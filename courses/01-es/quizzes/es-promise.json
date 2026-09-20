@@ -1,0 +1,92 @@
+{
+  "title": "Promise · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Promise 的状态转换规则是：",
+      "options": [
+        "pending → fulfilled 后可再改 rejected",
+        "pending → fulfilled 或 rejected，一旦变化就锁死",
+        "可以在 fulfilled / rejected 之间来回",
+        "只能保持 pending"
+      ],
+      "answer": 1,
+      "explanation": "三条不变式：① 只能从 pending 变；② 只能变一次；③ 值/理由锁定。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nPromise.resolve(1)\n  .then(v => v + 1)\n  .then(v => { throw new Error('E' + v); })\n  .then(v => console.log('A', v))\n  .catch(e => console.log('C', e.message))\n  .then(v => console.log('B', v));\n```",
+      "options": [
+        "A 2 → C E2",
+        "C E2 → B undefined",
+        "A 2 → B undefined",
+        "只打印 C E2"
+      ],
+      "answer": 1,
+      "explanation": "第二个 then throw → 跳过第三个 then（onFulfilled）→ 到 catch 捕到 E2 → catch 返回 undefined → 最后一个 then 收到 undefined。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`Promise.all` 与 `Promise.allSettled` 的差别：",
+      "options": [
+        "完全一样",
+        "all 任一 reject 立即 reject；allSettled 等所有 settle 返回 {status, value/reason} 数组",
+        "all 只支持 2 个 Promise",
+        "allSettled 是 ES2015 就有的"
+      ],
+      "answer": 1,
+      "explanation": "all 是**一票否决**；allSettled 是**部分失败也要跑完**——批量任务用后者。allSettled ES2020。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`Promise.any([])` 结果是：",
+      "options": ["resolved 空数组", "rejected with AggregateError", "永远 pending", "同步抛错"],
+      "answer": 1,
+      "explanation": "any 要**任一 fulfilled**——空数组永远不会有 → 立即 rejected 一个 AggregateError（errors 为空）。对比：`all([])` 立即 fulfilled 空数组。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下代码有什么问题？\n\n```js\nlist.forEach(async item => {\n  await doIt(item);\n});\nconsole.log('全部完成');\n```",
+      "options": [
+        "语法错误",
+        "forEach 不等待 async 回调里的 await——'全部完成' 会在 doIt 之前打印",
+        "只能 for...of",
+        "没有问题"
+      ],
+      "answer": 1,
+      "explanation": "forEach 忽略回调返回值（包括 Promise）。修：串行用 `for...of`；并行用 `await Promise.all(list.map(async x => doIt(x)))`。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nconst p = new Promise((resolve) => {\n  setTimeout(() => { throw new Error('boom'); }, 0);\n  resolve();\n});\np.catch(e => console.log('caught', e.message));\n```",
+      "options": [
+        "caught boom",
+        "uncaught（catch 不触发）",
+        "什么也不打印",
+        "Promise rejected"
+      ],
+      "answer": 1,
+      "explanation": "setTimeout 回调在**新栈帧**里 throw——Promise 已经 fulfilled，无法再 reject；错误变成 uncaughtException。这是「异步内部错误无法被 Promise 捕获」的经典事故。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "用 `Promise.race` 实现「5 秒超时」的正确写法：",
+      "options": [
+        "Promise.race([fetch(url), new Promise((_, rej) => setTimeout(rej, 5000))])",
+        "Promise.race([fetch(url), setTimeout(5000)])",
+        "Promise.all([fetch(url), delay(5000)])",
+        "fetch(url, { timeout: 5000 })"
+      ],
+      "answer": 0,
+      "explanation": "race 谁先 settle 就用谁——reject 分支要在超时后**reject**而不是 resolve。现代 fetch 有更规范的 `AbortSignal.timeout(5000)`。"
+    }
+  ]
+}

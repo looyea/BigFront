@@ -1,0 +1,82 @@
+{
+  "title": "Symbol · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "`Symbol('a') === Symbol('a')` 结果？",
+      "options": ["true", "false", "抛错", "undefined"],
+      "answer": 1,
+      "explanation": "每次 Symbol() 都返回**全宇宙唯一**的新值，描述字符串只是调试辅助。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`Symbol.for('x') === Symbol.for('x')` 结果？",
+      "options": ["true", "false", "抛错"],
+      "answer": 0,
+      "explanation": "Symbol.for 查/写**全局注册表**——同 key 拿同一个 Symbol。跨 realm / 跨模块共享符号必用。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`JSON.stringify({ [Symbol('a')]: 1, b: 2 })` 结果？",
+      "options": ["'{\"b\":2}'", "'{}'", "抛错", "'{\"Symbol(a)\":1,\"b\":2}'"],
+      "answer": 0,
+      "explanation": "Symbol 键被 JSON 忽略；只序列化字符串键。想恢复要手动 `Object.getOwnPropertySymbols` 处理。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "要让 `+obj` 得到数字，最优先被引擎查询的方法是：",
+      "options": [
+        "`obj.valueOf()`",
+        "`obj.toString()`",
+        "`obj[Symbol.toPrimitive]('number')`",
+        "`obj[Symbol.for('number')]()`"
+      ],
+      "answer": 2,
+      "explanation": "ToPrimitive 算法**先查 Symbol.toPrimitive**；没有才走 valueOf / toString。传 hint 决定语义。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`Object.prototype.toString.call(x)` 里的 `x` 显示成 `[object XXX]` 是由哪个符号决定？",
+      "options": [
+        "`Symbol.prototype.description`",
+        "`Symbol.toStringTag`",
+        "`Object.prototype.toString` 硬编码",
+        "`constructor.name`"
+      ],
+      "answer": 1,
+      "explanation": "Symbol.toStringTag 决定；Map/Set 等内置对象就是靠它让 toString 打印 `[object Map]`。自定义类挂上它也能改。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 `Symbol.species`，正确说法是：",
+      "options": [
+        "决定 `typeof` 的返回值",
+        "决定**派生方法**（如 Array.map、filter）返回时使用哪个构造器",
+        "决定 Symbol 的 description",
+        "决定 for-of 遍历顺序"
+      ],
+      "answer": 1,
+      "explanation": "子类可以 `static get [Symbol.species]() { return Array; }` 让 map/filter 返回普通 Array 而不是子类实例。Promise、TypedArray 家族都靠它。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "`Symbol` 上能挂属性吗？（比如 `const s = Symbol(); s.x = 1`）",
+      "options": [
+        "能，且能读回",
+        "能写但读不回（primitive 自动装箱）",
+        "**抛 TypeError**（Symbol 是 primitive，不能装箱挂属性）",
+        "静默失败"
+      ],
+      "answer": 2,
+      "explanation": "**Symbol 上没有 Object 包装**——试图给它挂属性会抛 TypeError（不像 number/string 会临时装箱）。这也是为什么 Symbol 不能 `new Symbol()`。"
+    }
+  ]
+}

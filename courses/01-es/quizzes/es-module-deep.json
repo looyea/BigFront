@@ -1,0 +1,97 @@
+{
+  "title": "模块系统深入 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "ESM 加载的三阶段正确顺序是：",
+      "options": [
+        "求值 → 链接 → 解析",
+        "解析 → 链接 → 求值",
+        "链接 → 解析 → 求值",
+        "求值 → 解析 → 链接"
+      ],
+      "answer": 1,
+      "explanation": "Parsing 建 AST 与声明；Linking 沿依赖图递归加载并建立**绑定**；Evaluation 按 DFS 后序执行顶层代码。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么 `import { x } from './m.js'` 会**提升**？",
+      "options": [
+        "V8 优化",
+        "解析阶段就建立**绑定**，与求值时机无关；顶层代码执行前所有 import 已完成链接",
+        "Babel 转的",
+        "运行时自动重排"
+      ],
+      "answer": 1,
+      "explanation": "Parsing / Linking 都在 Evaluation 之前——所以 `console.log(x)` 在 import 之前也不会拿不到，而是**已在链接**但未求值 → TDZ 中。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`package.json` 的 `exports` 字段里，字段匹配顺序是：",
+      "options": [
+        "字典序",
+        "自上而下第一个命中",
+        "自下而上",
+        "随机"
+      ],
+      "answer": 1,
+      "explanation": "顺序**敏感**——`types` 放最上（TS 编译期），再具体环境（node / browser），再通用（import / require），最后 default。放错就命中不了。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "什么是 dual-package hazard？",
+      "options": [
+        "包冲突",
+        "同一份代码**同时**被以 ESM 与 CJS 两条路径加载 → Node 视作**两个独立实例** → 单例状态分裂",
+        "两个包同名",
+        "循环依赖"
+      ],
+      "answer": 1,
+      "explanation": "ESM 与 CJS 各有独立缓存；exports 就算指同一份源码，Node 也**分别包装**——`store` 变成两个 store。修法：只发 ESM 或 CJS 之一。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`sideEffects: false` 的含义是：",
+      "options": [
+        "禁用副作用 API",
+        "告诉打包器：**所有文件都可安全摇**——未被使用的模块可以整个跳过求值",
+        "关闭 tree-shaking",
+        "只在浏览器有效"
+      ],
+      "answer": 1,
+      "explanation": "让 webpack / Rollup 大胆跳过未使用文件；**风险**：CSS import / polyfill 若真有副作用会被摇没——所以要么列白名单，要么整个包真的无顶层副作用。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "ESM 里 `import { readFile } from 'node:fs'` 时，Node 是怎么**知道** readFile 这个具名导出的？",
+      "options": [
+        "从 d.ts 文件读类型",
+        "cjs-module-lexer 静态扫描 fs.js 源码里的 `exports.readFile = ...` 模式",
+        "由用户手动列 exports",
+        "V8 内置了 fs 的 API 表"
+      ],
+      "answer": 1,
+      "explanation": "fs 是 CJS——Node 用 **cjs-module-lexer** 静态扫描识别 `exports.foo = ...` 之类的模式；匹配不到只暴露 default。`Object.assign(exports, obj)` 认不出。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "顶层 `await` 的**主要风险**是：",
+      "options": [
+        "语法错误",
+        "**阻塞整条依赖链**——一个 TLA 卡住，所有 import 它的模块都跟着卡",
+        "只能用于浏览器",
+        "只能 await Promise.all"
+      ],
+      "answer": 1,
+      "explanation": "TLA 让下游模块自动等它完成——好处是**用起来同步**，坏处是网络/慢 I/O 会**拖垮**整个入口。适合 polyfill / 特性探测，不适合业务数据。"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "title": "迭代器与生成器 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 Iterable 与 Iterator，正确的说法是：",
+      "options": [
+        "同一个东西的两种叫法",
+        "Iterable 上有 [Symbol.iterator]() 方法，调用它才**生产** Iterator",
+        "Iterator 上有 [Symbol.iterator]() 方法，Iterable 是它的一个实例",
+        "两者完全无关"
+      ],
+      "answer": 1,
+      "explanation": "Iterable 是「能被拿 iterator」的对象；Iterator 是「有 next() 状态机」。Generator 对象**同时**是二者。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`const arr = [1,2]; const it = arr[Symbol.iterator](); it.next(); it.next(); it.next(); it.next();` 第 4 次 next 返回什么？",
+      "options": [
+        "抛 StopIteration",
+        "{ value: undefined, done: true }",
+        "{ value: undefined, done: false }",
+        "TypeError"
+      ],
+      "answer": 1,
+      "explanation": "ES6 起规范明确：耗尽后 next() **幂等**返回 `{ value: undefined, done: true }`。老的 StopIteration 已废除。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nfunction* g() { const x = yield 1; yield x; }\nconst it = g();\nit.next();\nconsole.log(it.next(42).value);\n```",
+      "options": ["1", "42", "undefined", "抛错"],
+      "answer": 1,
+      "explanation": "第一次 next() 走到 `yield 1` 暂停，返回 1；第二次 next(42) **把 42 注入**给 `yield 1` 这个表达式的值，所以 x=42；然后 `yield x` 返回 42。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`yield*` 相比手动 for-of yield 的关键区别是：",
+      "options": [
+        "只是语法糖，完全等价",
+        "yield* **透传** next(v) 参数与 throw(err) 给被委托的 iterator",
+        "yield* 只能用于数组",
+        "yield* 会立即执行完"
+      ],
+      "answer": 1,
+      "explanation": "yield* 是**双向委托**——外层 next(v) 会直接进被委托 iterator；throw 也会透传。手写 for-of 只能传值不能传 throw。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`for-of` 遇到 break 时会调用迭代器的哪个方法？",
+      "options": ["next", "return（若存在）", "throw", "finalize"],
+      "answer": 1,
+      "explanation": "提前 break / return / throw 会让 for-of **调用 it.return()**（若定义），让迭代器清理资源；生成器里对应 finally 块。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`Array.from({ length: 3 }, (_, i) => i * i)` 与 `new Array(3).map((_, i) => i * i)` 分别得到？",
+      "options": [
+        "[0,1,4] 和 [0,1,4]",
+        "[0,1,4] 和 [empty × 3]",
+        "[0,1,4] 和 [undefined, undefined, undefined]",
+        "抛错"
+      ],
+      "answer": 1,
+      "explanation": "`new Array(3)` 是**稀疏**数组，map 会跳过 empty slot 且**保留洞**——结果仍是 [empty×3]。Array.from 走 length 索引读，undefined 传入回调 → 正常得 [0,1,4]。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下面哪个**不是** Iterable？",
+      "options": [
+        "`new Set()`",
+        "`'hello'`",
+        "`{ a:1, b:2 }`",
+        "`document.querySelectorAll('p')`"
+      ],
+      "answer": 2,
+      "explanation": "普通对象默认**没有** [Symbol.iterator]，`[...obj]` 抛 TypeError。要用 Object.entries(obj) 或挂 [Symbol.iterator] 才能迭代。"
+    }
+  ]
+}

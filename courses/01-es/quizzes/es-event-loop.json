@@ -1,0 +1,82 @@
+{
+  "title": "事件循环 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下代码打印顺序？\n\n```js\nconsole.log('1');\nsetTimeout(() => console.log('2'), 0);\nPromise.resolve().then(() => console.log('3'));\nconsole.log('4');\n```",
+      "options": ["1 2 3 4", "1 4 3 2", "1 4 2 3", "4 1 3 2"],
+      "answer": 1,
+      "explanation": "同步 1、4；栈空清微任务 3；下一轮宏任务 2。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "浏览器事件循环一 tick 的正确顺序是：",
+      "options": [
+        "取一个宏任务 → 清微任务 → 可能渲染 → 下一个",
+        "清微任务 → 取宏任务 → 渲染",
+        "取宏任务 → 渲染 → 清微任务",
+        "并行执行"
+      ],
+      "answer": 0,
+      "explanation": "先跑一个宏任务，然后清空**所有**微任务（包括新入队的），然后按需渲染。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下属于**微任务**的是：",
+      "options": ["setTimeout", "setInterval", "Promise.then", "postMessage"],
+      "answer": 2,
+      "explanation": "微任务：Promise.then/catch/finally、queueMicrotask、MutationObserver、process.nextTick（Node）。setTimeout/setInterval/postMessage 都是宏任务。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Node 事件循环六个阶段的正确顺序是：",
+      "options": [
+        "timers → pending → idle/prepare → poll → check → close",
+        "poll → timers → check → close → idle → pending",
+        "timers → poll → check → pending → close → idle",
+        "close → poll → timers → check → idle → pending"
+      ],
+      "answer": 0,
+      "explanation": "标准顺序：timers（到期的 setTimeout/setInterval） → pending callbacks → idle/prepare → poll（I/O）→ check（setImmediate）→ close callbacks。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么**不推荐**递归 `process.nextTick`？",
+      "options": [
+        "语法太老",
+        "nextTick 队列在事件循环**继续之前**清空——递归会**饿死** I/O",
+        "nextTick 会丢任务",
+        "nextTick 与 Promise 冲突"
+      ],
+      "answer": 1,
+      "explanation": "Node 官方文档明确警告：递归 nextTick 会让事件循环进不了 poll 阶段——I/O 与 timer 都被卡。新代码用 `queueMicrotask`。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`requestAnimationFrame` 相比 `setTimeout(fn, 16)` 的优势是：",
+      "options": [
+        "更快",
+        "与屏幕刷新率对齐、后台标签页自动暂停",
+        "可以传参",
+        "是微任务"
+      ],
+      "answer": 1,
+      "explanation": "rAF 与显示器 VSync 对齐——避免掉帧；页面不可见时自动暂停省电。setTimeout 不感知这些。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下代码打印顺序？\n\n```js\nasync function foo() { console.log('a'); await null; console.log('b'); }\nfoo();\nconsole.log('c');\n```",
+      "options": ["a b c", "a c b", "c a b", "b a c"],
+      "answer": 1,
+      "explanation": "foo 同步跑到 await 前打 a；await 让出（把 b 排进微任务）；外层打 c；栈空清微任务打 b。"
+    }
+  ]
+}

@@ -1,59 +1,92 @@
 {
-  "lessonId": "es-module",
-  "title": "L4 模块化 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "ES Module · 小测",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "一个模块文件里默认导出最多几个？",
+      "prompt": "ESM 与 CommonJS 的最大差别是：",
       "options": [
-        "不限",
-        "1 个",
-        "2 个",
-        "0 个"
+        "写法不同",
+        "ESM 静态分析 + live binding；CJS 运行时 require + 值拷贝",
+        "CJS 已淘汰",
+        "只有 Node 支持 ESM"
       ],
       "answer": 1,
-      "explanation": "export default 每文件最多一个；命名导出可多个。"
+      "explanation": "静态 + live binding 是 ESM 的两大特征——tree-shaking 与单例状态都源于此。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "CommonJS 用什么导入导出？",
-      "options": [
-        "import/export",
-        "require/module.exports",
-        "using/export",
-        "include/export"
-      ],
+      "prompt": "以下代码打印什么？\n\n```js\n// counter.js\nexport let n = 0;\nexport function inc() { n++; }\n\n// main.js\nimport { n, inc } from './counter.js';\nconsole.log(n); inc(); console.log(n);\n```",
+      "options": ["0 0", "0 1", "抛错", "undefined undefined"],
       "answer": 1,
-      "explanation": "CJS 用 require 与 module.exports；ESM 用 import/export。"
+      "explanation": "**live binding**——导入的是**绑定**（引用）而不是值；导出方改了 n，导入方读到新值。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "同一模块被 import 两次，模块内 let 变量是？",
+      "prompt": "关于 `export default`，错误的是：",
       "options": [
-        "两份独立副本",
-        "共享同一份（模块单例）",
-        "报错",
-        "自动垃圾回收"
+        "一个模块最多一个 default",
+        "`import c from './m'` 相当于 `import { default as c } from './m'`",
+        "`export default { x: 1 }` 是标准写法",
+        "default 本质是一个**具名**为 'default' 的导出"
       ],
-      "answer": 1,
-      "explanation": "ESM 有缓存，模块只初始化一次，是状态库全局共享的基础。"
+      "answer": 2,
+      "explanation": "`export default { x: 1 }` —— `{}` 会被当**块语句**开始，SyntaxError。要 `export default ({ x: 1 })` 或 `const o = {...}; export default o;`。"
     },
     {
       "id": "q4",
       "type": "single",
-      "prompt": "import * as m from \"./x.js\" 的含义是？",
+      "prompt": "Node ESM 里 `import x from './utils'` 报错的原因：",
       "options": [
-        "只导入默认导出",
-        "把所有命名导出收集到命名空间对象 m",
-        "执行副作用",
-        "重命名"
+        "路径不对",
+        "ESM 必须写**扩展名**（`./utils.js`），CJS 那种省略是不允许的",
+        "ESM 不能导入本地文件",
+        "需要 await"
       ],
       "answer": 1,
-      "explanation": "星号导入得到含所有导出的命名空间对象。"
+      "explanation": "Node ESM 严格要求扩展名与相对路径的完整写法——`./utils.js` 而非 `./utils`；`./dir/index.js` 而非 `./dir/`。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`await import('mod')` 与 `import x from 'mod'` 的差别是（**多选一**里选**最完整**）：",
+      "options": [
+        "完全等价",
+        "动态 import 是**表达式**（可用变量、条件），返回 Promise；静态是**声明**，编译期分析",
+        "动态 import 更慢",
+        "静态 import 不支持 top-level await"
+      ],
+      "answer": 1,
+      "explanation": "动态 import 支持**代码分割**与**条件加载**——打包器看到静态 import 就知道依赖图，看到 `import(specifier)` 只能给 specifier 打 tag 或整包切分。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`package.json` 里 `\"type\": \"module\"` 的作用是：",
+      "options": [
+        "让整个包发布到 npm",
+        "让本包内 `.js` 文件被 Node 视作 ESM 而不是 CJS",
+        "关闭 tree-shaking",
+        "指定入口文件"
+      ],
+      "answer": 1,
+      "explanation": "默认 Node 把 `.js` 当 CJS；`type: module` 让本包 `.js` 走 ESM 解析（同时禁用 `require` / `__dirname`）。`.mjs` 永远是 ESM，`.cjs` 永远是 CJS，与 type 无关。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "CJS 文件里能不能 `import` ESM 模块？",
+      "options": [
+        "不能，永远不行",
+        "不能静态 import，但**可以 `await import()`** 动态导入",
+        "Node 会拒绝加载 ESM",
+        "只能靠 ts-node"
+      ],
+      "answer": 1,
+      "explanation": "CJS 是同步语义，无法处理 ESM 的顶层 await——所以只能 `await import('esm')`（Node 12.17+）。反方向 ESM 可以直接 import CJS。"
     }
   ]
 }

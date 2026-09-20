@@ -1,30 +1,107 @@
-# 面试题 · ES Modules：import 与 export
+# 面试题 · ES Module
 
-1. **ESM 与 CommonJS 的核心区别？**（几乎必问）
-   | 维度 | ESM | CJS |
-   | --- | --- | --- |
-   | 语法 | import/export | require/module.exports |
-   | 加载时机 | **静态**分析、编译期确定依赖 | 运行时动态 |
-   | 值绑定 | **实时只读引用**（live binding） | 值拷贝（快照） |
-   | this | undefined | module.exports |
-   | 顶层 await | 支持 | 不支持 |
-   | Tree-shaking | 可 | 难（需额外分析） |
+> 本关所有面试题**整理自公开互联网题库**，每题末尾给出来源。题目已用中文重新表述，代码示例为业界通用范例。
 
-2. **默认导出与命名导出怎么选？**
-   - 命名：更明确、便于 IDE 自动导入、便于重命名重构、鼓励一个模块暴露多能力。
-   - 默认：适合「一个模块就是一个东西」（如 React 组件类）。现代工程**优先命名**。
+---
 
-3. **import 是值拷贝还是引用？**
-   **只读引用的活绑定**。导出方重新赋值 `let counter`，导入方能立即看到最新值。但你**不能**在导入方修改（会 TypeError）。
+**1）ESM 与 CommonJS 的 5 大差别？**
+- 参考要点：① **静态**结构 vs 运行时 require；② **live binding** vs 值拷贝；③ 顶层 `await` 支持 vs 不支持；④ 明确 `this` = undefined vs CJS 里 this=module.exports；⑤ `import.meta` vs `__dirname`/`__filename`；⑥ 加载策略异步（浏览器） vs 同步（Node）。
+- 来源：Node.js 官方《ES modules: What's the difference》；MDN。
 
-4. **循环依赖怎么办？**
-   ESM 通过「活绑定 + 编译期提升」能处理一部分循环，但仍可能拿到 undefined（TDZ）。工程做法：重构模块层级、把公共部分抽到第三个模块。
+---
 
-5. **什么是 tree-shaking？为什么 ESM 更适合？**
-   删掉未使用的导出。ESM 的 import/export 在**编译期就固定**，工具可以静态分析「谁没被用到」。CJS 的 require 是运行时表达式，工具难以确证。
+**2）什么是 live binding？写一段代码演示。**
+- 参考要点：
+  ```js
+  // counter.js
+  export let n = 0;
+  export const inc = () => n++;
+  // main.js
+  import { n, inc } from './counter.js';
+  inc(); inc(); console.log(n);   // 2 —— 而不是 0
+  ```
+  ESM 导出的是**绑定**（引用），不是值快照。CJS 拿到的是拷贝。
+- 来源：2ality《The different kinds of ES6 imports》；MDN。
 
-6. **动态 import() 有什么用？**
-   返回 Promise，可按需加载模块（懒加载、路由分割、条件加载 polyfill）。是 ESM 中唯一能「运行时决定路径」的入口。
+---
 
-7. **package.json 里 "type": "module" 的作用？**
-   告诉 Node：本包内 `.js` 文件按 ESM 解析。不加则按 CJS，除非用 `.mjs` 后缀。
+**3）`import c from './m'` 相当于哪一种具名导入？**
+- 参考要点：`import { default as c } from './m'`。**default 就是一个名为 'default' 的具名导出**——所以：① 每个模块只能有一个；② 导入方变量名随便起，与源解耦；③ 也能 `export { x as default }`。
+- 来源：ECMA-262；MDN；StackOverflow 高票。
+
+---
+
+**4）Node ESM 里 `import './utils'` 为什么报错？浏览器 `<script type="module">` 里同样问题？**
+- 参考要点：ESM 规范要求 **specifiers 完整**——必须有扩展名、相对路径必须显式。CJS 那种「自动补 `.js` / `/index.js`」在 ESM 里被砍掉是为了**跨环境一致**（浏览器要精确 URL）。**修**：写 `./utils.js`；Node 里可以配 `exports` 字段做映射；或用工具（`tsup` / `esbuild`）在打包时补全。
+- 来源：Node.js 官方文档；TC39 讨论；StackOverflow 高票。
+
+---
+
+**5）`import()` 动态导入的 3 个典型用途？**
+- 参考要点：① **代码分割**——打包器把动态 import 目标切独立 chunk，首屏不加载；② **条件加载**——`if (featureFlag) await import('./heavy.js')`；③ **运行时决定路径**——`await import(\`./langs/${lang}.js\`)`（要打包器配合 glob）；④ 从 CJS 加载 ESM（唯一路径）；⑤ 单例失效场景下的重加载（HMR）。
+- 来源：MDN `import()`；webpack / Rollup 官方文档 code-splitting。
+
+---
+
+**6）`package.json` 里 `type`、`main`、`module`、`exports` 分别是什么？**
+- 参考要点：
+  - `type`：`"module"` → 本包 `.js` 视为 ESM；`"commonjs"`（默认）→ 视为 CJS；
+  - `main`：CJS 时代的入口，Node 老版本读；
+  - `module`：**打包器约定**（Rollup/webpack 优先读它做 tree-shake），Node 不认；
+  - `exports`：**现代入口**，条件式映射（import / require / types / browser / node / default）；一旦声明，未列子路径不可访问。
+- 来源：Node.js 官方《Packages》；webpack 5 文档。
+
+---
+
+**7）ESM 里为什么不能用 `require`？CJS 里为什么不能 `import` ESM（静态）？**
+- 参考要点：ESM 是**独立模块系统**——不共享 CJS 的 `require` 与 `module.exports`；反之 CJS 是**同步**语义，无法处理 ESM 的顶层 await 与 Promise 加载链——所以只能 `await import()`。Node 的 `createRequire(import.meta.url)` 可以在 ESM 里创建 require 函数（过渡用）。
+- 来源：Node.js 官方 interop 文档。
+
+---
+
+**8）循环依赖在 ESM 里怎么表现？**
+- 参考要点：ESM **允许**循环 import——因为导入是**绑定的引用**，运行时才解引用。但**初始化顺序**决定你读到的是「已 init 的值」还是「TDZ 中的空槽」。规避：① 只在函数体里读循环方；② 用 `import * as ns` 命名空间（live，运行时读）；③ 抽出公共依赖到第三个模块。
+- 来源：Node.js 官方文档；StackOverflow 高票。
+
+---
+
+**9）ESM 中的 `this` 是什么？为什么？**
+- 参考要点：**`this === undefined`**。ESM 隐式**严格模式**且模块顶层 `this` 规范定义为 undefined。CJS 里顶层 `this === module.exports`——老代码用 `this.foo = bar` 挂属性，改成 ESM 会崩。
+- 来源：ECMA-262；MDN。
+
+---
+
+**10）如何在 ESM 里读取当前模块的路径（`__filename` / `__dirname` 的替代）？**
+- 参考要点：`import.meta.url`（`file://...`）+ `url.fileURLToPath(import.meta.url)` 得 `__filename`；`path.dirname` 得 `__dirname`。
+  ```js
+  import { fileURLToPath } from 'node:url';
+  import path from 'node:path';
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  ```
+  或 `new URL('./asset.png', import.meta.url)`——直接用 URL 对象，跨平台更规范。
+- 来源：Node.js 官方文档；MDN `import.meta`。
+
+---
+
+**11）tree-shaking 为什么依赖 ESM？**
+- 参考要点：ESM 的 `import { x } from 'y'` 是**编译期静态**结构——Rollup 能算出 y 里没被 x 引用的部分全部可摇；CJS 的 `require('y')` 是**运行时值**，`m.x` 与 `m[y.key]` 打包器无法预测——只能整体保留。这是 webpack 2 加入 ESM 支持后才实现 tree-shaking 的原因。
+- 来源：Rollup 官网《Tree-shaking》；webpack 官方文档。
+
+---
+
+**12）现场手写：一个 `importLazy(specifier)`，第一次调用时才动态加载并缓存，之后**同步**取用。**
+- 参考要点：
+  ```js
+  const cache = new Map();
+  function importLazy(specifier) {
+    if (!cache.has(specifier)) {
+      cache.set(specifier, import(specifier));
+    }
+    return cache.get(specifier);   // 同一 Promise，重复 await 也 OK
+  }
+  const mod = await importLazy('./heavy.js');   // 第一次 await 触发加载
+  const same = await importLazy('./heavy.js');  // 立即 resolve 同一 Promise
+  ```
+  **追问**：Node 内置 `import()` 有自身缓存，同一 specifier 只会加载一次——本函数主要是**给动态 specifier 做去重**（不同调用点用相同变量）。
+- 来源：MDN `import()`；Node.js 官方 ESM 缓存文档；StackOverflow 高票。

@@ -1,59 +1,97 @@
 {
-  "lessonId": "es-async",
-  "title": "L5 异步编程 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "async / await · 小测",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "Promise 的状态转换，正确的是？",
+      "prompt": "async 函数的返回值规则是：",
       "options": [
-        "pending→fulfilled 后可再变 rejected",
-        "pending 只能变为 fulfilled 或 rejected 之一且不可逆",
-        "可随时切换",
-        "初始即 fulfilled"
+        "原样返回",
+        "永远包成 Promise（return 42 → Promise<42>；throw → rejected）",
+        "只能返回 Promise",
+        "只能返回 undefined"
       ],
       "answer": 1,
-      "explanation": "Promise 状态一旦 settled 就永久固定。"
+      "explanation": "async 函数总返回 Promise——即使 return 普通值或抛错。这是与同步函数最大的语义差别。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "忘了写 await，变量拿到的是？",
+      "prompt": "以下代码有什么问题？\n\n```js\nconst a = await fetchA();\nconst b = await fetchB();\n```",
       "options": [
-        "最终结果",
-        "一个 pending 的 Promise 对象",
-        "null",
-        "抛错"
+        "语法错误",
+        "**无依赖却串行**——总耗时 = a + b，应用 Promise.all 并行",
+        "fetch 不能用 await",
+        "没有问题"
       ],
       "answer": 1,
-      "explanation": "不加 await 拿到 Promise 本身，这是新手第一大坑。"
+      "explanation": "两者不互相依赖 → 可并行：`const [a, b] = await Promise.all([fetchA(), fetchB()])`。有依赖才必须串行。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "要让三个互不依赖的请求并发执行并等全部完成，用？",
+      "prompt": "`list.forEach(async x => { await doIt(x); })` 的结果是：",
       "options": [
-        "依次 await 三次",
-        "Promise.all([a,b,c])",
-        "Promise.race",
-        "setTimeout"
+        "全部完成才继续",
+        "forEach **不等** Promise——外面的 await/then 拿不到完成信号",
+        "报错",
+        "自动 Promise.all"
       ],
       "answer": 1,
-      "explanation": "all 并发发起并等待全部成功；依次 await 是串行更慢。"
+      "explanation": "forEach 忽略回调返回值（包括 Promise）。修：`for...of` 串行；`await Promise.all(list.map(doIt))` 并行。"
     },
     {
       "id": "q4",
       "type": "single",
-      "prompt": "list.forEach(async x => await f(x)) 的问题是？",
+      "prompt": "`await 42` 的行为是：",
       "options": [
         "语法错误",
-        "forEach 不会等待 async 回调，无法正确串行/收集",
-        "太慢而已",
-        "没问题"
+        "等价 `await Promise.resolve(42)`——**多等一个微任务**",
+        "同步返回 42",
+        "抛 TypeError"
       ],
       "answer": 1,
-      "explanation": "forEach 忽略回调返回的 Promise，应用 for...of 或 Promise.all(list.map(...))。"
+      "explanation": "await 一个非 Promise 会被隐式包装并让出一个 tick——不是零成本。热点路径注意。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`for await...of` 用于消费：",
+      "options": [
+        "普通数组",
+        "**AsyncIterable**（每次 yield 一个 Promise）——如 Node Readable stream",
+        "同步 generator",
+        "Map / Set"
+      ],
+      "answer": 1,
+      "explanation": "for-await-of 是 AsyncIterable 的语法糖；每一项自动 await。真实场景：Node 流、fetch body、SSE。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "顶层 `await`（ES2022）的**限制**不包括：",
+      "options": [
+        "只能在 ESM 模块顶层",
+        "**会阻塞**整条依赖链上所有下游模块",
+        "在 CJS 里可以使用",
+        "打包 target 通常要 esnext"
+      ],
+      "answer": 2,
+      "explanation": "CJS 是同步语义——不支持顶层 await。ESM-only。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "`setTimeout(async () => { throw new Error() })` 能被外层 `try/catch` 抓住吗？",
+      "options": [
+        "能——await 会冒泡",
+        "不能——回调在**新栈帧**执行，原栈已退",
+        "只有 Node 能",
+        "要 await 才行"
+      ],
+      "answer": 1,
+      "explanation": "async 函数里的 throw 会变成它自己**返回的 Promise** 的 rejection，与外层同步栈无关。要接住得 `foo().catch(...)`。"
     }
   ]
 }

@@ -1,0 +1,92 @@
+{
+  "title": "回调函数 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Error-First 约定里，回调的第一个参数是：",
+      "options": ["业务数据", "错误对象（成功时为 null）", "回调本身", "上下文"],
+      "answer": 1,
+      "explanation": "Node 风格：`cb(err, data)`——成功时 err 为 null；失败时只传 err。这样错误永远在最前，用户不可能忘记检查。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\ntry {\n  setTimeout(() => { throw new Error('boom'); }, 0);\n  console.log('A');\n} catch (e) { console.log('catch', e.message); }\n```",
+      "options": [
+        "A 然后 catch boom",
+        "A 然后 uncaught（catch 不触发）",
+        "只打印 catch boom",
+        "什么也不打印"
+      ],
+      "answer": 1,
+      "explanation": "setTimeout 的回调在**新栈帧**里 throw——try/catch 的原栈帧早已退出，接不住。会打印 A，然后异步抛出未被捕获。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "什么是「Zalgo」？",
+      "options": [
+        "一种编码格式",
+        "一个函数**有时同步、有时异步**调用回调，导致上层代码行为不可预测",
+        "Promise 的一种反模式",
+        "Node 的崩溃日志"
+      ],
+      "answer": 1,
+      "explanation": "经典例：cache 命中就同步调 cb，未命中就异步调——导致 `let data; fetchOrCache(k, d => data = d); use(data)` 时 data 有时 undefined。修法：永远异步。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Callback Hell 的**根本问题**不包括：",
+      "options": [
+        "纵向代码膨胀",
+        "错误处理重复",
+        "并行组合困难",
+        "运行速度太慢"
+      ],
+      "answer": 3,
+      "explanation": "回调本身不慢——地狱的是**可读性 / 可组合性 / 错误处理**。Promise 与 async/await 是**语法层**的解药。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "控制反转的四道保险**不包括**：",
+      "options": [
+        "永远异步调用（setTimeout/queueMicrotask）",
+        "用 try/catch 抓错误转发给 cb",
+        "用 flag 保证只调用一次",
+        "用 class 封装状态"
+      ],
+      "answer": 3,
+      "explanation": "四道保险：异步化 + try/catch + once 保护 + Error-First 参数。class 不是保险。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "生产 Node 服务里，`process.on('unhandledRejection', ...)` 通常做什么？",
+      "options": [
+        "吞掉错误继续跑",
+        "记日志后**优雅退出**（进程状态已不可预测）",
+        "重启整个进程",
+        "自动重试失败的 Promise"
+      ],
+      "answer": 1,
+      "explanation": "未处理的 rejection 意味着代码有分支没考虑——继续跑可能引起数据不一致。生产做法：记日志 → 关闭连接池 → process.exit(1) → 由 PM2/K8s/Docker 重启。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下哪个**不是**现代 JS 中仍在使用的回调？",
+      "options": [
+        "Array.prototype.map 的 mapper",
+        "addEventListener 的 handler",
+        "fetch 返回的对象",
+        "MutationObserver 的 callback"
+      ],
+      "answer": 2,
+      "explanation": "fetch 返回 **Promise**——不是回调（虽然 Promise 内部靠回调实现）。map / addEventListener / MutationObserver 依然是回调 API。"
+    }
+  ]
+}

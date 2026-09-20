@@ -1,0 +1,82 @@
+{
+  "title": "Proxy 与 Reflect · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nconst p = new Proxy({ x: 1 }, {\n  get(t, k, r) { console.log('trap', k); return t[k]; },\n});\nconsole.log(p.x, p.y);\n```",
+      "options": [
+        "1 undefined（trap 打 2 次）",
+        "只打 1 次（第二次走缓存）",
+        "抛 TypeError",
+        "'x', 'y' 不打印 1"
+      ],
+      "answer": 0,
+      "explanation": "每次读属性都走 get trap，包括不存在的属性。所以打印 trap x 然后 trap y，然后返回 1、undefined。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "trap 里为什么**推荐**用 `Reflect.get(target, key, receiver)` 而不是 `target[key]`？",
+      "options": [
+        "Reflect 更快",
+        "Reflect 会把 getter 里的 this 正确指向 receiver（通过 proxy 访问的那个对象）",
+        "Reflect 支持 Symbol 键，直接读不支持",
+        "只是风格问题"
+      ],
+      "answer": 1,
+      "explanation": "receiver 透传是关键——Vue 3 依赖收集就依赖这个：target 上的 getter 里 `this.x` 也要通过 proxy 走，才能追踪到内层依赖。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下代码结果是？\n\n```js\nconst t = Object.freeze({ x: 1 });\nconst p = new Proxy(t, { get: () => 99 });\nconsole.log(p.x);\n```",
+      "options": ["99", "1", "TypeError", "undefined"],
+      "answer": 1,
+      "explanation": "**invariant 约束**——target 的**非可配置**属性必须返回**相同的值**（SameValue）。get 返回 99 违反 → **严格模式抛 TypeError**，非严格模式忽略返回值取 target 的 1。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Proxy 无法被 polyfill 的根本原因是：",
+      "options": [
+        "写法太复杂",
+        "需要引擎层拦截**属性读写**，defineProperty 类 API 无法模拟**未来键**的访问",
+        "Symbol 太新",
+        "IE 有 Proxy 但 bug 多"
+      ],
+      "answer": 1,
+      "explanation": "Proxy 的 set/ownKeys 能感知 target 上**尚不存在**的键——defineProperty 只能拦截**已定义**的属性。这就是 Vue 3 不支持 IE 11 的原因。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`Proxy.revocable({}, {})` 返回什么？",
+      "options": [
+        "只返回 proxy",
+        "{ proxy, revoke }：调用 revoke 后 proxy 一切操作抛错",
+        "只返回 revoke 函数",
+        "返回 Promise"
+      ],
+      "answer": 1,
+      "explanation": "revocable 提供**撤销能力**——把 proxy 交给外部后，可以随时 revoke 切断访问。适合插件沙箱、临时凭证。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下 trap 里，**只在**函数被调用时触发的是：",
+      "options": ["get", "construct", "apply", "has"],
+      "answer": 2,
+      "explanation": "apply trap 在 `proxy(...)` 时触发；construct 在 `new proxy()` 时；两者都要求 target 是函数或可构造对象。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nconst p = new Proxy({ a: 1 }, { has: () => false });\nconsole.log('a' in p);\n```",
+      "options": ["true", "false", "TypeError", "undefined"],
+      "answer": 1,
+      "explanation": "invariant 只禁止对 target 上的**非可配置**属性在 has 里返回 false。此例 `a` 是普通可配置属性，has trap 可以撒谎返回 false，`'a' in p` 得 false。" 
+    }
+  ]
+}
