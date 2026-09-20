@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-render-modes 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "routeRules 里让 /blog/** 获得类似 Next ISR 的行为，常用写法是？",
+      "options": ["{ ssr: false }", "{ prerender: true }", "{ headers: { 'cache-control': 'max-age' } }", "{ swr: 3600 }（或 isr 提示，具体兑现看 preset）"],
+      "answer": 3,
+      "explanation": "swr 秒数=Nitro 的 stale-while-revalidate 缓存，语义≈ISR；isr 键是带平台提示的变体（呼应 nuxt-render-modes 第 1、5 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "登录后个性化仪表盘（读 cookie 渲染用户数据）最适合的策略是？",
+      "options": ["prerender", "plain SSR（或 ssr:false 的 SPA 区），绝不进 HTML 缓存", "swr: 60 先顶一下", "crawlLinks 爬进去"],
+      "answer": 1,
+      "explanation": "响应与请求者相关的页面进缓存=串号事故；动态区只有 SSR/SPA 两选（呼应 nuxt-render-modes 第 4 节安全线）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Nuxt 预渲染动态路由清单的两种给法是？",
+      "options": ["nitro.prerender.routes（可异步函数）与 crawlLinks", "generateStaticParams 与 dynamicParams", "sitemap.xml 与 robots.txt", "routeRules.prerender 逐条枚举"],
+      "answer": 0,
+      "explanation": "routes 支持构建期函数动态返回清单；crawlLinks 沿链接爬——Next 的页内生成函数在 Nuxt 是配置期职责（呼应 nuxt-render-modes 第 3 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "routeRules 的 /old/**: { redirect: '/' } 与页面里 navigateTo 跳转的关系？",
+      "options": ["前者只能在开发模式生效", "完全等价", "前者在 Nitro 层、渲染发生前拦截，可带状态码且零渲染开销；后者是应用逻辑分支", "后者性能更好因为它靠近组件"],
+      "answer": 2,
+      "explanation": "URL 治理类跳转应上移到 Nitro/routeRules——不渲染任何页面就完成重定向（呼应 nuxt-render-modes 第 2 节、nuxt-dynamic D1）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "配了 ssr:false 的路由，浏览器收到的响应是？",
+      "options": ["纯 404", "完全空的 HTTP 响应体", "直接返回 app.js", "Nitro 仍产出外壳 HTML（骨架+脚本），数据与交互全在客户端完成"],
+      "answer": 3,
+      "explanation": "ssr:false 是\"关页面级服务端渲染\"不是\"关 Nitro\"——外壳仍在，SPA 语义（呼应 nuxt-render-modes 第 2 节陷阱）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": " isr/swr 缓存在不同部署平台的实际兑现依赖什么？",
+      "options": ["依赖 Nitro preset 对平台缓存原语的适配", "依赖浏览器版本", "一律由内存缓存兜底，平台无差异", "依赖 CDN 是否支持 HTTP/2"],
+      "answer": 0,
+      "explanation": "声明式规则由各 preset 翻译成 Vercel/Netlify/CF 原生缓存或本地存储——换平台先查 preset 支持矩阵（呼应 nuxt-render-modes 第 5 节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "与 Next 的\"页面自报动态\"相比，Nuxt routeRules 的\"中心表指派\"最显著的优势是？",
+      "options": ["缓存更安全", "渲染更快", "routeRules 能绕过鉴权", "策略集中可审计：一张表看全站渲染/缓存/重定向拓扑，CI 里可做规则审查"],
+      "answer": 3,
+      "explanation": "配置即文档：治理视角优于分散声明；安全与性能两家本质等价（呼应 nuxt-render-modes 第 1 节对照）。"
+    }
+  ]
+}

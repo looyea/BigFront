@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-lifecycle 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "一次 SSR 请求中，能\"短路\"提前结束页面渲染直接出栈的环节有哪些？",
+      "options": ["routeRules 的 redirect/proxy/缓存命中", "组件 onMounted", "render:html 钩子", "app:suspense:resolve"],
+      "answer": 0,
+      "explanation": "redirect 直接响应、proxy 转发它处、缓存命中回旧 HTML——都在进 Vue 应用前；客户端钩子与服务端渲染后期钩子无从短路（呼应 nuxt-lifecycle 第 2 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "route middleware 与 Nuxt 插件的执行频次差异是？",
+      "options": ["前者仅服务端跑，后者仅客户端跑", "两者每次导航都跑", "前者每次导航跑，后者每次 app 创建只跑一次", "前者可 await 阻塞水合，后者不能注册钩子"],
+      "answer": 2,
+      "explanation": "middleware 属导航管线；插件在应用实例创建时执行一次（SSR 下即每请求一次、客户端整会话一次）（呼应 nuxt-lifecycle 第 3 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "客户端首屏水合时，服务端预取的数据来自哪个载体？",
+      "options": ["localStorage", "Service Worker 缓存", "重新发一遍 HTTP 请求", "window 上的 payload（__NUXT__）反序列化"],
+      "answer": 3,
+      "explanation": "useFetch 收集的数据随 HTML 内联为 payload，水合站直接复用——这是 SSR 省一跳请求的关键（呼应 nuxt-lifecycle 第 3 节、nuxt-usefetch）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "想统计\"每次 SPA 导航耗时\"并上报，最合适的钩子组合是？",
+      "options": ["page:start 记时 + page:finish 上报（插件内 nuxtApp.hook）", "onMounted + onUnmounted", "routeRules.headers", "server middleware 对每请求计时"],
+      "answer": 0,
+      "explanation": "page 起止钩子天然夹住导航渲染期；server middleware 会把静态资源与 SSR 请求混进来（呼应 nuxt-lifecycle 第 4 节例①）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "defineNitroPlugin 里的启动逻辑何时执行？",
+      "options": ["每次 API 调用", "每个 Nitro 服务实例启动时一次", "每次页面导航", "构建时编译期"],
+      "answer": 1,
+      "explanation": "Nitro 插件是引擎级生命周期：实例启动跑一次，适合预热/连池初始化（呼应 nuxt-lifecycle 第 4 节例③、node-config 资源管理）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "SSR 下每个请求都新建 Vue 应用实例，主要目的是？",
+      "options": ["提升构建速度", "兼容 Edge 运行时", "隔离请求状态，防止用户 A 的全局 store 泄漏给用户 B", "方便热更新"],
+      "answer": 2,
+      "explanation": "跨请求共享单例会串状态（pinia 全局态/事件监听），每请求新建是最直接的隔离手段（呼应 nuxt-lifecycle 第 2 节、next-render-modes 同理）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "排查\"某钩子到底跑没跑、顺序对不对\"，工具首选？",
+      "options": ["浏览器 console.log 猜", "Vue devtools 的组件面板", "nuxt.config 的 debug: true", "Nuxt DevTools 的 timeline/钩子面板"],
+      "answer": 3,
+      "explanation": "DevTools 能录出导航与钩子序列、middleware 耗时、payload 内容，是时刻表的可视化本尊（呼应 nuxt-lifecycle 第 5 节）。"
+    }
+  ]
+}

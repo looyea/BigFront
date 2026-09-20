@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-cookie-session 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "登录态为什么必须放 Cookie 而不是 localStorage（就 SSR 框架而言）？",
+      "options": ["Cookie 容量更大", "Cookie 更安全", "localStorage 在 Nuxt 中不可用", "只有 Cookie 会随请求头自动送到服务端，SSR 阶段才能识别用户身份"],
+      "answer": 3,
+      "explanation": "SSR 首屏要知道你是谁，服务端只能读请求头里的 cookie；localStorage 在 Node 侧不存在，会导致渲染出未登录版本再闪烁（呼应 nuxt-cookie-session 第 1 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "useCookie('theme', { default: 'light' }) 这种写法的问题是什么？",
+      "options": ["没有 import", "default 必须是工厂函数，裸值会让所有用户共享同一初值引用", "cookie 名不能是 theme", "缺少 path 参数会报错"],
+      "answer": 1,
+      "explanation": "官方点名的坑：default 要写成 () => 'light'，裸值在 SSR 上下文里可能被跨请求共享（呼应 nuxt-cookie-session 第 2 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "服务端 handler 里给 useCookie 的 .value 赋了新 token，紧接着同一次请求内再读它，会得到什么？",
+      "options": ["仍是旧值——写的是响应头 Set-Cookie，本次请求的输入没变", "新值，因为是响应式的", "undefined", "抛出只读错误"],
+      "answer": 0,
+      "explanation": "服务端写 cookie 修改的是响应头，想让新登录态生效必须刷新或导航——这是\"登录后不跳转就 401\"的成因（呼应 nuxt-cookie-session 第 2 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 httpOnly cookie，下列说法正确的是？",
+      "options": ["JS 可以读但不能写", "性能更好，因为不进请求头", "document.cookie 与 useCookie 的客户端分支都读不到它，这是防 XSS 偷身份的关键", "必须配合 sameSite=none 使用"],
+      "answer": 2,
+      "explanation": "httpOnly 就是把 cookie 从 JS 可达范围拿掉，XSS 时也带不走明文；代价是前端代码无法直接读它（呼应 nuxt-cookie-session 第 2、6 节、exp-security）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "需要\"点退出立刻让某个已泄露会话失效\"，应选哪种会话方案？",
+      "options": ["纯 JWT，因为无状态更快", "把 token 存 localStorage 并手动清掉", "sameSite=strict 的 Cookie", "服务端 session（或 session 存库 + cookie 只放短 id），删记录即失效"],
+      "answer": 3,
+      "explanation": "JWT 在到期前无法作废，做黑名单等于回到服务端存储；能即时吊销是服务端 session 的决定性优势（呼应 nuxt-cookie-session 第 4 节对照表）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "排查\"cookie 明明写了却删不掉\"，最可能的原因是？",
+      "options": ["删除时 path（或 domain）与写入时不一致", "浏览器禁用了 JavaScript", "cookie 太长", "没有设置 expires 就不能删除"],
+      "answer": 0,
+      "explanation": "cookie 身份是 域名+名称+path 三元组，作用域不同就是两条不同的 cookie，删除自然打不中（呼应 nuxt-cookie-session 第 3 节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "上线后发现\"从外部 IM 点击链接进入站点变成未登录\"，最可能的配置原因是？",
+      "options": ["Secure 未开启", "SameSite 设成了 strict，跨站顶层导航不带 cookie", "后端 session 存储挂了", "payload 被 CDN 缓存"],
+      "answer": 1,
+      "explanation": "strict 连顶层 GET 导航也不带；lax 正是为此设计的折中：顶层 GET 带、跨站 POST/iframe 不带（呼应 nuxt-cookie-session 第 3 节）。"
+    }
+  ]
+}

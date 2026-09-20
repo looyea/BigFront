@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-server-routes 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "要暴露 POST /api/orders，文件应创建为？",
+      "options": ["server/api/orders.post.ts 导出 defineEventHandler", "app/api/orders.ts", "server/routes/orders.ts 导出 POST 函数", "server/api/orders/create.ts"],
+      "answer": 0,
+      "explanation": "Nuxt 的 HTTP 方法编码在文件名后缀；server/routes/ 则用于非 /api 前缀路径（呼应 nuxt-server-routes 第 1 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "handler 里想返回 422 与字段错误列表，正规做法是？",
+      "options": ["return { status: 422 }（客户端自己判）", "res.statusCode = 422", "throw createError({ statusCode: 422, data: errors })", "sendRedirect 到错误页"],
+      "answer": 2,
+      "explanation": "createError 抛 H3Error，Nitro 统一序列化为带状态码的 JSON，客户端 error 可取 statusCode/data（呼应 nuxt-server-routes 第 2 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "defineCachedEventHandler 的 getKey 对带用户态接口忘记包含 userId，后果是？",
+      "options": ["缓存命中率下降", "构建失败", "运行时报错自动回源", "用户 A 的响应缓存被用户 B 命中——数据串号事故"],
+      "answer": 3,
+      "explanation": "缓存键必须包含影响响应的全部请求者变量，与 Next 的\"响应与请求者无关\"安全线同款（呼应 nuxt-server-routes 第 3 节、nuxt-render-modes 第 4 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "页面 SSR 里 useFetch('/api/x')，x 是本项目的 server/api，实际发生的是？",
+      "options": ["必须配置 CORS 才能通", "Nitro 本地 API 内部短路直调，不绕真实 HTTP 环回", "报错：SSR 不能请求自己", "总是经过公网域名"],
+      "answer": 1,
+      "explanation": "同仓同引擎的内部调用优化；跨进程部署时失效，依赖 headers 的逻辑要注意（呼应 nuxt-server-routes 第 5 节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "server/ 里的代码想 import app/composables 里的函数，结果是？",
+      "options": ["构建失败或运行时 undefined——两个世界互不可达，共享代码放 shared/", "自动打包进服务端", "仅在 dev 可用", "需要 noexternal 配置放行"],
+      "answer": 0,
+      "explanation": "app 与 server 各有构建上下文；#shared 是唯一合法共享通道（呼应 nuxt-server-routes 第 1 节、nuxt-directory A1）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "多实例部署下让 defineCachedEventHandler 的缓存跨实例共享，配什么？",
+      "options": ["maxAge: 0", "nitro.storage 或缓存选项指向 Redis 等共享 storage 驱动", "swr: true", "加机器数量"],
+      "answer": 1,
+      "explanation": "Nitro 缓存抽象支持内存/fs/redis/http KV 等 storage 驱动——Next 需自写 cacheHandler，这里配置即用（呼应 nuxt-server-routes 第 3 节、next-deploy C2）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "全局 server middleware 做鉴权的推荐职责是？",
+      "options": ["拦截所有未登录请求返回 401", "只解析 token 挂 event.context.user，拦截决策留在各 handler", "重写响应头", "每个请求建立数据库连接池"],
+      "answer": 1,
+      "explanation": "解析与拦截分离：公共路径豁免、部分接口只要 user 不必强制登录——一刀切拦在中间件会误伤（呼应 nuxt-server-routes 第 4 节、nuxt-middleware-auth）。"
+    }
+  ]
+}

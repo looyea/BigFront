@@ -1,0 +1,62 @@
+{
+  "title": "next-server-actions 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "'use server 标注的函数，浏览器实际拿到的'函数'是什么？",
+      "options": ["函数源码字符串", "一个可执行 eval 的闭包", "绑定服务端函数的序列化引用（ID）", "WebSocket 通道"],
+      "answer": 2,
+      "explanation": "调用时 POST 表单+引用 ID，服务端执行真身——所以它天然是公网端点（呼应 next-server-actions 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "JavaScript 被禁用的用户点击 action=ServerAction 的表单，结果是？",
+      "options": ["什么都不会发生", "提交变成 GET 语义", "构建时报错所以不存在这种页面", "降级为原生表单 POST，服务端仍执行 Action 并返回新 HTML"],
+      "answer": 3,
+      "explanation": "渐进增强是 Action 的核心红利：可用性底线提前到 HTML 送达（呼应 next-server-actions 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "useActionState 回调里返回 { error } 的作用是？",
+      "options": ["成为下一次渲染的 state，可读取展示错误文案", "终止应用", "自动 toast 给用户", "触发重新水合"],
+      "answer": 0,
+      "explanation": "返回值即新 state（prev 参数串起历次结果），失败路径推荐返回文案而非 throw（呼应 next-server-actions 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Action 安全模型的第一课是？",
+      "options": ["Action 在组件内，外人找不到就等于安全", "只要加 CSRF token 即可省略鉴权", "必须假设任何人可直接调用该端点：体内做鉴权+校验", "用 try/catch 包住就安全"],
+      "answer": 2,
+      "explanation": "隐藏实现≠隐藏攻击面，防御四层链从 auth() 开始（呼应 next-server-actions 第二、五节、exp-security）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "官方建议的'成功路径'姿势通常是？",
+      "options": ["redirect() 到相关页（或 revalidatePath 后结束）", "return 一个大对象让客户端 setState", "window.location.reload()", "返回 204 空响应"],
+      "answer": 0,
+      "explanation": "成功即导航：新页面新数据自然到手，错误才用返回值表达（呼应 next-server-actions 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "在 actions.ts 文件最顶部写 'use server'，后果是？",
+      "options": ["只有默认导出是 Action", "该文件所有导出函数都成为可调用的 Action", "仅类型检查变化", "自动禁用客户端 import"],
+      "answer": 1,
+      "explanation": "模块级指令覆盖面是全量导出——纯工具函数混放会被意外公网化（呼应 next-server-actions 第二节推论3）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "isPending 只能防手滑双击，真正的防重复下单要靠？",
+      "options": ["把按钮变灰两秒", "跨标签页/重放下依然有效的服务端幂等键或唯一约束", "客户端加锁变量", "revalidatePath"],
+      "answer": 1,
+      "explanation": "客户端标志全部可绕过，幂等是服务端责任（呼应 next-server-actions 第四节、mp-network 的 seq 教训）。"
+    }
+  ]
+}

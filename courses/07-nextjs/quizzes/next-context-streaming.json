@@ -1,0 +1,62 @@
+{
+  "title": "next-context-streaming 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "流式 SSR 相比传统 SSR 的核心改进是？",
+      "options": ["服务器不再执行 React", "HTML 分块随时可吐，慢数据不再阻塞第一个字节", "不需要水合", "接口响应变快"],
+      "answer": 1,
+      "explanation": "传统 SSR 的 TTFB 等于最慢数据源，流式把等待变成局部（呼应 next-context-streaming 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "页面顶层写了 await getSlow()，其下所有 Suspense 的效果是？",
+      "options": ["依然全部流式生效", "父级 await 完成前整页都在等，边界形同虚设", "自动转为 CSR", "报错"],
+      "answer": 1,
+      "explanation": "await 必须下沉到边界之下的组件内，流式才真正起作用（呼应 next-context-streaming 第二节要点1）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "loading.tsx 的本质是？",
+      "options": ["手动 new 一个进度条", "路由段级的自动 Suspense fallback，兼导航即时反馈", "只用于 404 页", "替代 error boundary"],
+      "answer": 1,
+      "explanation": "段级粗粒度兜底 + 点击 Link 瞬间先出骨架的体感优化（呼应 next-context-streaming 第三节、next-routing 表）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "慢组件在 shell 刷出前就就绪了，React 会？",
+      "options": ["仍然强制显示 fallback 至少 1 秒", "直接显示内容，fallback 可能完全不出现", "整页延迟对齐后再出", "触发重新水合"],
+      "answer": 1,
+      "explanation": "缓冲防闪烁设计——fallback 是'真慢才见'，不是仪式（呼应 next-context-streaming 第二节要点3、mp-interaction 的 loading 延迟）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "禁用 JavaScript 的访客访问流式渲染的页面，会看到？",
+      "options": ["空白页", "只有 fallback 骨架", "完整最终 HTML（流结束时所有块都已追加）", "报错页"],
+      "answer": 2,
+      "explanation": "分块补齐靠内联脚本，但 HTML 本身逐段到达即渲染——最终文档是完整的，SEO 同理无损（呼应 next-context-streaming 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "骨架屏与真实内容尺寸不一致，最直接的指标后果是？",
+      "options": ["CLS 升高，布局跳动", "LCP 消失", "水合必崩", "预取失效"],
+      "answer": 0,
+      "explanation": "高度/栅格不一致在内容到达瞬间引发位移（呼应 next-context-streaming 第五节、react-performance 指标篇）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "一个 3000ms 的慢面板在 Suspense 边界下抛错，用户看到什么？",
+      "options": ["整页 500 白屏", "该边界的 error.tsx 局部接管，其余内容正常", "仅控制台报警页面不动", "自动无限重试"],
+      "answer": 1,
+      "explanation": "错误沿树向上冒泡到最近的错误边界，流式让故障域缩小到面板级（呼应 next-context-streaming 第四节、L7 主讲）。"
+    }
+  ]
+}

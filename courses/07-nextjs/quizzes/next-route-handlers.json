@@ -1,0 +1,62 @@
+{
+  "title": "next-route-handlers 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Route Handler 与 Express 处理函数最大的接口形态差异是？",
+      "options": ["参数顺序相反", "基于 Web 标准 Request/Response，无 (req,res,next) 三件套", "不能返回 JSON", "必须写类"],
+      "answer": 1,
+      "explanation": "方法导出收 Request、返回 Response/NextResponse，next 管线消失改由函数组合承担（呼应 next-route-handlers 第一、二节、node-http）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "GET 的 Route Handler 默认参与 Full Route Cache 吗？",
+      "options": ["默认不：handler 默认动态，与页面默认静态互为镜像", "默认是，所有 GET 都被构建期执行", "只有 2xx 才缓存", "取决于是否 async"],
+      "answer": 0,
+      "explanation": "接口世界默认实时；要静态需 force-static 显式声明（呼应 next-route-handlers 第一节镜像论）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "同一目录既有 page.tsx 又有 route.ts 时，浏览器地址栏访问该路径得到？",
+      "options": ["route 的 JSON", "page 的 HTML（导航永远命中 page）", "构建报错", "随机命中"],
+      "answer": 1,
+      "explanation": "两者共存、各司其职：route 只响应直接 API 调用（呼应 next-route-handlers 第一节、next-routing 面试 2）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "下列哪个是 Route Handler 的正当用途？",
+      "options": ["替代独立后端承载全部领域 CRUD", "支付 webhook 接收与验签", "给本应用页面组件做日常取数", "存放静态图片"],
+      "answer": 1,
+      "explanation": "webhook/BFF 聚合/流式响应是三正当用途；页面取数应直接 await 数据层，绕 HTTP 是反模式（呼应 next-route-handlers 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "把 Express 的鉴权中间件思路移植到 handler，推荐的形态是？",
+      "options": ["全局 app.use 注册", "高阶函数 withAuth(handler) 包裹导出", "在 layout.tsx 里判断", "靠 middleware 一肩挑，handler 不校验"],
+      "answer": 1,
+      "explanation": "闭包组合替代管线；middleware 是粗粒度第一道，handler 内仍需资源级校验（呼应 next-route-handlers 第四节表、exp-auth 纵深）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "runtime 设为 edge 的 handler 里，哪种代码会出问题？",
+      "options": ["读 req.headers", "import 含 fs 的 Node 原生模块链", "返回 NextResponse.json", "使用 crypto Web API"],
+      "answer": 1,
+      "explanation": "edge 无 Node API，import 图横跨会在构建期暴露（呼应 next-route-handlers 第五节、mp-subpackage 环境差异对照）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "在 handler 中完成写操作后，让依赖该数据的页面下次拿到新值的正确姿势是？",
+      "options": ["res.end() 前 sleep 一会", "revalidateTag/revalidatePath 声明失效半径", "重启服务", "通知浏览器清 localStorage"],
+      "answer": 1,
+      "explanation": "写侧失效闭环（本课第四节示例即演示），与 L4 缓存体系会师（呼应 next-fetch-cache、L5 将再进一步）。"
+    }
+  ]
+}

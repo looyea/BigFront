@@ -1,0 +1,62 @@
+{
+  "title": "next-middleware-auth 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "middleware.ts 的运行环境默认是？",
+      "options": ["Node.js 完整运行时", "Edge 轻量运行时（无 fs 等 Node API）", "浏览器主线程", "Worker Threads 池"],
+      "answer": 1,
+      "explanation": "毫秒级 CPU 预算+Web API only，决定了它只能轻判断（呼应 next-middleware-auth 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "下列哪项是 middleware 能做的事？",
+      "options": ["直接返回查库后的个性化页面 HTML", "rewrite 内部改道 / redirect / 读写请求响应头", "终结数据库事务", "渲染 React 组件"],
+      "answer": 1,
+      "explanation": "只能改道不能接管业务——重活属于渲染层与数据层（呼应 next-middleware-auth 第一节要点2）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "三层鉴权纵深中，middleware 这一层的合理职责是？",
+      "options": ["行级数据权限", "粗筛：有无效会话、是否该 redirect 去登录", "密码哈希校验", "审计日志落库"],
+      "answer": 1,
+      "explanation": "无库环境做不了精细权限；资源归属校验在第 3 层数据层（呼应 next-middleware-auth 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Auth.js 的 session 策略在 edge middleware 里能秒验的原因是？",
+      "options": ["每次都会查库", "JWT 自带签名与过期，验签无需 I/O", "靠 CDN 缓存", "token 内容明文可信"],
+      "answer": 1,
+      "explanation": "无状态验签是边缘可行的前提；database session 则要适配器（呼应 next-middleware-auth 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "matcher 用负向断言排除 _next/static 等路径的直接影响是？",
+      "options": ["防止静态资源请求也执行中间件逻辑", "开启 HTTP/3", "禁用预取", "提高水合速度"],
+      "answer": 0,
+      "explanation": "每个匹配请求都进函数：宽 matcher=为 favicon 也跑一遍鉴权逻辑（呼应 next-middleware-auth 第一节要点3）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "登录成功后的会话 cookie，防 XSS 偷 token 的关键参数是？",
+      "options": ["path=/", "maxAge", "httpOnly", "domain"],
+      "answer": 2,
+      "explanation": "httpOnly 让 document.cookie 读不到它；sameSite 防 CSRF 面、secure 防窃听（呼应 next-middleware-auth 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "同事说：'middleware 已挡 /admin，Action 里不用重复查权限。' 你的判断？",
+      "options": ["对，重复校验浪费", "错：Action 可被直接 POST 调用，数据层校验是最终防线", "取决于 Action 文件位置", "加个注释即可免除校验"],
+      "answer": 1,
+      "explanation": "UI 路径防线挡不住端点直打，纵深缺一不可（呼应 next-middleware-auth 第二节误区、next-server-actions 安全课）。"
+    }
+  ]
+}

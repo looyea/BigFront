@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-auto-imports 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Nuxt 自动导入的实现机制是？",
+      "options": ["运行时把符号挂到 window 全局", "构建期把全部代码打进一个巨型 chunk", "编译期扫描目录建索引，遇到裸标识符自动补写 import 语句", "靠浏览器模块联邦动态拉取"],
+      "answer": 2,
+      "explanation": "扫描→#imports 虚拟模块→unimport 在编译期逐符号注入 import——运行时代码与手写 import 完全一致（呼应 nuxt-auto-imports 第 1 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "两个不同目录都导出了 useUser()，会发生什么？",
+      "options": ["Nuxt 报编译错误强制改名", "运行时抛 ReferenceError", "两个都注册、按调用位置选择", "后者覆盖前者，通常只有一条构建警告，行为取决于扫描顺序"],
+      "answer": 3,
+      "explanation": "同名导出静默覆盖是自动导入最阴的坑，排查靠全局搜导出名与 .nuxt/imports.d.ts 对账（呼应 nuxt-auto-imports 第 2 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "下列哪项默认不在自动导入范围内？",
+      "options": ["app/composables 的导出", "ref/computed 等 Vue 核心 API", "Nuxt 核心的 useFetch", "dayjs 等三方库函数"],
+      "answer": 3,
+      "explanation": "三方库需要模块注册或手动配置才进清单；其余三类都在默认扫描范围（呼应 nuxt-auto-imports 第 2 节边界清单）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "\"自动导入会不会让包变大\"的正确理解是？",
+      "options": ["会，因为 #imports 聚合了所有导出", "不会，注入是逐符号的，未使用符号照常参与 tree-shaking", "会，但 Nitro 会二次压缩抵消", "取决于是否开启 minify"],
+      "answer": 1,
+      "explanation": "聚合模块只是声明层；实际产物按文件注入具体 import，Rollup 树摇逻辑不变（呼应 nuxt-auto-imports 第 4 节、vite-build 树摇）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "IDE 里 useCounter 标红\"找不到名称\"，最优先的检查动作是？",
+      "options": ["改写为显式 import 绕过", ".nuxt/imports.d.ts 里有没有该符号声明（没有则查命名/目录，有则重启 TS 服务/prepare）", "关闭自动导入", "升级 Vue 版本"],
+      "answer": 1,
+      "explanation": "生成物是唯一事实源：符号不在清单=扫描没命中（目录/命名规则），在清单仍标红=类型服务过期（呼应 nuxt-auto-imports 第 1、3 节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "团队纪律里，对\"跨目录引用的业务 composable\"推荐的姿势是？",
+      "options": ["必须依赖自动导入以保持简洁", "禁止跨目录复用", "允许自动导入但关键链路建议显式 import 或加注释标明来源", "全部改成全局插件注入"],
+      "answer": 2,
+      "explanation": "显式永远正确、自动导入允许——核心 API 随大流，业务符号可读性优先（呼应 nuxt-auto-imports 第 3 节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "app/utils 里的函数顶层 import 了一个 300KB 的重库，后果是？",
+      "options": ["Nitro 自动剥离服务端用不到的部分", "只有被 SSR 用到的行会进包", "所有引用该 utils 的前端页面都会背上这个依赖", "构建直接报错"],
+      "answer": 2,
+      "explanation": "utils 导出虽被树摇，但命中使用的符号其静态依赖一并进包——重库要动态 import 或隔离出独立组件（呼应 nuxt-auto-imports 第 4 节纪律）。"
+    }
+  ]
+}

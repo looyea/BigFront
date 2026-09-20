@@ -1,34 +1,90 @@
 {
   "id": "08-nuxt",
-  "title": "Nuxt 3 (Vue 全栈框架)",
+  "title": "Nuxt 3 全栈 Vue 框架",
   "order": 8,
   "tier": "大师 · Vue 生产级方案",
-  "tagline": "Vue 版 Next.js：文件路由、SSR、自动导入、server routes。与 Next 对照学习效果最佳。",
+  "tagline": "文件路由、自动导入、Nitro 引擎、混合渲染——Vue 生态的工业级答案，与 Next.js 对照学习最佳。",
   "icon": "💚",
   "color": "#00dc82",
   "levels": [
     {
       "id": "L1",
-      "title": "约定与自动导入",
-      "subtitle": "pages/ / composables / SSR",
+      "title": "心智与入门",
+      "subtitle": "为什么是 Nuxt",
       "lessons": [
-        {
-          "id": "nuxt-basics",
-          "title": "Nuxt3 的项目结构",
-          "goal": "理解 Nuxt 的约定式路由、自动导入与渲染模式"
-        }
+        { "id": "nuxt-overview", "title": "Nuxt 定位与 Vue CLI/Vite SPA 之辨", "goal": "裸 Vite+Vue 的痛点、Nuxt 解决什么、与 Next.js 的镜像关系（呼应 vue-ssr-nuxt、next-overview、vite-intro）" },
+        { "id": "nuxt-directory", "title": "项目结构与约定式目录", "goal": "app/pages/components/composables/server/public 目录全家福、.nuxt 生成物、tsconfig（呼应 next-routing 的 app/ 约定、mp-directory）" },
+        { "id": "nuxt-auto-imports", "title": "自动导入机制与它的代价", "goal": "composables/utils 自动导入、组件自动注册、#imports 别名、显式导入的正当场景（呼应 vue-composables）" }
       ]
     },
     {
       "id": "L2",
-      "title": "服务端与部署",
-      "subtitle": "server routes / 构建产物",
+      "title": "文件路由进阶",
+      "subtitle": "pages 与布局",
       "lessons": [
-        {
-          "id": "nuxt-server",
-          "title": "server 目录与部署",
-          "goal": "用 server/api 写接口，并理解 Nuxt 的构建与部署方式"
-        }
+        { "id": "nuxt-routing", "title": "pages 路由与 NuxtLink", "goal": "文件=路由、NuxtLink 预取与外部链接、路由参数 useRoute、编程式导航（呼应 vue-router-basics、next-link-router）" },
+        { "id": "nuxt-dynamic", "title": "动态路由与通配捕获", "goal": "[id]、[...slug]、可选参数、definePageMeta key、路由中间件 per-route（呼应 next-dynamic、vue-router-nested-dynamic）" },
+        { "id": "nuxt-layouts", "title": "嵌套布局与页面元信息", "goal": "layouts 目录、命名/动态布局、NuxtLayout 局部包裹、页面过渡与滚动行为（呼应 next-routing 的 layout、vue-router-nested-dynamic）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "渲染模式与生命周期",
+      "subtitle": "混合渲染的世界",
+      "lessons": [
+        { "id": "nuxt-render-modes", "title": "SSR/SSG/混合渲染与 route rules", "goal": "ssr:false、prerender、routeRules 一个项目四种姿势、与 Next 的 ○●ƒ 对照（呼应 next-render-modes、vite-ssr）" },
+        { "id": "nuxt-lifecycle", "title": "Nuxt 应用生命周期与钩子", "goal": "vue 生命周期之外的 Nuxt 钩子：app:created、page:loading:start、路由中间件时机、useRuntimeHook/nuxtApp.hooks（呼应 mp-lifecycle、node-events）" },
+        { "id": "nuxt-hydration", "title": "水合与同构陷阱", "goal": "payload、hydration 不一致三大来源、ClientOnly、import.meta.client/server、window 访问时机（呼应 next-render-modes Hydration 对账、vue-reactivity）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "数据获取与 Nitro",
+      "subtitle": "取数与服务端",
+      "lessons": [
+        { "id": "nuxt-usefetch", "title": "useFetch / useAsyncData / $fetch", "goal": "三件套分工、key 与去重、pending/refresh、transform/pick、何时该用 $fetch（呼应 react-data-fetching、vue-async-suspense）" },
+        { "id": "nuxt-server-routes", "title": "server/api 与 Nitro 事件", "goal": "event handler 写法、Web 标准 Request/Response、validateQuery/lazyHandler、与 Next Route Handler 对照（呼应 next-route-handlers、exp-rest）" },
+        { "id": "nuxt-runtime-config", "title": "runtimeConfig 与环境体系", "goal": "public 与非 public、NUXT_ 环境变量覆盖、构建期 vs 运行期、与 NEXT_PUBLIC_ 对照（呼应 next-deploy 第 4 节、node-config、vite-env）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "状态与鉴权",
+      "subtitle": "全栈的骨架",
+      "lessons": [
+        { "id": "nuxt-state", "title": "Pinia 与 SSR 状态水合", "goal": "state 序列化回传、storeInAction 模式、useState 轻量替代、服务端缓存态与客户端态边界（呼应 vue-pinia-basics、next-fetch-cache）" },
+        { "id": "nuxt-cookie-session", "title": "Cookie、Session 与服务端鉴权", "goal": "useCookie 同构读写、server session 中间件、JWT vs session cookie、与 Auth.js 对照（呼应 next-middleware-auth、exp-auth）" },
+        { "id": "nuxt-middleware-auth", "title": "路由中间件与登录守卫", "goal": "全局/per-route 中间件、navigate 重定向、服务端拦截（nitro middleware）、三层纵深对照（呼应 next-middleware-auth、vue-router-guard-lazy）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "模块与体验",
+      "subtitle": "生态拼装",
+      "lessons": [
+        { "id": "nuxt-modules", "title": "模块系统与生态", "goal": "nuxt.config modules、@nuxt/image @nuxt/content @pinia/nuxt、模块开发钩子、与 Next 插件对照（呼应 vite-plugin-api、next-overview 生态）" },
+        { "id": "nuxt-seo-meta", "title": "SEO 与 useSeoMeta", "goal": "useHead/useSeoMeta、OG/canonical、robots/sitemap 模块、服务端渲染 SEO 红利（呼应 next-metadata、vue-performance）" },
+        { "id": "nuxt-styling", "title": "样式体系与 Tailwind 集成", "goal": "css 数组、Vite 管道、Tailwind 模块、组件级 scoped 与服务端渲染、图片字体优化（呼应 next-css、next-fonts-images、vite-intro）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "性能与工程",
+      "subtitle": "生产级打磨",
+      "lessons": [
+        { "id": "nuxt-perf", "title": "性能优化与缓存策略", "goal": "route rules isr/cache、payload 瘦身、组件懒加载、bundle 分析（rollup visualizer）、CWV 对照 Next（呼应 next-perf、vite-build）" },
+        { "id": "nuxt-error-debug", "title": "错误处理与调试", "goal": "createError、error.vue、服务端 error 中间件、日志与 digest 对照（呼应 next-error-loading、node-async-errors）" },
+        { "id": "nuxt-testing", "title": "测试体系", "goal": "Vitest + @nuxt/test-utils、server route 测试、Playwright 黄金路径（呼应 next-testing、vue-testing、vite-intro Vitest）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "部署与架构",
+      "subtitle": "走向生产",
+      "lessons": [
+        { "id": "nuxt-deploy", "title": "Nitro 产物与多平台部署", "goal": "preset 家族（node-server/vercel/cloudflare/netlify…）、.output 结构、静态托管、Nginx 反代（呼应 next-deploy、vue-deploy、node-deploy-perf）" },
+        { "id": "nuxt-fullstack-project", "title": "全栈项目实战串联", "goal": "笔记应用 NoteDeck-N：数据层+鉴权+CRUD+部署，与 07 包同款项目对照实现（呼应 next-fullstack-project）" },
+        { "id": "nuxt-architect", "title": "架构师视角：Nuxt vs Next 与终局", "goal": "RSC vs 同构 SSR 两条路线、Nitro 的启示、何时选谁、全课程地图收官（呼应 next-architect、07 包全部）" }
       ]
     }
   ]

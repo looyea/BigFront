@@ -1,0 +1,62 @@
+{
+  "title": "next-revalidate 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "页面里读了一行 cookies()，其他什么都没改，该页默认会变成？",
+      "options": ["仍然 SSG", "自动转为动态渲染（每次请求现渲）", "构建直接失败", "变成纯 CSR"],
+      "answer": 1,
+      "explanation": "cookies 是动态反应物，静态优先被放弃（呼应 next-revalidate 第二节、render-modes 推断表）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "export const revalidate = 60 作用于页面时，含义是？",
+      "options": ["页面每 60 秒由定时器主动重build", "该段缓存产物 60s 后视为过期，首个过期请求拿旧页并触发后台重渲染", "所有 fetch 强制 60s 超时", "浏览器轮询间隔 60s"],
+      "answer": 1,
+      "explanation": "SWR 语义：翻新由请求触发而非定时器（呼应 next-revalidate 第三节生命周期）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "调用 revalidatePath('/blog') 之后，紧接着的下一个 /blog 请求拿到？",
+      "options": ["必定是新渲染的页面", "可能仍是旧页：失效是异步的，后台翻新完成前旧页继续服务", "503 等待中", "空白页直到完成"],
+      "answer": 1,
+      "explanation": "异步失效+永不阻塞是 ISR 的设计底色，强一致场景需另行设计（呼应 next-revalidate 第三节特性②）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "PPR（Partial Prerendering）的产物形态是？",
+      "options": ["整页静态 HTML", "整页动态渲染", "构建期静态壳 + 请求时流式补齐的动态 hole", "只生成 RSC Payload 不生成 HTML"],
+      "answer": 2,
+      "explanation": "SSG 的壳走 CDN，动态部分以 Suspense hole 流式补——一页并存两种模式（呼应 next-revalidate 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "force-static 配置下页面里的 cookies() 调用会？",
+      "options": ["正常读取", "返回空值桩（静默失效），因此危险", "抛运行时异常", "自动降级为 ISR"],
+      "answer": 1,
+      "explanation": "强制静态=拒绝一切动态来源，反应物被桩化——所以要用它必须自查代码（呼应 next-revalidate 第一节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "revalidateTag 之后浏览器端预取过的旧 payload（Router Cache）怎么办？",
+      "options": ["服务端 tag 会远程清空所有浏览器内存", "不会即时同步，靠客户端 TTL/版本轮换自然过期", "自动触发所有标签页 refresh", "tag 其实也写进了 localStorage"],
+      "answer": 1,
+      "explanation": "服务端失效与浏览器内存缓存是两个世界，跨标签脏读由此而来（呼应 next-revalidate 第五节、link-router 面试 11）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "段配置里 runtime: 'edge' 意味着什么？",
+      "options": ["部署到离用户最近的机房且用轻量运行时（部分 Node API 不可用）", "启用实验性边缘渲染库", "页面走 CDN 缓存", "使用 WebAssembly 渲染"],
+      "answer": 0,
+      "explanation": "Edge=V8  isolate 模型，无 Node API（fs 等），middleware 默认就是它（呼应 next-revalidate 第一节、L5 middleware、next-deploy）。"
+    }
+  ]
+}

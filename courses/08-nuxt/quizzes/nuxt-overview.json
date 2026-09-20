@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-overview 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Nuxt 的渲染模型与 Next.js 最大的区别是？",
+      "options": ["Nuxt 只支持 CSR", "Nuxt 是同构 SSR（一套组件双端渲染），没有 RSC 那种组件级运行时分治", "Nuxt 用虚拟 DOM diff 替代水合", "Nuxt 必须服务端渲染，无法关闭"],
+      "answer": 1,
+      "explanation": "Nuxt 组件默认同构：服务端渲染 HTML、客户端水合接管；不存在 'use client' 边界与 RSC Payload 概念（呼应 nuxt-overview 第 2 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Nitro 在 Nuxt 中的角色是？",
+      "options": ["CSS 引擎", "打包器（替代 Vite）", "状态管理库", "服务端引擎：负责 server/ 目录、API 与面向 55+ 平台的产物输出"],
+      "answer": 3,
+      "explanation": "Nitro 是 Nuxt 独门的服务端引擎，Next 没有对等独立产品——\"改 preset 换部署平台\"就是它的能力（呼应 nuxt-overview 第 4 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "npm run build 后，哪条命令能直接跑起 Nuxt 生产服务？",
+      "options": ["node .output/server/index.mjs", "nuxt start .next/server.js", "npm run preview -- ssr", "必须配合 Nginx 才能启动"],
+      "answer": 0,
+      "explanation": ".output 是\"产物即可运行服务\"的自足目录，node 直接执行入口即可，Nginx 只是生产前置而非必需（呼应 nuxt-overview 第 3 节、nuxt-deploy）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Nuxt 3（app server 布局）中，文件路由放在哪个目录？",
+      "options": ["src/views/", "pages/ 在 public/ 下", "app/pages/", "server/pages/"],
+      "answer": 2,
+      "explanation": "Nuxt 4 起约定目录收敛进 app/：app.vue、app/pages/、app/components/、app/composables/；根级 pages/ 属旧布局（呼应 nuxt-overview 第 3 节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "裸 Vite+Vue 项目上生产撞到的\"四堵墙\"不包括？",
+      "options": ["SEO 与首屏空壳", "服务端接口需另起项目", "Vue 组件无法响应式更新", "路由/状态/SSR 全家桶手工装配"],
+      "answer": 2,
+      "explanation": "响应式是 Vue 本体强项（vue-reactivity），从来不是墙；四堵墙是 SEO、全家桶装配、缺服务端、构建运行脱节（呼应 nuxt-overview 第 1 节、next-overview SPA 三座大山）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "想在 Nuxt 项目里写一个站内接口 GET /api/stats，正确姿势是？",
+      "options": ["新建 Express 项目再配代理", "在 app/pages/stats.vue 里 return 数据", "用 nuxt.config 的 routes 注册", "创建 server/api/stats.get.ts 导出 eventHandler"],
+      "answer": 3,
+      "explanation": "server/api/ 文件名即路由（动词后缀 .get/.post），导出 eventHandler——同仓同构建，这是 Nitro 赠品（呼应 nuxt-overview 第 4 节、nuxt-server-routes）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 Nuxt 与 Next 的学习策略，本课的建议是？",
+      "options": ["两套知识完全隔离，分开死记", "Nuxt 是 Next 的换皮，直接跳过", "每关做 Next↔Nuxt 对照，提炼\"服务端优先框架\"的通用设计图", "先学 Nitro 源码再用 Nuxt"],
+      "answer": 2,
+      "explanation": "本包与 07 包同构编排就是为对照学习：概念映射一次完成双倍巩固（呼应 nuxt-overview 第 5 节、next-architect 第 4 节对照表）。"
+    }
+  ]
+}

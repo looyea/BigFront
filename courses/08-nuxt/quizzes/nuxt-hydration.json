@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-hydration 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "下列哪项是水合不匹配的最典型成因？",
+      "options": ["CSS 加载慢", "服务端渲染分支用了 window 判断（客户端重跑时结果不同）", "Node 版本过低", "routeRules 配错"],
+      "answer": 1,
+      "explanation": "端态条件渲染进 HTML 输出，两次演出剧本不同必 mismatch——正确做法是延迟到 onMounted 后赋值（呼应 nuxt-hydration 第 1、2 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "import.meta.client 与 typeof window !== 'undefined' 的关键差别是？",
+      "options": ["前者是编译期常量，分支代码在另一端产物中被整体消除；后者两端都保留、运行时才判", "前者运行时更快", "两者完全等价只是写法偏好", "后者在 Nuxt 里永远为真"],
+      "answer": 0,
+      "explanation": "Vite define 注入常量让 Rollup 摇掉死分支，客户端体积与安全都受益（呼应 nuxt-hydration 第 2 节、vite-build 常量替换）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "首屏 LCP 大图组件因依赖浏览器 API 报 mismatch，把它整个包进 ClientOnly 后指标会？",
+      "options": ["变好——客户端渲染更快", "不变", "显著变差——服务端 HTML 里 LCP 元素缺席，要等 JS 下载执行", "取决于图片格式"],
+      "answer": 2,
+      "explanation": "LCP 元素禁入 ClientOnly：壳里没内容=浏览器最早的内容绘制被推迟到水合后（呼应 nuxt-hydration 第 3 节、next-perf 第 1 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Nuxt 轻微 hydration mismatch 的默认处理是？",
+      "options": ["直接白屏", "生产环境静默忽略什么都不做", "抛错并中断水合", "告警并回退为客户端重新渲染该子树（闪一下但功能恢复）"],
+      "answer": 3,
+      "explanation": "Vue 的容错路径是退回 CSR 保功能，代价是首屏体验损失与 warn 日志——出现日志仍要修根因（呼应 nuxt-hydration 第 1 节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "payload 体积失控的常见原因是？",
+      "options": ["useFetch 不加工直接把整个接口响应内联进 HTML（缺 transform/pick）", "CSS 未压缩", "组件自动导入太多", "Nitro preset 选错"],
+      "answer": 0,
+      "explanation": "payload 随 HTML 传输，列表接口全量回传是 TTFB 隐形税；取所需字段是默认纪律（呼应 nuxt-hydration 第 4 节、nuxt-usefetch）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "要让\"仅在客户端可用的值\"（如 navigator.language）正确参与渲染，标准流程是？",
+      "options": ["setup 里直接读（Nuxt 会处理）", "ref 初始空 + onMounted 里赋值 + 模板对空值渲染占位", "用 setTimeout 0 绕过水合", "写进 cookie 传服务端"],
+      "answer": 1,
+      "explanation": "onMounted 仅客户端执行：两端首帧都渲染占位天然一致，赋值后触发更新（呼应 nuxt-hydration 第 2 节时机铁律）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "文件后缀约定让组件仅客户端注册，写法是？",
+      "options": ["Component.only-client.vue", "Component.server.vue", "Component.client.vue（自动 ClientOnly 包裹语义）", "Component.nuxt-client.vue"],
+      "answer": 2,
+      "explanation": ".client.vue/.server.vue 后缀是目录级约定，比模板里手写 ClientOnly 更内聚（呼应 nuxt-hydration 第 3 节三件套之一）。"
+    }
+  ]
+}

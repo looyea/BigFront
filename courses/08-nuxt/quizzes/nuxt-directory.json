@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-directory 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Nuxt 4（app server）中，写一个只在服务端跑的工具函数供 API 使用，应放在？",
+      "options": ["app/utils/", "shared/utils/", "server/utils/", "public/"],
+      "answer": 2,
+      "explanation": "server/utils 仅服务端上下文可见、不进前端 bundle；app/utils 会被自动导入进前端，shared 是跨端共享纯代码（呼应 nuxt-directory 第 1 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "IDE 提示 #imports 里某个自动导入的函数\"找不到名称\"，第一步最该做？",
+      "options": ["重装 node_modules", "运行 nuxt prepare 重新生成 .nuxt 类型", "把函数改成显式 import", "升级 Node 版本"],
+      "answer": 1,
+      "explanation": "类型声明（imports.d.ts/tsconfig）都是 .nuxt 生成物，prepare 重新扫描即修复；改显式 import 是绕过而非解决（呼应 nuxt-directory 第 3 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "项目根 tsconfig.json 在 Nuxt 项目里的正确姿势是？",
+      "options": ["完整手写 compilerOptions 与 paths", "删除它，Nuxt 不需要 TS 配置", "放 ESLint 规则", "只写 extends: ./.nuxt/tsconfig.json 的壳"],
+      "answer": 3,
+      "explanation": "别名、lib、paths 全由 .nuxt/tsconfig.json 生成维护，根配置只做继承与少量覆写——手抄 paths 是维护地狱之源（呼应 nuxt-directory 第 3 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "app.config.ts 与 runtimeConfig 的分工是？",
+      "options": ["前者构建期确定、客户端可见（主题等）；后者运行期可经 NUXT_ 环境变量覆盖、可含私密项", "两者完全等价", "前者只管服务端，后者只管客户端", "app.config 已废弃"],
+      "answer": 0,
+      "explanation": "一个\"打包即定格\"、一个\"部署时可注入\"，双轨互补是 Nuxt 特有设计（呼应 nuxt-directory 第 4 节、nuxt-runtime-config）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 .nuxt/ 目录，下列说法错误的是？",
+      "options": ["包含自动导入与组件注册的 .d.ts 清单", "应由 git 忽略", "生产部署时必须把它一并上传到服务器", "它是代码生成的产物而非手写配置"],
+      "answer": 2,
+      "explanation": ".nuxt 只服务开发期与构建期；部署需要的只是 .output——\"产物即服务\"（呼应 nuxt-directory 第 3、5 节、nuxt-overview B3）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "别名 @@/ 指向的是？",
+      "options": ["项目根目录（app/ 之外，可够到 server/ 等）", "app/ 目录", ".nuxt/ 生成目录", "node_modules 根"],
+      "answer": 0,
+      "explanation": "~/ 与 @/ 指向 app 区，@@/ 升到项目根——跨区引用如 shared 场景才用得上（呼应 nuxt-directory 第 2 节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "仓库里不该出现的是哪一组？",
+      "options": ["nuxt.config.ts 与 lockfile", ".env、.nuxt/、.output/", "app/pages/ 与 server/api/", ".env.example 与 tsconfig.json"],
+      "answer": 1,
+      "explanation": "密钥文件与两类生成物/产物都应 gitignore；lockfile 恰恰必须进库保证可复现（呼应 nuxt-directory 第 5 节）。"
+    }
+  ]
+}

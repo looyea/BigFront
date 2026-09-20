@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-dynamic 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "app/pages/files/[...path].vue 匹配 /files/a/b 时，route.params.path 是？",
+      "options": ["'a/b'（字符串）", "{0:'a',1:'b'} 对象", "['a','b']（字符串数组）", "'/files/a/b'"],
+      "answer": 2,
+      "explanation": "通配捕获段给出字符串数组，逐项仍是 string（呼应 nuxt-dynamic 第 1 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "从 /blog/1 点到 /blog/2，页面数据没有更新，最贴 Nuxt 生态的解释与首选修法是？",
+      "options": ["同参数形状路由复用组件实例不重跑 setup——definePageMeta key 按 fullPath 强制重建（或响应式 URL 的 useFetch）", "浏览器缓存了页面", "NuxtLink 预取覆盖了数据", "vue-router 的 bug，需降级"],
+      "answer": 0,
+      "explanation": "这是本页头号坑：参数变化默认不重新挂载，key 方案或响应式取数二选一（呼应 nuxt-dynamic 第 3 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "同一路径位置上放 [id].vue 与 [slug].vue 会发生什么？",
+      "options": ["按访问顺序命中", "报错构建失败", "自动合并为正则联合", "两条记录路径形状相同，先匹配者赢、另一个被遮蔽——同位避免双动态段"],
+      "answer": 3,
+      "explanation": "两个不同名动态段同位会互相遮蔽，规范上应避免；构建不一定报错但路由表只认一个（呼应 nuxt-dynamic 第 1 节铁律 2）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Nuxt 里实现\"文章列表 + 点击弹预览 modal 且 URL 可分享\"的推荐方案是？",
+      "options": ["并行路由 @slot", "query 参数驱动 modal 显隐（?photo=3）", "window.open 新窗口", "vuex 存 modal 状态"],
+      "answer": 1,
+      "explanation": "Nuxt 无并行/拦截路由，query 驱动兼顾可分享与后退语义（呼应 nuxt-dynamic 第 4 节、next-dynamic 的对照）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "route.params.id 的类型是？",
+      "options": ["number（自动转型）", "string | string[]", "undefined 当缺省", "永远是 string（需自行 Number 转换并防 NaN）"],
+      "answer": 3,
+      "explanation": "URL 段永远文本，动态页三件套：转换、NaN 防御、validate 兜形状（呼应 nuxt-dynamic 第 1 节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "子路由出口在 Nuxt 里用什么组件？",
+      "options": ["<NuxtPage />（在父页面内放置）", "<router-view name=\"child\" />", "<slot />", "自动渲染无需放置"],
+      "answer": 0,
+      "explanation": "父页面显式放 <NuxtPage/>，Next 则自动把子段塞进父 layout 的 children——显式 vs 自动的差异（呼应 nuxt-dynamic 第 2 节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Nuxt 动态路由页面要做\"哪些 id 预渲染成静态\"，对应 Next 的 generateStaticParams 的 Nuxt 方案是？",
+      "options": ["页面内 prerender 宏", "definePageMeta({ ssr: false })", "route rules 的 prerender + routes 列表（渲染模式关详述）", "没有对等能力"],
+      "answer": 2,
+      "explanation": "Nuxt 把\"静态化哪些路径\"从页面代码剥离进 nuxt.config 的 routeRules 集中管理（呼应 nuxt-dynamic 第 6 节、nuxt-render-modes）。"
+    }
+  ]
+}

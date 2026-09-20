@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-runtime-config 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "在页面组件里读取 runtimeConfig 中未加 public 的私密字段（如 apiSecret），会得到什么？",
+      "options": ["构建期报错直接拦截", "undefined（客户端只能看到 public 栏）", "明文值，和服务器一致", "加密后的哈希值"],
+      "answer": 1,
+      "explanation": "runtimeConfig 是双栏模型：非 public 字段只存在于服务端上下文，客户端 useRuntimeConfig().apiSecret 恒为 undefined（呼应 nuxt-runtime-config 第 2 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "想把 nuxt.config 里 runtimeConfig.public.apiBase 在 production 环境覆盖，应设置哪个环境变量？",
+      "options": ["RUNTIME_CONFIG_PUBLIC_API_BASE", "NUXT_API_BASE", "NUXT_PUBLIC_API_BASE", "NUTS_PUBLIC_API_BASE"],
+      "answer": 2,
+      "explanation": "覆盖规则是 NUXT_ 前缀 + 字段路径的 SCREAMING_SNAKE_CASE：public 栏要带 PUBLIC 段，即 NUXT_PUBLIC_API_BASE（呼应 nuxt-runtime-config 第 3 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "app.config 与 runtimeConfig 的本质区别是？",
+      "options": ["前者只能放字符串，后者能放对象", "前者是 Vue 响应式的，后者不是", "没有区别，只是别名", "app.config 构建期固化可进客户端；runtimeConfig 运行期可读、环境变量可覆盖"],
+      "answer": 3,
+      "explanation": "时机矩阵：app.config 在 build 时定死、改值必须重新构建；runtimeConfig 服务端运行期解析，同一产物可用环境变量改配置（呼应 nuxt-runtime-config 第 4 节、nuxt-directory 双文件对照）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为防止生产环境漏配数据库连接串导致半瘫运行，最佳做法是？",
+      "options": ["在 plugins/boot.config.ts 里对关键私密字段断言，缺失即启动失败", "在页面里 if 判空后显示错误提示", "把它设成默认空字符串静默降级", "依赖运维 checklist"],
+      "answer": 0,
+      "explanation": "fail-fast：启动期插件断言关键配置，进程直接起不来比运行时逐个页面爆炸可运维得多（呼应 nuxt-runtime-config 第 5 节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "项目根 .env、.env.production、进程真实环境变量同时存在同名 NUXT_PUBLIC_API_BASE 时，谁是最终值？",
+      "options": ["三个文件按字母序合并", ".env（最先加载的基础文件）", "进程环境变量（优先级最高）", "随机取一个"],
+      "answer": 2,
+      "explanation": "加载顺序从低到高：.env < .env.production < 进程环境变量——CI/容器注入的真实变量永远赢，这正是 12-Factor 的要求（呼应 nuxt-runtime-config 第 3 节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "旋转了 API 密钥后只改了服务器的环境变量，Nuxt 服务需要怎样才生效？",
+      "options": ["重新 nuxt build", "重启进程即可，无需重新构建", "清除 .nuxt 目录后 dev", "重新部署整个镜像并在构建时传入"],
+      "answer": 1,
+      "explanation": "runtimeConfig 在非 public 场景是运行期解析的，进程重启重新读环境变量即生效——这也是它与 NEXT_PUBLIC_ 构建期内联模型的关键差异（呼应 nuxt-runtime-config 第 4 节、next-deploy 第 4 节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "需要把站点主题色（设计师改一次全站生效、不敏感）暴露给浏览器，同时把支付私钥只留在服务端，应如何摆放？",
+      "options": ["两者都放 runtimeConfig 非 public 栏", "两者都放 .env 并加 NUXT_ 前缀", "主题色放 process.env，私钥放 app.config", "主题色放 runtimeConfig.public（或 app.config），私钥放 runtimeConfig 非 public 栏"],
+      "answer": 3,
+      "explanation": "按可见性分栏是要害：浏览器要用的进 public（或构建期固化的 app.config），绝不能出服务端的留在非 public 栏（呼应 nuxt-runtime-config 第 2、4 节）。"
+    }
+  ]
+}

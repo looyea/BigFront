@@ -1,0 +1,62 @@
+{
+  "title": "next-fonts-images 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "next/font 相比手写 <link> 引 Google 字体的两个决定性优势是？",
+      "options": ["自动加粗、自动斜体", "支持更多字体格式", "构建期自托管（同源无外部请求）+ 度量补偿防 CLS", "无需声明 fallback"],
+      "answer": 2,
+      "explanation": "网络面与布局面双收：无外部请求、字体到位前后不跳行（呼应 next-fonts-images 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "中文字体上 next/font 最需要额外操心的是？",
+      "options": ["不支持 woff2", "体积大需子集化/分片，自动度量对 CJK 不可靠需手工补", "必须放 public", "不能配 CSS 变量"],
+      "answer": 1,
+      "explanation": "拉丁字体的自动度量补偿不覆盖中文，MB 级文件要自己切片（呼应 next-fonts-images 第一节 CJK 警告）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "next/image 优化远程图时，域名白名单不配置的后果是？",
+      "options": ["组件直接报错不渲染优化图", "静默跳过优化原样输出", "自动放行所有域名", "降级为 <img>"],
+      "answer": 0,
+      "explanation": "remotePatterns 是安全设计：不声明即拒绝，防止端点被当开放图片代理滥用（呼应 next-fonts-images 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "priority 属性的正确用法是？",
+      "options": ["所有首屏图都加，多多益善", "只给详情页图", "给折叠线下方的图", "只给 LCP 候选大图：取消懒加载并预加载"],
+      "answer": 3,
+      "explanation": "滥用会把懒加载红利反向变成带宽抢占（呼应 next-fonts-images 第四节罪1药1）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "width/height 在 Image 上的首要作用是？",
+      "options": ["限制上传尺寸", "控制文件压缩质量", "渲染时预留比例空间，防图片到达后布局跳动", "声明裁剪比例"],
+      "answer": 2,
+      "explanation": "浏览器据比例先占坑——CLS 的第一道闸（呼应 next-fonts-images 第二、四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "placeholder='blur' 的模糊底来自哪里？",
+      "options": ["运行时再请求一张小图", "CDN 的边缘缓存", "CSS filter 对原图实时模糊", "内联在 HTML 里的极小 base64（import 自动生成或手给 blurDataURL）"],
+      "answer": 3,
+      "explanation": "data URI 进 HTML 不占请求——渐进显影零成本（呼应 next-fonts-images 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "public 里的图片用 next/image 引用，收益是？",
+      "options": ["与站内 import 图完全一样", "几乎无优化收益：绕开了构建期资源管线，仅尺寸/格式参数仍可用", "加载反而更快", "自动获得 srcset"],
+      "answer": 1,
+      "explanation": "优化红利挂在 import 资源链上，public 绕开了它（呼应 next-fonts-images 第三节、next-groups-matchers）。"
+    }
+  ]
+}

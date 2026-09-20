@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-styling 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "全站 reset 与主题变量应该写在哪里？",
+      "options": ["随便一个布局组件的 <style> 里", "app.vue 的 <style>（不加 scoped）", "nuxt.config.ts 的 css 数组", "只在 Tailwind 配置文件里声明"],
+      "answer": 2,
+      "explanation": "写进组件样式会随该组件（可能是懒加载）才注入、且不会被回收，全站基础样式必须由 css 数组统一在入口注入（呼应 nuxt-styling 第 1、6 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "第三方 UI 库样式与自己的 reset 出现\"优先级看起来失灵\"，正确的处理是？",
+      "options": ["给所有自己的规则加 !important", "把文件合并成一个", "用 css 数组的对象写法（prepend/order）显式控制注入顺序", "改用内联 style"],
+      "answer": 2,
+      "explanation": "层叠失灵多半是顺序问题而非权重问题；css 数组支持 { src, prepend } 与 order 显式排位（呼应 nuxt-styling 第 1 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "要在项目里使用 .scss 文件，必须做的是？",
+      "options": ["没有任何要求，Nuxt 内置全部预处理器", "安装 sass 依赖（Vite 把预处理器作为可选依赖）", "只能在 module 内使用 scss", "把所有 scss 改为 css"],
+      "answer": 1,
+      "explanation": "与 10-vite 的结论一致：预处理器是可选依赖，需 i -D sass；构建时才报错、dev 可能已经报（呼应 vite-build、nuxt-styling 第 1 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Tailwind v4（CSS-first）接入 Nuxt 的推荐路线是？",
+      "options": ["必须等官方 Nuxt 模块发布才能用", "只能用 CDN script 引入", "通过 nuxt.config 的 vite.plugins 接 @tailwindcss/vite，并在 css 数组引入入口 CSS", "写一个自定义 Nitro 中间件生成 CSS"],
+      "answer": 2,
+      "explanation": "它属于\"文件怎么编译\"层，用 Vite 插件即可（呼应 nuxt-styling 第 2 节路线 B、nuxt-modules 第 6 节的三方分界）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "相比手工接 postcss + Tailwind，官方 @nuxtjs/tailwindcss 模块的核心价值是？",
+      "options": ["它能让 Tailwind 支持 Vue 模板里的类名扫描、处理 layers 与 SSR 样式注入，并自动接好配置", "它能减少 Tailwind 的 CSS 体积", "它可以脱离 Node 运行", "它把原子类编译成 JS 样式对象"],
+      "answer": 0,
+      "explanation": "模块的价值正是\"把 Nuxt 特有上下文喂给引擎\"（自动导入目录、layers、运行时注入），这正是 nuxt-modules 第 1 节讲的能力分发。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "为什么动态拼接类名（text-${color}-500）会导致样式丢失？",
+      "options": ["浏览器缓存了旧 CSS", "Vue 不支持模板字符串绑定 class", "Tailwind 是构建期静态扫描源码生成 CSS，拼接后的类名不存在于源码文本中", "SSR 会剥离模板字符串"],
+      "answer": 3,
+      "explanation": "原子化引擎靠纯文本扫描，必须出现完整类名；正解是写完整类名映射表（呼应 nuxt-styling 第 2、6 节、vue-class-style-transition）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "components/RichEditor.client.vue 这种后缀的作用是？",
+      "options": ["仅在浏览器端渲染，服务端输出注释占位", "强制该组件被预加载", "只在生产构建中存在", "把组件样式抽成单独 CSS 文件"],
+      "answer": 0,
+      "explanation": "这是避免 window/document 直接炸 SSR 的最优雅写法，比在 setup 里写 if (import.meta.client) 更省心（呼应 nuxt-styling 第 3 节、nuxt-hydration 的 ClientOnly）。"
+    }
+  ]
+}

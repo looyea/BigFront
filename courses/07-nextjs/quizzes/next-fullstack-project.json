@@ -1,0 +1,62 @@
+{
+  "title": "next-fullstack-project 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "带登录的私有区（/notes 全家）最合适的渲染策略是？",
+      "options": ["全部 SSG 构建期定格", "全部 output:'export'", "动态渲染——私有 layout 里 await auth() 读 cookies 即自动达成", "整站 ISR revalidate:60"],
+      "answer": 2,
+      "explanation": "响应与请求者有关就不能进 Full Route Cache；auth()/cookies 的出现让路由自动动态化，同时兼作段级守卫（呼应 next-fullstack-project 第 3、4 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Server Action 里 return 结构化结果、把 redirect 留给调用方，主要动机是？",
+      "options": ["避免 Action 内的 throw 型信号被外层 try/catch 吞掉，且返回值便于单测断言", "Action 里禁止调用 redirect", "页面级 redirect 执行更快", "为了兼容静态导出"],
+      "answer": 0,
+      "explanation": "redirect 靠 throw 实现，调用链上有宽泛 catch 就失效；返回 {ok,id} 让失败分支可测、跳转决策集中（呼应 next-fullstack-project 第 5 节、next-error-loading 第 3 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "删除笔记的 Action 里，revalidatePath 的正确姿势是？",
+      "options": ["只失效当前详情页即可", "不用失效，客户端会自动轮询", "在事务提交前先行失效", "同时失效 /notes 列表与 /notes/[id] 详情等所有受影响位点"],
+      "answer": 3,
+      "explanation": "一次写操作影响多个缓存位点，漏掉列表就会出现\"删了还在\"的幽灵数据（呼应 next-fullstack-project 第 5 节、next-revalidate 第 5 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Markdown 编辑器（客户端岛）的内容数据应该？",
+      "options": ["浏览器端再 fetch 一次接口", "由服务端父组件查询后以纯数据 props 传入", "写进 URL query 传递", "存 localStorage 由组件自取"],
+      "answer": 1,
+      "explanation": "服务端取数 + 客户端交互是边界组合的标准模式，props 必须过序列化海关只走纯数据（呼应 next-fullstack-project 第 5 节、next-boundaries 第 2、3 节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "站内页面消费数据，还需要为它们专门写 Route Handler 接口吗？",
+      "options": ["需要，组件不能直接查库", "需要，Action 不允许读数据", "不需要——服务端组件直连数据层最短；接口留给站外消费者", "不需要——所有数据都该内联进构建产物"],
+      "answer": 2,
+      "explanation": "HTTP 自调用是多余一跳；/api 的正确受众是 APP/小程序/Webhook 等站外方（呼应 next-fullstack-project 第 7 节复盘、next-route-handlers 第 2 节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "表单校验在该项目里应该做几层、权威在哪层？",
+      "options": ["两层：客户端 + Action 内 zod，权威在 Action", "一层：客户端即可，提交快体验好", "一层：数据库约束兜底即可", "两层：Action + DB 约束，客户端做了会被绕过所以没意义"],
+      "answer": 0,
+      "explanation": "客户端管体验（不可信）、Action 内 zod 是权威校验并产出回填错误、DB 约束兜竞态并发（呼应 next-fullstack-project 第 5 节、next-forms-mutations 防御模板）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "开发环境跑几小时后数据库报 too many connections，最可能的元凶是？",
+      "options": ["生产构建未压缩", "matcher 写错导致重复渲染", "Vercel 免费额度用尽", "热重载反复 new PrismaClient() 而未做 globalThis 单例"],
+      "answer": 3,
+      "explanation": "dev 的模块热替换会重复执行模块顶层代码，无单例守卫时每次数组式新建连接池（呼应 next-fullstack-project 第 3 节）。"
+    }
+  ]
+}

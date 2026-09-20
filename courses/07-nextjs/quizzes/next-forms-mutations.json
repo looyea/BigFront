@@ -1,0 +1,62 @@
+{
+  "title": "next-forms-mutations 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "useFormStatus 的 pending 反映的是？",
+      "options": ["本组件自己 fetch 的进行态", "最近的父级 form 正在执行 Action 的期间", "全站路由加载", "window.online 状态"],
+      "answer": 1,
+      "explanation": "它从渲染上下文读取父 form 的 Action 生命周期，无需 props 传递（呼应 next-forms-mutations 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "useOptimistic 的列表在 Action 抛错时会？",
+      "options": ["保留乐观项等用户自行删除", "自动回滚到真实数据", "整页刷新", "进入重试队列"],
+      "answer": 1,
+      "explanation": "乐观层的真相回滚由框架在 Action 失败时完成，业务只管 reducer（呼应 next-forms-mutations 第一节、面试11剧本）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "zod schema 在 Next 工程里的正确角色是？",
+      "options": ["仅客户端表单校验用", "仅 Action 内使用", "同份 schema 两侧共享：客户端体验+服务端安全兜底", "替代 TypeScript 类型"],
+      "answer": 2,
+      "explanation": "两侧同一份是红线，缺了服务端那半等于裸奔（呼应 next-forms-mutations 第二节、exp-validation）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "after() 回调的定位是？",
+      "options": ["响应发出后的旁路杂活（通知/日志），非关键路径", "替代数据库事务", "延迟到下一导航执行的前端代码", "Action 的 finally 语法糖"],
+      "answer": 0,
+      "explanation": "移出关键路径但仍在本次请求生命周期内；重活依旧要进队列（呼应 next-forms-mutations 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "改一条商品价格后（该数据出现在 12 个页面），影响面最小的失效方式是？",
+      "options": ["revalidatePath('/', 'layout')", "revalidateTag('price-42')", "router.refresh()", "重启服务"],
+      "answer": 1,
+      "explanation": "tag 按数据维度精确圈定 12 页，path 全刷是拆金字塔（呼应 next-forms-mutations 第四节树、L4 面试 5/10）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "顶层 'use server' 的 actions/ 目录约定解决的隐患是？",
+      "options": ["构建速度", "让公网端点清单在结构上一眼可辨，防工具函数被意外暴露", "运行内存", "循环依赖"],
+      "answer": 1,
+      "explanation": "位置即语义：目录规范=安全审计面（呼应 next-forms-mutations 第五节、next-groups-matchers）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "提交新评论要求'原地立即出现且不发第二次请求'，合理组合是？",
+      "options": ["useOptimistic 先行 + 成功后 payload 自然替换", "setInterval 轮询列表", "跳转详情页再返回", "localStorage 缓存"],
+      "answer": 0,
+      "explanation": "乐观层负责即时，服务端真值到达后自动收敛（呼应 next-forms-mutations 第一节）。"
+    }
+  ]
+}
