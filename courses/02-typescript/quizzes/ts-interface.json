@@ -1,46 +1,92 @@
 {
-  "lessonId": "ts-interface",
-  "title": "TS L2 接口 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "ts-interface 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "interface 里 age?: number 的问号表示？",
-      "options": [
-        "只读",
-        "可选属性",
-        "默认值",
-        "元组"
-      ],
-      "answer": 1,
-      "explanation": "问号表示该属性可选，可省略。"
+      "prompt": "下面哪种类型只能用 type 而不能用 interface 表达？",
+      "options": ["对象形状 { x: number }", "函数形状 (a:number)=>void", "联合类型 string | number", "带方法的对象"],
+      "answer": 2,
+      "explanation": "interface 只能描述对象/函数/可索引形状；联合、交叉、映射、条件、原始别名必须用 type。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "要表达 A | B 这种联合类型，应使用？",
+      "prompt": "声明合并（declaration merging）是谁的能力？",
       "options": [
-        "interface",
-        "type",
-        "enum",
-        "class"
+        "type —— 同名会自动合并",
+        "interface —— 同名会自动合并成员，type 重名会报错",
+        "两者都可以",
+        "都不可以"
       ],
       "answer": 1,
-      "explanation": "interface 不能直接表示联合，需用 type。"
+      "explanation": "同名 interface 取成员并集自动合并；同名 type 别名直接报重复定义错误。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "readonly 属性的作用是？",
+      "prompt": "想给第三方库的全局 Window 上加一个自定义属性，最合适的手段是？",
       "options": [
-        "运行只加密",
-        "编译后禁止再次赋值该属性",
-        "可选",
-        "私有"
+        "用 type 重新定义 Window",
+        "declare global { interface Window { MyVar?: string } } 利用声明合并",
+        "改成 any",
+        "用 as 断言"
       ],
       "answer": 1,
-      "explanation": "readonly 防止对该属性重新赋值（编译期检查）。"
+      "explanation": "interface 声明合并让你在不改源码前提下增强全局/库类型（ts-declarations 会深讲）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "interface 与 type 在'开放性'上的区别是？",
+      "options": [
+        "interface 封闭、type 开放",
+        "interface 开放（可被再次合并加成员）、type 封闭（定义即定死）",
+        "都开放",
+        "都封闭"
+      ],
+      "answer": 1,
+      "explanation": "这影响对外 API 可演进性：开放的 interface 允许消费者扩展，封闭的 type 更利于精确控制。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "让一个 interface 继承另一个，用什么关键字？type 又怎么'继承'？",
+      "options": [
+        "interface 用 extends，type 用交叉 &",
+        "两者都用 extends",
+        "两者都用 &",
+        "interface 用 implements"
+      ],
+      "answer": 0,
+      "explanation": "interface Admin extends User；type Admin = User & {...} 用交叉达到类似效果。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于错误信息可读性，通常哪种更好？",
+      "options": [
+        "复杂 type —— 会展开成短名字",
+        "interface —— 编译器倾向用其名字显示，简洁清晰；复杂 type 常展开成长字面量",
+        "两者完全一样",
+        "type 从不报错"
+      ],
+      "answer": 1,
+      "explanation": "具名 interface 在报错里多以名字呈现；结构化展开的 type 可能输出很长的字面量类型，难读。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "团队选型的务实建议是？",
+      "options": [
+        "永远只用 interface",
+        "永远只用 type",
+        "对象/类契约、需扩展第三方用 interface；类型运算（联合/映射/条件等）用 type，并保持团队一致",
+        "随便混用不必统一"
+      ],
+      "answer": 2,
+      "explanation": "按能力自然分工 + 一致性，避免无谓内耗。"
     }
   ]
 }

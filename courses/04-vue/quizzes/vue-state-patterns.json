@@ -1,0 +1,82 @@
+{
+  "title": "vue-state-patterns 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "判断一个状态该放组件内还是 store，最实用的准则是？",
+      "options": [
+        "全部放 store 统一管理",
+        "看作用域：只有单组件用就留在组件，跨组件共享才升级 store",
+        "看数据量大小",
+        "看是不是数组"
+      ],
+      "answer": 1,
+      "explanation": "作用域多大状态放多小，能就地就别全局化（呼应 vue-state-patterns 第一、五节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "props-down / events-up 描述的是什么？",
+      "options": [
+        "数据向下传、变更向上抛的单向数据流",
+        "双向自动同步",
+        "插槽用法",
+        "生命周期顺序"
+      ],
+      "answer": 0,
+      "explanation": "父传 props、子 emit 变更，写收敛一处（呼应 vue-state-patterns 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "组件 v-model 的\"双向\"本质是？",
+      "options": [
+        "真正的双向数据流",
+        "props 向下(值) + emit 向上(update:xxx)的语法糖",
+        "直接改父变量",
+        "靠 watch 同步"
+      ],
+      "answer": 1,
+      "explanation": "v-model 仍是单向流的糖（呼应 vue-state-patterns 第三节、vue-component-basics 第五节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "下面哪种是\"single source of truth\"要消除的反模式？",
+      "options": [
+        "用 computed 派生 fullName",
+        "同时存 first/last 又存 full，并用 watch 手动同步三者",
+        "store 里放共享状态",
+        "用 props 传只读数据"
+      ],
+      "answer": 1,
+      "explanation": "冗余状态互相同步是 bug 之源，派生值应 computed（呼应 vue-state-patterns 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "两个组件需要共享一份状态、但都不越出共同父的范围，优先？",
+      "options": ["提到全局 store", "状态提升到共同父、props+events 传递", "各存一份手动同步", "用全局变量"],
+      "answer": 1,
+      "explanation": "范围不大就提升到共同父，别急着全局化（呼应 vue-state-patterns 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "\"复用逻辑\"和\"共享状态\"分别主要对应哪两种工具？",
+      "options": ["store / composable", "composable / store", "props / emit", "watch / computed"],
+      "answer": 1,
+      "explanation": "composable 复用具局部逻辑、store 集中共享状态，别混（呼应 vue-state-patterns 第五节、vue-composables）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "把列表筛选/分页状态同时反映到 URL，好处是？",
+      "options": ["页面更快", "可分享/刷新保持/后退可用——URL 也是一种状态来源", "省内存", "不用 store 了"],
+      "answer": 1,
+      "explanation": "URL 承载可分享的状态，用 router.replace 同步（呼应 vue-state-patterns 第四节、vue-router-nested-dynamic 第五节）。"
+    }
+  ]
+}

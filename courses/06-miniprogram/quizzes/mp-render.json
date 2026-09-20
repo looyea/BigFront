@@ -1,0 +1,97 @@
+{
+  "title": "mp-render 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "弹窗内容需要频繁显示/隐藏，官方语义下更推荐？",
+      "options": [
+        "wx:if，因为销毁更干净",
+        "每次切换前 wx:clear",
+        "两者都一样",
+        "hidden，节点保留只切 display，避免反复建/毁子树"
+      ],
+      "answer": 3,
+      "explanation": "频繁切换用 hidden，昂贵子树少切换用 if（呼应 mp-render 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "wx:key=\"id\" 中的 id 指的是？",
+      "options": [
+        "item 对象上的属性名（字符串字面量）",
+        "节点的 DOM id",
+        "数组下标",
+        "全局唯一计数器"
+      ],
+      "answer": 0,
+      "explanation": "写的是数据项的属性名，不加 {{}}（呼应 mp-render 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "用 index 作 key 的最典型 bug 是？",
+      "options": [
+        "编译直接报错",
+        "内存泄漏必然发生",
+        "头部插入/删除时全列表重渲染，且输入框等有状态节点内容错位",
+        "图片加载变慢"
+      ],
+      "answer": 2,
+      "explanation": "diff 失去稳定身份→复用失败+状态漂移，React/Vue 同答（呼应 mp-render 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "嵌套两层 wx:for 都默认用 item，会怎样？",
+      "options": [
+        "内层遮蔽外层，外层变量在内层不可用，需 wx:for-item 改名",
+        "自动重命名，无影响",
+        "运行时抛出异常",
+        "只渲染外层"
+      ],
+      "answer": 0,
+      "explanation": "默认名冲突导致\"串数据\"（呼应 mp-render 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "只修改列表第 3 项的 title，代价最小的写法是？",
+      "options": [
+        "整页重新 setData 所有字段",
+        "this.setData({ list: newList }) 整个数组重发",
+        "无法局部更新",
+        "this.setData({ 'list[2].title': newVal }) 路径更新"
+      ],
+      "answer": 3,
+      "explanation": "路径更新只传差异字节（呼应 mp-render 第四节、mp-setdata）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "wx:if 与 wx:for 写在同一标签上，问题是？",
+      "options": [
+        "wx:for 优先级更高，先展开全部再逐条判断，浪费",
+        "wx:if 优先级更高，直接跳过循环",
+        "语法错误不允许共存",
+        "行为未定义不可依赖"
+      ],
+      "answer": 0,
+      "explanation": "应先数据层过滤或 block 包裹，与 Vue2 告诫同源（呼应 mp-render 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "wx:for 的循环展开实际发生在哪个环节？",
+      "options": [
+        "逻辑层 for 循环生成虚拟节点再传输",
+        "渲染层——数据下发后由渲染层按模板展开",
+        "服务端编译期展开",
+        "Native 层缓存模板"
+      ],
+      "answer": 1,
+      "explanation": "列表代价≈setData 字节数+diff 节点数（呼应 mp-render 第四节）。"
+    }
+  ]
+}

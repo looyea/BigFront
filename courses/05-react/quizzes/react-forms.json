@@ -1,0 +1,87 @@
+{
+  "title": "react-forms 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "受控输入框只写了 value={text} 没写 onChange，会出现什么？",
+      "options": [
+        "输入框变成只读，敲不进字符（value 永远被 state 覆盖）",
+        "正常输入但不更新 state",
+        "报语法错误直接崩溃",
+        "自动变成非受控"
+      ],
+      "answer": 0,
+      "explanation": "value 由 state 决定且从不回写，输入被覆盖（呼应 react-forms 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "非受控组件读取输入值通常靠什么？",
+      "options": ["useState", "useRef 指向 DOM，提交时读 .value", "useEffect", "context"],
+      "answer": 1,
+      "explanation": "值存 DOM，靠 ref 读（呼应 react-forms 第二节、react-refs）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "用一个对象 state 管理多字段，onChange 里为什么必须 setForm(f => ({...f, [name]: value}))？",
+      "options": [
+        "为了性能",
+        "因为 value 是异步的",
+        "否则拿到的是旧快照，会丢掉其它字段",
+        "没有原因，随便写"
+      ],
+      "answer": 2,
+      "explanation": "函数式更新基于最新 state，避免整体覆盖丢字段（呼应 react-forms 第三节、react-usestate）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "onSubmit 里 e.preventDefault() 的作用是？",
+      "options": [
+        "阻止输入",
+        "阻止浏览器默认提交导致的页面刷新",
+        "阻止冒泡",
+        "清空表单"
+      ],
+      "answer": 1,
+      "explanation": "阻止原生提交刷新整页（呼应 react-forms 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 React 事件对象，正确的是？",
+      "options": [
+        "它是 Vue 的 $event 包装",
+        "只能拿到 key 拿不到 value",
+        "onChange 参数直接是字符串值",
+        "它是合成的原生事件对象，值在 e.target.value"
+      ],
+      "answer": 3,
+      "explanation": "React 事件参数是事件对象，值在 e.target.value（呼应 react-forms 第一、四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "React 19 给 <form> 传 action={fn} 后，fn 的参数通常是？",
+      "options": ["event 对象", "FormData", "字符串", "ref"],
+      "answer": 1,
+      "explanation": "action 函数收到 FormData，可 .get(name) 取值（呼应 react-forms 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下哪种更适合用非受控组件？",
+      "options": [
+        "<input type=\"file\"> 或提交时一次性读值的简单表单",
+        "需要每次按键实时联动别的字段的输入框",
+        "带实时校验的注册表单",
+        "受控下拉联动"
+      ],
+      "answer": 0,
+      "explanation": "文件上传/提交时读一次适合非受控（呼应 react-forms 第二节）。"
+    }
+  ]
+}

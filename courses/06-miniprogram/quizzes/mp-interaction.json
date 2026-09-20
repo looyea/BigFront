@@ -1,0 +1,97 @@
+{
+  "title": "mp-interaction 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "四种反馈 API 按打断强度从轻到重排序正确的是？",
+      "options": [
+        "toast → loading → actionSheet → modal",
+        "loading → modal → toast → actionSheet",
+        "modal → actionSheet → toast → loading",
+        "toast → modal → loading → actionSheet"
+      ],
+      "answer": 0,
+      "explanation": "轻提示自动消失，modal 强制决策（呼应 mp-interaction 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "hideLoading 应放在哪最稳？",
+      "options": [
+        "成功回调里",
+        "下一个页面 onLoad 里",
+        "请求发起前",
+        "finally 里（失败也能收尾，防转圈永不停）"
+      ],
+      "answer": 3,
+      "explanation": "过程反馈必须闭环，错误路径同样要 hide（呼应 mp-interaction 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "先 showLoading 再立刻 showToast，常见现象是？",
+      "options": [
+        "两者共用浮层，互相顶掉/提示不出现",
+        "两个同时正常显示",
+        "自动排队依次显示",
+        "抛异常"
+      ],
+      "answer": 0,
+      "explanation": "先 hideLoading 再 toast（呼应 mp-interaction 第二节易错点1）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "想要\"带输入框\"的弹窗，官方方案是？",
+      "options": [
+        "wx.showModal({ editable: false }) 后再开一页",
+        "wx.prompt()",
+        "没有现成 API——自定义弹层组件实现",
+        "wx.showKeyboard()"
+      ],
+      "answer": 2,
+      "explanation": "modal 只有按钮；输入场景自建组件（呼应 mp-interaction 第二节易错点3）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "onPullDownRefresh 处理完不调 wx.stopPullDownRefresh()，表现是？",
+      "options": [
+        "页面自动回收",
+        "刷新指示器一直转圈",
+        "下次无法下拉",
+        "报错崩溃"
+      ],
+      "answer": 1,
+      "explanation": "官方 API 配对出现：start 就要负责 stop（呼应 mp-interaction 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "wx.showActionSheet 的点击结果从哪里拿？",
+      "options": [
+        "返回值 promise.resolve(item)",
+        "e.target.value",
+        "全局变量记录",
+        "success 回调的 res.tapIndex"
+      ],
+      "answer": 3,
+      "explanation": "按下标回传，注意 itemList 上限 6（呼应 mp-interaction 第二节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "封装 feedback utils 的三原则不包括？",
+      "options": [
+        "幂等（防重复 show/hide 泄漏）",
+        "Promise 化",
+        "每个页面自己写文案，不集中管理",
+        "反馈出口唯一（错误文案统一映射）"
+      ],
+      "answer": 2,
+      "explanation": "文案散落正是裸调之痛，应集中映射（呼应 mp-interaction 第四节）。"
+    }
+  ]
+}

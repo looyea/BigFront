@@ -1,0 +1,92 @@
+{
+  "title": "node-http 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "在裸 http 服务器里，req 和 res 分别是什么？",
+      "options": [
+        "都是普通对象",
+        "req 是 IncomingMessage（读流），res 是 ServerResponse（写流）",
+        "req 是写流、res 是读流",
+        "都是 Promise"
+      ],
+      "answer": 1,
+      "explanation": "req 承载请求行/头/体是 Readable，res 用 write/end 输出是 Writable（呼应 node-http 第一节、node-streams）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "如果 handler 里既不调 res.end() 也不报错，客户端会怎样？",
+      "options": ["立刻收到 200", "请求一直挂着直到超时", "自动 404", "进程退出"],
+      "answer": 1,
+      "explanation": "没有 end 就不会结束响应，连接挂起——这正是 Express async 路由忘记响应会『挂住请求』的底层机制（呼应 node-async-errors 第五节、node-http 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "req.url 的内容是？",
+      "options": [
+        "完整 URL 含 https://host",
+        "只有相对路径 + query（如 /users/42?x=1），无协议无主机",
+        "只有 pathname",
+        "空字符串"
+      ],
+      "answer": 1,
+      "explanation": "req.url 是请求行里的相对形式，要 new URL 解析必须补 base（呼应 node-http 第二节、node-path-url 第 7 题）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "用裸 http 收集 POST body 时，最该注意的两点是？",
+      "options": [
+        "用 res.read()、设 charset",
+        "拼接所有 data 块 + 设大小上限防超大 payload + 监听 req 的 error",
+        "直接 JSON.parse(req)",
+        "调 res.end 后再读"
+      ],
+      "answer": 1,
+      "explanation": "body 是流，要 on('data') 累积、end 时 Buffer.concat；必须限大小防内存攻击、并挂 error（呼应 node-http 第三节、node-events 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "express.json() 中间件在裸 http 层实际做了什么？",
+      "options": [
+        "启动一个新进程",
+        "把 req 当流收集、按 Content-Type 选解析器（如 JSON.parse），结果挂到 req.body",
+        "自动设置 CORS",
+        "压缩响应"
+      ],
+      "answer": 1,
+      "explanation": "body-parser 就是『收集流 + 按类型解析 + 挂 req.body』，所以没挂它 req.body 是 undefined（呼应 node-http 第三节、Express L5）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "把一个 mp4 文件作为响应体流式下发，最稳妥的是？",
+      "options": [
+        "res.end(fs.readFileSync(f))",
+        "await pipeline(fs.createReadStream(f), res)",
+        "res.write(整个字符串)",
+        "for(data) res.write 不 end"
+      ],
+      "answer": 1,
+      "explanation": "readFileSync 全量入内存且阻塞；用 pipeline(fs 流, res) 恒定内存、自动背压、错误资源统一收口（呼应 node-http 第五节、node-stream-pipeline）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Node 18+ 里发起一个 HTTP 请求，现代首选方式是？",
+      "options": [
+        "手写 net socket",
+        "全局 fetch（配 AbortController 做超时），必要时用 http.request",
+        "child_process 调 curl",
+        "fs.readFile 一个 URL"
+      ],
+      "answer": 1,
+      "explanation": "fetch 是 WHATWG 标准全局 API，最简洁；需要底层控制/特殊场景再用 http(s).request（呼应 node-http 第六节）。"
+    }
+  ]
+}

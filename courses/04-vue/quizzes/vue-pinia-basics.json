@@ -1,0 +1,72 @@
+{
+  "title": "vue-pinia-basics 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "从 store 解构 state/getter 时，要保持响应性必须用？",
+      "options": ["toRaw", "storeToRefs", "reactive", "JSON 拷贝"],
+      "answer": 1,
+      "explanation": "store 是 reactive，直接解构丢响应；storeToRefs 保留（action 可直接解构）（呼应 vue-pinia-basics 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "相比 Vuex，Pinia 在改动 state 上的最大简化是？",
+      "options": [
+        "取消 mutations，action 里直接改 state（同步异步统一）",
+        "不允许改 state",
+        "只能用 $patch",
+        "必须用 commit"
+      ],
+      "answer": 0,
+      "explanation": "Pinia 合并 mutation/action，直接在 action 改（呼应 vue-pinia-basics 第四节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "setup 式 store 相比选项式的好处主要是？",
+      "options": ["体积更小", "能用 ref/computed/watch、组合与类型推导更自然", "运行更快", "不需要 id"],
+      "answer": 1,
+      "explanation": "setup 式贴近组合式函数、TS 友好（呼应 vue-pinia-basics 第一节、vue-composables）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "下面哪个状态最应该放进 Pinia store？",
+      "options": [
+        "某个输入框的临时值（只有它自己用）",
+        "被多个页面共享的当前登录用户信息",
+        "一个组件内部的一次性动画开关",
+        "一个只在计算里用的局部变量"
+      ],
+      "answer": 1,
+      "explanation": "跨组件/页面共享的才进 store，局部状态留在组件（呼应 vue-pinia-basics 第六节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "store 的 getter 默认行为类似于？",
+      "options": ["每次访问都重算的函数", "基于 state 缓存的 computed", "watch", "一次性快照"],
+      "answer": 1,
+      "explanation": "getter 缓存；返回函数形式则不缓存（呼应 vue-pinia-basics 第三节、vue-reactivity 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "一个 store 里想调用另一个 store 的 action，正确做法是？",
+      "options": ["import 另一个 store 的 state 直接改", "在自己的 action 里 use 另一个 store 再调其 action", "用全局变量", "不能组合"],
+      "answer": 1,
+      "explanation": "在 action 中 useXxx() 拿实例、调其 action（呼应 vue-pinia-basics 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "defineStore 第一个参数（id）的作用是？",
+      "options": ["仅注释用", "唯一标识，供 devtools 与 SSR 水合/热更新识别", "决定路由路径", "指定存储 key 前缀"],
+      "answer": 1,
+      "explanation": "id 是 store 的唯一名（呼应 vue-pinia-basics 第五节、vue-pinia-advanced SSR）。"
+    }
+  ]
+}

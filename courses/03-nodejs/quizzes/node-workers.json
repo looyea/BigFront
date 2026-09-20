@@ -1,0 +1,97 @@
+{
+  "title": "node-workers 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "一个请求里要同步算 3 秒的大 Fibonacci，直接放主线程会导致？",
+      "options": [
+        "只有这个请求慢，其它不受影响",
+        "整个事件循环被阻塞，这 3 秒内所有请求都停摆",
+        "Node 自动开线程处理",
+        "只是内存升高"
+      ],
+      "answer": 1,
+      "explanation": "JS 单线程，CPU 密集同步任务会卡住事件循环，所有并发请求都被拖慢——正解是挪进 worker_threads（呼应 node-workers 第一节、node-event-loop）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "worker_threads 与 cluster 的典型分工是？",
+      "options": [
+        "worker_threads 分摊 HTTP 多核、cluster 跑 CPU 密集",
+        "cluster 多进程分摊 HTTP I/O、worker_threads 同进程线程跑 CPU 密集且可共享内存",
+        "两者完全等价",
+        "cluster 能共享内存、worker 不能"
+      ],
+      "answer": 1,
+      "explanation": "cluster=多进程分摊网络请求、worker=同进程线程跑重计算/共享内存（呼应 node-workers 第一节、node-cluster）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 postMessage 传数据，正确的是？",
+      "options": [
+        "可以直接把函数传给 worker 执行",
+        "默认结构化克隆（拷贝）；函数传不过去；普通 ArrayBuffer 可用 transferList 转移所有权免拷贝",
+        "所有数据都是零拷贝共享",
+        "只能传字符串"
+      ],
+      "answer": 1,
+      "explanation": "消息走结构化克隆、函数不可传；transferList 可把 ArrayBuffer 所有权转移（呼应 node-workers 第二、三节、node-child-process interview 第 9 题）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "使用 SharedArrayBuffer 让多线程同时读写时，为什么需要 Atomics？",
+      "options": [
+        "为了让代码更短",
+        "为避免竞态：Atomics 提供原子单操作与线程同步（wait/notify）",
+        "因为 SAB 不能直接读写",
+        "为了加密内存"
+      ],
+      "answer": 1,
+      "explanation": "SAB 真并发共享，普通读-改-写会竞态，需 Atomics.add/CAS/wait/notify 保证原子性与同步（呼应 node-workers 第四节、ES 包 SharedArrayBuffer）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 libuv 线程池与 worker_threads，下列说法对的是？",
+      "options": [
+        "它们是一回事，UV_THREADPOOL_SIZE 就是设置 worker 数",
+        "libuv 池跑内核级 I/O(fs/DNS/crypto)、不执行你的 JS；worker_threads 才在你的 JS 线程上跑计算",
+        "worker_threads 默认就是 4 个",
+        "libuv 池能执行 JS"
+      ],
+      "answer": 1,
+      "explanation": "两套线程用途不同，别把 fs 慢归因于没开 worker（呼应 node-workers 第五节、node-net-dns 第六节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "每来一个任务就 new 一个 Worker，主要问题是什么？更优做法？",
+      "options": [
+        "没问题，Worker 很轻量",
+        "创建 isolate 开销大、线程数失控抢 CPU/内存；应用固定大小线程池 + 队列（如 piscina）复用",
+        "Worker 不能复用所以只能新建",
+        "把任务串行即可"
+      ],
+      "answer": 1,
+      "explanation": "Worker 起 V8 isolate 有成本，应池化复用（呼应 node-workers 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "想让某个可能失控的计算任务不至于 OOM 拖垮整个进程，可用？",
+      "options": [
+        "把堆调得更大",
+        "创建 Worker 时设 resourceLimits 限制其堆大小，配合 worker.terminate() 兜底",
+        "忽略它",
+        "用 cluster 替代"
+      ],
+      "answer": 1,
+      "explanation": "resourceLimits 给单 worker 限堆、terminate 可强制终止，隔离失控任务（呼应 node-workers 第七节）。"
+    }
+  ]
+}

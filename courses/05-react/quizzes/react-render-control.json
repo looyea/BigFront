@@ -1,0 +1,97 @@
+{
+  "title": "react-render-control 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "JSX 的 {} 里不能直接放什么？",
+      "options": [
+        "三元表达式",
+        "函数调用",
+        "if/for 这类语句",
+        "逻辑与 &&"
+      ],
+      "answer": 2,
+      "explanation": "{} 只接受表达式，if/for 是语句（呼应 react-render-control 第一节、react-jsx 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "{count && <List/>} 当 count 为 0 时会？",
+      "options": [
+        "什么都不渲染",
+        "渲染出字符 0",
+        "报错",
+        "渲染 List"
+      ],
+      "answer": 1,
+      "explanation": "0 是合法可渲染值会被输出，应 count>0 &&（呼应 react-render-control 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "组件 return null 相当于 Vue 的？而用 CSS display:none 隐藏相当于？",
+      "options": [
+        "v-show；v-if",
+        "都是 v-if",
+        "v-if；v-show",
+        "都是 v-show"
+      ],
+      "answer": 2,
+      "explanation": "return null 销毁重建=v-if；CSS 显隐保留 DOM/state=v-show（呼应 react-render-control 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "ErrorBoundary 能捕获下列哪种错误？",
+      "options": [
+        "事件处理器 onClick 里抛出的错误",
+        "子组件渲染期间抛出的错误",
+        "setTimeout 回调里的错误",
+        "它自己 render 抛出的错误"
+      ],
+      "answer": 1,
+      "explanation": "只捕获渲染期错误，事件/异步/自身捕获不到（呼应 react-render-control 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么 ErrorBoundary 目前必须是类组件？",
+      "options": [
+        "性能更好",
+        "函数组件不能管理 state",
+        "官方禁止用 Hook",
+        "它依赖 static getDerivedStateFromError / componentDidCatch 这两个类生命周期，尚无对应 Hook"
+      ],
+      "answer": 3,
+      "explanation": "捕获错误靠特定类生命周期，暂无 Hook 替代（呼应 react-render-control 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "<Suspense fallback={<Spinner/>}> 的 fallback 何时显示？",
+      "options": [
+        "永远显示",
+        "仅报错时显示",
+        "子树尚未准备好（懒加载 chunk 未到 / 数据 pending）时显示，就绪后自动替换",
+        "父组件卸载时"
+      ],
+      "answer": 2,
+      "explanation": "子树挂起时渲染 fallback（呼应 react-render-control 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "React.lazy(() => import('./X')) 主要带来什么收益？",
+      "options": [
+        "让组件变成受控",
+        "自动 memo 化组件",
+        "替代 useEffect",
+        "代码分割：把 X 拆到独立 chunk 按需加载，减小首包"
+      ],
+      "answer": 3,
+      "explanation": "动态 import 实现代码分割（呼应 react-render-control 第四节、10-vite 动态 import）。"
+    }
+  ]
+}

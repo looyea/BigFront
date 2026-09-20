@@ -1,0 +1,87 @@
+{
+  "title": "vue-project-architecture 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "中大型项目里，按 features（领域）组织目录相比 layers（按类型）的主要优势是？",
+      "options": [
+        "打包体积一定更小",
+        "一个功能自包含，改动集中、认知负担低、易整体删除",
+        "不需要 router 了",
+        "自动获得类型检查"
+      ],
+      "answer": 1,
+      "explanation": "feature 自包含降低耦合与认知负担（呼应 vue-project-architecture 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "feature 目录里的 index.ts（barrel）主要解决什么？",
+      "options": [
+        "只导出对外 API，内部文件可自由重构而不影响外部",
+        "加速构建",
+        "替代 pinia",
+        "自动注册全局组件"
+      ],
+      "answer": 0,
+      "explanation": "barrel 划定公共出口边界（呼应 vue-project-architecture 第一节、ts-modules）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "容器/展示组件分离的核心分工是？",
+      "options": [
+        "展示组件负责拿数据、容器只渲染",
+        "容器负责数据来源与编排、展示组件只吃 props 抛 events",
+        "二者必须放同一文件",
+        "展示组件必须读 store"
+      ],
+      "answer": 1,
+      "explanation": "容器拥有数据、展示只渲染，是单向流的落地（呼应 vue-project-architecture 第二节、vue-state-patterns）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "组件树内未捕获的渲染/生命周期错误，全局统一兜底用？",
+      "options": ["window.onerror", "app.config.errorHandler", "try/catch 包 main", "process.on('uncaughtException')"],
+      "answer": 1,
+      "explanation": "errorHandler 是 Vue 应用的组件错误统一入口（呼应 vue-project-architecture 第四节、node-async-errors）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "onErrorCaptured 的作用是？",
+      "options": [
+        "捕获并拦截其子孙组件的错误做局部降级，返回 false 停止继续上抛",
+        "捕获所有全局错误",
+        "只捕获网络错误",
+        "替代 errorHandler"
+      ],
+      "answer": 0,
+      "explanation": "父组件拦截子孙错误（呼应 vue-project-architecture 第四节、vue-lifecycle 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "\"复用逻辑\"与\"共享状态\"在架构上分别落到哪里？",
+      "options": ["store / composable", "composable / store", "都放全局 store", "都放 provide"],
+      "answer": 1,
+      "explanation": "composable 复用局部逻辑、store 集中共享状态（呼应 vue-project-architecture 第三节、vue-state-patterns 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "为什么\"过度全局化\"在 SSR 场景尤其危险？",
+      "options": [
+        "会让打包变慢",
+        "全局单例状态会跨请求泄漏/污染水合，须每请求新建实例",
+        "SSR 不支持 store",
+        "没有危险"
+      ],
+      "answer": 1,
+      "explanation": "SSR 每请求新实例防水合污染（呼应 vue-project-architecture 第七节、vue-pinia-advanced、vue-ssr-nuxt）。"
+    }
+  ]
+}

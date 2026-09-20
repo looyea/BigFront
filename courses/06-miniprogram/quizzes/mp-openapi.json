@@ -1,0 +1,92 @@
+{
+  "title": "mp-openapi 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "wx.requestPayment 的 success 回调意味着？",
+      "options": [
+        "服务端已收到微信的支付成功通知",
+        "用户完成了付款动作，但业务成功要以支付回调/查单为准",
+        "订单已被自动退款之外的所有情况",
+        "商户号配置一定正确"
+      ],
+      "answer": 1,
+      "explanation": "端回调不可当发货依据，掉单要回调+查单+对账兜底（呼应 mp-openapi 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "统一下单时的金额 19.90 元应表示为？",
+      "options": ["19.9", "'19.90'", "199（角）", "1990（分，整数）"],
+      "answer": 3,
+      "explanation": "微信金额单位为分且整数，杜绝浮点误差（呼应 mp-openapi 第一节、es-number）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "被好友卡片打开的落地页，设计上最要紧的是？",
+      "options": [
+        "必须放在 tabBar 里",
+        "分享图必须 16:9",
+        "页面自治：凭 onLoad 的 query 自己拉全数据，并校验参数合法性",
+        "必须强制登录才能看"
+      ],
+      "answer": 2,
+      "explanation": "分享=冷启动直达任意页，没有\"上一跳\"可依赖（呼应 mp-openapi 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "wx.getLocation 调用前需要哪些前置？",
+      "options": [
+        "仅申请开通接口权限",
+        "app.json 配 permission 用途说明 + 开通接口权限 + 隐私协议声明并获用户同意",
+        "仅用户点一次授权按钮",
+        "无任何前置，随调随用"
+      ],
+      "answer": 1,
+      "explanation": "权限+声明+同意三道闸（呼应 mp-openapi 第三、五节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "一次性订阅消息的发送配额从哪来？",
+      "options": [
+        "后台开通后每天固定 10 万条",
+        "用户每同意一次模板，获得一次该模板的发送机会",
+        "支付一笔送十条",
+        "关注即有无限条"
+      ],
+      "answer": 1,
+      "explanation": "授权是消耗品，申请时机决定转化（呼应 mp-openapi 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "requestSubscribeMessage 放在哪个时机调用最合规且转化高？",
+      "options": [
+        "onLaunch 里尽早弹",
+        "onLoad 里进页即弹",
+        "检测到未订阅时循环补弹",
+        "用户点击\"开售提醒/支付成功\"等明确场景按钮的处理函数里"
+      ],
+      "answer": 3,
+      "explanation": "主动行为触发是官方要求也是转化密码（呼应 mp-openapi 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "个人主体小程序想接入微信支付，结论是？",
+      "options": [
+        "可以，但要交保证金",
+        "可以，走第三方聚合支付即可绕过",
+        "不可以，需企业等主体+微信支付商户号，虚拟支付另有禁令",
+        "审核通过率高就能"
+      ],
+      "answer": 2,
+      "explanation": "资质硬门槛，绕行方案=封禁风险（呼应 mp-openapi 第一、五节）。"
+    }
+  ]
+}

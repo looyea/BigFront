@@ -1,0 +1,82 @@
+{
+  "title": "react-effect-patterns 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "数据获取 effect 里用 AbortController 主要是为了？",
+      "options": [
+        "让请求更快返回",
+        "在依赖变化/卸载时取消在途请求，避免竞态与无谓流量",
+        "自动重试失败请求",
+        "替代 useEffect 的 cleanup"
+      ],
+      "answer": 1,
+      "explanation": "取消过期请求治竞态（呼应 react-effect-patterns 第一、二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "effect 里除了 abort，还常用一个 `ignore` 布尔标志，目的是？",
+      "options": [
+        "忽略错误",
+        "即使结果返回，也防止对已卸载/过期一轮的组件写 state",
+        "跳过依赖检查",
+        "禁用严格模式"
+      ],
+      "answer": 1,
+      "explanation": "双保险防过期写 state（呼应 react-effect-patterns 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "id 从 1 快速变到 2，请求1 比请求2 更晚返回导致界面显示 1 的数据，这是？",
+      "options": ["内存泄漏", "竞态(race condition)", "闭包陈旧值", "hydration mismatch"],
+      "answer": 1,
+      "explanation": "慢请求覆盖快请求，靠 cleanup abort/ignore 丢弃（呼应 react-effect-patterns 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "需要\"读元素尺寸后同步再改 DOM 且不让用户看到闪烁\"，用哪个 effect？",
+      "options": ["useEffect", "useInsertionEffect", "useLayoutEffect", "useMemo"],
+      "answer": 2,
+      "explanation": "layout 在绘制前同步跑（呼应 react-effect-patterns 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 useInsertionEffect，正确的是？",
+      "options": [
+        "是给业务组件写普通副作用用的",
+        "专供 CSS-in-JS 在其它 effect 前注入样式，日常代码几乎不用",
+        "等价于 useEffect",
+        "只在卸载时跑"
+      ],
+      "answer": 1,
+      "explanation": "insertion→layout→passive 三者时机不同（呼应 react-effect-patterns 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "effect 回调为什么不能直接写成 async function？",
+      "options": [
+        "async 太慢",
+        "async 函数返回 Promise，会被 React 误当成 cleanup 函数",
+        "React 不支持 await",
+        "会导致竞态"
+      ],
+      "answer": 1,
+      "explanation": "要在内部定义 async 函数再调用（呼应 react-effect-patterns 第七节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下面哪种不该用 useEffect，而应在 render 里直接算/useMemo？",
+      "options": ["订阅全局事件", "根据 props 计算列表总数展示", "启动定时器", "初始化第三方图表实例"],
+      "answer": 1,
+      "explanation": "派生值不是外部系统同步，别绕 effect+state（呼应 react-effect-patterns 第六节）。"
+    }
+  ]
+}

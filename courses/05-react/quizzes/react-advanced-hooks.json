@@ -1,0 +1,87 @@
+{
+  "title": "react-advanced-hooks 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "什么时候把多个 useState 换成 useReducer 更合适？",
+      "options": [
+        "只要状态是数组就用",
+        "当一个对象里多字段联动、迁移规则复杂且想集中时",
+        "永远都用 useReducer",
+        "状态需要传给子组件时"
+      ],
+      "answer": 1,
+      "explanation": "多字段联动/集中迁移用 reducer（呼应 react-advanced-hooks 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "useReducer 返回的 dispatch 有什么便于优化的特性？",
+      "options": ["每次渲染都是新函数", "引用稳定，可安全传给 React.memo 子组件", "会触发两次渲染", "只能同步调用"],
+      "answer": 1,
+      "explanation": "dispatch 引用恒定，利于 memo（呼应 react-advanced-hooks 第一节、react-memo-hooks）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "为什么 SSR 下给表单生成唯一 id 要用 useId 而不是 Math.random()？",
+      "options": [
+        "random 太慢",
+        "useId 服务端与客户端水合生成一致 id，random 两端不同导致 hydration mismatch",
+        "random 会触发重渲染",
+        "useId 能自动校验表单"
+      ],
+      "answer": 1,
+      "explanation": "水合要求两端一致（呼应 react-advanced-hooks 第二节、vue-ssr-nuxt）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "useSyncExternalStore 主要解决什么问题？",
+      "options": [
+        "缓存昂贵计算",
+        "安全订阅组件外的可变 store，防止渲染时读到撕裂的状态",
+        "替代 useEffect 做数据请求",
+        "生成稳定 key"
+      ],
+      "answer": 1,
+      "explanation": "订阅外部 store + 防 tearing（呼应 react-advanced-hooks 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "startTransition 包裹的 setState 与普通 setState 的关键区别是？",
+      "options": [
+        "它是同步的",
+        "它被标记为可打断的低优先级过渡，高优先级输入可插队",
+        "它会跳过渲染",
+        "它只用于表单"
+      ],
+      "answer": 1,
+      "explanation": "低优先级过渡更新，可被打断（呼应 react-advanced-hooks 第四节、react-render-model）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "useDeferredValue 适合的场景是？",
+      "options": [
+        "希望某个值参与渲染时允许\"落后一拍\"，把昂贵渲染降为低优先级",
+        "延迟组件挂载",
+        "缓存函数引用",
+        "把数据写进 localStorage"
+      ],
+      "answer": 0,
+      "explanation": "拿一个可滞后的值做低优先级渲染（呼应 react-advanced-hooks 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "SSR 场景用 useSyncExternalStore 需要多提供什么？",
+      "options": ["不需要额外", "第三个参数 getServerSnapshot", "一个 key", "一个 ref"],
+      "answer": 1,
+      "explanation": "服务端快照用于 SSR 渲染与水合（呼应 react-advanced-hooks 第三节）。"
+    }
+  ]
+}

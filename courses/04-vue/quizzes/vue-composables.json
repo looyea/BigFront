@@ -1,0 +1,87 @@
+{
+  "title": "vue-composables 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "组合式函数（composable）的常见约定是？",
+      "options": [
+        "必须以 use 开头、内部用响应式 API、在 setup 中调用",
+        "必须是 .vue 文件",
+        "必须默认导出一个组件",
+        "必须全局注册"
+      ],
+      "answer": 0,
+      "explanation": "use 前缀 + 响应式逻辑 + setup 同步调用才绑得上生命周期（呼应 vue-composables 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "组合式函数返回一个 reactive 对象，调用方解构后会发生什么？",
+      "options": ["照常响应", "解构出的是普通值、丢失响应性", "编译报错", "自动变 ref"],
+      "answer": 1,
+      "explanation": "reactive 解构丢响应；应返回 ref 或用 toRefs（呼应 vue-composables 第二节、reactivity-theory 第六节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "要让组合式函数既能接收 ref 又能接收普通值，通常怎么处理参数？",
+      "options": ["只允许传 ref", "用 toValue/unref 归一", "强制传字符串", "用 JSON 解析"],
+      "answer": 1,
+      "explanation": "toValue/unref 把两者统一成可读值（呼应 vue-composables 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "effectScope 主要解决什么问题？",
+      "options": [
+        "让 computed 更快",
+        "在组件之外把一批响应式副作用统一收集、一次性 stop 回收",
+        "替代 router",
+        "管理 CSS 作用域"
+      ],
+      "answer": 1,
+      "explanation": "为组件外的 effect 提供可回收作用域，防泄漏（呼应 vue-composables 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "相比 mixins，组合式函数在复用上的核心优势是？",
+      "options": [
+        "来源显式、可传参可组合、避免命名冲突、易单测",
+        "运行更快",
+        "不需要 import",
+        "能自动注入全局"
+      ],
+      "answer": 0,
+      "explanation": "mixin 来源不透明、易冲突；composable 是显式函数（呼应 vue-composables 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "一个内部用了 onMounted/onUnmounted 的组合式函数，若在组件卸载后的异步回调里才调用，会怎样？",
+      "options": [
+        "正常自动清理",
+        "生命周期钩子无所属实例、不会随组件清理，可能泄漏",
+        "直接抛编译错",
+        "被 Vue 忽略但不影响"
+      ],
+      "answer": 1,
+      "explanation": "钩子需绑定当前实例；异步/组件外调用要自己管或用 effectScope（呼应 vue-composables 第一、四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "组合式函数在 SSR 下要注意什么？",
+      "options": [
+        "什么都不能用",
+        "浏览器 API 要放 onMounted 或加 client 判断，避免服务端执行 window/document",
+        "必须写成全局单例",
+        "不能用 ref"
+      ],
+      "answer": 1,
+      "explanation": "服务端无 DOM，浏览器 API 要延后到客户端（呼应 vue-composables 第六节、vue-ssr-nuxt）。"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "title": "node-config 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "process.env.FEATURE 值为字符串 \"false\" 时，if (process.env.FEATURE) 的结果是？",
+      "options": ["false（正确关闭）", "true（非空字符串都 truthy）", "抛错", "undefined"],
+      "answer": 1,
+      "explanation": "env 全是字符串，\"false\" 非空即 truthy；要显式 === 'true' 判断（呼应 node-config 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 dotenv 与 .env 的正确做法是？",
+      "options": [
+        "把 .env 提交进 Git 方便团队共享",
+        "本地用 .env 并 gitignore，生产由平台注入真实环境变量",
+        "把密钥写进 .env 再打进 Docker 镜像",
+        "只能用 dotenv，Node 无法加载 env 文件"
+      ],
+      "answer": 1,
+      "explanation": ".env 含机密须忽略；生产用平台 secret 注入；Node 20.6+ 还能 --env-file 内置加载（呼应 node-config 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "12-Factor 主张配置应？",
+      "options": [
+        "硬编码在代码里按分支区分",
+        "存储在环境变量中，与代码分离，一份构建多环境部署",
+        "写死在 config.json 提交仓库",
+        "全部放命令行参数"
+      ],
+      "answer": 1,
+      "explanation": "配置随环境变、外置到 env，实现构建与配置分离（呼应 node-config 第一节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "必需的配置项（如 DATABASE_URL）缺失时，推荐何时、如何反应？",
+      "options": [
+        "运行到用到时再报 undefined",
+        "启动时集中校验、缺失即 fail fast 抛错退出",
+        "给个假默认值继续跑",
+        "只在日志里 warn"
+      ],
+      "answer": 1,
+      "explanation": "单一 config 出口 + 启动即校验，让配置错误立刻暴露（呼应 node-config 第四节、node-async-errors）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "生产环境日志的最佳实践是？",
+      "options": [
+        "大量 console.log 拼字符串写到本地文件并自行轮转",
+        "结构化(JSON)日志、分级、输出到 stdout 交给平台收集、字段脱敏",
+        "关掉所有日志省性能",
+        "把 secret 打进日志方便排查"
+      ],
+      "answer": 1,
+      "explanation": "结构化+级别+stdout+redact 是 12-Factor 日志观（呼应 node-config 第五、六节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于密钥，下列哪项是错的？",
+      "options": [
+        "不硬编码、不进 Git、不发进 npm 包",
+        "从 Vault/K8s Secret/CI secrets 注入",
+        "可以临时提交到私有仓库根目录里，反正不外露",
+        "日志里要脱敏、定期轮换"
+      ],
+      "answer": 2,
+      "explanation": "私有仓库也可能泄露/被爬、Git 历史难清除；密钥绝不进仓库（呼应 node-config 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "debug 模块的核心价值是？",
+      "options": [
+        "自动修复 bug",
+        "用命名空间 + DEBUG 环境变量在运行时按需开关调试日志，避免留 console.log",
+        "替代 assert",
+        "只做错误上报"
+      ],
+      "answer": 1,
+      "explanation": "按 env 精细开合调试输出，生产不留噪声（呼应 node-config 第七节）。"
+    }
+  ]
+}

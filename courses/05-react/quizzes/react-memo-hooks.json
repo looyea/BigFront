@@ -1,0 +1,92 @@
+{
+  "title": "react-memo-hooks 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "useMemo 和 useCallback 的区别是？",
+      "options": [
+        "没有区别，只是别名",
+        "useMemo 缓存计算结果值，useCallback 缓存函数引用",
+        "useCallback 缓存对象，useMemo 缓存数组",
+        "useMemo 只在挂载跑一次"
+      ],
+      "answer": 1,
+      "explanation": "useCallback(fn,deps)≈useMemo(()=>fn,deps)（呼应 react-memo-hooks 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "给 React.memo 包裹的子组件传内联 style={{}} / 箭头函数，会？",
+      "options": [
+        "更深优化",
+        "无影响",
+        "每次渲染都是新引用，令 memo 浅比较失败、子仍重渲染",
+        "编译报错"
+      ],
+      "answer": 2,
+      "explanation": "引用每次都变→memo 失效，用 useCallback/useMemo 稳定（呼应 react-memo-hooks 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "下列哪种最需要 useMemo？",
+      "options": [
+        "对一万个元素做过滤/聚合的昂贵计算",
+        "给 <p> 渲染一个字符串常量",
+        "切换布尔 state",
+        "读取 props.name"
+      ],
+      "answer": 0,
+      "explanation": "昂贵纯计算才值得 memo（呼应 react-memo-hooks 第二、三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "把对象放进 useEffect 依赖却每次新引用，导致 effect 狂跑，正确修法之一是？",
+      "options": ["改成空依赖数组", "删掉依赖检查规则", "用 useMemo 稳定该对象引用（或改依赖其中的原始值）", "用 useCallback 包住 effect"],
+      "answer": 2,
+      "explanation": "稳定引用或只依赖原始值（呼应 react-memo-hooks 第二节、react-useeffect）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于\"到处 memo\"，正确的看法是？",
+      "options": [
+        "越多越快，应默认全 memo",
+        "memo 本身有分配/比较成本，非瓶颈处是负优化，应先 Profiler 再加",
+        "memo 会改变渲染结果",
+        "memo 是必须的否则不工作"
+      ],
+      "answer": 1,
+      "explanation": "记忆化有成本，按需而非滥加（呼应 react-memo-hooks 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "React Compiler 接管记忆化的前提，以及它带来的变化是？",
+      "options": [
+        "前提组件保持纯；自动插入等价 memo，无需手写也不会漏依赖",
+        "前提必须用 class 组件",
+        "前提禁用 Hooks",
+        "它只是压缩代码，不改渲染"
+      ],
+      "answer": 0,
+      "explanation": "编译器假设纯组件、构建期自动记忆化（呼应 react-memo-hooks 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "与 Vue 的 computed 相比，React 的派生值缓存需要？",
+      "options": [
+        "完全一样自动",
+        "React 自动追踪依赖缓存",
+        "无需任何缓存",
+        "简单值 render 里直接算即可，昂贵值才手动 useMemo，且要自己列依赖"
+      ],
+      "answer": 3,
+      "explanation": "React 无内置响应式缓存，靠手动/编译器（呼应 react-memo-hooks 第六节、vue-reactivity-theory）。"
+    }
+  ]
+}

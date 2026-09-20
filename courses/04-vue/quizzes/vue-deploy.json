@@ -1,0 +1,92 @@
+{
+  "title": "vue-deploy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "history 路由(createWebHistory)部署后刷新子路由报 404，根因是？",
+      "options": [
+        "Vue 路由 bug",
+        "服务器上没有该真实路径对应的文件，需回退到 index.html",
+        "没有打包 CSS",
+        "base 设置错误"
+      ],
+      "answer": 1,
+      "explanation": "pushState 的真路径刷新需服务器 fallback（呼应 vue-deploy 第三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Nginx 里修复 SPA history 刷新 404 的常用配置是？",
+      "options": [
+        "try_files $uri $uri/ /index.html;",
+        "proxy_pass 到 8080",
+        "add_header Cache-Control no-store",
+        "rewrite ^ /404.html"
+      ],
+      "answer": 0,
+      "explanation": "try_files 找不到文件就回退 SPA 入口（呼应 vue-deploy 第三节、10-vite-deploy）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 VITE_ 前缀环境变量，正确的是？",
+      "options": [
+        "运行时从服务器读取，安全",
+        "构建时内联进前端产物、公开可反解，不能放密钥",
+        "所有 env 变量都会自动注入客户端",
+        "只有生产环境生效"
+      ],
+      "answer": 1,
+      "explanation": "VITE_ 变量构建期内联且公开（呼应 vue-deploy 第四节、node-config 密钥不外泄）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "带内容 hash 的 assets 文件适合什么样的缓存策略？",
+      "options": [
+        "no-cache 每次校验",
+        "max-age 一年 + immutable 长缓存",
+        "不缓存",
+        "只缓存 index.html"
+      ],
+      "answer": 1,
+      "explanation": "内容变→hash 变→URL 变，可永久缓存；index.html 才需短缓存（呼应 vue-deploy 第五节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么 index.html 反而不能长缓存？",
+      "options": [
+        "它太大",
+        "它是资源清单，长缓存会让用户一直拿到指向旧 hash 资源的入口、发版更新不到",
+        "浏览器不支持缓存 html",
+        "它含 hash"
+      ],
+      "answer": 1,
+      "explanation": "入口必须能取到最新，否则新构建失效（呼应 vue-deploy 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "应用部署在子路径 /admin/ 下资源 404，应调整什么？",
+      "options": ["改 router 模式为 hash", "设 vite base:'/admin/' 并与服务器 root/CDN 前缀对齐", "关闭 gzip", "换包管理器"],
+      "answer": 1,
+      "explanation": "非根路径需设 base（呼应 vue-deploy 第二节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "SPA、SSG、SSR 三者的部署目标区别是？",
+      "options": [
+        "都必须跑 Node 服务",
+        "SPA/SSG 产出可纯静态托管(CDN)，SSR 需 Node/edge 运行时跑 server entry",
+        "SSG 需要数据库",
+        "三者完全相同"
+      ],
+      "answer": 1,
+      "explanation": "静态托管 vs 运行时的差异（呼应 vue-deploy 第七节、vue-ssr-nuxt）。"
+    }
+  ]
+}

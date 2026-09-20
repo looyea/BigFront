@@ -1,0 +1,87 @@
+{
+  "title": "ts-utility 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Partial<User> 用映射类型的正确写法是？",
+      "options": [
+        "{ [K in keyof User]: User[K] }",
+        "{ [K in keyof User]?: User[K] }",
+        "{ [K in keyof User]-?: User[K] }",
+        "{ readonly [K in keyof User]: User[K] }"
+      ],
+      "answer": 1,
+      "explanation": "?: 给每个键加可选修饰符即 Partial；-? 是 Required，readonly 是 Readonly。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 Pick 与 Omit 的键参数，正确的说法是？",
+      "options": [
+        "两者 K 都被约束为 keyof T",
+        "Pick 的 K extends keyof T（写错报错）；Omit 的 K 不受限，可写不存在的键并静默忽略",
+        "Omit 的 K 更严格",
+        "两者都不能删键"
+      ],
+      "answer": 1,
+      "explanation": "Omit = Pick<T, Exclude<keyof T, K>>，其 K 只约束到 keyof any，故可写非法键名被忽略，是常见坑。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Exclude<'a'|'b'|'c', 'b'> 的结果是？",
+      "options": ["'a'|'c'", "'b'", "'a'|'b'|'c'", "never"],
+      "answer": 0,
+      "explanation": "Exclude 靠分布式条件类型把命中 'b' 的成员换成 never 消失，剩 'a'|'c'。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Record<Role, string[]>（Role='admin'|'guest'）的作用是？",
+      "options": [
+        "生成一个数组",
+        "生成必须有 admin 和 guest 两个键、值均为 string[] 的对象类型",
+        "把 Role 变成字符串",
+        "只允许一个键"
+      ],
+      "answer": 1,
+      "explanation": "Record 从键联合构造对象类型，强制覆盖每个成员，漏键即报错。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "ReturnType<typeof fn> / Parameters<typeof fn> / Awaited<T> 共同依赖的关键字是？",
+      "options": ["as", "infer", "satisfies", "keyof"],
+      "answer": 1,
+      "explanation": "它们都用 infer 从函数/Promise 结构里提取返回/参数/内部类型。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "表达'所有字段可选但 id 必须保留'，最贴切的组合是？",
+      "options": [
+        "Partial<User>",
+        "Partial<Omit<User,'id'>> & Pick<User,'id'>",
+        "Required<Omit<User,'id'>>",
+        "Readonly<User>"
+      ],
+      "answer": 1,
+      "explanation": "先 Omit 掉 id 再 Partial，然后交叉 Pick<User,'id'> 把必选 id 加回来。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Mutable<T>（去掉所有 readonly）应怎么写？",
+      "options": [
+        "{ +readonly [K in keyof T]: T[K] }",
+        "{ -readonly [K in keyof T]: T[K] }",
+        "{ readonly [K in keyof T]?: T[K] }",
+        "{ [K in keyof T]: readonly T[K] }"
+      ],
+      "answer": 1,
+      "explanation": "-readonly 是移除只读修饰符，配合映射类型即得 Mutable（Readonly 的反操作）。"
+    }
+  ]
+}

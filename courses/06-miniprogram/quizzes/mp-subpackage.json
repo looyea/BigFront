@@ -1,0 +1,92 @@
+{
+  "title": "mp-subpackage 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "用户冷启动小程序时，微信下载的是？",
+      "options": [
+        "全部主包+所有分包（只是懒解析）",
+        "仅当前页面所在分包之外的所有包",
+        "只有主包",
+        "只有 tabBar 页面文件"
+      ],
+      "answer": 2,
+      "explanation": "启动只下主包，分包按需（呼应 mp-subpackage 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "packageA 的页面想用 packageB 里的组件，正确做法是？",
+      "options": [
+        "相对路径直接引用",
+        "把组件移到主包或复制进 packageA（禁止跨分包引用）",
+        "componentPlaceholder 全局声明即可跨包",
+        "运行时 require 分包路径"
+      ],
+      "answer": 1,
+      "explanation": "分包间不可互相引用（呼应 mp-subpackage 第一、四节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "preloadRule 的作用是？",
+      "options": [
+        "启动时阻塞下载所有包",
+        "预下载独立分包的依赖主包文件",
+        "进入指定页面后的空闲时机按网络策略提前下载分包",
+        "把分包变成主包的一部分"
+      ],
+      "answer": 2,
+      "explanation": "用空闲带宽治\"首次进分包等待\"（呼应 mp-subpackage 第二节②）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "独立分包的页面上线后，开发时调试发现 getApp() 返回 undefined 般异常，为什么？",
+      "options": [
+        "独立分包禁用所有 wx API",
+        "必须用 App() 第二参开启",
+        "基础库 bug 需降级",
+        "独立分包可脱离主包运行，主包 app.js 可能根本未加载，逻辑要自包含"
+      ],
+      "answer": 3,
+      "explanation": "\"独立\"= 不依赖主包存在（呼应 mp-subpackage 第二节③）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "一张 1.8MB 的运营大图放在主包，最佳替代是？",
+      "options": [
+        "放到 tabBar 页目录让它看起来只加载一次",
+        "放进某分包即可",
+        "上 CDN/云存储，包内只留 URL 与占位",
+        "改成 base64 塞进 setData"
+      ],
+      "answer": 2,
+      "explanation": "大资源永远外置；base64 还双杀包体与 setData（呼应 mp-subpackage 第三节表、mp-setdata）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "tabBar 页面被写进 subPackages 后，结果是？",
+      "options": ["编译/校验报错，tab 页必须在主包", "正常，只是启动慢一点", "自动移回主包", "变成独立分包"],
+      "answer": 0,
+      "explanation": "规则硬约束（呼应 mp-subpackage 第三节表、mp-tabbar 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "分包切分的第一依据是？",
+      "options": [
+        "按文件类型（js/json/wxss 分家）",
+        "按开发者人数",
+        "按用户任务流（一次连续操作的页面群同包）",
+        "按 git 目录顺手"
+      ],
+      "answer": 2,
+      "explanation": "内聚的任务流让包内跳转零等待（呼应 mp-subpackage 第二节①）。"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "title": "react-router-data 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Data Router 的 loader 什么时候执行？",
+      "options": [
+        "组件挂载后的 useEffect 里",
+        "在匹配该路由、渲染组件之前用于取数",
+        "只在表单提交时",
+        "每次任意 setState 时"
+      ],
+      "answer": 1,
+      "explanation": "loader 在进入路由前取数，组件拿到即就绪（呼应 react-router-data 第二、三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "组件里如何拿到本路由 loader 返回的数据？",
+      "options": ["useLoaderData()", "useParams()", "useLocation()", "props.data"],
+      "answer": 0,
+      "explanation": "useLoaderData 同步返回 loader 结果（呼应 react-router-data 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "action 主要处理什么？",
+      "options": [
+        "读取 URL 参数",
+        "该路由上的写操作（POST/PUT），配 <Form method=post> 触发",
+        "缓存 GET 响应",
+        "定义错误界面"
+      ],
+      "answer": 1,
+      "explanation": "action 处理数据变更（呼应 react-router-data 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "action 成功后，相关列表数据为什么会自动更新？",
+      "options": [
+        "手动调了 refetch",
+        "Router 在 action 完成后自动重跑受影响路由的 loader",
+        "浏览器刷新了",
+        "WebSocket 推送"
+      ],
+      "answer": 1,
+      "explanation": "写后自动重取是框架级机制（呼应 react-router-data 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "在 loader 里做\"未登录就跳登录页\"，惯用写法是？",
+      "options": [
+        "return <Navigate to=.../>",
+        "throw redirect('/login')",
+        "window.location = '/login'",
+        "返回 null"
+      ],
+      "answer": 1,
+      "explanation": "loader 里 throw redirect 提前中断并跳转（呼应 react-router-data 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "从 /user/1 导航到 /user/2，Data Router 会？",
+      "options": [
+        "复用旧数据不重新取",
+        "自动重跑 loader（参数变了），无需自己 useEffect 监听",
+        "报错",
+        "整页刷新"
+      ],
+      "answer": 1,
+      "explanation": "参数变化触发 loader 重跑，解决换参数不取数问题（呼应 react-router-data 第三节、react-router-basics 第8题）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "errorElement 的作用是？",
+      "options": [
+        "渲染加载骨架",
+        "为该路由 loader/action/渲染抛出的错误提供兜底界面",
+        "定义重定向",
+        "缓存错误"
+      ],
+      "answer": 1,
+      "explanation": "路由级错误边界（呼应 react-router-data 第二节、react-render-control）。"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "title": "vue-template-syntax 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "下面哪个能合法写进 {{ }} 插值？",
+      "options": ["if (ok) 'A'", "ok ? 'A' : 'B'", "var x = 1", "count++（作为语句块）"],
+      "answer": 1,
+      "explanation": "插值只能是表达式，三元合法；if/声明/多语句非法（呼应 vue-template-syntax 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": ":href 和 @click 分别是哪两个指令的缩写？",
+      "options": ["v-once / v-html", "v-bind / v-on", "v-model / v-show", "v-if / v-else"],
+      "answer": 1,
+      "explanation": ": 是 v-bind 缩写、@ 是 v-on 缩写（呼应 vue-template-syntax 第二、四节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "<input :disabled=\"isOff\"> 当 isOff 为 false 时，disabled 属性会？",
+      "options": ["渲染成 disabled=\"false\"", "被自动移除", "报错", "变成 disabled=\"\""],
+      "answer": 1,
+      "explanation": "布尔属性遇假值(false/null/undefined)自动移除（呼应 vue-template-syntax 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "要动态决定绑定的属性/事件名，用哪种语法？",
+      "options": [":{name}", ":[name] 和 @[name] 动态参数", "$:name", "v-dynamic:name"],
+      "answer": 1,
+      "explanation": "方括号是动态参数，值自动转小写（呼应 vue-template-syntax 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 v-html，最正确的态度是？",
+      "options": [
+        "它不转义，插入不可信内容会造成 XSS，应尽量改用 {{ }} 或先清洗",
+        "它会自动转义，比 {{ }} 更安全",
+        "只能用于静态字符串",
+        "它等价于 v-text"
+      ],
+      "answer": 0,
+      "explanation": "v-html 原样注入 HTML，用户内容会带来 XSS（呼应 vue-template-syntax 第五节、exp-security/OWASP）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "希望某段纯静态内容只渲染一次、之后不参与更新，用？",
+      "options": ["v-pre", "v-once", "v-cloak", "v-memo"],
+      "answer": 1,
+      "explanation": "v-once 首次渲染后跳过 patch（v-pre 是跳过编译，语义不同）（呼应 vue-template-syntax 第一、六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "@submit.prevent 里的 .prevent 作用是？",
+      "options": ["阻止事件冒泡", "阻止表单默认提交行为", "只触发一次", "使用捕获阶段"],
+      "answer": 1,
+      "explanation": ".prevent 调 preventDefault 阻止默认；.stop 才阻止冒泡（呼应 vue-template-syntax 第四节）。"
+    }
+  ]
+}

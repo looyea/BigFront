@@ -1,0 +1,72 @@
+{
+  "title": "vue-async-suspense 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "defineAsyncComponent 的工厂函数应返回什么？",
+      "options": ["一个组件对象", "一个解析出组件的 Promise（如 import()）", "一个字符串路径", "一个 ref"],
+      "answer": 1,
+      "explanation": "返回 Promise<组件>，配合 import() 实现按需加载（呼应 vue-async-suspense 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "异步组件对打包产物的直接好处是？",
+      "options": [
+        "让组件运行更快",
+        "被拆成独立 chunk、用到才下载，缩小首屏 bundle",
+        "自动做懒加载图片",
+        "去掉 tree-shaking"
+      ],
+      "answer": 1,
+      "explanation": "import() 触发代码分割，首屏只下必要 chunk（呼应 vue-async-suspense 第一、四节、10-vite 分包）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "loadingComponent 常配哪个选项来避免网络快时加载态\"闪一下\"？",
+      "options": ["timeout", "delay", "suspensible", "onError"],
+      "answer": 1,
+      "explanation": "delay 只有加载超过该时长才显示 loading（呼应 vue-async-suspense 第一节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "<Suspense> 的两个插槽/两种状态是？",
+      "options": [
+        "header / footer",
+        "default（就绪内容）/ fallback（加载中）",
+        "if / else",
+        "before / after"
+      ],
+      "answer": 1,
+      "explanation": "pending 显示 fallback、resolve 显示 default（呼应 vue-async-suspense 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "路由懒加载 component: () => import('./View.vue') 本质用了本讲哪个机制？",
+      "options": ["effectScope", "异步组件 + 代码分割", "provide/inject", "computed"],
+      "answer": 1,
+      "explanation": "路由组件用异步组件机制按需拉取（呼应 vue-async-suspense 第四节、vue-router-guard-lazy）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "下列哪种组件最不该设成异步组件？",
+      "options": ["首屏立即可见的核心导航栏", "点击才打开的富文本编辑器弹窗", "某个低频后台页面", "图表详情页的图"],
+      "answer": 0,
+      "explanation": "首屏关键内容异步会多一次往返、延迟出现；异步用于低频/按需块（呼应 vue-async-suspense 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 <Suspense> 的现状，正确的是？",
+      "options": ["完全稳定、生产首选", "仍是实验性，API/SSR 支持可能变，谨慎用于核心路径", "只能配 v-show", "已废弃"],
+      "answer": 1,
+      "explanation": "官方标注实验性，需留意兼容性（呼应 vue-async-suspense 第三节）。"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "title": "react-router-basics 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "BrowserRouter 同步 URL 与 UI 依赖什么？对部署有何要求？",
+      "options": [
+        "location.hash；无需服务端配置",
+        "HTML5 History API；服务端需把未知路径回退到 index.html",
+        "iframe；需 CORS",
+        "WebSocket；需网关"
+      ],
+      "answer": 1,
+      "explanation": "history 模式需服务端回退（呼应 react-router-basics 第一节、vue-router-basics）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "React Router 里给某路由指定要渲染的组件用的是？",
+      "options": ["component: Home 配置项", "element={<Home/>}", "to=\"/home\"", "render=\"Home\""],
+      "answer": 1,
+      "explanation": "Route 用 element 传一个 React 元素（呼应 react-router-basics 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "为什么 SPA 内部跳转要用 <Link> 而不是 <a href>？",
+      "options": [
+        "<a> 会整页刷新、丢失 SPA state，Link 走 History API 无刷新",
+        "<a> 不支持样式",
+        "Link 能自动 prefetch 数据",
+        "没有区别，只是习惯"
+      ],
+      "answer": 0,
+      "explanation": "a 触发浏览器导航刷新整页（呼应 react-router-basics 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "做导航项\"当前页高亮\"最方便的是哪个组件？",
+      "options": ["Link", "Outlet", "NavLink", "Routes"],
+      "answer": 3,
+      "explanation": "NavLink 提供 isActive 用于激活态（呼应 react-router-basics 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "要读取 /user/:id 里的 id，用哪个 Hook？",
+      "options": ["useParams", "useNavigate", "useLocation", "useSearchParams"],
+      "answer": 0,
+      "explanation": "useParams 拿动态段（呼应 react-router-basics 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "嵌套路由里，子路由渲染在父组件的哪个位置？",
+      "options": ["<router-view>", "<Outlet />", "<slot>", "<Routes>"],
+      "answer": 1,
+      "explanation": "Outlet 是子路由插槽，等于 Vue router-view（呼应 react-router-basics 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "<Route index element=...> 的作用是？",
+      "options": [
+        "定义首页为默认导出",
+        "当只匹配到父路径本身时渲染的默认子路由",
+        "开启严格匹配",
+        "重定向到根路径"
+      ],
+      "answer": 1,
+      "explanation": "index 路由=父路径的默认子内容（呼应 react-router-basics 第四节）。"
+    }
+  ]
+}

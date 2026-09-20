@@ -1,0 +1,87 @@
+{
+  "title": "ts-object-types 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "strict 模式下 email?: string 的真实类型是？",
+      "options": ["string", "string | undefined", "string | null", "只表示'可省略'，类型仍是 string"],
+      "answer": 1,
+      "explanation": "可选属性等价于 T | undefined，使用前需判空或用可选链。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "readonly 修饰符的作用是？",
+      "options": [
+        "运行时冻结对象，任何方式都改不了",
+        "编译期禁止重新赋值该属性（擦除后 JS 仍可改，非安全机制）",
+        "让属性变可选",
+        "禁止读取该属性"
+      ],
+      "answer": 1,
+      "explanation": "readonly 只是编译期约束，防手滑重赋值；真运行时不可变要 Object.freeze。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "type Bad = { [k: string]: number; name: string } 为什么报错？",
+      "options": [
+        "语法错误",
+        "具名属性 name: string 与索引签名 number 不兼容（所有属性必须兼容索引签名类型）",
+        "不能同时写索引和具名",
+        "其实不报错"
+      ],
+      "answer": 1,
+      "explanation": "索引签名约束整个对象：具名属性类型必须可赋给索引签名值类型。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "TS 判断两个类型是否兼容，依据是什么？",
+      "options": [
+        "名字是否相同（名义类型）",
+        "形状/成员是否结构兼容（结构化类型），成员更丰富的可满足更精简的",
+        "文件位置",
+        "是否 export"
+      ],
+      "answer": 1,
+      "explanation": "TS 是结构化类型（鸭子类型）：看形状不看名字，无需 implements 即可匹配。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么 {x:1,y:2,z:3} 直接赋给 type Pt={x,y} 报错，但先存进变量再赋就不报？",
+      "options": [
+        "编译器 bug",
+        "过剩属性检查只针对'新鲜'对象字面量直接赋值，经变量中转走结构兼容不再检查",
+        "变量是 any",
+        "因为 z 被删除了"
+      ],
+      "answer": 1,
+      "explanation": "excess property check 只作用于字面量直赋，帮抓拼写错；中转变量会绕过。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "想表达'键任意、值未知的对象'，最推荐？",
+      "options": ["Object", "{}", "Record<string, unknown> 或 { [k: string]: unknown }", "any"],
+      "answer": 2,
+      "explanation": "Object/{} 语义怪异、any 放弃检查；Record<string,unknown> 既表达任意键又强制取值时收窄。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 'r' in s 这种写法，下列说法正确的是？",
+      "options": [
+        "只能运行时用，与类型无关",
+        "既是运行时判断键存在，也能作为类型守卫把联合对象收窄到含该属性的分支",
+        "会修改对象",
+        "只能用于数组"
+      ],
+      "answer": 1,
+      "explanation": "in 运算符参与控制流分析，可把 Shape 联合收窄到 Circ（详见 ts-narrowing）。"
+    }
+  ]
+}

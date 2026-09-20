@@ -1,0 +1,87 @@
+{
+  "title": "react-testing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Testing Library 的核心测试理念是？",
+      "options": [
+        "按用户使用方式测（查询 DOM、触发交互、断言结果），而非测内部实现细节",
+        "尽量测组件内部 state 和方法",
+        "只用快照测试",
+        "每个组件测私有 className"
+      ],
+      "answer": 0,
+      "explanation": "测行为不测实现（呼应 react-testing 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "要断言\"某元素不应该存在\"，应使用哪个查询？",
+      "options": ["getByRole", "findByRole", "queryByRole（返回 null 不抛错）", "getAllByRole"],
+      "answer": 2,
+      "explanation": "query 找不到返回 null，配 toBeNull（呼应 react-testing 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "内容要等接口返回后才渲染出来，最合适的查询是？",
+      "options": ["getByText", "findByText（返回 Promise 自动等待）", "queryByText", "getByTestId"],
+      "answer": 1,
+      "explanation": "find 自动轮询等待出现（呼应 react-testing 第二、四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "userEvent 相比 fireEvent 的优势是？",
+      "options": [
+        "更快、不用 await",
+        "能测私有方法",
+        "不需要渲染",
+        "模拟真实用户行为序列（focus/pointer/逐字键入），更贴近真实交互"
+      ],
+      "answer": 3,
+      "explanation": "userEvent 触发完整事件序列（呼应 react-testing 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "被测组件依赖 Context/Router/Query，测试时应该？",
+      "options": [
+        "忽略，组件能单独渲染",
+        "修改组件去掉依赖",
+        "在 render 时包上相应的 Provider（如 MemoryRouter、QueryClientProvider）",
+        "用快照代替"
+      ],
+      "answer": 2,
+      "explanation": "测试补齐运行时上下文（呼应 react-testing 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于快照测试，合理的评价是？",
+      "options": [
+        "可防意外 UI 变化，但可读性差、易被无脑更新，不宜作主力",
+        "应作为唯一测试手段",
+        "完全不能用",
+        "只能测逻辑不能测 UI"
+      ],
+      "answer": 0,
+      "explanation": "快照有边界，优先行为断言（呼应 react-testing 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "查询元素时的优先顺序建议是？",
+      "options": [
+        "getByTestId 优先，最稳",
+        "优先可访问性语义（getByRole+name、getByLabelText、getByText），testId 作最后手段",
+        "随机选择即可",
+        "只能用 CSS 选择器"
+      ],
+      "answer": 1,
+      "explanation": "逼出无障碍、贴近用户（呼应 react-testing 第二节）。"
+    }
+  ]
+}

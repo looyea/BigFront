@@ -1,0 +1,77 @@
+{
+  "title": "vue-router-guard-lazy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "全站统一的登录鉴权检查，最适合放在哪里？",
+      "options": ["每个组件 onMounted", "全局 router.beforeEach", "afterEach", "App 的 watch"],
+      "answer": 1,
+      "explanation": "beforeEach 每次导航前统一拦截、配 meta 判断（呼应 vue-router-guard-lazy 第一、四节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "在返回风格的守卫里，想让某个导航\"取消\"（留在原页），应？",
+      "options": ["return true", "return false", "不 return", "return next()"],
+      "answer": 1,
+      "explanation": "return false 取消；返回路由对象=重定向；undefined=放行（呼应 vue-router-guard-lazy 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "beforeRouteEnter 里为什么不能直接用 this/组件实例？怎么访问？",
+      "options": [
+        "因为该组件还没创建；用 next(vm => { ... }) 回调拿实例",
+        "因为它在最后执行",
+        "因为它是异步的",
+        "其实可以直接用"
+      ],
+      "answer": 0,
+      "explanation": "进入守卫在组件实例创建前触发，需 next(vm=>) 回调（呼应 vue-router-guard-lazy 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 next 与返回值两种风格，正确做法是？",
+      "options": ["两者可以随意混用", "二选一，别在同一次导航里既 next 又 return", "只能用 next", "只能用 return"],
+      "answer": 1,
+      "explanation": "混用会导致行为不可预期，选一种（呼应 vue-router-guard-lazy 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "把登录重定向到 /login 并记住原始目标，登录后回到原页，靠什么？",
+      "options": [
+        "把 to.fullPath 塞进 query.redirect，登录后 replace 过去",
+        "存进 localStorage 轮询",
+        "用全局变量",
+        "无法实现"
+      ],
+      "answer": 0,
+      "explanation": "redirect query 回跳是标准做法（呼应 vue-router-guard-lazy 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "「前端路由守卫挡住未登录页 = 后端安全」这个说法？",
+      "options": ["对，前端拦了就安全", "错，真正鉴权必须在后端每接口校验", "只要加 meta 就安全", "用了 beforeEach 就安全"],
+      "answer": 1,
+      "explanation": "前端守卫只是 UX，可被绕过，后端才是边界（呼应 vue-router-guard-lazy 第四节、exp-auth）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "component: () => import('./X.vue') 带来的构建效果是？",
+      "options": [
+        "打包时把 X 拆成独立 chunk、进入该路由才下载",
+        "让 X 变成全局组件",
+        "禁用懒加载",
+        "把 X 内联进主包"
+      ],
+      "answer": 0,
+      "explanation": "动态 import 是代码分割点，缩小首屏（呼应 vue-router-guard-lazy 第五节、vue-async-suspense、10-vite）。"
+    }
+  ]
+}

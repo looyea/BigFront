@@ -1,0 +1,82 @@
+{
+  "title": "vue-router-nested-dynamic 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "嵌套子路由的 path 为什么通常不写前导 /？",
+      "options": [
+        "写了会报错",
+        "子 path 是相对父级的，写 / 会变成绝对路径脱离父结构",
+        "/ 表示默认子路由",
+        "纯粹风格问题"
+      ],
+      "answer": 1,
+      "explanation": "子 path 相对父级拼接；path:'' 才是默认子路由（呼应 vue-router-nested-dynamic 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "props: true 配置的作用是什么？",
+      "options": [
+        "把路由 params 自动作为 props 传给组件、解耦组件与 $route",
+        "开启缓存",
+        "禁止导航",
+        "把 query 存进 store"
+      ],
+      "answer": 0,
+      "explanation": "组件收 props 而非直接读 route，更可复用可测（呼应 vue-router-nested-dynamic 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "路由 /files/:name* 中的 :name* 表示？",
+      "options": ["name 可选、单个值", "name 零或多段、值为数组", "name 必须是数字", "匹配 404"],
+      "answer": 1,
+      "explanation": "* 零或多段(数组)，? 可选单个，+ 至少一段（呼应 vue-router-nested-dynamic 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "catch-all 404 路由 /:pathMatch(.*)* 应放在 routes 数组的什么位置？",
+      "options": ["最前", "最后", "任意位置", "紧跟首页"],
+      "answer": 1,
+      "explanation": "通配会吞其它路由，故必须最后（呼应 vue-router-nested-dynamic 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "?page=2&sort=asc 这类筛选/分页参数更适合用 query 而不是 params，理由是？",
+      "options": [
+        "query 更快",
+        "params 需在路由里声明、用于资源身份；query 承载非层级的附加状态、可任意增删",
+        "params 不能刷新",
+        "query 只在内存"
+      ],
+      "answer": 1,
+      "explanation": "身份用 params、筛选态用 query（呼应 vue-router-nested-dynamic 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "从 /user/1 切到 /user/2（同组件），onMounted 里的取数没重跑，最直接的修法是？",
+      "options": [
+        "改成 onUpdated",
+        "watch(() => route.params.id, load, { immediate:true }) 或给出口 :key=fullPath",
+        "刷新页面",
+        "用 v-if"
+      ],
+      "answer": 1,
+      "explanation": "同组件被复用不重挂载，需监听参数或强制重建（呼应 vue-router-nested-dynamic 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "route.query 里取到的值类型通常是？",
+      "options": ["number", "字符串（或字符串数组），需自行转数值", "boolean", "Object"],
+      "answer": 1,
+      "explanation": "URL 参数都是字符串，别当数字用（呼应 vue-router-nested-dynamic 第五节、node-config env 皆字符串）。"
+    }
+  ]
+}

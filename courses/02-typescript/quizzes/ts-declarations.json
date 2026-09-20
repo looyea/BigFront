@@ -1,0 +1,97 @@
+{
+  "title": "ts-declarations 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": ".d.ts 文件的本质是？",
+      "options": [
+        "编译后的 JS 产物",
+        "只含类型信息、无实现体（函数写成 ;），运行时不存在的'类型契约'",
+        "一种模块格式",
+        "source map"
+      ],
+      "answer": 1,
+      "explanation": ".d.ts 只描述形状供编译器/IDE 使用，运行时不存在（呼应类型擦除）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "对一个 import 'lodash' 的包，TS 首先从哪里找类型？",
+      "options": [
+        "总是找 @types/lodash",
+        "先看包自身 package.json 的 types/typings 或 exports 的 types 条件，找不到再看 @types",
+        "看 README",
+        "看 .js 源码推断"
+      ],
+      "answer": 1,
+      "explanation": "优先包自带类型（types/exports.types），再退到约定 index.d.ts，最后查 @types/pkg。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "declare 关键字在 .d.ts / 声明语句里的含义是？",
+      "options": [
+        "创建运行时变量",
+        "告诉编译器该值在别处运行时真实存在，这里只声明类型、不生成代码",
+        "等价于 const",
+        "禁止使用"
+      ],
+      "answer": 1,
+      "explanation": "declare 是 ambient 声明——只补类型不 emit 实现（如给全局注入变量/无类型库声明形状）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "在模块文件里给全局 Window 补一个属性，正确写法是？",
+      "options": [
+        "interface Window { ... } 直接写",
+        "declare global { interface Window { ... } }，并保持文件是模块（有 export {}）",
+        "namespace Window",
+        "declare module 'window'"
+      ],
+      "answer": 1,
+      "explanation": "模块顶层不进全局，必须包 declare global，且文件需是模块（呼应 ts-modules 第12题）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "tsc 的 declaration + declarationMap 组合作用是？",
+      "options": [
+        "只输出 JS",
+        "为源码生成 .d.ts，并让'跳转到定义'能回到 .ts 源文件",
+        "压缩代码",
+        "生成 sourcemap 给运行时"
+      ],
+      "answer": 1,
+      "explanation": "declaration 产出类型声明，declarationMap 记录回指源码位置，方便库使用者跳转。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "skipLibCheck: true 做了什么、代价是什么？",
+      "options": [
+        "跳过所有类型检查",
+        "不深入检查 node_modules 里 .d.ts 内部一致性（提速、避第三方全局冲突），代价是可能漏报 .d.ts 间真实冲突",
+        "删除 @types",
+        "只检查 .ts 不检查类型"
+      ],
+      "answer": 1,
+      "explanation": "它跳过声明文件自身的检查但仍使用其类型；库发布前应临时关掉自查（第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "给一个完全无类型、庞大的 JS 库补类型，推荐的起步策略是？",
+      "options": [
+        "一次性把全部 API 精确写完再用了",
+        "先 declare module 覆盖你实际用到的部分（必要时局部 any + TODO），随用随收紧",
+        "放弃使用它",
+        "直接改库源码"
+      ],
+      "answer": 1,
+      "explanation": "渐进式补类型（呼应 ts-migration），先能编译、逐步提高精度，不追求一次到位。"
+    }
+  ]
+}

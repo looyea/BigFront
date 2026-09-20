@@ -1,0 +1,97 @@
+{
+  "title": "mp-login 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "wx.login 拿到的 code 的正确用法是？",
+      "options": [
+        "直接当登录 token 存起来用",
+        "发给前端组件绑定到头像",
+        "传给自家后端，由后端调 code2session 换 openid/session_key",
+        "存 Storage 供下次登录复用"
+      ],
+      "answer": 2,
+      "explanation": "code 是换凭证的一次性临时凭证（5 分钟有效限用一次）（呼应 mp-login 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "openid 是什么？",
+      "options": [
+        "用户在其小程序内的唯一标识，按 appid 隔离",
+        "用户的微信号",
+        "全微信生态通用唯一 ID",
+        "随机数，每次登录都变"
+      ],
+      "answer": 0,
+      "explanation": "跨应用归一要靠 unionid（呼应 mp-login 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 session_key，正确的是？",
+      "options": [
+        "每次请求头都要带上它",
+        "它就是 JWT 的签名密钥",
+        "前端拿它解密后可以随意展示",
+        "微信发给服务器的密钥，不应下发到小程序端"
+      ],
+      "answer": 3,
+      "explanation": "泄露=可解密用户数据、伪造会话（呼应 mp-login 第一、二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "现在要拿用户头像和昵称，合规姿势是？",
+      "options": [
+        "wx.getUserProfile 静默获取",
+        "wx.getUserInfo 带弹窗获取",
+        "type=nickname 输入框 + chooseAvatar 按钮，用户主动填写选择",
+        "从 unionid 反查默认头像接口"
+      ],
+      "answer": 2,
+      "explanation": "老授权接口已回收，头像昵称变成\"用户填写\"语义（呼应 mp-login 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "手机号快速验证的正确流程是？",
+      "options": [
+        "登录时随 openid 自动带出",
+        "button open-type=getPhoneNumber → 回传 code/加密数据 → 后端调微信接口换取",
+        "wx.getPhoneNumber() 直接返回前端明文",
+        "让用户手输即可，无需微信接口"
+      ],
+      "answer": 1,
+      "explanation": "必须官方授权弹窗+后端换取，且有主体资质门槛（呼应 mp-login 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "隐私协议（__usePrivacyCheck__/指引）没配置好，最先出现的症状是？",
+      "options": [
+        "包体积超限",
+        "tabBar 不显示",
+        "setData 告警",
+        "涉及隐私的 API（位置/相册/手机号等）调用直接 fail"
+      ],
+      "answer": 3,
+      "explanation": "隐私前置是 API 级闸门（呼应 mp-login 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "拦截器收到 401（token 过期）后的标准动作序列是？",
+      "options": [
+        "清 token → 跳登录页（带 redirect）→ 登录成功 redirectTo 回原目标",
+        "再试三次，失败则忽略",
+        "reLaunch 到首页当游客",
+        "把过期 token 续期一年"
+      ],
+      "answer": 0,
+      "explanation": "与 mp-network 拦截器、mp-route redirect 场景闭环（呼应 mp-login 第五节）。"
+    }
+  ]
+}

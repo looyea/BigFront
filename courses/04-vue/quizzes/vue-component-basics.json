@@ -1,0 +1,87 @@
+{
+  "title": "vue-component-basics 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "子组件想\"修改\"父传来的 prop，正确做法是？",
+      "options": [
+        "直接 props.count++",
+        "基于它用 computed 派生，或拷贝一份本地 ref 再改",
+        "用 watch 改回去",
+        "在模板里赋值"
+      ],
+      "answer": 1,
+      "explanation": "props 单向数据流不可直接改；派生用 computed、本地副本用 ref（呼应 vue-component-basics 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "prop 的默认值是数组/对象时，default 必须怎么写？",
+      "options": ["直接写 []", "写成工厂函数 default: () => []", "写成 null", "不能给默认值"],
+      "answer": 1,
+      "explanation": "引用类型用工厂函数，避免多个实例共享同一对象（呼应 vue-component-basics 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "defineEmits 显式声明事件的主要好处是？",
+      "options": [
+        "让声明的事件不再作为原生事件透传到根元素、并作为文档/校验",
+        "自动做双向绑定",
+        "提升渲染性能",
+        "没有实际作用"
+      ],
+      "answer": 0,
+      "explanation": "声明后避免 fallthrough 歧义、便于校验与阅读（呼应 vue-component-basics 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "要让父组件自定义某列表项的渲染、同时拿到子提供的 item，应使用？",
+      "options": ["props", "作用域插槽(v-slot 接收子传数据)", "emit", "$attrs"],
+      "answer": 1,
+      "explanation": "作用域插槽把子的数据回传给父的模板渲染（呼应 vue-component-basics 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Vue 3 组件上默认 v-model 使用的 prop 与事件名是？",
+      "options": [
+        "value / input",
+        "modelValue / update:modelValue",
+        "model / change",
+        "value / update"
+      ],
+      "answer": 1,
+      "explanation": "默认 modelValue + update:modelValue；defineModel 封装它（呼应 vue-component-basics 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "组件有多个根元素时，父传入的 class/@click 等 attribute 会？",
+      "options": [
+        "自动落到第一个根元素",
+        "无法自动透传，需手动 v-bind=\"$attrs\" 指定",
+        "全部丢弃",
+        "报错崩溃"
+      ],
+      "answer": 1,
+      "explanation": "多根无单一落点，Vue 告警并要求手动绑 $attrs（呼应 vue-component-basics 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "<script setup> 里如何使用子组件？",
+      "options": [
+        "必须写 components:{} 注册",
+        "import 进来即可在模板直接当标签用（自动注册）",
+        "只能全局注册",
+        "用 require 动态引入"
+      ],
+      "answer": 1,
+      "explanation": "<script setup> 顶层 import 的组件自动注册（呼应 vue-component-basics 第一节）。"
+    }
+  ]
+}

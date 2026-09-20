@@ -9,26 +9,82 @@
   "levels": [
     {
       "id": "L1",
-      "title": "组件与 Hooks",
-      "subtitle": "useState / useEffect / JSX",
+      "title": "JSX、组件与渲染模型",
+      "subtitle": "UI = f(state)",
       "lessons": [
-        {
-          "id": "react-hooks",
-          "title": "函数组件与常用 Hooks",
-          "goal": "理解\"UI=f(状态)\"，会用 useState 管理状态、useEffect 处理副作用"
-        }
+        { "id": "react-jsx", "title": "JSX 语法与编译", "goal": "JSX 是 createElement/jsx 的语法糖、表达式插值、children、class/for/htmlFor 差异、必须单一根、XSS 自动转义、key 初识（呼应 vue-template-syntax、vue-jsx）" },
+        { "id": "react-component", "title": "函数组件与 props", "goal": "函数组件、props 只读、children、组合、受控/非受控初步、组件是函数每次渲染重新执行（呼应 vue-component-basics）" },
+        { "id": "react-render-model", "title": "渲染模型与协调 diff", "goal": "UI=f(state)、渲染时机、reconciliation、虚拟 DOM、diff 与 key、何时重渲染（呼应 vue-reactivity-theory、react-lists-keys）" }
       ]
     },
     {
       "id": "L2",
-      "title": "数据与生态",
-      "subtitle": "受控组件 / 生态选型",
+      "title": "核心 Hooks：状态与副作用",
+      "subtitle": "useState / useEffect",
       "lessons": [
-        {
-          "id": "react-ecosystem",
-          "title": "路由、状态与工程",
-          "goal": "了解 react-router、状态方案与 React 生态的整体版图"
-        }
+        { "id": "react-usestate", "title": "useState 与不可变更新", "goal": "useState、惰性初始化、函数式更新、状态不可变、对象/数组更新、批处理（呼应 vue-reactivity ref）" },
+        { "id": "react-useeffect", "title": "useEffect 与依赖数组", "goal": "useEffect、依赖数组语义、清理函数、执行时机(渲染后)、React18 严格模式双调用、闭包陈旧值（呼应 vue-watch）" },
+        { "id": "react-effect-patterns", "title": "副作用模式与坑", "goal": "数据获取、订阅、竞态与 AbortController、useLayoutEffect/useInsertionEffect、何时不用 effect（呼应 vue-effect/async-suspense、node-async-errors）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "Refs、记忆化与更多 Hooks",
+      "subtitle": "useRef / useMemo / useReducer / 并发",
+      "lessons": [
+        { "id": "react-refs", "title": "useRef 与 DOM 引用", "goal": "useRef 存可变实例、DOM ref、forwardRef/3 ref 直传、ref 时机与不触发渲染（呼应 vue-refs-expose）" },
+        { "id": "react-memo-hooks", "title": "useMemo 与 useCallback", "goal": "记忆化计算/回调、引用相等、何时值得、依赖、React Compiler 展望（呼应 vue-reactivity-theory computed）" },
+        { "id": "react-advanced-hooks", "title": "useReducer 与并发 Hooks", "goal": "useReducer 复杂状态、useId、useSyncExternalStore、useTransition/useDeferredValue 并发（呼应 pinia、状态管理）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "组件通信与逻辑复用",
+      "subtitle": "Context / 组合 / 自定义 Hook",
+      "lessons": [
+        { "id": "react-context", "title": "Context 跨层通信", "goal": "useContext、Provider、避免过度重渲染、拆分 context、context vs props/状态库（呼应 vue-provide-inject）" },
+        { "id": "react-composition", "title": "组合模式与 props 传递", "goal": "children/slot、render props、HOC、组合优于继承、提升状态（呼应 vue 组件 slot、state-patterns）" },
+        { "id": "react-custom-hooks", "title": "自定义 Hook", "goal": "抽取可复用有状态逻辑、Rules of Hooks、命名约定、可测试（呼应 vue-composables）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "表单、列表与渲染控制",
+      "subtitle": "受控组件 / key / 错误边界",
+      "lessons": [
+        { "id": "react-forms", "title": "受控与非受控表单", "goal": "受控组件、value+onChange、非受控+ref、表单校验、React Hook Form 思路（呼应 vue v-model）" },
+        { "id": "react-lists-keys", "title": "列表渲染与 key", "goal": "map 渲染、key 与 diff 复用、别用 index、排序/过滤用派生（呼应 vue-conditional-list）" },
+        { "id": "react-render-control", "title": "条件渲染与错误边界", "goal": "条件渲染/early return、渲染门、ErrorBoundary、Suspense 边界（呼应 vue-lifecycle onErrorCaptured、vue-project-architecture 错误层）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "路由与数据获取",
+      "subtitle": "React Router 7 / TanStack Query",
+      "lessons": [
+        { "id": "react-router-basics", "title": "React Router 基础", "goal": "BrowserRouter/Routes/Route/Link/NavLink、参数 useSearchParams/useParams、嵌套 Outlet（呼应 vue-router-basics）" },
+        { "id": "react-router-data", "title": "数据路由与守卫", "goal": "loader/action、data router API、useNavigate、重定向鉴权、路由懒加载（呼应 vue-router-nested-dynamic、guard-lazy、exp-rest）" },
+        { "id": "react-data-fetching", "title": "服务端状态与 TanStack Query", "goal": "useQuery/缓存/去重/失效、useMutation、服务端状态 vs 客户端状态分离（呼应 vue-state-patterns、pinia）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "状态管理、性能与测试",
+      "subtitle": "Zustand/RTK · 优化 · RTL",
+      "lessons": [
+        { "id": "react-state-mgmt", "title": "状态管理方案", "goal": "何时才需要全局态、Zustand/Redux Toolkit、单向数据流、切片选择器（呼应 vue-pinia-basics、state-patterns）" },
+        { "id": "react-performance", "title": "性能优化", "goal": "避免多余重渲染、memo/key、代码分割 React.lazy+Suspense、列表虚拟化、Profiling（呼应 vue-performance、10-vite）" },
+        { "id": "react-testing", "title": "组件测试：RTL + Vitest", "goal": "Testing Library 理念、render/query/fireEvent/userEvent、按可访问性查询、mock、异步、快照边界（呼应 vue-testing、node-testing）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "架构、Next.js 与部署",
+      "subtitle": "工程化 · RSC · 上线",
+      "lessons": [
+        { "id": "react-architecture", "title": "大型项目架构", "goal": "目录/features、组件分层、Server/Client 组件边界、避免过度全局、错误与数据兜底（呼应 vue-project-architecture、node-config）" },
+        { "id": "react-nextjs", "title": "Next.js 与 SSR/RSC", "goal": "为什么 SSR、App Router、SSR/SSG/ISR、Server vs Client Components、水合（呼应 vue-ssr-nuxt、07-nextjs）" },
+        { "id": "react-deploy", "title": "构建与部署", "goal": "vite build 产物、base、history 回退、NEXT_PUBLIC/环境变量、hash 缓存与 CDN、SPA vs SSG（呼应 vue-deploy、10-vite-deploy）" }
       ]
     }
   ]

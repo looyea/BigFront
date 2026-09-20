@@ -1,0 +1,77 @@
+{
+  "title": "react-usestate 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "React 的 useState 与 Vue 的 ref 在\"如何修改值\"上的关键区别是？",
+      "options": [
+        "React 直接改 state 变量即可，Vue 要调 set",
+        "两者完全一样",
+        "React 不能存对象",
+        "React 必须调用 setXxx(新值) 且把 state 当不可变，Vue 可就地改 .value"
+      ],
+      "answer": 3,
+      "explanation": "React 靠 set + 新引用触发更新（呼应 react-usestate 第一、二节、vue-reactivity）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "React 用什么判断要不要因这次 set 重渲染？",
+      "options": ["深比较", "JSON.stringify 比较", "Object.is(next, prev) 浅比较引用/值", "从不判断"],
+      "answer": 2,
+      "explanation": "同引用被认为没变，故要造新对象（呼应 react-usestate 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "连续两次 `setN(n+1)`（n 为本帧值）最终 n 增加了几？",
+      "options": ["1", "2", "0", "不确定，会报错"],
+      "answer": 0,
+      "explanation": "都基于同一旧 n；应改函数式 setN(p=>p+1) 才 +2（呼应 react-usestate 第三、五节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "从 localStorage 解析大对象作初始 state，最佳写法是？",
+      "options": [
+        "useState(() => JSON.parse(raw)) 惰性初始化",
+        "useState(JSON.parse(raw))",
+        "useEffect 里再 set",
+        "放全局变量"
+      ],
+      "answer": 0,
+      "explanation": "惰性初始化只在挂载算一次，避免每次渲染重复 parse（呼应 react-usestate 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "给数组 list 追加 item 的不可变写法是？",
+      "options": ["list.push(item)", "setList([...list, item])", "setList(list.push(item))", "list[list.length]=item"],
+      "answer": 1,
+      "explanation": "展开造新数组，push 改原引用不触发（呼应 react-usestate 第二节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`setCount(5); console.log(count)` 打印的是？",
+      "options": ["5", "undefined", "本次渲染的旧快照值", "报错"],
+      "answer": 2,
+      "explanation": "state 异步，本帧读到的是旧值（呼应 react-usestate 第五节、react-render-model）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "React 18 里在 setTimeout 中调用两次 setState，会？",
+      "options": [
+        "触发两次渲染",
+        "抛出警告并忽略",
+        "只在同步事件里才批处理",
+        "被自动批处理为一次渲染"
+      ],
+      "answer": 3,
+      "explanation": "18 起所有上下文自动批处理（呼应 react-usestate 第六节、react-render-model 第六节）。"
+    }
+  ]
+}

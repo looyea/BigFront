@@ -1,0 +1,92 @@
+{
+  "title": "mp-cloud 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "云开发四件套中，替代\"Express 路由层\"角色的是？",
+      "options": ["云数据库", "云调用", "云函数", "静态托管"],
+      "answer": 2,
+      "explanation": "事件触发的无状态函数≈Controller（呼应 mp-cloud 第一、二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "云函数里怎么拿到当前用户 openid？",
+      "options": [
+        "cloud.getWXContext() 直接获得，免 code2session",
+        "必须前端把 openid 当参数传进来",
+        "解析请求头 Authorization",
+        "调 wx.login 再换一次"
+      ],
+      "answer": 0,
+      "explanation": "平台注入身份上下文，是云开发\"免登录\"红利（呼应 mp-cloud 第一节、对照 mp-login）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "小程序端直连云数据库的安全前提是？",
+      "options": [
+        "接口全部 https",
+        "openid 已注入",
+        "集合数据量小",
+        "配置安全规则（如 doc._openid == auth.openid），复杂校验放云函数"
+      ],
+      "answer": 3,
+      "explanation": "规则=数据库层中间件，不信任客户端（呼应 mp-cloud 第一节权限模型）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "云调用中的\"免密钥\"指的是免管什么？",
+      "options": [
+        "免管前端 token",
+        "AppSecret 与 access_token 的获取刷新",
+        "免管数据库密码",
+        "免管 CDN 证书"
+      ],
+      "answer": 1,
+      "explanation": "订阅消息/内容安全等官方接口走平台通道（呼应 mp-cloud 第一节表、mp-login 密钥焦虑）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "云函数相对自建 Express 的典型短板是？",
+      "options": [
+        "必须自己管域名备案",
+        "无法读写数据库",
+        "冷启动延迟与重事务/复杂架构表达力",
+        "不能拿 openid"
+      ],
+      "answer": 2,
+      "explanation": "高峰预留并发可缓解冷启动；事务复杂请回 Express（呼应 mp-cloud 第二节表）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "小程序原生\"状态管理库\"普遍在补什么课？",
+      "options": [
+        "没有响应式——把\"状态变化→自动 setData\"的订阅调度封装起来",
+        "替代 setData 的跨线程传输",
+        "提供 wx.request 拦截器",
+        "组件样式隔离"
+      ],
+      "answer": 0,
+      "explanation": "一切 store 的本质是 setData 调度器（呼应 mp-cloud 第三节、mp-setdata）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "什么时候该劝退云开发改自建后端？",
+      "options": [
+        "用户量超过一千",
+        "前端同学多于后端",
+        "需要发订阅消息",
+        "出现重度关系型事务、多云/多端复用、复杂第三方集成"
+      ],
+      "answer": 3,
+      "explanation": "撞墙点提前认，迁移成本才可控（呼应 mp-cloud 第二节迁移焦虑）。"
+    }
+  ]
+}

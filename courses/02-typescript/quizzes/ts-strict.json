@@ -1,0 +1,82 @@
+{
+  "title": "ts-strict 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "开启 strictNullChecks 后，interface 里的 a?: T 其真实类型是？",
+      "options": ["T", "T | undefined", "null", "unknown"],
+      "answer": 1,
+      "explanation": "可选属性等价于 T | undefined（除非开 exactOptionalPropertyTypes 改变赋值端语义）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "noImplicitAny 的主要作用是？",
+      "options": [
+        "禁止任何显式 any",
+        "当无法推断时不允许'默默'落成 any，逼你显式标注（你仍可主动写 any）",
+        "禁用 unknown",
+        "强制泛型"
+      ],
+      "answer": 1,
+      "explanation": "它把'放弃类型'变成显式决定，堵住隐式 any 悄悄关闭下游检查（呼应 ts-any-unknown）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "noUncheckedIndexedAccess 打开后 arr[0] 的类型变成？",
+      "options": ["原元素类型", "原元素类型 | undefined", "never", "unknown"],
+      "answer": 1,
+      "explanation": "它承认索引/越界可能取到 undefined，逼你判空或用 NonNullable/守卫（strict 不含，需单独开）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "strictPropertyInitialization 报'字段无初始化'时，哪种做法最诚实？",
+      "options": [
+        "一律加 ! 消音",
+        "若确实可能没有就改成 T | undefined 并处理；确有保证再谨慎用 !",
+        "关掉该开关",
+        "改成 any"
+      ],
+      "answer": 1,
+      "explanation": "! 是'我保证'的断言、会掩盖真实 undefined；类型要反映现实（呼应 ts-any-unknown）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "strictFunctionTypes 施加逆变检查的对象是？",
+      "options": [
+        "所有函数含方法",
+        "函数类型位置（属性/签名）的参数；方法声明仍按老的双变规则不检查",
+        "只有箭头函数",
+        "只有构造函数"
+      ],
+      "answer": 1,
+      "explanation": "它只管'函数类型'参数的逆变，方法(bivariant)是历史豁免（呼应 ts-functions）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "@ts-expect-error 相比 @ts-ignore 的好处是？",
+      "options": [
+        "能屏蔽更多错误",
+        "若被'期待'的错误其实没发生，它会反向报错，避免注释失效残留",
+        "不需要注释",
+        "会自动修类型"
+      ],
+      "answer": 1,
+      "explanation": "expect-error 有'过期即报'的自愈特性，迁移清债时能提醒你删掉不再需要的抑制（第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下面哪个开关 NOT 被 strict: true 包含？",
+      "options": ["noImplicitAny", "strictNullChecks", "exactOptionalPropertyTypes", "noImplicitThis"],
+      "answer": 2,
+      "explanation": "exactOptionalPropertyTypes（及 noUncheckedIndexedAccess、noPropertyAccessFromIndexSignature）要单独开。"
+    }
+  ]
+}

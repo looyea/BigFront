@@ -1,12 +1,50 @@
 {
-  "lessonId": "node-npm",
-  "title": "Node L2 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "node-npm 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "vite、eslint 通常放在？",
+      "prompt": "字段 \"type\": \"module\" 的作用是？",
+      "options": [
+        "让项目只能用 TypeScript",
+        "决定 .js 文件按 ESM 解析（否则按 CJS）",
+        "禁止安装依赖",
+        "开启严格模式"
+      ],
+      "answer": 1,
+      "explanation": "type:module 让 .js 视为 ESM；单个文件可用 .cjs/.mjs 覆盖（呼应 node-npm 第一节、node-esm-cjs）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "^1.2.3 允许安装到的版本范围是？",
+      "options": [
+        "仅 1.2.3",
+        ">=1.2.3 <2.0.0（不改主版本）",
+        ">=1.2.3 <1.3.0",
+        "任意 1.x 及以下"
+      ],
+      "answer": 1,
+      "explanation": "^ 允许次版本+补丁升级、锁 MAJOR；~ 才只允许补丁（呼应 node-npm 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 package-lock.json，错误的是？",
+      "options": [
+        "记录本次解析出的精确版本与依赖树",
+        "应提交进 Git 保证团队/CI 一致",
+        "它锁的是版本区间而非精确版本",
+        "npm ci 严格按它安装"
+      ],
+      "answer": 2,
+      "explanation": "lockfile 锁的是精确版本+hash；区间写在 package.json（呼应 node-npm 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "typescript、eslint、vitest 一般应放哪里？",
       "options": [
         "dependencies",
         "devDependencies",
@@ -14,33 +52,46 @@
         "optionalDependencies"
       ],
       "answer": 1,
-      "explanation": "仅开发阶段用到的工具放 devDependencies。"
+      "explanation": "仅开发/构建期用、不进生产代码→devDependencies，生产安装可省略（呼应 node-npm 第五节）。"
     },
     {
-      "id": "q2",
+      "id": "q5",
       "type": "single",
-      "prompt": "`^1.2.3` 允许安装哪个版本？",
+      "prompt": "什么是\"幽灵依赖\"？哪个包管理器默认结构能避免它？",
       "options": [
-        "2.0.0",
-        "1.9.0",
-        "1.2.2 以外任意",
-        "只能 1.2.3"
+        "没写进 package.json 却能 require 到被提升的包；pnpm 非扁平结构可避免",
+        "装了却没用的包；npm 可避免",
+        "循环依赖；yarn 可避免",
+        "锁文件损坏；三者都不能避免"
       ],
-      "answer": 1,
-      "explanation": "^ 允许同一主版本内的更高次/补丁版本，故 1.9.0 符合。"
+      "answer": 0,
+      "explanation": "hoisting 让未声明的包也可导入=幽灵依赖，pnpm 严格结构杜绝（呼应 node-npm 第六、七节）。"
     },
     {
-      "id": "q3",
+      "id": "q6",
       "type": "single",
-      "prompt": "package-lock.json 应该？",
+      "prompt": "npm run dev -- --port 3000 里的 -- 作用是？",
       "options": [
-        "加入 .gitignore",
-        "提交到 Git 保证可复现安装",
-        "手动编辑",
-        "删除"
+        "注释",
+        "把其后的参数透传给脚本本身，而不是被 npm 吃掉",
+        "表示后台运行",
+        "无意义"
       ],
       "answer": 1,
-      "explanation": "lockfile 需提交，确保所有人装到完全相同版本。"
+      "explanation": "-- 分隔 npm 参数与传给底层命令的参数（呼应 node-npm 第二节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "peerDependencies 的典型用途是？",
+      "options": [
+        "可选加速依赖",
+        "声明\"由宿主提供\"的依赖（如插件需要 react），避免重复实例",
+        "锁定 Node 版本",
+        "替代 devDependencies"
+      ],
+      "answer": 1,
+      "explanation": "peer 期望宿主已装某包/版本，避免多份实例导致状态/单例问题（呼应 node-npm 第五节、Express 中间件）。"
     }
   ]
 }

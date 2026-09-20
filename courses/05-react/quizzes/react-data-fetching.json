@@ -1,0 +1,97 @@
+{
+  "title": "react-data-fetching 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "相比 useEffect 手动 fetch，TanStack Query 主要额外提供什么？",
+      "options": [
+        "自动加样式",
+        "缓存、请求去重、失效重取、加载/错误态、乐观更新等一整套",
+        "替代 JSX",
+        "免鉴权"
+      ],
+      "answer": 1,
+      "explanation": "把服务端状态管理标准化（呼应 react-data-fetching 第一、三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "queryKey 为什么常写成数组（如 ['user', id]）？",
+      "options": [
+        "只是风格，无实际作用",
+        "数组把参数编进缓存地址：换 id 自动新缓存并重取，相同 key 多处共享去重",
+        "必须是数组否则报错",
+        "为了排序"
+      ],
+      "answer": 1,
+      "explanation": "key 决定缓存与去重（呼应 react-data-fetching 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "数据变更后想让列表重新获取，惯用做法是？",
+      "options": [
+        "window.location.reload()",
+        "再 new 一个 useQuery",
+        "queryClient.invalidateQueries({ queryKey: ['todos'] })",
+        "手动 setQueryData 写死"
+      ],
+      "answer": 2,
+      "explanation": "invalidate 标记过期并触发重取（呼应 react-data-fetching 第三、四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "useMutation 相比 useQuery 在\"去重\"上的态度是？",
+      "options": [
+        "两者都自动去重",
+        "两者都不去重",
+        "mutation 去重、query 不去重",
+        "query 去重缓存，mutation 不去重（写操作每次都要执行）"
+      ],
+      "answer": 3,
+      "explanation": "写本就该每次执行，不去重（呼应 react-data-fetching 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下哪项更应交给 Zustand/Context 而不是 Query？",
+      "options": [
+        "文章列表接口数据",
+        "当前弹窗是否打开、主题色等纯客户端 UI/全局态",
+        "用户详情接口",
+        "搜索结果缓存"
+      ],
+      "answer": 1,
+      "explanation": "客户端状态交 store，服务端状态交 Query（呼应 react-data-fetching 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "\"乐观更新\"指的是？",
+      "options": [
+        "等服务器返回再更新 UI",
+        "先在本地即时改 UI（onMutate+setQueryData），失败再回滚",
+        "禁用按钮防重复",
+        "轮询服务器"
+      ],
+      "answer": 1,
+      "explanation": "先改后确认、失败回滚（呼应 react-data-fetching 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "staleTime 的作用是？",
+      "options": [
+        "请求超时时间",
+        "数据在多长时间内被视为\"新鲜\"、期间不自动重取",
+        "缓存永久保留时间",
+        "组件卸载延迟"
+      ],
+      "answer": 1,
+      "explanation": "新鲜窗口，配合失效策略（呼应 react-data-fetching 第三节）。"
+    }
+  ]
+}

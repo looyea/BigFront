@@ -1,0 +1,97 @@
+{
+  "title": "node-async-errors 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么 try/catch 抓不到 setTimeout 回调里抛出的错误？",
+      "options": [
+        "setTimeout 不允许抛错",
+        "回调在下一轮事件循环的全新调用栈里执行，届时 try 栈早已弹出",
+        "错误被 V8 自动吞掉",
+        "因为 setTimeout 是异步 API"
+      ],
+      "answer": 1,
+      "explanation": "try/catch 只能捕获同一调用栈内、同步发生的抛错。异步回调执行时原 try 栈已不存在，所以抓不到（呼应 node-event-loop）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "error-first 回调约定的“first argument”是什么？",
+      "options": [
+        "结果数据",
+        "错误对象，无错时为 null",
+        "回调函数本身",
+        "超时毫秒"
+      ],
+      "answer": 1,
+      "explanation": "Node 传统 API 约定 callback(err, result)：第一个参数是错误、成功时为 null，调用方第一件事就是 if(err) 检查。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "并行多个异步任务、希望“不因一个失败就丢掉其它结果与错误”，应优先用？",
+      "options": [
+        "Promise.all",
+        "Promise.allSettled",
+        "顺序 await",
+        "Promise.race"
+      ],
+      "answer": 1,
+      "explanation": "Promise.all 一个 reject 就整体 reject、其它错误易被吞；allSettled 等全部落定并返回每个的 status/理由，便于逐个处理（呼应 ES）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Node 15+ 对“未被 catch 的 Promise rejection”默认行为是？",
+      "options": [
+        "仅打印警告继续运行",
+        "触发 unhandledRejection，且默认导致进程退出",
+        "自动重试",
+        "忽略"
+      ],
+      "answer": 1,
+      "explanation": "自 Node 15 起未处理 rejection 默认使进程以非零码退出，逼开发者正视“悄悄丢错”；可监听 unhandledRejection 记录后处理。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "在 uncaughtException 监听器里，最推荐的姿势是？",
+      "options": [
+        "吞掉错误让进程继续跑",
+        "记录日志 + 尽力 flush + 尽快退出，交给守护进程重启",
+        "重启事件循环",
+        "忽略，等 GC 处理"
+      ],
+      "answer": 1,
+      "explanation": "未捕获异常意味着进程状态可能已不一致，继续跑会放大损坏。正确做法是记录后退出，由 pm2/systemd/K8s 拉起干净进程（crash-only）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Express 4 里 async 路由 `throw` 一个错误，默认会发生什么？",
+      "options": [
+        "自动返回 500",
+        "错误被丢弃、请求可能一直挂起不响应",
+        "进程立即退出",
+        "自动重试该路由"
+      ],
+      "answer": 1,
+      "explanation": "Express 4 不自动捕获 async rejection，需 try/catch 后 next(e)（或用 asyncHandler 包装）；Express 5/较新 router 才自动转给错误中间件（呼应 09-express）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "new Error('读配置失败', { cause: err }) 里的 cause 作用是？",
+      "options": [
+        "设置错误码",
+        "保留原始错误、形成错误链便于排查根因",
+        "让错误变异步",
+        "自动打印堆栈"
+      ],
+      "answer": 1,
+      "explanation": "ES2022 的 Error cause 允许包裹底层错误同时保留原因链，排查时能看到“表面的高层错误 + 真正的底层原因”（呼应 ES）。"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "title": "ts-migration 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "allowJs: true 在迁移中的含义是？",
+      "options": [
+        "把所有 JS 自动转成 TS",
+        "让 tsc 纳入 .js/.jsx 与 .ts 混编（默认只解析不深度检查其类型）",
+        "禁止检查 JS",
+        "只处理 JS"
+      ],
+      "answer": 1,
+      "explanation": "allowJs 允许 JS 进入编译程序、与 TS 共存；是否检查由 checkJs 决定（第三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "想把 TS 引入项目、产物仍交给 babel/现有构建，自己只用 tsc 做类型检查，关键选项是？",
+      "options": ["declaration", "noEmit: true", "isolatedModules", "skipLibCheck"],
+      "answer": 1,
+      "explanation": "noEmit 让 tsc 只跑类型检查不产出 JS，转译交给既有构建链（双轨，呼应 ts-project 第9题）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "还没把 foo.js 改成 foo.ts，怎么就能享受类型检查？",
+      "options": [
+        "不可能",
+        "文件顶加 // @ts-check，配合 JSDoc 写类型即可检查该文件",
+        "加 // @ts-nocheck",
+        "关掉 strict"
+      ],
+      "answer": 1,
+      "explanation": "@ts-check + JSDoc 让单文件在不改后缀下获得类型检查（第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "迁移外部数据（JSON.parse 结果）时的推荐姿势是？",
+      "options": [
+        "直接 as User 断言",
+        "先当 unknown，用类型守卫/zod 运行时校验后再当精确类型用",
+        "存成 any",
+        "关掉 strictNullChecks"
+      ],
+      "answer": 1,
+      "explanation": "as 只是骗编译器、运行时不校验；unknown+守卫/校验才真正在边界建立信任（第五节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "单文件迁移（改名 .ts）时，在 moduleResolution: nodenext 下 import 路径要注意？",
+      "options": [
+        "必须去掉扩展名",
+        "相对导入要写编译产物名 ./foo.js（即便源是 foo.ts）",
+        "必须写 .ts 后缀",
+        "改成绝对路径"
+      ],
+      "answer": 1,
+      "explanation": "nodenext 按运行时 ESM 规则解析，import 指向 emit 后的 .js 名（第四节，呼应 ts-modules）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "'棘轮（ratchet）'策略在迁移里指什么？",
+      "options": [
+        "一次性全量重写",
+        "让 any 数/@ts-expect-error 数/未迁移文件数等指标在 CI 里只降不升",
+        "回退到 JS",
+        "关掉 CI 类型检查"
+      ],
+      "answer": 1,
+      "explanation": "棘轮=只准进步不准回退，用 CI 卡住债务数量单调下降（第一、七节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "遇到无类型第三方 JS 库，第一步应？",
+      "options": [
+        "fork 库源码加类型",
+        "查有没有 @types/xxx；没有再写 declare module 覆盖用到的 API（先 any 兜底）",
+        "放弃该库",
+        "把整库全部精确声明完"
+      ],
+      "answer": 1,
+      "explanation": "优先现成 @types，再渐进手写最小声明覆盖用到的部分（第六节，呼应 ts-declarations）。"
+    }
+  ]
+}

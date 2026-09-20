@@ -1,0 +1,61 @@
+{
+  "title": "next-server-client 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "App Router 里一个没写任何指令的 page.tsx，默认是？",
+      "options": ["Client Component", "Server Component", "二者取决于是否 async", "Static Component"],
+      "answer": 1,
+      "explanation": "默认服务端，'use client' 才变客户端岛——server-first 是框架底色（呼应 next-server-client 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "RSC 在服务端执行后，发送给浏览器的是什么？",
+      "options": ["完整 HTML 字符串", "JSON 数据让浏览器自己渲染", "序列化的组件树描述（RSC Payload）", "虚拟 DOM diff"],
+      "answer": 2,
+      "explanation": "Payload 描述'哪些元素、props、孩子'，浏览器据此拼树——这与 SSR 的 HTML 字符串是本质区别（呼应 next-server-client 第五节表）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于标了 'use client' 的组件，正确的是？",
+      "options": ["只在浏览器渲染，SEO 看不到它", "服务端不渲染它，全部交给水合", "它会被服务端渲染进 HTML，同时其 JS 下发供水合交互", "它等同于被 React.lazy 包裹"],
+      "answer": 2,
+      "explanation": "常见误读一：'use client ≠ 只有 CSR'；首轮 HTML 与 SSR 语义一致（呼应 next-server-client 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Server Component 里不能用 useState 的根本原因是？",
+      "options": ["React 团队没实现", "服务端组件是一次性渲染，没有实例与状态存储处，也无从触发重渲染", "会泄漏密钥所以禁用", "只能用 useReducer 替代"],
+      "answer": 1,
+      "explanation": "状态挂在客户端 Fiber 实例上；服务端渲完即弃，没有'等待下次事件的那个组件实例'（呼应 next-server-client 第二节3、react-render-model）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "想把含数据库密钥的模块物理上禁止进入客户端图，工程做法是？",
+      "options": ["文件名加 .server.ts 即可", "在模块顶部 import 'server-only'", "把它放 app 目录下", "导出时 JSON.stringify 一遍"],
+      "answer": 1,
+      "explanation": "server-only 包让误用在构建期直接报错；扩展名只是命名习惯无强制力（呼应 next-server-client 第六节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "SSR 与 RSC 的关系，下列说法成立的是？",
+      "options": ["RSC 是 SSR 的一种新写法，二者互斥", "SSR 优化首屏可见，RSC 优化计算与代码的物理位置，两者正交可叠加", "有了 RSC 就不需要水合", "SSR 需要 Node，RSC 不需要任何服务器"],
+      "answer": 1,
+      "explanation": "客户端岛依然 SSR 出首屏；RSC 解决的是'谁的代码在哪跑、哪下发'（呼应 next-server-client 第五节）。"    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "页面 90% 是静态文章展示，10% 是可交互评论区。符合本课设计律的切法是？",
+      "options": ["整页 'use client' 省事", "整页异步取数后 dangerouslySetInnerHTML", "文章部分保持服务端组件，评论区单独做客户端岛", "评论也用服务端组件+表单刷新"],
+      "answer": 2,
+      "explanation": "server-first, client-minimal：交互边界画多小，JS 就下多小（呼应 next-server-client 第四节、next-perf 的包体账本）。"
+    }
+  ]
+}

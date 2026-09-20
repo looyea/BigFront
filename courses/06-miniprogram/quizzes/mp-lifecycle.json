@@ -1,0 +1,77 @@
+{
+  "title": "mp-lifecycle 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "App 的 onLaunch 什么时候触发、触发几次？",
+      "options": [
+        "每次进入小程序都触发",
+        "冷启动时触发、全局仅一次",
+        "每次前后台切换",
+        "页面加载时"
+      ],
+      "answer": 1,
+      "explanation": "onLaunch 冷启动仅一次（呼应 mp-lifecycle 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "\"从详情页返回列表页后要刷新列表\"，刷新逻辑应写在哪个钩子？",
+      "options": ["onLoad", "onReady", "onShow", "onUnload"],
+      "answer": 2,
+      "explanation": "返回只触发 onShow，不重载 onLoad（呼应 mp-lifecycle 第三、四节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "进入一个页面的正确触发顺序是？",
+      "options": [
+        "onLoad → onShow → onReady",
+        "onShow → onLoad → onReady",
+        "onReady → onLoad → onShow",
+        "onLoad → onReady → onShow"
+      ],
+      "answer": 0,
+      "explanation": "load→show→ready（首绘完成）（呼应 mp-lifecycle 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "想安全地查询节点布局/操作渲染后的内容，最合适放哪个钩子？",
+      "options": ["onLoad", "onShow", "App.onLaunch", "onReady"],
+      "answer": 3,
+      "explanation": "onReady 表示初次渲染完成（呼应 mp-lifecycle 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "navigateBack 回到上一页时，上一页触发的是？",
+      "options": ["onLoad", "onShow", "onReady", "都不触发"],
+      "answer": 1,
+      "explanation": "页面未销毁，只 onShow（呼应 mp-lifecycle 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "下列哪个不是 Page 的生命周期而是需在 json 开启的页面事件钩子？",
+      "options": ["onLoad", "onShow", "onPullDownRefresh", "onUnload"],
+      "answer": 2,
+      "explanation": "下拉刷新需 enablePullDownRefresh（呼应 mp-lifecycle 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 App.onShow，正确的是？",
+      "options": [
+        "只在冷启动触发一次",
+        "前后台切换/进入时反复触发",
+        "等价于 Page.onLoad",
+        "销毁时触发"
+      ],
+      "answer": 1,
+      "explanation": "App.onShow 随可见性反复（呼应 mp-lifecycle 第一节）。"
+    }
+  ]
+}

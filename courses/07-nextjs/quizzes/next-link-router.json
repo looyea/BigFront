@@ -1,0 +1,62 @@
+{
+  "title": "next-link-router 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Next 的 <Link> 默认在什么时机触发预取（prefetch）？",
+      "options": ["页面加载完成时预取全站所有链接", "用户点击的瞬间", "链接进入视口时预取该页的 RSC Payload", "只在 hover 时"],
+      "answer": 2,
+      "explanation": "视口驱动预取，拉的是 RSC Payload 进 Router Cache，真点击时秒开（呼应 next-link-router 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "哪种场景最应该给 Link 加 prefetch={false}？",
+      "options": ["高频访问的首页入口", "低频且后端昂贵的管理页入口，或超长列表里大量边缘链接", "所有外部域名链接", "指向锚点的链接"],
+      "answer": 1,
+      "explanation": "预取有请求账单：低频/昂贵/数量巨大时应关闭（呼应 next-link-router 第一节的代价意识）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "App Router 服务端组件里做'未登录跳 /login'，最佳写法是？",
+      "options": ["useRouter().push('/login')", "返回一个 <Navigate to='/login'/> 组件", "res.writeHead(302) 后 return", "if (!session) redirect('/login')"],
+      "answer": 3,
+      "explanation": "next/navigation 的 redirect() 在服务端直接发 3xx 中断渲染，无白屏闪烁；useRouter 是客户端钩子、Navigate 是 React Router 的东西（呼应 next-link-router 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 useSearchParams，下列说法正确的是？",
+      "options": ["服务端组件里也能直接调用", "预渲染阶段其值为空，直接使用可能水合不一致", "它返回的是普通对象 {q: 'xx'}", "它会自动触发重新取数"],
+      "answer": 1,
+      "explanation": "它是客户端钩子，SSR 首轮拿不到 query——要 Suspense 包裹或改用服务端 searchParams prop（呼应 next-link-router 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "router.refresh() 的效果是？",
+      "options": ["等价于浏览器 F5 整页重载", "清空所有客户端状态后重载", "重新执行当前路由的服务端渲染并合并数据，不重跑客户端逻辑", "只刷新当前组件"],
+      "answer": 2,
+      "explanation": "refresh 重拉 RSC Payload：服务端数据更新、客户端 state/effect 不动（呼应 next-link-router 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "小程序里 wx.redirectTo 在 Next 客户端 API 里的最贴近对应是？",
+      "options": ["router.replace", "router.push", "router.back", "router.prefetch"],
+      "answer": 0,
+      "explanation": "replace 替换当前历史条目，不能回退——与 redirectTo 换栈顶语义一致（呼应 next-link-router 第二节对照表、mp-route）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "为什么 <Link> 对 SEO 友好而某些 SPA 的 onClick 跳转不是？",
+      "options": ["Link 渲染速度更快", "Link 最终渲染真实 <a href>，无 JS 也能导航", "Link 自动携带 meta 标签", "Link 会预取所以爬虫喜欢"],
+      "answer": 1,
+      "explanation": "渐进增强的底色：真实 href 是爬虫与右键新开的基础（呼应 next-link-router 第一节、next-render-modes 的爬虫空壳问题）。"
+    }
+  ]
+}

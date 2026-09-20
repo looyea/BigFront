@@ -3,32 +3,88 @@
   "title": "微信小程序",
   "order": 6,
   "tier": "钻石 · 国民级流量入口",
-  "tagline": "一套 WXML/WXSS/JS 跑在微信里。理解小程序的双线程架构、页面生命周期与官方 API。",
+  "tagline": "一套 WXML/WXSS/JS 跑在微信里。理解双线程架构、页面/组件生命周期、官方 API 与上架全流程。",
   "icon": "🟢",
   "color": "#07c160",
   "levels": [
     {
       "id": "L1",
-      "title": "结构与生命周期",
-      "subtitle": "app.json / WXML / Page",
+      "title": "认识小程序与运行架构",
+      "subtitle": "双线程 / 目录 / 生命周期",
       "lessons": [
-        {
-          "id": "mp-basics",
-          "title": "小程序目录与页面",
-          "goal": "看懂小程序四类文件与页面生命周期，会用数据绑定渲染列表"
-        }
+        { "id": "mp-overview", "title": "小程序是什么与双线程架构", "goal": "小程序定位、与 H5/App/WebView 区别、逻辑层(渲染线程分离)双线程模型、为何不能用 DOM、整体开发范式（呼应 vue-reactivity-theory 渲染、exp-server 心智）" },
+        { "id": "mp-directory", "title": "目录结构与全局配置", "goal": "app.js/app.json/app.wxss/project.config.json/sitemap 四类角色、pages 注册、window/tabBar 全局配置、page.json 局部覆盖（呼应 vue-project-architecture、10-vite）" },
+        { "id": "mp-lifecycle", "title": "应用与页面生命周期", "goal": "App onLaunch/onShow/onHide、Page onLoad/onShow/onReady/onHide/onUnload、触发顺序与用途、页面栈概念（呼应 vue-lifecycle、react-component）" }
       ]
     },
     {
       "id": "L2",
-      "title": "API 与网络",
-      "subtitle": "wx.request / 组件 / 分包",
+      "title": "WXML / WXSS 与数据绑定",
+      "subtitle": "视图层语法",
       "lessons": [
-        {
-          "id": "mp-api",
-          "title": "官方 API 与交互",
-          "goal": "会发起网络请求、使用交互 API，并了解组件与分包优化"
-        }
+        { "id": "mp-wxml", "title": "WXML 模板语法", "goal": "数据绑定 {{}}、运算、属性绑定、wxs、与 JSX/vue-template 对照、block（呼应 vue-template-syntax、react-jsx）" },
+        { "id": "mp-wxss", "title": "WXSS 与 rpx 适配", "goal": "WXSS 扩展、rpx 单位与屏幕适配、样式导入 @import、全局 vs 页面样式、选择器限制、darkmode（呼应 vue-class-style-transition）" },
+        { "id": "mp-render", "title": "列表与条件渲染", "goal": "wx:for/wx:for-item/index/key、wx:if/wx:elif/hidden 差异、节点与 setData 关系、别用 index 作 key（呼应 vue-conditional-list、react-lists-keys）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "事件、setData 与交互",
+      "subtitle": "数据是驱动核心",
+      "lessons": [
+        { "id": "mp-events", "title": "事件系统与传参", "goal": "bind/catch 冒泡与捕获、tap/input/change、dataset 传参、事件对象、阻止冒泡（呼应 vue-class-style、react-forms 事件）" },
+        { "id": "mp-setdata", "title": "setData 原理与性能", "goal": "setData 做什么(逻辑层→渲染线程通信+diff)、异步、路径更新、勿传大数据/高频、回调（呼应 react-render-model、vue-reactivity）" },
+        { "id": "mp-interaction", "title": "交互与反馈 API", "goal": "showToast/showModal/showLoading/actionSheet/pull-down 刷新等交互反馈、封装统一提示（呼应 react-effect-patterns）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "路由与页面",
+      "subtitle": "页面栈与 tabBar",
+      "lessons": [
+        { "id": "mp-route", "title": "页面路由与跳转", "goal": "navigateTo/redirectTo/switchTab/reLaunch/navigateBack、tabBar 页与普通页规则、页面栈上限、url 传参（呼应 vue-router-basics、react-router-basics）" },
+        { "id": "mp-tabbar", "title": "tabBar 与多页结构", "goal": "tabBar 配置/list/icon/selected、徽标、自定义 tabBar、与分包首页关系（呼应 vue-router-nested-dynamic）" },
+        { "id": "mp-communication", "title": "页面间通信", "goal": "url 参数、getCurrentPages、eventChannel、全局 globalData、缓存、状态管理思路（呼应 react-context、vue-provide-inject）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "自定义组件",
+      "subtitle": "组件化开发",
+      "lessons": [
+        { "id": "mp-component", "title": "组件创建与 properties", "goal": "Component 构造器、properties/数据/方法、styleIsolation、usingComponents、与 Page 关系（呼应 vue-component-basics、react-component）" },
+        { "id": "mp-component-comm", "title": "组件通信与 slot", "goal": "父传子 properties、子传父 triggerEvent、selectComponent/组件实例、slot/默认插槽、属性观察者（呼应 vue-component slot、react-composition）" },
+        { "id": "mp-component-lifecycle", "title": "组件生命周期与 behavior", "goal": "created/attached/ready/detached、pageLifetimes、properties observer、behavior 复用（呼应 vue-lifecycle、react-custom-hooks）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "网络与开放能力",
+      "subtitle": "request / 登录 / 支付",
+      "lessons": [
+        { "id": "mp-network", "title": "网络请求与封装", "goal": "wx.request、域名白名单与 https、超时/并发、Promise 封装与拦截、上传下载（呼应 09-exp-rest、react-data-fetching）" },
+        { "id": "mp-login", "title": "登录与授权", "goal": "wx.login→code→后端换 openid/session_key、手机号授权、用户信息、隐私合规、token 存储（呼应 09-exp-auth、node-config）" },
+        { "id": "mp-openapi", "title": "开放接口", "goal": "支付、分享 onShareAppMessage、扫码/蓝牙/定位、订阅消息、能力按需与审核（呼应 react-architecture 边界）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "存储、分包与性能",
+      "subtitle": "体验优化",
+      "lessons": [
+        { "id": "mp-storage", "title": "数据缓存", "goal": "setStorage/getStorage 同步异步、容量限制、过期策略、与 globalData/内存取舍、隐私（呼应 node-config、vue-pinia 持久化）" },
+        { "id": "mp-subpackage", "title": "分包加载", "goal": "主包/分包、subPackages、预下载、独立分包、分包大小限制、按需加载策略（呼应 10-vite-splitting、react-performance）" },
+        { "id": "mp-performance", "title": "性能与体验优化", "goal": "启动/首屏优化、setData 精简、长列表、图片、Skyline 渲染引擎、体验评分与监控（呼应 vue-performance、react-performance）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "工程化、跨端与上架",
+      "subtitle": "框架与发布",
+      "lessons": [
+        { "id": "mp-framework", "title": "跨端框架 Taro/uni-app", "goal": "为何跨端、用 React/Vue 写小程序、编译原理、原生 vs 框架取舍、多端差异抹平（呼应 04-vue、05-react、react-architecture）" },
+        { "id": "mp-cloud", "title": "云开发与状态管理", "goal": "微信云开发(云函数/云数据库/存储)、Serverless、无后端场景、原生状态管理方案（呼应 09-express、node-deploy-perf、react-state-mgmt）" },
+        { "id": "mp-publish", "title": "调试、真机与上架", "goal": "开发者工具/真机调试/vConsole、埋点监控、审核规范与驳回、体验版、发布灰度（呼应 react-deploy、exp-deploy）" }
       ]
     }
   ]

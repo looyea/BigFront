@@ -1,0 +1,97 @@
+{
+  "title": "ts-intro 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "'类型擦除'指的是什么？",
+      "options": [
+        "编译后类型被加密",
+        "TS 类型在编译成 JS 后被完全删除，产物里不含任何类型信息",
+        "运行时动态删除未使用变量",
+        "把 any 转成具体类型"
+      ],
+      "answer": 1,
+      "explanation": "类型只存在于编译期，跑起来是普通 JS——运行时没有类型信息，泛型也被擦除。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于泛型 <T>，因为类型擦除，运行时能做什么？",
+      "options": [
+        "可以 if (T === string)",
+        "拿不到 T，无法在运行时判断类型参数",
+        "可以用 T 创建实例",
+        "T 会保留在 metadata 里默认可读"
+      ],
+      "answer": 1,
+      "explanation": "Array<T> 运行时就是普通数组，T 消失——这与 Java/C# 泛型不同。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`tsc --noEmit` 的作用是？",
+      "options": [
+        "只编译不检查类型",
+        "只做类型检查、报告错误，但不产出任何 JS 文件",
+        "清空输出目录",
+        "禁用 sourcemap"
+      ],
+      "answer": 1,
+      "explanation": "--noEmit 是'只抓 bug 不产出'模式，CI 门禁常用。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么'脚本能用 tsx/esbuild 跑起来'不代表没有类型错误？",
+      "options": [
+        "因为 tsx 会隐藏所有错误",
+        "转译工具(esbuild/tsx)只删类型转 JS，根本不做类型检查",
+        "因为浏览器会兜底",
+        "其实跑起来就等于类型正确"
+      ],
+      "answer": 1,
+      "explanation": "'能跑'靠转译、'有没有类型错'靠 tsc，两者独立。要 tsc --noEmit 才知类型是否过关。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "tsconfig 里 target 和 lib 分别控制什么？",
+      "options": [
+        "都控制输出路径",
+        "target 控制输出 JS 的语法版本(降级到哪)，lib 控制可用的全局 API 类型(如 DOM)",
+        "target 控制严格模式，lib 控制模块",
+        "两者等价"
+      ],
+      "answer": 1,
+      "explanation": "target=语法降级目标；lib=注入哪些全局环境类型声明。写 Node 需 @types/node。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "TS 类型对'接口返回的 JSON'能自动保证安全吗？",
+      "options": [
+        "能，类型会在运行时校验",
+        "不能，外部数据运行时不带类型，需 typeof/zod 等运行时校验（类型只是静态近似）",
+        "能，只要加 :User 标注",
+        "不能，所以 TS 无用于接口"
+      ],
+      "answer": 1,
+      "explanation": "JSON.parse 回来是 any/unknown，类型擦除后无运行时校验。标注骗不过真实数据，需 schema 校验。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下关于 TS 的说法，正确的是？",
+      "options": [
+        "TS 让程序运行更快",
+        "TS 是 JS 的超集，任何合法 JS 都是合法 TS",
+        "TS 必须先全量重写才能用",
+        "TS 给 JS 增加了新的运行时能力"
+      ],
+      "answer": 1,
+      "explanation": "超集关系；TS 不提升运行速度、不改运行时行为、可渐进迁移。"
+    }
+  ]
+}

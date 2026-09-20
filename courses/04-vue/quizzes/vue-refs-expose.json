@@ -1,0 +1,77 @@
+{
+  "title": "vue-refs-expose 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "模板 ref 指向的 DOM 元素，最早在什么时候能拿到非 null 值？",
+      "options": ["setup 执行时", "onBeforeMount", "onMounted 之后", "永远同步可用"],
+      "answer": 2,
+      "explanation": "DOM 在挂载后才存在，ref 也随之有值（呼应 vue-refs-expose 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "useTemplateRef('input') 相比\"同名 ref 变量\"的主要好处是？",
+      "options": [
+        "运行更快",
+        "显式取模板引用、不与普通变量混淆、TS 能推断元素类型",
+        "不需要 onMounted",
+        "能自动聚焦"
+      ],
+      "answer": 1,
+      "explanation": "把隐式魔法变显式 API，类型更安全（呼应 vue-refs-expose 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "<script setup> 子组件没写 defineExpose，父通过组件 ref 调子方法会？",
+      "options": ["正常调用", "拿到 undefined（组件默认封闭）", "编译报错", "自动暴露全部"],
+      "answer": 1,
+      "explanation": "<script setup> 默认封闭，须 defineExpose 才开放（呼应 vue-refs-expose 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "函数 ref 的调用时机是？",
+      "options": [
+        "只在挂载时调一次",
+        "元素挂载时以 el 调用、卸载时以 null 调用",
+        "每次渲染都只传 el",
+        "等价于 watch"
+      ],
+      "answer": 1,
+      "explanation": "挂载给 el、卸载给 null，适合第三方 init/dispose（呼应 vue-refs-expose 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "下面哪个更应改用数据驱动而不是 ref 操作 DOM？",
+      "options": ["调用 input.focus()", "手动 el.innerText='hi' 改文本", "video.play()", "editor.init(el)"],
+      "answer": 1,
+      "explanation": "改文本该用插值/state，直接 innerText 绕过响应式模型（呼应 vue-refs-expose 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "被 v-if 隐藏的元素，其模板 ref 值是？",
+      "options": ["仍指向旧 DOM", "变回 null", "抛错", "自动 keep-alive"],
+      "answer": 1,
+      "explanation": "元素不存在时 ref 复位为 null，用前判空（呼应 vue-refs-expose 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "defineExpose 的最佳实践是？",
+      "options": [
+        "把组件所有内部状态都暴露出去",
+        "只暴露必要的公开方法、保持窄接口",
+        "每个组件都必须写",
+        "用它代替 props"
+      ],
+      "answer": 1,
+      "explanation": "公开 API 要窄、以方法为主，避免泄漏内部实现（呼应 vue-refs-expose 第四节）。"
+    }
+  ]
+}

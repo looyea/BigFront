@@ -1,0 +1,97 @@
+{
+  "title": "ts-publish 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "发布一个 TS 库到 npm，实际应该发布的内容是？",
+      "options": [
+        "只发 .ts 源码，让用户自己编译",
+        "编译后的 JS + 对应的 .d.ts 类型声明",
+        "只发 .d.ts，运行时靠用户猜",
+        "把整个 src + node_modules 打包发上去"
+      ],
+      "answer": 1,
+      "explanation": "TS 类型编译期擦除，消费方运行的是 JS、类型信息来自随包发布的 .d.ts。合格产物是 JS(各格式) + 配套 .d.ts（呼应 ts-intro、ts-declarations）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "在 exports 映射里，types 条件为什么必须放在 import/require 之前？",
+      "options": [
+        "纯属风格，无实际影响",
+        "Node/TS 按顺序匹配条件，types 排后面就永远轮不到，导致找不到类型",
+        "types 只能出现一次",
+        "为了减小包体积"
+      ],
+      "answer": 1,
+      "explanation": "exports 条件是顺序敏感的，先匹配先用。types 必须第一个，否则 TS 会先命中 import/require 拿到 .js 而报“找不到声明文件”（呼应 ts-declarations 查找顺序）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "什么是 dual package hazard（双包陷阱）？",
+      "options": [
+        "同时发两个不同版本的包",
+        "同一库的 ESM 与 CJS 两份实例被同时加载，导致单例/instanceof/模块状态错乱",
+        "package.json 写了两份 exports",
+        "既发 npm 又发 GitHub"
+      ],
+      "answer": 1,
+      "explanation": "import 吃 ESM 版、require 吃 CJS 版会让 Node 加载两份独立实例，破坏共享单例与 instanceof。ESM-only 可从根上避免（呼应 ts-modules）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "are-the-types-wrong（attw）和 publint 各自帮你检查什么？",
+      "options": [
+        "attw 查类型/解析姿势是否正确，publint 查 package.json 字段是否规范",
+        "两者都是打包器",
+        "两者都只是格式化",
+        "attw 查安全漏洞，publint 查测试覆盖率"
+      ],
+      "answer": 0,
+      "explanation": "attw 模拟 bundler/node16/nodeNext 等各消费方式看类型/运行时解析对不对、是否踩双包坑；publint 检查 exports/files/type 等字段是否规范（呼应 ts-tooling 质量门禁）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "你从公共库里删除了一个已被导出的接口字段，按 SemVer 应该？",
+      "options": [
+        "升 PATCH（改一行而已）",
+        "升 MINOR（只是删字段）",
+        "升 MAJOR（这是破坏性变更）",
+        "不用升版本"
+      ],
+      "answer": 2,
+      "explanation": "导出的类型/接口就是公共 API 契约，删字段会让依赖它的用户编译失败，属 breaking，须升 MAJOR（可用 @deprecated 先过渡一个版本）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "declarationMap: true 给库消费者带来的体验是？",
+      "options": [
+        "让运行时更快",
+        "在“跳转到定义”时能从 .d.ts 跳回你的 .ts 源码",
+        "自动减小 bundle 体积",
+        "生成单元测试"
+      ],
+      "answer": 1,
+      "explanation": "配合 declaration 的 .d.ts.map，IDE 能把定义跳转到原始 TS 源码而非只读的 .d.ts，大幅提升可读性（呼应 ts-project）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "package.json 里的 files 字段作用是？",
+      "options": [
+        "列出源码里 import 了哪些文件",
+        "白名单：决定哪些文件被打进发布的 tarball",
+        "声明库支持的文件后缀",
+        "指定 tsconfig include"
+      ],
+      "answer": 1,
+      "explanation": "files 是发布白名单（如 [\"dist\",\"README.md\"]），控制 npm 包里到底放哪些文件，避免把源码目录/测试/杂物一起发出去（npm pack --dry-run 可核对）。"
+    }
+  ]
+}

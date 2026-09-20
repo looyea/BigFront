@@ -1,0 +1,92 @@
+{
+  "title": "mp-route 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "从列表进入详情、需要能返回上一页，应该用？",
+      "options": ["redirectTo", "switchTab", "navigateTo", "reLaunch"],
+      "answer": 2,
+      "explanation": "navigateTo 压栈保留当前页可 back（呼应 mp-route 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "登录成功后进入首页、不希望返回到登录页，最合适的 API 是？",
+      "options": [
+        "navigateTo（把登录页压在下面）",
+        "redirectTo（替换栈顶，登录页销毁）",
+        "navigateBack",
+        "switchTab 之前先 navigateTo 首页"
+      ],
+      "answer": 1,
+      "explanation": "替换栈顶不让回退（呼应 mp-route 第二节决策表）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "wx.navigateTo({ url: '/pages/home/home' }) 失败，home 是 tabBar 页，为什么？",
+      "options": [
+        "url 必须以 .html 结尾",
+        "页面栈没满也不会失败，是别的原因",
+        "home 页没注册也能跳但会白屏",
+        "tabBar 页只能 switchTab/reLaunch 进入，navigateTo 被禁止"
+      ],
+      "answer": 3,
+      "explanation": "tab 页通行铁律（呼应 mp-route 第二节铁律）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "页面栈上限与超限行为？",
+      "options": [
+        "10 层，第 11 次 navigateTo 失败",
+        "5 层，自动丢掉栈底",
+        "无上限，只受内存限制",
+        "10 层，自动 redirectTo 化继续跳"
+      ],
+      "answer": 0,
+      "explanation": "上限 10，深层流程要 redirect 或重设计（呼应 mp-route 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "?id=5 跳转后 onLoad(query) 里 query.id 是？",
+      "options": [
+        "数字 5",
+        "undefined",
+        "字符串 \"5\"",
+        "对象 {id:5}"
+      ],
+      "answer": 2,
+      "explanation": "query 值全是字符串，需自行转型（呼应 mp-route 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "B 页操作后返回 A 页，A 页需要知道 B 页产生的新数据，url 传参做不到，可用？",
+      "options": [
+        "把数据写进 B 页 wxss 里传递",
+        "重新打开 A 页（reLaunch 全部）",
+        "不可能，只能让用户手动刷新",
+        "eventChannel 或 globalData/getCurrentPages 拿 A 页实例回调"
+      ],
+      "answer": 3,
+      "explanation": "回传机制下一课展开（呼应 mp-route 第三节、mp-communication）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "小程序没有路由守卫，登录拦截的常用做法是？",
+      "options": [
+        "在 app.wxss 里配置路由规则",
+        "入口/onLoad 判断登录态 redirect 到登录页 + 封装跳转做集中拦截",
+        "审核时由微信服务端拦截",
+        "在 project.config.json 声明 guard"
+      ],
+      "answer": 1,
+      "explanation": "拦截器思想替代 beforeEach（呼应 mp-route 第四节）。"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "title": "react-jsx 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "JSX 编译后本质上是什么？",
+      "options": [
+        "createElement/jsx 函数调用，返回描述 UI 的普通 JS 对象",
+        "一段 HTML 字符串",
+        "直接的 DOM 节点",
+        "一种新的模板语言运行时"
+      ],
+      "answer": 0,
+      "explanation": "JSX 是 JS 语法糖，编译成返回 React Element 对象的函数调用（呼应 react-jsx 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "JSX 里为什么用 className 而不是 class？",
+      "options": ["HTML 规范", "性能更好", "class 是 JS 保留字", "React 约定区分组件"],
+      "answer": 2,
+      "explanation": "JSX 是 JS，class 是关键字，故改名 className（呼应 react-jsx 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "下面关于 {} 插值，错误的是？",
+      "options": [
+        "可以放三元表达式",
+        "可以放 a + b 这样的表达式",
+        "可以放 array.map(...) 返回的数组",
+        "可以放 if 语句"
+      ],
+      "answer": 3,
+      "explanation": "{} 只能放有返回值的表达式，不能放 if/var 语句（呼应 react-jsx 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "count 为 0 时，渲染 `{count && <List/>}` 会发生什么？",
+      "options": ["会渲染出一个 0", "什么都不渲染", "报错", "渲染 <List/>"],
+      "answer": 0,
+      "explanation": "0 会被渲染出来，false/null/undefined 才不渲染；应用 count > 0 && ...（呼应 react-jsx 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "JSX 防止 XSS 的机制是？",
+      "options": [
+        "要求开发者手动 escape",
+        "禁止渲染任何字符串",
+        "对 {} 插入的字符串自动转义",
+        "依赖 CSP 头"
+      ],
+      "answer": 2,
+      "explanation": "React 默认转义插值，富文本才用 dangerouslySetInnerHTML（呼应 react-jsx 第五节、exp-security）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "新自动 JSX 运行时(React 17+)相比经典写法的改进是？",
+      "options": ["必须 import React", "不再支持 Fragment", "只能在浏览器运行", "无需 import React、产物更小、利于 tree-shaking"],
+      "answer": 3,
+      "explanation": "自动运行时编译到 react/jsx-runtime，免 import React（呼应 react-jsx 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "渲染多个平级根节点又不要多余 DOM，应使用？",
+      "options": ["Fragment <>...</>", "<div> 包一层", "用注释包裹", "返回数组字符串"],
+      "answer": 0,
+      "explanation": "Fragment 不产生额外 DOM 节点；需 key 时用 React.Fragment（呼应 react-jsx 第二节）。"
+    }
+  ]
+}

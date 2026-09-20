@@ -1,0 +1,97 @@
+{
+  "title": "ts-decorators 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "装饰器本质上是什么、什么时候运行？",
+      "options": [
+        "一种注释，不运行",
+        "一个函数，在它所贴的声明被定义时运行，可读取/修改目标或登记元数据",
+        "运行时才动态生成的类",
+        "一种类型别名"
+      ],
+      "answer": 1,
+      "explanation": "装饰器=定义期执行的高阶函数，作用于类/方法/字段/访问器/参数五类。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "NestJS/TypeORM 为什么需要 experimentalDecorators + emitDecoratorMetadata？",
+      "options": [
+        "为了性能",
+        "它们基于老版装饰器语义，且 DI 靠 emitDecoratorMetadata 把构造参数类型写进 design:paramtypes 元数据",
+        "为了支持泛型",
+        "只是习惯，不开也行"
+      ],
+      "answer": 1,
+      "explanation": "老版签名 + 反射类型元数据是其 DI 的地基；新版标准装饰器暂未含参数装饰器/类型反射（第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "@register(\"user\") 这种带参数装饰器为什么写成'工厂返回装饰器'？",
+      "options": [
+        "语法糖，等价于两个函数拼写",
+        "因为 TS 要求 @ 后是表达式：先调用 @register(\"user\") 得到真正的装饰器函数再去装饰目标",
+        "为了异步",
+        "其实不能带参数"
+      ],
+      "answer": 1,
+      "explanation": "带参装饰器=装饰器工厂：外层接收配置参数、返回真正的 (target)=>... 装饰器。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "emitDecoratorMetadata 解决的核心难题是？",
+      "options": [
+        "让 class 更快",
+        "泛型擦除下运行时本拿不到类型，它把类型主动写进元数据供 DI 读取",
+        "自动补全",
+        "生成 .d.ts"
+      ],
+      "answer": 1,
+      "explanation": "呼应 ts-generic-constraints 构造器令牌——类型信息需作为值/元数据显式携带，装饰器把它写入 Reflect 元数据。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "@Column()、@Expose() 这类字段装饰器通常做什么？",
+      "options": [
+        "直接给字段赋默认值",
+        "只登记元数据（列名/序列化规则），真正行为由库运行时读元数据执行",
+        "删除字段",
+        "把字段变私有"
+      ],
+      "answer": 1,
+      "explanation": "ORM/序列化字段装饰器是纯元数据标记，运行期反射驱动映射，不改变字段本身值。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "TS 5.0 的标准（TC39 Stage 3）装饰器与老版的一个显著差异是？",
+      "options": [
+        "标准版更快",
+        "标准版签名是 (value, context)，用 context.metadata；且暂不包含参数装饰器",
+        "标准版不能有类装饰器",
+        "老版用 context 参数"
+      ],
+      "answer": 1,
+      "explanation": "两套语义不兼容：老版 (target,key,descriptor[,index])，新版 (value,context)（第二节表）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下面哪种场景更该用普通高阶函数而非装饰器？",
+      "options": [
+        "NestJS 控制器路由声明",
+        "对普通函数做一次性 memoize/once 包装（无 class、不想依赖装饰器开关）",
+        "TypeORM 实体列",
+        "Angular 组件元数据"
+      ],
+      "answer": 1,
+      "explanation": "纯函数场景 const memo=memoize(fn) 更清晰、无框架/编译开关锁定（第六节）。"
+    }
+  ]
+}

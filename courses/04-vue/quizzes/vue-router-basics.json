@@ -1,0 +1,82 @@
+{
+  "title": "vue-router-basics 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "SPA 里用 <RouterLink> 而不是普通 <a href> 的关键原因是？",
+      "options": [
+        "RouterLink 更好看",
+        "<a> 会触发整页刷新丢失 SPA 状态，RouterLink 做客户端导航不刷新",
+        "<a> 不能被样式化",
+        "两者完全等价"
+      ],
+      "answer": 1,
+      "explanation": "RouterLink 拦截点击走前端路由，避免整页加载（呼应 vue-router-basics 第三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "用 createWebHistory 时，用户直接刷新 /about 出现 404，通常因为？",
+      "options": [
+        "Vue Router 有 bug",
+        "服务器没有 /about 文件、未配置回退到 index.html",
+        "组件没懒加载",
+        "没装 history 插件"
+      ],
+      "answer": 1,
+      "explanation": "HTML5 history 刷新会真发请求，需服务器 fallback（呼应 vue-router-basics 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "想读当前路由的 query/params，用哪个 API？",
+      "options": ["useRouter", "useRoute", "router.push", "$attrs"],
+      "answer": 1,
+      "explanation": "useRoute 是只读的当前路由快照；useRouter 用于导航（呼应 vue-router-basics 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "登录后跳转到首页、且不希望用户\"后退\"回到登录页，应使用？",
+      "options": ["router.push", "router.replace", "router.back", "location.href="],
+      "answer": 1,
+      "explanation": "replace 替换当前历史条目、不留后退项（呼应 vue-router-basics 第五节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "createWebHashHistory 相比 webHistory 的特点是？",
+      "options": [
+        "URL 更干净、需要后端回退",
+        "URL 带 #，刷新不需要后端回退（# 后不发请求）",
+        "不支持 params",
+        "只能用于 SSR"
+      ],
+      "answer": 1,
+      "explanation": "hash 片段服务器看不到，天然免回退，但 URL 丑（呼应 vue-router-basics 第二节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "用命名路由跳转 { name: 'user', params: { id: 1 } } 的最大好处是？",
+      "options": [
+        "运行更快",
+        "跳转点不依赖路径字符串，改路由定义时不用改所有调用点",
+        "可以不用注册路由",
+        "自动带上 query"
+      ],
+      "answer": 1,
+      "explanation": "name 解耦路径与调用点，重构友好（呼应 vue-router-basics 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "router.push(...) 在导航被守卫取消时会怎样？",
+      "options": ["静默失败", "返回的 Promise 会 reject/中止", "抛同步异常崩溃", "自动重试"],
+      "answer": 1,
+      "explanation": "push 返回 Promise，中断即 reject，需 catch（呼应 vue-router-basics 第五节、node-async-errors）。"
+    }
+  ]
+}

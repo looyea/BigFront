@@ -1,0 +1,92 @@
+{
+  "title": "node-buffer 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Buffer.alloc(10) 与 Buffer.allocUnsafe(10) 的关键区别是？",
+      "options": [
+        "前者更快",
+        "alloc 清零（安全），allocUnsafe 不清零、可能含池里残留字节（有信息泄漏风险）",
+        "两者完全等价",
+        "allocUnsafe 只能读不能写"
+      ],
+      "answer": 1,
+      "explanation": "allocUnsafe 从内存池取用且跳过初始化，快但可能残留上一次数据；若被回显给外部=信息泄漏，除非立刻全部覆盖否则用 alloc（呼应 node-buffer 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Buffer.from('h中','utf8').length 是多少？",
+      "options": ["2", "3", "4", "5"],
+      "answer": 2,
+      "explanation": "h=1 字节 + 中(utf8)=3 字节 = 4。Buffer.length 数的是字节，不是字符（呼应 node-buffer 第四、一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "把一个 PNG 文件 readFile 后按 'utf8' 转成字符串再写回，会怎样？",
+      "options": [
+        "完全无损",
+        "损坏——二进制字节按 utf8 解码出现非法序列被替换，往返不再相等",
+        "自动转成 base64",
+        "抛 TypeError"
+      ],
+      "answer": 1,
+      "explanation": "二进制不是合法 utf8 文本，非法字节被替换成 U+FFFD，解再编码回写数据已丢，文件损坏。二进制应保持 Buffer（呼应 node-buffer 第三节、node-fs 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "流式分块收到多字节 utf8 文本，为什么某块单独 toString 会乱码？怎么解决？",
+      "options": [
+        "因为流会丢字节；重连即可",
+        "因为一个汉字的 3 字节可能被块边界切断；用 StringDecoder/TextDecoder 跨块暂存残缺字节",
+        "因为 utf8 不稳定",
+        "改成 hex 编码就不会"
+      ],
+      "answer": 1,
+      "explanation": "按字节切分可能把多字节字符劈开，半截无法解码。StringDecoder 会攒着残缺字节等下一块补齐（呼应 node-buffer 第四节、node-streams）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "一个 4 字节头部用 writeUInt32BE 写入，却用 readUInt32LE 读出，结果会？",
+      "options": [
+        "只是精度损失",
+        "数值完全错乱（字节序反了），协议解析失败",
+        "抛异常",
+        "自动纠正"
+      ],
+      "answer": 1,
+      "explanation": "BE(网络序)写、LE 读会把字节顺序颠倒，得到完全不同的数（如 256 变 16777216）。读写端序必须一致（呼应 node-buffer 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "buf.subarray(a,b) 返回的是？",
+      "options": [
+        "拷贝出的新独立内存",
+        "与原 buf 共享同一块内存的视图，改一个会影响另一个",
+        "一个字符串",
+        "一个只读数组"
+      ],
+      "answer": 1,
+      "explanation": "subarray/Buffer.from(existingBuffer) 是零拷贝视图，共享底层内存；要独立副本得 copy（呼应 node-buffer 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "要把一张图片塞进 JSON 字段传输，通常先把它？",
+      "options": [
+        "toString('utf8')",
+        "toString('base64')，接收端 Buffer.from(str,'base64') 还原",
+        "toString('hex') 后再乘 2",
+        "直接放 JSON（Buffer 可 JSON 序列化）"
+      ],
+      "answer": 1,
+      "explanation": "base64 把任意字节映射进 ASCII 安全字符集，能塞进文本协议/JSON；utf8 不行、直接 JSON.stringify(Buffer) 得到的是 {type:'Buffer',data:[]} 结构（呼应 node-buffer 第三节）。"
+    }
+  ]
+}

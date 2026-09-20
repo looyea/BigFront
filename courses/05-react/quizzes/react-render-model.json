@@ -1,0 +1,92 @@
+{
+  "title": "react-render-model 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "React 一次更新的两个阶段及顺序是？",
+      "options": [
+        "先 commit(改 DOM) 再 render(算 diff)",
+        "先 render(执行函数+diff 算变更) 再 commit(应用到真实 DOM)",
+        "只有 render 一个阶段",
+        "mount 和 unmount"
+      ],
+      "answer": 1,
+      "explanation": "render 算变更、commit 改 DOM（呼应 react-render-model 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "React 的 diff 为什么能做到 O(n)？",
+      "options": [
+        "它做了完整的树最小编辑距离计算",
+        "靠三条假设：同层比较、类型即身份、列表用 key 标识，做启发式而非最优",
+        "它不比较只重建",
+        "因为虚拟 DOM 比真实 DOM 快"
+      ],
+      "answer": 1,
+      "explanation": "用启发式假设换取线性复杂度（呼应 react-render-model 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "把某组件的子节点换到另一层父节点下，React 会？",
+      "options": ["智能移动复用", "视为跨层，销毁旧子树并重建（连带重置其 state）", "忽略", "仅改 props"],
+      "answer": 1,
+      "explanation": "React 不做跨层移动，只同层比较（呼应 react-render-model 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "父组件重渲染时，子组件默认会？",
+      "options": [
+        "一定不重渲染",
+        "也跟着重渲染(即使 props 没实质变化)",
+        "只有用了 useState 才重渲染",
+        "取决于 key 存不存在"
+      ],
+      "answer": 1,
+      "explanation": "默认向下传播重渲染，可用 React.memo 阻止（呼应 react-render-model 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于\"重渲染\"，正确的是？",
+      "options": [
+        "重渲染必然产生 DOM 操作",
+        "重渲染只是重跑函数+算 Element，diff 后无变化则不提交 DOM",
+        "重渲染就是重新挂载",
+        "setState 后一定重渲染"
+      ],
+      "answer": 1,
+      "explanation": "重渲染 ≠ 改 DOM；值未变还可能提前退出（呼应 react-render-model 第四、六节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "React 18 的自动批处理意味着？",
+      "options": [
+        "多个 setState 合并为一次渲染，且 Promise/定时器里也生效",
+        "setState 变成同步的",
+        "不再支持多次 setState",
+        "只有事件处理器里才批处理"
+      ],
+      "answer": 0,
+      "explanation": "18 起所有场景自动批处理（呼应 react-render-model 第六节、react-usestate）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "与 Vue 的更新机制相比，React 更需要你手动做的是？",
+      "options": [
+        "声明依赖收集",
+        "用稳定 key 和 memo/useMemo 提示，避免多余重渲染",
+        "手写 patchFlag",
+        "手动 nextTick"
+      ],
+      "answer": 1,
+      "explanation": "React 运行时全 diff，靠 key/memo 提示（呼应 react-render-model 第三节、vue-reactivity-theory 对照）。"
+    }
+  ]
+}

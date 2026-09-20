@@ -1,0 +1,77 @@
+{
+  "title": "node-publish 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "exports 条件里，TypeScript 的 types 应放在什么位置才能被稳定解析到？",
+      "options": ["最后", "最前", "随便位置", "不能和 import/require 并存"],
+      "answer": 1,
+      "explanation": "解析自上而下取第一个匹配，types 放最前否则 TS 可能匹配到 import/require 而丢类型（呼应 node-publish 第二节、ts-publish）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "什么是 dual package hazard？",
+      "options": [
+        "同时发两个包",
+        "同一包被以 ESM 和 CJS 各加载一份，导致单例/instanceof/内部状态出现两份实例",
+        "版本号冲突",
+        "锁文件损坏"
+      ],
+      "answer": 1,
+      "explanation": "双格式各加载一份→模块实例不唯一，含单例/注册表的包最易中招（呼应 node-publish 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "一旦 package.json 定义了 exports 字段，未声明的子路径（如 my-lib/src/internal）会？",
+      "options": ["照常可导入", "被拒绝/报错，强制公共 API 边界", "自动指向 main", "被打包器忽略"],
+      "answer": 1,
+      "explanation": "exports 是白名单，未声明路径不可被外部访问，带来封装性（呼应 node-publish 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "想把发布内容限制为只含 dist 与 README，应该用？",
+      "options": [".gitignore", "files 白名单字段", "scripts", "engines"],
+      "answer": 1,
+      "explanation": "files 白名单只发必要产物；配 npm pack --dry-run 预览（呼应 node-publish 第五节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "npm version patch 的作用是？",
+      "options": [
+        "升级依赖到最新",
+        "把版本号补丁位 +1、改 package.json 并打 git tag",
+        "发布到 npm",
+        "删除 lockfile"
+      ],
+      "answer": 1,
+      "explanation": "npm version 负责改版本+打 tag（minor/major 同理），publish 才是发布（呼应 node-publish 第六节、node-npm 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "npm publish --provenance 主要防御什么？",
+      "options": [
+        "让安装更快",
+        "生成密码学来源证明，让消费者能核验包确由指定仓库/commit 在受信 CI 构建发布，防账号劫持投毒",
+        "自动修漏洞",
+        "压缩体积"
+      ],
+      "answer": 1,
+      "explanation": "provenance/attestation 建立供应链可追溯性，配合 2FA/audit signatures（呼应 node-publish 第八节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "在 type:module 的包里额外产出一份 CJS 产物，文件后缀应是？",
+      "options": [".js", ".mjs", ".cjs", ".json"],
+      "answer": 2,
+      "explanation": "type:module 下 .js 视为 ESM，CJS 产物必须用 .cjs 后缀（呼应 node-publish 第四节、node-esm-cjs）。"
+    }
+  ]
+}

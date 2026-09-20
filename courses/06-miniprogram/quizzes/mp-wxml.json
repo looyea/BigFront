@@ -1,0 +1,97 @@
+{
+  "title": "mp-wxml 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "WXML 中想输出计算结果 {{ n + 1 }}，前提是？",
+      "options": [
+        "n 必须在渲染层定义",
+        "n 必须来自逻辑层 setData 进 data 的字段",
+        "n 可以是任意全局变量",
+        "必须先声明 wxs 模块"
+      ],
+      "answer": 1,
+      "explanation": "{{}} 只吃 data（含 properties）里的数据（呼应 mp-wxml 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "在 WXML 里直接调用 Page 中定义的 js 方法做格式化，结果？",
+      "options": [
+        "正常执行",
+        "编译报错中断构建",
+        "不支持——模板里不能调 js 方法，需 setData 前算好或用 wxs",
+        "运行时自动转成 wxs 执行"
+      ],
+      "answer": 2,
+      "explanation": "WXML 表达式不是完整 JS，不能调方法（呼应 mp-wxml 第二、五节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "{{ rawHtml }} 输出 <b>hi</b>，页面显示？",
+      "options": [
+        "加粗的 hi",
+        "原样字符 <b>hi</b>（自动转义）",
+        "空白",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "插值默认转义防 XSS，与 JSX 同思路；富文本要用 rich-text（呼应 mp-wxml 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "<block> 的作用是？",
+      "options": [
+        "渲染一个空白占位节点",
+        "定义模板",
+        "引入外部文件",
+        "分组多个兄弟节点且自身不渲染任何节点"
+      ],
+      "answer": 3,
+      "explanation": "block 是无容器分组，对标 Vue 的 template v-if（呼应 mp-wxml 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 wxs，错误的是？",
+      "options": [
+        "wxs 运行在渲染层",
+        "wxs 可以使用 let/const、箭头函数等 ES6 语法",
+        "wxs 不能调用逻辑层的 js 方法",
+        "wxs 可以独立成 .wxs 文件用 src 引入"
+      ],
+      "answer": 1,
+      "explanation": "wxs 是 ES5 子集，没有 ES6 语法（呼应 mp-wxml 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "hidden=\"false\"（不带 {{}}）的效果是？",
+      "options": [
+        "元素不可见——字符串非空即真，属易错点",
+        "元素正常显示",
+        "编译报错",
+        "取决于组件类型"
+      ],
+      "answer": 0,
+      "explanation": "字符串 \"false\" 按存在即真处理，必须写 hidden=\"{{false}}\"（呼应 mp-wxml 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "WXML 的 bindtap=\"onTap\" 中，\"onTap\"是什么？",
+      "options": [
+        "函数引用",
+        "内联表达式",
+        "逻辑层方法名的字符串",
+        "事件 id，需先注册"
+      ],
+      "answer": 2,
+      "explanation": "写的是方法名字符串，找不到方法只静默警告（呼应 mp-wxml 第三节）。"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "title": "node-fs 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么不建议在 HTTP 服务的请求处理路径里使用 fs.readFileSync？",
+      "options": [
+        "它比异步版慢一点点",
+        "它会阻塞事件循环，读完前所有其它请求/定时器都停摆",
+        "它不能读大文件",
+        "它会泄漏内存"
+      ],
+      "answer": 1,
+      "explanation": "同步 fs 在整个读操作期间占死事件循环 poll 阶段，服务吞吐直接归零（呼应 node-event-loop、node-fs 第一节）。同步版只适合启动/脚本一次性场景。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "读取一张 PNG 图片，正确的做法是？",
+      "options": [
+        "readFile(path, 'utf8') 再转回来",
+        "readFile(path) 不传 encoding，得到 Buffer",
+        "readFileSync(path, 'ascii')",
+        "用 appendFile 读"
+      ],
+      "answer": 1,
+      "explanation": "二进制文件不能按 utf8 文本解码（会乱码/损坏），不传 encoding 得到原始 Buffer（呼应 node-buffer、node-fs 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "writeFile 与 appendFile 的关键区别是？",
+      "options": [
+        "前者只能写文本，后者只能写 Buffer",
+        "writeFile 覆盖（清空重写），appendFile 追加到末尾",
+        "没有区别",
+        "appendFile 会阻塞事件循环"
+      ],
+      "answer": 1,
+      "explanation": "writeFile 打开即清空原内容重写；appendFile 在文件末尾追加，适合日志（呼应 node-fs 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "mkdir('a/b/c') 当 a、b 都不存在时会报错，加哪个选项可一次建多级目录？",
+      "options": ["{ force: true }", "{ recursive: true }", "{ shallow: false }", "{ encoding: 'utf8' }"],
+      "answer": 1,
+      "explanation": "recursive:true 会顺带创建缺失的中间目录且不因已存在而报错（呼应 node-fs 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么『没关闭的文件描述符/watcher』是个隐患？",
+      "options": [
+        "会让文件变大",
+        "fd 是有限系统资源，未关会泄漏；且活跃句柄会让进程迟迟不退出",
+        "会导致编码乱码",
+        "会触发 uncaughtException"
+      ],
+      "answer": 1,
+      "explanation": "fd/watcher 不关=资源泄漏；而且事件循环只要还有活跃句柄就不退出（呼应 node-event-loop、node-fs 第五六节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "要处理一个 10GB 日志文件统计行数，最该用？",
+      "options": [
+        "readFile 全读进来再 split",
+        "createReadStream 分块流式处理",
+        "readFileSync",
+        "appendFile"
+      ],
+      "answer": 1,
+      "explanation": "readFile 会把 10GB 全塞进内存→OOM。流式读一块处理一块，内存恒定（呼应 node-fs 第七节、node-streams）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "fs.promises.readFile 的调用若既不 await 也不 catch，一旦失败会？",
+      "options": [
+        "静默失败无事发生",
+        "变成 unhandledRejection，Node 15+ 默认使进程退出",
+        "自动重试",
+        "返回 null"
+      ],
+      "answer": 1,
+      "explanation": "Promise 版错误若无人接管会升级成未处理 rejection，Node 15+ 默认崩溃退出（呼应 node-async-errors 第三四节）。"
+    }
+  ]
+}

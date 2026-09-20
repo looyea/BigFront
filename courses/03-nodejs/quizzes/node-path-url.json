@@ -1,0 +1,97 @@
+{
+  "title": "node-path-url 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "path.join('a','..','b') 与 path.resolve('a','..','b') 的主要区别是？",
+      "options": [
+        "完全一样",
+        "join 只做拼接/规范化（结果可能仍是相对路径），resolve 返回基于 cwd 的绝对路径",
+        "resolve 只支持 Windows",
+        "join 会访问文件系统"
+      ],
+      "answer": 1,
+      "explanation": "join 拼接并规范化、结果可相对；resolve 一定给出绝对路径（以 cwd 或首个绝对段为锚）（呼应 node-path-url 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么不应在代码里手写 `dir + '/' + file` 拼路径？",
+      "options": [
+        "因为太慢",
+        "因为分隔符跨平台不同（win 用 \\），应交给 path.join 自动处理",
+        "因为字符串不能拼接",
+        "因为 path 会修改文件"
+      ],
+      "answer": 1,
+      "explanation": "Windows 用 \\、POSIX 用 /，手拼在别的平台会出错；path.join 用平台正确分隔符并顺带规范化（呼应 node-path-url 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "在 ESM 模块里想拿到『当前文件所在目录』，正确写法是？",
+      "options": [
+        "直接用 __dirname（ESM 也有）",
+        "path.dirname(fileURLToPath(import.meta.url))",
+        "process.cwd()",
+        "path.resolve('.')"
+      ],
+      "answer": 1,
+      "explanation": "ESM 没有 __dirname，用 import.meta.url（file URL）经 fileURLToPath 还原再取 dirname（呼应 node-path-url 第二节、node-esm-cjs）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "动态 import() 一个由变量拼出的本地文件路径时，为什么要先 pathToFileURL(p).href？",
+      "options": [
+        "为了加速加载",
+        "因为 import 需要合法 URL，Windows 裸路径会被误解析（盘符/反斜杠）",
+        "因为 Buffer 不能 import",
+        "没必要，纯风格"
+      ],
+      "answer": 1,
+      "explanation": "import() 接受模块 specifier/URL；本地文件须转成 file:// URL，否则 Windows 下路径解析失败（呼应 node-path-url 第三节、node-esm-cjs）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "解析 `?a=1&a=2&b=%E4%B8%AD` 这种查询串，最稳妥的是？",
+      "options": [
+        "url.split('?')[1].split('&')",
+        "new URL(...).searchParams（含 getAll、自动解码）",
+        "正则匹配",
+        "JSON.parse"
+      ],
+      "answer": 1,
+      "explanation": "URLSearchParams 正确处理 %编码、重复 key（getAll）、+与空格；手搓 split 遇到编码/无值/重复必错（呼应 node-path-url 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 process.cwd() 与 __dirname，下列说法正确的是？",
+      "options": [
+        "两者永远相同",
+        "cwd 是进程启动位置（会变），__dirname 是当前文件位置（不变）；定位自身资源应用后者",
+        "__dirname 就是 cwd",
+        "库应依赖 cwd 找自己的文件"
+      ],
+      "answer": 1,
+      "explanation": "cwd 随启动方式变化，用它定位库自身资源会导致『换个目录运行就 ENOENT』（呼应 node-path-url 第二节、node-fs 第 12 题）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "跨平台生成多行文本文件，为保证换行一致应使用？",
+      "options": [
+        "硬写 \\r\\n",
+        "os.EOL",
+        "path.sep",
+        "URL 的 hash"
+      ],
+      "answer": 1,
+      "explanation": "os.EOL 给出当前平台换行符（win \\r\\n / posix \\n），用它保证本地打开不错行（呼应 node-path-url 第四节）。"
+    }
+  ]
+}

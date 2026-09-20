@@ -1,0 +1,82 @@
+{
+  "title": "mp-overview 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "小程序的\"双线程架构\"指的是哪两个线程分离？",
+      "options": [
+        "主线程 和 UI 线程",
+        "逻辑层(JS 引擎) 和 渲染层(WebView)",
+        "网络线程 和 存储线程",
+        "下载线程 和 编译线程"
+      ],
+      "answer": 1,
+      "explanation": "逻辑层与渲染层分离（呼应 mp-overview 第三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "在小程序逻辑层里，下列哪个对象通常不存在？",
+      "options": ["wx", "Date", "document", "JSON"],
+      "answer": 2,
+      "explanation": "没有 DOM，document 不存在（呼应 mp-overview 第三、四节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "小程序更新界面的正确方式是？",
+      "options": [
+        "querySelector 拿到节点后改 innerHTML",
+        "改数据并通过 setData 通知渲染层",
+        "直接操作 CSS 对象",
+        "调用 window.location.reload"
+      ],
+      "answer": 1,
+      "explanation": "数据驱动视图，靠 setData（呼应 mp-overview 第五节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "双线程架构下，为什么给 setData 传超大对象会导致卡顿？",
+      "options": [
+        "JS 不支持大对象",
+        "逻辑层与渲染层通信是异步且有成本，大数据传输+diff 很重",
+        "WebView 会崩溃",
+        "会触发重新编译"
+      ],
+      "answer": 1,
+      "explanation": "跨线程通信有开销（呼应 mp-overview 第四节、mp-setdata）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "相比 H5，小程序做\"禁止任意访问 DOM/BOM\"主要出于？",
+      "options": ["节省内存", "安全可控、可审核、体验一致", "因为技术做不到", "为了兼容 IE"],
+      "answer": 1,
+      "explanation": "沙箱是安全与体验的地基（呼应 mp-overview 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "多个页面与逻辑线程的关系，通常是？",
+      "options": [
+        "每个页面一个逻辑线程",
+        "所有页面共享一个逻辑线程、各页有独立渲染 WebView",
+        "只有一个 WebView 复用",
+        "逻辑线程数 = CPU 核数"
+      ],
+      "answer": 1,
+      "explanation": "共享逻辑层、独立渲染层（呼应 mp-overview 第三节、mp-communication）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "小程序的\"更新\"方式和原生 App 相比最大特点是？",
+      "options": ["必须重装", "静默热更新、无需走应用商店发版审核", "不能热更", "只能靠 URL 刷新"],
+      "answer": 1,
+      "explanation": "平台托管、可热更新（呼应 mp-overview 第二节）。"
+    }
+  ]
+}

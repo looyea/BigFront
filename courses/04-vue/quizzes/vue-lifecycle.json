@@ -1,0 +1,77 @@
+{
+  "title": "vue-lifecycle 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "第一次能安全访问组件渲染出的 DOM，是在哪个钩子？",
+      "options": ["setup", "onBeforeMount", "onMounted", "onBeforeUpdate"],
+      "answer": 2,
+      "explanation": "onMounted 时 DOM 已生成；setup/beforeMount 都没有 DOM（呼应 vue-lifecycle 第一、二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "SSR 场景下，下列哪个钩子不会在服务端执行？",
+      "options": ["setup", "onServerPrefetch", "onMounted", "computed 求值"],
+      "answer": 2,
+      "explanation": "mounted 只在客户端水合后跑，故浏览器 API 初始化放这里（呼应 vue-lifecycle 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 onUpdated，最该注意的是？",
+      "options": [
+        "在里面改响应式状态可能造成更新死循环，应优先用 flush:post 的 watch 或 nextTick",
+        "它每次挂载只跑一次",
+        "它比 mounted 更早",
+        "可以安全地随便改状态"
+      ],
+      "answer": 0,
+      "explanation": "updated 里改状态→再渲染→再 updated，易循环（呼应 vue-lifecycle 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "组件卸载时，下面哪个不会自动清理、必须手动 remove？",
+      "options": [
+        "组件内 watch 创建的侦听器",
+        "computed",
+        "window.addEventListener 注册的全局监听",
+        "render effect"
+      ],
+      "answer": 2,
+      "explanation": "Vue 只管自己的 effect/侦听器；window 原生监听要手动 off（呼应 vue-lifecycle 第二节、vue-watch interview 第8题）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "用 <KeepAlive> 缓存组件后，切换标签时触发的一对钩子是？",
+      "options": ["mounted/unmounted", "onActivated/onDeactivated", "beforeCreate/created", "onUpdated/onBeforeUpdate"],
+      "answer": 1,
+      "explanation": "缓存组件切走不销毁，改触发 activated/deactivated（呼应 vue-lifecycle 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "有个轮询定时器写在 onUnmounted 里清理，套上 <KeepAlive> 后切走却停不下来，为什么？",
+      "options": [
+        "KeepAlive 会忽略定时器",
+        "切走时组件没卸载、onUnmounted 不触发，应改到 onDeactivated 暂停",
+        "onUnmounted 本身写错了",
+        "需要用 clearImmediate"
+      ],
+      "answer": 1,
+      "explanation": "缓存下不触发 unmounted，清理逻辑要挪到 deactivated（呼应 vue-lifecycle 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "想在组件卸载后仍阻止某子组件抛出的错误继续上冒，用哪个钩子？",
+      "options": ["onErrorCaptured(返回 false)", "onUnmounted", "onBeforeMount", "watch 的 onError"],
+      "answer": 0,
+      "explanation": "onErrorCaptured 捕获后代错误、返回 false 停止上抛（呼应 vue-lifecycle 第四节）。"
+    }
+  ]
+}

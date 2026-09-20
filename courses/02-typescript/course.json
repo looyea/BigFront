@@ -3,48 +3,89 @@
   "title": "TypeScript 类型系统",
   "order": 2,
   "tier": "白银 · 给 JS 加上类型护甲",
-  "tagline": "TS = JavaScript + 类型。它在你敲代码、编译时就抓出错误。现代 Vue3、React、Angular 项目几乎都默认用 TS。",
+  "tagline": "TS = JavaScript + 静态类型。它在敲代码和编译时就抓出错误。从零到类型体操，吃透类型基础、接口与函数、联合与收窄、泛型、条件/映射类型、类与模块、声明文件、严格模式与迁移、生态工具链，直到把一个类型安全的库发布上 npm。现代 Vue3/React/Angular 项目几乎都默认 TS。",
   "icon": "🔷",
   "color": "#3178c6",
   "levels": [
     {
       "id": "L1",
-      "title": "类型基础",
-      "subtitle": "原始类型、类型推断、显式注解",
+      "title": "入门与类型基础",
+      "subtitle": "为什么 TS / 编译模型 / 原始类型 / any-unknown",
       "lessons": [
-        { "id": "ts-basics", "title": "为什么要 TS + 基础类型注解", "goal": "给变量/函数加类型，理解类型推断与 any/unknown 的区别" }
+        { "id": "ts-intro", "title": "为什么要 TS：类型擦除与编译模型", "goal": "理解 TS 是 JS 超集、编译期擦除、tsc 与第一个 tsconfig、Node/浏览器如何真正跑 TS" },
+        { "id": "ts-basics", "title": "基础类型、注解与类型推断", "goal": "原始类型/数组/元组/枚举/对象字面量；显式注解 vs 上下文推断，何时该省略类型" },
+        { "id": "ts-any-unknown", "title": "any / unknown / never / void 与安全边界", "goal": "说清四者区别，为什么 unknown 是'类型安全的 any'，never 的穷尽语义" }
       ]
     },
     {
       "id": "L2",
-      "title": "对象与接口",
-      "subtitle": "interface、type、可选与只读",
+      "title": "对象、接口与函数",
+      "subtitle": "结构化类型 / interface vs type / 函数重载",
       "lessons": [
-        { "id": "ts-interface", "title": "interface 与 type 别名", "goal": "描述对象/函数形状，会选 interface 还是 type" }
+        { "id": "ts-object-types", "title": "对象类型与属性修饰", "goal": "可选/只读/索引签名/字面量类型、过剩属性检查、结构化类型(鸭子类型)与兼容性" },
+        { "id": "ts-interface", "title": "interface 与 type 别名", "goal": "描述对象/函数/可索引形状，interface vs type 异同与选型、声明合并" },
+        { "id": "ts-functions", "title": "函数类型、可选参数与重载", "goal": "函数类型/参数默认与可选/剩余、函数重载签名、this 参数与箭头函数" }
       ]
     },
     {
       "id": "L3",
-      "title": "联合与交叉、字面量类型",
-      "subtitle": "可辨识联合、类型收窄、守卫",
+      "title": "联合、收窄与类型守卫",
+      "subtitle": "可辨识联合 / narrowing / 类型谓词 / 穷尽",
       "lessons": [
-        { "id": "ts-union", "title": "联合类型与类型收窄", "goal": "用 union + 收窄写出对多种输入安全的代码" }
+        { "id": "ts-union", "title": "联合类型与交叉类型", "goal": "union/intersection 语义、字面量联合、可辨识联合(discriminated union)" },
+        { "id": "ts-narrowing", "title": "类型收窄", "goal": "typeof/in/instanceof/truthiness/相等收窄，控制流分析如何自动缩小类型" },
+        { "id": "ts-guards", "title": "自定义类型守卫与穷尽检查", "goal": "类型谓词 is、assertion 函数、never 兜底穷尽、as const 的作用" }
       ]
     },
     {
       "id": "L4",
       "title": "泛型",
-      "subtitle": "generic、约束、默认类型参数",
+      "subtitle": "generic / 约束 / 条件类型 + infer",
       "lessons": [
-        { "id": "ts-generic", "title": "泛型入门", "goal": "写一个可复用且类型安全的泛型函数/接口" }
+        { "id": "ts-generic", "title": "泛型入门", "goal": "泛型函数/接口/类、类型参数推断、默认类型参数，写可复用且类型安全的抽象" },
+        { "id": "ts-generic-constraints", "title": "泛型约束", "goal": "extends 约束、keyof/属性约束、用约束访问泛型成员、多态 this 类型" },
+        { "id": "ts-conditional-infer", "title": "条件类型与 infer", "goal": "条件类型三元、分布式条件类型、infer 提取类型、据此理解内置工具类型" }
       ]
     },
     {
       "id": "L5",
-      "title": "实战与工程配置",
-      "subtitle": "tsconfig、装饰、实用类型、迁移策略",
+      "title": "高级类型与类型体操",
+      "subtitle": "工具类型 / 映射类型 / 递归与变型",
       "lessons": [
-        { "id": "ts-project", "title": "tsconfig 与实用类型", "goal": "读懂 tsconfig，会用 Partial/Pick/Omit 等，编译运行一个真实文件" }
+        { "id": "ts-utility", "title": "内置工具类型全解与手写", "goal": "Partial/Required/Pick/Omit/Record/NonNullable/ReturnType/Awaited/Parameters 等，能手写" },
+        { "id": "ts-mapped", "title": "映射类型与模板字面量类型", "goal": "遍历 keyof 生成新类型、修饰符增删、键重映射 as、模板字面量类型变换" },
+        { "id": "ts-advanced", "title": "递归类型与类型编程实战", "goal": "DeepReadonly/路径类型/解构参数类型、变型标注(in/out)、类型体操边界与可读性权衡" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "类、模块与声明文件",
+      "subtitle": "OOP / ESM / .d.ts / 装饰器",
+      "lessons": [
+        { "id": "ts-classes", "title": "类、继承与访问控制", "goal": "public/private/protected/#私有字段、abstract、implements、泛型类、static、只读与构造参数属性" },
+        { "id": "ts-modules", "title": "模块与命名空间", "goal": "ESM 导入导出、import type、常见模块报错、命名空间与 AMD 遗留、类型再导出" },
+        { "id": "ts-declarations", "title": "声明文件 .d.ts", "goal": "为无类型的 JS/库补声明、declare、全局增强、模块声明、三斜线指令、发布自带类型" },
+        { "id": "ts-decorators", "title": "装饰器", "goal": "TC39 stage3 与 legacy 装饰器差异、类/方法/访问器/字段装饰器、与 Angular/NestJS 用法" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "配置、严格模式与迁移",
+      "subtitle": "tsconfig / strict 家族 / JS→TS",
+      "lessons": [
+        { "id": "ts-project", "title": "tsconfig 全解", "goal": "target/lib/module/moduleResolution/paths/references/build mode、组合工程、include/exclude" },
+        { "id": "ts-strict", "title": "严格模式家族与典型报错", "goal": "strict 打开的子项逐个击破、noUncheckedIndexedAccess/exactOptionalPropertyTypes/undici 常见错误" },
+        { "id": "ts-migration", "title": "渐进迁移 JS→TS", "goal": "allowJs/checkJs/JSDoc 类型、逐步收紧 strict、大文件迁移策略与 CI 门禁" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "生态与部署实战",
+      "subtitle": "工具链 / 框架集成 / 库发布",
+      "lessons": [
+        { "id": "ts-tooling", "title": "运行、构建与测试工具链", "goal": "tsx/ts-node/esbuild/swc/原生 tsgo、Vitest/Jest、type-aware ESLint，选型与提速" },
+        { "id": "ts-frameworks", "title": "在 Vue3 / React 中使用 TS", "goal": "组合式 API 类型、泛型组件、props/emit/ref 推导、Common pitfalls（与 10-vite/框架课呼应）" },
+        { "id": "ts-publish", "title": "类型安全的库发布全链路", "goal": "declaration + declarationMap、ESM/CJS 双包与 exports、打包 d.ts、语义版本、CI 发布（部署阶段）" }
       ]
     }
   ]

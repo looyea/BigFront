@@ -1,46 +1,97 @@
 {
-  "lessonId": "ts-generic",
-  "title": "TS L4 泛型 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "ts-generic 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "function f<T>(a: T[]): T 中 T 的作用是？",
+      "prompt": "泛型相对 any 的核心优势是？",
       "options": [
-        "无意义",
-        "把入参元素类型传递到返回值，保留类型信息",
-        "只能是对象",
-        "等于 any"
+        "运行更快",
+        "用类型变量保留'输入类型→输出类型'的关系，既复用又不丢类型信息",
+        "写法更短",
+        "能访问任何属性"
       ],
       "answer": 1,
-      "explanation": "泛型让函数适配任意类型同时保留类型推断。"
+      "explanation": "any 放弃类型；泛型把类型当参数传递，调用后仍精确（echo<T>(x:T):T）。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "<T extends { length: number }> 的含义是？",
+      "prompt": "function identity<T>(x:T):T; identity(5) 里 T 是什么？需要手写 <number> 吗？",
       "options": [
-        "T 默认是数组",
-        "约束 T 必须具有 number 型的 length",
-        "T 只能继承类",
-        "报错"
+        "T=any，必须手写",
+        "T 被推断为 number，通常无需显式指定",
+        "T=unknown",
+        "报错，必须显式"
       ],
       "answer": 1,
-      "explanation": "extends 是泛型约束，要求实参类型至少满足该形状。"
+      "explanation": "类型参数推断从实参反推 T；只有推断不出或想覆盖时才显式写。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "<T = string> 提供的是？",
+      "prompt": "为什么裸函数里 a.length 在 T 上会报错？",
       "options": [
-        "只读",
-        "默认类型参数",
-        "可选属性",
-        "交叉类型"
+        "length 不是合法属性名",
+        "未约束的 T 可能是任何类型，编译器无法保证它有 length，需要 T extends { length: number }",
+        "因为 a 是 any",
+        "其实不报错"
       ],
       "answer": 1,
-      "explanation": "等号给泛型设默认类型，未显式传入时使用。"
+      "explanation": "裸 T 无任何成员保证；要访问成员必须先 extends 约束（下一关）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "interface Response<T = unknown> 里默认用 unknown 而不是 any，好处是？",
+      "options": [
+        "性能更好",
+        "不指定 T 时数据落 unknown，强制使用方收窄，避免 any 无声放弃检查",
+        "unknown 能直接用",
+        "没区别"
+      ],
+      "answer": 1,
+      "explanation": "安全默认：unknown 逼你在用前证明类型，any 会让下游集体失去保护（呼应 ts-any-unknown）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "class Stack<T> 在运行时能拿到 T 做 if (T === number) 判断吗？",
+      "options": [
+        "能，泛型保留到运行时",
+        "不能，泛型被类型擦除，运行时 T 不存在",
+        "能，用 typeof T",
+        "只有加了约束才能"
+      ],
+      "answer": 1,
+      "explanation": "类型擦除对泛型同样适用；要按类型分支得显式传构造器/工厂函数（呼应 ts-intro）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下哪个是泛型类型别名？",
+      "options": [
+        "type Handler = (x: Event) => void",
+        "type Handler<T> = (payload: T) => void",
+        "interface Box { value: number }",
+        "const x: number = 1"
+      ],
+      "answer": 1,
+      "explanation": "带 <T> 类型参数、按参数产出不同具体类型的别名即泛型别名；A 是普通别名。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于'什么时候显式写类型参数'，最合理的是？",
+      "options": [
+        "永远都写，防止推断错",
+        "绝大多数靠推断省略；仅当推断不出、或想强制更宽/特定类型时显式指定",
+        "永远不写",
+        "只在类上写"
+      ],
+      "answer": 1,
+      "explanation": "信任推断减少噪音，必要时显式覆盖——与'边界显式、内部宽松'一致（呼应 ts-basics）。"
     }
   ]
 }

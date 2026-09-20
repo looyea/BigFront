@@ -1,0 +1,67 @@
+{
+  "title": "node-cli 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "运行 `node cli.js build -w`，process.argv 里用户真正的参数从哪个索引开始？",
+      "options": ["0", "1", "2", "3"],
+      "answer": 2,
+      "explanation": "argv[0]=node 路径、argv[1]=脚本路径，用户参数从索引 2 起，故用 argv.slice(2)（呼应 node-cli 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "让 `npm i -g mycli` 后能直接敲 `mycli`，依赖 package.json 的哪个字段 + 脚本首行的什么？",
+      "options": ["scripts + # comment", "bin + shebang(#!/usr/bin/env node)", "main + use strict", "exports + import"],
+      "answer": 1,
+      "explanation": "bin 登记命令→软链进 PATH，shebang 告诉 OS 用 node 执行（呼应 node-cli 第二节、node-npm interview 第 3 题）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "CLI 的常规约定：机器可读的结果和人类可读的错误分别写到？",
+      "options": ["都写 stdout", "结果→stdout，错误/诊断→stderr", "都写 stderr", "写文件"],
+      "answer": 1,
+      "explanation": "结果走 stdout 可被管道捕获，诊断走 stderr 不污染数据流（呼应 node-cli 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么推荐设 `process.exitCode = 1` 而不是直接 `process.exit(1)`？",
+      "options": [
+        "两者完全等价",
+        "process.exit 会截断尚未 flush 的 stdout；设 exitCode 让事件循环自然结束、输出写完再退",
+        "exitCode 更快",
+        "process.exit 不能传数字"
+      ],
+      "answer": 1,
+      "explanation": "硬 exit 可能丢输出；设 exitCode 更优雅（呼应 node-cli 第五、七节、node-child-process 'exit' vs 'close'）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`mycli | head` 时下游先关闭管道，你的 CLI 写 stdout 可能收到什么错误、应如何处理？",
+      "options": ["EACCES，需提权", "EPIPE，应忽略/优雅退出而非崩溃", "ENOENT，文件不存在", "不用处理"],
+      "answer": 1,
+      "explanation": "下游关闭→写 stdout 抛 EPIPE，要挂 error 处理避免崩溃（呼应 node-cli 第七节、node-stream-pipeline error）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "检测到输出被重定向到文件/管道（process.stdout.isTTY 为 false）时，最佳做法是？",
+      "options": ["加大字体", "自动关闭 ANSI 颜色，避免乱码", "报错退出", "强制刷新"],
+      "answer": 1,
+      "explanation": "非 TTY 应去色（并尊重 NO_COLOR），否则管道/CI 里塞满 ANSI 转义（呼应 node-cli 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "不想引入第三方依赖、又要规范解析 --flag/位置参数，可用 Node 内置的？",
+      "options": ["child_process.parse", "util.parseArgs", "querystring.parse", "path.parse"],
+      "answer": 1,
+      "explanation": "util.parseArgs（Node 18.3+）内置轻量解析器，适合小 CLI；复杂场景再上 commander/yargs（呼应 node-cli 第三节）。"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "title": "node-deploy-perf 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Dockerfile 里为什么先 COPY package*.json 并 npm ci，之后再 COPY 源码？",
+      "options": [
+        "纯属个人习惯",
+        "利用镜像层缓存：源码变化时不必重装依赖，构建更快",
+        "node_modules 不能被 COPY",
+        "防止源码泄露"
+      ],
+      "answer": 1,
+      "explanation": "依赖层稳定→命中缓存；改代码只使源码层失效（呼应 node-deploy-perf 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "运行阶段用 `npm ci --omit=dev` 的收益是？",
+      "options": [
+        "装得更快但功能不变",
+        "生产镜像不含 devDependencies，体积更小、攻击面更小",
+        "会自动跑测试",
+        "能装更多包"
+      ],
+      "answer": 1,
+      "explanation": "只装运行时依赖，镜像精简、少漏洞面（呼应 node-deploy-perf 第一节、node-npm 第五节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "graceful shutdown 收到 SIGTERM 后的正确第一步通常是？",
+      "options": [
+        "process.exit(0)",
+        "server.close() 停止接受新连接、让在途请求 drain 完",
+        "kill 所有子进程",
+        "重启机器"
+      ],
+      "answer": 1,
+      "explanation": "先 close 停止接单再等在途完成，最后关资源退出（呼应 node-deploy-perf 第二节、node-cluster 第六节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么 SIGKILL(-9) 不能做优雅收尾？",
+      "options": [
+        "它太慢",
+        "SIGKILL 不可被捕获，进程被内核立即回收，没机会跑清理代码",
+        "它只杀子进程",
+        "Node 收不到任何信号"
+      ],
+      "answer": 1,
+      "explanation": "SIGTERM 可捕获做收尾，SIGKILL/不可拦截；超时兜底才用强杀（呼应 node-deploy-perf 第二、三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "容器里 PID 1 直接跑 `node app.js` 的经典问题是？",
+      "options": [
+        "启动更慢",
+        "可能不默认转发/处理 SIGTERM 且不回收僵尸子进程，导致 docker stop 超时被强杀",
+        "无法联网",
+        "占用更多内存"
+      ],
+      "answer": 1,
+      "explanation": "用 tini/--init 作 PID1 正确转发信号+回收僵尸（呼应 node-deploy-perf 第三节、node-child-process）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "要定位一段代码是否卡住事件循环 / CPU 热点，最合适的工具是？",
+      "options": [
+        "console.log 计时",
+        "--cpu-prof / clinic flame 生成火焰图 + 监控事件循环延迟",
+        "重启服务",
+        "加大内存"
+      ],
+      "answer": 1,
+      "explanation": "先测量后优化：cpu-prof/clinic/ELU 量化热点与卡顿（呼应 node-deploy-perf 第四节、node-workers）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "容器内存受限时，Node 堆上限为什么要显式设置 `--max-old-space-size`？",
+      "options": [
+        "默认没有堆上限会无限增长",
+        "Node 可能按物理内存估算堆、超过 cgroup 限额被 OOM-kill，设成小于容器限额更稳",
+        "为了加速 GC",
+        "没必要设置"
+      ],
+      "answer": 1,
+      "explanation": "受限 cgroup 下默认估算可能偏大→OOM；显式设小于限额（呼应 node-deploy-perf 第五节）。"
+    }
+  ]
+}

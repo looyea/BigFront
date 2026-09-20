@@ -3,32 +3,88 @@
   "title": "Vue 3 渐进式框架",
   "order": 4,
   "tier": "铂金 · 视图层利器",
-  "tagline": "响应式 + 组件化。用 <script setup> 组合式 API 构建界面，本项目前端外壳就是 Vue3 + Vite。",
+  "tagline": "响应式 + 组件化。从 Proxy 响应式原理、组合式 API(ref/reactive/computed/watch)、模板与指令、组件通信与生命周期，到 Vue Router 路由、Pinia 状态管理、SFC 编译器宏、性能优化与测试，直至大型项目架构与部署——用 <script setup> 组合式 API 构建现代界面。本项目前端外壳就是 Vue3 + Vite，学完能把「怎么用它写的」也一并讲清。",
   "icon": "🟦",
   "color": "#42b883",
   "levels": [
     {
       "id": "L1",
-      "title": "响应式与组合式 API",
-      "subtitle": "ref / reactive / computed",
+      "title": "响应式基础",
+      "subtitle": "ref-reactive-computed / watch / Proxy 原理",
       "lessons": [
-        {
-          "id": "vue-reactivity",
-          "title": "Vue3 组合式 API 入门",
-          "goal": "理解 ref/reactive 的区别，会用 computed 与 watch 驱动视图更新"
-        }
+        { "id": "vue-reactivity", "title": "响应式核心：ref、reactive 与 computed", "goal": "理解 ref 与 reactive 的区别与 .value 心智、为什么需要响应式、computed 的缓存与惰性求值、可选链解构丢失响应性（呼应 ES 包的 getter/Proxy）" },
+        { "id": "vue-watch", "title": "侦听器：watch 与 watchEffect", "goal": "watch 的源(单值/多值/getter/reactive)、immediate/deep/flush、onCleanup 处理竞态、watchEffect 自动收集依赖、何时用 computed 何时用 watch" },
+        { "id": "vue-reactivity-theory", "title": "响应式原理：Proxy、effect 与依赖收集", "goal": "Proxy/Reflect 如何实现响应式、effect 与 depsMap(WeakMap)、get 收集 set 触发、shallowRef/shallowReactive/toRef/toRefs、markRaw、为什么 Vue3 抛弃 Object.defineProperty（呼应 ES 包 Proxy/WeakMap）" }
       ]
     },
     {
       "id": "L2",
-      "title": "路由与状态管理",
-      "subtitle": "Vue Router / Pinia",
+      "title": "模板与渲染",
+      "subtitle": "指令语法 / 条件与列表 / class-style-过渡",
       "lessons": [
-        {
-          "id": "vue-router-pinia",
-          "title": "路由与全局状态",
-          "goal": "会用 vue-router 做页面切换、Pinia 做跨组件共享状态"
-        }
+        { "id": "vue-template-syntax", "title": "模板语法与指令", "goal": "插值 {{}} 与 v-once/v-bind/v-on 缩写、指令参数与动态参数、修饰符、v-html 与 XSS 风险、v-cloak、模板表达式约束（呼应 Express/OWASP XSS）" },
+        { "id": "vue-conditional-list", "title": "条件与列表渲染", "goal": "v-if vs v-show 的取舍与性能、v-else/v-else-if、v-for 遍历对象/区间、key 的作用与为什么避免用 index、v-for 与 v-if 同元素优先级、v-memo" },
+        { "id": "vue-class-style-transition", "title": "class/style 绑定与过渡动画", "goal": "对象/数组语法绑定 class、style 自动前缀、绑定 CSS 变量、<Transition>/<TransitionGroup>、钩子过渡与 FLIP、列表动画（呼应 DOM/CSS）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "组件基础",
+      "subtitle": "props-emits-slot / 生命周期 / 模板引用",
+      "lessons": [
+        { "id": "vue-component-basics", "title": "组件：props、emits 与 slot", "goal": "组件注册(全局/局部)、props 单向数据流与校验、emits 声明与自定义事件、默认/具名/作用域插槽 slot、v-model 组件、fallthrough attrs（呼应 node-modules 的复用思想）" },
+        { "id": "vue-lifecycle", "title": "生命周期与 keep-alive", "goal": "创建/挂载/更新/卸载各钩子(onMounted/onUpdated/onUnmounted)、setup 与渲染关系、SSR 钩子、<KeepAlive> 缓存组件 include/exclude、activated/deactivated" },
+        { "id": "vue-refs-expose", "title": "模板引用与 defineExpose", "goal": "template ref(ref 绑定 DOM/组件)、useTemplateRef、组件默认封闭与 defineExpose、ref 数组、函数 ref、何时该用 ref 何时该用数据驱动" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "组件通信与逻辑复用",
+      "subtitle": "provide-inject / 组合式函数 / 异步组件",
+      "lessons": [
+        { "id": "vue-provide-inject", "title": "依赖注入：provide 与 inject", "goal": "跨层组件通信、provide/inject 与响应式结合、Symbol key 避免冲突、注入默认值、用 InjectionKey 做 TS 类型（呼应 02-ts generics）、反模式警告" },
+        { "id": "vue-composables", "title": "组合式函数（Composables）", "goal": "以 use 开头的逻辑复用约定、在 setup 中调用、返回 ref/reactive、可组合、副作用清理与 effectScope、通用库(vueuse)思想、替代 mixin 的原因" },
+        { "id": "vue-async-suspense", "title": "异步组件与 Suspense", "goal": "defineAsyncComponent(加载/错误/延迟/超时)、按需加载与代码分割（呼应 10-vite 分包）、<Suspense> 实验性、配合路由懒加载（呼应 vue-router-guard）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "路由：Vue Router 4",
+      "subtitle": "路由基础 / 嵌套与动态 / 守卫与懒加载",
+      "lessons": [
+        { "id": "vue-router-basics", "title": "Vue Router 入门", "goal": "createRouter/createWebHistory、RouterLink/RouterView、useRoute/useRouter、声明式与编程式导航、命名路由、history 模式与 SPA（呼应 node-http、vue-deploy history fallback）" },
+        { "id": "vue-router-nested-dynamic", "title": "嵌套路由与动态匹配", "goal": "children 嵌套、动态路由段 params、可选/可重复/catch-all、props 解耦、嵌套出口、404 通配、query 与 params 区别" },
+        { "id": "vue-router-guard-lazy", "title": "导航守卫、元信息与懒加载", "goal": "全局/路由/组件级守卫(beforeEach/beforeEnter/守卫顺序)、导航上下文 next、鉴权重定向、meta 字段、滚动行为、路由组件懒加载与分包（呼应 vue-auth、Express 鉴权）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "状态管理：Pinia",
+      "subtitle": "store 基础 / 持久化与插件 / 状态设计",
+      "lessons": [
+        { "id": "vue-pinia-basics", "title": "Pinia 入门：store、state、getters、actions", "goal": "defineStore(选项式/setup 式)、storeToRefs 保持响应、action 同步/异步、模块化、与组件本地状态/composables 的分工（替代 Vuex）" },
+        { "id": "vue-pinia-advanced", "title": "Pinia 进阶：持久化、插件与 devtools", "goal": "订阅 $subscribe、$patch 批量、$reset、持久化插件(localStorage)、写插件扩展、SSR 注意、跨 store 组合、类型推导" },
+        { "id": "vue-state-patterns", "title": "状态管理与单向数据流设计", "goal": "什么该进全局 store、props-down/events-up、v-model 双向的本质、组合式函数 vs store、状态提升、避免同步冗余状态、可预测数据流（呼应 vue-reactivity-theory）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "编译器、性能与测试",
+      "subtitle": "SFC 宏 / 性能优化 / 组件测试",
+      "lessons": [
+        { "id": "vue-sfc-compiler-macros", "title": "SFC 与 <script setup> 编译器宏", "goal": "defineProps/defineEmits/defineModel/defineExpose/defineOptions、withDefaults、类型声明式 props、scoped CSS 与 :deep()、CSS v-bind、多 <style>、宏的编译产物（呼应 ts-decorators 的编译期魔法）" },
+        { "id": "vue-performance", "title": "性能优化", "goal": "编译期静态提升/patchFlag/hoists、v-memo、shallowRef 大列表、虚拟滚动、v-once、避免不必要的响应式、key 与 diff、组件级代码分割与预加载、生产构建分析（呼应 10-vite build）" },
+        { "id": "vue-testing", "title": "组件测试：Vitest 与 Vue Test Utils", "goal": "@vue/test-utils mount/shallowMount、find/getByText、触发事件、断言 DOM 与 props/emit、测试 setup 生命周期、mock Pinia/Router、快照测试边界（呼应 node-testing 的 test runner 思想）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "实战、SSR 与部署",
+      "subtitle": "项目架构 / SSR 与 Nuxt / 构建部署",
+      "lessons": [
+        { "id": "vue-project-architecture", "title": "大型项目架构与规范", "goal": "目录组织(features vs layers)、组件分层(容器/展示)、composables 库、全局错误处理 app.config.errorHandler、插件、类型化组件、依赖注入边界、避免过度全局（呼应 node-config 环境分层、ts-project）" },
+        { "id": "vue-ssr-nuxt", "title": "SSR 原理与 Nuxt 概览", "goal": "为什么 SSR(C SEO/首屏)、服务端渲染与 hydration 水合、同构数据获取、SSR 注意事项(每请求新实例、onMounted 才跑)、createSSRApp、Nuxt 约定式路由/自动导入/服务端（呼应 08-nuxt）" },
+        { "id": "vue-deploy", "title": "构建与部署", "goal": "vite build 产物、base/publicPath、history 路由的 Nginx try_files 回退、环境变量 VITE_、静态资源缓存与 hash、CDN、gzip/预压缩、首屏优化与 SPA vs SSG（呼应 10-vite-deploy、node-deploy-perf）" }
       ]
     }
   ]

@@ -1,0 +1,97 @@
+{
+  "title": "node-https-tls 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "HTTPS 与 HTTP、TLS、TCP 的关系是？",
+      "options": [
+        "HTTPS 是替代 TCP 的新传输协议",
+        "HTTPS = HTTP over TLS，TLS 插在 TCP 与 HTTP 之间做加密/认证",
+        "TLS 跑在 HTTP 之上",
+        "完全独立无关系"
+      ],
+      "answer": 1,
+      "explanation": "HTTP 字节先经 TLS 加密再落到 TCP socket；TLS 是介于 TCP 与应用层之间的加密流（呼应 node-https-tls 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "服务器证书(X.509)里主要包含什么？它的作用是？",
+      "options": [
+        "包含私钥，用于加密数据",
+        "包含公钥 + 身份(SAN 域名) + CA 签名，用于证明公钥归属/身份认证",
+        "包含对称密钥",
+        "只是文件名列表"
+      ],
+      "answer": 1,
+      "explanation": "证书=公钥+身份+CA签名，证明『这个公钥确实属于该域名』；私钥绝不进证书、证书也不用于加密业务数据（呼应 node-https-tls 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "TLS 握手中，非对称加密与对称加密各承担什么？",
+      "options": [
+        "全程只用非对称",
+        "非对称用于身份认证+安全协商出共享对称密钥，之后业务数据用对称加密（快）",
+        "对称用于认证、非对称用于数据",
+        "两者都不参与"
+      ],
+      "answer": 1,
+      "explanation": "非对称解决『不安全信道上建立共享密钥+验证身份』，数据量大后用对称加密（AES-GCM 等）保证性能（呼应 node-https-tls 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "把 NODE_TLS_REJECT_UNAUTHORIZED 设为 0 / rejectUnauthorized:false 的后果是？",
+      "options": [
+        "只是跳过警告，仍安全",
+        "关闭服务端身份校验，失去 MITM（中间人）防护，高危",
+        "提速",
+        "启用双向认证"
+      ],
+      "answer": 1,
+      "explanation": "关掉证书校验=任何人都能伪造站点做中间人窃听/篡改；只可本地临时调试，生产必须正确配置信任的 CA（呼应 node-https-tls 第五节、Express L6）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "访问一个用私有 CA 签发的 https 服务，正确做法是？",
+      "options": [
+        "关掉校验",
+        "把签发它的 CA 证书通过 ca 选项加入信任（https.Agent/ connect.ca）",
+        "改用 http",
+        "忽略报错继续"
+      ],
+      "answer": 1,
+      "explanation": "自签/私有 CA 报 unable to verify 是因签发者不在信任根；应显式提供该 CA，而不是关闭校验（呼应 node-https-tls 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "SNI 解决什么问题？",
+      "options": [
+        "加速 DNS",
+        "一个 IP/服务器上托管多个 HTTPS 域名时，客户端在握手中表明目标主机名，服务端据此选对应证书",
+        "压缩响应",
+        "替换 Content-Length"
+      ],
+      "answer": 1,
+      "explanation": "SNI 让 ClientHello 携带目标域名，服务端据此返回正确域名证书（server.addContext）（呼应 node-https-tls 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "『前向保密(PFS)』靠什么保证？它防什么？",
+      "options": [
+        "靠更长密钥；防暴力破解",
+        "靠 ECDHE 临时会话密钥；防『长期私钥日后泄露后解密历史流量』",
+        "靠 HTTPS 端口；防端口扫描",
+        "靠 HSTS；防重放"
+      ],
+      "answer": 1,
+      "explanation": "(EC)DHE 每次会话生成临时密钥，即便服务器长期私钥日后泄露也无法解密之前抓包的流量（呼应 node-https-tls 第四节）。"
+    }
+  ]
+}

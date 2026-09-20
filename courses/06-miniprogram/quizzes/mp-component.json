@@ -1,0 +1,92 @@
+{
+  "title": "mp-component 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "让一个 .wxml/.js/.wxss/.json 四件套成为\"组件\"的关键声明是？",
+      "options": [
+        "js 里调用 Page() 并传 options",
+        "json 里 \"component\": true",
+        "app.json 的 usingComponents 之外别无他法",
+        "文件名以 comp- 开头"
+      ],
+      "answer": 1,
+      "explanation": "component:true 是组件身份卡（呼应 mp-component 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "页面 wxml 写了一个自定义标签却只显示空白、无红字报错，最可能？",
+      "options": [
+        "组件样式没写",
+        "properties 少定义了字段",
+        "该标签未在（页面或 app.json 的）usingComponents 登记",
+        "data 里有同名键"
+      ],
+      "answer": 2,
+      "explanation": "未登记的自定义标签静默失败（呼应 mp-component 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "组件内执行 this.properties.title = 'x'，效果是？",
+      "options": [
+        "报错中断",
+        "生效且同步回父页面",
+        "生效但仅本组件",
+        "告警且不生效——properties 对组件只读"
+      ],
+      "answer": 3,
+      "explanation": "props 单向流宪法，改走内部镜像或通知父级（呼应 mp-component 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "properties 声明 type: Number，父页面传了字符串 \"199\"，会？",
+      "options": [
+        "自动转换为数字 199",
+        "原样保留字符串并静默",
+        "抛异常",
+        "组件不渲染"
+      ],
+      "answer": 0,
+      "explanation": "type 兼具校验与转换职责（呼应 mp-component 第三节铁律2）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "properties 里写 bgColor，WXML 中传值应写？",
+      "options": ["bgColor=\"...\"", "bgcolor=\"...\"", "bg-color=\"...\"", "BG_COLOR=\"...\""],
+      "answer": 2,
+      "explanation": "小驼峰↔连字符自动互转，同 Vue prop 规则（呼应 mp-component 第三节末）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "externalClasses 的用途是？",
+      "options": [
+        "让组件能引用 app.wxss 的类",
+        "把组件样式导出给页面用",
+        "禁用样式隔离的全局开关",
+        "组件暴露\"类占位\"，允许父页面注入样式定制节点外观"
+      ],
+      "answer": 3,
+      "explanation": "官方样式插槽，vant 定制全靠它（呼应 mp-component 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "组件内 this.createSelectorQuery() 查询节点，作用范围是？",
+      "options": [
+        "整个页面所有节点",
+        "仅本页面 json 登记的组件",
+        "默认限定在组件自身子树内",
+        "所有已挂载实例的全局并集"
+      ],
+      "answer": 2,
+      "explanation": "组件查询自动限域，防跨组件误伤（呼应 mp-component 第四节）。"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "title": "mp-component-lifecycle 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "组件里想 safe 地查询自身节点宽高/初始化播放器，应放哪个钩子？",
+      "options": ["created", "ready", "attached", "onShow"],
+      "answer": 1,
+      "explanation": "ready=首次渲染完成（呼应 mp-component-lifecycle 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "在 created 里 this.setData({...})，结果是？",
+      "options": [
+        "正常生效",
+        "进入队列等 attached 后执行",
+        "无效/告警——视图尚不存在，初始数据应写 data 默认值",
+        "自动推迟到 ready"
+      ],
+      "answer": 2,
+      "explanation": "created 时 nothing exists（呼应 mp-component-lifecycle 铁律1）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "组件所在页面 onShow 时，组件如何感知？",
+      "options": [
+        "写顶层 onShow 方法即可",
+        "pageLifetimes.show",
+        "bus 必须自建才有解",
+        "无法感知"
+      ],
+      "answer": 1,
+      "explanation": "页面事件经 pageLifetimes 转发（呼应 mp-component-lifecycle 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "price 的 observer 里执行 this.setData({ price: x })，会发生？",
+      "options": [
+        "同值短路无事发生",
+        "仅一次额外渲染",
+        "框架自动去环",
+        "观察→赋值→再观察的无限循环告警"
+      ],
+      "answer": 3,
+      "explanation": "派生值要写别的字段（呼应 mp-component-lifecycle 第三节军规1）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "定时器该在哪个钩子清理？",
+      "options": ["ready", "onUnload", "hide", "detached"],
+      "answer": 3,
+      "explanation": "组件唯一销毁点是 detached（呼应 mp-component-lifecycle 铁律3）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "组件被父级 wx:if 销毁又重建，其内部 data 会？",
+      "options": [
+        "重置——保状态需 hidden 或状态提升",
+        "自动保留",
+        "保留 properties 丢弃 data",
+        "取决于是否写了 observers"
+      ],
+      "answer": 0,
+      "explanation": "重建即全新实例（呼应 mp-component-lifecycle 第一节末）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 behavior 的合并规则，正确的是？",
+      "options": [
+        "同名 methods 组件让位于 behavior",
+        "生命周期只执行组件自己的",
+        "只能挂一个 behavior",
+        "成员浅合并、组件优先覆盖；同名生命周期都会执行（behavior 先跑）"
+      ],
+      "answer": 3,
+      "explanation": "近似 Vue mixin 的选项合并（呼应 mp-component-lifecycle 第四节）。"
+    }
+  ]
+}

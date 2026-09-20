@@ -1,0 +1,92 @@
+{
+  "title": "vue-class-style-transition 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "要根据多个布尔条件动态组合 class，最清晰的写法是？",
+      "options": [
+        "字符串拼接 if/else",
+        ":class=\"{ active: isActive, disabled: isDisabled }\" 对象语法",
+        "只能写死静态 class",
+        "用 v-html 拼 class"
+      ],
+      "answer": 1,
+      "explanation": "对象语法把类名和布尔条件一一对应，最声明式（呼应 vue-class-style-transition 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "想让 JS 状态驱动一个 CSS 自定义属性(--main-color)，怎么写？",
+      "options": [
+        ":style=\"{ '--main-color': color }\"",
+        ":class=\"'--main-color:' + color\"",
+        "v-bind:style=\"{ mainColor: color }\"",
+        "无法在模板里做"
+      ],
+      "answer": 0,
+      "explanation": "CSS 变量用方括号键 '[--x]' 绑定（呼应 vue-class-style-transition 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "<Transition> 默认的六个过渡类名，进场三个阶段是？",
+      "options": [
+        "enter-from / enter-active / enter-to",
+        "start / running / end",
+        "in / ing / out",
+        "from / via / to"
+      ],
+      "answer": 0,
+      "explanation": "enter-from→enter-active→enter-to（离场同理 leave-*）（呼应 vue-class-style-transition 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "切换两个元素时进/出场重叠、难看，应给 <Transition> 加什么？",
+      "options": ["appear", "mode=\"out-in\"", "type=\"animation\"", "name"],
+      "answer": 1,
+      "explanation": "mode=\"out-in\" 让旧的先离场、新的再进场（呼应 vue-class-style-transition 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "用 GSAP 等 JS 库做动画时，为什么钩子里要调用 done()？",
+      "options": [
+        "通知 Vue 动画已结束，好清理类名/移除元素",
+        "防止内存泄漏的唯一手段",
+        "触发一次 nextTick",
+        "其实可不调用"
+      ],
+      "answer": 0,
+      "explanation": "CSS 靠 transitionend 猜结束，JS 动画须手动 done() 告知时机（呼应 vue-class-style-transition 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "<TransitionGroup> 里每个子项为什么必须有唯一 key？",
+      "options": [
+        "只是风格建议",
+        "列表增删/移动时要靠 key 正确匹配节点，动画才不会跳项、FLIP 才成立",
+        "不然编译报错",
+        "key 用于设置 CSS 变量"
+      ],
+      "answer": 1,
+      "explanation": "key 保证 diff 复用正确，列表动画/换位才不串（呼应 vue-class-style-transition 第五节、vue-conditional-list 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "写 :style=\"{ transform: 'rotate(3deg)' }\" 需要自己加 -webkit-transform 吗？",
+      "options": [
+        "需要，Vue 不处理",
+        "不需要，Vue 会自动加厂商前缀",
+        "取决于浏览器",
+        "要写在 script 里"
+      ],
+      "answer": 1,
+      "explanation": ":style 会自动补前缀（呼应 vue-class-style-transition 第二节）。"
+    }
+  ]
+}

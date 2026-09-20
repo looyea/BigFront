@@ -1,0 +1,87 @@
+{
+  "title": "vue-sfc-compiler-macros 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 <script setup> 里的 defineProps 等\"编译器宏\"，正确的说法是？",
+      "options": [
+        "它们是运行时从 vue 导入的普通函数",
+        "它们是 @vue/compiler-sfc 在编译期识别并转译的宏，无需 import",
+        "它们只能在 <template> 里使用",
+        "它们等价于 Vue 2 的混入"
+      ],
+      "answer": 1,
+      "explanation": "宏是编译期产物，被转成 props/emits/setup 选项，编译器自动注入无需 import（呼应 vue-sfc-compiler-macros 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "编译器宏必须写在哪里？为什么？",
+      "options": [
+        "任意位置，因为运行时才解析",
+        "必须顶层直接调用，因为编译期做的是静态分析",
+        "必须写在 onMounted 里",
+        "必须写在 <style> 块里"
+      ],
+      "answer": 1,
+      "explanation": "静态分析要求宏在顶层直接调用，不能藏在条件/循环/回调里（呼应 vue-sfc-compiler-macros 第一、六节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "用 TS 类型声明 props 时，如何提供默认值？",
+      "options": [
+        "defineProps<Props>({ default: ... }) 直接传",
+        "用 withDefaults(defineProps<Props>(), { ... }) 包一层",
+        "在模板里写默认值",
+        "无法提供默认值"
+      ],
+      "answer": 1,
+      "explanation": "类型声明式 props 用 withDefaults 提供默认值（呼应 vue-sfc-compiler-macros 第二节、vue-component-basics props 默认）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "tags: string[] 这类引用类型的 props 默认值应怎么写？",
+      "options": ["tags: []", "tags: () => []", "tags: new Array()", "tags: null"],
+      "answer": 1,
+      "explanation": "对象/数组默认值必须用工厂函数返回，避免多实例共享同一引用（呼应 vue-component-basics default 工厂、vue-sfc-compiler-macros 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "defineModel（3.4+）合并了哪两样东西？",
+      "options": [
+        "props 和 emits 的全部声明",
+        "modelValue prop 与 update:modelValue 事件，返回一个可写 ref",
+        "data 和 methods",
+        "computed 和 watch"
+      ],
+      "answer": 1,
+      "explanation": "defineModel 把 v-model 的 prop+事件合成一个可写 ref，省样板（呼应 vue-sfc-compiler-macros 第三节、vue-component-basics 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "在 <style scoped> 中要修改子组件内部元素的样式，应使用？",
+      "options": [":global()", ":deep()", "!important", "v-bind()"],
+      "answer": 1,
+      "explanation": "scoped 默认不穿透子组件，:deep() 显式下沉选择器（呼应 vue-sfc-compiler-macros 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "CSS 里的 v-bind(color) 底层是如何实现的？",
+      "options": [
+        "编译成内联 style 字符串拼接",
+        "通过 useCssVars 设置 CSS 自定义属性（变量）",
+        "运行时 setInterval 轮询更新",
+        "生成一份独立 JS 文件"
+      ],
+      "answer": 1,
+      "explanation": "CSS v-bind 底层用 useCssVars 绑定 --xxxx 变量（呼应 vue-sfc-compiler-macros 第五节、vue-class-style-transition 第二节）。"
+    }
+  ]
+}

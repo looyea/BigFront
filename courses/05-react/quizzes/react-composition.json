@@ -1,0 +1,77 @@
+{
+  "title": "react-composition 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "React 说的\"组合优于继承\"意味着复用主要靠？",
+      "options": [
+        "extends 一个基类组件",
+        "把组件当函数拼装：children/props/HOC/自定义 Hook",
+        "mixins",
+        "全局事件总线"
+      ],
+      "answer": 1,
+      "explanation": "组合而非 class 继承是 React 复用主流（呼应 react-composition 第一、五节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "用多个 prop 传不同子元素给组件的固定位置，对应 Vue 的？",
+      "options": ["默认插槽", "作用域插槽", "具名插槽", "动态组件"],
+      "answer": 2,
+      "explanation": "header/footer 类 prop = 具名插槽（呼应 react-composition 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "render prop（children-as-function）最适合？",
+      "options": [
+        "父组件内部状态想交给调用方决定怎么渲染（作用域插槽）",
+        "缓存计算结果",
+        "订阅 Context",
+        "生成唯一 id"
+      ],
+      "answer": 0,
+      "explanation": "把内部数据回传给消费方渲染（呼应 react-composition 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "两个兄弟组件要共享一份状态，先想到？",
+      "options": ["各存一份再同步", "提升到共同父，传 value+onChange", "用全局变量", "用 ref"],
+      "answer": 1,
+      "explanation": "提升状态到共同父（呼应 react-composition 第三节、vue-state-patterns）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "HOC 的典型缺点是什么？",
+      "options": [
+        "无法读 state",
+        "props 透传易忘、嵌套地狱、来源不显式",
+        "必须搭配 class 组件",
+        "会禁用 Hooks"
+      ],
+      "answer": 1,
+      "explanation": "这正是自定义 Hook 改善的点（呼应 react-composition 第四、五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "现在复用一段\"有状态逻辑\"，社区首选是？",
+      "options": ["class 继承", "mixins", "自定义 Hook", "全局 store"],
+      "answer": 2,
+      "explanation": "自定义 Hook 来源显式、可组合、可测（呼应 react-composition 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "\"受控组件\"本质上是哪种组合模式的典型体现？",
+      "options": ["提升状态(值握在父)", "HOC", "render prop", "Context 广播"],
+      "answer": 0,
+      "explanation": "父持有值、子 value+onChange，是 lifting 的样板（呼应 react-composition 第三节、react-forms）。"
+    }
+  ]
+}

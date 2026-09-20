@@ -1,0 +1,92 @@
+{
+  "title": "ts-classes 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "TS 的 private 和 ES 的 #field 最大区别是？",
+      "options": [
+        "没区别",
+        "private 只在编译期检查、擦除后字段仍可被 JS 访问；#field 是运行时真正的私有",
+        "#field 是编译期的",
+        "private 运行时更强"
+      ],
+      "answer": 1,
+      "explanation": "private/protected 是类型层约束，编译产物无痕迹；要硬私有用 ES 的 #field（呼应 ts-intro）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "constructor(public x: number) 这种写法叫什么、省了什么？",
+      "options": [
+        "参数属性；省去声明字段 + this.x = x 赋值样板",
+        "默认参数",
+        "剩余参数",
+        "装饰器"
+      ],
+      "answer": 0,
+      "explanation": "参数属性把'可见性+类型+赋值'合到构造参数一行完成。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "abstract class 与 interface 都能强制实现，关键差别是？",
+      "options": [
+        "abstract 可以有已实现的方法/字段，interface 不能有实现体",
+        "interface 可以实例化",
+        "abstract 能被 new",
+        "完全一样"
+      ],
+      "answer": 0,
+      "explanation": "抽象类可提供共享实现且不能直接 new；接口只声明形状（可多实现，呼应 ts-interface）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "两个 public 形状相同、但一个含 private 成员的类，能否互相赋值？",
+      "options": [
+        "能，结构化类型只看形状",
+        "不能——private/protected 成员是名义的，除非来自同一继承链",
+        "取决于是否 implements",
+        "只有 protected 才行"
+      ],
+      "answer": 1,
+      "explanation": "私有成员破坏结构兼容，是 TS 鸭子类型里唯一的'名义例外'（第六节，呼应品牌类型）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "type Ctor<T> = new (...args:any[]) => T 的常见用途是？",
+      "options": [
+        "定义函数类型",
+        "把'类'当值传递并保留实例类型（DI token、工厂、mixin）",
+        "声明枚举",
+        "约束数组"
+      ],
+      "answer": 1,
+      "explanation": "构造签名描述可 new 出 T 的东西，泛型擦除下靠它把类型信息随构造器值传入（呼应 ts-generic-constraints 第7题）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "class Win implements Draggable 中 implements 的作用是？",
+      "options": [
+        "让 Win 成为 Draggable 的运行时父类",
+        "编译期检查 Win 具备接口要求的全部成员，不改变结构化兼容",
+        "生成 JS 代码",
+        "引入命名空间"
+      ],
+      "answer": 1,
+      "explanation": "implements 只是编译期'契约校验'，TS 本就按结构判兼容，不产生运行时代码。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "泛型 class Stack<T> 的 static 成员能否使用类型参数 T？",
+      "options": ["能", "不能——静态作用域看不到实例的类型参数", "只在 abstract 里能", "加了 readonly 就能"],
+      "answer": 1,
+      "explanation": "类型参数属于实例侧作用域，static 成员无法引用 T（会报 unknown 类约束错误）。"
+    }
+  ]
+}

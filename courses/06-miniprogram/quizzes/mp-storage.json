@@ -1,0 +1,87 @@
+{
+  "title": "mp-storage 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "wx.getStorageSync('not-exist') 返回？",
+      "options": ["空字符串 ''", "undefined", "null", "抛异常"],
+      "answer": 0,
+      "explanation": "未命中返回 ''，if (!raw) 判空即可、别等 undefined（呼应 mp-storage 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Storage 容量限额是？",
+      "options": [
+        "每页面 10MB 独立",
+        "单 key 1MB、整个小程序总量 10MB",
+        "无限，受手机存储限制",
+        "单 key 10MB、总量 100MB"
+      ],
+      "answer": 1,
+      "explanation": "全小程序共享 10MB，爆仓是全局事故（呼应 mp-storage 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "存入 new Date()，取出来是？",
+      "options": ["Date 实例", "时间戳数字", "Object", "字符串——序列化导致类型丢失"],
+      "answer": 3,
+      "explanation": "JSON 化后 Date 变字符串，同构问题 web 也有（呼应 mp-storage 第一节、json 类型话题）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "官方更推荐异步版 setStorage 而非同步版的主要原因是？",
+      "options": [
+        "异步版容量更大",
+        "同步版不支持过期参数",
+        "同步磁盘 IO 会阻塞逻辑层 JS 线程",
+        "异步版才能跨页面共享"
+      ],
+      "answer": 2,
+      "explanation": "阻塞=卡事件响应，冷启动连环同步读是性能杀手（呼应 mp-storage 第一节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于缓存数据的可靠性，正确的是？",
+      "options": [
+        "随时可能被用户/系统清除，读取必须容错并回源",
+        "只要不卸载就永远在",
+        "同微信号换手机后自动同步",
+        "审核后会迁移到账号云空间"
+      ],
+      "answer": 0,
+      "explanation": "设置页可清、空间紧张可清——缓存只是加速层（呼应 mp-storage 第一、二节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "购物车预览数据的正确存储策略是？",
+      "options": [
+        "只存 Storage，后端不存",
+        "只放 globalData",
+        "后端为权威源，Storage 存预览副本+启动回源校准",
+        "每次进页面向后端全量拉取，本地不留副本"
+      ],
+      "answer": 2,
+      "explanation": "可展示加速、不可当事实（呼应 mp-storage 第二、四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "cache.js 里 TTL 实现的核心是？",
+      "options": [
+        "依赖微信自带的过期参数",
+        "写入时包一层 {v, e过期时刻}，读取时比对并惰性删除+启动 sweep",
+        "每分钟 setInterval 全库扫描",
+        "key 里拼时间戳让其自然失效"
+      ],
+      "answer": 1,
+      "explanation": "官方无 TTL 能力，自己造信封（呼应 mp-storage 第三节）。"
+    }
+  ]
+}

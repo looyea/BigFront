@@ -1,0 +1,77 @@
+{
+  "title": "ts-mapped 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "映射类型 { [K in keyof T]: T[K] } 中 in 右侧要求是什么类型？",
+      "options": [
+        "任意对象",
+        "string | number | symbol 的键联合（keyof T 恰好是这种联合）",
+        "只能是 number",
+        "只能是字符串字面量"
+      ],
+      "answer": 1,
+      "explanation": "in 右侧是键类型联合；keyof T 产出正是 string|number|symbol 的子类型联合。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "-? 修饰符在映射类型里的作用是？",
+      "options": ["加可选", "移除可选（得 Required）", "加只读", "删属性"],
+      "answer": 1,
+      "explanation": "-? 去掉可选修饰符即 Required；+?/?: 加可选；-readonly 去只读。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "TS 4.1 的 as 子句在映射类型里能做两件关键事，是？",
+      "options": [
+        "类型断言 + 定义枚举",
+        "改写键名（配合模板字面量）+ 把键映射成 never 以删除该属性",
+        "加装饰器 + 收窄",
+        "导入类型 + 导出类型"
+      ],
+      "answer": 1,
+      "explanation": "as 用于键重映射：改名（`get${K}`）或映射为 never 删键（PickByType）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Getters<{name:string}> 若映射为 [K in keyof T as `get${Capitalize<string & K>}`]: ()=>T[K]，结果是？",
+      "options": ["{ name: ()=>string }", "{ getName: ()=>string }", "{ getname: ()=>string }", "{ get: ()=>string }"],
+      "answer": 1,
+      "explanation": "模板字面量把键改成 get+首字母大写的 Name，值变取值函数，得 { getName: ()=>string }。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "type ExtractRoute<T> = T extends `/api/${infer Id}` ? Id : never; ExtractRoute<'/api/42'> 得？",
+      "options": ["'/api/42'", "'42'", "never", "'/api/'"],
+      "answer": 1,
+      "explanation": "模板字面量类型可用 infer 反解出片段，'/api/42' 匹配出 Id='42'。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "对元组 [number, boolean] 做同态映射 { [K in keyof T]: ... } 会？",
+      "options": [
+        "退化成普通数组",
+        "保留元组骨架逐位变换元素类型",
+        "只处理第一个元素",
+        "报编译错误"
+      ],
+      "answer": 1,
+      "explanation": "同态映射保留 tuple/数组结构与 readonly，只变换元素类型（可实现 MapTuple/Awaited tuple）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "PickByType<T,V> = { [K in keyof T as T[K] extends V ? K : never]: T[K] } 里 as never 的意义是？",
+      "options": ["运行时报错", "让不匹配的键不出现在结果里（过滤删键）", "把值变成 never", "关闭分发"],
+      "answer": 1,
+      "explanation": "as never 使该键被丢弃，从而只保留值类型匹配 V 的键——键重映射过滤的标准用法。"
+    }
+  ]
+}

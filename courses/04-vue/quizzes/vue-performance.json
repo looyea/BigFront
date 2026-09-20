@@ -1,0 +1,87 @@
+{
+  "title": "vue-performance 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Vue 3 编译器里的\"静态提升(hoist)\"主要优化的是哪一步？",
+      "options": [
+        "更新时跳过 diff",
+        "把不变的节点只创建一次、提到 render 外复用，避免每次渲染重新 createVNode",
+        "把 CSS 内联",
+        "压缩打包体积"
+      ],
+      "answer": 1,
+      "explanation": "静态提升优化 VNode 创建阶段（呼应 vue-performance 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "patchFlag 的作用是什么？",
+      "options": [
+        "给动态节点打标记，更新时只比对被标记的那一处而非全部 props",
+        "标记组件边界",
+        "决定打包 chunk 划分",
+        "控制事件冒泡"
+      ],
+      "answer": 0,
+      "explanation": "patchFlag 让 patch 按需进行，正是 vue-reactivity-theory 按需更新思路的编译期体现（呼应 vue-performance 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 v-memo，下列说法正确的是？",
+      "options": [
+        "它让元素只渲染一次，永不更新",
+        "按依赖数组缓存子树，依赖不变就复用上次的 VNode，常用于大 v-for",
+        "它等价于 v-cloak",
+        "它只能用在 <transition> 里"
+      ],
+      "answer": 1,
+      "explanation": "v-memo 是子树级缓存、需配 :key；v-once 才是只渲染一次（呼应 vue-performance 第二节、vue-conditional-list key）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "对上万条只读明细数据，推荐用 shallowRef 而不是 reactive 的原因是？",
+      "options": [
+        "shallowRef 渲染更快因为跳过了虚拟 DOM",
+        "避免对整棵嵌套对象做深度懒代理，减少代理与依赖收集开销",
+        "reactive 不能用于数组",
+        "shallowRef 会自动虚拟滚动"
+      ],
+      "answer": 1,
+      "explanation": "深度代理开销大，shallowRef 只追踪 .value 替换（呼应 vue-performance 第三节、vue-reactivity-theory Proxy）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "用了 shallowRef 后，原地 push 了新元素但视图没更新，正确补救是？",
+      "options": ["改用 shallowReactive", "调用 triggerRef(list) 手动触发", "再包一层 ref", "无法补救，只能整体替换"],
+      "answer": 1,
+      "explanation": "深层变更不追踪，需要 triggerRef；当然也可整体替换 .value（呼应 vue-performance 第三节、vue-reactivity-theory triggerRef）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "v-for 里用 index 当 key 主要会引发什么问题？",
+      "options": ["打包体积变大", "列表逆序/删除时 key 错位导致错误复用节点、状态串位与多余重渲染", "触发 XSS", "让 computed 失效"],
+      "answer": 1,
+      "explanation": "index 不稳定破坏 diff 复用，应用唯一 id（呼应 vue-performance 第五节、vue-conditional-list）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下列哪个不是组件级代码分割/预加载手段？",
+      "options": [
+        "路由 component: () => import('...')",
+        "defineAsyncComponent 延后加载重组件",
+        "hover/空闲时预 import 下一路由 chunk",
+        "把所有页面都 import 进 main.js 顶部"
+      ],
+      "answer": 3,
+      "explanation": "顶部全量 import 会进同一 chunk，抵消分包（呼应 vue-performance 第六节、vue-router-guard-lazy、10-vite）。"
+    }
+  ]
+}

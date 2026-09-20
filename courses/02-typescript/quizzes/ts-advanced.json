@@ -1,0 +1,87 @@
+{
+  "title": "ts-advanced 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "类型断言测试里 Equal<A,B> 相比 A extends B && B extends A 的优势是？",
+      "options": [
+        "更快",
+        "更严格——能区分 any、可选 undefined 等'互相可赋值但并不相同'的类型",
+        "写法更短",
+        "没有区别"
+      ],
+      "answer": 1,
+      "explanation": "Equal 用条件类型签名的内部一致性判断真正同一性，双向 extends 会把 any/可选等误判相等。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "写 DeepReadonly 时为什么要先用条件类型把 函数 / Date / 数组 分流出去？",
+      "options": [
+        "为了运行更快",
+        "否则映射类型会把它们当普通对象逐键展开，破坏其结构/签名",
+        "因为不能递归",
+        "没必要，多此一举"
+      ],
+      "answer": 1,
+      "explanation": "对象映射会拆解函数/内置对象；分流后原样保留，只对普通对象递归加 readonly。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Paths<{a:number;b:{c:string}}> 期望得到的联合是？",
+      "options": ["'a'|'b'", "'a'|'b'|'b.c'", "'a.b.c'", "{a:number;b:{c:string}}"],
+      "answer": 1,
+      "explanation": "递归把嵌套键用点号拼接：自身键 a、b 加上 b 下的 b.c，得 'a'|'b'|'b.c'。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "type GetByPath<T,P> 用 P extends `${infer K}.${infer Rest}` 的目的是？",
+      "options": [
+        "生成新字符串",
+        "把路径字符串拆成首段 K 与剩余 Rest，按键递归下降到嵌套类型取值类型",
+        "删除属性",
+        "把 P 转成 number"
+      ],
+      "answer": 1,
+      "explanation": "模板字面量 infer 反解路径，逐段用 K extends keyof T 下钻，实现类型化 lodash.get。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "品牌类型 string & { __brand:'UserId' } 解决了 TS 结构化类型的什么问题？",
+      "options": [
+        "性能问题",
+        "两个都是 string 的语义类型会被随意互换——品牌给它加上'名义'区分，防串号",
+        "循环引用",
+        "命名冲突"
+      ],
+      "answer": 1,
+      "explanation": "结构化类型只看形状，UserId/OrderId 都是 string 会互串；品牌加不可见标记模拟名义类型。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "declare function once<F extends Fn>(fn:F):F 相比 (fn:(...a:any[])=>any)=>(...) 好在哪？",
+      "options": [
+        "运行更快",
+        "泛型原样透传，保留入参的具体参数/返回/this 类型，不像 any 丢信息",
+        "更短",
+        "能处理异步"
+      ],
+      "answer": 1,
+      "explanation": "F 捕获整个函数签名并原样返回，避免 any 把参数/返回类型抹平（呼应 ts-any-unknown）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下哪项不是重递归类型的典型风险？",
+      "options": ["excessively deep 报错", "模板字面量对大联合笛卡尔积爆炸", "循环引用无限展开", "自动改变运行时数值精度"],
+      "answer": 3,
+      "explanation": "类型层不影响运行时数值精度；其余三项都是递归/映射类型的真实坑（见第六节）。"
+    }
+  ]
+}

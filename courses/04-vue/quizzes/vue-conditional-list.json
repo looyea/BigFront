@@ -1,0 +1,82 @@
+{
+  "title": "vue-conditional-list 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "一个需要被用户频繁展开/收起、内容很重的面板，应优先用？",
+      "options": ["v-if", "v-show", "v-for", "v-once"],
+      "answer": 1,
+      "explanation": "频繁切换用 v-show（只切 display，不反复销毁重建）（呼应 vue-conditional-list 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 v-if 与 v-show，下列正确的是？",
+      "options": [
+        "v-if 为假时节点仍在 DOM，只是隐藏",
+        "v-show 切换会触发组件的 mounted/unmounted",
+        "v-if 为假时不渲染，切换会触发挂载/卸载",
+        "两者完全等价"
+      ],
+      "answer": 2,
+      "explanation": "v-if 惰性渲染并触发生命周期；v-show 一直渲染只切 CSS（呼应 vue-conditional-list 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "登录/注册两个结构相似的表单用 v-if/v-else 切换，输入内容会串味。最佳修法？",
+      "options": ["改用 v-show", "给两者加不同的 key", "去掉 v-else", "用 computed 过滤"],
+      "answer": 1,
+      "explanation": "加不同 key 强制 Vue 不复用同一 DOM，切换即重建（呼应 vue-conditional-list 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么列表渲染通常不建议用 index 当 :key？",
+      "options": [
+        "index 不是字符串",
+        "增删/排序时 index 与数据错位，导致复用错乱、性能下降、动画/焦点跳项",
+        "Vue 不支持数字 key",
+        "index 太慢"
+      ],
+      "answer": 1,
+      "explanation": "key 是 diff 的身份牌，index 不稳定会造成三类问题（呼应 vue-conditional-list 第五节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Vue 3 中同一元素上 v-if 与 v-for 的优先级是？",
+      "options": [
+        "v-for 先执行，v-if 能拿到 item",
+        "v-if 先执行，拿不到 v-for 的 item",
+        "随机",
+        "不允许同时出现，直接报错"
+      ],
+      "answer": 1,
+      "explanation": "Vue3 里 v-if 优先、访问不到循环变量；过滤应改用 computed（呼应 vue-conditional-list 第六节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "要按条件只渲染 list 中 ok 为真的项，最推荐？",
+      "options": [
+        "每项写 v-for + v-if 同标签",
+        "用 computed 先 filter 出子集再 v-for",
+        "用 v-show 隐藏不合格项",
+        "用 v-once"
+      ],
+      "answer": 1,
+      "explanation": "computed 过滤只渲染命中项、且只算一次（呼应 vue-conditional-list 第六节、vue-reactivity 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "v-for 遍历对象 (v, k, i) 三个别名分别代表？",
+      "options": ["键、值、索引", "值、键、索引", "值、索引、键", "只能写一个"],
+      "answer": 1,
+      "explanation": "对象遍历顺序为 value, key, index（呼应 vue-conditional-list 第四节）。"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "title": "ts-frameworks 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "React 里表达“primary 变体有 onClick、ghost 变体必有 href 且互斥”的 props，最贴切的类型是？",
+      "options": [
+        "全部字段都写成可选 ?",
+        "用可辨识联合（按 variant 分的两个对象类型）",
+        "用 any 兜底",
+        "用两个独立 interface 各导出一份"
+      ],
+      "answer": 1,
+      "explanation": "可辨识联合（discriminated union）能以 variant 为标签精确表达每个变体独有的字段，消费处靠 variant 自动收窄，杜绝非法组合（呼应 ts-union、ts-narrowing）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "现在不推荐用 React.FC 给函数组件标类型，主要原因是？",
+      "options": [
+        "React.FC 会让组件变慢",
+        "它隐式注入 children、难以写泛型组件，且没带来实际收益",
+        "React.FC 已被删除无法 import",
+        "它只能用于类组件"
+      ],
+      "answer": 1,
+      "explanation": "React.FC 会把 children 隐式加进 props（不总是想要）、给泛型组件传类型很别扭；直接给函数参数标 props 类型更清晰（呼应 ts-functions）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Vue3 里 defineProps<Props>() 为什么必须把类型作为“泛型实参”传入？",
+      "options": [
+        "因为运行时要用泛型擦除后的值",
+        "因为它是编译期宏，编译器需静态读取类型来生成运行时 props 声明",
+        "因为 Vue 不支持对象形式的 props",
+        "为了性能优化"
+      ],
+      "answer": 1,
+      "explanation": "defineProps 是编译期宏，SFC 编译器在编译时读取泛型实参里的类型信息，生成对应的运行时 props 选项——所以类型必须是可静态分析的（呼应 ts-generic）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么 .vue 单文件组件的类型检查要用 vue-tsc 而不是裸 tsc？",
+      "options": [
+        "tsc 不支持 lang=\"ts\"",
+        "裸 tsc 看不懂 SFC 里 template 与 script 的关联，vue-tsc 会虚拟出 TS 再检查",
+        "vue-tsc 更快",
+        "vue-tsc 会顺便打包"
+      ],
+      "answer": 1,
+      "explanation": "SFC 的模板绑定、宏等需要 Volar/vue-tsc 生成虚拟 .ts 才能被类型系统理解；裸 tsc 只处理纯 .ts。构建成功≠类型过，CI 要单独跑 vue-tsc --noEmit（呼应 ts-tooling）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "NestJS 里 `@Body() dto: CreateUserDto` 的编译期类型能保证运行时请求体真的是那个形状吗？",
+      "options": [
+        "能，TS 类型会在运行时自动校验",
+        "不能，需 class-validator + ValidationPipe 做运行时校验，否则是谎言",
+        "不能，但 DI 容器会自动补全校验",
+        "能，只要开了 strict 模式"
+      ],
+      "answer": 1,
+      "explanation": "类型编译期即擦除，运行时不校验。要真正保证形状必须配 class-validator/ValidationPipe（呼应 Express L5、ts-strict 第 11 题、ts-migration 边界策略）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "tRPC / openapi-typescript / graphql-codegen 这类方案解决的共同问题是？",
+      "options": [
+        "让前端渲染更快",
+        "让类型跨网络边界共享或自动生成，避免手写第二遍导致漂移",
+        "替代 TypeScript 编译器",
+        "只做运行时校验"
+      ],
+      "answer": 1,
+      "explanation": "共同哲学是“类型不要手写第二遍”：要么前后端共享（tRPC），要么从契约生成（codegen），杜绝各自漂移（呼应 ts-declarations codegen 思想）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "想给“组件对外类型签名”本身加回归测试，防止重构悄悄退化，最合适的工具是？",
+      "options": [
+        "npm audit",
+        "expectTypeOf / tsd 这类类型断言测试",
+        "Prettier",
+        "tsc --noEmit 单独一条就够"
+      ],
+      "answer": 1,
+      "explanation": "expectTypeOf（vitest/expect）或 tsd 能断言参数/返回类型是否符合预期，用 @ts-expect-error 断言“本该报错”，把公共类型纳入测试（呼应 ts-strict 第 9 题）。"
+    }
+  ]
+}

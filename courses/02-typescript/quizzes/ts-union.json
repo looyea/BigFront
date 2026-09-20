@@ -1,46 +1,87 @@
 {
-  "lessonId": "ts-union",
-  "title": "TS L3 联合与收窄 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "ts-union 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "在 if (typeof x === \"string\") 分支里访问 x.toUpperCase() 能编译通过，靠的是？",
-      "options": [
-        "类型断言",
-        "类型收窄",
-        "泛型",
-        "any"
-      ],
-      "answer": 1,
-      "explanation": "typeof 判断触发控制流分析，把 x 收窄为 string。"
+      "prompt": "在联合类型 string | number 的变量上，能直接访问哪个成员？",
+      "options": ["length", "toFixed", "只有 string 和 number 都有的成员（如 toString）", "任意成员都行"],
+      "answer": 2,
+      "explanation": "联合类型只保证'共有成员'可直接用；访问某一支特有成员前必须先收窄。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "\"可辨识联合\"靠什么区分成员？",
+      "prompt": "交叉类型 A & B 与联合类型 A | B 的关系是？",
       "options": [
-        "顺序",
-        "共同的字面量标签字段",
-        "颜色",
-        "函数名"
+        "完全一样",
+        "联合取'或'(值属于其一)，交叉取'且'(值同时具备两者所有成员)",
+        "交叉是联合的语法糖",
+        "联合成员更多、交叉成员更少"
       ],
       "answer": 1,
-      "explanation": "用一个各自不同的字面量字段（如 status）作判别式。"
+      "explanation": "A|B 值可以是 A 或 B；A&B 值要同时满足 A 和 B（拥有全部成员）。方向相反。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "关于 as 断言，正确的是？",
+      "prompt": "可辨识联合靠什么让 TS 在 switch 中自动收窄到某一支？",
       "options": [
-        "会做运行时检查",
-        "仅说服编译器、无运行时检查",
-        "等价于 cast 会转换值",
-        "必须每个变量都写"
+        "属性数量",
+        "每个成员共有的字面量'判别字段'(如 kind)",
+        "接口名字",
+        "数组顺序"
       ],
       "answer": 1,
-      "explanation": "as 不产生任何运行时代码，滥用会掩盖真实错误。"
+      "explanation": "判别标签(discriminant)是共有且唯一的字面量字段，switch 它即可把 s 缩到对应变体。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么 {kind:'circle', w:5} 在'全可选大对象'里能编译通过、在可辨识联合里不行？",
+      "options": [
+        "编译器 bug",
+        "全可选对象允许任意字段组合(非法状态可表示)；可辨识联合的 circle 变体根本没有 w、必须 r，写错就报错",
+        "可辨识联合允许更多字段",
+        "两者其实都能通过"
+      ],
+      "answer": 1,
+      "explanation": "这正是'make illegal states unrepresentable'：用判别联合把非法组合编码成不可构造。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "{a: string} & {a: number} 的属性 a 类型是？",
+      "options": ["string", "number", "string | number", "never（string & number 无值满足）"],
+      "answer": 3,
+      "explanation": "交叉对同名属性再取交集，string & number 没有任何值满足，即 never——常见隐式陷阱。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "parse 返回 number | null，直接用 v.toFixed() 会怎样？正确做法？",
+      "options": [
+        "正常，因为可能是 number",
+        "报错(可能为 null)；应先 if (v !== null) 收窄到 number 再用",
+        "自动当作 0",
+        "运行时才报错，编译期无所谓"
+      ],
+      "answer": 1,
+      "explanation": "T | null 在使用前必须判空收窄，这是 strictNullChecks 带来的安全约束（呼应 ts-strict）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下面哪个是'字面量联合'的典型用途？",
+      "options": [
+        "声明一个类",
+        "把合法取值集合('on'|'off'、状态机 tag)锁进类型，充当轻量枚举",
+        "定义索引签名",
+        "声明模块"
+      ],
+      "answer": 1,
+      "explanation": "字面量联合纯类型零运行时，是替代 enum、限定取值、做判别标签的常用手段。"
     }
   ]
 }

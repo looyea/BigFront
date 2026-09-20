@@ -1,0 +1,97 @@
+{
+  "title": "mp-network 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "开发者工具里请求 localhost:3001 正常，真机预览报 url not in domain list，原因是？",
+      "options": [
+        "真机不支持 localhost 域名解析所以必然失败",
+        "真机强制走代理服务器",
+        "工具勾选了\"不校验合法域名\"而真机没有——域名必须先在后台白名单登记",
+        "端口号超过 1024 被拦截"
+      ],
+      "answer": 2,
+      "explanation": "白名单是硬约束，本地调试选项只存在于工具（呼应 mp-network 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "服务器返回 404，wx.request 的回调走向是？",
+      "options": [
+        "进 fail，err.errMsg 含 404",
+        "进 success，res.statusCode 为 404，需自行判断",
+        "success 和 fail 都进",
+        "Promise 自动 reject"
+      ],
+      "answer": 1,
+      "explanation": "网络层走通即 success，同 fetch 语义（呼应 mp-network 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "wx.uploadFile 的响应体与 wx.request 有何差异？",
+      "options": [
+        "response 是字符串，需自己 JSON.parse",
+        "只能传图片不能传其他文件",
+        "不支持附带 header 鉴权",
+        "没有差异"
+      ],
+      "answer": 0,
+      "explanation": "multipart 专用通道，字段名 name 对应后端 multer（呼应 mp-network 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "拦截器收到 401，标准三连是？",
+      "options": [
+        "toast 后原页面继续等待用户操作",
+        "重发请求三次碰运气",
+        "清本地 token → 引导跳登录页 → 把错误抛给业务层（可带 redirect 参数）",
+        "直接 reLaunch 到首页"
+      ],
+      "answer": 2,
+      "explanation": "登录态失效的集中处理点（呼应 mp-network 第三节、exp-auth）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "搜索联想的竞态问题（旧请求后到覆盖新结果），可用的治理武器是？",
+      "options": [
+        "把 timeout 设为 100ms",
+        "并发数降为 1",
+        "让后端排序返回",
+        "发新请求前 task.abort() 旧请求，或 requestId 比对只应用最新回包"
+      ],
+      "answer": 3,
+      "explanation": "abort 与 seq 比对两板斧（呼应 mp-network 第四节、react-effect-patterns）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "哪种请求失败后可以放心自动重试？",
+      "options": [
+        "支付下单 POST（未收到响应说明没成功）",
+        "幂等的 GET 列表请求",
+        "任何请求都不该重试",
+        "提交表单 POST"
+      ],
+      "answer": 1,
+      "explanation": "非幂等写操作重试=重复单风险，除非服务端有幂等键（呼应 mp-network 第四节、exp-rest）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "wx.request 的并发限制带来的实践建议是？",
+      "options": [
+        "所有请求串行 await 排队",
+        "改用 setTimeout 模拟并发",
+        "批量预加载控制并发窗口（如 p-limit 思路），别裸开几十个 Promise.all",
+        "并发无限制，10 个是谣言"
+      ],
+      "answer": 2,
+      "explanation": "上限 10、超限排队——要节流（呼应 mp-network 第一节）。"
+    }
+  ]
+}

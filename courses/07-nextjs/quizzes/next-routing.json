@@ -1,46 +1,62 @@
 {
-  "lessonId": "next-routing",
-  "title": "Next L1 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "next-routing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "App Router 中定义页面根路径 `/` 的文件是？",
-      "options": [
-        "index.js",
-        "app/page.tsx",
-        "pages/index.tsx",
-        "main.tsx"
-      ],
-      "answer": 1,
-      "explanation": "App Router 用 app/page.tsx 表示首页（pages/index 是 Pages Router 老约定）。"
+      "prompt": "App Router 中，一个目录要成为可访问的路由，必须包含哪个文件？",
+      "options": ["layout.tsx", "route.ts", "page.tsx", "index.tsx"],
+      "answer": 2,
+      "explanation": "有 page 才是可访问路由；route.ts 是 API 版、layout 只是壳（呼应 next-routing 第一节表）。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "让一个组件在客户端使用 state/事件，需要？",
-      "options": [
-        "\"use strict\"",
-        "\"use client\"",
-        "\"use server\"",
-        "useState 导入"
-      ],
+      "prompt": "从 /blog 导航到 /blog/hello，app/blog/layout.tsx 的状态会？",
+      "options": ["重置，因为布局在导航时重新挂载", "保持，layout 跨子路由导航持久化不重挂载", "取决于是否用了 Link 组件", "只在生产构建后才保持"],
       "answer": 1,
-      "explanation": "\"use client\" 指令把组件及其子树标记为客户端组件。"
+      "explanation": "layout 持久化是默认行为，要重置请换 template（呼应 next-routing 第四节对照表）。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "构建期预生成 HTML 的渲染方式叫？",
-      "options": [
-        "SSR",
-        "SSG",
-        "CSR",
-        "Streaming"
-      ],
+      "prompt": "layout 与 template 的核心区别是？",
+      "options": ["layout 只能有一个，template 可以多个", "template 每次导航重新挂载、状态清零；layout 复用", "layout 是客户端组件，template 是服务端组件", "二者只是命名新旧区别"],
       "answer": 1,
-      "explanation": "SSG（静态站点生成）在 build 时产出 HTML。"
+      "explanation": "换 key = 换人生：template 相当于给壳换了 key（呼应 next-routing 第四节、react-lists-keys）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "根布局 app/layout.tsx 的铁律是？",
+      "options": ["必须渲染 <html> 和 <body>，且不可删除", "必须包含导航栏", "必须声明 metadata", "必须用 tsx 扩展名"],
+      "answer": 0,
+      "explanation": "Next 没有 index.html，html/body 只能由根 layout 提供（呼应 next-routing 第三节、next-overview 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "子路由页面全部白屏但根页面正常，最可能的原因是？",
+      "options": ["子页面没导出命名组件", "某层 layout 接收了 children 却没有渲染它", "缓存未清除", "没装 react-router 依赖"],
+      "answer": 1,
+      "explanation": "layout 不渲染 {children}，子段内容无处安放——最常见白屏 bug（呼应 next-routing 第六节；Next 也根本不需要装 react-router）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Next App Router 里新增一个页面，需要像小程序那样去某个 json 注册吗？",
+      "options": ["需要，在 app/routes.json 注册", "需要，在 next.config.ts 声明", "不需要，文件放进去路由即生效", "不需要，但必须重启 dev server"],
+      "answer": 2,
+      "explanation": "约定优于配置、零注册；对照小程序 app.json pages 数组的老规矩（呼应 next-routing 第一节、mp-directory）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "要为某一段写 GET/POST 接口（如 /api/stats），应创建？",
+      "options": ["该段的 route.ts", "该段的 page.tsx 里导出 fetch", "middleware.ts", "server/api/stats.ts"],
+      "answer": 0,
+      "explanation": "route.ts 是同一路由段的处理器，导出 HTTP 方法函数即可（呼应 next-routing 第一节表、L4 next-route-handlers 细讲）。"
     }
   ]
 }

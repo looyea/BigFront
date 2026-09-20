@@ -3,32 +3,88 @@
   "title": "Next.js 全栈 React 框架",
   "order": 7,
   "tier": "大师 · React 生产级方案",
-  "tagline": "文件即路由、SSR/SSG、React 服务器组件、API 路由一体化。React 的工业级答案。",
+  "tagline": "文件即路由、RSC 边界、缓存与再验证、Server Actions——React 的工业级答案。",
   "icon": "▲",
   "color": "#e5e5e5",
   "levels": [
     {
       "id": "L1",
-      "title": "App Router 与路由",
-      "subtitle": "app/ / Server Components",
+      "title": "心智与入门",
+      "subtitle": "为什么是 Next.js",
       "lessons": [
-        {
-          "id": "next-routing",
-          "title": "文件路由与渲染模式",
-          "goal": "理解 App Router 目录约定与 SSR/SSG/CSR 的取舍"
-        }
+        { "id": "next-overview", "title": "Next.js 定位与项目结构", "goal": "CRA/Vite SPA 的痛点、Next 解决什么、app/ 目录约定、create-next-app 工作流（呼应 react-nextjs、vite-intro）" },
+        { "id": "next-routing", "title": "文件路由基础与 Page/Layout", "goal": "文件夹=路由、page.js/layout.js 根布局、嵌套布局、tsx 与目录规范（呼应 vue-router-basics、react-router-basics）" },
+        { "id": "next-render-modes", "title": "SSR/SSG/ISR/CSR 渲染模式总览", "goal": "四种渲染模式是什么、何时用、Hydration 概念、与 SPA 的本质区别（呼应 vite-ssr、vue-ssr-nuxt、node-http）" }
       ]
     },
     {
       "id": "L2",
-      "title": "数据与 API",
-      "subtitle": "fetch 缓存 / Route Handlers",
+      "title": "路由进阶",
+      "subtitle": "动态、嵌套与组织",
       "lessons": [
-        {
-          "id": "next-data",
-          "title": "数据获取与接口",
-          "goal": "掌握服务端 fetch 取数、缓存策略与用 Route Handler 写接口"
-        }
+        { "id": "next-link-router", "title": "Link 导航与 useRouter", "goal": "Link 预取、useRouter/usePathname/useSearchParams、redirect、next/navigation vs legacy（呼应 react-router-basics）" },
+        { "id": "next-dynamic", "title": "动态路由与并行/拦截路由", "goal": "[slug]、[...catchAll]、生成函数、并行路由 @、拦截路由 ()、modal 经典玩法（呼应 vue-router-nested-dynamic）" },
+        { "id": "next-groups-matchers", "title": "路由组、私有目录与高级匹配", "goal": "(group) 共享布局不改 URL、_private、matchers、public 静态目录、favicon/robots（呼应 10-vite L1 public）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "服务器与客户端组件",
+      "subtitle": "RSC 边界",
+      "lessons": [
+        { "id": "next-server-client", "title": "Server Components 与 'use client'", "goal": "RSC 是什么、默认服务端、'use client' 边界、能否在服务端用 hooks/事件（呼应 react-component、react-render-model）" },
+        { "id": "next-boundaries", "title": "组件边界与数据流模式", "goal": "children 穿透边界、服务端取数+客户端交互组合、三方包与 Context 边界策略（呼应 react-context、react-composition）" },
+        { "id": "next-context-streaming", "title": "Suspense 与流式渲染", "goal": "Loading.tsx、Suspense 边界、streaming SSR、loading.tsx 与骨架屏（呼应 react-advanced-hooks Suspense、mp-performance 骨架屏）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "数据获取与缓存",
+      "subtitle": "fetch / 缓存 / 再验证",
+      "lessons": [
+        { "id": "next-fetch-cache", "title": "服务端取数与 fetch 缓存", "goal": "组件内 async 取数、fetch 扩展 cache/next.revalidate、缓存分层与请求记忆化（呼应 react-data-fetching、exp-rest）" },
+        { "id": "next-revalidate", "title": "ISR、动态渲染与缓存控制", "goal": "SSG/ISR 参数、dynamic/viewport/revalidate 段配置、cookies 触发动态、cacheComponents 新范式（呼应 node-deploy-perf CDN）" },
+        { "id": "next-route-handlers", "title": "Route Handlers（API 路由）", "goal": "route.js 的 GET/POST、Request/NextResponse、与 Express 手写服务的对照、何时才需要（呼应 09-express 全包）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "变更与全栈能力",
+      "subtitle": "Server Actions / 中间件",
+      "lessons": [
+        { "id": "next-server-actions", "title": "Server Actions 与 useActionState", "goal": "'use server'、表单变更、useActionState 状态、渐进增强无 JS 提交（对照 exp-validation 的两侧校验）" },
+        { "id": "next-forms-mutations", "title": "表单进阶与变更模式", "goal": "useFormStatus/useRouter.refresh、after()、zod 校验、revalidatePath/revalidateTag（呼应 react-forms、mp-setdata 广播成本）" },
+        { "id": "next-middleware-auth", "title": "Middleware 与鉴权", "goal": "middleware.js edge 运行时、matcher、NextAuth 思路、cookie 校验与权限边界（呼应 exp-auth、node-https-tls）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "样式、字体与 SEO",
+      "subtitle": "体验与收录",
+      "lessons": [
+        { "id": "next-css", "title": "样式方案与 Tailwind", "goal": "全局/模块 CSS、Tailwind 集成、styled-jsx 历史、样式进入 RSC 的规则（呼应 vue-class-style、vite L2 CSS）" },
+        { "id": "next-metadata", "title": "Metadata API 与 SEO", "goal": "generateMetadata、metadata 段、openGraph/robots/sitemap、SEO 与爬虫可见性（对照 mp-openapi 分享卡）" },
+        { "id": "next-fonts-images", "title": "字体与 next/image", "goal": "next/font 零 CLS、next/image 尺寸/Lazy/远程域名/loader 原理（呼应 mp-performance 图片、react-performance）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "性能与工程",
+      "subtitle": "优化、错误与测试",
+      "lessons": [
+        { "id": "next-perf", "title": "性能与包体优化", "goal": "Core Web Vitals(LCP/CLS/INP)、next/dynamic 懒加载、bundle 分析、预取与路由级代码分割（呼应 react-performance、vite-build）" },
+        { "id": "next-error-loading", "title": "错误、加载与 not-found", "goal": "error.js/global-error.js、not-found.tsx、boundary 恢复策略、日志与监控（呼应 react-effect-patterns、exp-patterns）" },
+        { "id": "next-testing", "title": "测试 Next 应用", "goal": "测 async 组件、Server Action 单测、Playwright e2e、mock fetch（呼应 react-testing、exp-testing）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "部署与架构",
+      "subtitle": "上线与终局",
+      "lessons": [
+        { "id": "next-deploy", "title": "部署：Vercel 与自托管", "goal": "Vercel 零配置、standalone 输出、Docker/Nginx、节点服务对照（呼应 react-deploy、exp-deploy、node-deploy-perf）" },
+        { "id": "next-fullstack-project", "title": "全栈项目实战", "goal": "从建站到上线完整串联：数据层、鉴权、CRUD、部署（串联 09-express 后端能力）" },
+        { "id": "next-architect", "title": "架构抉择与未来", "goal": "RSC/Turbopack/PPR、Next vs Nuxt 对照、何时不该用 Next、给 React 工程师的终局地图（呼应 react-architecture、08-nuxt 预告）" }
       ]
     }
   ]

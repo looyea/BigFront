@@ -1,0 +1,92 @@
+{
+  "title": "react-state-mgmt 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "决定一段状态该不该放全局，第一原则是？",
+      "options": [
+        "只要两个组件用到就全局",
+        "接口数据一律进 Redux",
+        "放在需要它的最小公共父组件，能局部就局部、能派生就不存",
+        "统一放 Context 最省事"
+      ],
+      "answer": 2,
+      "explanation": "最小作用域优先（呼应 react-state-mgmt 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "用 Context 做全局状态的主要代价是？",
+      "options": [
+        "不能有初始值",
+        "value 变化会广播给所有消费者重渲染，React.memo 挡不住",
+        "只能存字符串",
+        "必须在类组件里用"
+      ],
+      "answer": 1,
+      "explanation": "Provider value 变→全体消费者更新（呼应 react-state-mgmt 第二节、react-context）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Zustand 相比 Context 在重渲染控制上的关键优势是？",
+      "options": [
+        "选择器订阅：组件只在它选中的切片变化时重渲染",
+        "它不需要 state",
+        "它自动 memo 所有组件",
+        "它禁止函数式 set"
+      ],
+      "answer": 0,
+      "explanation": "细粒度选择器订阅（呼应 react-state-mgmt 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "缓解 Context 广播重渲染的常用手段是？",
+      "options": [
+        "把 value 传 null",
+        "禁用 useContext",
+        "所有状态都塞进一个 value",
+        "把 value 用 useMemo 稳定，并拆成 StateCtx 与 DispatchCtx 两个 Context"
+      ],
+      "answer": 3,
+      "explanation": "稳定 value + 拆分读写 context（呼应 react-state-mgmt 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "\"派生而非存储\"指的是？",
+      "options": [
+        "把过滤/计算结果也用 useState 存一份并 effect 同步",
+        "能用现有 state 算出来的值就地(如 useMemo)派生，别复制进 state 造成双写",
+        "派生值不能缓存",
+        "所有值都应全局存"
+      ],
+      "answer": 1,
+      "explanation": "避免状态同步反模式（呼应 react-state-mgmt 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "来自服务器的列表数据，本课程建议放在哪？",
+      "options": ["useState", "Redux slice", "TanStack Query（服务端状态，不进客户端 store）", "Context"],
+      "answer": 2,
+      "explanation": "服务端状态分离给 Query（呼应 react-state-mgmt 第一、五节、react-data-fetching）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于\"把 props 复制进 state 再用 useEffect 同步\"，评价正确的是？",
+      "options": [
+        "推荐做法，性能更好",
+        "这是状态同步反模式，通常应直接用 props 或就地派生",
+        "只有 Context 会这样",
+        "Zustand 必须这样写"
+      ],
+      "answer": 1,
+      "explanation": "双写易不一致，能用 props/派生就别存（呼应 react-state-mgmt 第四节）。"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "title": "react-nextjs 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "相比纯 CSR 的 SPA，SSR 主要改善了什么？",
+      "options": [
+        "一定减少服务器压力",
+        "首屏直出真实 HTML：更快可见、利于 SEO、TTFB 更好",
+        "不再需要 JS",
+        "免去水合"
+      ],
+      "answer": 1,
+      "explanation": "SSR 解决白屏/SEO/慢首屏（呼应 react-nextjs 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "内容基本不变、要放 CDN 最快触达，应选哪种渲染？",
+      "options": ["SSR（每次请求渲染）", "只有 ISR", "SSG（构建时静态生成）", "纯 CSR"],
+      "answer": 2,
+      "explanation": "静态内容用 SSG 产物直接上 CDN（呼应 react-nextjs 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "ISR（增量静态再生）的特点是？",
+      "options": [
+        "构建时生成 + 到期后台自动重生成，兼顾静态速度与内容更新",
+        "每次请求都在服务器实时渲染",
+        "完全不生成 HTML",
+        "只能在浏览器端再生"
+      ],
+      "answer": 0,
+      "explanation": "SSG + 定期再验证（呼应 react-nextjs 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 Server Component，正确的是？",
+      "options": [
+        "必须写 'use client'",
+        "只能用于交互按钮",
+        "默认在服务器渲染：可 async 直取数据、密钥不外泄、代码不进客户端 bundle",
+        "和 Client Component 完全等价"
+      ],
+      "answer": 2,
+      "explanation": "服务端组件的能力与优势（呼应 react-nextjs 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Server Component 向 Client Component 传 props 时，值必须满足什么？",
+      "options": [
+        "必须是字符串",
+        "必须可序列化（函数/Date/class 实例不能直接跨边界传）",
+        "只能是数组",
+        "无限制"
+      ],
+      "answer": 1,
+      "explanation": "跨边界要序列化（呼应 react-nextjs 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "下列哪个最可能引发 hydration mismatch？",
+      "options": [
+        "在 useEffect 里读 window",
+        "两端都渲染同样的静态文本",
+        "用 useId 生成 id",
+        "服务端 HTML 用 Math.random()/直接读 window 渲染、客户端首帧值不同"
+      ],
+      "answer": 3,
+      "explanation": "两端首帧不一致导致水合错（呼应 react-nextjs 第五节、react-advanced-hooks）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "App Router 里 loading.tsx / error.tsx 约定对应什么能力？",
+      "options": [
+        "国际化 / 主题",
+        "鉴权 / 日志",
+        "该级的 Suspense 加载 fallback / ErrorBoundary 错误边界",
+        "路由跳转 / 重定向"
+      ],
+      "answer": 2,
+      "explanation": "约定式的加载与错误边界（呼应 react-nextjs 第二节、react-render-control）。"
+    }
+  ]
+}

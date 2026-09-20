@@ -1,0 +1,77 @@
+{
+  "title": "mp-directory 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "被称为整个小程序\"总装配清单\"（路由/外观/tabBar/分包）的是哪个文件？",
+      "options": ["app.js", "app.wxss", "app.json", "project.config.json"],
+      "answer": 2,
+      "explanation": "app.json 是全局配置（呼应 mp-directory 第三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "app.json 的 pages 数组第一项的含义是？",
+      "options": ["冷启动首页", "404 页", "默认样式页", "分包入口"],
+      "answer": 0,
+      "explanation": "第一项即启动页（呼应 mp-directory 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "页面级 index.json 里写的 navigationBarTitleText 与 app.json window 同名项冲突时？",
+      "options": ["报错", "页面级覆盖全局", "全局覆盖页面级", "取字典序"],
+      "answer": 1,
+      "explanation": "局部覆盖全局（呼应 mp-directory 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "globalData 能跨页面共享的前提是？",
+      "options": [
+        "它被写入磁盘",
+        "每个页面各有一份拷贝",
+        "整个小程序逻辑层只有一个线程，页面共享同一 JS 运行环境",
+        "它会自动响应式更新界面"
+      ],
+      "answer": 2,
+      "explanation": "依赖逻辑层单线程（呼应 mp-directory 第二节、mp-overview 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "project.config.json 的作用是？",
+      "options": [
+        "声明页面路由",
+        "给开发者工具/构建用的配置(appid、编译选项)，不参与业务运行时",
+        "定义全局样式",
+        "配置 tabBar"
+      ],
+      "answer": 1,
+      "explanation": "工具/构建侧配置（呼应 mp-directory 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "sitemap.json 影响的是？",
+      "options": ["页面是否被微信搜索索引(搜索直达)", "分包大小", "登录流程", " setData 性能"],
+      "answer": 0,
+      "explanation": "只影响搜索收录（呼应 mp-directory 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 App() 构造器，正确的是？",
+      "options": [
+        "每个页面都要调用一次 App()",
+        "一个小程序只能有一个 App()，在 app.js 顶层调用",
+        "App() 里可以直接操作 DOM",
+        "App() 必须在页面 onLoad 里调用"
+      ],
+      "answer": 1,
+      "explanation": "全局唯一 App 入口（呼应 mp-directory 第二节）。"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "title": "vue-testing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "mount 和 shallowMount 的核心区别是？",
+      "options": [
+        "mount 用于生产、shallowMount 用于开发",
+        "mount 渲染整棵子组件树，shallowMount 用桩替换子组件只测本组件",
+        "shallowMount 不能触发事件",
+        "二者完全等价"
+      ],
+      "answer": 1,
+      "explanation": "单元测隔离优先用 shallowMount（呼应 vue-testing 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "find 和 get 的差别是？",
+      "options": [
+        "get 找不到元素会直接报错，find 返回空 wrapper",
+        "find 只能查组件，get 只能查 DOM",
+        "get 是异步的",
+        "没有区别"
+      ],
+      "answer": 0,
+      "explanation": "get 找不到即失败，适合断言前置（呼应 vue-testing 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "trigger('click') 之后 DOM 断言常失败，最可能的原因是？",
+      "options": [
+        "Vue 不支持 click 事件",
+        "Vue 的 DOM 更新是异步的，需要 await nextTick()/flushPromises() 等一轮更新",
+        "必须先 unmount",
+        "应该用 setValue 而不是 trigger"
+      ],
+      "answer": 1,
+      "explanation": "更新走微任务批处理，测试要 await（呼应 vue-testing 第四节、vue-reactivity-theory nextTick）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "要断言子组件向父抛出了 submit 事件及其参数，用？",
+      "options": [
+        "w.emitted().submit[0]",
+        "w.vm.submit",
+        "w.trigger('submit')",
+        "expect(w.props('submit'))"
+      ],
+      "answer": 0,
+      "explanation": "emitted() 记录每次 emit 的参数数组（呼应 vue-testing 第五节、vue-component-basics）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "每个测试用例里 setActivePinia(createPinia()) 的目的是？",
+      "options": [
+        "提升运行速度",
+        "为每个用例提供相互隔离、干净初始化的 store，避免状态串味",
+        "禁用 devtools",
+        "自动 mock 网络"
+      ],
+      "answer": 1,
+      "explanation": "测试间状态隔离，同 SSR 每请求新 pinia 的道理（呼应 vue-testing 第六节、vue-pinia-advanced）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "在测试环境做路由跳转断言，最合适的 history 是？",
+      "options": ["createWebHistory", "createWebHashHistory", "createMemoryHistory", "不用 history"],
+      "answer": 2,
+      "explanation": "memory 路由不依赖浏览器地址栏，专供测试/Node（呼应 vue-testing 第六节、vue-router-basics）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于快照测试，正确的态度是？",
+      "options": [
+        "用它替代所有行为断言最省心",
+        "作辅助锁定输出结构，但只保证\"和上次一样\"，不能代替正确性断言，需人工 review",
+        "快照一旦生成就永不可更新",
+        "快照只能对 props 用"
+      ],
+      "answer": 1,
+      "explanation": "错的东西也会被快照固化，行为断言为主（呼应 vue-testing 第七节）。"
+    }
+  ]
+}

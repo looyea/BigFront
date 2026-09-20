@@ -1,0 +1,92 @@
+{
+  "title": "vue-pinia-advanced 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "用 $patch 一次性改多个字段，相比逐条赋值的好处是？",
+      "options": [
+        "更快且 devtools 只记一条、更新只触发一次",
+        "可以绕过响应式",
+        "能自动持久化",
+        "没有区别"
+      ],
+      "answer": 0,
+      "explanation": "$patch 批量、单一记录、少几次触发（呼应 vue-pinia-advanced 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "想\"每次 state 变化都写 localStorage\"，应使用？",
+      "options": ["$onAction", "$subscribe", "watchEffect", "$reset"],
+      "answer": 1,
+      "explanation": "$subscribe 订阅 state 变更做持久化（呼应 vue-pinia-advanced 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "$onAction 适合做什么？",
+      "options": [
+        "订阅 action 开始/成功/错误，做统一埋点与耗时统计",
+        "直接改 state",
+        "水合 SSR",
+        "定义 getter"
+      ],
+      "answer": 0,
+      "explanation": "$onAction 提供 after/onError 钩子做日志/监控（呼应 vue-pinia-advanced 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 $reset，下列正确的是？",
+      "options": [
+        "setup 式 store 开箱即用",
+        "选项式开箱可用；setup 式需自己写 reset action",
+        "会删除整个 store",
+        "只能重置一个字段"
+      ],
+      "answer": 1,
+      "explanation": "setup 式无默认 $reset，要手动赋回初值（呼应 vue-pinia-advanced 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "把 auth token 持久化到 localStorage 的主要风险是？",
+      "options": [
+        "占空间",
+        "明文存储，XSS 一旦发生可被脚本读取窃取",
+        "会让 store 变慢",
+        "无法水合"
+      ],
+      "answer": 1,
+      "explanation": "localStorage 明文、易被 XSS 读，敏感 token 应走 httpOnly cookie（呼应 vue-pinia-advanced 第四节、exp-security）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "SSR 下防止\"请求 A 的 store 状态泄漏到请求 B\"的关键是？",
+      "options": [
+        "把所有状态放模块级单例",
+        "每个请求都新建 pinia（在 createApp 工厂里）",
+        "禁用 getters",
+        "关闭 devtools"
+      ],
+      "answer": 1,
+      "explanation": "每请求独立 pinia 实例 + 自动水合，避免共享污染（呼应 vue-pinia-advanced 第六节、vue-ssr-nuxt）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Pinia 插件（pinia.use）的能力是？",
+      "options": [
+        "给每个 store 注入共享属性/方法、扩展行为",
+        "只能改 devtools 主题",
+        "替代 action",
+        "自动路由守卫"
+      ],
+      "answer": 0,
+      "explanation": "插件横切增强所有 store（持久化/日志等）（呼应 vue-pinia-advanced 第五节）。"
+    }
+  ]
+}

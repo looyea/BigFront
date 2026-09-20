@@ -1,46 +1,97 @@
 {
-  "lessonId": "node-basics",
-  "title": "Node L1 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "node-basics 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "Node 处理并发 I/O 的主要方式是？",
+      "prompt": "关于 Node.js 的本质，最准确的说法是？",
       "options": [
-        "多线程阻塞",
-        "单线程 + 事件循环 + 非阻塞 I/O",
-        "每请求一线程",
-        "轮询磁盘"
+        "它是 Chrome 浏览器的服务端版本",
+        "它是 V8 + libuv + 内置模块构成的 JS 运行时，没有 DOM/window",
+        "它是一种新的编程语言",
+        "它必须依赖浏览器才能执行 JS"
       ],
       "answer": 1,
-      "explanation": "Node 用事件循环把耗时 I/O 交给系统，主线程不阻塞。"
+      "explanation": "Node = V8 执行 JS + libuv 提供异步 I/O/事件循环 + 内置模块；它是浏览器之外的 JS 运行时，没有 window/document。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "异步读取文件推荐用哪个模块？",
+      "prompt": "`node app.js foo bar` 时，process.argv 的内容是？",
       "options": [
-        "fs 回调版",
-        "fs/promises",
-        "http",
-        "zlib"
+        "['foo', 'bar']",
+        "[node路径, app.js路径, 'foo', 'bar']",
+        "['app.js', 'foo', 'bar']",
+        "{'foo':'bar'}"
       ],
       "answer": 1,
-      "explanation": "fs.promises 返回 Promise，配合 async/await 更清晰。"
+      "explanation": "argv 前两项固定是 node 可执行路径与脚本路径，用户参数从索引 2 开始，所以常写 process.argv.slice(2)。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "拼接文件路径应使用？",
+      "prompt": "process.cwd() 与 __dirname 的区别是？",
       "options": [
-        "字符串相加",
-        "path.join / path.resolve",
-        "os.EOL",
-        "url.parse"
+        "两者完全等价",
+        "cwd 是运行命令时所在目录，__dirname 是当前脚本文件所在目录",
+        "__dirname 是全局对象属性，任何模块都能改",
+        "cwd 只在 ESM 存在"
       ],
       "answer": 1,
-      "explanation": "path 模块处理跨平台分隔符，避免手拼出错。"
+      "explanation": "cwd 取决于“你在哪个目录敲命令”，__dirname 取决于脚本文件本身位置；读写项目内文件应基于 __dirname 拼路径。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "在 ESM 模块里想拿到“当前文件所在目录”，正确做法是？",
+      "options": [
+        "直接用 __dirname",
+        "path.dirname(fileURLToPath(import.meta.url))",
+        "process.__dirname",
+        "globalThis.dirname"
+      ],
+      "answer": 1,
+      "explanation": "ESM 没有 __dirname，需要用 import.meta.url（file:// URL）经 fileURLToPath 转成路径再取 dirname。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于“Node 单线程却适合高并发”，原因是？",
+      "options": [
+        "Node 其实会自动开很多线程执行你的 JS",
+        "JS 执行单线程，但靠事件循环 + libuv 异步 I/O，等待期间可处理别的请求",
+        "单线程一定比多线程快",
+        "Node 把请求丢给数据库去并发"
+      ],
+      "answer": 1,
+      "explanation": "I/O 交给底层异步，主线程不空等、事件回调排队调度，因此一根线程能扛大量并发；但 CPU 密集任务会卡住事件循环。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "console.log 之后紧接着 process.exit(0) 的风险是？",
+      "options": [
+        "进程不会退出",
+        "可能截断尚未 flush 到 stdout 的输出，导致内容丢失",
+        "会抛异常",
+        "会导致内存泄漏"
+      ],
+      "answer": 1,
+      "explanation": "exit 立即结束，缓冲区里的输出可能还没写完就被截断；应尽量让事件循环自然结束或先写完再退出。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下哪类任务最不适合直接跑在 Node 主线程上？",
+      "options": [
+        "读写文件的 API 请求",
+        "对一张大图做同步像素级加密计算",
+        "转发 HTTP 请求",
+        "查数据库返回结果"
+      ],
+      "answer": 1,
+      "explanation": "CPU 密集的同步长计算会阻塞整个事件循环，拖垮所有并发请求；应交给 worker_threads/cluster 或外部服务。"
     }
   ]
 }

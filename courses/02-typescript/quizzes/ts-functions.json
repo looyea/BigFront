@@ -1,0 +1,97 @@
+{
+  "title": "ts-functions 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "const add: (a:number,b:number)=>number = (a,b)=>a+b; 里为什么实现不必再写 a、b 的类型？",
+      "options": [
+        "因为省略是语法允许且类型为 any",
+        "变量已被标注函数类型，参数类型由上下文推断得到",
+        "因为箭头函数不能标注类型",
+        "其实会报错"
+      ],
+      "answer": 1,
+      "explanation": "上下文推断：目标函数类型确定了参数形状，实现可省略重复标注。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于可选/默认/剩余参数，下列哪个是非法的？",
+      "options": [
+        "function f(a?: number, b = 1) {}",
+        "function f(a: string, ...rest: number[]) {}",
+        "function f(a?: number, b: string) {}",
+        "function f(a: number, b?: string) {}"
+      ],
+      "answer": 2,
+      "explanation": "可选参数(?)后不能再跟必选参数；有默认值的参数可省所以放后面合法。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "为什么 each([1,2], n => n*2) 里回调返回 number 也满足 (n:number)=>void？",
+      "options": [
+        "因为 n*2 实际返回 undefined",
+        "期望 => void 表示'忽略返回值'，任何返回类型的函数都可充当该回调位",
+        "因为 void 包含 number",
+        "其实不满足，会报错"
+      ],
+      "answer": 1,
+      "explanation": "TS 允许有返回值的函数赋给返回 void 的函数类型，返回值被丢弃（呼应 ts-any-unknown）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "this: void 作为第一个'参数'的作用是？",
+      "options": [
+        "让函数运行更快",
+        "约束该函数必须以不依赖 this 的方式（普通函数）调用，防止丢失 this 绑定",
+        "把 this 变成 any",
+        "禁用箭头函数"
+      ],
+      "answer": 1,
+      "explanation": "this 参数仅编译期；this: void 表示调用不应依赖 this 上下文，避免被当作方法误用。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于函数重载，正确的是？",
+      "options": [
+        "最后一个是对外可见的签名",
+        "声明签名从上到下匹配、越具体越靠前；最后一个是调用者看不到的实现签名",
+        "重载会生成多份运行时代码",
+        "重载参数必须完全相同"
+      ],
+      "answer": 1,
+      "explanation": "重载 = 多个声明签名 + 一个更宽的实现签名；按顺序匹配，实现签名对外不可见。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "多于两个可选配置项的函数，社区推荐怎么设计参数？",
+      "options": [
+        "继续加位置可选参数",
+        "改用命名的对象参数（一个 options 对象），清晰、可扩展、不受顺序影响",
+        "全部用 any",
+        "用重载"
+      ],
+      "answer": 1,
+      "explanation": "对象参数避免'满屏 undefined'，调用可读、后续加字段不破坏签名。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "开启 strictFunctionTypes 后，(a: Animal)=>void 能否被 (a: Dog)=>void 赋值？",
+      "options": [
+        "能，参数总是双向协变",
+        "对函数类型属性不能——参数按逆变检查，Dog 比 Animal 窄不安全（方法声明语法则不受此约束）",
+        "取决于返回类型",
+        "永远都不能"
+      ],
+      "answer": 1,
+      "explanation": "strictFunctionTypes 收紧为参数逆变；'方法简写'语法历史上仍双向协变，是经典坑（见 ts-strict）。"
+    }
+  ]
+}

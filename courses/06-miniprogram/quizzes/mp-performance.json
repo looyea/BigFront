@@ -1,0 +1,92 @@
+{
+  "title": "mp-performance 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "小程序启动耗时的官方三段划分是？",
+      "options": [
+        "DNS、TCP、TLS",
+        "编译、打包、上传",
+        "代码包下载、注入运行框架并执行 app.js、首页首屏渲染",
+        "登录、鉴权、拉数据"
+      ],
+      "answer": 2,
+      "explanation": "三段各有对治手段（呼应 mp-performance 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "体验评分对 setData 的常见告警阈值是？",
+      "options": ["单次 >10KB", "单次 >80KB", "每秒 >10 次", "字段 >50 个"],
+      "answer": 1,
+      "explanation": "80KB 红线来自官方评分规则（呼应 mp-performance 第一节、mp-setdata）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "首页数据慢接口导致白屏 2 秒，最贴路的组合拳是？",
+      "options": [
+        "把 timeout 调大",
+        "换服务器机房",
+        "缓存旧数据先上屏(SWR)+骨架屏占位+回源后路径更新",
+        "让用户手动下拉刷新"
+      ],
+      "answer": 2,
+      "explanation": "先给内容再校准，等待必有反馈（呼应 mp-performance 第二节、react-data-fetching）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Skyline 引擎的说法哪个正确？",
+      "options": [
+        "开启后自动兼容全部旧 WXSS 写法",
+        "与 WebView 可同时运行在同一页面",
+        "是新的逻辑层 JS 引擎",
+        "Skia 直绘换帧率/一致性收益，但 WXSS 是子集，需按页面灰度并可回退 WebView"
+      ],
+      "answer": 3,
+      "explanation": "收益与代价对偶，灰度采纳（呼应 mp-performance 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "千条数据长列表的推荐治理路径是？",
+      "options": [
+        "把行节点写简单点就行",
+        "分页+虚拟列表/recycle-view+列表项组件化局部更新",
+        "换 Skyline 就不用改代码",
+        "全部转 rich-text 渲染"
+      ],
+      "answer": 1,
+      "explanation": "三件套组合拳（呼应 mp-performance 第三节 2、mp-render）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "性能优化工作流的第一步是？",
+      "options": [
+        "升级基础库",
+        "全员改用组件化",
+        "定指标并接入监控/体验评分基线",
+        "打开 Skyline"
+      ],
+      "answer": 2,
+      "explanation": "没有度量就没有优化与防回潮（呼应 mp-performance 第五节、exp-perf）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "内存持续增长排查的第一优先方向是？",
+      "options": [
+        "定时器/IntersectionObserver/bus 订阅等未清理的\"幽灵引用\"",
+        "图片太多",
+        "分包太大",
+        "wxss 选择器太深"
+      ],
+      "answer": 0,
+      "explanation": "detached/onUnload 清理纪律（呼应 mp-performance 第三节 5、mp-component-lifecycle）。"
+    }
+  ]
+}

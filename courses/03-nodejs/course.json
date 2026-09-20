@@ -3,32 +3,87 @@
   "title": "Node.js 服务端运行时",
   "order": 3,
   "tier": "黄金 · 让 JS 走出浏览器",
-  "tagline": "用 JS 写服务器、脚本、工具链。理解事件循环、内置模块与 npm 生态。",
+  "tagline": "用 JS 写服务器、脚本与工具链。从运行时本质、模块系统(CJS/ESM)、事件循环与 libuv，到 fs/Buffer/Stream、裸 http 与网络、多进程与 worker_threads 并发、npm 与包生态，直到配置、CLI、部署与性能剖析——吃透 Node 这台「异步 I/O 引擎」如何真正运转，也为 Express/Nest/Vite 工具链打下地基。",
   "icon": "🟩",
   "color": "#5fa04e",
   "levels": [
     {
       "id": "L1",
-      "title": "运行时与内置模块",
-      "subtitle": "fs / path / http / 事件循环",
+      "title": "运行时与模块系统",
+      "subtitle": "进程与全局 / CJS 与 ESM / 混用坑",
       "lessons": [
-        {
-          "id": "node-basics",
-          "title": "第一个 Node 程序",
-          "goal": "会用 fs、path，理解 Node 是 JS 的运行时且单线程事件循环"
-        }
+        { "id": "node-basics", "title": "第一个 Node 程序：运行时、全局与 process", "goal": "理解 Node 是 JS 运行时而非浏览器；全局对象、process/argv、__dirname、stdout、退出码；跑通并调试第一个脚本" },
+        { "id": "node-modules", "title": "CommonJS 模块：require、导出与加载缓存", "goal": "require/module.exports 机制、模块包装函数、加载与缓存算法、路径解析、循环依赖表现" },
+        { "id": "node-esm-cjs", "title": "ESM 与 CJS：两套模块系统并存", "goal": "import/export、.mjs 与 package.json type、顶层 await、静态结构、两套系统互操作与混用坑（呼应 ts-modules）" }
       ]
     },
     {
       "id": "L2",
-      "title": "npm 与模块生态",
-      "subtitle": "依赖 / scripts / package.json",
+      "title": "事件循环与异步模型",
+      "subtitle": "libuv 阶段 / 微任务 / 异步错误 / EventEmitter",
       "lessons": [
-        {
-          "id": "node-npm",
-          "title": "package.json 与 npm 工作流",
-          "goal": "看懂 package.json，会装依赖、写 scripts、区分 dependencies 与 devDependencies"
-        }
+        { "id": "node-event-loop", "title": "事件循环与 libuv：六个阶段", "goal": "调用栈/微任务队列/宏任务、libuv 线程池、timers/poll/check 阶段、nextTick vs setImmediate vs setTimeout 顺序" },
+        { "id": "node-async-errors", "title": "异步错误处理", "goal": "错误优先回调、try/catch 在异步里的失效点、unhandledRejection、uncaughtException、进程崩溃与兜底策略" },
+        { "id": "node-events", "title": "EventEmitter：Node 的事件驱动内核", "goal": "on/once/emit/removeListener、maxListeners 泄漏、错误事件语义、自定义事件与背压（呼应 stream close）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "文件系统与二进制",
+      "subtitle": "fs 三形态 / path-url / Buffer 编码",
+      "lessons": [
+        { "id": "node-fs", "title": "fs 模块：同步、回调与 Promise", "goal": "fs 三种 API 形态、readFile/writeFile、fs.promises、stat/目录、大文件为何不能整读（引出 stream）" },
+        { "id": "node-path-url", "title": "path、url 与 os：跨平台路径", "goal": "path.join/resolve/normalize、__dirname vs import.meta.url、fileURLToPath、WHATWG URL 解析、os 信息" },
+        { "id": "node-buffer", "title": "Buffer 与字符编码", "goal": "Buffer 本质(TypedArray)、hex/base64/utf8、编码转换乱码、allocUnsafe 危险区、二进制协议拼包" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "Stream 流",
+      "subtitle": "四种流 / 背压 / pipeline 组合",
+      "lessons": [
+        { "id": "node-streams", "title": "Stream 基础：读、写、转换", "goal": "Readable/Writable/Transform/Duplex、data/end 事件、highWaterMark、objectMode、为什么流省内存" },
+        { "id": "node-stream-pipeline", "title": "组合流与背压：pipe 与 pipeline", "goal": "pipe 的错误处理缺陷、stream/promises pipeline、Transform 链、背压机制、stream/consumers 转字符串" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "网络与 HTTP 底层",
+      "subtitle": "TCP/dns / 裸 http / HTTPS TLS",
+      "lessons": [
+        { "id": "node-net-dns", "title": "底层网络：net、dgram 与 dns", "goal": "net TCP server/client、socket 事件流、dgram UDP、dns 解析、从字节流理解协议（为 http 铺垫）" },
+        { "id": "node-http", "title": "裸 http 模块：服务器与请求响应", "goal": "createServer、IncomingMessage/ServerResponse、手写路由与解析 body、header、状态码——理解 Express 之下发生了什么（呼应 09-express）" },
+        { "id": "node-https-tls", "title": "HTTPS 与 TLS", "goal": "https 模块、自签名证书、TLS 握手概念、SNI、证书链与校验、把 http 服务升级成 https" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "并发与多进程",
+      "subtitle": "child_process / cluster / worker_threads",
+      "lessons": [
+        { "id": "node-child-process", "title": "child_process：spawn、exec、fork", "goal": "spawn/exec/execFile/fork 区别、stdio 管道、退出码与信号、进程间消息 IPC、跑外部命令" },
+        { "id": "node-cluster", "title": "cluster：用多核与优雅重启", "goal": "单线程瓶颈与多核、master/worker 模型、端口共享、worker 挂了如何重启、与 pm2 关系" },
+        { "id": "node-workers", "title": "worker_threads：CPU 密集并行", "goal": "worker_threads vs cluster 场景、postMessage/SharedArrayBuffer/Atomics、线程池、把重计算挪出事件循环" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "npm 与包生态",
+      "subtitle": "package.json-semver / 发布双包 / 测试",
+      "lessons": [
+        { "id": "node-npm", "title": "package.json 与 npm 工作流", "goal": "scripts、bin、dependencies vs devDependencies、semver 区间与 lockfile、npm vs pnpm/yarn（重写）" },
+        { "id": "node-publish", "title": "发包与 ESM/CJS 双包", "goal": "files/exports/main/types、发布流程、dual package hazard、provenance 供应链（呼应 ts-publish、ts-modules）" },
+        { "id": "node-testing", "title": "测试：node:test 与断言", "goal": "内置 test runner、describe/it、assert、mock、覆盖率、给 http 服务写集成测试（呼应 Express L7）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "服务端实战与部署",
+      "subtitle": "配置日志 / CLI / 部署与性能",
+      "lessons": [
+        { "id": "node-config", "title": "配置、环境变量与日志", "goal": "process.env 与 12-factor、dotenv、配置分层、结构化日志、debug 模块、别把密钥写进代码" },
+        { "id": "node-cli", "title": "写命令行工具 CLI", "goal": "argv 解析、commander/yargs、stdin/stdout/stderr、exit code、shebang 与 bin 发布一个 CLI（呼应 10-vite/esbuild CLI）" },
+        { "id": "node-deploy-perf", "title": "部署、性能与生产就绪", "goal": "Dockerfile、优雅退出 graceful shutdown、pm2/进程守护、--prof/clinic 剖析、内存与 event loop 泄漏、安全基线（呼应 Express L8）" }
       ]
     }
   ]

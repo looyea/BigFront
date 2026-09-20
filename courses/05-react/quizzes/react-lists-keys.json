@@ -1,0 +1,92 @@
+{
+  "title": "react-lists-keys 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "key 在 React 中的主要作用是？",
+      "options": [
+        "给 diff 算法标识同一父节点下哪两项是同一个，从而复用 DOM 与 state",
+        "美化输出顺序",
+        "作为 prop 传进子组件",
+        "触发组件重新挂载"
+      ],
+      "answer": 0,
+      "explanation": "key 服务于 reconciliation 复用（呼应 react-lists-keys 第二节、react-render-model 第三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "列表在头部插入一项，若用 index 作 key 会？",
+      "options": [
+        "无任何影响",
+        "只会变慢不会出错",
+        "所有 key 整体错位，React 复用错误的节点，导致 state/输入跟着位置跑、动画错乱",
+        "自动改用稳定 id"
+      ],
+      "answer": 2,
+      "explanation": "index 随位置变，头部插入即错位（呼应 react-lists-keys 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "为什么不能在渲染时用 Math.random() 生成 key？",
+      "options": [
+        "太慢",
+        "会产生重复 key",
+        "React 禁止使用函数",
+        "每次渲染 key 都变，被当成全新元素，导致每次全量重建、state 无法保留"
+      ],
+      "answer": 3,
+      "explanation": "key 不稳定 = 身份不稳定 = 每次重建（呼应 react-lists-keys 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "key 的\"唯一\"要求范围是？",
+      "options": [
+        "整个应用全局唯一",
+        "只需同一父节点的兄弟之间唯一",
+        "每个组件类型内唯一",
+        "必须与 id 相等"
+      ],
+      "answer": 1,
+      "explanation": "同层兄弟唯一即可，不同列表可重复（呼应 react-lists-keys 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "对 state 里的数组直接 items.sort() 有什么问题？",
+      "options": [
+        "排序太慢",
+        "sort 会返回 undefined",
+        "原地突变了 state 数组本体，破坏不可变约定且不一定触发更新",
+        "没有问题"
+      ],
+      "answer": 2,
+      "explanation": "sort 原地突变，应先 [...items].sort()（呼应 react-lists-keys 第五节、react-usestate）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 key 与组件 props，正确的是？",
+      "options": [
+        "key 不会传进组件内部，仅用于 React 对该位置的 diff",
+        "key 会作为 prop 出现在组件内部 props 里",
+        "key 必须是数字",
+        "没写 key 会编译报错"
+      ],
+      "answer": 0,
+      "explanation": "key 保留给 React，不作为业务 prop（呼应 react-lists-keys 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "渲染一个会增删重排的列表，最合适的 key 是？",
+      "options": ["数组 index", "元素文本内容", "数据自带的稳定唯一 id", "渲染时间戳"],
+      "answer": 2,
+      "explanation": "稳定唯一 id 保证正确复用（呼应 react-lists-keys 第三、四节）。"
+    }
+  ]
+}

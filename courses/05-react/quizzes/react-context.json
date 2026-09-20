@@ -1,0 +1,92 @@
+{
+  "title": "react-context 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Context 主要解决什么问题？",
+      "options": [
+        "props 一层层往下传的 prop drilling，让任意深度后代直接取值",
+        "替代所有 useState",
+        "避免组件重渲染",
+        "做数据请求"
+      ],
+      "answer": 0,
+      "explanation": "跨层透传值（呼应 react-context 第一、二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "给 <Ctx.Provider value={每次新建的对象}> 会导致？",
+      "options": [
+        "什么都不变",
+        "只有直接子组件更新",
+        "Object.is 判定 value 变了 → 所有 useContext 消费者重渲染",
+        "编译报错"
+      ],
+      "answer": 2,
+      "explanation": "value 引用比较，新对象触发全体广播（呼应 react-context 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "React.memo 包住的消费组件，能挡住 Context value 变化带来的重渲染吗？",
+      "options": [
+        "能，完全不受影响",
+        "不能，Context 更新是强制广播，memo 也挡不住",
+        "只有开发环境能",
+        "要看有没有 key"
+      ],
+      "answer": 1,
+      "explanation": "与 Vue 依赖收集不同，Context 整棵消费子树广播（呼应 react-context 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "把 state 和 dispatch 拆成两个 Context 的好处是？",
+      "options": [
+        "代码更少",
+        "让 React 自动优化",
+        "省内存",
+        "dispatch 引用稳定，只用 dispatch 的组件不会因 state 变化而重渲染"
+      ],
+      "answer": 3,
+      "explanation": "稳定分发器减少重渲染（呼应 react-context 第四节、react-advanced-hooks dispatch 稳定）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "下面哪类值最适合放 Context？",
+      "options": ["读得多改得少且很多层要用的主题/语言/登录用户", "输入框每帧变化的文本", "单个列表项的临时 hover", "组件私有 state"],
+      "answer": 0,
+      "explanation": "低频广布的值才用 Context（呼应 react-context 第二节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 Context 与 Zustand/Redux，正确的说法是？",
+      "options": [
+        "Context 就是更好的状态库",
+        "它们不能共存",
+        "Context 只透传值、不做细粒度选择器/devtools；高频大状态宜用基于 useSyncExternalStore 的 store",
+        "store 底层就是 Context"
+      ],
+      "answer": 2,
+      "explanation": "边界不同，store 用外部订阅（呼应 react-context 第五节、react-state-mgmt）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "把 useContext 封装成 useXxx 并判空 throw 的好处是？",
+      "options": [
+        "少写 Provider",
+        "消费方 API 更干净、缺 Provider 时 fail-fast 早报错",
+        "提升渲染性能",
+        "自动 memo"
+      ],
+      "answer": 1,
+      "explanation": "封装 + fail fast（呼应 react-context 第六节、vue-provide-inject）。"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "title": "vue-provide-inject 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "provide/inject 主要解决什么问题？",
+      "options": [
+        "替代所有 props",
+        "跨多层组件传递依赖，避免 prop drilling",
+        "只做父子一层通信",
+        "管理 CSS"
+      ],
+      "answer": 1,
+      "explanation": "祖先 provide、任意后代 inject，跳过中间层（呼应 vue-provide-inject 第一、五节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "要让后代注入到的值能随祖先更新，应该 provide 什么？",
+      "options": ["值的快照 obj.value", "ref/reactive 本身（或含修改函数的对象）", "JSON 字符串", "普通字面量"],
+      "answer": 1,
+      "explanation": "传响应式源本身才保持更新；快照是一次性的（呼应 vue-provide-inject 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "为什么推荐用 Symbol / InjectionKey 而不是字符串做 key？",
+      "options": ["Symbol 更快", "避免不同库/组件间 key 撞名，InjectionKey 还能带类型", "字符串不能用", "能自动响应式"],
+      "answer": 1,
+      "explanation": "字符串易冲突；Symbol 唯一、InjectionKey 绑定类型（呼应 vue-provide-inject 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "inject(key) 找不到任何 provider 时（未给默认值）会？",
+      "options": ["抛异常", "返回 undefined（并可能告警）", "自动创建", "返回 null 且报错"],
+      "answer": 1,
+      "explanation": "无 provider 且无默认值返回 undefined；给第三参可降级（呼应 vue-provide-inject 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "provide/inject 与 props/emits、Pinia 的定位，正确的是？",
+      "options": [
+        "全都一样，任选",
+        "props/emits 父子直连、inject 跨多层、Pinia 跨兄弟/全局",
+        "inject 应取代 props",
+        "Pinia 是 inject 的一种"
+      ],
+      "answer": 1,
+      "explanation": "各有分工，别把 inject 当全局变量垃圾桶（呼应 vue-provide-inject 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": " InjectionKey<T> 的本质/好处是？",
+      "options": [
+        "一个字符串常量",
+        "带类型标签的 unique symbol，注入端自动推断值类型",
+        "一个 ref",
+        "运行时的 class"
+      ],
+      "answer": 1,
+      "explanation": "它是泛型 symbol，TS 下 provide/inject 类型自洽（呼应 vue-provide-inject 第三节、02-ts generics）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 provide 的响应式对象被后代直接改，稳妥做法是？",
+      "options": [
+        "随便改，反正是同一个对象",
+        "同时提供修改函数、变更集中在 provider 里",
+        "改成 provide 快照",
+        "用 watch 同步回去"
+      ],
+      "answer": 1,
+      "explanation": "暴露 inc() 等函数、别就地乱改，保持可追踪（呼应 vue-provide-inject 第二节）。"
+    }
+  ]
+}

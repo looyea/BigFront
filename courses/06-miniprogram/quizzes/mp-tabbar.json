@@ -1,0 +1,87 @@
+{
+  "title": "mp-tabbar 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "tabBar list 的数量限制是？",
+      "options": ["1 ~ 8 个", "2 ~ 5 个", "3 ~ 6 个", "无限制"],
+      "answer": 1,
+      "explanation": "2~5 个，且 pagePath 必须已注册进 pages（呼应 mp-tabbar 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "在首页 push 了详情页，切到\"我的\"tab 再切回首页，会看到？",
+      "options": [
+        "回到首页根（栈被清空）",
+        "白屏重新加载",
+        "仍停在详情页——每个 tab 维护独立页面栈",
+        "随机"
+      ],
+      "answer": 2,
+      "explanation": "tab 各自保栈是核心运行模型（呼应 mp-tabbar 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "tab 页在反复切换过程中，生命周期表现为？",
+      "options": [
+        "每次都 onLoad → onShow → onReady",
+        "首次 load+show，之后只 onShow/onHide，不 onUnload",
+        "只有 onShow，从不 onHide",
+        "每次切换都 onUnload 重建"
+      ],
+      "answer": 1,
+      "explanation": "tab 页常驻不销毁，状态保留（呼应 mp-tabbar 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "wx.setTabBarBadge 在什么配置下失效？",
+      "options": ["position 为 top", "tab 数为 2", "app.json 配了 custom: true 自定义 tabBar", "开了 darkmode"],
+      "answer": 2,
+      "explanation": "原生角标 API 管不到自绘底栏，需自行同步（呼应 mp-tabbar 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "自定义 tabBar 的组件放置要求是？",
+      "options": [
+        "任意目录，在 app.json 指定路径",
+        "放在 components/tab 并 import",
+        "写在 app.wxss 同级",
+        "固定根目录 custom-tab-bar/index.{js,wxml,wxss,json}"
+      ],
+      "answer": 3,
+      "explanation": "目录文件名都是官方硬约定（呼应 mp-tabbar 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "为什么 tabBar 页面必须放在主包？",
+      "options": [
+        "底栏常驻可用，不能依赖分包的异步下载",
+        "分包目录不允许存在 wxml",
+        "分包页无法调用 wx API",
+        "纯粹是建议，没有技术原因"
+      ],
+      "answer": 0,
+      "explanation": "入口可用性优先（呼应 mp-tabbar 第五节、mp-subpackage）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "用了自定义 tabBar 后，切换 tab 时高亮不同步，最常见原因是？",
+      "options": [
+        "iconPath 文件太大",
+        "switchTab 写成了 navigateTo",
+        "app.json 没写 list",
+        "各 tab 页 onShow 里没调 getTabBar().setData({selected}) 同步选中态"
+      ],
+      "answer": 3,
+      "explanation": "原生托管变手动维护后的头号 bug（呼应 mp-tabbar 第四节代价1）。"
+    }
+  ]
+}

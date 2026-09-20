@@ -1,46 +1,97 @@
 {
-  "lessonId": "ts-basics",
-  "title": "TS L1 基础 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "ts-basics 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "TypeScript 的类型在什么时候起作用？",
+      "prompt": "为什么原始类型要用小写 number 而不是大写 Number？",
       "options": [
-        "运行时",
-        "开发与编译阶段，运行时被擦除",
-        "网络传输时",
-        "从不"
+        "大写是语法错误",
+        "小写是原始类型，大写是包装对象类型，几乎永远不该拿来标注变量",
+        "大写性能更好",
+        "没有区别"
       ],
       "answer": 1,
-      "explanation": "TS 类型是编译期的，编译成 JS 后类型全部擦除。"
+      "explanation": "number/string/boolean 是原始类型；Number/String/Boolean 是对象/构造函数类型，用错会带来 null 可赋值等怪异问题。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "下列哪个是\"关闭类型检查\"的危险类型？",
+      "prompt": "const s = 'hi' 与 let s = 'hi' 推断出的类型分别是？",
       "options": [
-        "unknown",
-        "never",
-        "any",
-        "void"
+        "都是 string",
+        "const 推成字面量类型 'hi'，let 推成宽类型 string",
+        "都是 'hi'",
+        "const 推成 string，let 推成 'hi'"
       ],
-      "answer": 2,
-      "explanation": "any 会放弃所有检查；unknown 才是安全的顶层类型。"
+      "answer": 1,
+      "explanation": "const 不可变→保留最精确字面量类型；let 可变→拓宽为 string。这个差异在联合/映射类型里很有用。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "let city = \"北京\" 之后再 city = 123 会？",
+      "prompt": "关于类型注解，推荐的工程实践是？",
       "options": [
-        "正常",
-        "报错，因为被推断为 string",
-        "自动转换",
-        "变 any"
+        "每一处都强制写类型注解",
+        "能推断就别重复标注，但导出的公共函数边界要显式参数/返回类型",
+        "永远不写，全靠推断",
+        "只在变量上写"
       ],
       "answer": 1,
-      "explanation": "TS 类型推断把字面量初始化推断为 string，重新赋 number 报错。"
+      "explanation": "重复标注啰嗦易过时；对外 API 显式签名固化契约、报错更准、防实现改动悄悄改变外部类型。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "现代项目为什么常把 enum 换成字面量联合（'a'|'b'）？",
+      "options": [
+        "enum 不能编译",
+        "数字 enum 会产生运行时对象（体积/反向映射困惑），字面量联合是纯类型零运行时负担",
+        "联合类型性能更差",
+        "enum 已被 TS 废弃"
+      ],
+      "answer": 1,
+      "explanation": "enum 是少数会生成运行时代码的 TS 结构；const enum 又在 isolatedModules 下受限，故倾向 as const + 联合。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "void 与 never 的区别是？",
+      "options": [
+        "完全一样",
+        "void 表示函数无(有意义的)返回值；never 表示绝不正常返回（抛错/死循环/穷尽兜底）",
+        "never 是 void 的别名",
+        "void 用于变量，never 用于函数"
+      ],
+      "answer": 1,
+      "explanation": "()=>void 能 return 但被忽略；()=>never 永不返回。never 常用于穷尽检查和不可达分支。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "元组 [string, number] 相对 number[] 的特点是？",
+      "options": [
+        "长度可变、元素同类型",
+        "定长、每个位置类型可不同且顺序敏感",
+        "只能放一个类型",
+        "本质是对象"
+      ],
+      "answer": 1,
+      "explanation": "元组描述固定长度、按位置的类型；数组是同类型可变长集合。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "const list: string[] = [] 里为什么建议显式标注，而不是 let list = []？",
+      "options": [
+        "空数组不合法",
+        "无标注的空数组会推成 never[]（或过宽），显式声明元素类型避免后续 push 报错",
+        "标注能提速",
+        "其实没必要"
+      ],
+      "answer": 1,
+      "explanation": "空数组无初值可推断元素类型，显式 string[] 告诉编译器后续要放什么。"
     }
   ]
 }

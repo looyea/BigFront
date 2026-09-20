@@ -1,0 +1,92 @@
+{
+  "title": "mp-framework 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Taro 3 这类\"运行时\"跨端框架的核心机制是？",
+      "options": [
+        "把 Vue 模板逐行转译成 WXML",
+        "React 渲染器产出模拟 DOM 树，diff 后翻译成小程序 setData",
+        "用 Canvas 自绘所有组件",
+        "运行时解释执行 WXML"
+      ],
+      "answer": 1,
+      "explanation": "runtime+reconciler→setData 桥接（呼应 mp-framework 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "跨端框架性能损耗的主要来源是？",
+      "options": [
+        "JS 引擎太慢",
+        "微信限流",
+        "框架把 setState 泛化成更大的 setData/桥接层模拟 DOM 的额外开销",
+        "WXML 不支持函数调用"
+      ],
+      "answer": 2,
+      "explanation": "多一层翻译=多一层账（呼应 mp-framework 第一节、mp-setdata）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "uni-app 的 #ifdef MP-WEIXIN ... #endif 是什么机制？",
+      "options": [
+        "运行时特性开关",
+        "微信审核标记",
+        "注释仅是文档约定，代码都会打包",
+        "条件编译：构建期按目标平台裁剪代码块"
+      ],
+      "answer": 3,
+      "explanation": "编译期裁剪省体积与无关 API 调用（呼应 mp-framework 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "在 Taro 里监听\"页面每次显示\"，等价写法是？",
+      "options": ["useEffect(() => {}, [])", "componentDidMount", "window.addEventListener('focus')", "useDidShow Hook"],
+      "answer": 3,
+      "explanation": "页面生命周期 Hooks 化，对应原生 onShow（呼应 mp-framework 第二节、mp-lifecycle）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "哪种项目最应该顶住压力选\"原生开发\"？",
+      "options": [
+        "内部管理系统 H5",
+        "团队全员 React 背景的营销页",
+        "要同时发支付宝和抖音",
+        "单微信端、重度依赖最新原生能力（Skyline/新支付组件）且性能极致"
+      ],
+      "answer": 3,
+      "explanation": "能力首日可用+零桥接损耗是原生护城河（呼应 mp-framework 第四节表）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于跨端框架里的分包，正确的是？",
+      "options": [
+        "跨端框架产物是单 bundle，无法分包",
+        "配置后仍产出原生 subPackages，包体策略与原生一致",
+        "分包只能靠微信后台开白名单",
+        "框架会自动把主包清零"
+      ],
+      "answer": 1,
+      "explanation": "翻译的是代码形态，不改运行模型（呼应 mp-framework 第二节、mp-subpackage）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "\"90% 跨端 + 10% 原生关键页\"依赖的是框架的什么能力？",
+      "options": [
+        "热更新",
+        "多端同一份样式",
+        "原生页面/组件混编（mix）能力",
+        "云函数"
+      ],
+      "answer": 2,
+      "explanation": "混编逃生门是成熟跨端方案的标配（呼应 mp-framework 第四节末）。"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "title": "node-testing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Node 18+ 内置测试运行器的启动命令是？",
+      "options": ["node run-tests", "node --test", "npm test --jest", "node test"],
+      "answer": 1,
+      "explanation": "node --test 自动发现并运行 *.test.js 等；无需装 jest/mocha（呼应 node-testing 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么推荐 import assert from 'node:assert/strict'？",
+      "options": [
+        "速度快一倍",
+        "strict 下 equal/deepEqual 采用严格比较(===)与深比较，避免 == 漏 bug",
+        "支持更多断言方法",
+        "能自动修复失败"
+      ],
+      "answer": 1,
+      "explanation": "老 assert 用宽松 ==，strict 模式强制严格+深比较更安全（呼应 node-testing 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "要断言一个异步函数会 reject 且错误 code 为 ENOENT，用？",
+      "options": [
+        "assert.throws(fn, /ENOENT/)",
+        "await assert.rejects(fn(), { code: 'ENOENT' })",
+        "try { fn() } catch {}",
+        "assert.equal(fn(), undefined)"
+      ],
+      "answer": 1,
+      "explanation": "rejects 处理 Promise 拒绝并可校验错误对象；throws 只用于同步抛错（呼应 node-testing 第三节、node-fs 错误码）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 t.mock.method(obj,'fn',impl)，错误的是？",
+      "options": [
+        "可替换实现（stub）并跟踪调用（spy）",
+        "可用 fn.mock.callCount()/calls 断言调用",
+        "会永久改变 obj.fn，影响后续所有测试文件",
+        "测完自动还原"
+      ],
+      "answer": 2,
+      "explanation": "t.mock 在测试结束自动还原；且每文件独立子进程，不跨文件永久污染（呼应 node-testing 第五、七节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "给 HTTP 服务写集成测试时，listen(0) 的好处是？",
+      "options": [
+        "启动更快",
+        "让 OS 随机分配空闲端口，多个测试并行不抢占固定端口",
+        "不需要关服务器",
+        "自动加密"
+      ],
+      "answer": 1,
+      "explanation": "端口 0 由系统分配，避免并发/CI 下固定端口冲突；仍需 after 里 close（呼应 node-testing 第六节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "测试跑完进程却不退出，最可能原因是？",
+      "options": [
+        "断言太少",
+        "仍有活跃句柄（服务器/连接/定时器）没在 after 里关闭",
+        "用了 describe",
+        "assert/strict 的副作用"
+      ],
+      "answer": 1,
+      "explanation": "事件循环需无活跃句柄才退出，忘了 server.close()/清理定时器会挂住（呼应 node-testing 第四节、node-event-loop）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "开启测试覆盖率输出的标志是？",
+      "options": ["--coverage-only", "--experimental-test-coverage", "--cov", "--report-coverage"],
+      "answer": 1,
+      "explanation": "node --test --experimental-test-coverage 输出行/分支/函数覆盖，配 --test-reporter 选格式（呼应 node-testing 第七节）。"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "title": "vue-reactivity-theory 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Vue 3 用 Proxy 取代 Object.defineProperty 做响应式，最直接的好处是？",
+      "options": [
+        "能侦测新增/删除属性和数组索引变化，且可懒代理",
+        "彻底不再需要 effect",
+        "不再需要 .value",
+        "性能一定比 Vue2 差但功能更强"
+      ],
+      "answer": 0,
+      "explanation": "Proxy 拦截整个对象的操作，新增/删除/数组索引都能感知，且深层属性按需代理（呼应 vue-reactivity-theory 第一节、ES 包 Proxy）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "依赖收集的核心数据结构 targetMap 的三层结构是？",
+      "options": [
+        "WeakMap<对象, Map<key, Set<effect>>>",
+        "Map<effect, 对象>",
+        "Array<{key, effect}>",
+        "Set<对象> 一层即可"
+      ],
+      "answer": 0,
+      "explanation": "WeakMap 存原始对象→Map 存属性 key→Set 存依赖它的 effect（呼应 vue-reactivity-theory 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "外层为什么用 WeakMap 而不是 Map？",
+      "options": [
+        "WeakMap 的 key 弱引用，对象被回收后依赖记录自动清理，防内存泄漏",
+        "WeakMap 更快",
+        "WeakMap 可以遍历",
+        "没有区别，只是习惯"
+      ],
+      "answer": 0,
+      "explanation": "WeakMap key 不阻止 GC，避免已销毁对象的依赖永久驻留（呼应 vue-reactivity-theory 第三节、ES 包 WeakMap）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "computed 的\"缓存\"在底层是如何实现的？",
+      "options": [
+        "依赖变化时只把 dirty 置真，读取 .value 且脏了才真正执行 getter",
+        "每次访问都重新计算",
+        "把结果写进 localStorage",
+        "用 setTimeout 延迟计算"
+      ],
+      "answer": 0,
+      "explanation": "scheduler 只标脏、getter 惰性求值，依赖不变直接返回缓存（呼应 vue-reactivity-theory 第四节、vue-reactivity 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "同一 tick 内连续修改响应式数据 100 次，DOM 只更新一次，靠的是？",
+      "options": [
+        "把更新排进去重队列，用微任务一次性 flush",
+        "Vue 会自动合并成一次同步渲染",
+        "每次都要手动 nextTick",
+        "浏览器自动节流"
+      ],
+      "answer": 0,
+      "explanation": "trigger 入队、微任务批量 flush，避免反复重排重绘（呼应 vue-reactivity-theory 第五节、vue-watch 第三节、node-event-loop）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "要存放一个 ECharts 实例或超大只读列表且不希望深层被代理，应选？",
+      "options": ["reactive", "shallowRef 并用 triggerRef 手动触发", "computed", "toRefs"],
+      "answer": 1,
+      "explanation": "shallowRef 只关心 .value 替换，深层不侦听，需要时 triggerRef 手动触发（呼应 vue-reactivity-theory 第六节、vue-performance）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "从 reactive 对象解构属性会丢失响应性，用哪个 API 解构后仍保持响应？",
+      "options": ["markRaw", "toRefs", "shallowReactive", "customRef"],
+      "answer": 1,
+      "explanation": "toRefs 把每个属性转成共享读写的 ref，解构后仍是活的（呼应 vue-reactivity-theory 第六节、vue-reactivity 解构坑）。"
+    }
+  ]
+}

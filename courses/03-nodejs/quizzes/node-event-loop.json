@@ -1,0 +1,97 @@
+{
+  "title": "node-event-loop 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "同步代码跑完后，Node 在进入事件循环下一阶段之前会先排空哪个队列？",
+      "options": [
+        "宏任务队列",
+        "process.nextTick 队列，然后是微任务(Promise)队列",
+        "只有 setTimeout 队列",
+        "I/O 回调队列"
+      ],
+      "answer": 1,
+      "explanation": "nextTick 队列优先级最高、先于微任务队列；两者会在每个任务/阶段之间被彻底排空，之后才进入事件循环的宏任务阶段。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "setImmediate 的回调在事件循环哪个阶段执行？",
+      "options": [
+        "timers",
+        "poll",
+        "check",
+        "close callbacks"
+      ],
+      "answer": 2,
+      "explanation": "setImmediate 回调固定在 check 阶段执行，紧跟在 poll（I/O 回调）阶段之后。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "在主模块顶层，setTimeout(fn,0) 与 setImmediate(fn) 的执行顺序是？",
+      "options": [
+        "setTimeout 一定先",
+        "setImmediate 一定先",
+        "不确定，取决于同步代码耗时是否越过 timer 的最小阈值",
+        "完全同时"
+      ],
+      "answer": 2,
+      "explanation": "顶层顺序不定：若准备阶段的耗时已超过 1ms，事件循环进 timers 时定时器已就绪则先跑 timer，否则先跑本轮 check 的 immediate。在 I/O 回调里 setImmediate 则稳定先于 setTimeout。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "下列哪类操作通常【不】占用 libuv 线程池？",
+      "options": [
+        "fs 文件读写",
+        "dns 解析",
+        "zlib 压缩",
+        "http/net 网络 I/O"
+      ],
+      "answer": 3,
+      "explanation": "网络 I/O 由操作系统异步机制(epoll/kqueue/IOCP)处理，不进 libuv 线程池；而 fs/dns/crypto/zlib 走线程池（默认 4 线程）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "在回调里不断递归 process.nextTick(spin) 会导致什么？",
+      "options": [
+        "性能提升，任务更快",
+        "事件循环被“饿死”，poll/timer 等阶段再也轮不到、服务假死",
+        "进程自动退出",
+        "只是打印变多"
+      ],
+      "answer": 1,
+      "explanation": "nextTick 队列优先级高于事件循环阶段，且每个阶段之间都要排空它；递归填满它就永远进不了下一阶段。想让出循环应用 setImmediate。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Node 进程在什么情况下自然退出？",
+      "options": [
+        "同步代码一跑完就退出",
+        "事件循环中没有任何待处理的 timer、I/O、immediate 等 Keeps 任务时",
+        "只要调用了一次 process.exit 之外永不退出",
+        "GC 触发时"
+      ],
+      "answer": 1,
+      "explanation": "当没有活跃的句柄/请求（无未到期的定时器、无进行中的 I/O、无挂起的 server）时，poll 无可等待之事，事件循环结束、进程退出——不必显式 process.exit。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "衡量“事件循环卡顿”最合适的工具/指标是？",
+      "options": [
+        "console.time 打每一行",
+        "loop lag（如 performance.eventLoopUtilization / monitorEventLoopDelay）",
+        "npm ls",
+        "process.memoryUsage.rss()"
+      ],
+      "answer": 1,
+      "explanation": "事件循环利用率/延迟能量化 tick 间隔是否被拉长，直接反映“有同步任务霸占主线程”。RSS 只测内存、不测循环阻塞。"
+    }
+  ]
+}

@@ -1,46 +1,87 @@
 {
-  "lessonId": "ts-project",
-  "title": "TS L5 工程 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "ts-project 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "Partial<User> 的效果是？",
+      "prompt": "target 和 lib 两个选项分别管什么？",
       "options": [
-        "全部必填",
-        "把所有属性变可选",
-        "删除属性",
-        "只读"
+        "都管输出目录",
+        "target 决定语法降级到哪版 JS、lib 决定提供哪些环境的类型声明",
+        "lib 转译语法",
+        "target 只管模块"
       ],
       "answer": 1,
-      "explanation": "Partial 生成一个所有属性可选的新类型。"
+      "explanation": "target 转译语法、lib 给类型；想要新 API 类型但不转译就要单独配 lib/polyfill。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "Omit<User, \"id\"> 得到？",
+      "prompt": "include/exclude/files 决定的是？",
       "options": [
-        "只剩 id",
-        "去掉 id 后的其余属性",
-        "报错",
-        "全部可选"
+        "输出文件结构",
+        "哪些源文件进入本次编译（输入范围）",
+        "打包优化",
+        "运行顺序"
       ],
       "answer": 1,
-      "explanation": "Omit 剔除指定键，Pick 则相反保留指定键。"
+      "explanation": "它们划定输入；输出目录由 outDir/rootDir 决定。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "tsconfig 中最应打开以保证严格检查的是？",
+      "prompt": "strict: true 打开的是？",
       "options": [
-        "outDir",
-        "strict",
-        "target",
-        "include"
+        "单一开关",
+        "一组 strict* 子开关的总闸（noImplicitAny/strictNullChecks 等），但个别更严开关需单独开",
+        "只关 any",
+        "只影响 emit"
       ],
       "answer": 1,
-      "explanation": "strict 一揽子开启 noImplicitAny、strictNullChecks 等。"
+      "explanation": "strict 是总闸；noUncheckedIndexedAccess、exactOptionalPropertyTypes 等不在其中要手动加。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "子配置 extends 父配置时，include 字段的合并规则是？",
+      "options": ["与父配置叠加", "被子配置整体覆盖（不是合并）", "取交集", "报错"],
+      "answer": 1,
+      "explanation": "compilerOptions 逐键合并，但 include/exclude/files 是被子配置覆盖。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "只在 tsconfig 配了 paths 别名、没配打包器 alias，最可能出现？",
+      "options": [
+        "编译直接失败",
+        "tsc 不报错，但运行时 Cannot find module（paths 只解析类型、不改写产物 import 路径）",
+        "自动生效",
+        "只是慢一点"
+      ],
+      "answer": 1,
+      "explanation": "paths 只管类型层解析，运行时路径要 Vite/webpack/Node imports 另行对齐。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "composite + references（build 模式）主要解决什么？",
+      "options": [
+        "代码风格",
+        "monorepo 多包增量/并行编译、复用上游 .d.ts",
+        "运行时性能",
+        "自动生成 README"
+      ],
+      "answer": 1,
+      "explanation": "项目引用让改动只重建相关包、按拓扑 tsc -b 构建，提速大工程（呼应 skipLibCheck/incremental）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "CI 里做纯类型检查、不产出 JS，最合适的命令/选项是？",
+      "options": ["tsc --declaration", "tsc --noEmit", "tsc --watch", "tsc -b --clean"],
+      "answer": 1,
+      "explanation": "noEmit 只跑类型检查不落盘，是 CI 门禁标准做法（呼应 Express L7）。"
     }
   ]
 }

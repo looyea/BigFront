@@ -1,0 +1,95 @@
+{
+  "title": "ts-conditional-infer 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "条件类型 T extends U ? X : Y 与 extends 约束的最大区别是？",
+      "options": [
+        "没有区别",
+        "约束只是'限定 T 的下界'，条件类型能'根据 T 的形状计算/分叉出不同结果类型'",
+        "条件类型只能返回布尔",
+        "约束能生成新类型"
+      ],
+      "answer": 1,
+      "explanation": "约束管'能访问什么'，条件类型管'根据输入产出什么'——后者让类型可计算。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "infer 关键字用在哪里、起什么作用？",
+      "options": [
+        "任意位置声明变量",
+        "只能用在条件类型的 extends 子句里，声明一个'待推断'占位，让 TS 从匹配结构中反推类型",
+        "替代 as",
+        "只在 class 里用"
+      ],
+      "answer": 1,
+      "explanation": "infer 是模式匹配里的捕获变量，如 (...)=>infer R 提取返回类型。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "type Elem<T> = T extends (infer U)[] ? U : never; Elem<[1,2]> 结果是？",
+      "options": ["[1,2]", "1 | 2", "never", "number[]"],
+      "answer": 1,
+      "explanation": "infer U 捕获元组/数组的元素类型联合，[1,2] → 1|2。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "分布式条件类型在什么条件下发生？如何关闭？",
+      "options": [
+        "总是分发；无法关闭",
+        "当 extends 左侧是裸类型参数且实参为联合时分发到每个成员；用 [T] extends [U] 包元组关闭",
+        "只在 class 分发",
+        "用 as const 关闭"
+      ],
+      "answer": 1,
+      "explanation": "裸类型参数 + 联合触发分发；把 T 包进元组即非裸参数，抑制分发。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "MyExclude<T,U> = T extends U ? never : T 为什么能'从联合里剔除'成员？",
+      "options": [
+        "因为 never 会运行报错",
+        "分发后匹配到的成员被替换成 never，而 never 在联合中'消失'，于是只剩不匹配的成员",
+        "因为 U 是 any",
+        "它其实不能剔除"
+      ],
+      "answer": 1,
+      "explanation": "分发 + never 在联合里被吸收，是 Exclude/Extract/NonNullable 的共同机制。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "NonNullable<string | null | undefined> 的结果是？",
+      "options": ["string | null", "string", "unknown", "null | undefined"],
+      "answer": 1,
+      "explanation": "分发后 null、undefined 分支被替换为 never 消失，只剩 string。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "类型安全事件总线 on<K extends keyof Events>(name:K, cb:(e:Events[K])=>void) 靠什么让回调参数随事件名精确？",
+      "options": [
+        "any 断言",
+        "约束 K extends keyof Events + 索引访问类型 Events[K]，K 定则负载类型定",
+        "重载",
+        "enum"
+      ],
+      "answer": 1,
+      "explanation": "keyof 约束 + 索引访问把'事件名'与'该事件负载类型'绑在一起（呼应 ts-generic-constraints）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "递归条件类型 Awaited<Promise<Promise<number>>> 得到？",
+      "options": ["Promise<number>", "number", "Promise<Promise<number>>", "unknown"],
+      "answer": 1,
+      "explanation": "每命中一层 Promise 就 infer 出内层再递归，直到非 Promise 停止，得到 number。"
+    }
+  ]
+}

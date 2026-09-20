@@ -1,0 +1,87 @@
+{
+  "title": "react-deploy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "用 BrowserRouter 部署后，刷新某个子路由(如 /user/1)出现 404，最常见原因是？",
+      "options": [
+        "JS 报错",
+        "base 没设",
+        "服务器没有该真实文件，且未配置把未知路径回退到 index.html",
+        "CDN 挂了"
+      ],
+      "answer": 2,
+      "explanation": "history 模式需服务端回退（呼应 react-deploy 第二节、react-router-basics）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "站点部署在非根路径(如 /myapp/)时，需要正确设置什么，否则资源 404？",
+      "options": ["Cache-Control", "Vite 的 base / publicPath", "source map", "port"],
+      "answer": 1,
+      "explanation": "子路径要设 base（呼应 react-deploy 第一、六节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Vite 项目里，客户端能读到的环境变量必须满足什么？",
+      "options": ["以 VITE_ 前缀命名（会被内联进浏览器包）", "任意名字都可", "必须放 .env.production 且无前缀", "只能运行时读"],
+      "answer": 0,
+      "explanation": "VITE_ 前缀注入客户端（呼应 react-deploy 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于机密(如数据库连接串)，正确的处理是？",
+      "options": [
+        "加 NEXT_PUBLIC_ 前缀方便读取",
+        "放进 VITE_SECRET 前端调用",
+        "写进 index.html 注释",
+        "不加任何暴露前缀、只在服务端使用，绝不进客户端包"
+      ],
+      "answer": 3,
+      "explanation": "暴露前缀=可被用户看到，密钥不外泄（呼应 react-deploy 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "带 hash 的资源文件(assets/app.abc123.js)合适的缓存策略是？",
+      "options": [
+        "no-store 每次拉新",
+        "长缓存 immutable + 一年（内容变则文件名变）",
+        "缓存 5 分钟",
+        "不能缓存"
+      ],
+      "answer": 1,
+      "explanation": "hash 文件名可安全长缓存（呼应 react-deploy 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "index.html 为什么不能强缓存？",
+      "options": [
+        "它很小无所谓",
+        "它必须走 HTTPS",
+        "若缓存旧 html，会引用旧 hash 资源导致新版本无法下发",
+        "浏览器本就不缓存 html"
+      ],
+      "answer": 2,
+      "explanation": "html 引新 hash，需 no-cache 才能更新（呼应 react-deploy 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "改了 VITE_/NEXT_PUBLIC_ 环境变量却\"没生效\"，最可能因为？",
+      "options": [
+        "这些变量在构建期内联，需重新 build",
+        "变量名太长",
+        "必须重启浏览器",
+        "只能改代码不能改 env"
+      ],
+      "answer": 0,
+      "explanation": "构建期固化，改值要重构建（呼应 react-deploy 第四、六节）。"
+    }
+  ]
+}

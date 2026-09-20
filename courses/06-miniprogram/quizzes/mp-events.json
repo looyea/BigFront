@@ -1,0 +1,92 @@
+{
+  "title": "mp-events 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "catchtap 与 bindtap 的核心区别是？",
+      "options": [
+        "catchtap 会阻止事件继续冒泡，bindtap 不会",
+        "catchtap 只响应一次",
+        "bindtap 用于冒泡，catchtap 用于捕获阶段",
+        "没有区别，只是别名"
+      ],
+      "answer": 0,
+      "explanation": "bind 听而放行，catch 听而截断（呼应 mp-events 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "WXML 里想给点击处理函数传行 id，正确写法是？",
+      "options": [
+        "bindtap=\"onEdit(item.id)\"",
+        "data-id=\"{{item.id}}\" + bindtap=\"onEdit\"，处理函数取 e.target.dataset.id",
+        "bindtap=\"onEdit\" 并在参数表第二个位置自动收 item",
+        "把 id 写进 id 属性，事件对象自动带上"
+      ],
+      "answer": 1,
+      "explanation": "模板不能传参调用，dataset 是唯一入口（呼应 mp-events 第四节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "点击带子节点的按钮行，绑定在容器上的 handler 里，e.currentTarget 指的是？",
+      "options": [
+        "被点击的最小子节点",
+        "页面根节点",
+        "document.body 的等价物",
+        "绑定该 handler 的那个节点"
+      ],
+      "answer": 3,
+      "explanation": "target 是源头、currentTarget 是绑定者（呼应 mp-events 第五节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "data-user-name=\"a\" 在 dataset 里怎么取？",
+      "options": ["e.dataset['data-user-name']", "e.dataset['user-name']", "e.dataset.userName", "e.dataset.username"],
+      "answer": 2,
+      "explanation": "连字符转小驼峰（呼应 mp-events 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么 input 的 bindinput 处理函数里做重活（大 setData）很危险？",
+      "options": [
+        "每敲一键触发一次，高频事件×跨线程通信=卡顿重灾区",
+        "input 事件的 e.detail 没有 value",
+        "bindinput 只能绑在 textarea 上",
+        "事件会先冒泡导致重复触发"
+      ],
+      "answer": 0,
+      "explanation": "高频事件是性能红线，必要时节流/防抖（呼应 mp-events 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "想在处理函数里阻止冒泡，怎么办？",
+      "options": [
+        "return false",
+        "组件边界会自动拦截，无需处理",
+        "把模板上的 bind 改成 catch——声明式截断，没有 stopPropagation",
+        "e.stopPropagation()"
+      ],
+      "answer": 2,
+      "explanation": "事件对象是序列化数据，没有方法可调（呼应 mp-events 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "页面在自定义组件标签上写 bindtap，能收到组件内部节点的点击吗？",
+      "options": [
+        "能，事件正常冒泡出组件",
+        "不能，普通事件不跨组件边界，需组件内 triggerEvent",
+        "能，但只在捕获阶段",
+        "取决于 styleIsolation 配置"
+      ],
+      "answer": 1,
+      "explanation": "边界即隔离，跨边界走自定义事件（呼应 mp-events 第六节）。"
+    }
+  ]
+}

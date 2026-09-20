@@ -1,46 +1,82 @@
 {
-  "lessonId": "vue-reactivity",
-  "title": "Vue L1 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "vue-reactivity 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "组合式 API 中在脚本里访问 ref 变量的值需要？",
-      "options": [
-        "直接访问",
-        ".value",
-        ".value()",
-        "toRaw"
-      ],
+      "prompt": "在 <script setup> 中读写一个 ref，正确方式是？",
+      "options": ["直接用变量名", "必须用 .value", "用 .val()", "用 $value"],
       "answer": 1,
-      "explanation": "脚本中 ref 需 .value；模板里会自动解包。"
+      "explanation": "脚本里 ref 需 .value 读写；模板中会自动解包不写 .value（呼应 vue-reactivity 第二节）。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "computed 的特点是？",
+      "prompt": "const { count } = reactive({count:0}) 之后改 count 不触发更新，为什么？",
       "options": [
-        "每次访问都重算",
-        "有缓存，依赖变化才重算",
-        "不能返回值",
-        "用于发请求"
+        "reactive 不支持 count",
+        "解构拿到的是普通值快照，脱离了 Proxy，丢失响应性；应用 toRefs",
+        "count 必须是 ref",
+        "需要 .value"
       ],
       "answer": 1,
-      "explanation": "computed 基于依赖缓存，比方法调用更高效。"
+      "explanation": "解构 reactive 会失去代理引用；toRefs 才能保持响应（呼应 vue-reactivity 第三节）。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "子组件向父组件通信通常用？",
+      "prompt": "computed 相比在模板里写 {{ total() }} 调用函数的核心优势是？",
+      "options": ["写法更短", "有缓存，依赖不变时不重复计算", "能异步", "自动 deep"],
+      "answer": 1,
+      "explanation": "computed 惰性+缓存，仅依赖变化后再读取才重算；方法每次渲染都执行（呼应 vue-reactivity 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么连基本类型也要用 ref 包成对象？",
       "options": [
-        "直接改 props",
-        "emit 自定义事件",
-        "全局变量",
-        "ref"
+        "为了好看",
+        "JS 按值传递原始类型无法被拦截，包成对象才能用 getter/Proxy 追踪读写",
+        "ref 只能用于对象",
+        "不包会报错"
       ],
       "answer": 1,
-      "explanation": "props 向下、emit 向上，遵循单向数据流。"
+      "explanation": "只有对象属性访问可被拦截追踪，故原始值需包一层带 .value 的对象（呼应 vue-reactivity 第二、六节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "要重置一个 reactive 对象的全部内容，推荐做法是？",
+      "options": [
+        "state = reactive({})",
+        "Object.assign(state, 新值) 或逐项删除（不能整体替换引用）",
+        "state.clear()",
+        "delete state"
+      ],
+      "answer": 1,
+      "explanation": "整体赋值会切断原代理引用；应就地修改 Object.assign（呼应 vue-reactivity 第三节坑 2）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 ref 放对象，正确的是？",
+      "options": [
+        "对象的属性不会变响应式",
+        "ref(obj) 内部用 reactive 代理该对象，故嵌套属性也是响应式的",
+        "必须再手动 toRefs",
+        "只能用 shallowRef"
+      ],
+      "answer": 1,
+      "explanation": "ref 对对象会深层代理（内部走 reactive）（呼应 vue-reactivity 第二节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "\"能用它表达的派生数据就不要放进 watch\"，这里的\"它\"指？",
+      "options": ["ref", "computed", "reactive", "toRef"],
+      "answer": 1,
+      "explanation": "派生\"值\"用 computed（自动追踪依赖+缓存）；watch 用于\"副作用\"（呼应 vue-reactivity 第四节、vue-watch）。"
     }
   ]
 }

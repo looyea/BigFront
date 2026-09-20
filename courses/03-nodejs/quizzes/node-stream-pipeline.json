@@ -1,0 +1,97 @@
+{
+  "title": "node-stream-pipeline 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "src.pipe(dest) 时若源流 emit('error') 且未给源流单独挂 error 监听，会怎样？",
+      "options": [
+        "错误自动转发给 dest",
+        "'error' 无人监听 → 抛未捕获异常崩进程，且 dest 不会被关闭",
+        "自动重试源流",
+        "静默忽略、dest 正常 end"
+      ],
+      "answer": 1,
+      "explanation": "pipe 不传播 error，未监听的 'error' 会崩进程（呼应 node-events 第三节），且目标流不会被关闭，留下半成品/泄漏资源（呼应 node-stream-pipeline 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "stream.pipeline 相比裸 pipe 主要多保证了什么？",
+      "options": [
+        "读取更快",
+        "任一环节 error 统一回调一次，且所有流自动 destroy 清理资源",
+        "不需要 highWaterMark",
+        "自动压缩数据"
+      ],
+      "answer": 1,
+      "explanation": "pipeline 统一收口错误 + 自动销毁所有参与的流，避免 fd/socket 泄漏与半成品文件（呼应 node-stream-pipeline 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "用 stream/promises 的 pipeline，错误是通过什么机制被处理的？",
+      "options": [
+        "全局 process.on('error')",
+        "返回的 Promise 被 reject，可用 await + try/catch 捕获",
+        "抛同步异常需立刻 catch",
+        "写日志后继续"
+      ],
+      "answer": 1,
+      "explanation": "Promise 版 pipeline 任一环节出错即 reject，纳入 async 的统一错误路径（try/catch），符合现代错误处理（呼应 node-async-errors、node-stream-pipeline 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "await finished(writeStream) 的作用等价于？",
+      "options": [
+        "等待所有流创建完成",
+        "等该流的 end/finish（或出错时 reject），替代手写 on('finish')+包 Promise",
+        "强制关闭进程",
+        "把流转成数组"
+      ],
+      "answer": 1,
+      "explanation": "finished(stream) 在流正常结束(读端 end/写端 finish)时 resolve、出错时 reject，是等某个流收尾的干净写法（呼应 node-stream-pipeline 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "stream/consumers 的 text(readable) 为什么不会像逐块 toString 那样乱码？",
+      "options": [
+        "它强制 latin1",
+        "它内部用 StringDecoder 跨块拼接、正确处理多字节字符边界",
+        "它只读第一块",
+        "它会重连"
+      ],
+      "answer": 1,
+      "explanation": "text() 内部按 utf8 流式解码（StringDecoder）避免切断多字节字符（呼应 node-buffer 第四节），但会把全量收进内存——只适合小数据（呼应 node-stream-pipeline 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "要用 for-await 逐块处理一个可读流，正确的写法是？",
+      "options": [
+        "for (const c of stream)",
+        "for await (const chunk of readable) { handle(chunk); }",
+        "stream.forEach(async c => ...)",
+        "while(stream.next())"
+      ],
+      "answer": 1,
+      "explanation": "Readable 实现异步迭代协议，for-await 每轮读完才拉下一块（自带背压语义），是逐块/逐行处理大流的优雅写法（呼应 node-stream-pipeline 第六节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "给 pipeline 传 { signal }（AbortController）主要是为了？",
+      "options": [
+        "加速传输",
+        "能在外部取消/中止这条流管道（如客户端断开、优雅关闭）",
+        "改变编码",
+        "提高 highWaterMark"
+      ],
+      "answer": 1,
+      "explanation": "signal 允许中途 abort 整条管道，触发流销毁并让 Promise reject(AbortError)——用于请求取消、graceful shutdown（呼应 node-stream-pipeline 第三节、node-deploy-perf）。"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "title": "node-child-process 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "要执行一个输出很大、需要边读边处理的命令（如 tail -f），该用？",
+      "options": ["exec", "execFile", "spawn", "fork"],
+      "answer": 2,
+      "explanation": "spawn 的 stdout 是流，可边出边处理、不受 maxBuffer 限制；exec/execFile 会把输出缓冲到内存、超上限会杀进程（呼应 node-child-process 第一、二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么把用户输入拼进 exec 的命令串有命令注入风险？更安全的替代？",
+      "options": [
+        "没问题，exec 会自动转义",
+        "exec 经 shell 解析，; && | 等会被当命令执行；应改用 execFile + 参数数组（不经 shell）",
+        "exec 只能跑系统命令",
+        "加引号即可彻底安全"
+      ],
+      "answer": 1,
+      "explanation": "exec 开 shell，用户输入里的 ; | && 会被 shell 当语法执行→注入；execFile 直接传数组参数、不经过 shell，输入只作普通参数（呼应 node-child-process 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "child 的 'exit' 与 'close' 事件区别？想确保输出全读完再收尾该等哪个？",
+      "options": [
+        "完全一样",
+        "'exit' 进程终止即触发（stdio 可能未 flush 完）；'close' 在 stdio 流也关闭后触发——收尾用 close",
+        "close 先于 exit",
+        "都拿不到退出码"
+      ],
+      "answer": 1,
+      "explanation": "close 保证 stdio 已关闭、输出读完；exit 可能过早（呼应 node-child-process 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "fork 与 spawn 的关键差别是？",
+      "options": [
+        "fork 只能跑非 Node 程序",
+        "fork 启动另一个 Node 进程并自带 IPC 通道（send/message）",
+        "spawn 不能传参",
+        "没有区别"
+      ],
+      "answer": 1,
+      "explanation": "fork 是 spawn 特化：专用于 Node 子进程 + 建立 process.send/on('message') 的 IPC（呼应 node-child-process 第五节、node-cluster）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "child.kill() 之后发现命令的孙进程还活着，最可能原因是？",
+      "options": [
+        "kill 无效",
+        "只杀了直接子进程（如 shell:true 时 shell 是子），孙进程未进同一进程组、需按进程组杀",
+        "Node 的 bug",
+        "孙进程会自动退出"
+      ],
+      "answer": 1,
+      "explanation": "kill 只作用于直接子进程；要清理整棵进程树需 detached 起新进程组、再 process.kill(-pid)（呼应 node-child-process 第四节、node-deploy-perf）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "要把一段 CPU 密集计算挪出主线程且与主线程共享一块 ArrayBuffer，最合适的机制是？",
+      "options": [
+        "child_process.exec",
+        "worker_threads（共享内存 + postMessage）",
+        "setTimeout 分批",
+        "cluster"
+      ],
+      "answer": 1,
+      "explanation": "worker_threads 是同进程内线程、可共享 SharedArrayBuffer/transfer ArrayBuffer，适合 CPU 密集（呼应 node-child-process 第七节、node-workers）；cluster 是为多核分摊网络负载。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "fork 的 IPC 消息里，不能直接发送的是？",
+      "options": ["普通对象", "字符串", "函数 / 不可序列化对象", "数组"],
+      "answer": 2,
+      "explanation": "IPC 走序列化（结构化克隆/JSON），函数、Symbol、原型方法等不可序列化发不过去；可 transfer 的是句柄/ArrayBuffer（呼应 node-child-process 第五节）。"
+    }
+  ]
+}

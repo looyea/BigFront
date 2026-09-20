@@ -1,0 +1,62 @@
+{
+  "title": "next-dynamic 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Next 15 起，服务端组件页面接收的 params 正确用法是？",
+      "options": ["直接同步解构 const { slug } = params", "类型写成 string", "params 只能是单个下划线参数", "先 await：params 是 Promise"],
+      "answer": 3,
+      "explanation": "15 开始 params/searchParams 均为 Promise，同步解构会拿到 pending 对象（呼应 next-dynamic 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "目录 app/docs/[...path]/ 能匹配哪个 URL？",
+      "options": ["/docs 本身", "/docs/a/b/c 等一级以上全部", "只有 /docs/a 单级", "/docs/任意文件.pdf"],
+      "answer": 1,
+      "explanation": "catch-all 收多级片段成数组；想连 /docs 本身也可匹配要用双括号可选 catch-all（呼应 next-dynamic 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "动态详情页不写 generateStaticParams 时，默认渲染模式是？",
+      "options": ["自动 SSR（请求时确定参数再渲染）", "全部 404", "自动变成 SSG 枚举所有参数", "纯 CSR"],
+      "answer": 0,
+      "explanation": "构建器无从枚举参数值，页面保持动态；写了生成函数才有预生成清单（呼应 next-dynamic 第二节、render-modes 的推断表）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "dynamicParams = false 的语义是？",
+      "options": ["禁用动态段", "白名单外的参数值直接 404，不现渲", "页面不参与缓存", "关闭路由级代码分割"],
+      "answer": 1,
+      "explanation": "generateStaticParams 给出的是白名单；false 拒绝名单外，防爬虫乱敲参数打爆现渲（呼应 next-dynamic 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "并行路由 @analytics 目录会改变 URL 吗？",
+      "options": ["会，路径变成 /@analytics", "会，作为查询参数附加", "不会，它只是布局上的渲染插槽", "取决于是否配 default.tsx"],
+      "answer": 2,
+      "explanation": "@slot 不进 URL，以同名 props 注入 layout——命名视图思想的路径无关版（呼应 next-dynamic 第三节、vue-router-nested-dynamic）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "拦截路由 (.)posts 的效果范围是？",
+      "options": ["拦截自任意页面的 /posts 导航", "仅拦截从同级（当前所在层）发起的对 /posts 的导航", "拦截所有 API 请求", "仅拦截后退操作"],
+      "answer": 1,
+      "explanation": "点号个数=回溯层级：(.) 同级、(..) 上级、(...) 根级；从别处直达仍是整页（呼应 next-dynamic 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "拦截路由打开的 modal，正确的关闭姿势是？",
+      "options": ["window.close()", "把 URL 手动改成空字符串", "router.back()（回到来源列表，URL 与历史栈自然还原）", "删除 DOM 节点"],
+      "answer": 2,
+      "explanation": "modal 本质是一次入栈导航，back 即出栈关闭——这正是它比手写 setState 弹窗高级的地方（呼应 next-dynamic 第四节、mp-route 页面栈）。"
+    }
+  ]
+}

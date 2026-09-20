@@ -1,0 +1,97 @@
+{
+  "title": "vue-ssr-nuxt 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "相比纯 CSR(SPA)，SSR 主要解决哪两个痛点？",
+      "options": [
+        "服务器成本和数据库压力",
+        "首屏白屏慢 与 SEO 不友好（爬虫看到空壳）",
+        "打包体积和依赖冲突",
+        "组件通信和状态管理"
+      ],
+      "answer": 1,
+      "explanation": "SSR 直出 HTML 加快首屏、利于收录（呼应 vue-ssr-nuxt 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "hydration（水合）指的是什么？",
+      "options": [
+        "客户端把服务端 HTML 丢弃后重新渲染",
+        "客户端 Vue 复用服务端产出的 DOM，绑定事件并建立响应式",
+        "服务端把数据写进数据库",
+        "把 CSS 内联进 HTML"
+      ],
+      "answer": 1,
+      "explanation": "水合是复用已有 DOM 而非重建（呼应 vue-ssr-nuxt 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "出现 hydration mismatch 最常见的诱因是？",
+      "options": [
+        "服务端与客户端渲染结果不一致（数据/时间不同、条件依赖浏览器 API）",
+        "CSS 优先级",
+        "用了 computed",
+        "路由用了懒加载"
+      ],
+      "answer": 0,
+      "explanation": "两端输出必须一致，否则水合报错（呼应 vue-ssr-nuxt 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "SSR 里为什么 createApp/createPinia/createRouter 必须每请求新建？",
+      "options": [
+        "为了性能",
+        "模块级单例会让 A 用户状态泄漏给 B 用户、污染水合",
+        "Vue 强制要求",
+        "为了 tree-shaking"
+      ],
+      "answer": 1,
+      "explanation": "跨请求隔离是 SSR 铁律（呼应 vue-ssr-nuxt 第四节、vue-pinia-advanced、vue-project-architecture 第七节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "需要在 SSR 应用中访问 window/document，正确做法是？",
+      "options": [
+        "写在 setup 顶层直接访问",
+        "放到 onMounted 或用 import.meta.client / typeof window 守卫",
+        "写在服务端 entry",
+        "用 try/catch 包住即可"
+      ],
+      "answer": 1,
+      "explanation": "onMounted 只在客户端跑，服务端无浏览器 API（呼应 vue-ssr-nuxt 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Nuxt 3 相比手写裸 Vue SSR 帮你做了什么？（最佳概括）",
+      "options": [
+        "只是换了个 UI 库",
+        "约定式文件路由、自动导入、SSR 感知的 useFetch、服务端 Nitro、一键退回 SPA/混合渲染",
+        "去掉了 hydration",
+        "强制只能用 SSR"
+      ],
+      "answer": 1,
+      "explanation": "Nuxt 把 SSR 工程细节全包（呼应 vue-ssr-nuxt 第五节、08-nuxt）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "SSR 场景下同构数据获取的关键目标是？",
+      "options": [
+        "让服务端和客户端各请求一次保证最新",
+        "服务端取数渲染，客户端水合时复用已注入的初始状态、不重复请求",
+        "所有数据都在客户端取",
+        "把数据写死在组件里"
+      ],
+      "answer": 1,
+      "explanation": "初始状态序列化注入、水合复用，避免二次请求（呼应 vue-ssr-nuxt 第三节）。"
+    }
+  ]
+}

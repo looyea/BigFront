@@ -1,0 +1,97 @@
+{
+  "title": "mp-component-comm 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "this.triggerEvent('pay', { id: 1 }) 后，父页面要在组件标签上接收，写法是？",
+      "options": [
+        "onPay={fn}",
+        "v-on:pay=\"fn\"",
+        "bind:pay=\"onPay\"，数据从 e.detail 取",
+        "bindtap=\"pay\""
+      ],
+      "answer": 2,
+      "explanation": "自定义事件用 bind:事件名（呼应 mp-component-comm 第二节）。"
+      },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "子组件 triggerEvent 默认能否冒泡穿过组件边界到祖先页面？",
+      "options": [
+        "不能，需第三参 { bubbles/composed } 显式开启",
+        "能，所有事件都全局冒泡",
+        "取决于 styleIsolation",
+        "只在真机上能"
+      ],
+      "answer": 0,
+      "explanation": "边界即隔离，穿透要显式选项（呼应 mp-component-comm 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "slot 插槽内容在哪个作用域编译、能引用谁的数据？",
+      "options": [
+        "子的作用域，可用子 data",
+        "渲染层直接编译，与两侧无关",
+        "父作用域，也可用子 data（作用域插槽）",
+        "父作用域，只能用父 data——小程序没有作用域插槽"
+      ],
+      "answer": 3,
+      "explanation": "内容属父；无 slot-scope 是原生能力差（呼应 mp-component-comm 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "播放器组件对外暴露 play()/pause() 动作，父页正确的调用方式是？",
+      "options": [
+        "给子传 data-play=\"{{true}}\"",
+        "this.selectComponent('#player').play()",
+        "直接调子模块导出的函数",
+        "wx.callMethod('play')"
+      ],
+      "answer": 1,
+      "explanation": "命令式动作走实例方法，≈React ref API（呼应 mp-component-comm 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "兄弟组件之间传数据，速查表首选？",
+      "options": [
+        "互相 selectComponent",
+        "globalData 轮询",
+        "共同父级中转（一个 emit 上来，一个 properties 下去）",
+        "slot 互换"
+      ],
+      "answer": 2,
+      "explanation": "数据向下、事件向上的宪法推论（呼应 mp-component-comm 第五节表）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "父模板里写 value=\"{{ list.filter(f) }}\" 给子的对象/数组属性，隐患是？",
+      "options": [
+        "WXML 报错，filter 不可用",
+        "子的 observer 收不到值",
+        "自动深比较，无隐患",
+        "每次父渲染都产生新引用，子 observer 重复触发白重渲染"
+      ],
+      "answer": 3,
+      "explanation": "引用比较导致\"没变也触发\"，同 React memo 失效（呼应 mp-component-comm 第一节、面试第6题）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "input 型组件\"受控\"形态指什么？",
+      "options": [
+        "父用 value 属性下发 + 子 bindinput 回传，父始终持有最新值",
+        "组件内部自己记值，父只能读缓存",
+        "禁用输入法即受控",
+        "子每次按键 triggerEvent，父不做任何事"
+      ],
+      "answer": 0,
+      "explanation": "与 React 受控组件同义，务必与内部态方案二选一（呼应 mp-component-comm 第一节）。"
+    }
+  ]
+}

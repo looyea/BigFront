@@ -1,0 +1,87 @@
+{
+  "title": "react-component 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "React 里组件函数首字母必须大写，原因是？",
+      "options": [
+        "编码风格偏好",
+        "React 靠首字母大写区分这是组件还是原生小写标签",
+        "为了性能",
+        "为了让 props 生效"
+      ],
+      "answer": 1,
+      "explanation": "小写会被当成字符串标签如 <div>（呼应 react-component 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 props，正确的做法是？",
+      "options": [
+        "组件内直接 props.x = 新值",
+        "props 只读，需变更就调用父传入的 onXxx 回调",
+        "用 setState 修改 props",
+        "把 props 存进全局对象共享"
+      ],
+      "answer": 1,
+      "explanation": "props 不可变，子通过回调请求父改（呼应 react-component 第二节、vue-state-patterns）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "props.children 最接近 Vue 的哪个概念？",
+      "options": ["具名插槽", "默认插槽", "provide/inject", "计算属性"],
+      "answer": 1,
+      "explanation": "标签之间内容=children，对应默认插槽（呼应 react-component 第三节、vue slot）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "React 函数组件与 Vue 的 setup() 在\"执行次数\"上的根本差异是？",
+      "options": [
+        "二者都只执行一次",
+        "函数组件每次渲染都从头重新执行，Vue setup 只在实例创建时跑一次",
+        "函数组件从不重复执行",
+        "setup 每次渲染都重跑"
+      ],
+      "answer": 1,
+      "explanation": "重跑是理解 Hook 顺序/依赖数组/useMemo 的钥匙（呼应 react-component 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么 Hooks 必须在组件顶层调用、不能放在 if 里？",
+      "options": [
+        "语法报错而已",
+        "React 按调用顺序为组件缓存状态槽，条件调用会打乱顺序导致错位",
+        "为了可读性",
+        "为了 SSR"
+      ],
+      "answer": 1,
+      "explanation": "顺序即身份，条件调用会错位（呼应 react-component 第四节、react-custom-hooks Rules of Hooks）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "下面哪种是把副作用写在组件渲染体的后果？",
+      "options": ["只在挂载跑一次", "每次渲染都重新执行、可能无限循环/撕裂渲染", "被 React 自动去重", "自动放进 useEffect"],
+      "answer": 1,
+      "explanation": "渲染体每次重跑，副作用要放 useEffect（呼应 react-component 第五节、react-useeffect）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "受控 vs 非受控输入的核心区别是？",
+      "options": [
+        "受控的值来自 React state、非受控的值留在 DOM 用 ref 读",
+        "受控更快",
+        "非受控不能校验",
+        "二者完全等价"
+      ],
+      "answer": 0,
+      "explanation": "区别在\"数据握在谁手里\"（呼应 react-component 第六节、react-forms）。"
+    }
+  ]
+}

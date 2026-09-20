@@ -1,0 +1,77 @@
+{
+  "title": "mp-wxss 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "rpx 的定义基准是？",
+      "options": [
+        "屏幕高度固定为 750rpx",
+        "1rpx 恒等于 1px",
+        "屏幕宽度固定为 750rpx",
+        "以 iPhone6 为基准的 rem"
+      ],
+      "answer": 2,
+      "explanation": "规定屏幕宽 750rpx，rpx 随设备宽度自动折算（呼应 mp-wxss 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "375px 宽的设备上，1rpx 等于？",
+      "options": ["0.5px", "1px", "2px", "0.75px"],
+      "answer": 0,
+      "explanation": "375×2=750，故 1rpx=0.5px（呼应 mp-wxss 第二节表格）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "1rpx 画边框在小屏机型可能出现的问题是？",
+      "options": [
+        "边框颜色变淡",
+        "触发编译错误",
+        "边框自动变粗",
+        "不足 1 物理像素导致边框消失/粗细不一"
+      ],
+      "answer": 3,
+      "explanation": "所以细线建议用 px 或 4rpx 起（呼应 mp-wxss 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "自定义组件默认的 styleIsolation 是？",
+      "options": ["isolated", "shared", "apply-shared", "page"],
+      "answer": 0,
+      "explanation": "默认运行时真隔离，页面样式不进组件（呼应 mp-wxss 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 @import，正确的是？",
+      "options": [
+        "可以写在文件任意位置",
+        "只能引入当前页面的 wxss",
+        "必须写在文件最顶部，分包下相对路径要格外小心",
+        "性能与直接内联完全等价"
+      ],
+      "answer": 2,
+      "explanation": "@import 置顶是硬性要求，路径解析是分包高频坑（呼应 mp-wxss 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "页面 wxss 与 app.wxss 对同一元素定义了同权重样式，谁生效？",
+      "options": ["app.wxss", "页面 wxss", "随机", "都不生效"],
+      "answer": 1,
+      "explanation": "层叠规则：页面样式后于全局加入，胜出（呼应 mp-wxss 第三节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "想让页面的一条样式作用于组件内部的某个节点，官方推荐的\"样式插槽\"机制是？",
+      "options": ["externalClasses（外部类）", "ID 选择器", "行内 style", "!important"],
+      "answer": 0,
+      "explanation": "隔离下父选不中子节点，externalClasses 是正解（呼应 mp-wxss 第四节）。"
+    }
+  ]
+}

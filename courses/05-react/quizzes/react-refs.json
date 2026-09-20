@@ -1,0 +1,87 @@
+{
+  "title": "react-refs 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 useRef 返回的对象，正确的是？",
+      "options": [
+        "每次渲染都是一个新对象",
+        "改了 .current 会触发重渲染",
+        "组件生命周期内是同一引用，改 .current 不触发渲染",
+        "只能存 DOM 节点"
+      ],
+      "answer": 2,
+      "explanation": "ref 是跨渲染保持的可变盒子（呼应 react-refs 第一、二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "要把滚动位置实时显示在页面上，应该用？",
+      "options": ["useState（因为它参与渲染）", "useRef（因为不想重渲染）", "全局变量", "useContext"],
+      "answer": 0,
+      "explanation": "会出现在输出里的值用 state；只是记一笔才用 ref（呼应 react-refs 第二节口诀）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "React 19 里让子组件接收并使用父传来的 ref，推荐写法是？",
+      "options": [
+        "必须用 forwardRef 包裹",
+        "用 useImperativeHandle 才能传",
+        "ref 作为普通 prop 直接在参数里取用",
+        "无法再传 ref"
+      ],
+      "answer": 2,
+      "explanation": "19 起 ref 是普通 prop，forwardRef 基本退场（呼应 react-refs 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "useImperativeHandle 的作用是？",
+      "options": [
+        "阻止 ref 传递",
+        "自定义 ref 暴露出去的句柄（只开放指定方法），而非整个 DOM/实例",
+        "把 ref 变成 state",
+        "触发重渲染"
+      ],
+      "answer": 1,
+      "explanation": "控制暴露面，对应 Vue defineExpose（呼应 react-refs 第三节、vue-refs-expose）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "首帧渲染时 `inputRef.current` 通常是什么？",
+      "options": ["null（节点尚未挂载，访问前要判空）", "input 元素", "undefined 报错", "一个 Promise"],
+      "answer": 0,
+      "explanation": "挂载后 React 才填入节点（呼应 react-refs 第一、五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "为什么不应在渲染阶段读写 ref.current？",
+      "options": [
+        "性能略慢",
+        "语法不允许",
+        "破坏渲染纯函数性，严格模式/并发重跑会导致错乱",
+        "ref 在渲染阶段不存在"
+      ],
+      "answer": 2,
+      "explanation": "渲染必须纯，ref 读写放事件/effect（呼应 react-refs 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下列最适合用 useRef 的是？",
+      "options": [
+        "输入框当前文本用于渲染字数",
+        "保存 setInterval 返回的定时器 id 以便清理",
+        "列表当前选中项高亮",
+        "主题色应用到 className"
+      ],
+      "answer": 1,
+      "explanation": "定时器 id 不参与渲染、跨渲染保持，正好用 ref（呼应 react-refs 第二节）。"
+    }
+  ]
+}

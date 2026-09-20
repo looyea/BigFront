@@ -1,0 +1,82 @@
+{
+  "title": "react-custom-hooks 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "自定义 Hook 靠什么被 React/工具识别？",
+      "options": ["放在 hooks 目录", "以 use 开头的命名约定", "必须导出默认值", "必须有返回值"],
+      "answer": 1,
+      "explanation": "use 前缀让 rules-of-hooks 校验与人识别（呼应 react-custom-hooks 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Rules of Hooks 的核心原因是？",
+      "options": [
+        "性能考虑",
+        "React 按调用顺序维护组件的 Hook 状态链表，乱序会错位",
+        "语法限制",
+        "为了 tree-shaking"
+      ],
+      "answer": 1,
+      "explanation": "顺序即身份（呼应 react-custom-hooks 第二节、react-component 第四节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "在 if 里调用 useState 会怎样？",
+      "options": ["正常运行", "违反规则：某分支少调 Hook 时状态错位/报错", "自动忽略", "仅警告无影响"],
+      "answer": 1,
+      "explanation": "条件调用打乱顺序，把条件写进 Hook 内部而非包住（呼应 react-custom-hooks 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "自定义 Hook 里返回的回调函数为什么要 useCallback？",
+      "options": [
+        "语法要求",
+        "稳定引用，配合 React.memo/依赖数组避免子重渲染或 effect 狂跑",
+        "让它变成异步",
+        "减少 token"
+      ],
+      "answer": 1,
+      "explanation": "引用稳定是 React 复用的常见诉求（呼应 react-custom-hooks 第三节、react-memo-hooks）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "两个组件各调用一次 useCounter，它们的 count 关系是？",
+      "options": ["共享同一份", "各自独立一份状态", "报错", "第二个读到第一个的值"],
+      "answer": 1,
+      "explanation": "每次在某组件调用=该组件一份，这是与 Vue 模块级单例的差异（呼应 react-custom-hooks 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "想在 React 里让一段有状态逻辑\"跨组件共享单例\"，正确做法是？",
+      "options": [
+        "再调一次自定义 Hook",
+        "把 useState 改成全局变量",
+        "用 Context 或外部 store(useSyncExternalStore)",
+        "用 useRef 存在 window 上"
+      ],
+      "answer": 2,
+      "explanation": "共享单例靠 Context/store，而非重复调用 Hook（呼应 react-custom-hooks 第五节、react-context）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "自定义 Hook 内部访问 window/localStorage，为兼容 SSR 应？",
+      "options": [
+        "直接写在函数顶层",
+        "放到 useEffect 或用 typeof window 守卫",
+        "用 try/catch 包住整个 Hook",
+        "SSR 不支持自定义 Hook"
+      ],
+      "answer": 1,
+      "explanation": "服务端首帧无浏览器 API（呼应 react-custom-hooks 第六节、vue-ssr-nuxt）。"
+    }
+  ]
+}

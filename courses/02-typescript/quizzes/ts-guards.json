@@ -1,0 +1,97 @@
+{
+  "title": "ts-guards 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么 function isStr(x): boolean 不能收窄调用点，而 x is string 可以？",
+      "options": [
+        "两者都能收窄",
+        "boolean 只表示真/假，不携带'x 是某类型'的信息；类型谓词 x is string 告诉编译器'返回真时 x 就是 string'",
+        "因为 is 会运行校验",
+        "因为 boolean 是 any"
+      ],
+      "answer": 1,
+      "explanation": "类型谓词把'判断结果为真'与'变量是某类型'绑定，让控制流分析据此收窄。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "断言函数 asserts x is T 与守卫函数 x is T 的差别是？",
+      "options": [
+        "完全一样",
+        "断言函数不返回布尔：不满足就抛错，满足则后续代码视 x 已收窄；守卫函数返回布尔供 if 判断",
+        "断言函数运行时更慢",
+        "守卫函数会抛错"
+      ],
+      "answer": 1,
+      "explanation": "asserts 适合'前置校验、过则放心用、不过即抛'；is 适合'分支判断'。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "穷尽检查 default: const _: never = s 的原理是？",
+      "options": [
+        "运行时会抛错",
+        "处理完所有判别分支后剩余 s 类型应为 never；若漏分支，s 非 never，赋给 never 变量编译报错",
+        "把 s 变成 never",
+        "只是注释，无实际作用"
+      ],
+      "answer": 1,
+      "explanation": "用'类型消失为 never'证明分支齐全；新增变体忘处理时编译器立刻报警。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下哪种收窄能力不需要你手写 x is T？",
+      "options": [
+        "Array.isArray / instanceof / in / typeof 这些内置守卫",
+        "判断自定义业务对象类型",
+        "判断可辨识联合的分支",
+        "都无法自动收窄"
+      ],
+      "answer": 0,
+      "explanation": "TS 内置守卫自带谓词信息；自定义复杂判定才需手写 is。可辨识联合用判别字段 switch 即可。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "as const 在状态机建模里的关键作用是？",
+      "options": [
+        "提速",
+        "把常量深冻结为字面量类型，使派生的 keyof/值类型保持精确（否则拓宽成 number/string）",
+        "让对象可变",
+        "生成运行时枚举"
+      ],
+      "answer": 1,
+      "explanation": "没有 as const，step:0 会推成 number、联合退化；as const 守住精确字面量类型。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "对一个可能改动的第三方对象类型、靠是否有某属性区分，最合适的收窄手段是？",
+      "options": [
+        "强行给它加判别字段",
+        "用 in 守卫或封装自定义 is 类型谓词",
+        "一律 as 断言",
+        "用 enum"
+      ],
+      "answer": 1,
+      "explanation": "无法改形状时用 in 探测属性、或写 is 谓词复用判断，比 as 安全（有运行时证据）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "边界外部数据(JSON/env)一次性从 unknown 变成可信类型，最省心的主流方案是？",
+      "options": [
+        "大量 as 断言",
+        "zod/valibot 等 schema 的 parse（运行时校验 + 推导静态类型）",
+        "全部标 any",
+        "关闭 strict"
+      ],
+      "answer": 1,
+      "explanation": "schema 单一来源，parse 同时给运行时保证和静态类型，避免手写守卫/断言的疏漏。"
+    }
+  ]
+}

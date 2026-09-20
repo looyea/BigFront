@@ -1,0 +1,97 @@
+{
+  "title": "node-modules 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "在 CJS 模块里，下面哪种写法会导致外部 require 到空对象？",
+      "options": [
+        "module.exports = { add(){} }",
+        "exports.add = function(){}",
+        "exports = { add(){} }",
+        "module.exports.add = function(){}"
+      ],
+      "answer": 2,
+      "explanation": "exports 只是 module.exports 的引用别名；给 exports 重新赋值只改了局部变量，module.exports 未变，最终导出为空。整体替换必须用 module.exports=。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "两次 `const a=require('./m'); const b=require('./m')`，a===b 为 true 说明？",
+      "options": [
+        "require 每次都重新执行模块",
+        "模块被缓存，module.exports 复用同一引用，顶层代码只跑一次",
+        "m 是内置模块",
+        "require 返回的是深拷贝"
+      ],
+      "answer": 1,
+      "explanation": "CJS 有加载缓存，同一解析出的模块只执行并初始化一次，之后返回同一个 module.exports 引用——这也是模块可当单例的原因。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`require('./x')` 当 x 是一个目录时，Node 优先怎么找入口？",
+      "options": [
+        "直接找 x/index.js",
+        "找 x/package.json 的 main 字段，没有再退到 x/index.js 等",
+        "报错，目录不能被 require",
+        "找 x/main.js"
+      ],
+      "answer": 1,
+      "explanation": "目录解析先看其 package.json 的 main，其次 index.js/index.json/index.node。这就是发包用 main/exports 指向入口的原理。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 CJS 的循环依赖，正确的描述是？",
+      "options": [
+        "Node 会直接抛错终止",
+        "会死锁",
+        "后加载方拿到的是对方“尚未执行完”的 module.exports 快照（可能不完整）",
+        "两个模块都会被忽略"
+      ],
+      "answer": 2,
+      "explanation": "CJS 循环依赖不死锁：正在加载的模块其 exports 会先返回给引用方，故可能拿到半成品。应打破环或把使用推迟到函数调用时。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "下列哪项是 CommonJS 相对 ESM 的特点？",
+      "options": [
+        "静态结构、天然支持 tree-shaking",
+        "同步、运行时、可条件/动态 require",
+        "支持顶层 await",
+        "导出是 live binding 引用"
+      ],
+      "answer": 1,
+      "explanation": "CJS 的 require 是同步运行时、能放条件里、能拼路径；代价是工具难以静态分析做摇树。静态/treeshake/顶层await/live binding 都是 ESM 的特征。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "测试里想让某个被 require 过的模块“重新初始化”，常用手段是？",
+      "options": [
+        "重新 require 一次即可",
+        "delete require.cache[require.resolve('./m')]",
+        "重启整个进程",
+        "把模块改成 ESM"
+      ],
+      "answer": 1,
+      "explanation": "因为 require 有缓存，删掉对应 cache 条目后再次 require 会重新执行模块顶层代码，常用于单测重置单例/模块状态。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "`require('node:fs')` 里 `node:` 前缀的作用是？",
+      "options": [
+        "表示异步加载",
+        "显式指定内置模块，避免与同名第三方包冲突",
+        "启用严格模式",
+        "没有实际意义"
+      ],
+      "answer": 1,
+      "explanation": "node: 前缀明确“这是内置模块”，即便 node_modules 里有同名包也不会被误用，语义更清晰，官方推荐。"
+    }
+  ]
+}

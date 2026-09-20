@@ -1,0 +1,92 @@
+{
+  "title": "ts-any-unknown 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "any 和 unknown 的核心区别是？",
+      "options": [
+        "两者完全等价",
+        "any 绕过所有检查、可随意使用/赋值；unknown 用其成员或赋给具体类型前必须先收窄",
+        "unknown 比 any 更危险",
+        "any 只能用于变量"
+      ],
+      "answer": 1,
+      "explanation": "unknown 是'类型安全的 any'：能装任何值，但取用必须收窄；any 直接放行一切。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "TS 4.4+（useUnknownInCatchVariables）下 catch (e) 的 e 默认类型是？",
+      "options": ["any", "unknown", "Error", "void"],
+      "answer": 1,
+      "explanation": "默认 unknown，需 if (e instanceof Error) 等收窄后才能安全取 message。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "下面哪项不是 never 的典型用途？",
+      "options": [
+        "永不返回的函数（抛错/死循环）返回类型",
+        "可辨识联合的穷尽性检查兜底",
+        "表示一个可能为 null 的值",
+        "空交集 string & number 的结果"
+      ],
+      "answer": 2,
+      "explanation": "'可能为 null'应写 T | null。never 表'无值/不可能'，用于不返回、穷尽、空交集。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于类型断言 x as T，正确的说法是？",
+      "options": [
+        "运行时会把 x 转换成 T",
+        "只是告诉编译器按 T 看待，运行时不做任何转换或校验",
+        "它会触发一次运行时类型检查",
+        "它等价于类型守卫"
+      ],
+      "answer": 1,
+      "explanation": "断言不改运行时、不校验，滥用会让错误类型溜到运行时才炸。优先守卫/satisfies。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "satisfies 相比 as 的优势是？",
+      "options": [
+        "能提速编译",
+        "既校验值符合目标类型，又保留值本身的精确(字面量)类型，不像 as 会拓宽/丢信息",
+        "可以替代所有类型注解",
+        "会在运行时做校验"
+      ],
+      "answer": 1,
+      "explanation": "satisfies 做'校验 + 保留推断'；as 会把你指定的类型强加、丢失更精确推断。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "为什么 forEach 能接受一个有返回值的回调，即使参数类型是 (…) => void？",
+      "options": [
+        "因为 TS 有 bug",
+        "TS 规则：返回任何类型的函数可赋给返回 void 的函数类型（返回值被忽略）",
+        "因为回调实际返回 undefined",
+        "因为 forEach 参数不是函数"
+      ],
+      "answer": 1,
+      "explanation": "期望 () => void 表示'我不关心返回值'，所以有返回值的函数也能传入；但别指望用 void 传数据。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "想安全处理'接口返回的一段未知 JSON'，最佳起点是？",
+      "options": [
+        "直接 JSON.parse 后 when as User 断言",
+        "把结果标为 any 方便使用",
+        "标为 unknown，再用类型守卫或 zod 校验建立信任后再用",
+        "用 Object 类型接收"
+      ],
+      "answer": 2,
+      "explanation": "外部数据不可信，先 unknown 再校验（守卫/zod）转成精确类型，是把'不可信变可信'的标准姿势。"
+    }
+  ]
+}

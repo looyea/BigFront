@@ -1,0 +1,97 @@
+{
+  "title": "react-architecture 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "本课程推荐 React 项目目录主要按什么组织？",
+      "options": [
+        "按文件类型：全部组件放 components/、接口放 api/",
+        "按开发者名字分文件夹",
+        "按 feature 业务域切分，每个 feature 自带组件/hook/服务/store",
+        "全部平铺在 src 根下"
+      ],
+      "answer": 2,
+      "explanation": "feature 优先、高内聚（呼应 react-architecture 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "feature 目录里放一个 index.ts 作\"门面\"的好处是？",
+      "options": [
+        "对外只暴露公共 API、隐藏内部结构，防止随意穿透耦合",
+        "能让打包更快是唯一目的",
+        "可以省略 Provider",
+        "没有任何作用"
+      ],
+      "answer": 0,
+      "explanation": "门面收敛入口、降低耦合（呼应 react-architecture 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于组件不直接写 fetch('/api')，正确做法是？",
+      "options": [
+        "在每个组件里各写一遍 fetch",
+        "把 URL 硬编码进 JSX",
+        "用全局变量存数据",
+        "抽到 services 层封装 HTTP（统一实例/拦截器/错误），组件经 hooks 调用"
+      ],
+      "answer": 3,
+      "explanation": "单向依赖 组件→hooks→services→lib（呼应 react-architecture 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Server/Client 组件边界，社区建议怎么标 'use client'？",
+      "options": [
+        "整个应用全标 client",
+        "把边界推深：只在真正需要交互的小叶子标，主体留服务端",
+        "完全不区分",
+        "只在页面级标 client"
+      ],
+      "answer": 1,
+      "explanation": "客户端 bundle 越小越好（呼应 react-architecture 第四节、react-nextjs）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "展示组件(presentational)的典型特征是？",
+      "options": [
+        "自己 fetch 数据并管理全局 state",
+        "绑定某条路由",
+        "纯 props 进、UI 出，无业务，易测易复用",
+        "必须写成类组件"
+      ],
+      "answer": 2,
+      "explanation": "业务与展示分离（呼应 react-architecture 第二节、react-composition）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "\"别过度工程\"在架构里如何体现？",
+      "options": [
+        "小项目也先上 Redux + 微前端 + monorepo",
+        "先按 feature 分层 + Context/Query，痛点出现再演进",
+        "完全不要任何组织",
+        "所有逻辑塞进一个超大组件"
+      ],
+      "answer": 1,
+      "explanation": "架构随复杂度生长（呼应 react-architecture 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "全局错误与加载兜底，合理的分层策略是？",
+      "options": [
+        "根 ErrorBoundary + 路由级 errorElement + Suspense/Query 加载态",
+        "只在组件里各自 try/catch",
+        "不处理，让报错冒到控制台",
+        "只用 window.onerror"
+      ],
+      "answer": 0,
+      "explanation": "多层边界分层兜底（呼应 react-architecture 第五节、react-render-control）。"
+    }
+  ]
+}

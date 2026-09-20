@@ -1,0 +1,97 @@
+{
+  "title": "mp-communication 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "\"A 跳到 B 选地址，B 确认后把结果带回 A 且 A 不重载\"，官方一等公民方案是？",
+      "options": [
+        "globalData 轮询",
+        "Storage + A 页 onShow 比对",
+        "eventChannel（navigateTo 的 events + getOpenerEventChannel）",
+        "getCurrentPages 改 A 页 data"
+      ],
+      "answer": 2,
+      "explanation": "专为返回回传设计，无需全局状态（呼应 mp-communication 第三节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "eventChannel 的连接范围是？",
+      "options": [
+        "仅 opener 与 opened 这一对页面",
+        "全应用任意页面广播",
+        "同一 tabBar 下的所有页",
+        "组件与页面之间"
+      ],
+      "answer": 0,
+      "explanation": "只连\"亲子\"两页，链式需逐跳转发（呼应 mp-communication 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "拿到 prev = getCurrentPages().at(-2) 后执行 prev.data.x = 1，为什么视图没变？",
+      "options": [
+        "prev 永远是 undefined",
+        "跨页赋值被框架禁止并告警",
+        "WebView 实例冻结导致写入丢失",
+        "改 data 不上屏，必须 prev.setData({ x: 1 })"
+      ],
+      "answer": 3,
+      "explanation": "setData 才是唯一去程（呼应 mp-communication 第二节、mp-setdata）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "自建事件总线最必须配对的清理动作是？",
+      "options": [
+        "每次 emit 后清空全部 handler",
+        "页面 onUnload（或 onHide）时 off 掉自己的订阅",
+        "把 bus 挂到 globalData 上",
+        "用 catch 事件包住 emit"
+      ],
+      "answer": 1,
+      "explanation": "忘解绑=回调打到已销毁页面，幽灵刷新/报错（呼应 mp-communication 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "globalData 作为通信介质的固有缺陷是？",
+      "options": [
+        "只能存字符串",
+        "页面间不可访问",
+        "小程序被销毁重启后丢失，且没有变化通知",
+        "体积上限只有 100KB"
+      ],
+      "answer": 2,
+      "explanation": "内存级+无通知，持久请走 Storage（呼应 mp-communication 第一节表）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "什么时候才值得引入小程序 store？",
+      "options": [
+        "多个不相关页面要读同一状态且要求变化通知时",
+        "项目一建立即引入以显规范",
+        "只要有两个页面共享数据就必须",
+        "官方要求 3 页以上强制使用"
+      ],
+      "answer": 0,
+      "explanation": "与 React 的判断标准一致，避免过度全局化（呼应 mp-communication 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "支付成功后首页、订单页、角标都要刷新，最贴切的通道是？",
+      "options": [
+        "url 参数逐页传递",
+        "Storage 写入后各页 setInterval 轮询",
+        "getCurrentPages 遍历挨个调方法",
+        "事件总线广播 'pay:success'，相关页订阅"
+      ],
+      "answer": 3,
+      "explanation": "一对多全局广播是总线的主场（呼应 mp-communication 第四节）。"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "title": "next-overview 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "纯 SPA 骨架在production被爬虫抓取时，最典型的问题是？",
+      "options": ["爬虫会执行所有JS所以没问题", "默认只能拿到空的 div#root 壳，收录不到内容", "爬虫会自动重试直到JS加载完", "只要网站有robots.txt就能收录"],
+      "answer": 1,
+      "explanation": "SEO 失效是 SPA 三座大山之一：不执行 JS 的爬虫看到的就是空壳（呼应 next-overview 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Next.js 与 Vite 的关系，下列说法最准确的是？",
+      "options": ["两者完全竞品，只能选一个", "Vite 管构建打包，Next 是包含渲染/路由/服务端能力的完整应用方案", "Next 内部就是用 Vite 打包的", "Vite 只能配 Vue，不能配 React"],
+      "answer": 1,
+      "explanation": "Vite 是构建工具，Next 是应用框架（尽管 Next 也吸收过类似理念、用自有 SWC/Turbopack），定位不同层（呼应 next-overview 第二节表、vite-intro）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Next.js App Router 项目里，URL /blog/list 默认由哪个文件承载？",
+      "options": ["pages/blog/list.tsx", "app/blog/list/index.tsx", "app/blog/list/page.tsx", "routes/blog/list.route.tsx"],
+      "answer": 2,
+      "explanation": "App Router 规则：文件夹即路由 + page.tsx 作为界面文件；pages/ 是旧 Pages Router 时代（呼应 next-overview 第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么 Next 项目里没有 index.html？",
+      "options": ["因为 HTML 被禁止使用", "HTML 由服务器生成（构建时或请求时），不需要手写静态壳", "index.html 在 public 目录会自动生成", "Next 用 WXML 替代了 HTML"],
+      "answer": 1,
+      "explanation": "SSR/SSG 都由框架产出完整 HTML 文档，壳子不再是手工维护物（呼应 next-overview 第三节；与 mp 的 WXML 是两回事）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "验证一个页面是不是服务端渲染出来的，最直观的办法是？",
+      "options": ["打开 DevTools Network 看有没有 XHR", "查看网页源代码（view-source）能否看到真实内容标签", "看页面有没有动画", "看 URL 里有没有 # 号"],
+      "answer": 1,
+      "explanation": "view-source 是服务器原始响应，能看到内容即服务端已渲染；Network 有无 XHR 只是辅助线索（呼应 next-overview 第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "npm run start 做的事情是？",
+      "options": ["启动开发服务器并开启 HMR", "执行生产构建", "用已构建产物启动一个 Node HTTP 服务", "把站点部署到 Vercel"],
+      "answer": 2,
+      "explanation": "start 跑的是 build 之后的产物，本质仍是一个 Node HTTP 服务器（node-http 的老朋友，呼应 next-overview 第三节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "app/layout.tsx 的职责是？",
+      "options": ["定义全站 CSS 变量", "作为共用外壳包裹其下所有页面，通过 children 渲染内容", "配置路由表", "声明 metadata"],
+      "answer": 1,
+      "explanation": "layout 是嵌套布局的外壳，children 占位内容页——类比 vue-router 嵌套 RouterView（呼应 next-overview 第四节、next-routing）。"
+    }
+  ]
+}

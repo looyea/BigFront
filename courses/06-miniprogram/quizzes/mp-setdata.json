@@ -1,0 +1,97 @@
+{
+  "title": "mp-setdata 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "this.data.count = 5 直接赋值后视图不更新，根本原因是？",
+      "options": [
+        "data 是只读对象会静默失败",
+        "必须调用 this.refresh() 才能重绘",
+        "赋值触发了 diff 但被队列丢弃",
+        "data 不是响应式代理，跳过 setData 就没有跨线程传输与渲染层 diff"
+      ],
+      "answer": 3,
+      "explanation": "小程序没有 Proxy 拦截，setData 才是触发器（呼应 mp-setdata 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "setData 完成后想立刻测量更新后节点的高度，应该？",
+      "options": [
+        "放进 setData 的回调（或 wx.nextTick）再查询",
+        "直接同步调用 createSelectorQuery 即可",
+        "sleep 100ms 后再查",
+        "在 onLoad 里提前查好"
+      ],
+      "answer": 0,
+      "explanation": "setData 异步，回调表示渲染层已更新（呼应 mp-setdata 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "连续调用三次 setData，框架行为是？",
+      "options": [
+        "自动合并为一次渲染，同 React18",
+        "每次都必然触发一次独立渲染",
+        "不会自动合并，仅队列节流——应手动合并成一次调用",
+        "第三次会覆盖前两次的数据"
+      ],
+      "answer": 2,
+      "explanation": "\"拆碎连环 setData\"是反模式（呼应 mp-setdata 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "把列表第 2 项的 done 置 true，最省的写法是？",
+      "options": [
+        "this.setData({ list: this.data.list })",
+        "this.setData({ 'list[1].done': true })",
+        "this.data.list[1].done = true",
+        "this.setData({ list: JSON.parse(JSON.stringify(this.data.list)) })"
+      ],
+      "answer": 1,
+      "explanation": "路径更新只传差异字节，下标从 0 起（呼应 mp-setdata 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "动态下标 i 的不定字段路径怎么写？",
+      "options": [
+        "this.setData({ list[i].done: true })",
+        "this.setData({ 'list[?]': i, done: true })",
+        "先 setData 一个 i 再在回调里改 list",
+        "const k = `list[${i}].done`; this.setData({ [k]: true })"
+      ],
+      "answer": 3,
+      "explanation": "模板字符串+计算属性名拼 key（呼应 mp-setdata 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "下列哪种数据不该进 setData / data？",
+      "options": [
+        "接口原始响应中与视图无关的大字段（仅逻辑用）",
+        "页面渲染列表所需数组",
+        "控制弹窗显隐的布尔",
+        "标题文案字符串"
+      ],
+      "answer": 0,
+      "explanation": "不进视图的数据存 this.xxx 普通属性（呼应 mp-setdata 第三节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "onPageScroll 里 setData({scrollTop}) 的问题与正解？",
+      "options": [
+        "没问题，官方推荐",
+        "每帧跨线程通信导致队列堵塞；能用 CSS sticky/Skyline 方案就别在滚动里 setData",
+        "只会浪费内存，不影响流畅度",
+        "应改成 onScroll 事件名就自动优化了"
+      ],
+      "answer": 1,
+      "explanation": "高频事件×大数据=双杀（呼应 mp-setdata 第四节红线表）。"
+    }
+  ]
+}

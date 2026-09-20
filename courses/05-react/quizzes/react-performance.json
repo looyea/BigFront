@@ -1,0 +1,97 @@
+{
+  "title": "react-performance 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "React 性能优化建议的第一步是？",
+      "options": [
+        "给所有组件套 React.memo",
+        "用 Profiler 定位到底是渲染次数多还是单次渲染贵",
+        "把所有 state 提到顶层",
+        "关掉严格模式"
+      ],
+      "answer": 1,
+      "explanation": "先测再改，避免过度记忆化（呼应 react-performance 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "给子组件套了 React.memo 却仍每次重渲染，最可能是？",
+      "options": [
+        "memo 有 bug",
+        "用了函数组件",
+        "父每次传入了新的对象/函数引用，浅比较不相等",
+        "没写 key"
+      ],
+      "answer": 2,
+      "explanation": "引用不稳令 memo 失效，需 useCallback/useMemo（呼应 react-performance 第二节、react-memo-hooks）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "\"状态下沉(colocation)\"如何提升性能？",
+      "options": [
+        "把只被某子树用的 state 就近放置，避免顶层 state 一变整树重渲染",
+        "把 state 都放 Context",
+        "把 state 存进 localStorage",
+        "用全局变量替代 state"
+      ],
+      "answer": 0,
+      "explanation": "缩小重渲染范围（呼应 react-performance 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "上千行列表滚动卡顿，首选优化是？",
+      "options": [
+        "给每行加 memo",
+        "把 list 换成 table",
+        "增大 staleTime",
+        "列表虚拟化：只渲染视口内的行"
+      ],
+      "answer": 3,
+      "explanation": "虚拟化把 DOM 数降到可见行（呼应 react-performance 第三节、react-lists-keys）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "React.lazy(() => import('./X')) 的性能收益来自？",
+      "options": [
+        "自动 memo",
+        "代码分割：把 X 拆到独立 chunk，减小首包、按需加载",
+        "跳过渲染",
+        "禁用 diff"
+      ],
+      "answer": 1,
+      "explanation": "动态 import 让 Vite 切分 chunk（呼应 react-performance 第四节、10-vite-splitting）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "React Compiler 能自动记忆化的前提是？",
+      "options": [
+        "组件必须写成类",
+        "必须用 Redux",
+        "代码遵守\"React 规则\"（纯渲染、不突变已渲染状态、守 Rules of Hooks）",
+        "必须开启 SSR"
+      ],
+      "answer": 2,
+      "explanation": "编译器依赖不可变/纯渲染规则（呼应 react-performance 第五节、react-custom-hooks）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "把\"会变的一小块\"拆成独立子组件的好处是？",
+      "options": [
+        "state 变化时只重渲染那一小块，而非整父树",
+        "一定能减少首次渲染时间",
+        "可以不用 key",
+        "不再需要 props"
+      ],
+      "answer": 0,
+      "explanation": "拆分隔离重渲染范围（呼应 react-performance 第三节、react-render-model）。"
+    }
+  ]
+}

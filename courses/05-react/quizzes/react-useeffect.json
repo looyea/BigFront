@@ -1,0 +1,87 @@
+{
+  "title": "react-useeffect 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "useEffect(fn, []) 什么时候执行 fn？",
+      "options": [
+        "仅组件挂载后一次",
+        "每次渲染后",
+        "仅卸载时",
+        "依赖变化时"
+      ],
+      "answer": 0,
+      "explanation": "空依赖 = 只在挂载后跑一次（呼应 react-useeffect 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "带依赖 `useEffect(fn,[url])` 重跑前，React 会先做什么？",
+      "options": [
+        "直接跑新 fn",
+        "清空组件 state",
+        "重新挂载组件",
+        "先执行上一轮返回的清理函数，再跑新 fn"
+      ],
+      "answer": 3,
+      "explanation": "先 cleanup 后 setup，保证订阅成对（呼应 react-useeffect 第三、二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "定时器 effect 里写 `setCount(count+1)` 一直加不上，根因是？",
+      "options": [
+        "setCount 有 bug",
+        "React 不支持 setInterval",
+        "闭包捕获了挂载时的旧 count 快照，且依赖为空不重建",
+        "count 是只读的"
+      ],
+      "answer": 2,
+      "explanation": "stale closure，应用函数式 setCount(c=>c+1)（呼应 react-useeffect 第五节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "React 18 严格模式下开发环境 effect 跑两遍，正确应对是？",
+      "options": [
+        "让 effect 与 cleanup 对称幂等，暴露缺失的清理；生产只跑一遍",
+        "用 useRef 加锁只跑一次",
+        "关掉严格模式永远别开",
+        "把逻辑搬到 render 里"
+      ],
+      "answer": 0,
+      "explanation": "双调用是故意的，用来发现 bug（呼应 react-useeffect 第六节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "下面哪个最不该放进 useEffect？",
+      "options": [
+        "订阅 websocket",
+        "根据 props 计算的派生展示值",
+        "启动定时器",
+        "同步第三方非 React 库"
+      ],
+      "answer": 1,
+      "explanation": "派生值应在 render 里算/useMemo，不该绕 effect+state（呼应 react-useeffect 第七节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "useEffect 的执行时机是？",
+      "options": ["render 之前同步", "构造函数里", "commit 到 DOM 并绘制之后异步", "与 useMemo 同时"],
+      "answer": 2,
+      "explanation": "effect 在 paint 后异步跑（呼应 react-useeffect 第一、四节、react-render-model）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "漏写依赖数组里用到的变量，最可能的后果是？",
+      "options": ["编译直接失败", "React 自动补齐", "无任何影响", "effect 读到旧的快照值(行为错)且 ESLint 告警"],
+      "answer": 3,
+      "explanation": "exhaustive-deps 规则就是防这个（呼应 react-useeffect 第二、五节）。"
+    }
+  ]
+}

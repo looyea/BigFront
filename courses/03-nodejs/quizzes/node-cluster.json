@@ -1,0 +1,87 @@
+{
+  "title": "node-cluster 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "单个 Node 进程在 8 核机器上处理 CPU 有一定占比的 HTTP 请求，大约能用上几个核的 JS 计算能力？",
+      "options": ["8 个", "1 个", "4 个", "0 个"],
+      "answer": 1,
+      "explanation": "JS 在主线程单线程执行，一个进程只吃 1 个核；libuv 线程池只帮 I/O/加密。要多核分摊需 cluster 起多进程（呼应 node-cluster 第一节、node-event-loop）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "多个 worker 都执行 listen(3000) 却不报 EADDRINUSE，本质原因是？",
+      "options": [
+        "端口会自动分时复用",
+        "监听 socket 由 primary 持有，通过 IPC 把句柄 transfer 给 worker，连接被分发",
+        "OS 忽略了重复 bind",
+        "每个 worker 其实监听不同端口"
+      ],
+      "answer": 1,
+      "explanation": "共享端口的本质是 primary 持句柄 + 连接分发（呼应 node-cluster 第三节、node-child-process interview 第 9 题）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "cluster.fork() 应该由谁调用？",
+      "options": ["任意 worker", "仅 primary(isPrimary)", "仅 worker", "操作系统"],
+      "answer": 1,
+      "explanation": "派生 worker 是 primary 的职责，用 cluster.isPrimary 分支判断（呼应 node-cluster 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "worker 因未捕获异常崩溃，让服务自愈最直接的做法是？",
+      "options": [
+        "什么都不用做，Node 会自动重启 worker",
+        "primary 监听 'exit' 事件，在其中再 cluster.fork() 补一个",
+        "把异常吞掉继续跑",
+        "重启整台机器"
+      ],
+      "answer": 1,
+      "explanation": "在 primary 的 cluster.on('exit') 里 fork 补位；让崩的 worker fail fast、爆炸半径限于单 worker（呼应 node-cluster 第五节、node-async-errors）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于连接分发，下列说法正确的是？",
+      "options": [
+        "同一 TCP 长连接的请求会被轮流分到不同 worker",
+        "分发是连接级的：一条连接固定落在一个 worker，故不宜把会话状态放单进程内存",
+        "round-robin 一定比 OS 调度差",
+        "worker 之间自动共享内存中的 session"
+      ],
+      "answer": 1,
+      "explanation": "cluster 按连接分发，一条连接归属固定 worker；会话要外置（如 Redis），round-robin 通常更均衡（呼应 node-cluster 第四节、Express session）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "优雅重启（零停机换代码）的核心步骤是？",
+      "options": [
+        "直接 SIGKILL 所有 worker 再重启",
+        "worker 先 server.close() 停止接新连接、等在途请求 drain 完再 exit，primary 补 fork 新 worker",
+        "同时重启所有 worker",
+        "改完代码热替换函数即可，无需重启"
+      ],
+      "answer": 1,
+      "explanation": "close→等 drain→exit→补 fork，避免切断在途请求（呼应 node-cluster 第六节、node-deploy-perf）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 pm2 与 cluster 的关系，正确的是？",
+      "options": [
+        "pm2 和 cluster 没有任何关系",
+        "pm2 -i max 按核数起多实例并托管重启/reload/日志，封装了 cluster 思路且无代码侵入",
+        "用了 pm2 就不能用容器",
+        "cluster 只能起 1 个 worker"
+      ],
+      "answer": 1,
+      "explanation": "pm2 把多核、自愈、reload、日志封装成运维工具，理解 cluster 才懂其背后（呼应 node-cluster 第八节、node-deploy-perf）。"
+    }
+  ]
+}

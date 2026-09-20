@@ -1,0 +1,97 @@
+{
+  "title": "node-esm-cjs 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Node 判断一个 .js 文件按 ESM 还是 CJS 解析，主要依据是？",
+      "options": [
+        "文件里有没有 import 语句",
+        "扩展名(.mjs/.cjs) 与最近 package.json 的 type 字段",
+        "文件名首字母",
+        "是否用了 await"
+      ],
+      "answer": 1,
+      "explanation": "身份由扩展名和 package.json 的 type 决定：.mjs 恒 ESM、.cjs 恒 CJS；.js 看最近的 type:module/commonjs，默认 CJS。不是靠内容猜。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "在 `\"type\":\"module\"` 项目里 `import utils from './utils'` 报错，最可能原因是？",
+      "options": [
+        "utils 有语法错误",
+        "ESM 相对导入必须写完整扩展名 ./utils.js",
+        "不能用默认导入",
+        "Node 不支持 ESM"
+      ],
+      "answer": 1,
+      "explanation": "ESM 不做扩展名猜测，相对 import 必须精确到 ./utils.js。CJS 的 require 才会自动尝试 .js/.json/.node。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "需要在运行时根据条件加载某个模块，ESM 下正确做法是？",
+      "options": [
+        "把 import 写进 if 块",
+        "用 await import(路径) 动态导入",
+        "用 require(路径)",
+        "用 @import 装饰器"
+      ],
+      "answer": 1,
+      "explanation": "import/export 是顶层静态声明，不能进 if。动态 import() 返回 Promise、可在任意处调用，且 ESM 和 CJS 都支持，是条件/延迟加载的正解。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "在 CJS 文件里 `require('某个纯 ESM 包')` 抛 ERR_REQUIRE_ESM，原因是？",
+      "options": [
+        "包没装",
+        "ESM 无法被同步 require（没有同步钩子、可能含顶层 await）",
+        "包名写错",
+        "Node 版本太低不支持包"
+      ],
+      "answer": 1,
+      "explanation": "require 是同步的，而 ESM 是异步语义且可能用顶层 await，CJS 没有可用的同步加载钩子。解法：整体转 ESM / 用 await import() / 换提供 CJS 的包。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "ESM 与 CJS 在“导出的值”上的一个重要语义差异是？",
+      "options": [
+        "ESM 导出是快照，CJS 是引用",
+        "ESM 是 live binding（引用，会随源变化），CJS 导出是加载时的值拷贝",
+        "两者完全相同",
+        "CJS 支持 named export 更多"
+      ],
+      "answer": 1,
+      "explanation": "ESM 导入的是对导出绑定的实时引用（源里变了导入方看得到），CJS 拿到的是那一刻 module.exports 的引用/快照。这也是循环依赖表现不同的根因。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "顶层 await（top-level await）在哪里可用？",
+      "options": [
+        "所有 JS 文件",
+        "仅在 ESM 模块顶层",
+        "仅在 CJS",
+        "仅在浏览器"
+      ],
+      "answer": 1,
+      "explanation": "顶层 await 是 ESM 特性；CJS 同步加载模型不支持。用了它会让该模块的导入方也变异步。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "在一个 ESM 文件里确实需要同步 require 少数 CJS-only 依赖，应使用？",
+      "options": [
+        "直接写 require（一定能用）",
+        "createRequire(import.meta.url) 造一个 require",
+        "global.require",
+        "import require from 'require'"
+      ],
+      "answer": 1,
+      "explanation": "ESM 里没有内置 require，可用 node:module 的 createRequire(import.meta.url) 得到一个同步 require 函数，专门兜住少数只有 CJS 的包。"
+    }
+  ]
+}
