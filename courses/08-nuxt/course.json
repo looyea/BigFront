@@ -1,0 +1,35 @@
+{
+  "id": "08-nuxt",
+  "title": "Nuxt 3 (Vue 全栈框架)",
+  "order": 8,
+  "tier": "大师 · Vue 生产级方案",
+  "tagline": "Vue 版 Next.js：文件路由、SSR、自动导入、server routes。与 Next 对照学习效果最佳。",
+  "icon": "💚",
+  "color": "#00dc82",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "约定与自动导入",
+      "subtitle": "pages/ / composables / SSR",
+      "lessons": [
+        {
+          "id": "nuxt-basics",
+          "title": "Nuxt3 的项目结构",
+          "goal": "理解 Nuxt 的约定式路由、自动导入与渲染模式"
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "服务端与部署",
+      "subtitle": "server routes / 构建产物",
+      "lessons": [
+        {
+          "id": "nuxt-server",
+          "title": "server 目录与部署",
+          "goal": "用 server/api 写接口，并理解 Nuxt 的构建与部署方式"
+        }
+      ]
+    }
+  ]
+}

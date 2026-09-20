@@ -1,0 +1,14 @@
+# 依赖
+node_modules/
+
+# 前端构建产物（用 npm run build 生成，无需提交）
+web/dist/
+
+# 本地日志
+*.log
+.DS_Store
+
+# 注意：data/progress.md 学习进度【故意纳入版本管理】，
+# 这样每次 git push 到 GitHub 都会形成你的每日打卡记录。
+# 历史遗留：若你从 v1.1 升级上来，服务首次启动会自动把旧的 progress.json 迁移为
+# progress.md，并把旧文件改名为 progress.json.migrated；确认无误后可自行删除。

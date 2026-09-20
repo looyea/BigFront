@@ -1,0 +1,46 @@
+{
+  "lessonId": "mp-basics",
+  "title": "小程序 L1 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "小程序里更新视图的正确方式是？",
+      "options": [
+        "操作 DOM",
+        "setData 修改 data",
+        "innerHTML",
+        "document.querySelector"
+      ],
+      "answer": 1,
+      "explanation": "无 DOM，须用 this.setData 驱动视图更新。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "声明小程序所有页面路径的文件是？",
+      "options": [
+        "project.config.json",
+        "app.json",
+        "index.wxml",
+        "sitemap.json"
+      ],
+      "answer": 1,
+      "explanation": "app.json 的 pages 数组声明页面，首项为首页。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "列表渲染使用的指令是？",
+      "options": [
+        "v-for",
+        "wx:for",
+        "ngFor",
+        "map"
+      ],
+      "answer": 1,
+      "explanation": "小程序用 wx:for（Vue 用 v-for，React 用 map）。"
+    }
+  ]
+}

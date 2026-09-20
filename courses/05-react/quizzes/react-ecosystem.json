@@ -1,0 +1,46 @@
+{
+  "lessonId": "react-ecosystem",
+  "title": "React L2 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "React 官方推荐的路由库是？",
+      "options": [
+        "vue-router",
+        "react-router",
+        "@angular/router",
+        "nuxt"
+      ],
+      "answer": 1,
+      "explanation": "React 生态用 react-router。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "value 会变化的输入框在 React 中被称？",
+      "options": [
+        "非受控组件",
+        "受控组件",
+        "自由组件",
+        "静态组件"
+      ],
+      "answer": 1,
+      "explanation": "值由 state 控制即受控组件。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "需要 SSR 与文件路由，通常选？",
+      "options": [
+        "Create React App",
+        "Next.js",
+        "Vite 默认模板",
+        "Parcel"
+      ],
+      "answer": 1,
+      "explanation": "Next.js 是基于 React 的全栈框架，内置 SSR/路由等。"
+    }
+  ]
+}

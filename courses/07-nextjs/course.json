@@ -1,0 +1,35 @@
+{
+  "id": "07-nextjs",
+  "title": "Next.js 全栈 React 框架",
+  "order": 7,
+  "tier": "大师 · React 生产级方案",
+  "tagline": "文件即路由、SSR/SSG、React 服务器组件、API 路由一体化。React 的工业级答案。",
+  "icon": "▲",
+  "color": "#e5e5e5",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "App Router 与路由",
+      "subtitle": "app/ / Server Components",
+      "lessons": [
+        {
+          "id": "next-routing",
+          "title": "文件路由与渲染模式",
+          "goal": "理解 App Router 目录约定与 SSR/SSG/CSR 的取舍"
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "数据与 API",
+      "subtitle": "fetch 缓存 / Route Handlers",
+      "lessons": [
+        {
+          "id": "next-data",
+          "title": "数据获取与接口",
+          "goal": "掌握服务端 fetch 取数、缓存策略与用 Route Handler 写接口"
+        }
+      ]
+    }
+  ]
+}

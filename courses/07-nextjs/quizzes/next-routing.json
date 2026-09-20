@@ -1,0 +1,46 @@
+{
+  "lessonId": "next-routing",
+  "title": "Next L1 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "App Router 中定义页面根路径 `/` 的文件是？",
+      "options": [
+        "index.js",
+        "app/page.tsx",
+        "pages/index.tsx",
+        "main.tsx"
+      ],
+      "answer": 1,
+      "explanation": "App Router 用 app/page.tsx 表示首页（pages/index 是 Pages Router 老约定）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "让一个组件在客户端使用 state/事件，需要？",
+      "options": [
+        "\"use strict\"",
+        "\"use client\"",
+        "\"use server\"",
+        "useState 导入"
+      ],
+      "answer": 1,
+      "explanation": "\"use client\" 指令把组件及其子树标记为客户端组件。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "构建期预生成 HTML 的渲染方式叫？",
+      "options": [
+        "SSR",
+        "SSG",
+        "CSR",
+        "Streaming"
+      ],
+      "answer": 1,
+      "explanation": "SSG（静态站点生成）在 build 时产出 HTML。"
+    }
+  ]
+}

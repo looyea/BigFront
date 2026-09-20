@@ -1,0 +1,59 @@
+{
+  "lessonId": "es-arrow",
+  "title": "L2 函数进化 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "箭头函数的 this 是如何确定的？",
+      "options": [
+        "由调用方式决定",
+        "由定义时所在外层作用域决定（词法绑定）",
+        "永远是 globalThis",
+        "永远是 undefined"
+      ],
+      "answer": 1,
+      "explanation": "箭头函数没有自己的 this，它捕获定义时外层的 this，且不能被 call/bind 改变。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "const f = () => { count: 1 } 的返回值是？",
+      "options": [
+        "{count:1}",
+        "undefined",
+        "报错",
+        "1"
+      ],
+      "answer": 1,
+      "explanation": "花括号被当作函数体，{count:1} 是代码块+标签，函数无 return 返回 undefined。返回对象要写 () => ({count:1})。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "下列哪个【不】适合用箭头函数？",
+      "options": [
+        "数组 map 回调",
+        "对象的方法（需要 this 指向对象）",
+        "Promise 的 then",
+        "setTimeout 回调"
+      ],
+      "answer": 1,
+      "explanation": "对象方法需要 this 指向对象自身，箭头函数会向外借 this 导致指向错误。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "function sum(...nums) 里的 ...nums 作用是？",
+      "options": [
+        "展开数组",
+        "把剩余实参收集为数组（rest）",
+        "浅拷贝",
+        "解构"
+      ],
+      "answer": 1,
+      "explanation": "在参数位置 ... 是 rest，收集多个实参为数组；在调用/字面量位置才是展开。"
+    }
+  ]
+}

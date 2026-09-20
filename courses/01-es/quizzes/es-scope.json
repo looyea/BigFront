@@ -1,0 +1,44 @@
+{
+  "lessonId": "es-scope",
+  "title": "L1 变量与作用域 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "下面代码的输出是什么？\nfor (var i=0;i<3;i++){ setTimeout(()=>console.log(i),0); }",
+      "options": ["0 1 2", "3 3 3", "0 0 0", "报错"],
+      "answer": 1,
+      "explanation": "var 是函数作用域，整个循环共享同一个 i，回调异步执行时循环已结束，i 为 3。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 const，下列说法正确的是？",
+      "options": [
+        "const 声明的值完全不可修改",
+        "const 只是不能再重新赋值给这个变量名，但对象内部属性可改",
+        "const 和 let 完全没有区别",
+        "const 必须声明为对象"
+      ],
+      "answer": 1,
+      "explanation": "const 锁定的是绑定（地址），对象/数组内部仍可修改；要冻结需 Object.freeze。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "在 let 声明语句之前访问该变量，会发生什么？",
+      "options": ["得到 undefined", "得到 null", "抛出 ReferenceError（暂时性死区）", "自动提升并初始化"],
+      "answer": 2,
+      "explanation": "let/const 有 TDZ，声明前访问会抛 ReferenceError，而 var 才会得到 undefined。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "现代 JS 项目推荐的变量声明策略是？",
+      "options": ["全部用 var", "全部用 let", "默认 const，需要重新赋值时用 let", "不声明直接赋值"],
+      "answer": 2,
+      "explanation": "默认 const 表达\"不可重新赋值\"的意图，确需改变才用 let，杜绝 var。"
+    }
+  ]
+}

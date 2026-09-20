@@ -1,0 +1,59 @@
+{
+  "lessonId": "es-modern",
+  "title": "L6 现代语法 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "0 ?? 10 的结果是？",
+      "options": [
+        "10",
+        "0",
+        "undefined",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "?? 只在 null/undefined 时取右值，0 是合法值。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "user?.address?.city 当 address 为 undefined 时结果是？",
+      "options": [
+        "抛错",
+        "undefined",
+        "null",
+        "空字符串"
+      ],
+      "answer": 1,
+      "explanation": "可选链遇到 null/undefined 短路返回 undefined，不报错。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "arr.at(-1) 返回？",
+      "options": [
+        "第一个元素",
+        "最后一个元素",
+        "报错",
+        "-1"
+      ],
+      "answer": 1,
+      "explanation": "at 支持负索引，-1 表示倒数第一个。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于管道 |> 与模式匹配，正确说法是？",
+      "options": [
+        "已是 ES2023 正式标准",
+        "仍是 TC39 提案，尚未进入稳定标准",
+        "Node 已全部支持",
+        "已被否决"
+      ],
+      "answer": 1,
+      "explanation": "它们处于提案阶段，以官方为准，勿照抄过时教程——警惕幻觉。"
+    }
+  ]
+}

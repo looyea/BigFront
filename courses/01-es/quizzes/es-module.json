@@ -1,0 +1,59 @@
+{
+  "lessonId": "es-module",
+  "title": "L4 模块化 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "一个模块文件里默认导出最多几个？",
+      "options": [
+        "不限",
+        "1 个",
+        "2 个",
+        "0 个"
+      ],
+      "answer": 1,
+      "explanation": "export default 每文件最多一个；命名导出可多个。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "CommonJS 用什么导入导出？",
+      "options": [
+        "import/export",
+        "require/module.exports",
+        "using/export",
+        "include/export"
+      ],
+      "answer": 1,
+      "explanation": "CJS 用 require 与 module.exports；ESM 用 import/export。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "同一模块被 import 两次，模块内 let 变量是？",
+      "options": [
+        "两份独立副本",
+        "共享同一份（模块单例）",
+        "报错",
+        "自动垃圾回收"
+      ],
+      "answer": 1,
+      "explanation": "ESM 有缓存，模块只初始化一次，是状态库全局共享的基础。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "import * as m from \"./x.js\" 的含义是？",
+      "options": [
+        "只导入默认导出",
+        "把所有命名导出收集到命名空间对象 m",
+        "执行副作用",
+        "重命名"
+      ],
+      "answer": 1,
+      "explanation": "星号导入得到含所有导出的命名空间对象。"
+    }
+  ]
+}

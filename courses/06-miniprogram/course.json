@@ -1,0 +1,35 @@
+{
+  "id": "06-miniprogram",
+  "title": "微信小程序",
+  "order": 6,
+  "tier": "钻石 · 国民级流量入口",
+  "tagline": "一套 WXML/WXSS/JS 跑在微信里。理解小程序的双线程架构、页面生命周期与官方 API。",
+  "icon": "🟢",
+  "color": "#07c160",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "结构与生命周期",
+      "subtitle": "app.json / WXML / Page",
+      "lessons": [
+        {
+          "id": "mp-basics",
+          "title": "小程序目录与页面",
+          "goal": "看懂小程序四类文件与页面生命周期，会用数据绑定渲染列表"
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "API 与网络",
+      "subtitle": "wx.request / 组件 / 分包",
+      "lessons": [
+        {
+          "id": "mp-api",
+          "title": "官方 API 与交互",
+          "goal": "会发起网络请求、使用交互 API，并了解组件与分包优化"
+        }
+      ]
+    }
+  ]
+}

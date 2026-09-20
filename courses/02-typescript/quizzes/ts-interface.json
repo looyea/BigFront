@@ -1,0 +1,46 @@
+{
+  "lessonId": "ts-interface",
+  "title": "TS L2 接口 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "interface 里 age?: number 的问号表示？",
+      "options": [
+        "只读",
+        "可选属性",
+        "默认值",
+        "元组"
+      ],
+      "answer": 1,
+      "explanation": "问号表示该属性可选，可省略。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "要表达 A | B 这种联合类型，应使用？",
+      "options": [
+        "interface",
+        "type",
+        "enum",
+        "class"
+      ],
+      "answer": 1,
+      "explanation": "interface 不能直接表示联合，需用 type。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "readonly 属性的作用是？",
+      "options": [
+        "运行只加密",
+        "编译后禁止再次赋值该属性",
+        "可选",
+        "私有"
+      ],
+      "answer": 1,
+      "explanation": "readonly 防止对该属性重新赋值（编译期检查）。"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "03-nodejs",
+  "title": "Node.js 服务端运行时",
+  "order": 3,
+  "tier": "黄金 · 让 JS 走出浏览器",
+  "tagline": "用 JS 写服务器、脚本、工具链。理解事件循环、内置模块与 npm 生态。",
+  "icon": "🟩",
+  "color": "#5fa04e",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "运行时与内置模块",
+      "subtitle": "fs / path / http / 事件循环",
+      "lessons": [
+        {
+          "id": "node-basics",
+          "title": "第一个 Node 程序",
+          "goal": "会用 fs、path，理解 Node 是 JS 的运行时且单线程事件循环"
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "npm 与模块生态",
+      "subtitle": "依赖 / scripts / package.json",
+      "lessons": [
+        {
+          "id": "node-npm",
+          "title": "package.json 与 npm 工作流",
+          "goal": "看懂 package.json，会装依赖、写 scripts、区分 dependencies 与 devDependencies"
+        }
+      ]
+    }
+  ]
+}

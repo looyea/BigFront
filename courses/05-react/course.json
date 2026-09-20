@@ -1,0 +1,35 @@
+{
+  "id": "05-react",
+  "title": "React 组件化 UI",
+  "order": 5,
+  "tier": "铂金 · 一次学习处处编写",
+  "tagline": "函数组件 + Hooks 的世界。理解状态、渲染与副作用，是 Next.js 的前置。",
+  "icon": "⚛️",
+  "color": "#61dafb",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "组件与 Hooks",
+      "subtitle": "useState / useEffect / JSX",
+      "lessons": [
+        {
+          "id": "react-hooks",
+          "title": "函数组件与常用 Hooks",
+          "goal": "理解\"UI=f(状态)\"，会用 useState 管理状态、useEffect 处理副作用"
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "数据与生态",
+      "subtitle": "受控组件 / 生态选型",
+      "lessons": [
+        {
+          "id": "react-ecosystem",
+          "title": "路由、状态与工程",
+          "goal": "了解 react-router、状态方案与 React 生态的整体版图"
+        }
+      ]
+    }
+  ]
+}

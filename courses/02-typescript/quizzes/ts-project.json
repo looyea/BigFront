@@ -1,0 +1,46 @@
+{
+  "lessonId": "ts-project",
+  "title": "TS L5 工程 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Partial<User> 的效果是？",
+      "options": [
+        "全部必填",
+        "把所有属性变可选",
+        "删除属性",
+        "只读"
+      ],
+      "answer": 1,
+      "explanation": "Partial 生成一个所有属性可选的新类型。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Omit<User, \"id\"> 得到？",
+      "options": [
+        "只剩 id",
+        "去掉 id 后的其余属性",
+        "报错",
+        "全部可选"
+      ],
+      "answer": 1,
+      "explanation": "Omit 剔除指定键，Pick 则相反保留指定键。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "tsconfig 中最应打开以保证严格检查的是？",
+      "options": [
+        "outDir",
+        "strict",
+        "target",
+        "include"
+      ],
+      "answer": 1,
+      "explanation": "strict 一揽子开启 noImplicitAny、strictNullChecks 等。"
+    }
+  ]
+}

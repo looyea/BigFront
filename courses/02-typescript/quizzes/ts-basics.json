@@ -1,0 +1,46 @@
+{
+  "lessonId": "ts-basics",
+  "title": "TS L1 基础 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "TypeScript 的类型在什么时候起作用？",
+      "options": [
+        "运行时",
+        "开发与编译阶段，运行时被擦除",
+        "网络传输时",
+        "从不"
+      ],
+      "answer": 1,
+      "explanation": "TS 类型是编译期的，编译成 JS 后类型全部擦除。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "下列哪个是\"关闭类型检查\"的危险类型？",
+      "options": [
+        "unknown",
+        "never",
+        "any",
+        "void"
+      ],
+      "answer": 2,
+      "explanation": "any 会放弃所有检查；unknown 才是安全的顶层类型。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "let city = \"北京\" 之后再 city = 123 会？",
+      "options": [
+        "正常",
+        "报错，因为被推断为 string",
+        "自动转换",
+        "变 any"
+      ],
+      "answer": 1,
+      "explanation": "TS 类型推断把字面量初始化推断为 string，重新赋 number 报错。"
+    }
+  ]
+}

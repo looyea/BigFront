@@ -1,0 +1,46 @@
+{
+  "lessonId": "vue-reactivity",
+  "title": "Vue L1 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "组合式 API 中在脚本里访问 ref 变量的值需要？",
+      "options": [
+        "直接访问",
+        ".value",
+        ".value()",
+        "toRaw"
+      ],
+      "answer": 1,
+      "explanation": "脚本中 ref 需 .value；模板里会自动解包。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "computed 的特点是？",
+      "options": [
+        "每次访问都重算",
+        "有缓存，依赖变化才重算",
+        "不能返回值",
+        "用于发请求"
+      ],
+      "answer": 1,
+      "explanation": "computed 基于依赖缓存，比方法调用更高效。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "子组件向父组件通信通常用？",
+      "options": [
+        "直接改 props",
+        "emit 自定义事件",
+        "全局变量",
+        "ref"
+      ],
+      "answer": 1,
+      "explanation": "props 向下、emit 向上，遵循单向数据流。"
+    }
+  ]
+}

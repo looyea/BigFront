@@ -1,0 +1,46 @@
+{
+  "lessonId": "ts-generic",
+  "title": "TS L4 泛型 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "function f<T>(a: T[]): T 中 T 的作用是？",
+      "options": [
+        "无意义",
+        "把入参元素类型传递到返回值，保留类型信息",
+        "只能是对象",
+        "等于 any"
+      ],
+      "answer": 1,
+      "explanation": "泛型让函数适配任意类型同时保留类型推断。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "<T extends { length: number }> 的含义是？",
+      "options": [
+        "T 默认是数组",
+        "约束 T 必须具有 number 型的 length",
+        "T 只能继承类",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "extends 是泛型约束，要求实参类型至少满足该形状。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "<T = string> 提供的是？",
+      "options": [
+        "只读",
+        "默认类型参数",
+        "可选属性",
+        "交叉类型"
+      ],
+      "answer": 1,
+      "explanation": "等号给泛型设默认类型，未显式传入时使用。"
+    }
+  ]
+}

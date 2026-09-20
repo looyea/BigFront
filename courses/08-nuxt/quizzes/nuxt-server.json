@@ -1,0 +1,33 @@
+{
+  "lessonId": "nuxt-server",
+  "title": "Nuxt L2 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Nuxt 后端接口放在哪个目录？",
+      "options": [
+        "api/",
+        "server/api/",
+        "routes/",
+        "backend/"
+      ],
+      "answer": 1,
+      "explanation": "server/api 下用 defineEventHandler 写接口。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Nuxt 生产构建命令是？",
+      "options": [
+        "nuxt dev",
+        "nuxt build",
+        "nuxt start",
+        "nuxt generate"
+      ],
+      "answer": 1,
+      "explanation": "nuxt build 产出可部署的 .output；generate 用于纯静态。"
+    }
+  ]
+}

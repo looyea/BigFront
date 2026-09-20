@@ -1,0 +1,51 @@
+{
+  "id": "02-typescript",
+  "title": "TypeScript 类型系统",
+  "order": 2,
+  "tier": "白银 · 给 JS 加上类型护甲",
+  "tagline": "TS = JavaScript + 类型。它在你敲代码、编译时就抓出错误。现代 Vue3、React、Angular 项目几乎都默认用 TS。",
+  "icon": "🔷",
+  "color": "#3178c6",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "类型基础",
+      "subtitle": "原始类型、类型推断、显式注解",
+      "lessons": [
+        { "id": "ts-basics", "title": "为什么要 TS + 基础类型注解", "goal": "给变量/函数加类型，理解类型推断与 any/unknown 的区别" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "对象与接口",
+      "subtitle": "interface、type、可选与只读",
+      "lessons": [
+        { "id": "ts-interface", "title": "interface 与 type 别名", "goal": "描述对象/函数形状，会选 interface 还是 type" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "联合与交叉、字面量类型",
+      "subtitle": "可辨识联合、类型收窄、守卫",
+      "lessons": [
+        { "id": "ts-union", "title": "联合类型与类型收窄", "goal": "用 union + 收窄写出对多种输入安全的代码" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "泛型",
+      "subtitle": "generic、约束、默认类型参数",
+      "lessons": [
+        { "id": "ts-generic", "title": "泛型入门", "goal": "写一个可复用且类型安全的泛型函数/接口" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "实战与工程配置",
+      "subtitle": "tsconfig、装饰、实用类型、迁移策略",
+      "lessons": [
+        { "id": "ts-project", "title": "tsconfig 与实用类型", "goal": "读懂 tsconfig，会用 Partial/Pick/Omit 等，编译运行一个真实文件" }
+      ]
+    }
+  ]
+}

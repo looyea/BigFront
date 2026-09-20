@@ -1,0 +1,46 @@
+{
+  "lessonId": "node-npm",
+  "title": "Node L2 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "vite、eslint 通常放在？",
+      "options": [
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "optionalDependencies"
+      ],
+      "answer": 1,
+      "explanation": "仅开发阶段用到的工具放 devDependencies。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`^1.2.3` 允许安装哪个版本？",
+      "options": [
+        "2.0.0",
+        "1.9.0",
+        "1.2.2 以外任意",
+        "只能 1.2.3"
+      ],
+      "answer": 1,
+      "explanation": "^ 允许同一主版本内的更高次/补丁版本，故 1.9.0 符合。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "package-lock.json 应该？",
+      "options": [
+        "加入 .gitignore",
+        "提交到 Git 保证可复现安装",
+        "手动编辑",
+        "删除"
+      ],
+      "answer": 1,
+      "explanation": "lockfile 需提交，确保所有人装到完全相同版本。"
+    }
+  ]
+}

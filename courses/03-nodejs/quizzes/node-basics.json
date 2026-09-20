@@ -1,0 +1,46 @@
+{
+  "lessonId": "node-basics",
+  "title": "Node L1 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Node 处理并发 I/O 的主要方式是？",
+      "options": [
+        "多线程阻塞",
+        "单线程 + 事件循环 + 非阻塞 I/O",
+        "每请求一线程",
+        "轮询磁盘"
+      ],
+      "answer": 1,
+      "explanation": "Node 用事件循环把耗时 I/O 交给系统，主线程不阻塞。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "异步读取文件推荐用哪个模块？",
+      "options": [
+        "fs 回调版",
+        "fs/promises",
+        "http",
+        "zlib"
+      ],
+      "answer": 1,
+      "explanation": "fs.promises 返回 Promise，配合 async/await 更清晰。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "拼接文件路径应使用？",
+      "options": [
+        "字符串相加",
+        "path.join / path.resolve",
+        "os.EOL",
+        "url.parse"
+      ],
+      "answer": 1,
+      "explanation": "path 模块处理跨平台分隔符，避免手拼出错。"
+    }
+  ]
+}

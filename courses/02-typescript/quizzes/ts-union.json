@@ -1,0 +1,46 @@
+{
+  "lessonId": "ts-union",
+  "title": "TS L3 联合与收窄 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "在 if (typeof x === \"string\") 分支里访问 x.toUpperCase() 能编译通过，靠的是？",
+      "options": [
+        "类型断言",
+        "类型收窄",
+        "泛型",
+        "any"
+      ],
+      "answer": 1,
+      "explanation": "typeof 判断触发控制流分析，把 x 收窄为 string。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "\"可辨识联合\"靠什么区分成员？",
+      "options": [
+        "顺序",
+        "共同的字面量标签字段",
+        "颜色",
+        "函数名"
+      ],
+      "answer": 1,
+      "explanation": "用一个各自不同的字面量字段（如 status）作判别式。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 as 断言，正确的是？",
+      "options": [
+        "会做运行时检查",
+        "仅说服编译器、无运行时检查",
+        "等价于 cast 会转换值",
+        "必须每个变量都写"
+      ],
+      "answer": 1,
+      "explanation": "as 不产生任何运行时代码，滥用会掩盖真实错误。"
+    }
+  ]
+}

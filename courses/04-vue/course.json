@@ -1,0 +1,35 @@
+{
+  "id": "04-vue",
+  "title": "Vue 3 渐进式框架",
+  "order": 4,
+  "tier": "铂金 · 视图层利器",
+  "tagline": "响应式 + 组件化。用 <script setup> 组合式 API 构建界面，本项目前端外壳就是 Vue3 + Vite。",
+  "icon": "🟦",
+  "color": "#42b883",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "响应式与组合式 API",
+      "subtitle": "ref / reactive / computed",
+      "lessons": [
+        {
+          "id": "vue-reactivity",
+          "title": "Vue3 组合式 API 入门",
+          "goal": "理解 ref/reactive 的区别，会用 computed 与 watch 驱动视图更新"
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "路由与状态管理",
+      "subtitle": "Vue Router / Pinia",
+      "lessons": [
+        {
+          "id": "vue-router-pinia",
+          "title": "路由与全局状态",
+          "goal": "会用 vue-router 做页面切换、Pinia 做跨组件共享状态"
+        }
+      ]
+    }
+  ]
+}

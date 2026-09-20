@@ -1,0 +1,59 @@
+{
+  "lessonId": "es-destructure",
+  "title": "L3 解构与展开 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "const [x, ...rest] = [1,2,3,4]; rest 的值是？",
+      "options": [
+        "[1]",
+        "[2,3,4]",
+        "4",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "rest 收集除已解构外的剩余元素。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "{...obj} 做的是？",
+      "options": [
+        "深拷贝",
+        "浅拷贝",
+        "移动",
+        "冻结"
+      ],
+      "answer": 1,
+      "explanation": "展开只复制第一层，嵌套对象仍是引用；深拷贝用 structuredClone。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "React 中为什么用 [...list, item] 而不是 list.push(item)？",
+      "options": [
+        "push 太慢",
+        "生成新引用以便框架检测到变化并重渲染",
+        "push 不存在",
+        "为了好看"
+      ],
+      "answer": 1,
+      "explanation": "框架靠引用变化判断更新，原地 push 不改变引用。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "function f({a = 1} = {}) 中末尾的 = {} 是？",
+      "options": [
+        "多余写法",
+        "参数级默认值，防止不传参时解构 undefined 报错",
+        "返回值",
+        "类型注解"
+      ],
+      "answer": 1,
+      "explanation": "不传参时参数默认为空对象，再解构默认值，避免 TypeError。"
+    }
+  ]
+}

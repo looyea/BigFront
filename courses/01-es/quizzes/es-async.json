@@ -1,0 +1,59 @@
+{
+  "lessonId": "es-async",
+  "title": "L5 异步编程 · 小测",
+  "passRule": "答对 60% 及以上即可通关",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Promise 的状态转换，正确的是？",
+      "options": [
+        "pending→fulfilled 后可再变 rejected",
+        "pending 只能变为 fulfilled 或 rejected 之一且不可逆",
+        "可随时切换",
+        "初始即 fulfilled"
+      ],
+      "answer": 1,
+      "explanation": "Promise 状态一旦 settled 就永久固定。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "忘了写 await，变量拿到的是？",
+      "options": [
+        "最终结果",
+        "一个 pending 的 Promise 对象",
+        "null",
+        "抛错"
+      ],
+      "answer": 1,
+      "explanation": "不加 await 拿到 Promise 本身，这是新手第一大坑。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "要让三个互不依赖的请求并发执行并等全部完成，用？",
+      "options": [
+        "依次 await 三次",
+        "Promise.all([a,b,c])",
+        "Promise.race",
+        "setTimeout"
+      ],
+      "answer": 1,
+      "explanation": "all 并发发起并等待全部成功；依次 await 是串行更慢。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "list.forEach(async x => await f(x)) 的问题是？",
+      "options": [
+        "语法错误",
+        "forEach 不会等待 async 回调，无法正确串行/收集",
+        "太慢而已",
+        "没问题"
+      ],
+      "answer": 1,
+      "explanation": "forEach 忽略回调返回的 Promise，应用 for...of 或 Promise.all(list.map(...))。"
+    }
+  ]
+}
