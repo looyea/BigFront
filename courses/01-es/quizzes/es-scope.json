@@ -1,44 +1,87 @@
 {
-  "lessonId": "es-scope",
-  "title": "L1 变量与作用域 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "作用域 · 小测（紧扣本关知识点）",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "下面代码的输出是什么？\nfor (var i=0;i<3;i++){ setTimeout(()=>console.log(i),0); }",
-      "options": ["0 1 2", "3 3 3", "0 0 0", "报错"],
-      "answer": 1,
-      "explanation": "var 是函数作用域，整个循环共享同一个 i，回调异步执行时循环已结束，i 为 3。"
+      "prompt": "JavaScript 有哪三种作用域？",
+      "options": [
+        "全局 / 函数 / 块",
+        "全局 / 模块 / 类",
+        "包级 / 文件级 / 函数级",
+        "静态 / 动态 / 词法"
+      ],
+      "answer": 0,
+      "explanation": "标准答案是全局、函数、块。模块作用域在 ESM 语境下可视为特殊的全局一层，但语言规范仍归到块作用域家族。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "关于 const，下列说法正确的是？",
-      "options": [
-        "const 声明的值完全不可修改",
-        "const 只是不能再重新赋值给这个变量名，但对象内部属性可改",
-        "const 和 let 完全没有区别",
-        "const 必须声明为对象"
-      ],
-      "answer": 1,
-      "explanation": "const 锁定的是绑定（地址），对象/数组内部仍可修改；要冻结需 Object.freeze。"
+      "prompt": "以下代码打印什么？\n\n```js\nif (true) {\n  var x = 1;\n  let y = 2;\n}\nconsole.log(x, typeof y);\n```",
+      "options": ["1, 'number'", "ReferenceError", "1, 'undefined'", "'undefined', 2"],
+      "answer": 2,
+      "explanation": "var 不属于块，泄漏到外层函数/全局，所以 x=1；y 只在 if 块内可见，块外 typeof y 是 'undefined'（typeof 对未声明变量不抛错）。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "在 let 声明语句之前访问该变量，会发生什么？",
-      "options": ["得到 undefined", "得到 null", "抛出 ReferenceError（暂时性死区）", "自动提升并初始化"],
-      "answer": 2,
-      "explanation": "let/const 有 TDZ，声明前访问会抛 ReferenceError，而 var 才会得到 undefined。"
+      "prompt": "关于 const，正确的说法是：",
+      "options": [
+        "const 声明的值不可变",
+        "const 声明的绑定不可重新赋值，但对象/数组内部仍可变",
+        "const 会自动 Object.freeze",
+        "const 与 let 只有性能差异"
+      ],
+      "answer": 1,
+      "explanation": "const 锁的是 binding，不是 value。要值也不变需 Object.freeze（且是浅冻结）。"
     },
     {
       "id": "q4",
       "type": "single",
-      "prompt": "现代 JS 项目推荐的变量声明策略是？",
-      "options": ["全部用 var", "全部用 let", "默认 const，需要重新赋值时用 let", "不声明直接赋值"],
-      "answer": 2,
-      "explanation": "默认 const 表达\"不可重新赋值\"的意图，确需改变才用 let，杜绝 var。"
+      "prompt": "以下代码打印什么？\n\n```js\nconst x = 'g';\nfunction f() {\n  console.log(x);\n  const x = 'f';\n}\nf();\n```",
+      "options": ["'g'", "'f'", "undefined", "ReferenceError（TDZ）"],
+      "answer": 3,
+      "explanation": "函数内的 const x 让整个函数体内 x 都归它；console.log 在声明之前，落入 TDZ，抛 ReferenceError。这是「遮蔽 + TDZ」的双料陷阱题。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "作用域链查找一个自由变量时，正确的顺序是：",
+      "options": [
+        "当前函数 → 外层函数（依据定义位置）→ ... → 全局",
+        "当前函数 → 调用者函数 → ... → 全局",
+        "全局 → 当前函数",
+        "先在原型链上找，再回到作用域"
+      ],
+      "answer": 0,
+      "explanation": "JavaScript 是词法作用域（静态作用域），链由代码书写位置决定，不是调用者。这是与早期动态作用域语言的核心差别。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "for 循环 `for (let i = 0; i < 3; i++) setTimeout(() => console.log(i))` 打印 0 1 2 的原因是：",
+      "options": [
+        "let 是块作用域，块作用域天然每次迭代新建",
+        "规范特例：for+let 每轮新建绑定并从上一轮拷贝值",
+        "setTimeout 内部会做快照",
+        "V8 的即时编译优化"
+      ],
+      "answer": 1,
+      "explanation": "普通块作用域做不到这件事；这是语言规范里 for+let 的一条专门规则（CreatePerIterationEnvironment）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 ESM 模块作用域，正确的说法是：",
+      "options": [
+        "模块顶层的 var 会自动挂到 window",
+        "模块顶层未 export 的变量，其他模块 import 不到",
+        "模块作用域与 IIFE 完全等价，没有区别",
+        "同一个模块文件被多次 import 会执行多次"
+      ],
+      "answer": 1,
+      "explanation": "ESM 的顶层作用域独立于全局，未 export 的绑定天然私有。且模块有实例缓存，多次 import 只执行一次。"
     }
   ]
 }

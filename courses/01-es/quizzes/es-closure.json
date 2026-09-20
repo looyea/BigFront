@@ -1,0 +1,82 @@
+{
+  "title": "闭包 · 小测（紧扣本关知识点）",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nfunction counter() {\n  let n = 0;\n  return () => ++n;\n}\nconst c = counter();\nc(); c();\nconsole.log(c());\n```",
+      "options": ["1", "2", "3", "0"],
+      "answer": 2,
+      "explanation": "箭头函数闭包捕获的是变量 binding 本身，不是拷贝。c() 依次把 n 加到 1、2、3。第三次调用返回 3。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于闭包的定义，最准确的是：",
+      "options": [
+        "函数内部再定义的函数",
+        "函数 + 它被创建时所在的词法环境引用",
+        "只有 IIFE 才是闭包",
+        "class 里的私有字段就是闭包"
+      ],
+      "answer": 1,
+      "explanation": "闭包关键是 [[Environment]]，即函数被创建时捕获的词法作用域。定义位置才是决定因素，不是运行时嵌套。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nfor (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i));\n}\n```",
+      "options": ["0 1 2", "3 3 3", "0 0 0", "TypeError"],
+      "answer": 1,
+      "explanation": "var 提升到函数/全局作用域，三个回调共享同一个 i；等定时器实际执行时循环已结束，i 为 3。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 React useEffect 里的闭包陷阱，最合适的修法是：",
+      "options": [
+        "把 setCount(count + 1) 改成 setCount(c => c + 1)",
+        "把 state 换成 useState 的第二个返回值",
+        "永远不要在 effect 里读 state",
+        "用 class component 替代函数组件"
+      ],
+      "answer": 0,
+      "explanation": "函数式更新让 React 用最新 state 计算，绕开闭包捕获旧值的问题。加依赖数组也能修但会重建 interval，是次优解。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下哪种最可能造成内存泄漏？",
+      "options": [
+        "每次渲染都新建一个短命的 debounce 闭包",
+        "setInterval 里闭包持有大数组，页面切换时忘了 clearInterval",
+        "用 WeakMap 做对象缓存",
+        "用模块内部私有 const"
+      ],
+      "answer": 1,
+      "explanation": "长生命定时器 + 闭包强引用大对象 = 典型泄漏。WeakMap 允许 GC 回收键对象，模块私有 const 生命周期与模块相同。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下代码得到什么？\n\n```js\nfunction add(a) {\n  return (b) => (c) => a + b + c;\n}\nadd(1)(2)(3);\n```",
+      "options": ["6", "NaN", "TypeError", "返回一个函数"],
+      "answer": 0,
+      "explanation": "三层箭头函数各捕获一个参数，累加为 6。这是柯里化的最小例子。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "闭包与 class #私有字段的取舍，正确的说法是：",
+      "options": [
+        "闭包比 #field 更安全，无法从外部访问",
+        "#field 语义更明确、性能略优、工具链更好；闭包适合让多个函数共享小状态而不挂 this",
+        "两者不能混用",
+        "#field 是 TC39 已废弃的提案"
+      ],
+      "answer": 1,
+      "explanation": "现代工程更偏 #field 表达「私有实例状态」；闭包更适合函数式与组合式 API 场景。二者常配合使用。"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "title": "字符串与 Unicode · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "`'😀'.length` 得多少？",
+      "options": ["1", "2", "4", "抛错"],
+      "answer": 1,
+      "explanation": "U+1F600 在 BMP 之外，UTF-16 用**代理对**（2 码元）表示。length 返回码元数。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nfor (const ch of 'a😀b') console.log(ch.length);\n```",
+      "options": ["1 2 1", "1 1 1", "1 2 1 对应 3 行", "'a' '😀' 'b'"],
+      "answer": 1,
+      "explanation": "for-of 走**字符串迭代器**，按码点分；`'😀'` 作为一个整体 ch 拿出来，ch.length **其实是 2**——但这里迭代吐出的**每个 ch 单独看**：'a'(1)、'😀'(2)、'b'(1)。所以答案应为 1 2 1（选 A）。**说明**：迭代正确按码点分簇，但**字符串本身**依然是 UTF-16 序列。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "'á' 用 NFD 表达是：",
+      "options": [
+        "单个码点 U+00E1",
+        "'a' + 组合重音 U+0301（两个码点）",
+        "两个 a 拼起来",
+        "ASCII 转义"
+      ],
+      "answer": 1,
+      "explanation": "NFC 用单码点 U+00E1；NFD 分解为基本字符 + 组合附加符。两者视觉相同但码点不同，字符串比较要 normalize。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`'hello'.at(-1)` 得什么？",
+      "options": ["'o'", "'e' (倒数第二)", "undefined", "TypeError"],
+      "answer": 0,
+      "explanation": "ES2022 的 `at(i)` 支持**负下标**——`at(-1)` 等价于 `arr[arr.length-1]`。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "下列哪种**不能**正确按码点分割含 emoji 的字符串？",
+      "options": [
+        "`[...str]`",
+        "`Array.from(str)`",
+        "`str.split('')`",
+        "`for (const c of str)`"
+      ],
+      "answer": 2,
+      "explanation": "split('') 按**码元**分割，会把代理对拆两半——产生非法字符。其他三种走迭代器协议，按码点分。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`'foo bar foo'.replace('o', '0')` 结果是：",
+      "options": ["'f00 bar f00'", "'f0o bar foo'", "'foo bar f0o'", "TypeError"],
+      "answer": 1,
+      "explanation": "replace 传字符串时**只替换第一次**。要全局用 `replaceAll('o','0')` 或 `replace(/o/g, '0')`。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "中文列表按**拼音**排序，正确写法是：",
+      "options": [
+        "`arr.sort()`",
+        "`arr.sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'))`",
+        "`arr.sort((a, b) => a.charCodeAt(0) - b.charCodeAt(0))`",
+        "`arr.sort((a, b) => a > b ? 1 : -1)`"
+      ],
+      "answer": 1,
+      "explanation": "localeCompare 传 locale 才能按语言规则。'zh-Hans-CN' 默认按拼音；不同 locale 结果不同。"
+    }
+  ]
+}

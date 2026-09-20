@@ -3,56 +3,109 @@
   "title": "JavaScript 现代语法 ES6→ES2024",
   "order": 1,
   "tier": "青铜 · 一切的地基",
-  "tagline": "从零理解 JS 语言本身：作用域、函数、模块、异步、以及每年新增的糖。后面所有框架都建在这块地基上。",
+  "tagline": "从零吃透 JS 语言本身：作用域、类型、函数、集合、迭代器、元编程、模块化、异步、每年新增的糖，一直到把 JS 库发布上 npm 的部署全链路。后面 7 个框架都建在这块地基上。",
   "icon": "🟨",
   "color": "#f1dd00",
   "levels": [
     {
       "id": "L1",
       "title": "变量与作用域",
-      "subtitle": "let / const 与块级作用域，告别 var 的坑",
+      "subtitle": "let / const / 提升 / TDZ / 闭包",
       "lessons": [
-        { "id": "es-scope", "title": "let、const 与块级作用域", "goal": "说清 var/let/const 三者区别，理解暂时性死区与闭包雏形" }
+        { "id": "es-scope", "title": "let、const 与块级作用域", "goal": "说清 var/let/const 三者区别，理解暂时性死区与闭包雏形" },
+        { "id": "es-hoisting", "title": "变量提升与函数提升", "goal": "掌握 var 提升、function 提升、class TDZ 的完整规则" },
+        { "id": "es-closure", "title": "闭包深入与应用", "goal": "识别与写出常见闭包：模块化、防抖、柯里化、缓存" }
       ]
     },
     {
       "id": "L2",
-      "title": "函数进化",
-      "subtitle": "箭头函数、默认参数、rest 参数与 this",
+      "title": "数据类型与转换",
+      "subtitle": "7 种类型、== 与 ToPrimitive",
       "lessons": [
-        { "id": "es-arrow", "title": "箭头函数与 this 的词法绑定", "goal": "会写箭头函数，并解释它为什么不绑定自己的 this" }
+        { "id": "es-types", "title": "7 种类型与类型判定", "goal": "typeof / instanceof / Object.prototype.toString 各自能判什么" },
+        { "id": "es-coercion", "title": "隐式转换与 == 规则", "goal": "解释 [] + {} 与 'a' == 'a'，会写不坑的比较代码" }
       ]
     },
     {
       "id": "L3",
-      "title": "数据拆解",
-      "subtitle": "解构赋值、展开运算符、rest 三者一体",
+      "title": "函数进化",
+      "subtitle": "箭头、参数、高阶、柯里化",
       "lessons": [
-        { "id": "es-destructure", "title": "解构与展开运算符", "goal": "熟练解构对象/数组，用展开做不可变更新" }
+        { "id": "es-arrow", "title": "箭头函数与 this 的词法绑定", "goal": "会写箭头函数，并解释它为什么不绑定自己的 this" },
+        { "id": "es-params", "title": "默认参数 / rest / 展开", "goal": "熟练处理函数参数：默认值、变长、解构组合" },
+        { "id": "es-currying", "title": "高阶函数、柯里化与组合", "goal": "手写 curry / compose，理解函数式基础" }
       ]
     },
     {
       "id": "L4",
-      "title": "模块化",
-      "subtitle": "import / export，现代工程的组织方式",
+      "title": "对象与数组",
+      "subtitle": "解构、展开、常用 API 全景",
       "lessons": [
-        { "id": "es-module", "title": "ES Modules：import 与 export", "goal": "区分默认导出与命名导出，理解模块即单例" }
+        { "id": "es-destructure", "title": "解构与展开运算符", "goal": "熟练解构对象/数组，用展开做不可变更新" },
+        { "id": "es-object-api", "title": "Object 新 API 全家桶", "goal": "assign/freeze/entries/fromEntries/hasOwn 各自场景" },
+        { "id": "es-array-api", "title": "数组方法深度", "goal": "map/filter/reduce/flat/flatMap/at/includes/find/sort 稳如老狗" },
+        { "id": "es-string-unicode", "title": "字符串与 Unicode", "goal": "码点 vs 代码单元、normalize、Intl、模板字面量标签" }
       ]
     },
     {
       "id": "L5",
-      "title": "异步编程",
-      "subtitle": "回调 → Promise → async/await 的演进",
+      "title": "集合与结构化数据",
+      "subtitle": "Map / Set / WeakMap / structuredClone",
       "lessons": [
-        { "id": "es-async", "title": "Promise 与 async/await", "goal": "把回调地狱改写为 async/await，正确处理错误" }
+        { "id": "es-map-set", "title": "Map / Set / WeakMap / WeakSet", "goal": "为什么需要 Map；WeakMap 的常见工程用途" },
+        { "id": "es-structured", "title": "structuredClone 与深拷贝", "goal": "JSON 深拷贝 vs structuredClone vs 手写递归" }
       ]
     },
     {
       "id": "L6",
-      "title": "近年新语法巡礼",
-      "subtitle": "ES2018→ES2024：可选链、空值合并、原子操作等",
+      "title": "迭代器与元编程",
+      "subtitle": "Symbol / iterator / generator / Proxy",
       "lessons": [
-        { "id": "es-modern", "title": "你该知道的现代糖精", "goal": "识别并使用可选链、??、Array.at、结构化等待等新特性" }
+        { "id": "es-symbol", "title": "Symbol 与内置符号", "goal": "Symbol.iterator / toPrimitive / hasInstance 都在哪儿起作用" },
+        { "id": "es-iterator", "title": "迭代器协议与 for-of / 生成器", "goal": "会写可迭代对象，会用 generator + yield*" },
+        { "id": "es-proxy", "title": "Proxy 与 Reflect", "goal": "响应式系统的原语：13 个 trap" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "模块化",
+      "subtitle": "ESM 深水区",
+      "lessons": [
+        { "id": "es-module", "title": "ES Modules：import 与 export", "goal": "区分默认导出与命名导出，理解模块即单例" },
+        { "id": "es-module-deep", "title": "动态 import / 顶层 await / import.meta", "goal": "运行时决定路径、代码分割与运行时探测" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "异步编程",
+      "subtitle": "回调 → Promise → async/await → 事件循环",
+      "lessons": [
+        { "id": "es-callback", "title": "回调与错误优先约定", "goal": "理解为什么 async 需要约定，什么是回调地狱" },
+        { "id": "es-promise", "title": "Promise 原理与手写", "goal": "A+ 规范、链式 then、异常穿透、手写 Promise.all" },
+        { "id": "es-async", "title": "Promise 与 async/await", "goal": "把回调地狱改写为 async/await，正确处理错误" },
+        { "id": "es-event-loop", "title": "事件循环与微任务", "goal": "解释 setTimeout / Promise.then / nextTick 的顺序" }
+      ]
+    },
+    {
+      "id": "L9",
+      "title": "现代语法时间线",
+      "subtitle": "ES2018 → ES2024 分组细讲",
+      "lessons": [
+        { "id": "es-2018", "title": "ES2018：对象展开 / 异步迭代 / Promise.finally", "goal": "熟悉当年新增的四大件" },
+        { "id": "es-2020", "title": "ES2020：可选链 / ?? / BigInt / allSettled / import.meta", "goal": "现代工程每天都在用的语法" },
+        { "id": "es-2022", "title": "ES2022：class fields / #private / at() / error.cause / top-level await", "goal": "class 与错误处理的一次到位" },
+        { "id": "es-2024", "title": "ES2023-2024：Array.fromAsync / toReversed / grouping / transfer", "goal": "不可变数组方法与 ArrayBuffer 转移" },
+        { "id": "es-modern", "title": "近年新语法巡礼（综合）", "goal": "把上面四条串起来，形成选型直觉" }
+      ]
+    },
+    {
+      "id": "L10",
+      "title": "环境部署",
+      "subtitle": "跑起来、上线去",
+      "lessons": [
+        { "id": "es-devtools", "title": "浏览器 DevTools 调试 JS", "goal": "断点 / watch / call stack / Performance 面板" },
+        { "id": "es-build", "title": "Babel / SWC / esbuild 与 polyfill", "goal": "选择合适转译链，target/browserslist 配起来" },
+        { "id": "es-publish", "title": "npm 发布：ESM/CJS 双包与 exports 字段", "goal": "把自己的库发到 npm，让 Node/浏览器都能用" }
       ]
     }
   ]

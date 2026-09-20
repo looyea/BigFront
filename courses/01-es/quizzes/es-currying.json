@@ -1,0 +1,87 @@
+{
+  "title": "高阶函数与柯里化 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下哪个是**高阶函数**？",
+      "options": [
+        "function add(a, b) { return a + b; }",
+        "function twice(f, x) { return f(f(x)); }",
+        "const PI = 3.14159;",
+        "const greet = 'hello';"
+      ],
+      "answer": 1,
+      "explanation": "高阶函数：接收或返回函数。twice 接收 f 作为参数，是 HOF。add 只是普通函数。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下 curry 版本代码得到什么？\n\n```js\nfunction curry(fn) {\n  return function curried(...args) {\n    if (args.length >= fn.length) return fn.apply(this, args);\n    return (...more) => curried.apply(this, args.concat(more));\n  };\n}\nconst add3 = curry((a, b, c) => a + b + c);\nconsole.log(add3(1)(2)(3), add3(1, 2)(3), add3(1)(2, 3));\n```",
+      "options": ["6 6 6", "6 NaN NaN", "TypeError", "6 6 NaN"],
+      "answer": 0,
+      "explanation": "通用 curry 支持任意分次组合。三种调用都凑齐 3 参数，结果都是 6。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "pipe(f, g, h)(x) 的执行顺序是：",
+      "options": [
+        "h(g(f(x)))——左到右",
+        "f(g(h(x)))——右到左",
+        "并发执行",
+        "随机顺序"
+      ],
+      "answer": 0,
+      "explanation": "pipe 是左到右（数据流方向）；compose 是右到左（数学 f∘g 定义）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "柯里化与部分应用的最大区别是：",
+      "options": [
+        "柯里化更快",
+        "柯里化每次只吃一个参数（严格分次）；部分应用可以一次固定任意数量",
+        "部分应用需要 lodash",
+        "两者是同一件事"
+      ],
+      "answer": 1,
+      "explanation": "curry 是 f(a,b,c) → f(a)(b)(c)；partial 是 f(a,b,c) → g(b,c)，一次固定前缀任意数量。bind 就是 partial 工具。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`curry(fn)` 里判断是否凑齐参数依据什么？",
+      "options": [
+        "arguments.length",
+        "fn.length（形参数量）",
+        "fn.arity",
+        "手动传入的数字"
+      ],
+      "answer": 1,
+      "explanation": "标准做法是看原函数的 .length（第一个默认值之前的形参数）。带默认值/rest 会失真——这是 curry 的常见限制。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下 Koa 中间件 compose 代码，dispatch 里 `if (n <= i)` 检查的是什么？",
+      "options": [
+        "无限递归",
+        "同一个中间件被 next() 多次触发",
+        "ctx 为 null",
+        "异步错误"
+      ],
+      "answer": 1,
+      "explanation": "Koa 要求每个中间件对下游只能「前进」一次；重复 next() 会让后续中间件被再次执行，抛错更安全。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下代码得 676 吗？\n\n```js\nconst pipe = (...fns) => (x) => fns.reduce((a, f) => f(a), x);\nconst calc = pipe(x => x + 10, x => x * 2, x => x * x);\ncalc(3);\n```",
+      "options": ["676", "148", "96", "抛错"],
+      "answer": 0,
+      "explanation": "3+10=13, 13*2=26, 26*26=676。pipe 是左到右。"
+    }
+  ]
+}

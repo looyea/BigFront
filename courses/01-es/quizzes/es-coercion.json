@@ -1,0 +1,72 @@
+{
+  "title": "隐式转换 · 小测（紧扣本关知识点）",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "`[] + {}` 的结果是：",
+      "options": ["'[object Object]'", "'[object Object][object Object]'", "{}", "TypeError"],
+      "answer": 0,
+      "explanation": "[] ToPrimitive hint=number 得 ''（valueOf 返回自己不是 primitive，toString 返回 ''）；{} 得 '[object Object]'；'' + '[object Object]' = '[object Object]'。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`[] == ![]` 的结果是：",
+      "options": ["true", "false", "TypeError", "NaN"],
+      "answer": 0,
+      "explanation": "![] = false；[] == false → 两侧 ToNumber：[]→''→0；false→0 → true。这是 == 的经典翻车。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下 8 个 falsy 值不包括：",
+      "options": ["0", "''", "[]", "NaN"],
+      "answer": 2,
+      "explanation": "空数组 [] 是 truthy（对象一律 truthy）。8 个 falsy：false, 0, -0, 0n, '', NaN, null, undefined。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`Object.is(NaN, NaN)` 与 `NaN === NaN` 分别是什么？",
+      "options": ["true / true", "true / false", "false / true", "false / false"],
+      "answer": 1,
+      "explanation": "Object.is 修正了 NaN 自反性；=== 保留 IEEE-754 语义 NaN !== NaN。Object.is 与 === 的第二个差别是 +0 vs -0。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下代码得到什么？\n\n```js\nconsole.log('5' - '3', '5' * '2', '5' + '3');\n```",
+      "options": ["'2 10 53'", "2 10 '53'", "'2' '10' '53'", "SyntaxError"],
+      "answer": 1,
+      "explanation": "减号/乘号只走 ToNumber；加号有一侧是 string 走拼接。这是 + 与其他算术运算符的最大差异。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 ToPrimitive 的顺序，正确的是：",
+      "options": [
+        "始终 valueOf → toString",
+        "始终 toString → valueOf",
+        "hint=string 先 toString；hint=number/默认 先 valueOf；Symbol.toPrimitive 存在则优先",
+        "顺序由引擎实现决定"
+      ],
+      "answer": 2,
+      "explanation": "hint 决定顺序；Symbol.toPrimitive 是最高优先级，能完全接管。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "工程上强制 === 的正确 ESLint 配置是：",
+      "options": [
+        "'eqeqeq': 'error'",
+        "'eqeqeq': ['error', 'always', { null: 'ignore' }]",
+        "'eqeqeq': ['warn', 'smart']",
+        "'no-eq-null': 'error'"
+      ],
+      "answer": 1,
+      "explanation": "always + null:'ignore' 是团队项目最常用配置：默认禁 ==，但允许 x == null 作为 null/undefined 双检的简写。"
+    }
+  ]
+}
