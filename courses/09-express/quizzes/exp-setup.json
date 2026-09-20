@@ -1,0 +1,84 @@
+{
+  "title": "exp-setup 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么要把 app.js 和 server.js 分开？",
+      "options": [
+        "性能优化",
+        "测试时可 import app 用 supertest 而不需要真正 listen 端口",
+        "Express 强制要求",
+        "为了热更新"
+      ],
+      "answer": 1,
+      "explanation": "app.js 只创建并配置 Express 实例导出；server.js 做 listen。测试只拿 app → 不占端口 → 不依赖网络。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "错误处理中间件的特征是？",
+      "options": [
+        "有 2 个参数 (req, res)",
+        "有 3 个参数 (req, res, next)",
+        "有 4 个参数 (err, req, res, next)",
+        "名字必须叫 handleError"
+      ],
+      "answer": 2,
+      "explanation": "Express 通过参数个数识别错误中间件：必须 4 个形参 (err, req, res, next)，哪怕不用 next 也必须声明。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "express.json({ limit: '1mb' }) 防什么？",
+      "options": [
+        "XSS 攻击",
+        "超大 JSON body 耗尽服务器内存",
+        "CSRF 攻击",
+        "SQL 注入"
+      ],
+      "answer": 1,
+      "explanation": "不限制时攻击者可以 POST 一个 500MB JSON → 解析后撑爆内存。limit 超了直接返回 413 Payload Too Large。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "helmet() 中间件做了什么？",
+      "options": [
+        "HTTPS 重定向",
+        "设置一组安全相关的 HTTP 响应头（CSP/X-Frame-Options/HSTS 等）",
+        "防 DDoS",
+        "加密 Cookie"
+      ],
+      "answer": 1,
+      "explanation": "helmet 聚合十几个安全头：X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security, CSP 等，一行代码加固。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "中间件里忘记调用 next() 会导致什么？",
+      "options": [
+        "报错崩溃",
+        "请求永远挂起（客户端超时）",
+        "自动跳到下一个",
+        "返回 500"
+      ],
+      "answer": 1,
+      "explanation": "如果中间件既不 next() 也不结束响应(res.send/json/end) → 请求卡在管道里 → 直到客户端/代理超时。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "分层架构中 controller 层的职责是什么？",
+      "options": [
+        "操作数据库",
+        "取 req 数据 → 调 service → 返回 res",
+        "业务逻辑编排",
+        "处理 HTTP 头"
+      ],
+      "answer": 1,
+      "explanation": "Controller 只做 HTTP ↔ 业务 的薄适配层：从 req 取参数、调 service 处理、把结果放 res 返回。不直接操作 DB（那是 model/service）。"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "title": "vite-hmr 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Vite HMR 通过什么方式通知浏览器有模块更新？",
+      "options": [
+        "轮询 HTTP 接口",
+        "WebSocket 长连接推送",
+        "Server-Sent Events",
+        "修改 HTML 后让浏览器自动检测"
+      ],
+      "answer": 1,
+      "explanation": "Vite dev server 启动 WS 服务（/__vite_hmr），文件变更时 server 主动推 update 消息 → 客户端即时响应。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "如果一个被修改的模块及其所有父模块都没有 hot.accept()，会发生什么？",
+      "options": ["什么都不做", "Full page reload", "报错崩溃", "只更新该模块"],
+      "answer": 1,
+      "explanation": "HMR 边界找不到 → Vite 发 full-reload 消息 → 浏览器整页刷新。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "import.meta.hot.dispose 的用途是？",
+      "options": [
+        "接收新模块",
+        "在旧模块被替换前做清理（取消订阅/定时器/观察者）",
+        "阻止更新",
+        "发送事件到服务端"
+      ],
+      "answer": 1,
+      "explanation": "dispose 回调在模块被替换前执行——清理副作用（IntersectionObserver.disconnect、clearInterval 等）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "import.meta.hot.data 解决了什么问题？",
+      "options": [
+        "跨标签页通信",
+        "HMR 替换后保留运行时状态（count、scroll 位置等）",
+        "存储环境变量",
+        "缓存 API 响应"
+      ],
+      "answer": 1,
+      "explanation": "hot.data 对象在 dispose 回调里写入 → 新模块的 accept 里读出 → 跨热更新保持状态（不丢组件 state）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "生产构建产物里包含 HMR 代码吗？",
+      "options": [
+        "包含但被禁用",
+        "不包含——import.meta.hot 被替换为 undefined → 死代码被 Tree Shake",
+        "包含完整 WS 连接",
+        "取决于配置"
+      ],
+      "answer": 1,
+      "explanation": "Vite build 时 if(import.meta.hot) → if(undefined) → 整块 if(false) → Rollup 删除。产物完全干净。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "修改 vite.config.js 会导致什么？",
+      "options": ["只热更改变的那个路由", "Dev server 重启", "无任何影响", "仅刷新 CSS"],
+      "answer": 1,
+      "explanation": "vite.config 是 server 本身的行为配置——改动需重启 dev server（重新加载插件、重新解析 proxy 等）。"
+    }
+  ]
+}

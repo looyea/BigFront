@@ -1,0 +1,69 @@
+{
+  "title": "vite-env 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "vite build --mode staging 会额外加载哪个文件？",
+      "options": [".env", ".env.staging", ".env.production", ".env.local"],
+      "answer": 1,
+      "explanation": "--mode staging → 按优先级加载 .env → .env.local → .env.staging → .env.staging.local。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么 import.meta.env.VITE_FOO 在生产构建后被替换为字符串字面量？",
+      "options": [
+        "运行时查表",
+        "Vite 做编译时静态文本替换 → Tree Shake 能删除不可达分支",
+        "Service Worker 注入",
+        "依赖后端 API"
+      ],
+      "answer": 1,
+      "explanation": "静态替换 → if(false){...} 被 Rollup 删除 → 减少产物体积。不是运行时对象查找。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "define: { __DEV__: JSON.stringify(true) } 中 JSON.stringify 是必须的，为什么？",
+      "options": [
+        "性能优化",
+        "define 是文本替换——不加 stringify 会把 true 当代码变量名（而不是布尔字面量）",
+        "Express 兼容",
+        "防止 XSS"
+      ],
+      "answer": 1,
+      "explanation": "不 stringify：__DEV__ → true（代码标识符 true 碰巧合法）。但如果值是字符串 'hello'，不 stringify → 替换成裸 hello → 变量未定义。JSON.stringify 确保加引号。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "DATABASE_URL 不带 VITE_ 前缀，前端能拿到吗？",
+      "options": ["能", "不能——只有 VITE_ 前缀变量暴露在客户端", "加 process.env. 就行", "取决于 Node 版本"],
+      "answer": 1,
+      "explanation": "安全设计：无 VITE_ 前缀的变量只在 vite.config.ts / 插件里可读 → 不会进 bundle → 防密钥泄露。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "修改 .env 文件后 Vite 会怎样？",
+      "options": ["自动 HMR 生效", "需要重启 dev server", "自动 full-reload", "报错"],
+      "answer": 1,
+      "explanation": ".env 只在 server 启动时加载——改文件后需手动重启（或 Vite 6 部分场景自动 restart）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "loadEnv(mode, cwd, '') 的第三个参数 '' 含义是？",
+      "options": [
+        "不加载任何变量",
+        "加载所有变量（无前缀过滤），包括不带 VITE_ 的敏感变量",
+        "加载默认变量",
+        "从空目录加载"
+      ],
+      "answer": 1,
+      "explanation": "默认前缀 'VITE_' 只返回带前缀的；传 '' = 全部返回 → 用于 vite.config 内部（proxy target 等不暴露给客户端的配置）。"
+    }
+  ]
+}

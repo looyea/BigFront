@@ -1,0 +1,67 @@
+{
+  "title": "ES2024 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "`Object.groupBy([1,2,3], x => x > 1 ? 'big' : 'small')` 的返回值原型是：",
+      "options": ["Object.prototype", "null（Object.create(null)）", "Array.prototype", "Map.prototype"],
+      "answer": 1,
+      "explanation": "groupBy 返回 **原型为 null** 的对象——避免继承 toString/hasOwnProperty 等干扰分组键。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`Promise.withResolvers()` 返回什么？",
+      "options": ["只返回 promise", "{ promise, resolve, reject }", "一个 class 实例", "undefined"],
+      "answer": 1,
+      "explanation": "把 resolve/reject 暴露到构造器外面——以前必须用 hack 在 new Promise 里偷拿。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`ArrayBuffer.transfer()` 之后原 buffer 的状态是：",
+      "options": ["正常使用", "detached（byteLength=0，读写返回空）", "抛错", "自动 GC"],
+      "answer": 1,
+      "explanation": "transfer 转移**所有权**——原 buffer 变 detached，不能再使用。类似 postMessage 里 transfer 的行为。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`'\\uD800a'.isWellFormed()` 返回：",
+      "options": ["true", "false", "抛 SyntaxError", "undefined"],
+      "answer": 1,
+      "explanation": "\\uD800 是**高代理**但后面没跟低代理（跟了 'a'=0x61）——截断/不完整的代理对使 isWellFormed = false。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`Atomics.waitAsync` 相比 `Atomics.wait` 的优势是：",
+      "options": ["更快", "返回 Promise——**主线程不阻塞**可用", "不需要 SharedArrayBuffer", "只用于 Node"],
+      "answer": 1,
+      "explanation": "旧 Atomics.wait 阻塞当前线程——主线程用直接卡死页面。waitAsync 异步等待，UI 不冻结。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`Map.groupBy` 与 `Object.groupBy` 的核心差别：",
+      "options": [
+        "完全相同",
+        "Map.groupBy 键可以是**任意类型**（对象、数组），返回 Map 保持**插入顺序**",
+        "Object.groupBy 更快",
+        "Map.groupBy 不支持 Symbol"
+      ],
+      "answer": 1,
+      "explanation": "Object 键只能 string/symbol；Map 键任意。Object 有整数键自动排序问题；Map 无此问题。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "`'\\uD800a'.toWellFormed()` 的结果是：",
+      "options": ["原样返回", "用 \\uFFFD（替换字符）替代不合法代理", "抛错", "截断"],
+      "answer": 1,
+      "explanation": "toWellFormed 把**不完整的代理对**替换为 U+FFFD；后续 'a' 保留。确保输出是**可安全序列化/传输**的字符串。"
+    }
+  ]
+}

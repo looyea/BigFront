@@ -1,0 +1,97 @@
+{
+  "title": "exp-security 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "helmet() 主要做什么？",
+      "options": [
+        "加密响应体",
+        "批量设置一组安全 HTTP 响应头（CSP/HSTS/nosniff/X-Frame-Options 等）",
+        "拦截所有跨域请求",
+        "压缩响应"
+      ],
+      "answer": 1,
+      "explanation": "helmet 是一组设置安全响应头的中间件集合，缓解点击劫持、MIME 嗅探、XSS、协议降级等。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "带 credentials 的 CORS，origin 为什么不能设成 '*'？",
+      "options": [
+        "性能原因",
+        "规范禁止：允许携带凭证时必须精确回显来源 origin，'*' 会被浏览器拒绝",
+        "会 404",
+        "只有 GET 允许 *"
+      ],
+      "answer": 1,
+      "explanation": "Access-Control-Allow-Credentials: true 时 Allow-Origin 不能是通配 → 必须指定确切域名，否则浏览器拦截。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "防 SQL 注入最根本的手段是？",
+      "options": [
+        "过滤单引号",
+        "使用参数化查询 / ORM 占位符，永不字符串拼接 SQL",
+        "限制输入长度",
+        "前端校验"
+      ],
+      "answer": 1,
+      "explanation": "参数化让输入永远是'数据'不是'代码'。手写过滤引号极易被绕过（编码/多字节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "把 JWT 放在 Authorization header 的 API 为什么天然免疫 CSRF？",
+      "options": [
+        "JWT 加密了",
+        "浏览器不会自动携带自定义 Authorization header，跨站伪造请求带不上它",
+        "header 很长",
+        "用了 HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "CSRF 靠浏览器'自动携带'cookie 生效；header 需 JS 显式设置，跨站脚本受同源限制无法为目标 API 加 → 免疫。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "集群部署下 express-rate-limit 为什么必须用 Redis Store？",
+      "options": [
+        "Redis 更快",
+        "默认内存 store 每个实例各自计数且重启清零 → 限流失效/不一致",
+        "内存 store 不支持 HTTP",
+        "为了持久化日志"
+      ],
+      "answer": 1,
+      "explanation": "多实例内存计数彼此独立 → 攻击者被轮询分摊到各节点绕过限制。集中式 Redis 保证全局一致。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "执行外部命令时防命令注入的正确做法是？",
+      "options": [
+        "用 exec + 字符串拼接",
+        "用 execFile/spawn 传参数数组（不经过 shell 解释）+ 白名单",
+        "转义空格",
+        "限制长度"
+      ],
+      "answer": 1,
+      "explanation": "exec 走 shell → `; rm -rf` 被解释执行。execFile/spawn 参数数组不经 shell → 用户输入只是参数不是命令。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "CSP（Content-Security-Policy）在 XSS 防御里的定位是？",
+      "options": [
+        "唯一手段",
+        "最后防线：即使注入成功，非白名单来源的脚本也无法执行",
+        "只防 CSRF",
+        "只作用于图片"
+      ],
+      "answer": 1,
+      "explanation": "纵深防御里 CSP 是兜底——转义/清洗是主力，万一漏了 CSP 限制脚本来源再挡一层。"
+    }
+  ]
+}

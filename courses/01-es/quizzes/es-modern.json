@@ -1,59 +1,69 @@
 {
-  "lessonId": "es-modern",
-  "title": "L6 现代语法 · 小测",
-  "passRule": "答对 60% 及以上即可通关",
+  "title": "现代 JS 全景 · 小测",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
       "id": "q1",
       "type": "single",
-      "prompt": "0 ?? 10 的结果是？",
-      "options": [
-        "10",
-        "0",
-        "undefined",
-        "报错"
-      ],
-      "answer": 1,
-      "explanation": "?? 只在 null/undefined 时取右值，0 是合法值。"
+      "prompt": "`Object.groupBy` 是哪一年引入的？",
+      "options": ["ES2019", "ES2022", "ES2024", "ES2020"],
+      "answer": 2,
+      "explanation": "ES2024 标准化 Object.groupBy 与 Map.groupBy——替代 lodash _.groupBy 与手写 reduce。"
     },
     {
       "id": "q2",
       "type": "single",
-      "prompt": "user?.address?.city 当 address 为 undefined 时结果是？",
-      "options": [
-        "抛错",
-        "undefined",
-        "null",
-        "空字符串"
-      ],
-      "answer": 1,
-      "explanation": "可选链遇到 null/undefined 短路返回 undefined，不报错。"
+      "prompt": "以下哪个 lodash 功能**还没有**原生替代？",
+      "options": ["_.flatten", "_.groupBy", "_.debounce", "_.toPairs"],
+      "answer": 2,
+      "explanation": "debounce / throttle 没有原生 API——仍需手写或引第三方。其余三项：flat / groupBy / Object.entries 都标准化了。"
     },
     {
       "id": "q3",
       "type": "single",
-      "prompt": "arr.at(-1) 返回？",
-      "options": [
-        "第一个元素",
-        "最后一个元素",
-        "报错",
-        "-1"
-      ],
-      "answer": 1,
-      "explanation": "at 支持负索引，-1 表示倒数第一个。"
+      "prompt": "Array 不可变方法 `toSorted` / `with` 是哪一年？",
+      "options": ["ES2020", "ES2022", "ES2023", "ES2024"],
+      "answer": 2,
+      "explanation": "ES2023 引入 toSorted / toSpliced / with——不改变原数组就得到排序/替换后的新数组。"
     },
     {
       "id": "q4",
       "type": "single",
-      "prompt": "关于管道 |> 与模式匹配，正确说法是？",
+      "prompt": "ES2025 **Iterator Helpers** 的核心优势是：",
       "options": [
-        "已是 ES2023 正式标准",
-        "仍是 TC39 提案，尚未进入稳定标准",
-        "Node 已全部支持",
-        "已被否决"
+        "语法糖而已",
+        "惰性链式——不创建中间数组，filter/map/take 串联后**一次遍历**",
+        "只能用于数组",
+        "替代 for-of"
       ],
       "answer": 1,
-      "explanation": "它们处于提案阶段，以官方为准，勿照抄过时教程——警惕幻觉。"
+      "explanation": "对比 arr.filter().map().slice() 创建 3 个中间数组 vs 迭代器 .filter().map().take() 零额外内存。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`structuredClone` 能替代 `_.cloneDeep` 吗？",
+      "options": [
+        "完全能",
+        "大部分能，但函数 / DOM 节点 / 类实例 / 不可克隆值（Error 的部分属性等）**会抛 DataCloneError**",
+        "完全不能",
+        "只是浅拷贝"
+      ],
+      "answer": 1,
+      "explanation": "structuredClone 走 HTML 结构化克隆算法——可序列化对象 OK，函数与 DOM 不行。纯 JSON 类数据完美。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "browserslist 配置 `\"last 2 Chrome versions\"` 的效果是：",
+      "options": [
+        "只测最新版",
+        "Babel / core-js / autoprefixer 只针对**最后 2 版 Chrome 不支持的**才降级/注入——产物更小",
+        "只打包两个文件",
+        "关闭 polyfill"
+      ],
+      "answer": 1,
+      "explanation": "targets 越现代 → 降级越少 → 体积越小。last 2 Chrome 基本**不需要** Babel 转任何语法。"
     }
   ]
 }

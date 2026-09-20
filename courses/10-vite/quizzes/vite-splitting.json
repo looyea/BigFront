@@ -1,0 +1,84 @@
+{
+  "title": "vite-splitting 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Vite/Rollup 产生异步 chunk 的关键触发条件是什么？",
+      "options": [
+        "使用 import 静态导入",
+        "使用动态 import() 表达式",
+        "文件超过 500KB",
+        "在 package.json 声明"
+      ],
+      "answer": 1,
+      "explanation": "动态 import() 让 Rollup 把目标模块及其独有依赖打成独立 chunk，运行时按需加载。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "manualChunks 函数对多个模块 id 返回同一个字符串，效果是？",
+      "options": [
+        "报错",
+        "这些模块被合并进同一个同名 chunk",
+        "每个模块单独成 chunk",
+        "被丢弃"
+      ],
+      "answer": 1,
+      "explanation": "返回值即 chunk 名——返回相同字符串的模块归到同一 chunk（如都 return 'vendor' 则合并成一个 vendor.js）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "rel=\"modulepreload\" 相比普通 preload 的优势是？",
+      "options": [
+        "体积更小",
+        "专门预取 ES 模块：避免重复获取、可复用已解析的模块",
+        "只用于 CSS",
+        "支持跨域绕过 CORS"
+      ],
+      "answer": 1,
+      "explanation": "modulepreload 针对 module 语义优化——预取+解析，且浏览器能重用已在文档中加载过的相同模块。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么 import { debounce } from 'lodash-es' 能 tree-shake 而 'lodash' 不能？",
+      "options": [
+        "lodash-es 体积本来就小",
+        "lodash 已废弃",
+        "lodash-es 是纯 ESM 无副作用可静态分析；lodash 是 CJS 无法 tree-shake",
+        "两者都能"
+      ],
+      "answer": 2,
+      "explanation": "tree-shaking 依赖 ESM 静态 import/export。lodash 是 CommonJS require → 无法静态分析 → 全量打包。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "分析构建产物体积构成，最合适的工具是？",
+      "options": [
+        "Chrome DevTools Network",
+        "rollup-plugin-visualizer 生成 treemap",
+        "eslint",
+        "npm ls"
+      ],
+      "answer": 1,
+      "explanation": "visualizer 输出 stats.html treemap，直观看每个依赖占比，据此决定分包/外链/替换。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "把 import() 写成含变量路径 `import(./locales/${lang}.json)` 会怎样？",
+      "options": [
+        "精确只打包 lang 对应文件",
+        "Rollup 无法静态分析 → 把整个匹配目录的文件都打进 bundle",
+        "直接报错",
+        "运行最快"
+      ],
+      "answer": 1,
+      "explanation": "动态变量导致 Rollup 保守地把目录下所有可能文件纳入。应改用 import.meta.glob 显式声明。"
+    }
+  ]
+}

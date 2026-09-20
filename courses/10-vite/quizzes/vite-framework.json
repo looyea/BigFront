@@ -1,0 +1,97 @@
+{
+  "title": "vite-framework 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么 Vue/React/Svelte 在 Vite 里都需要各自的官方插件？",
+      "options": [
+        "加速安装",
+        "Vite 核心不认识 .vue/.jsx/.svelte 等 DSL，需插件在 transform 编译成标准 ESM 并接入 HMR 语义",
+        "为了写起来好看",
+        "因为 npm 强制"
+      ],
+      "answer": 1,
+      "explanation": "框架专属语法必须编译成浏览器能跑的 JS，且要框架级 HMR 边界，靠官方插件完成。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Vue 的 defineProps / defineEmits 这些 <script setup> 宏是什么性质的？",
+      "options": [
+        "运行时函数",
+        "编译期宏——被 @vue/compiler-sfc 在编译时转换掉，不是运行时调用",
+        "浏览器原生 API",
+        "Babel 插件"
+      ],
+      "answer": 1,
+      "explanation": "编译器宏在构建期被展开成组件选项/运行时代码，本身不是运行时函数。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 esbuild 处理 TypeScript，正确的说法是？",
+      "options": [
+        "它会做完整类型检查",
+        "它只做语法转换与删类型，不做类型检查，类型需另用 tsc/vue-tsc 校验",
+        "它不支持 JSX",
+        "它比 Babel 慢"
+      ],
+      "answer": 1,
+      "explanation": "esbuild 极快但'擦除'类型不校验，构建通过≠类型正确，CI 要单独跑 --noEmit。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "@vitejs/plugin-react 相比 plugin-react-swc 的主要取舍是？",
+      "options": [
+        "Babel 版编译更快",
+        "SWC 版（Rust）编译更快、冷启动更好；Babel 版胜在能跑任意自定义 Babel 插件/实验语法",
+        "两者完全相同",
+        "SWC 不支持 HMR"
+      ],
+      "answer": 1,
+      "explanation": "SWC 用 Rust 提速，功能对齐；需特定 Babel 插件生态时才回 Babel 版。二者都支持 Fast Refresh。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "React 的 Fast Refresh 常常整页刷新而非热替换，最常见原因是？",
+      "options": [
+        "网络慢",
+        "组件文件混导出了非组件（函数/常量），破坏了 HMR 边界",
+        "用了 TypeScript",
+        "CSS 太多"
+      ],
+      "answer": 1,
+      "explanation": "Fast Refresh 要求组件模块边界清晰；把非组件导出挪走，一个文件尽量只默认导出组件。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Svelte 被称为'编译时框架'意味着？",
+      "options": [
+        "它没有运行时永远不打包",
+        "组件在构建期编译成近乎 vanilla 的精确 DOM 操作，产物几乎不含框架 runtime",
+        "它只能用 JS 写",
+        "它不支持 HMR"
+      ],
+      "answer": 1,
+      "explanation": "编译时框架把框架开销移到构建期，运行时无（或极小）vdom，产物小。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "一个 Vite 项目能同时用 react() 和 vue() 两个插件吗？",
+      "options": [
+        "绝对不能",
+        "可以，各按后缀处理各自文件（.jsx/.tsx vs .vue），互不干扰（如多框架岛）",
+        "会导致构建崩溃",
+        "只能二选一装但可都启用"
+      ],
+      "answer": 1,
+      "explanation": "插件靠 id 后缀过滤，作用范围不重叠即可共存；Astro 多框架岛就是典型。"
+    }
+  ]
+}

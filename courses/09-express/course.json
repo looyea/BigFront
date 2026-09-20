@@ -1,0 +1,87 @@
+{
+  "id": "09-express",
+  "title": "Express 5 后端框架",
+  "order": 9,
+  "tier": "白银 · 服务端基石",
+  "tagline": "从零掌握 Express 5——Node.js 最成熟、最流行的 Web 框架。吃透路由、中间件、请求/响应、错误处理、模板引擎、文件上传、RESTful API、鉴权、安全加固、测试、生产部署全链路。",
+  "icon": "🟩",
+  "color": "#68a063",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "入门与项目结构",
+      "subtitle": "Express 5 新特性 / 安装 / Hello World / ESM / 项目骨架",
+      "lessons": [
+        { "id": "exp-intro", "title": "Express 5 新特性与迁移指南", "goal": "了解 v4→v5 破坏性变化、async 错误自动捕获、Router 重写、移除的 API" },
+        { "id": "exp-setup", "title": "安装、启动与项目骨架", "goal": "用 generator 或手动搭一个 ESM + Express 5 项目；理解目录结构" },
+        { "id": "exp-routing", "title": "路由系统全解", "goal": "掌握 Router、参数路由、嵌套路由、HTTP 方法、编程式路由" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "中间件机制",
+      "subtitle": "核心概念 / 三类中间件 / 错误中间件 / 第三方生态",
+      "lessons": [
+        { "id": "exp-middleware", "title": "中间件原理与五种类型", "goal": "说清 application / router / 错误 / 内置 / 第三方五种；手写一个计时中间件" },
+        { "id": "exp-error", "title": "错误处理：从手动到自动", "goal": "Express 5 async 错误自动转发；错误中间件签名 (err,req,res,next)；http-errors" },
+        { "id": "exp-3rd-party", "title": "常用第三方中间件", "goal": "cors / compression / morgan / helmet / express-rate-limit / cookie-parser / session 等" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "请求与响应",
+      "subtitle": "Request API / Response API / Body 解析 / 文件上传",
+      "lessons": [
+        { "id": "exp-request", "title": "Request 对象深度", "goal": "query / params / body / headers / cookies / ip / protocol / accepts / get('Header')" },
+        { "id": "exp-response", "title": "Response 对象与 HTTP 语义", "goal": "status / json / send / sendFile / redirect / download / vary / setHeader" },
+        { "id": "exp-upload", "title": "文件上传与 multipart", "goal": "multer 中间件配置；单文件/多文件/字段混合；大小与类型校验；存储策略" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "模板与静态资源",
+      "subtitle": "View Engine / EJS / Nunjucks / Static Files / CSP",
+      "lessons": [
+        { "id": "exp-view", "title": "View Engine 与 EJS/Nunjucks", "goal": "配置视图引擎、布局、局部视图、动态渲染；SSR 思维" },
+        { "id": "exp-static", "title": "静态资源服务与缓存", "goal": "express.static / maxAge / etag / immutable / Content Hash / CDN 策略" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "RESTful API 实战",
+      "subtitle": "CRUD / 版本化 / 校验 / 分页 / 鉴权 / JWT",
+      "lessons": [
+        { "id": "exp-rest", "title": "REST 设计原则与 CRUD 实战", "goal": "设计规范的资源路由；HTTP 方法语义；状态码；幂等性" },
+        { "id": "exp-validation", "title": "参数校验", "goal": "express-validator / zod / joi 选型；body/query/params/header 校验；错误响应统一格式" },
+        { "id": "exp-auth", "title": "鉴权：JWT / Session / OAuth2", "goal": "注册-登录-JWT 签发-验证-刷新完整链路；bcrypt；权限中间件" },
+        { "id": "exp-pagination", "title": "分页、排序与过滤", "goal": "offset/limit / cursor / 复合排序 / 动态过滤 / 响应元数据" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "安全与最佳实践",
+      "subtitle": "Helmet / CORS / XSS / SQL注入 / CSRF / 限流",
+      "lessons": [
+        { "id": "exp-security", "title": "Express 安全加固完全指南", "goal": "OWASP Top10 在 Express 里的防御：helmet / CORS / rate limit / input sanitize / cookie 安全 / 依赖扫描" },
+        { "id": "exp-patterns", "title": "工程模式：分层架构 / DI / 配置管理", "goal": "Controller-Service-Repository 分层；dotenv/config 管理；错误码体系；日志规范" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "测试",
+      "subtitle": "supertest / unit / integration / mock / CI",
+      "lessons": [
+        { "id": "exp-testing", "title": "单元与集成测试", "goal": "supertest 测端点；jest/vitest mock DB；CI 跑覆盖率；测试分层" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "生产部署",
+      "subtitle": "PM2 / Docker / Nginx / HTTPS / 监控 / 优雅关闭",
+      "lessons": [
+        { "id": "exp-deploy", "title": "生产部署全链路", "goal": "cluster/PM2、Docker 镜像、Nginx 反代、HTTPS/证书、日志收集、健康检查、优雅关闭" },
+        { "id": "exp-perf", "title": "性能调优", "goal": "keep-alive / connection pool / compression / cache-control / 内存泄漏检测 / benchmark" }
+      ]
+    }
+  ]
+}

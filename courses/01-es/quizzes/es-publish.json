@@ -1,0 +1,97 @@
+{
+  "title": "es-publish 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "package.json 中 exports 和 main 的关系是？",
+      "options": [
+        "完全等价，只是新写法",
+        "exports 优先级高于 main；配了 exports 后 Node 忽略 main",
+        "main 优先级高于 exports",
+        "必须同时配才生效"
+      ],
+      "answer": 1,
+      "explanation": "Node 12+ 看到 exports 字段后完全忽略 main/module/browser。main 只给不支持 exports 的老工具兜底。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "SemVer 中什么变更递增 MAJOR 版本？",
+      "options": [
+        "修复 bug",
+        "新增向后兼容的功能",
+        "破坏性变更（删除或修改已有 API）",
+        "更新依赖版本"
+      ],
+      "answer": 2,
+      "explanation": "MAJOR = 不兼容变更（删 API / 改签名 / 改行为）。MINOR = 新增功能向后兼容。PATCH = bug fix。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "prepublishOnly 脚本的触发时机是？",
+      "options": [
+        "每次 npm install 时",
+        "npm publish 之前自动执行",
+        "git pre-commit 时",
+        "npm version 时"
+      ],
+      "answer": 1,
+      "explanation": "npm lifecycle：npm publish → prepublishOnly → publish → postpublish。通常在此跑构建确保 dist/ 是最新的。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "peerDependencies 的作用是什么？",
+      "options": [
+        "声明开发时需要的依赖",
+        "声明宿主项目必须安装的依赖，防止重复打包",
+        "声明可选的依赖",
+        "等同于 dependencies"
+      ],
+      "answer": 1,
+      "explanation": "如 UI 库声明 peerDependencies: { vue: '^3.0' }——vue 由 app 安装 → 库不打包 vue → 避免 bundle 里出现两份 vue。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "npm publish --tag next 的效果是？",
+      "options": [
+        "发布最新版本号",
+        "发布后用户 npm install my-pkg 默认拿不到这个版本，需 npm install my-pkg@next",
+        "发布到测试服务器",
+        "自动标记为 deprecated"
+      ],
+      "answer": 1,
+      "explanation": "默认 latest tag → npm install pkg 拿最新。--tag next/beta/rc → 不更新 latest → 用户需显式 @next 安装。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "files 字段的作用是什么？",
+      "options": [
+        "指定 TypeScript 编译哪些文件",
+        "白名单——npm publish 时只打包列出的文件/目录",
+        "指定 git 追踪的文件",
+        "指定哪些文件需要 lint"
+      ],
+      "answer": 1,
+      "explanation": "files: [\"dist\", \"README.md\", \"LICENSE\"] → 发布时只包含这些 → src/ tests/ 等不会上传 → 减小包体积、防源码泄露。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "npm Provenance 解决了什么问题？",
+      "options": [
+        "加速 npm install",
+        "通过 OIDC 身份链证明包确实由指定 GitHub repo + commit 发布，防供应链投毒",
+        "自动修复安全漏洞",
+        "压缩 npm 包体积"
+      ],
+      "answer": 1,
+      "explanation": "Provenance = 用 GitHub Actions 的 OIDC token 签名 → npm 记录\"这个包是从这个 repo 的这个 commit 构建的\"→ 用户可验证来源。"
+    }
+  ]
+}

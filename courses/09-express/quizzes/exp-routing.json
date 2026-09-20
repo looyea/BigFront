@@ -1,0 +1,84 @@
+{
+  "title": "exp-routing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下两条路由注册顺序会导致什么问题？\napp.get('/users/:id', getUser)\napp.get('/users/new', getNewForm)",
+      "options": [
+        "无问题，Express 会智能匹配最精确的",
+        "/users/new 永远匹配不到，因为先被 /users/:id 截获（id='new'）",
+        "Express 报错",
+        "两个都会执行"
+      ],
+      "answer": 1,
+      "explanation": "Express 自上而下匹配，第一个命中就处理。/users/new 先被 /users/:id 捕获 → 把 'new' 当 id。修复：精确路径放前面。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Router({ mergeParams: true }) 解决什么问题？",
+      "options": [
+        "合并多个 Router 实例",
+        "让子 Router 能访问父级路由参数（如 /api/users/:userId/orders 中的 userId）",
+        "合并 query 和 params",
+        "启用缓存"
+      ],
+      "answer": 1,
+      "explanation": "默认 Router 不继承父级 params。mergeParams: true 后 req.params 包含父路由的 :userId + 子路由的 :orderId。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "router.param('userId', fn) 的触发时机是？",
+      "options": [
+        "每次 app.use 时",
+        "任何匹配路径中含 :userId 参数时，在路由 handler 之前执行",
+        "只在 POST 请求时",
+        "只有手动调用时"
+      ],
+      "answer": 1,
+      "explanation": "param 中间件相当于参数级 beforeEach：路径含 :userId → 先执行 param 回调加载数据/校验 → 再进路由 handler。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "req.originalUrl 和 req.url 的区别是？",
+      "options": [
+        "完全相同",
+        "originalUrl 始终是完整请求 URL；url 在 Router 内被截去挂载前缀",
+        "originalUrl 包含 query，url 不包含",
+        "url 是解码后的，originalUrl 是编码的"
+      ],
+      "answer": 1,
+      "explanation": "如果 Router 挂在 /api 下，请求 /api/users → req.url = '/users'，req.originalUrl = '/api/users'。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "res.sendStatus(404) 的效果是？",
+      "options": [
+        "只设状态码不设 body",
+        "设 404 + body 是 'Not Found'（状态码文字）",
+        "抛错",
+        "重定向到 /404 页面"
+      ],
+      "answer": 1,
+      "explanation": "sendStatus 是 status + send 的快捷方式，body 自动填状态文字（如 404 → 'Not Found'）。Express 5 新增。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Express 5 里 async handler 抛错后如何传递到 error middleware？",
+      "options": [
+        "手动 try/catch + next(err)",
+        "Express 内部检测 thenable 自动 .catch(next)",
+        "无法传递，会崩溃",
+        "用 express-async-errors 包"
+      ],
+      "answer": 1,
+      "explanation": "Express 5 原生检测返回值是否有 .then → 有就 catch → next(err)。不再需要第三方包。"
+    }
+  ]
+}

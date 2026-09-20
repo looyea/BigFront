@@ -1,0 +1,84 @@
+{
+  "title": "vite-target 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "build.target 主要降级的是什么？",
+      "options": [
+        "运行时 API（如 fetch、Promise）",
+        "JS 语法特性（如可选链、class fields）",
+        "CSS 样式",
+        "网络请求"
+      ],
+      "answer": 1,
+      "explanation": "build.target 用 esbuild 做语法转译。API polyfill 不在其职责内，需 core-js/plugin-legacy。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "设了 target: 'es2015'，代码用了 Array.prototype.at()，在缺该 API 的旧浏览器会？",
+      "options": [
+        "自动 polyfill 正常运行",
+        "构建报错",
+        "运行时 TypeError: ... is not a function（esbuild 不补 API）",
+        "自动降级为索引访问"
+      ],
+      "answer": 2,
+      "explanation": "at() 是 ES2022 运行时 API 不是语法，esbuild 只降语法不 polyfill API → 必须手动引 core-js 或用 legacy 插件。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "@vitejs/plugin-legacy 生成的双产物靠什么机制分发给不同浏览器？",
+      "options": [
+        "Cookie",
+        "type=\"module\" 与 nomodule 双 script 标签",
+        "localStorage",
+        "URL 参数"
+      ],
+      "answer": 1,
+      "explanation": "支持 ESM 的浏览器执行 type=module 忽略 nomodule；老浏览器反之执行 nomodule 里的 SystemJS ES5 产物。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Vite 的 build.target 默认读取 browserslist 配置吗？",
+      "options": [
+        "是，自动完全同步",
+        "否，需手动用 browserslist-to-esbuild 对齐",
+        "Vite 不支持 browserslist 概念",
+        "只在 dev 模式读"
+      ],
+      "answer": 1,
+      "explanation": "Vite 的 esbuild target 不自动读 browserslist（那是 Autoprefixer/Babel 的输入）。要一致需 browserslist-to-esbuild 手动桥接。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 polyfill.io 的风险提示，正确的是？",
+      "options": [
+        "它比 core-js 更快所以推荐生产首选",
+        "曾因供应链投毒事件，生产慎用第三方托管，宜自建或用 core-js",
+        "它只做语法转译",
+        "它不需要网络请求"
+      ],
+      "answer": 1,
+      "explanation": "2024 年 polyfill.io 被恶意收购后注入恶意代码 → 第三方 UA 动态 polyfill 有供应链风险。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "一味把 build.target 降得很低（如 es5）的代价是？",
+      "options": [
+        "没有任何代价，兼容性越好越好",
+        "产物体积增大 + 运行变慢（大量转译 helper）",
+        "会导致构建直接失败",
+        "CSS 会失效"
+      ],
+      "answer": 1,
+      "explanation": "降得越低，越多现代语法被转成冗长 ES5 helper → 体积涨、性能降。应基于真实用户数据取舍。"
+    }
+  ]
+}

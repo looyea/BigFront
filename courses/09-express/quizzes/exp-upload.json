@@ -1,0 +1,84 @@
+{
+  "title": "exp-upload 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么 fileFilter 检查 mimetype 不够安全？",
+      "options": [
+        "mimetype 字段太慢影响性能",
+        "客户端可伪造 Content-Type 头（把 .exe 伪装成 image/png）",
+        "multer 不支持所有 MIME 类型",
+        "mimetype 只在 memoryStorage 时才有"
+      ],
+      "answer": 1,
+      "explanation": "mimetype 来自客户端 multipart Part 的 Content-Type 头——攻击者可任意修改。必须用 magic bytes（file-type）检测真实文件头。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "S3 预签名直传的核心优势是什么？",
+      "options": [
+        "不需要前端代码",
+        "文件不经过服务器 → 减轻带宽/内存压力 → 支持超大文件",
+        "自动压缩图片",
+        "不需要 HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "后端只生成有时效的 PUT URL → 前端直传 S3 → 服务器不受上传带宽限制 → 适合视频/大文件。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "分片上传中 merge 步骤最关键的问题是？",
+      "options": [
+        "文件名太长了",
+        "保证分片顺序正确 + 处理缺片/乱片",
+        "需要浏览器支持 WebAssembly",
+        "必须用 WebSocket"
+      ],
+      "answer": 1,
+      "explanation": "网络乱序/丢片 → merge 前必须验证所有 index 齐全且按序写入。tus 协议自动处理偏移续传。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "multer 的 memoryStorage vs diskStorage 如何选择？",
+      "options": [
+        "永远用 diskStorage",
+        "文件小且后续要 buffer 处理（如 sharp 裁剪后传 S3）用 memory；文件大且直接落盘用 disk",
+        "memoryStorage 性能一定比 disk 差",
+        "diskStorage 不支持多文件"
+      ],
+      "answer": 1,
+      "explanation": "memoryStorage 把整个文件放 RAM → 适合 <10MB 需二次处理；大文件用 disk 防 OOM。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "上传文件为什么要用 UUID 重命名？",
+      "options": [
+        "方便数据库存储",
+        "防止同名覆盖 + 消除特殊字符/XSS 文件名 + 隐藏真实文件名",
+        "加速文件系统读取",
+        "兼容 CDN 规则"
+      ],
+      "answer": 1,
+      "explanation": "originalname 可能含 ../../、<script>、空格、中文 → 安全最佳实践 = 丢弃原文件名 + 用 randomUUID + 真实扩展。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Nginx 对大文件上传的限制默认由哪个指令控制？",
+      "options": [
+        "proxy_read_timeout",
+        "client_max_body_size",
+        "upload_limit",
+        "max_post_size"
+      ],
+      "answer": 1,
+      "explanation": "Nginx 默认 client_max_body_size 1m → 超过直接返回 413 不转给 Express。需根据业务调整。"
+    }
+  ]
+}

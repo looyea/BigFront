@@ -1,0 +1,79 @@
+{
+  "title": "vite-setup 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "部署到子目录 /my-app/ 时，vite.config 里需要设置什么？",
+      "options": ["root: '/my-app'", "base: '/my-app/'", "outDir: '/my-app'", "publicDir: '/my-app'"],
+      "answer": 1,
+      "explanation": "base 影响所有资源引用前缀。默认 '/'，改成 '/my-app/' 后产物里 JS/CSS/图片引用都变成 /my-app/assets/xxx。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "前端代码能通过 import.meta.env 访问 .env 里的哪些变量？",
+      "options": [
+        "所有变量",
+        "只有 VITE_ 前缀的变量",
+        "只有 MODE 和 DEV",
+        "需要手动 export 的变量"
+      ],
+      "answer": 1,
+      "explanation": "安全设计——防止 DATABASE_URL 等密钥泄露到客户端。只有 VITE_ 开头的才被静态替换进产物。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "server.proxy 配置解决什么问题？",
+      "options": [
+        "生产环境代理",
+        "开发时避免 CORS——前端请求 /api 由 Vite 转发到后端",
+        "SSL 证书配置",
+        "域名重定向"
+      ],
+      "answer": 1,
+      "explanation": "dev 时前端 :5173 调后端 :8080 跨域 → proxy 让 Vite 拦截 /api 转发 → 浏览器视为同源 → 无 CORS。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "define: { __DEV__: true } 和 import.meta.env.DEV 的区别？",
+      "options": [
+        "完全相同",
+        "define 是全局文本替换（可在 if 里 Tree Shake）；env.DEV 是内置的布尔对象属性",
+        "define 只在 build 时生效",
+        "env.DEV 只在 dev 时存在"
+      ],
+      "answer": 1,
+      "explanation": "define 做编译期文本替换——if(false){...} 整块被删。env 是 Vite 预设的只读对象，也可 Tree Shake 但不如 define 灵活。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "vite build --mode staging 会加载哪些 .env 文件？",
+      "options": [
+        "只 .env.staging",
+        ".env + .env.staging + .env.staging.local + .env.local（优先级从低到高）",
+        "只 .env 和 .env.local",
+        "所有 .env.* 文件"
+      ],
+      "answer": 1,
+      "explanation": "Vite 按 mode 加载：.env → .env.local → .env.staging → .env.staging.local。后者覆盖前者。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "minify: 'esbuild' 和 'terser' 的区别？",
+      "options": [
+        "完全一样",
+        "esbuild 快（Go）但压缩率略低；terser 慢但支持 mangle props 等高级优化",
+        "terser 更快",
+        "esbuild 不能压缩 CSS"
+      ],
+      "answer": 1,
+      "explanation": "默认 esbuild minify（快 20-40x）；如果需要 terser 的 mangle.properties 等高级功能则配 'terser'。"
+    }
+  ]
+}

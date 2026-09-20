@@ -1,0 +1,84 @@
+{
+  "title": "vite-assets 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "import img from './logo.png' 和 public 目录下的 /logo.png 有什么核心区别？",
+      "options": [
+        "完全一样",
+        "import 走构建管线（hash + transform + code split）；public 原样复制不处理",
+        "public 会被 hash",
+        "import 的文件不会被打包"
+      ],
+      "answer": 1,
+      "explanation": "import 后文件名带 contenthash → 永久缓存 + 可被 Tree Shake；public 原样拷贝 → 改名需手动 cache-bust。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "assetsInlineLimit: 4096 的效果是？",
+      "options": [
+        "所有图片都转 base64",
+        "小于 4KB 的 import 资源自动 base64 内联到 JS/CSS",
+        "限制上传文件大小 4KB",
+        "图片最大 4096px"
+      ],
+      "answer": 1,
+      "explanation": "小资源内联减少 HTTP 请求数；大于 4KB 才独立文件。设 0 = 全部不内联。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "import content from './data.csv?raw' 返回什么？",
+      "options": [
+        "CSV 文件 URL",
+        "CSV 文件的文本内容字符串",
+        "解析后的数组",
+        "Buffer"
+      ],
+      "answer": 1,
+      "explanation": "?raw 后缀返回文件原始文本内容（字符串）——适合需自行解析的格式如 CSV/TOML/Markdown。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "import.meta.glob('./views/*.vue', { eager: false }) 返回的是？",
+      "options": [
+        "模块对象集合",
+        "动态 import 函数集合（() => import(...)）",
+        "文件路径数组",
+        "字符串内容集合"
+      ],
+      "answer": 1,
+      "explanation": "默认 eager:false → 值是 lazy import 函数 → 按需加载。eager:true → 值是模块命名空间对象。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "?worker 后缀 import 的作用是什么？",
+      "options": [
+        "返回 worker 文件 URL",
+        "返回 Worker 构造函数——new MyWorker() 直接创建实例",
+        "内联执行 worker",
+        "创建 SharedWorker"
+      ],
+      "answer": 1,
+      "explanation": "?worker 告诉 Vite 此文件作为 Web Worker 处理——独立打包 + 返回构造函数 → 免去手动 new Worker(url) 路径管理。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "assetsInclude 配置的作用？",
+      "options": [
+        "指定哪些文件不打包",
+        "告诉 Vite 额外把哪些扩展名当静态资源处理（返回 URL）",
+        "限制可 import 的文件类型",
+        "定义 CDN 路径"
+      ],
+      "answer": 1,
+      "explanation": "Vite 默认只识别常见图片/字体/媒体后缀。自定义格式（.glb/.glsl/.hdr）需加入 assetsInclude → 才能 import 后走资源管线。"
+    }
+  ]
+}

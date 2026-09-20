@@ -1,0 +1,59 @@
+{
+  "title": "exp-middleware 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "错误处理中间件必须有几个参数？",
+      "options": ["2", "3", "4", "5"],
+      "answer": 2,
+      "explanation": "Express 通过参数个数判断是否为 error middleware：(err, req, res, next) 共 4 个，即使不用 next 也必须声明。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Express 5 中 setTimeout 里 throw 的错误能被 async handler 的自动捕获机制处理吗？",
+      "options": ["能，所有错误都行", "不能——只有 handler 返回的 Promise 链上的错误才被捕获", "取决于 Node 版本", "只有 TypeError 能"],
+      "answer": 1,
+      "explanation": "Express 5 只 catch handler 返回的 Promise rejection。setTimeout 的回调脱离了 Promise 链→不被捕获。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "中间件工厂函数（返回中间件的函数）的好处是什么？",
+      "options": ["执行更快", "可配置参数 + 复用 + 避免闭包泄漏", "Express 强制要求", "支持 async"],
+      "answer": 1,
+      "explanation": "工厂模式 options(opts) → 内部捕获 opts → 返回 (req,res,next) => {}——同一逻辑配不同参数多处复用。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下哪个中间件应在 express.json() 之前执行？",
+      "options": ["路由 handler", "helmet()", "morgan()", "error handler"],
+      "answer": 1,
+      "explanation": "helmet 设安全头 → 应在所有响应发送前执行。cors 也在 body parse 前（OPTIONS 预检不带 body）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "validate(schema) 中间件里用 req.body = value 覆盖的目的是？",
+      "options": ["清空 body", "用 schema 清洗后的安全值替代原始输入（去未知字段、类型转换）", "提升性能", "方便日志"],
+      "answer": 1,
+      "explanation": "Joi/Zod validate 返回 value = 只含已定义字段 + 类型已转换的对象 → 覆盖后防止 unknown fields 注入。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "next(err) 之后 Express 会怎么做？",
+      "options": [
+        "继续执行下一个普通中间件",
+        "跳过所有普通中间件，找最近的 4 参数 error handler",
+        "立即返回 500",
+        "重启进程"
+      ],
+      "answer": 1,
+      "explanation": "next(err) 让 Express 沿 middleware stack 向下找第一个 (err,req,res,next) 签名的处理函数。"
+    }
+  ]
+}

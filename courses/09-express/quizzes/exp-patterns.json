@@ -1,0 +1,92 @@
+{
+  "title": "exp-patterns 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "三层架构里，业务规则（如'邮箱重复则拒绝注册'）应放在哪一层？",
+      "options": ["Controller", "Service", "Repository", "Middleware"],
+      "answer": 1,
+      "explanation": "Service 承载业务逻辑与编排。Controller 只处理 HTTP 协议，Repository 只管数据存取。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Controller 层'保持薄'的好处不包括？",
+      "options": [
+        "便于替换底层 DB",
+        "业务逻辑可被定时任务/消息消费者复用（因在 Service）",
+        "单元测试更容易",
+        "职责清晰易定位"
+      ],
+      "answer": 0,
+      "explanation": "便于替换 DB 是 Repository 抽象的功劳，与 Controller 薄无直接关系。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "配置管理为什么推荐'启动即校验必填项'？",
+      "options": [
+        "加快启动",
+        "fail fast：缺关键配置立刻崩溃，而非运行到一半才在隐蔽路径报错",
+        "减少内存",
+        "方便热更新"
+      ],
+      "answer": 1,
+      "explanation": "启动时 required() 校验缺失即抛错崩溃，问题在部署第一时间暴露，而非某个低频接口被调用时才 500。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "统一错误体系里 code 和 message 的分工是？",
+      "options": [
+        "两者都给用户看",
+        "code 给程序做逻辑分支（稳定），message 给人读（可改可国际化）",
+        "message 给程序、code 给人",
+        "只留一个即可"
+      ],
+      "answer": 1,
+      "explanation": "前端据稳定 code（如 CONFLICT）编程分支，message 只是人类可读文案。这是 API 契约。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么生产环境的 5xx 响应要隐藏原始错误 message？",
+      "options": [
+        "节省带宽",
+        "原始 message/堆栈可能泄露内部实现、路径、SQL、依赖版本等敏感信息",
+        "5xx 不需要 message",
+        "为了提速"
+      ],
+      "answer": 1,
+      "explanation": "呼应 L2：内部错误详情只进日志，对外返回通用文案，避免信息泄露助攻击者。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "结构化日志（pino JSON）相比 console.log 的核心优势是？",
+      "options": [
+        "打印更快",
+        "字段可被日志系统索引检索/聚合（配合 requestId 贯穿链路），且便于脱敏",
+        "不需要级别",
+        "人能更好读"
+      ],
+      "answer": 1,
+      "explanation": "JSON 结构让 ELK/Loki 按字段查询统计；配合 requestId 做全链路追踪；redact 做脱敏。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "依赖注入（工厂 + composition root）主要解决什么测试痛点？",
+      "options": [
+        "让代码更短",
+        "Service 依赖可替换为 fake（假 repo/mailer），无需真 DB 即可单测业务逻辑",
+        "提升运行性能",
+        "减少文件数"
+      ],
+      "answer": 1,
+      "explanation": "注入让被测单元的依赖可 mock，隔离外部系统，单测快且稳定。"
+    }
+  ]
+}

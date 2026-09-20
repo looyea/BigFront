@@ -1,0 +1,92 @@
+{
+  "title": "vite-plugin-write 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "实现一个虚拟模块，最少需要哪两个钩子配合？",
+      "options": [
+        "transform + renderChunk",
+        "resolveId（认领说明符）+ load（生成源码）",
+        "config + transform",
+        "buildStart + closeBundle"
+      ],
+      "answer": 1,
+      "explanation": "resolveId 把 'virtual:x' 解析成自定义 id，load 对该 id 返回生成的源码，业务即可 import。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "虚拟模块解析后的 id 加 \\0 前缀主要是为了？",
+      "options": [
+        "跑得更快",
+        "标记这不是真实文件路径、让其它插件默认跳过，避免被当文件读取或争抢",
+        "加密源码",
+        "兼容 IE"
+      ],
+      "answer": 1,
+      "explanation": "\\0（null 字节）是 Rollup 生态惯例，表示虚拟/非文件 id，防止文件系统类插件误处理。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "写 transform 钩子时，最重要的性能习惯是？",
+      "options": [
+        "对所有模块都跑完整逻辑",
+        "先按 id/内容过滤，无关模块直接 return（没改时返回 null）",
+        "用正则匹配一切",
+        "总是返回新字符串"
+      ],
+      "answer": 1,
+      "explanation": "dev 下每个请求模块都会过 transform；空跑或返回未变内容会浪费性能/制造无谓转换。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "只想在开发服务器生效、生产构建完全不挂载，应该用？",
+      "options": ["enforce: 'pre'", "apply: 'serve'", "configureServer 里 try/catch", "mode === 'test'"],
+      "answer": 1,
+      "explanation": "apply:'serve' 让插件只在 dev 挂载；配合 configureServer 注册中间件，生产零成本、不把调试端点带上线。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "在 configureServer 里想让中间件跑在 Vite 内部转换之后，应怎么做？",
+      "options": [
+        "直接 server.middlewares.use",
+        "return (server) => { server.middlewares.use(...) }（返回后置函数）",
+        "设 enforce: 'post' 即可",
+        "没法控制顺序"
+      ],
+      "answer": 1,
+      "explanation": "configureServer 返回的函数会在 Vite 内部中间件安装后调用，从而把自定义中间件插到其后。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "把源码里 __FEATURE_X__ 替换为 true/false 后，未启用分支被剔除依赖的是？",
+      "options": [
+        "minify",
+        "Rollup tree-shaking（死代码消除）",
+        "HMR",
+        "code splitting"
+      ],
+      "answer": 1,
+      "explanation": "替换成常量 false 后 if(false){} 成为死代码，被 tree-shaking/minify 移除，实现编译期功能开关。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "想做'构建守卫'（如禁止把某秘密打进产物，命中就让构建失败），最合适的钩子是？",
+      "options": [
+        "transform",
+        "generateBundle（遍历产物 chunk，必要时 this.error）",
+        "configureServer",
+        "resolveId"
+      ],
+      "answer": 1,
+      "explanation": "generateBundle 能拿到最终产物集合，遍历 chunk.code 断言，用 this.error 让构建失败。"
+    }
+  ]
+}

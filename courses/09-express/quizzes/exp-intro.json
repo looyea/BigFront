@@ -1,0 +1,79 @@
+{
+  "title": "exp-intro 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Express 5 相比 4 最重要的改进是什么？",
+      "options": [
+        "支持 TypeScript",
+        "async handler 中 Promise reject 自动传递给 error handler",
+        "内置 ORM",
+        "支持 WebSocket"
+      ],
+      "answer": 1,
+      "explanation": "Express 5 检测 handler 返回值是 thenable → 自动 .catch(next)。不再需要 express-async-errors 或手动 try/catch。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Express 4 的 `/files/:name*` 在 Express 5 中怎么写？",
+      "options": [
+        "/files/:name(.*)",
+        "/files/{*name}",
+        "/files/**",
+        "/files/:name+"
+      ],
+      "answer": 1,
+      "explanation": "path-to-regexp v8 用花括号包裹：{*name} 匹配零或多段。原来的 :name* 和 :name+ 已移除。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Express 5 的 req.query 默认用什么库解析？",
+      "options": [
+        "querystring（Node 内置）",
+        "qs",
+        "URLSearchParams",
+        "express-validator"
+      ],
+      "answer": 1,
+      "explanation": "qs 支持嵌套对象 ?a[b]=c 和数组 ?a[]=1&a[]=2，比 Node 内置 querystring 强大得多。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Express 5 最低要求的 Node.js 版本是？",
+      "options": ["14", "16", "18", "20"],
+      "answer": 2,
+      "explanation": "Express 5 要求 Node.js >= 18，不再支持 16 及以下。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下哪个 API 在 Express 5 中已被移除？",
+      "options": [
+        "app.get()",
+        "res.send(statusCode)",
+        "app.use()",
+        "res.json()"
+      ],
+      "answer": 1,
+      "explanation": "res.send(404) 直接传数字作为状态码的用法在 5 中移除。改为 res.status(404).send() 或 res.sendStatus(404)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "node --watch 的作用是什么？",
+      "options": [
+        "监视文件变化自动重启进程",
+        "性能分析模式",
+        "开启调试器",
+        "热更新（HMR）"
+      ],
+      "answer": 0,
+      "explanation": "Node 18.11+ 的 --watch 标志监听源文件变化 → 自动重启 → 类似 nodemon 但零依赖。"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "title": "exp-testing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "测试金字塔推荐的健康比例是？",
+      "options": [
+        "大量 E2E + 少量单元测试",
+        "大量单元测试 + 适量集成测试 + 少量 E2E",
+        "全部写集成测试最省事",
+        "各占三分之一"
+      ],
+      "answer": 1,
+      "explanation": "单元多快稳、集成适量、E2E 少而脆。全压 E2E 会慢且难维护。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么要把 app 定义和 server.listen 拆成两个文件？",
+      "options": [
+        "为了代码更短",
+        "让测试能 import app 用 supertest 在内存发请求，无需真开端口",
+        "Express 强制要求",
+        "提升运行性能"
+      ],
+      "answer": 1,
+      "explanation": "app.js 只组装导出、server.js 才 listen。测试拿到 app 即可测完整中间件链，不占用真实端口。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "单元测试 Service 层时 mock 掉 Repository，依赖的是哪种设计？",
+      "options": ["继承", "依赖注入（DI）", "全局单例", "静态方法"],
+      "answer": 1,
+      "explanation": "有 DI（工厂 + composition root）才能把真 repo 换成 fake，不连 DB 测全部业务分支。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "supertest 主要测的是哪一层？",
+      "options": [
+        "纯业务函数",
+        "完整 HTTP 中间件链契约（校验+路由+错误处理+响应）",
+        "数据库索引",
+        "前端渲染"
+      ],
+      "answer": 1,
+      "explanation": "supertest 把 app 起临时 server 发真实请求，断言状态码/响应头/响应体，覆盖整条链。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "集成测试保证用例间数据库状态干净，通常怎么做？",
+      "options": [
+        "所有用例共用一份数据不清理",
+        "每个用例后 clearDB（或每类前后建拆内存库），用例可任意顺序重复执行",
+        "靠执行顺序保证",
+        "禁用并行就行"
+      ],
+      "answer": 1,
+      "explanation": "mongodb-memory-server + afterEach 清库 → 隔离、可重复、无顺序依赖。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于覆盖率，正确的说法是？",
+      "options": [
+        "覆盖率 100% 就能证明没有 bug",
+        "覆盖率是下限保护网，高覆盖 ≠ 无 bug，应重点覆盖业务分支/边界/错误路径",
+        "覆盖率越低越好",
+        "覆盖率只能靠 E2E 提升"
+      ],
+      "answer": 1,
+      "explanation": "行被跑过不代表断言充分。把它当门禁下限，别当质量目标。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "'测行为不测实现'的含义是？",
+      "options": [
+        "只断言对外契约（状态码/响应体/DB 副作用），不断言内部私有调用细节",
+        "不写断言",
+        "只测 happy path",
+        "测代码行数"
+      ],
+      "answer": 0,
+      "explanation": "断言内部实现会在重构时误碎测试；断言外部行为才能既保护契约又允许重构。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "测'调用第三方汇率 API'的业务，最合适的做法是？",
+      "options": [
+        "每次真打生产 API",
+        "用 nock/msw 拦截出网请求返回固定假响应",
+        "跳过不测",
+        "sleep 等真实返回"
+      ],
+      "answer": 1,
+      "explanation": "nock/msw 拦截 HTTP，测试快、稳定、可断言外部是否被正确调用，不依赖真实第三方。"
+    }
+  ]
+}

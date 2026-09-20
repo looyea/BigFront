@@ -1,0 +1,84 @@
+{
+  "title": "exp-pagination 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "offset 分页（SKIP 100000）翻到很深时为什么慢？",
+      "options": [
+        "网络慢",
+        "数据库需扫描并丢弃前面所有行才到目标偏移，成本随页码线性增长",
+        "内存不足",
+        "索引失效"
+      ],
+      "answer": 1,
+      "explanation": "SKIP 不是直接跳转，而是扫描并跳过前 N 行 → 深分页 O(n)。游标分页用索引定位则恒定。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "游标（cursor）分页相比 offset 的最大优势是？",
+      "options": [
+        "可以任意跳转到第 N 页",
+        "性能稳定（索引定位无 SKIP）+ 翻页期间数据插入不导致重复/漏项",
+        "实现更简单",
+        "一定返回 total"
+      ],
+      "answer": 1,
+      "explanation": "cursor 靠 WHERE 排序键>游标 直接定位、不受中间插入影响；代价是不能跳页、实现更复杂。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "游标分页的排序键为什么要额外附加一个唯一字段（如 _id）？",
+      "options": [
+        "加速查询",
+        "排序键有并列值时保证顺序唯一确定，否则翻页会重复/遗漏并列行",
+        "节省空间",
+        "没有原因"
+      ],
+      "answer": 1,
+      "explanation": "createdAt 可能相同 → 游标边界处的并列行会翻重或漏。追加唯一 _id 打破并列，形成全序。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "处理 sort 查询参数时最重要的安全措施是？",
+      "options": [
+        "转成小写",
+        "字段白名单校验，禁止用户排序未暴露的字段",
+        "加引号",
+        "限制长度"
+      ],
+      "answer": 1,
+      "explanation": "直接把 req.query.sort 传进 .sort() 会被排序隐藏字段（内部权重/他人数据）→ 泄露/性能攻击。必须白名单。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "前端只需要'是否有下一页'时，如何避免额外的 count 查询？",
+      "options": [
+        "查两次",
+        "取 limit+1 条，若拿到 limit+1 说明还有下一页，返回时截断到 limit",
+        "永远返回 true",
+        "用 offset"
+      ],
+      "answer": 1,
+      "explanation": "多取一条探测法：够 limit+1 → hasMore=true。省掉大集合上昂贵的 countDocuments。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "构造 MongoDB 过滤条件时，哪种写法会招致 NoSQL 注入？",
+      "options": [
+        "{ status: req.query.status }",
+        "把用户输入直接解析成查询对象拼接 / eval 用户传来的 JSON 条件",
+        "字段值用参数化传入",
+        "白名单枚举值"
+      ],
+      "answer": 1,
+      "explanation": "若信任 `?status={$gt:''}` 之类被解析成对象拼进查询 → 注入。应把值当数据传或用白名单，杜绝拼接用户对象。"
+    }
+  ]
+}

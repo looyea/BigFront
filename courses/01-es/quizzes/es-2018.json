@@ -1,0 +1,87 @@
+{
+  "title": "ES2018 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下代码 `publicUser` 里有什么？\n\n```js\nconst user = { id: 1, name: 'Ann', pwd: 'x' };\nconst { pwd, ...publicUser } = user;\n```",
+      "options": [
+        "{ id: 1, name: 'Ann', pwd: 'x' }",
+        "{ id: 1, name: 'Ann' }",
+        "{ pwd: 'x' }",
+        "抛错"
+      ],
+      "answer": 1,
+      "explanation": "rest 收集**剩余**可枚举自有键——pwd 被解构走，publicUser = { id, name }。这是**浅拷贝**。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "对象 spread `{ ...obj }` 与 `Object.assign({}, obj)` 的**主要**差别：",
+      "options": [
+        "完全等价",
+        "spread 是**语法**、无法被 Proxy set trap 拦截；assign 会走 set 触发拦截",
+        "spread 支持 Symbol，assign 不支持",
+        "assign 支持 getter，spread 不支持"
+      ],
+      "answer": 1,
+      "explanation": "语义相近，但 Object.assign 触发 target 的 setter（可被 Proxy 拦截）；spread 走 CreateDataProperty（**不**触发 setter）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`for await...of` 消费的是：",
+      "options": [
+        "普通数组",
+        "AsyncIterable（`Symbol.asyncIterator`）——每次 next 返回 Promise",
+        "同步 Generator",
+        "只要实现了 `then` 的对象"
+      ],
+      "answer": 1,
+      "explanation": "for-await 每次 next() 得到 Promise<{value,done}>——自动 await。Node stream、fetch body、async generator 都符合。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nPromise.resolve('ok')\n  .finally(() => console.log('F'))\n  .then(v => console.log(v));\n```",
+      "options": [
+        "F → ok（finally 不吞值）",
+        "只打 F",
+        "只打 ok",
+        "抛错"
+      ],
+      "answer": 0,
+      "explanation": "finally **不接参数、不改变状态**——上游的 value 原样穿透。所以先打 F（清理），再打 ok。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "命名捕获组的值挂在哪个字段？\n\n```js\n/(?<y>\\d{4})/.exec('2026')\n```",
+      "options": ["`m[0]`", "`m.groups.y`", "`m.named.y`", "`m.captures.y`"],
+      "answer": 1,
+      "explanation": "匹配结果的 `groups` 字段是所有命名捕获的容器；`m[1]` 依然能用（索引）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "正则 `s` 标志（dotAll）的作用是：",
+      "options": [
+        "开启严格模式",
+        "让 `.` 匹配**换行符** `\\n`",
+        "开启 sticky 模式",
+        "多行匹配"
+      ],
+      "answer": 1,
+      "explanation": "默认 `.` 不匹配 `\\n` — 加了 s 就可以。终于不用写 `[\\s\\S]`。sticky 是 `y`，多行是 `m`。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下**不能**被 Babel 降级的是：",
+      "options": ["对象 spread", "for-await-of", "lookbehind `(?<=x)`", "Promise.finally"],
+      "answer": 2,
+      "explanation": "lookbehind 是**引擎级**正则语法——Babel 处理 JS AST 不改正则内部；Safari 16.4 前不支持。其它三项 babel 都能降级（Promise.finally 靠 core-js polyfill）。"
+    }
+  ]
+}

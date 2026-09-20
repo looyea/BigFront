@@ -1,0 +1,92 @@
+{
+  "title": "exp-auth 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "JWT 的 payload 段是加密的吗？",
+      "options": [
+        "是，别人看不到内容",
+        "不是，只是 Base64Url 编码，任何人可解码查看",
+        "是对称加密",
+        "取决于算法"
+      ],
+      "answer": 1,
+      "explanation": "JWT 只签名不加密。payload 可被 Base64 解码明文看到，绝不能放密码/敏感信息。签名只保证未被篡改。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么推荐 Access Token 短命 + Refresh Token 长命？",
+      "options": [
+        "节省流量",
+        "Access 频繁用暴露面大需短（被盗窗口小），Refresh 只在续期时用可长，兼顾安全与免频繁登录",
+        "Access 更大",
+        "Refresh 会过期"
+      ],
+      "answer": 1,
+      "explanation": "双 token 平衡安全与体验：短时 Access 泄露风险窗口小，长时 Refresh 让用户不用反复登录，且可轮换/吊销。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "httpOnly Cookie 主要防御哪类攻击？",
+      "options": ["CSRF", "XSS 窃取 token（JS 读不到 cookie）", "SQL 注入", "点击劫持"],
+      "answer": 1,
+      "explanation": "httpOnly 让文档 JS 无法读 cookie，XSS 脚本偷不走 session/token。但防不住 CSRF（需 SameSite/CSRF token）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "存储用户密码的正确方式是？",
+      "options": [
+        "MD5 加密",
+        "SHA-256 哈希",
+        "bcrypt/argon2 带 salt 的慢哈希",
+        "AES 可逆加密"
+      ],
+      "answer": 2,
+      "explanation": "MD5/SHA 太快可被 GPU 彩虹表爆破；密码应单向慢哈希（bcrypt/argon2 自带 salt+可调 cost）。可逆加密更是外行。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Session 认证相比 JWT 的一个显著优势是？",
+      "options": [
+        "无需存储",
+        "可即时吊销（服务端删 session 立即失效）",
+        "天然跨域",
+        "不依赖 cookie"
+      ],
+      "answer": 1,
+      "explanation": "Session 存服务端，登出/封号删掉即失效。JWT 无状态，签发后到期前无法撤销（除非加黑名单）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "使用 JWT verify 时为什么必须显式传 algorithms:['HS256']？",
+      "options": [
+        "提升性能",
+        "防止 alg:none 绕过和 HS/RS 算法混淆等签名验证漏洞",
+        "默认不支持",
+        "为了可读性"
+      ],
+      "answer": 1,
+      "explanation": "不指定则库可能信任 token header 里声明的算法，历史上 alg:none 或 RS→HS 混淆可伪造 token。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "OAuth2 为什么用授权码流程（后端用 code 换 token）而非前端直接拿 token？",
+      "options": [
+        "更快",
+        "client_secret 只在后端使用不下发前端，code 经后端交换防拦截，配合 PKCE 更安全",
+        "省一步",
+        "不需要 state"
+      ],
+      "answer": 1,
+      "explanation": "授权码模式下 secret 留服务端、token 不经浏览器 URL 暴露；public client 加 PKCE 防授权码截获。"
+    }
+  ]
+}

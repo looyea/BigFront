@@ -1,0 +1,64 @@
+{
+  "title": "exp-rest 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "下列哪个 HTTP 方法是幂等的？",
+      "options": ["POST", "PATCH（如 {views:+1}）", "PUT", "都不幂等"],
+      "answer": 2,
+      "explanation": "PUT 全量替换——同一请求执行 N 次结果一致。POST 会重复创建，语义 PATCH 每次累加不幂等。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "用户未登录访问受保护资源，应返回哪个状态码？",
+      "options": ["403 Forbidden", "401 Unauthorized", "404 Not Found", "400 Bad Request"],
+      "answer": 1,
+      "explanation": "401 = 未认证（缺/错凭证，需登录）。403 = 已认证但无权限。'Unauthorized' 实为'未认证'的历史命名。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "POST 创建资源成功的规范响应是？",
+      "options": [
+        "200 + 空 body",
+        "201 Created + Location 头指向新资源",
+        "204 No Content",
+        "301 Moved"
+      ],
+      "answer": 1,
+      "explanation": "201 表示已创建，Location: /users/42 告诉客户端新资源 URI。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "注册时用户名已存在，最贴切的状态码是？",
+      "options": ["400", "409 Conflict", "422", "500"],
+      "answer": 1,
+      "explanation": "409 = 请求与当前资源状态冲突（重复创建）。400 太泛，422 侧重格式对但语义校验失败。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "哪个 URL 更符合 REST 资源命名规范？",
+      "options": ["/getUsersByPage", "/users?page=2", "/fetchUserList", "/user/listData"],
+      "answer": 1,
+      "explanation": "REST 用复数名词表资源、query 参数表过滤/分页，动词交给 HTTP method。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 API 版本升级，何时需要升大版本（v1→v2）？",
+      "options": [
+        "每次改动都升",
+        "破坏性变更（删字段/改类型/改语义）时",
+        "加一个可选字段时",
+        "只在加新接口时"
+      ],
+      "answer": 1,
+      "explanation": "向后兼容的变更（加字段、加可选参数）不升版；只有破坏既有契约才升大版本。"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "title": "vite-deploy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "把应用部署在域名子路径 /my-app/ 下，页面白屏、资源 404，最可能要先检查什么？",
+      "options": [
+        "Node 版本",
+        "vite.config 的 base 是否设为 '/my-app/'",
+        "CSS 预处理器",
+        "包管理器"
+      ],
+      "answer": 1,
+      "explanation": "默认 base:'/' 会让 index.html 引用 /assets/... 指向根而 404；子路径部署必须显式配 base。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`vite preview` 的作用是？",
+      "options": [
+        "启动开发服务器",
+        "用真实构建产物在本地起服务，上线前自检 base/路由/缓存是否正常",
+        "生成 sourcemap",
+        "跑单元测试"
+      ],
+      "answer": 1,
+      "explanation": "preview 服务 dist（构建产物），不是 dev server，用来验证真实产物行为。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "SPA 用 history 路由，刷新 /about 出现 404，需要配置什么？",
+      "options": [
+        "关掉路由",
+        "服务端 SPA fallback：未知路径都返回 index.html（Nginx try_files / _redirects）",
+        "改用 hash 路由唯一解",
+        "增加 base"
+      ],
+      "answer": 1,
+      "explanation": "/about 不是真实文件，服务器需回退到 index.html 让前端路由接管。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "静态资源的推荐缓存策略是？",
+      "options": [
+        "全部 no-store 保证最新",
+        "带 contenthash 的资源 immutable 长缓存，index.html 用 no-cache",
+        "全部强缓存一年",
+        "不设置缓存头"
+      ],
+      "answer": 1,
+      "explanation": "hash 变则 URL 变可放心 immutable；HTML 必须协商缓存才能及时拿到新引用（呼应 Express L4）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Monorepo 里希望改组件库源码时应用能即时 HMR、无需先 build，通常怎么做？",
+      "options": [
+        "每次手动 npm run build 库",
+        "让库的入口指向源码 src，并在应用里 optimizeDeps.exclude 该包、按源码编译",
+        "把库复制进应用",
+        "禁用 HMR"
+      ],
+      "answer": 1,
+      "explanation": "源码直用（exports 指 src + exclude 预打包）让 Vite 把 workspace 依赖当源码编译，改即热更。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "library mode 打组件库时，为什么要把 vue/react 放进 rollupOptions.external？",
+      "options": [
+        "减小构建配置体积",
+        "避免把 peer 依赖打进库导致重复实例/体积爆炸，让消费方提供",
+        "加快开发启动",
+        "生成类型声明"
+      ],
+      "answer": 1,
+      "explanation": "框架是 peerDependency，打进库会有多份 runtime 冲突与臃肿产物；应 external 由宿主提供。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "一个项目要多个独立 HTML 入口（home.html / admin.html），应如何配置？",
+      "options": [
+        "配多个 base",
+        "build.rollupOptions.input 传多个 HTML 路径（MPA 多入口）",
+        "装多个 Vite",
+        "用 SSR 才行"
+      ],
+      "answer": 1,
+      "explanation": "多页面通过 rollupOptions.input 指定多个 html 入口，各自独立打包。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "前端构建产物里绝不应该出现什么？",
+      "options": [
+        "contenthash 文件名",
+        "只有 VITE_ 前缀、且非敏感的公开变量",
+        "数据库密码/内部密钥等敏感信息（前端代码人人可读）",
+        "压缩后的 JS"
+      ],
+      "answer": 2,
+      "explanation": "任何打进前端的字符串都可被查看；密钥绝不能进前端包，鉴权/密钥留服务端（呼应 Express L6）。"
+    }
+  ]
+}

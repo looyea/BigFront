@@ -1,0 +1,84 @@
+{
+  "title": "exp-3rd-party 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "express-session 默认 MemoryStore 在生产环境的问题是什么？",
+      "options": [
+        "太慢",
+        "内存不共享（多进程/多实例 session 不互通）且重启丢失",
+        "不支持 Cookie",
+        "不安全"
+      ],
+      "answer": 1,
+      "explanation": "MemoryStore 存在进程内存里 → pm2 cluster 多 worker 各有独立 store → 用户请求被分到不同进程 → session 丢失。生产用 Redis。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "JWT 放在 Authorization header 里为什么天然防 CSRF？",
+      "options": [
+        "JWT 有签名",
+        "浏览器不会自动携带自定义 Header → 伪造请求带不上 Token",
+        "JWT 是加密的",
+        "用了 HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "CSRF 攻击利用浏览器自动带 cookie 的特性。Authorization header 需要 JS 手动设置 → 跨站伪造的表单/请求无法携带 → 免疫 CSRF。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "multer fileFilter 里调用 cb(new Error('...')) 后错误如何传递？",
+      "options": [
+        "自动返回 500",
+        "multer 内部调 next(err) → 进入 Express error handler",
+        "需要手动 res.status(400).json()",
+        "错误被静默忽略"
+      ],
+      "answer": 1,
+      "explanation": "multer 是中间件，fileFilter cb(err) → multer 调 next(err) → 全局 error handler 捕获 → 统一返回 400。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "/healthz 和 /readyz 分别检查什么？",
+      "options": [
+        "完全相同",
+        "healthz=进程存活(uptime)；readyz=依赖可用(DB/Redis连接正常)",
+        "healthz=性能指标；readyz=错误率",
+        "healthz 给监控用；readyz 给前端用"
+      ],
+      "answer": 1,
+      "explanation": "Liveness(liveness probe=healthz): 进程是否活着 → 死了重启。Readiness(readyz): 是否能处理请求 → 暂时不可用时摘流量不重启。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "pino-http 的 genReqId 有什么用？",
+      "options": [
+        "加速日志写入",
+        "为每个请求生成唯一 ID → 日志中所有行可关联同一个请求（分布式追踪）",
+        "防止日志重复",
+        "压缩日志体积"
+      ],
+      "answer": 1,
+      "explanation": "有 requestId 后，用户报错反馈一个 ID → 在 Loki/ELK 搜这个 ID 看到该请求全链路所有日志行。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "signed cookie 防什么？防不了什么？",
+      "options": [
+        "防 XSS 偷 cookie；防不了篡改",
+        "防篡改（用户改值后签名验证失败）；防不了 XSS 读取（httpOnly 才防）",
+        "什么都能防",
+        "什么都防不了"
+      ],
+      "answer": 1,
+      "explanation": "signed 用 HMAC 签名 → 用户改 cookie 值 → 验签失败 → 被丢弃。但 XSS 可直接读 cookie 发走 → 需 httpOnly 防。"
+    }
+  ]
+}

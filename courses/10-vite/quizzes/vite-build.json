@@ -1,0 +1,84 @@
+{
+  "title": "vite-build 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Vite 生产构建的默认入口是什么？",
+      "options": [
+        "src/main.js",
+        "项目根目录的 index.html",
+        "vite.config.js",
+        "package.json 的 main 字段"
+      ],
+      "answer": 1,
+      "explanation": "Vite 以 HTML 为构建起点（HTML-first），从 index.html 里的 <script type=module> 递归解析依赖图。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "build.sourcemap: 'hidden' 的效果是？",
+      "options": [
+        "完全不生成 map 文件",
+        "生成 .map 文件但 JS 末尾不写 sourceMappingURL 注释",
+        "把 map 内联进 JS",
+        "加密 map 文件"
+      ],
+      "answer": 1,
+      "explanation": "hidden = 生成 map 但不引用 → 上传到 Sentry 供错误还原，同时不随公开 JS 暴露给用户。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Vite 默认的 JS 压缩器是什么，为什么选它？",
+      "options": [
+        "Terser，因为压缩率最高",
+        "esbuild，因为用 Go 编写比 Terser 快 20-40 倍",
+        "UglifyJS，因为最老牌",
+        "SWC，因为兼容 Babel"
+      ],
+      "answer": 1,
+      "explanation": "esbuild（Go）极快。只有需要 Terser 特有的细粒度控制（drop_console 精细规则/法律注释保留）时才切 terser。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "assetsInlineLimit 默认 4096 的含义是？",
+      "options": [
+        "超过 4KB 的文件被丢弃",
+        "小于 4KB 的资源内联为 base64 data URL",
+        "所有资源都内联",
+        "单个 chunk 最大 4KB"
+      ],
+      "answer": 1,
+      "explanation": "小资源内联减少 HTTP 请求数；大资源保持独立文件利于缓存（base64 会膨胀约 33%）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "产物文件名里的 [hash] 有什么作用？",
+      "options": [
+        "防止文件被篡改",
+        "内容哈希 → 内容不变文件名不变 → 配合 CDN 长缓存，发版只增量下载",
+        "加密源码",
+        "压缩体积"
+      ],
+      "answer": 1,
+      "explanation": "contenthash 让变动文件的哈希改变，未变的保持 → 浏览器 immutable 长缓存命中率最大化。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "cssCodeSplit: false 会导致什么？",
+      "options": [
+        "CSS 不再被压缩",
+        "所有 CSS 合并进单个文件，不再按异步 chunk 拆分",
+        "CSS 变成内联 style 属性",
+        "禁用 CSS Modules"
+      ],
+      "answer": 1,
+      "explanation": "默认 true 时每个懒加载 chunk 的 CSS 单独输出按需注入；false 合并成一个 → 首屏 CSS 变大。"
+    }
+  ]
+}

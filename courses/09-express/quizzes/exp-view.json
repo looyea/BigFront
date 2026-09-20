@@ -1,0 +1,84 @@
+{
+  "title": "exp-view 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "EJS 中哪个标签输出内容存在 XSS 风险？",
+      "options": [
+        "<%= %>",
+        "<%- %>",
+        "<% %>",
+        "<%# %>"
+      ],
+      "answer": 1,
+      "explanation": "<%- %> 输出原始 HTML 不转义 → 若含用户输入会被当标签执行。转义输出用 <%= %>。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "res.render('a', data) 和 res.send(html) 的核心区别是？",
+      "options": [
+        "完全一样",
+        "render 用模板引擎把 data 编译成 HTML 再发送；send 直接发已有内容",
+        "render 只能发 JSON",
+        "send 会缓存模板"
+      ],
+      "answer": 1,
+      "explanation": "render 查 views 目录模板 → 引擎编译 + 注入数据 → 得到 HTML 字符串再响应。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "EJS 原生支持 layout（布局继承）吗？",
+      "options": [
+        "支持，用 extends 关键字",
+        "不支持，需 express-ejs-layouts 等插件",
+        "支持但只支持一层",
+        "通过 include 等效且完全一样"
+      ],
+      "answer": 1,
+      "explanation": "EJS 只有 include，无原生布局继承。真正 layout（block 填充）需 express-ejs-layouts 插件。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "app.set('view cache', true) 应该在哪里开启？",
+      "options": [
+        "开发环境，加速",
+        "生产环境，缓存编译后的模板函数避免重复 parse",
+        "任何环境都强制开",
+        "只在测试开"
+      ],
+      "answer": 1,
+      "explanation": "生产开：模板只编译一次复用。开发关：改了模板立刻生效不用重启。NODE_ENV=production 默认自动开。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Nunjucks 的 {% extends %} + {% block %} 相比 include 的优势是？",
+      "options": [
+        "运行更快",
+        "子模板只写差异部分填充父模板占位块，更 DRY、结构复用性强",
+        "不需要文件",
+        "支持 JavaScript"
+      ],
+      "answer": 1,
+      "explanation": "模板继承让公共布局在父模板定义，子模板覆盖 block → 比复制粘贴 include 更 DRY。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "想让所有模板都能访问当前登录用户，最佳做法是？",
+      "options": [
+        "每次 res.render 手动传 user",
+        "在中间件里 res.locals.user = req.user",
+        "写成全局变量 var user",
+        "存到 app.locals.user"
+      ],
+      "answer": 1,
+      "explanation": "res.locals 请求级隔离 → 中间件里设一次，下游所有 render 自动可用，且不跨用户串数据（app.locals 是全局共享不能放用户）。"
+    }
+  ]
+}

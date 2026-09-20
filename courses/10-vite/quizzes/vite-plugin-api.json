@@ -1,0 +1,90 @@
+{
+  "title": "vite-plugin-api 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Vite 插件与 Rollup 插件的关系是？",
+      "options": [
+        "完全无关的两套系统",
+        "Vite 插件是 Rollup 插件的超集：继承大部分 Rollup 钩子 + 若干 Vite 独有钩子",
+        "Rollup 插件是 Vite 的子集",
+        "Vite 不支持任何 Rollup 插件"
+      ],
+      "answer": 1,
+      "explanation": "构建走 Rollup，多数 Rollup 插件直接可用；Vite 另加 config/configureServer/transformIndexHtml/handleHotUpdate 等扩展钩子。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "'定身份 / 给初稿 / 改正文' 分别对应哪三个钩子？",
+      "options": [
+        "options / buildStart / end",
+        "resolveId / load / transform",
+        "config / transform / renderChunk",
+        "load / resolveId / transform"
+      ],
+      "answer": 1,
+      "explanation": "resolveId 解析模块身份、load 生成初始源码、transform 改写已有代码。顺序不能反（load 与 resolveId 别混）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "下列哪个钩子在 dev（serve）模式下不会触发？",
+      "options": ["transform", "resolveId", "generateBundle", "load"],
+      "answer": 2,
+      "explanation": "dev 没有真正打包，产物级钩子（options/renderChunk/generateBundle/writeFile）不跑；resolveId/load/transform 会对每个请求模块跑。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "apply: 'serve' 的作用是？",
+      "options": [
+        "让插件跑得更快",
+        "限定该插件只在开发服务器（dev）生效，不在 build 生效",
+        "只在构建生效",
+        "禁用插件"
+      ],
+      "answer": 1,
+      "explanation": "apply 控制作用域：'build'/'serve'/函数。给 dev-only 的 server 注入插件用 'serve'，避免构建时误用不触发的钩子。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "虚拟模块（凭空造一个可 import 的模块）主要靠哪两个钩子配对实现？",
+      "options": ["transform + renderChunk", "resolveId + load", "config + load", "options + transform"],
+      "answer": 1,
+      "explanation": "resolveId 把 'virtual:x' 认领成一个带 \\0 前缀的自定义 id，load 对该 id 返回生成的源码。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "想往 index.html 注入一个 <script> 标签，最合适的钩子是？",
+      "options": ["transformIndexHtml", "configureServer", "handleHotUpdate", "renderChunk"],
+      "answer": 0,
+      "explanation": "transformIndexHtml 专门改 HTML，可返回 tags 数组注入到 head/body，是埋点/meta/脚本注入正解。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "enforce: 'pre' 的含义是？",
+      "options": [
+        "强制报错",
+        "让该插件在插件执行顺序中排在（内建）转换之前",
+        "让插件最后执行",
+        "只在生产生效"
+      ],
+      "answer": 1,
+      "explanation": "enforce 决定插件间顺序：'pre' 最先、'post' 最后、其余 normal。要在 Vite 核心转换前处理原始源码用 'pre'。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "在插件里想吐出一个额外产物文件（如生成 .txt/asset），用哪个 API？",
+      "options": ["fs.writeFileSync", "this.emitFile", "res.end", "server.close"],
+      "answer": 1,
+      "explanation": "Rollup 插件上下文 this.emitFile({ type:'asset', fileName, source }) 纳入构建产物管理，别直接写文件绕过管线。"
+    }
+  ]
+}

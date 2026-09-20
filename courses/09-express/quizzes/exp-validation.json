@@ -1,0 +1,79 @@
+{
+  "title": "exp-validation 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "zod 的 object schema 默认如何处理未声明的多余字段？",
+      "options": [
+        "全部保留并透传",
+        "剥离（strip）掉，只保留 schema 声明的字段",
+        "抛异常",
+        "转成字符串"
+      ],
+      "answer": 1,
+      "explanation": "默认 strip → 客户端多传的 role/_id 等被丢弃，天然防 mass assignment 越权字段注入。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "对 query 参数 ?page=2 做数字校验，正确做法是？",
+      "options": [
+        "z.number()",
+        "z.coerce.number()",
+        "parseInt 后再 typeof",
+        "直接当数字用"
+      ],
+      "answer": 1,
+      "explanation": "req.query 的值永远是字符串，普通 z.number() 会失败。z.coerce.number() 先转类型再校验。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "z.coerce.boolean() 校验字符串 'false' 会得到什么？",
+      "options": ["false", "true（Boolean('false') 非空串为真）", "报错", "undefined"],
+      "answer": 1,
+      "explanation": "Boolean('false') === true（非空字符串都真）。布尔 query 应用 z.enum(['true','false']).transform(v=>v==='true')。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "safeParse 和 parse 的区别是？",
+      "options": [
+        "没区别",
+        "safeParse 返回 {success,data/error} 不抛错；parse 失败直接抛异常",
+        "parse 更安全",
+        "safeParse 只做类型不做值校验"
+      ],
+      "answer": 1,
+      "explanation": "中间件里用 safeParse 手动分支返回 400；或用 parse 让异常冒泡到全局 error handler 统一处理。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "格式校验（zod）和授权校验（能否改这条记录）的关系是？",
+      "options": [
+        "都在 zod schema 里做",
+        "格式校验管数据长相，授权校验管谁能干，分属不同层，都要做",
+        "有 zod 就不需要授权",
+        "授权比校验更重要可省略校验"
+      ],
+      "answer": 1,
+      "explanation": "schema 无法表达'当前用户是否拥有 id=5 的帖子'这种权限——那是业务/授权层职责。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "校验错误响应里带 field 路径的主要目的是？",
+      "options": [
+        "方便调试",
+        "让前端把错误精确定位到对应输入框显示",
+        "加快响应",
+        "减少体积"
+      ],
+      "answer": 1,
+      "explanation": "details[].field（如 email）→ 前端表单在该字段下红字提示，形成校验/错误/表单的协作契约。"
+    }
+  ]
+}

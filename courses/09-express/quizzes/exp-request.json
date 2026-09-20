@@ -1,0 +1,66 @@
+{
+  "title": "exp-request 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "app.set('trust proxy', 1) 后 req.ip 从哪里取值？",
+      "options": [
+        "socket.remoteAddress",
+        "X-Forwarded-For 头的第一段",
+        "req.hostname",
+        "Host 头"
+      ],
+      "answer": 1,
+      "explanation": "trust proxy 让 Express 信任代理传来的 X-Forwarded-For → req.ip 取 XFF 最左边（真实客户端 IP）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "req.fresh 为 true 意味着什么？",
+      "options": [
+        "请求是新的",
+        "客户端缓存有效（If-None-Match/Modified 匹配），可返回 304",
+        "响应没有缓存",
+        "ETag 不存在"
+      ],
+      "answer": 1,
+      "explanation": "req.fresh 对比条件头（If-None-Match vs ETag / If-Modified-Since vs Last-Modified）→ 匹配 = 客户端有最新副本 = 304。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "req.url 和 req.originalUrl 的区别何时体现？",
+      "options": [
+        "完全相同",
+        "在挂载的 Router 内：url 截去 mount 前缀，originalUrl 保留完整",
+        "originalUrl 包含 query，url 不包含",
+        "只有 POST 时不同"
+      ],
+      "answer": 1,
+      "explanation": "Router 挂在 /api 下，请求 /api/users → req.url = '/users'，req.originalUrl = '/api/users'。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "req.accepts(['json','xml']) 返回什么？",
+      "options": [
+        "boolean",
+        "客户端 Accept 头中最匹配的那个类型字符串，或 false",
+        "数组",
+        "状态码"
+      ],
+      "answer": 1,
+      "explanation": "按 q 值权重从 Accept 头里匹配——匹配到 'json' 返回 'json'，都不匹配返回 false。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "客户端上传中途关闭浏览器，Express 哪个事件触发？",
+      "options": ["req.on('end')", "req.on('aborted')", "res.on('finish')", "server.on('close')"],
+      "answer": 1,
+      "explanation": "aborted = 请求未完整接收就断开（上传取消）。end = 正常读完 body。finish = 响应发完。"
+    }
+  ]
+}

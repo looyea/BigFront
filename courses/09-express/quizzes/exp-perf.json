@@ -1,0 +1,110 @@
+{
+  "title": "exp-perf 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Node 性能问题的'第一杀手'通常是？",
+      "options": [
+        "变量名太长",
+        "同步阻塞代码卡住事件循环（fs 同步/CPU 密集/大 JSON/正则回溯）",
+        "注释太多",
+        "文件太多"
+      ],
+      "answer": 1,
+      "explanation": "事件循环单线程，任何同步 CPU 密集或阻塞 API 会让所有请求排队（呼应 L1）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "看延迟指标时为什么更该关注 P99 而不是平均值？",
+      "options": [
+        "P99 更好算",
+        "平均值会掩盖长尾卡顿，P99 反映最差体验用户的延迟",
+        "平均值没意义",
+        "P99 一定更小"
+      ],
+      "answer": 1,
+      "explanation": "少数极慢请求被均值稀释；P50/P95/P99 才暴露长尾，是延迟 SLA 的核心。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "数据库为什么必须用连接池而不是每条 SQL 新建连接？",
+      "options": [
+        "新建连接会写坏数据",
+        "避免每次握手/认证开销、防止连接数爆炸，借-用-还复用",
+        "池能自动加索引",
+        "连接池更安全"
+      ],
+      "answer": 1,
+      "explanation": "建连成本高且数量有限，池复用；用完必归还否则耗尽池导致请求挂起。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "keep-alive 超时链的正确原则是？",
+      "options": [
+        "后端空闲超时 < 代理空闲超时",
+        "上游(后端)空闲超时 > 下游(代理/LB)空闲超时",
+        "两者必须相等",
+        "关掉 keep-alive 就行"
+      ],
+      "answer": 1,
+      "explanation": "若 Node 比 Nginx/LB 更早关连接，代理会复用已关连接引发偶发 502。故 server.keepAliveTimeout 要略大于 LB 超时。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "使用 compression 中间件时应避免什么？",
+      "options": [
+        "压缩 JSON",
+        "压缩已经压缩过的内容（图片/视频/zip）或流式响应",
+        "设置 threshold",
+        "在 Nginx 层做压缩"
+      ],
+      "answer": 1,
+      "explanation": "已压内容再压浪费 CPU 甚至变大；流式/SSE 不宜压。小响应(<阈值)也不值得。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "缓存'击穿'指的是什么？",
+      "options": [
+        "大量不存在的 key 同时打到 DB",
+        "某个热点 key 过期瞬间，海量并发同时查库回填打爆 DB",
+        "缓存和 DB 数据不一致",
+        "Redis 内存满了"
+      ],
+      "answer": 1,
+      "explanation": "穿透=查不存在、雪崩=同时过期、击穿=单热 key 过期瞬间并发打库。对策：互斥锁/逻辑过期。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "排查 Node 内存泄漏，常用手段是？",
+      "options": [
+        "重启服务器",
+        "堆快照对比（--inspect + DevTools / clinic），看持续增长的对象",
+        "把内存调大就好",
+        "删日志"
+      ],
+      "answer": 1,
+      "explanation": "拍两次 heap snapshot 对比找只增不减对象；常见源是无界缓存、未清定时器/监听、未归还连接。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "关于优化流程，正确的顺序是？",
+      "options": [
+        "凭经验直接改最可疑的地方",
+        "先建基线→profile 定位瓶颈→改一处→复测对比",
+        "同时改十几处再看效果",
+        "只读代码不测量"
+      ],
+      "answer": 1,
+      "explanation": "先测量再优化，一次改一处可归因；否则无法判断哪步有效、是否引入回退。"
+    }
+  ]
+}

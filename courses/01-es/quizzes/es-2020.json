@@ -1,0 +1,67 @@
+{
+  "title": "ES2020 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nconst a = 0;\nconsole.log(a || 'x', a ?? 'y');\n```",
+      "options": ["x y", "x x", "0 y", "0 x"],
+      "answer": 2,
+      "explanation": "`||` 看 falsy → 0 走右 = 'x'；`??` 只看 nullish → 0 保留 = 0。这就是 `??` 的意义。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`user?.profile?.city` 里 profile 是 `null`，整个表达式的值：**",
+      "options": ["抛 TypeError", "undefined", "null", "空字符串"],
+      "answer": 1,
+      "explanation": "`?.` 遇到 null/undefined → 短路整个链返回 undefined（不是 null）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`a || b ?? c` 的结果是：",
+      "options": ["按从左到右执行", "SyntaxError，需要加括号", "等价 a ?? c", "自动 a || (b ?? c)"],
+      "answer": 1,
+      "explanation": "规范禁止 `||` / `&&` 与 `??` 直接混用——必须写 `(a || b) ?? c` 或 `a || (b ?? c)`。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`Promise.allSettled([p1, p2])` 的返回结构：",
+      "options": [
+        "[v1, v2]",
+        "[{status, value/reason}, ...]，**从不** reject",
+        "任一 reject 立即 reject",
+        "第一个 fulfilled"
+      ],
+      "answer": 1,
+      "explanation": "allSettled 等所有 Promise settle，返回 `{status: 'fulfilled' | 'rejected', value?, reason?}` 数组。批量场景必用。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下代码结果：\n\n```js\nlet x = 0;\nconst y = null;\ny?.foo(x++);\nconsole.log(x);\n```",
+      "options": ["1", "0", "抛错", "undefined"],
+      "answer": 1,
+      "explanation": "`?.` **短路整个调用表达式**——y 是 null 时 `y?.foo(...)` 不执行调用，参数也不会求值，x++ **不发生**。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`JSON.stringify({ id: 1n })` 会：",
+      "options": ["正常输出", "抛 TypeError（BigInt 不能序列化）", "输出字符串", "输出数字"],
+      "answer": 1,
+      "explanation": "BigInt 无法被 JSON.stringify——抛 `Do not know how to serialize a BigInt`。要么转字符串要么用自定义 replacer。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "`globalThis` 在 Node.js 里等价于：",
+      "options": ["window", "self", "global", "process"],
+      "answer": 2,
+      "explanation": "浏览器 → window；Web Worker → self；Node → global。globalThis 统一了这个概念。"
+    }
+  ]
+}

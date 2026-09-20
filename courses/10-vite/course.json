@@ -1,0 +1,60 @@
+{
+  "id": "10-vite",
+  "title": "Vite 构建工具",
+  "order": 10,
+  "tier": "白银 · 工程化核心",
+  "tagline": "从零到精通 Vite 6——下一代前端构建工具。吃透 ESM 开发服务器、HMR 原理、Rollup 构建管线、插件系统、环境配置、SSR、库模式、Monorepo、性能优化与部署全链路。",
+  "icon": "⚡",
+  "color": "#646cff",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "Vite 初体验与核心概念",
+      "subtitle": "创建项目 / Dev Server / HMR / 配置文件",
+      "lessons": [
+        { "id": "vite-intro", "title": "Vite 是什么、为什么快", "goal": "理解 no-bundle dev（native ESM）+ esbuild 预打包 + Rollup build 的双模型" },
+        { "id": "vite-setup", "title": "创建项目与配置文件", "goal": "npm create vite / vite.config.js 结构 / resolve / server / define 基本配置" },
+        { "id": "vite-hmr", "title": "HMR 热更新机制", "goal": "WebSocket 通信 / 模块图 / accept / invalidate / 框架 HMR 边界" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "资源处理与特性",
+      "subtitle": "静态资源 / CSS / JSON / WASM / Glob / Env",
+      "lessons": [
+        { "id": "vite-assets", "title": "静态资源与导入", "goal": "import url from './img.png' / ?url ?raw ?inline / public 目录 / base 路径" },
+        { "id": "vite-css", "title": "CSS 全家桶", "goal": "CSS Modules / Sass / Less / PostCSS / Tailwind / :is() 作用域 / 样式提取" },
+        { "id": "vite-env", "title": "环境变量与模式", "goal": ".env / .env.production / import.meta.env / loadEnv API / 自定义模式" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "构建与优化",
+      "subtitle": "生产构建 / code splitting / target / polyfill / 缓存",
+      "lessons": [
+        { "id": "vite-build", "title": "生产构建配置", "goal": "build.outDir / assetsInlineLimit / sourcemap / minify (terser/esbuild) / cssCodeSplit" },
+        { "id": "vite-splitting", "title": "代码分割与手动分块", "goal": "动态 import / manualChunks / preload / modulepreload / 产物分析" },
+        { "id": "vite-target", "title": "Target 与兼容性", "goal": "build.target / browserslist / @vitejs/plugin-legacy / polyfill 策略 / module vs nomodule" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "插件系统",
+      "subtitle": "生命周期 / 钩子 / 虚拟模块 / transform / 自定义插件",
+      "lessons": [
+        { "id": "vite-plugin-api", "title": "Vite 插件 API 与 Rollup 兼容", "goal": "Vite 扩展的钩子（config / configureServer / transformIndexHtml / handleHotUpdate）+ Rollup 全部钩子" },
+        { "id": "vite-plugin-write", "title": "手写插件", "goal": "做一个 virtual module 插件 + 一个 transform 注入代码插件 + 一个 dev server middleware 插件" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "框架集成与 SSR",
+      "subtitle": "Vue/React 插件 / SSR / SSG / Environment API",
+      "lessons": [
+        { "id": "vite-framework", "title": "Vue / React / Svelte 集成", "goal": "@vitejs/plugin-vue / plugin-react / 编译时 vs 运行时 / JSX / TS" },
+        { "id": "vite-ssr", "title": "SSR 与 Vite 6 Environment API", "goal": "createServer / transformIndexHtml / ssrLoadModule / 双进程 / hydration / streaming SSR" },
+        { "id": "vite-deploy", "title": "部署与 Monorepo", "goal": "静态部署 / CDN / Docker / Monorepo workspace 链接 / library mode / 多页面" }
+      ]
+    }
+  ]
+}

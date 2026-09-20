@@ -1,0 +1,97 @@
+{
+  "title": "es-devtools 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "循环 10000 次里只想在 i===9999 时暂停，最高效的做法是？",
+      "options": [
+        "在循环里加 if (i === 9999) debugger",
+        "右键行号 → Add conditional breakpoint → 写 i === 9999",
+        "用 console.log 打印然后肉眼看",
+        "改用 for...of 循环"
+      ],
+      "answer": 1,
+      "explanation": "条件断点不需要修改代码（A 要改代码重新部署）、不污染日志（C）、精确命中。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Performance 火焰图中，红色三角形标记代表？",
+      "options": [
+        "内存泄漏",
+        "HTTP 错误响应",
+        "Long Task（主线程阻塞 >50ms）",
+        "CSS 解析失败"
+      ],
+      "answer": 2,
+      "explanation": "红三角 = Long Task（>50ms 主任务）——通常由复杂 JS 计算、大量 DOM 操作、或同步 XHR 导致——需要拆分。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "排查内存泄漏时，Comparison 视图的作用是？",
+      "options": [
+        "对比两个版本的代码",
+        "对比两次快照间的对象增删——增长的就是泄漏",
+        "对比开发环境和生产环境",
+        "对比 JS Heap 和 CSS Memory"
+      ],
+      "answer": 1,
+      "explanation": "Heap Snapshot 三模式：Summary / Containment / Comparison。Comparison 显示两次快照间的 delta（+新建 / -释放），持续正增长的就是泄漏对象。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "TTFB 是指？",
+      "options": [
+        "页面完全加载的时间",
+        "从请求发出到收到第一个字节的时间",
+        "从 DNS 解析到 TCP 握手的时间",
+        "JS 执行第一行代码的时间"
+      ],
+      "answer": 1,
+      "explanation": "TTFB = Time To First Byte：请求发出 → 收到响应第一个字节。包含 DNS + TCP + TLS + 服务器处理。好 ≤800ms。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "INP（Interaction to Next Paint）替代了哪个旧 Core Web Vital？",
+      "options": [
+        "LCP",
+        "CLS",
+        "FID（First Input Delay）",
+        "FP"
+      ],
+      "answer": 2,
+      "explanation": "INP 2024 年正式替代 FID。FID 只看首次交互；INP 看**整个会话中所有交互**里最慢的——测量更完整、更贴合真实体验。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Coverage 面板用于检测？",
+      "options": [
+        "测试覆盖率（单元测试）",
+        "线上 JS/CSS 有多少字节实际被使用了——找 dead code",
+        "浏览器兼容性覆盖",
+        "网络请求覆盖率"
+      ],
+      "answer": 1,
+      "explanation": "DevTools → Ctrl+Shift+P → Coverage：录制操作后显示每个 JS/CSS 文件的 Used/Unused 百分比——红色就是没用到的代码——可移除或改为动态加载来减小首屏体积。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Blackbox script 的功能是？",
+      "options": [
+        "禁止浏览器加载第三方脚本",
+        "调试时跳过指定文件（Step Over 不进入）",
+        "加密 JS 文件",
+        "阻止 DevTools 打开"
+      ],
+      "answer": 1,
+      "explanation": "右键文件 → Add script to blackbox → 调试时 Step Into 会自动跳过这些文件（框架代码如 React/Vue 内部）——只关注自己的代码。"
+    }
+  ]
+}

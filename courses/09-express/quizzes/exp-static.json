@@ -1,0 +1,84 @@
+{
+  "title": "exp-static 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Cache-Control: no-cache 的准确含义是？",
+      "options": [
+        "完全不缓存响应",
+        "可以缓存，但每次使用前的请求服务器验证（走协商缓存，可能 304）",
+        "禁止代理缓存",
+        "立即过期且不验证"
+      ],
+      "answer": 1,
+      "explanation": "no-cache = 不用强缓存直接返回，总得向服务器验证（If-None-Match）→ 没变返回 304 复用。真正不缓存是 no-store。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么带 content hash 的 JS 文件可以设 max-age=31536000（一年）？",
+      "options": [
+        "因为文件很重要",
+        "内容变则 hash 变→文件名变，不会与旧文件冲突；未变则安全命中长缓存",
+        "因为 JS 不会变",
+        "因为浏览器不支持更短的时间"
+      ],
+      "answer": 1,
+      "explanation": "文件名含内容哈希，不同内容必不同名 → 长缓存不会拿到错文件；发版时 index.html（no-cache）引用新名即可。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "协商缓存中精度最高、最推荐用的是哪一对头？",
+      "options": [
+        "Last-Modified / If-Modified-Since",
+        "ETag / If-None-Match",
+        "Expires / Pragma",
+        "Cache-Control / Age"
+      ],
+      "answer": 1,
+      "explanation": "ETag 是内容哈希，能捕捉秒内多次修改、内容回滚等 Last-Modified 误判的情况，优先级也更高。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "index.html 如果被强缓存，发版后会发生什么？",
+      "options": [
+        "用户自动拿到新版本",
+        "浏览器仍用旧 HTML → 引用已删除的旧 hash 资源 → 白屏/404",
+        "服务器自动刷新缓存",
+        "没有任何影响"
+      ],
+      "answer": 1,
+      "explanation": "入口 HTML 必须 no-cache，否则用户拿到旧 HTML 引用的旧资源（已删）→ 报错。这是经典线上事故。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Cache-Control: immutable 的作用是？",
+      "options": [
+        "文件变为只读",
+        "告知浏览器 max-age 内连条件请求都免了，不再验证",
+        "禁止压缩",
+        "只能被一个浏览器缓存"
+      ],
+      "answer": 1,
+      "explanation": "immutable 告诉浏览器这个 URL 内容永不改变 → 即使过期也不发协商请求，省 304 往返（配合 hash 文件名）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "生产环境静态资源更推荐由谁服务？",
+      "options": [
+        "express.static 服务所有文件（最佳）",
+        "Nginx/CDN 直接服务静态，Express 专注 API",
+        "让客户端从 GitHub 拉",
+        "全部内联进 HTML"
+      ],
+      "answer": 1,
+      "explanation": "Node 单线程处理文件 IO 浪费且占连接。Nginx/CDN 高并发、缓存、边缘分发 → 静态交给它，Express 只跑业务逻辑。"
+    }
+  ]
+}

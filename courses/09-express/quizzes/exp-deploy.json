@@ -1,0 +1,110 @@
+{
+  "title": "exp-deploy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Node 单进程为什么打不满多核 CPU，生产如何解决？",
+      "options": [
+        "换更快的 CPU",
+        "用 cluster/PM2 多进程 或 编排层横向扩多实例，每进程占一核",
+        "开更多线程共享内存",
+        "把代码写短一点"
+      ],
+      "answer": 1,
+      "explanation": "Node 事件循环单线程，一个进程≈一个核。多 worker（cluster/PM2）或多 Pod（K8s）才能吃满多核。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Dockerfile 里为什么运行阶段用 `npm ci --omit=dev` 并用多阶段构建？",
+      "options": [
+        "构建更快",
+        "镜像更小、攻击面更小、可复现（严格按 lockfile、devDeps/源码不进运行镜像）",
+        "省磁盘",
+        "官方强制要求"
+      ],
+      "answer": 1,
+      "explanation": "多阶段把 build 依赖与源码留在构建层，运行层只装生产依赖，减小体积与漏洞面；npm ci 保证可复现。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Nginx 反代之后 Express 拿到的 req.ip 都是代理地址，应如何修正？",
+      "options": [
+        "解析 User-Agent",
+        "app.set('trust proxy', 1) 并让 Nginx 传 X-Forwarded-For/Proto",
+        "重启服务",
+        "改用 IPv6"
+      ],
+      "answer": 1,
+      "explanation": "trust proxy 让 req.ip/secure 依据转发头还原真实客户端，否则限流、日志、IP 判断全错（呼应 L3）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "liveness 与 readiness 探测的区别是？",
+      "options": [
+        "两者完全一样",
+        "liveness 失败→重启容器；readiness 失败→暂停转发但不重启",
+        "readiness 失败→重启；liveness 失败→暂停转发",
+        "都是给运维看的"
+      ],
+      "answer": 1,
+      "explanation": "liveness 判活（卡死才重启），readiness 判是否可接流量（依赖抖动只摘流量）。别把重检查放 liveness 引发重启雪崩。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "优雅关闭的核心目的是？",
+      "options": [
+        "加快启动",
+        "收到 SIGTERM 后停止新连接、等在途请求处理完再关依赖，避免截断请求/数据不一致",
+        "减少内存",
+        "自动重启崩溃进程"
+      ],
+      "answer": 1,
+      "explanation": "server.close() 停 accept 新连接并等在途完成，再关 DB/Redis/flush 日志，超时兜底强退。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "生产日志的推荐做法是？",
+      "options": [
+        "应用自己写本地文件并轮转",
+        "结构化 JSON 写到 stdout/stderr，由平台采集进 Loki/ELK",
+        "用 console.log 随意打印",
+        "不记日志省钱"
+      ],
+      "answer": 1,
+      "explanation": "12-Factor：日志当事件流写标准输出，交给基础设施收集；应用不管理文件轮转（呼应 L6 pino）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于生产密钥（DB 密码、JWT 私钥），正确做法是？",
+      "options": [
+        "写死在 config 默认值里",
+        "打进 Docker 镜像层方便",
+        "运行时从 Secret Manager/K8s Secret 注入环境变量，不进镜像不进 git",
+        "提交到私有仓库就行"
+      ],
+      "answer": 2,
+      "explanation": "镜像可被 pull/diff 泄露、git 历史难清除。密钥须外部注入、可轮换、有审计（呼应 L6）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "为什么镜像 tag 应该用不可变版本号而不是 latest？",
+      "options": [
+        "latest 下载更慢",
+        "不可变 tag 才能保证可回滚、可追溯、部署确定（同一 tag 内容会变会导致回滚/复现失效）",
+        "版本号能加速启动",
+        "纯粹为了好看"
+      ],
+      "answer": 1,
+      "explanation": "latest 指向会变，出问题无法确定回滚到哪个具体镜像；用 git sha/语义版本 tag 可追溯可回滚。"
+    }
+  ]
+}

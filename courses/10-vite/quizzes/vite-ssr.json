@@ -1,0 +1,105 @@
+{
+  "title": "vite-ssr 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "SSR 主要解决纯客户端渲染（SPA）的哪些问题？",
+      "options": [
+        "代码太长",
+        "首屏白屏、SEO 弱（爬虫拿到空 HTML）、慢网/低端机体验差",
+        "包体积大",
+        "HMR 慢"
+      ],
+      "answer": 1,
+      "explanation": "SSR 在服务器输出真实 HTML，首屏可见、可被爬，再靠 hydration 变交互。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "hydration（水合）指的是什么？",
+      "options": [
+        "把 CSS 注入页面",
+        "浏览器加载 JS 后，框架接管服务端返回的已有 DOM，绑定事件/恢复状态",
+        "把图片转 base64",
+        "服务端压缩 HTML"
+      ],
+      "answer": 1,
+      "explanation": "SSR 出静态 HTML，client JS 执行后'接管'这些 DOM 使其可交互，即 hydration。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Vite SSR 开发模式里，在服务端加载并执行前端 SSR 入口模块用的是哪个 API？",
+      "options": ["import()", "vite.ssrLoadModule()", "require()", "loadEnv()"],
+      "answer": 1,
+      "explanation": "ssrLoadModule 在 Node 里即时编译并执行 SSR 入口拿到 render()，配合 transformIndexHtml/middlewareMode。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么 SSR 里通常要'每个请求新建一个应用实例'？",
+      "options": [
+        "为了省内存",
+        "避免用户间状态串台（共享单例会把 A 的数据渲染给 B）",
+        "加速渲染",
+        "框架强制语法"
+      ],
+      "answer": 1,
+      "explanation": "服务端并发共享实例会造成状态泄漏/错乱，须按请求隔离（呼应 Express L5 无状态）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "生产环境 SSR 应该怎么部署？",
+      "options": [
+        "直接跑 dev server + ssrLoadModule",
+        "构建 client + server 双产物，用常驻 Node 服务加载 server 产物渲染、client 产物做 hydration",
+        "只上传 dist 静态文件即可",
+        "交给 CDN 执行 JS"
+      ],
+      "answer": 1,
+      "explanation": "dev server/ssrLoadModule 为开发设计，慢且不安全；生产要预构建双产物 + Node 服务。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Vite 6 Environment API 带来的核心变化是？",
+      "options": [
+        "新增了 CSS 预处理器",
+        "把 client 与 SSR/Node 等统一成'多环境'抽象，插件按环境注册行为，取代散落的 isSSR 分支",
+        "去掉了 SSR 支持",
+        "只支持 Node 一种环境"
+      ],
+      "answer": 1,
+      "explanation": "SSR 变成一个 environment，可自定义更多（edge/test），Vite 升级为通用多环境编译平台。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "把 SSR 的初始 state 注入 HTML 时，必须注意什么？",
+      "options": [
+        "越大越好",
+        "state 要可 JSON 序列化，且对内容做转义防 </script> 逃逸引发 XSS",
+        "直接拼字符串即可",
+        "用 localStorage 传"
+      ],
+      "answer": 1,
+      "explanation": "内联脚本里的 </script><script> 会逃逸执行 → XSS；且不可序列化值会坏 hydration（呼应 Express L6）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "出现 hydration mismatch（水合不匹配）的常见原因是？",
+      "options": [
+        "网络太慢",
+        "服务端与客户端首次渲染结果不同（用了 Date.now/random/读 window/依赖客户端数据的条件渲染）",
+        "CSS 太多",
+        "chunk 分太多"
+      ],
+      "answer": 1,
+      "explanation": "两端渲染必须一致；把仅客户端的渲染延后到挂载后，或用 ClientOnly/suppressHydrationWarning。"
+    }
+  ]
+}

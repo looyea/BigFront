@@ -1,0 +1,84 @@
+{
+  "title": "vite-css 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "CSS Modules 文件命名规则是什么？",
+      "options": [
+        "Component.css",
+        "Component.module.css",
+        "Component.scoped.css",
+        "*.css 自动全部 module 化"
+      ],
+      "answer": 1,
+      "explanation": "只有 *.module.css（或 .scss/.less）才被当作 CSS Modules → 类名自动 hash → 作用域隔离。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "css.preprocessorOptions.scss.additionalData 的作用是？",
+      "options": [
+        "添加全局 CSS 变量",
+        "在每个 SCSS 文件顶部自动注入代码（如 @use 导入变量）",
+        "编译后追加 CSS",
+        "设置 sass 编译器选项"
+      ],
+      "answer": 1,
+      "explanation": "additionalData 在每个 .scss 编译前 prepend 字符串 → 免去每个文件手动写 @use \"@/vars\"。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "生产构建时 CSS 默认怎么处理？",
+      "options": [
+        "内联到 JS 里",
+        "提取成独立 .css 文件 + minify",
+        "不处理原样输出",
+        "转成 Tailwind"
+      ],
+      "answer": 1,
+      "explanation": "build 时 Rollup 提取所有 CSS → 独立文件 + Lightning CSS minify + contenthash → <link> 引用。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "dev 模式下 CSS 是怎么注入页面的？",
+      "options": [
+        "<link> 标签",
+        "JS 动态创建 <style> 标签插入 DOM",
+        "内联在 HTML 里",
+        "Service Worker"
+      ],
+      "answer": 1,
+      "explanation": "Vite dev 把 CSS 当 JS 模块处理 → styleinject → 动态 <style> → 支持 HMR 热替换 CSS 内容无需刷新。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "cssCodeSplit: false 会导致什么？",
+      "options": [
+        "CSS 不压缩",
+        "所有路由的 CSS 合并成一个大文件（首屏全加载）",
+        "CSS 内联到 HTML",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "true(默认)：异步 chunk 有自己的 CSS → 按需加载。false：合并全部 → 首屏下载所有页面样式。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Tailwind CSS 在 Vite 里以什么方式集成？",
+      "options": [
+        "Vite 原生插件",
+        "通过 PostCSS 插件（tailwindcss 是 postcss 插件）",
+        "npm 全局安装",
+        "CDN 引入"
+      ],
+      "answer": 1,
+      "explanation": "Tailwind 本质是 PostCSS 插件 → 写在 postcss.config.js 里 → Vite 内置 PostCSS pipeline 处理。"
+    }
+  ]
+}

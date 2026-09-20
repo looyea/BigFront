@@ -1,0 +1,69 @@
+{
+  "title": "vite-intro 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Vite dev 启动快的核心原因是？",
+      "options": [
+        "用了 Rust 编写",
+        "不打包——利用浏览器原生 ESM 按需编译单个文件",
+        "缓存了上次构建结果",
+        "只编译入口文件"
+      ],
+      "answer": 1,
+      "explanation": "Vite no-bundle 模型：启动 server 即就绪（<1s），浏览器 import 哪个模块就即时编译哪个。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "esbuild 预打包主要解决什么问题？",
+      "options": [
+        "生产代码压缩",
+        "CJS→ESM 转换 + 合并多文件依赖减少请求瀑布",
+        "CSS 预处理",
+        "TypeScript 类型检查"
+      ],
+      "answer": 1,
+      "explanation": "浏览器只认 ESM，node_modules 里大量 CJS 包需转换；lodash-es 600+ 文件打成 1 个避免 600 个 HTTP 请求。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Vite build（生产构建）默认用什么引擎？",
+      "options": ["Webpack", "esbuild", "Rollup", "Parcel"],
+      "answer": 2,
+      "explanation": "Vite 用 Rollup 做生产构建（Tree Shake + Code Split + 产物优化）。esbuild 只用于 dev 预打包和语法转换。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Vite 的入口文件是什么？",
+      "options": ["main.js", "vite.config.js", "index.html", "src/app.ts"],
+      "answer": 2,
+      "explanation": "Vite 以 index.html 为入口——解析 HTML 里的 <script type=\"module\"> 开始构建模块图。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "预打包结果缓存在哪个目录？",
+      "options": ["dist/", ".vite/deps/", "node_modules/.cache/", "src/.vite/"],
+      "answer": 1,
+      "explanation": "缓存在 node_modules/.vite/deps/。命中缓存时 dev 启动秒级；--force 可强制清除重新打包。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Vite 项目 npm run preview 的作用是？",
+      "options": [
+        "预览源代码",
+        "用静态服务器预览 build 后的 dist/ 产物",
+        "启动 dev server",
+        "开启 SSR 模式"
+      ],
+      "answer": 1,
+      "explanation": "preview 起一个本地静态服务器模拟生产环境——验证构建产物是否正确（路径/base/缓存行为）。"
+    }
+  ]
+}

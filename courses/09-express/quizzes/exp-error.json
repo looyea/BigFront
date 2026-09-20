@@ -1,0 +1,84 @@
+{
+  "title": "exp-error 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "HttpError 类里 expose 属性的作用是什么？",
+      "options": [
+        "控制错误是否打印到控制台",
+        "标记该错误信息是否可以暴露给客户端（5xx 不暴露内部细节）",
+        "控制 Sentry 是否上报",
+        "标记是否为已知错误"
+      ],
+      "answer": 1,
+      "explanation": "expose=true (4xx) → 返回真实 message 给用户；expose=false (5xx) → 只返回 'Internal Server Error' 防止泄露堆栈。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "uncaughtException 之后进程应该怎么做？",
+      "options": [
+        "继续运行，catch 后忽略",
+        "记录日志后尽快重启进程（状态不可靠）",
+        "调用 process.exit(0)",
+        "重新注册路由"
+      ],
+      "answer": 1,
+      "explanation": "uncaughtException = 未知状态 → 内部数据可能损坏 → 正确做法：记 fatal log → close server → 让进程管理器(pm2/K8s)重启。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "404 处理推荐用哪种方式？",
+      "options": [
+        "res.status(404).json({error:'Not Found'})",
+        "next(HttpError.notFound('Cannot ' + req.method + ' ' + req.originalUrl))",
+        "throw new Error('404')",
+        "res.sendStatus(404)"
+      ],
+      "answer": 1,
+      "explanation": "用 next(err) → 统一走 error handler（格式一致 + 日志记录 + 监控上报），不散落各处手写。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Error handler 里为什么要区分 4xx 和 5xx 的日志级别？",
+      "options": [
+        "节省磁盘",
+        "4xx = 用户/客户端问题（warn），5xx = 服务端 bug（error）→ 只有 5xx 才触发告警",
+        "Express 要求",
+        "没有区别"
+      ],
+      "answer": 1,
+      "explanation": "4xx 正常业务（用户输错密码）用 warn；5xx 非预期崩溃用 error → PagerDuty 只对 error 级别告警。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下错误中，哪个不应该被 catch？",
+      "options": [
+        "数据库连接超时",
+        "用户提交了无效邮箱",
+        "TypeError: Cannot read properties of undefined（代码 bug）",
+        "第三方 API 返回 503"
+      ],
+      "answer": 2,
+      "explanation": "编程错误（TypeError/ReferenceError）= 代码 bug → 应该 crash + 报警 + 修复，不应该静默处理。操作错误才 catch。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Sentry 的 errorHandler 放在自定义 errorHandler 前面还是后面？",
+      "options": [
+        "前面——先上报再响应",
+        "后面——确保自定义 handler 已处理响应格式，Sentry 只做上报",
+        "位置无所谓",
+        "不能同时存在两个 error handler"
+      ],
+      "answer": 1,
+      "explanation": "通常自定义 handler 在前（负责 res.json 响应），Sentry handler 在后作为最后兜底上报（不再发响应）。或反过来：Sentry request handler 在前捕获 context。"
+    }
+  ]
+}

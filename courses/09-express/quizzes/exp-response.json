@@ -1,0 +1,66 @@
+{
+  "title": "exp-response 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "res.sendFile() 为什么要配 root 选项？",
+      "options": [
+        "提升性能",
+        "限制文件访问范围——防路径穿越攻击（../../etc/passwd）",
+        "设置 Content-Type",
+        "指定缓存策略"
+      ],
+      "answer": 1,
+      "explanation": "root 指定安全根目录 → Express 只允许访问该目录下的文件 → 攻击者无法用 .. 跳出。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "res.vary('Accept-Encoding') 的作用是什么？",
+      "options": [
+        "强制压缩",
+        "告诉中间缓存：不同 Accept-Encoding 要分别缓存响应变体",
+        "拒绝不支持 gzip 的客户端",
+        "设置响应编码"
+      ],
+      "answer": 1,
+      "explanation": "CDN/Proxy 看 Vary → 知道同一个 URL 要按 gzip/br/identity 分别存储 → 不会把压缩版发给不支持的客户端。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "SSE (Server-Sent Events) 的 Content-Type 是？",
+      "options": ["application/json", "text/event-stream", "text/plain", "multipart/mixed"],
+      "answer": 1,
+      "explanation": "SSE 用 text/event-stream + 每条消息 `data: xxx\\n\\n` 格式 → 浏览器 EventSource API 自动解析。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "res.locals 的用途是什么？",
+      "options": [
+        "设置本地变量只在本文件可用",
+        "为当前请求的模板渲染提供上下文变量",
+        "存储 session 数据",
+        "设置本地文件路径"
+      ],
+      "answer": 1,
+      "explanation": "res.locals.user = req.user → 后续 res.render('page') 时模板里直接用 user 变量。中间件里设 → 所有下游模板共享。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "res.on('finish') 什么时候触发？",
+      "options": [
+        "请求处理完毕（进 handler 后）",
+        "响应最后一字节已交给操作系统（不一定到达客户端）",
+        "客户端收到完整响应",
+        "服务器关闭时"
+      ],
+      "answer": 1,
+      "explanation": "finish = res.end() 后所有缓冲已 flush 到 OS socket → 日志/morgan 用此时机记录 statusCode+时间。不代表客户端收到。"
+    }
+  ]
+}
