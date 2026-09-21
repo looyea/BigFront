@@ -1,0 +1,92 @@
+{
+  "title": "vue-directives-teleport 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "自定义指令钩子里，'el 已插入真实 DOM、适合 focus/初始化第三方库'的时机是？",
+      "options": ["created", "beforeMount", "mounted", "updated"],
+      "answer": 2,
+      "explanation": "mounted 时元素已在文档中；created 时 DOM 还没挂（呼应 vue-directives-teleport 第一节钩子表）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "v-permission=\"row.code\" 传入的值变化了，指令却没反应，最可能的原因是？",
+      "options": [
+        "指令不支持绑定表达式",
+        "没写 updated 钩子去重放参数",
+        "应该改用 watchEffect",
+        "指令只能全局注册"
+      ],
+      "answer": 1,
+      "explanation": "binding.value 变化只触发 beforeUpdate/updated，漏写 updated 是'参数不生效'bug 之母（呼应 vue-directives-teleport 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "指令钩子 (el, binding) 里，v-tooltip:top.fade=\"text\" 的 binding.arg 与 binding.modifiers 是？",
+      "options": [
+        "arg='top'，modifiers={ fade: true }",
+        "arg='fade'，modifiers={ top: true }",
+        "arg='top.fade'",
+        "arg=text，modifiers 为空"
+      ],
+      "answer": 0,
+      "explanation": "冒号后是参数 arg，点号后是修饰符对象（呼应 vue-directives-teleport 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "'弹窗被父级的 overflow:hidden / transform / z-index 困住'，Vue 的声明式解法是？",
+      "options": [
+        "把弹窗 ref 手动 appendChild 到 body",
+        "<Teleport to=\"body\"> 把 DOM 搬出、逻辑树不动",
+        "提高弹窗 z-index 到最大",
+        "改用 v-if 延迟渲染"
+      ],
+      "answer": 1,
+      "explanation": "Teleport 让组件逻辑上仍在树内（props/events/inject 畅通），DOM 渲染到目标位置（呼应 vue-directives-teleport 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "<Teleport :disabled=\"isMobile\"> 的作用是？",
+      "options": [
+        "isMobile 时销毁弹窗",
+        "isMobile 时禁止点击弹窗",
+        "isMobile 时停止传送、就地渲染在组件树位置",
+        "isMobile 时切换渲染目标为 body"
+      ],
+      "answer": 2,
+      "explanation": "disabled 是热开关：断开传送后内容回到父级原位——小屏内联、大屏 portal 一个 prop 切换（呼应 vue-directives-teleport 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "SSR 项目里使用 Teleport 的前提注意是？",
+      "options": [
+        "Teleport 会报错，必须禁用 SSR",
+        "目标锚点需存在于首屏服务端 HTML，否则水合找不到挂载位",
+        "必须 to 指向 id 而不是选择器",
+        "无需任何注意"
+      ],
+      "answer": 1,
+      "explanation": "服务端 HTML 里得有那个容器节点，水合才能把 Teleport 内容对上号（呼应 vue-directives-teleport 第四节、08-nuxt）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "'无权限即不渲染该按钮'，关于 v-permission 指令方案的正确认识是？",
+      "options": [
+        "只是 UI 遮眼法，真正的安全必须服务端鉴权兜底",
+        "足够安全，前端隐藏后接口也攻不破",
+        "指令删 DOM 同时也删数据",
+        "应该用 CSS display:none 替代指令"
+      ],
+      "answer": 0,
+      "explanation": "指令只能移除元素，数据与接口仍在——前端隐藏≠安全（呼应 vue-directives-teleport 第三节、09-express 鉴权）。"
+    }
+  ]
+}

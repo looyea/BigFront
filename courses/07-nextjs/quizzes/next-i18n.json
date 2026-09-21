@@ -1,0 +1,87 @@
+{
+  "title": "next-i18n 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "App Router 项目里 next.config 的内置 i18n 配置处于什么状态？",
+      "options": [
+        "照常可用且是推荐方案",
+        "不支持——官方要求用 middleware + 路由段自建",
+        "仅生产模式可用",
+        "需要开 experimental 标志"
+      ],
+      "answer": 1,
+      "explanation": "Pages Router 遗产不会迁移到 App Router，社区方案 next-intl 成事实标准（呼应 next-i18n 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "让 /zh/about 与 /en/about 都 SSG 预渲染，关键是什么？",
+      "options": [
+        "output: 'standalone'",
+        "dynamic = 'force-static'",
+        "[locale] 动态段里 export generateStaticParams 返回所有 locale",
+        "next.config 里设 i18n.locales"
+      ],
+      "answer": 2,
+      "explanation": "generateStaticParams 枚举参数，每个 locale 生成静态页（呼应 next-i18n 第二节、next-render-modes）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "访问无前缀的 /about 时跳到用户偏好语言，这一步发生在哪？",
+      "options": [
+        "客户端 useEffect 里判断跳转",
+        "middleware.ts 读 Accept-Language 协商后 redirect",
+        "layout 服务端组件里 redirect",
+        "nginx 配置里重写"
+      ],
+      "answer": 1,
+      "explanation": "middleware 在渲染前拦截并重定向；客户端跳转会闪双语且伤 SEO（呼应 next-i18n 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "静态标题文案在 RSC 里翻译，应使用哪组 API？",
+      "options": ["useTranslations（客户端 hook）", "getTranslations（next-intl/server）", "t 全局函数", "i18n.t 实例方法"],
+      "answer": 1,
+      "explanation": "服务端用 getTranslations，字典不进客户端 bundle；hooks 版留给客户端组件（呼应 next-i18n 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "多语言站的 hreflang 正确姿势是？",
+      "options": [
+        "只在默认语言页写 hreflang",
+        "写进 robots.txt",
+        "每页经 alternates.languages 列出全部语言互引且包含自身",
+        "靠 <html lang> 属性即可"
+      ],
+      "answer": 2,
+      "explanation": "hreflang 组必须互引+自引用才有效；lang 属性给无障碍/字体，不负责 SEO（呼应 next-i18n 第四节、next-metadata）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "next-intl 的切换器能做到'切语言停在当前页'，原理是？",
+      "options": [
+        "它把当前 pathname（不含语言段）保留，只替换 locale 段导航",
+        "把整页状态存 sessionStorage",
+        "浏览器自动记住上次访问的页",
+        "用 iframe 包了站点"
+      ],
+      "answer": 0,
+      "explanation": "usePathname 返回去语言段的规范化路径，router.replace 时拼新前缀（呼应 next-i18n 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "\"{count} item | {count} items\" 这类复数能力的底层标准是什么？",
+      "options": ["ICU MessageFormat 独一份", "CLDR plural categories（Intl.PluralRules 同源）", "各库自己拍脑袋", "正则匹配 s 结尾"],
+      "answer": 1,
+      "explanation": "vue-i18n/next-intl/Intl.PluralRules 共享 CLDR 分类（zero/one/few/many…）（呼应 next-i18n 第三节、01-es Intl、vue-use-i18n）。"
+    }
+  ]
+}

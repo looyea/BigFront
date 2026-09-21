@@ -1,0 +1,97 @@
+{
+  "title": "svelte-performance 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "哪类 React 性能问题在 Svelte 中基本不存在？",
+      "options": [
+        "大列表 DOM 节点过多导致的卡顿",
+        "首屏 JS 包体积过大",
+        "深层对象属性代理带来的读取开销",
+        "父组件更新导致子组件无谓重渲染（memo 场景）"
+      ],
+      "answer": 3,
+      "explanation": "Svelte 没有'组件函数重跑'模型，父更新不会连坐子组件——React 靠 memo/useMemo 缓解的问题在这里天然免疫。而 DOM 总量、包体积、代理开销三类是框架无关的真实瓶颈。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "1 万行表格中间删一行，无 key 的 {#each} 会发生什么？",
+      "options": [
+        "后续每一行就地错位复用旧 DOM，组件内部状态串位",
+        "整个表格自动重建，只是慢一点",
+        "编译器报错拒绝无 key 删除",
+        "被删行的 DOM 自动进入回收池延迟清理"
+      ],
+      "answer": 0,
+      "explanation": "无 key 时 each 按位置就地 diff：第 i 个组件实例被复用去显示新的第 i 项，选中态/输入值等内部状态全体错位。keyed each（as r (r.id)）既修正确性也缩小更新面。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "几 MB 的只读查找表（永不修改），最好的存放方式是？",
+      "options": [
+        "深 $state 对象，保证随时可响应",
+        "放进 $derived 表达式里内联",
+        "$state.raw 或直接普通模块常量",
+        "存进 writable store，$ 前缀自动订阅"
+      ],
+      "answer": 2,
+      "explanation": "深 $state 会把整个对象图包成代理、每次读取都打点登记依赖——只读大数据纯亏。不需要响应就 raw/常量；将来要整体替换时再 raw+换引用。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "模板里 {fmt(a)} 函数调用出现 5 处且计算昂贵，性能更优的做法是？",
+      "options": [
+        "给 fmt 外面再包一层 try/catch 防重复执行",
+        "改成 $derived(fmt(a))，5 处共享一次计算",
+        "把 fmt 移到 context 里传递",
+        "用 untrack(() => fmt(a)) 包住每处调用"
+      ],
+      "answer": 1,
+      "explanation": "$derived 惰性求值带缓存，多个读取点只算一次；模板内联函数调用每个使用点各自成 effect。untrack 会切断依赖导致不更新，是反向操作。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 $effect 的性能纪律，正确的是？",
+      "options": [
+        "$effect 越多越好，编译器会自动合并重复副作用",
+        "派生值应该放 $effect 里算好再写回另一个 $state，便于调试",
+        "$effect 里应把全部变量列入依赖，宁多勿少",
+        "派生用 $derived，$effect 只用于和外部系统同步，无关读取包 untrack"
+      ],
+      "answer": 3,
+      "explanation": "'effect 镜像 state'多一倍延迟与环路风险，是官方点名反模式；依赖宁缺勿滥（untrack 收窄）。派生归 $derived、副作用归 effect，两刀切干净。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "验证'一次 count 写入到底惊动了哪些 effect'，趁手的工具是？",
+      "options": [
+        "浏览器 Console 里给 DOM 加 breakpoints",
+        "$inspect.trace()（或 $inspect 观察打印面）",
+        "把组件拆到只剩一个元素逐段二分",
+        "Network 面板看请求数变化"
+      ],
+      "answer": 1,
+      "explanation": "$inspect/$inspect.trace 是响应式图的 X 光：没打印=依赖没建立，打印超预期=图接宽了。DOM breakpoint 只能看节点变更，看不到信号传播路径。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "屏幕外很长的静态区块，零 JS 成本跳过渲染工作的 CSS 方案是？",
+      "options": [
+        "visibility: hidden 配 scroll 监听",
+        "position: sticky 提升合成层",
+        "will-change: transform 提前分层",
+        "content-visibility: auto 配 contain-intrinsic-size"
+      ],
+      "answer": 3,
+      "explanation": "content-visibility:auto 让浏览器跳过视口外子树的布局/渲染，contain-intrinsic-size 提供占位尺寸防滚动条跳动。其余选项都不产生'跳过渲染'效果。"
+    }
+  ]
+}

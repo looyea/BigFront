@@ -55,6 +55,16 @@
         { "id": "vite-ssr", "title": "SSR 与 Vite 6 Environment API", "goal": "createServer / transformIndexHtml / ssrLoadModule / 双进程 / hydration / streaming SSR" },
         { "id": "vite-deploy", "title": "部署与 Monorepo", "goal": "静态部署 / CDN / Docker / Monorepo workspace 链接 / library mode / 多页面" }
       ]
+    },
+    {
+      "id": "L6",
+      "title": "测试与性能工程",
+      "subtitle": "Vitest 体系 / 预构建调优 / CI 工程化",
+      "lessons": [
+        { "id": "vite-vitest", "title": "Vitest 体系：单元、组件与覆盖率", "goal": "共享 Vite 配置与 transform 管道的红利、test/别名/env 配置、describe/it/expect 与 vi.mock/vi.fn、组件测试（happy-dom/jsdom + @testing-library）、coverage provider（v8）、watch/UI/相关测试模式、与 node:test 选型分工（呼应 node-testing、vue-testing、react-testing、svelte-testing）" },
+        { "id": "vite-deps-perf", "title": "依赖预构建与冷启动调优", "goal": "esbuild 预构建的动机（CJS/ESM 互操作、请求瀑布流）、.vite 缓存与失效重建、optimizeDeps.include/exclude/entries 实战、冷启动剖析 --debug、大项目 dev 提速组合拳、BUILD_DEPS 与 SSR 预构建（呼应 vite-intro 双模型、L3 构建）" },
+        { "id": "vite-ci-perf", "title": "CI 加速与前端性能工程化", "goal": "CI 里的 node_modules/.vite/构建产物三层缓存策略、Turbo 任务级缓存命中回灌（呼应 L5 monorepo）、Rolldown 过渡期工程决策（rolldown-vite 尝鲜通道、环境 API、development.build）、bundle 预算门禁与产物 diff、web-vitals 线上监控接埋点——把'构建工具'升维成'交付流水线'（呼应 vite-build、vite-splitting、node-deploy-perf）" }
+      ]
     }
   ]
 }

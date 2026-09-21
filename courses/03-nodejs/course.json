@@ -59,11 +59,12 @@
     {
       "id": "L6",
       "title": "并发与多进程",
-      "subtitle": "child_process / cluster / worker_threads",
+      "subtitle": "child_process / cluster / worker_threads / 任务队列",
       "lessons": [
         { "id": "node-child-process", "title": "child_process：spawn、exec、fork", "goal": "spawn/exec/execFile/fork 区别、stdio 管道、退出码与信号、进程间消息 IPC、跑外部命令" },
         { "id": "node-cluster", "title": "cluster：用多核与优雅重启", "goal": "单线程瓶颈与多核、master/worker 模型、端口共享、worker 挂了如何重启、与 pm2 关系" },
-        { "id": "node-workers", "title": "worker_threads：CPU 密集并行", "goal": "worker_threads vs cluster 场景、postMessage/SharedArrayBuffer/Atomics、线程池、把重计算挪出事件循环" }
+        { "id": "node-workers", "title": "worker_threads：CPU 密集并行", "goal": "worker_threads vs cluster 场景、postMessage/SharedArrayBuffer/Atomics、线程池、把重计算挪出事件循环" },
+        { "id": "node-queues-jobs", "title": "任务队列与定时任务：BullMQ 与 cron", "goal": "为什么重活不能留在请求路径（事件循环单线程）、BullMQ(Redis) 队列模型：生产/消费、attempts 退避重试、并发度、幂等与 exactly-once 幻觉、delay/重复任务 repeat、锁看门狗 stalled、worker 与 web 进程分离、优雅退出、node-cron 与 setInterval 的漂移坑（呼应 09-express redis、node-deploy-perf、node-workers）" }
       ]
     },
     {

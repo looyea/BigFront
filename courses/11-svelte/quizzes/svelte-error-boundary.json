@@ -1,0 +1,97 @@
+{
+  "title": "svelte-error-boundary 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "<svelte:boundary> 是哪个版本引入的特性？它的两个职责是？",
+      "options": [
+        "Svelte 4.0；样式隔离与热更新",
+        "Svelte 5.3+；接住渲染/effect 错误给兜底 UI，以及为内部 await 提供 pending 占位",
+        "Svelte 5.0；组件级作用域与依赖注入",
+        "Svelte 3.x；条件渲染与列表 key"
+      ],
+      "answer": 1,
+      "explanation": "boundary 是 5.3.0 新增的特殊元素，failed=错误兜底、pending=异步占位二合一（React 需要 ErrorBoundary+Suspense 两个原语的位置它一个元素干了）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "boundary 内某组件渲染时抛错且存在 failed snippet，此时 boundary 原有内容的命运是？",
+      "options": [
+        "保留 DOM，上面叠加一层错误提示",
+        "冻结在崩溃瞬间的状态，等 reset 后续跑",
+        "自动重试渲染，失败才显示 failed",
+        "整体卸载（组件树销毁、effect 清理），然后渲染 failed snippet"
+      ],
+      "answer": 3,
+      "explanation": "处理错误=原内容整体卸载再渲染 failed——不是隐藏也不是冻结。这决定了 reset() 语义是'重建'：组件从头挂载、$state 回初始值。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "下列哪个错误会被 boundary 的 failed snippet 接住？",
+      "options": [
+        "组件渲染期访问 undefined.foo",
+        "onclick 处理器里抛出的异常",
+        "setTimeout 回调里抛出的异常",
+        "未 catch 的 fetch Promise rejection（事件处理器里发起的）"
+      ],
+      "answer": 0,
+      "explanation": "boundary 只管'渲染事务'：渲染过程与 effect 执行中的抛出。事件处理器/定时器/异步回调里的错误属于普通 JS 执行流，要 try-catch 或全局监听——这是本课第一考点，与 React 错误边界同款边界。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "pending snippet 的显示时机是？",
+      "options": [
+        "boundary 内每次有任何 Promise 活动都显示",
+        "仅在页面首次加载时显示一次，之后永不显示",
+        "boundary 创建时内部 await 首次解析期间；后续异步更新要用 $effect.pending()",
+        "与 failed 互斥，出错时自动切换显示"
+      ],
+      "answer": 2,
+      "explanation": "首次挂载的 await 播 pending；之后再遇异步，pending 不重播——判断'现在有没有在等'的响应式工具是 $effect.pending()（课文第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "onerror 处理函数里 throw error（故意上抛），会发生什么？",
+      "options": [
+        "错误被吞掉，页面保持原状",
+        "错误交给父级 boundary（若有），到顶无人接则成全局未处理错误",
+        "Svelte 自动 reload 整个页面",
+        "立即触发本 boundary 的 failed 渲染"
+      ],
+      "answer": 1,
+      "explanation": "传播协议：onerror 再抛→父 boundary 接管——这就是'局部兜 UI、上层管上报、顶层可留空'分级错误处理的基础（与 express 错误中间件栈同构）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "SSR 渲染期间 boundary 内抛错，默认行为是？",
+      "options": [
+        "与客户端一致，服务端也渲染 failed snippet",
+        "服务端输出半截 HTML 后截断",
+        "跳过该组件继续渲染其余部分",
+        "默认整个 render() 失败；可用 render 的 transformError 选项让 failed 拿到脱敏错误在水合后呈现（版本以官方文档为准）"
+      ],
+      "answer": 3,
+      "explanation": "boundary 对服务端默认无效（渲染整体失败）；transformError 把错误转成可序列化安全摘要，failed snippet 随水合在浏览器复现——服务端错误信息含敏感栈，脱敏是纪律（呼应 vite-ci-perf 的 sourcemap 隐私观）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "把本课三家谱系说给别人听，哪句准确？",
+      "options": [
+        "React 用函数组件的 useErrorBoundary 钩子、Vue 用 <ErrorBlock> 元素",
+        "三家都是全局 errorHandler 一个口子，没有组件级边界",
+        "React 错误边界只能 class（或社区包）、Vue 用 onErrorCaptured 钩子、Svelte 5 把边界做成模板元素",
+        "Vue 的 onErrorCaptured 返回 true 表示拦截错误不再传播"
+      ],
+      "answer": 2,
+      "explanation": "React 无内置声明式边界（class 生命周期模式或 react-error-boundary 包）；Vue 是组合式钩子（返回 false 才拦截——D 项把返回值说反了）；Svelte 5 独占'模板一等公民'形态。"
+    }
+  ]
+}

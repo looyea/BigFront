@@ -60,11 +60,12 @@
     {
       "id": "L6",
       "title": "模块与体验",
-      "subtitle": "生态拼装",
+      "subtitle": "生态拼装：模块、多语言、内容与分层",
       "lessons": [
         { "id": "nuxt-modules", "title": "模块系统与生态", "goal": "nuxt.config modules、@nuxt/image @nuxt/content @pinia/nuxt、模块开发钩子、与 Next 插件对照（呼应 vite-plugin-api、next-overview 生态）" },
         { "id": "nuxt-seo-meta", "title": "SEO 与 useSeoMeta", "goal": "useHead/useSeoMeta、OG/canonical、robots/sitemap 模块、服务端渲染 SEO 红利（呼应 next-metadata、vue-performance）" },
-        { "id": "nuxt-styling", "title": "样式体系与 Tailwind 集成", "goal": "css 数组、Vite 管道、Tailwind 模块、组件级 scoped 与服务端渲染、图片字体优化（呼应 next-css、next-fonts-images、vite-intro）" }
+        { "id": "nuxt-styling", "title": "样式体系与 Tailwind 集成", "goal": "css 数组、Vite 管道、Tailwind 模块、组件级 scoped 与服务端渲染、图片字体优化（呼应 next-css、next-fonts-images、vite-intro）" },
+        { "id": "nuxt-i18n-content-layers", "title": "实战三件套：i18n、Content 与 Layers", "goal": "@nuxtjs/i18n 框架级多语言（strategy 五种前缀形态、hreflang 自动生成、switchLocalePath）、@nuxt/content v3 集合建模 defineCollections/ContentQuery 链式查询/Content Studio、Layers 继承体系（extends 方向、主题包/租户层、与模块的三方分界）——把 nuxt-modules 只点名的三大生态支柱落地（呼应 next-i18n、vue-use-i18n、nuxt-seo-meta）" }
       ]
     },
     {

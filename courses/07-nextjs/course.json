@@ -60,11 +60,12 @@
     {
       "id": "L6",
       "title": "样式、字体与 SEO",
-      "subtitle": "体验与收录",
+      "subtitle": "体验、收录与多语言",
       "lessons": [
         { "id": "next-css", "title": "样式方案与 Tailwind", "goal": "全局/模块 CSS、Tailwind 集成、styled-jsx 历史、样式进入 RSC 的规则（呼应 vue-class-style、vite L2 CSS）" },
         { "id": "next-metadata", "title": "Metadata API 与 SEO", "goal": "generateMetadata、metadata 段、openGraph/robots/sitemap、SEO 与爬虫可见性（对照 mp-openapi 分享卡）" },
-        { "id": "next-fonts-images", "title": "字体与 next/image", "goal": "next/font 零 CLS、next/image 尺寸/Lazy/远程域名/loader 原理（呼应 mp-performance 图片、react-performance）" }
+        { "id": "next-fonts-images", "title": "字体与 next/image", "goal": "next/font 零 CLS、next/image 尺寸/Lazy/远程域名/loader 原理（呼应 mp-performance 图片、react-performance）" },
+        { "id": "next-i18n", "title": "国际化：多语言路由与 next-intl", "goal": "App Router 下的 i18n 路线（内置 middleware 已不支持）、[locale] 路由段与 generateStaticParams、middleware 协商 Accept-Language、next-intl 的 getRequestConfig/getTranslations 服务端翻译与客户端 hooks、hreflang alternates 与 sitemap（回扣 next-metadata 伏笔）、语言切换器与 usePathname 重写（呼应 04-vue vue-use-i18n、08-nuxt i18n 专课预告）" }
       ]
     },
     {

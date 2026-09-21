@@ -1,0 +1,97 @@
+{
+  "title": "svelte-transitions-animations 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "{#if} 翻 false 后,挂了 transition: 的元素何时被真正移除?",
+      "options": [
+        "立即移除,动画只是视觉装饰",
+        "出场过渡播完之后才移除",
+        "不会移除,只是透明",
+        "要手动调 remove()"
+      ],
+      "answer": 1,
+      "explanation": "出场动画播完才卸载,state 也那时才销毁(呼应 svelte-transitions-animations 第一、五节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "进场要 fly、出场要 fade,怎么写?",
+      "options": [
+        "transition:fly out:fade 同时挂",
+        "只能选一个过渡",
+        "写两个同名元素分别挂",
+        "in:fly=\"{...}\" 与 out:fade=\"{...}\" 分开声明"
+      ],
+      "answer": 3,
+      "explanation": "in:/out: 可拆开用不同过渡(呼应 svelte-transitions-animations 第一节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "animate:flip 能正确工作的前提是?",
+      "options": [
+        "{#each} 必须 keyed(用 id 认元素)",
+        "必须开 requestAnimationFrame polyfill",
+        "元素必须 fixed 定位",
+        "列表不超过 10 项"
+      ],
+      "answer": 0,
+      "explanation": "FLIP 靠 key 配对旧位新位(呼应 svelte-transitions-animations 第二节、svelte-template keyed)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "自定义过渡里 css 与 tick 的分工?",
+      "options": [
+        "css 给浏览器用、tick 给 Node 用",
+        "tick 只能改颜色",
+        "css 做属性插值;需要逐帧改内容/量 DOM(如打字机)用 tick",
+        "二者等价,随便选"
+      ],
+      "answer": 2,
+      "explanation": "tick=每帧命令式回调(呼应 svelte-transitions-animations 第三节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "transition:slide|local 里 local 的作用是?",
+      "options": [
+        "禁止动画出屏",
+        "只对元素本身显隐做过渡,不再给内部新插入子元素播进场",
+        "只在开发环境生效",
+        "过渡时长除以二"
+      ],
+      "answer": 1,
+      "explanation": "默认行为会波及后插入的子元素(呼应 svelte-transitions-animations 第一节)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "对 prefers-reduced-motion 用户的正确姿势?",
+      "options": [
+        "忽略,动画人人平等",
+        "只给触屏设备关动画",
+        "要求他们装插件",
+        "CSS 侧 media query 关停动画,JS 过渡用 matchMedia 把 duration 归零"
+      ],
+      "answer": 3,
+      "explanation": "动效无障碍红线(呼应 svelte-transitions-animations 第五节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "crossfade 过渡的典型用法是?",
+      "options": [
+        "两个列表容器各挂 in:receive/out:send 并配相同 key,元素跨容器 morph",
+        "页面背景渐变切换",
+        "音频淡入淡出",
+        "轮换多个过渡函数"
+      ],
+      "answer": 0,
+      "explanation": "send/receive 以 key 配对(呼应 svelte-transitions-animations 第二节)。"
+    }
+  ]
+}

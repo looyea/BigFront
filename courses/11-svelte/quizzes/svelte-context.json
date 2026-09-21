@@ -1,0 +1,97 @@
+{
+  "title": "svelte-context 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "setContext / getContext 的调用时机要求是？",
+      "options": [
+        "任意时机,包括事件回调里",
+        "setContext 随意,getContext 必须在 onMount",
+        "只能在模块文件(.svelte.js)里调用",
+        "必须在组件初始化期的同步代码中"
+      ],
+      "answer": 3,
+      "explanation": "两者都是初始化期专用(呼应 svelte-context 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "想让 context 值变化时所有读取它的后代更新,正确做法是？",
+      "options": [
+        "重新调用 setContext 覆盖",
+        "传一个持有 $state 字段的对象,依赖字段级响应",
+        "把 context 存进 writable store 再传",
+        "context 天生响应,无需处理"
+      ],
+      "answer": 1,
+      "explanation": "context 外壳非响应式,内核要 $state(呼应 svelte-context 第一节铁律2)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "避免第三方组件间 context key 冲突的推荐做法是？",
+      "options": [
+        "用唯一 Symbol / 导出的对象作为 key",
+        "key 加组件名前缀的字符串",
+        "数字下标",
+        "context 不存在冲突问题"
+      ],
+      "answer": 0,
+      "explanation": "导出 Symbol/对象 key 是业界标准(呼应 svelte-context 第二节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "getContext 找不到祖先注入的值时会怎样?",
+      "options": [
+        "抛运行时异常",
+        "返回空对象 {}",
+        "返回 undefined(传第二参可得 fallback)",
+        "自动向上级 window 查找"
+      ],
+      "answer": 2,
+      "explanation": "getContext(key, fallback) 显式给默认(呼应 svelte-context 第二节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "React Context 的\"value 一变整个消费子树重渲染\"在 Svelte context 里为何不存在?",
+      "options": [
+        "Svelte context 不支持更新",
+        "Svelte 靠 memo 优化掉了",
+        "因为 context 是 store",
+        "信号直达读了那个字段的最小更新集合,不重跑组件函数"
+      ],
+      "answer": 3,
+      "explanation": "细粒度信号更新(呼应 svelte-context 第五节、svelte-overview 第二节)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "哪种组件拿不到模板树上层的 context?",
+      "options": [
+        "三层深的孙组件",
+        "带 $bindable 的子组件",
+        "用 mount() 单独挂载的组件(Portal 外独立树)",
+        "snippet 传下去的内容"
+      ],
+      "answer": 2,
+      "explanation": "context 沿模板树查找,独立挂载不在树上(呼应 svelte-context 第六节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "表单 Form 与深处 Input 的\"自动接入\"最地道的实现是?",
+      "options": [
+        "props 逐层透传 register 函数",
+        "Form setContext 注册表,Input getContext 后 register 自己",
+        "全局 store 里放所有字段",
+        "自定义事件 document 广播"
+      ],
+      "answer": 1,
+      "explanation": "context 注册模式(呼应 svelte-context 第三节)。"
+    }
+  ]
+}

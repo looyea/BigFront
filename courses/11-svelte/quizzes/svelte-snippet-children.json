@@ -1,0 +1,97 @@
+{
+  "title": "svelte-snippet-children 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 {#snippet} 与 {@render} 的关系,正确的是？",
+      "options": [
+        "{#snippet} 声明后立即渲染",
+        "{@render} 只是复制一段已渲染的 DOM",
+        "声明本身不渲染任何内容,被 {@render} 调用时才实例化",
+        "snippet 只能声明一次、渲染一次"
+      ],
+      "answer": 2,
+      "explanation": "snippet 是模板函数,声明≠渲染(呼应 svelte-snippet-children 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Svelte 5 里组件标签之间的内容(children)是什么？",
+      "options": [
+        "特殊 slot 对象,要 <slot/> 渲染",
+        "一个 snippet prop,用 {@render children?.()} 渲染",
+        "存在 $$slots 里",
+        "只能是字符串"
+      ],
+      "answer": 1,
+      "explanation": "children 即 snippet prop(呼应 svelte-snippet-children 第二节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "要实现 Vue 具名插槽那样的\"多路内容分发\",Svelte 5 做法是？",
+      "options": [
+        "不支持,只有 children",
+        "用 v-slot 指令",
+        "把 children 做成数组分段",
+        "声明多个 snippet prop,父组件在标签内用 {#snippet name()} 就近定义"
+      ],
+      "answer": 3,
+      "explanation": "每个\"插槽\"就是一个 snippet prop(呼应 svelte-snippet-children 第三节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "实现 Vue\"作用域插槽\"(子组件把行数据交给父决定渲染)的 Svelte 方式是？",
+      "options": [
+        "snippet 带参数,子组件 {@render cell(row)} 时把数据作实参传入",
+        "用 v-slot:item 语法",
+        "把 DOM 用 {@html} 传过去",
+        "只能用 context"
+      ],
+      "answer": 0,
+      "explanation": "snippet 天然可带参(呼应 svelte-snippet-children 第四节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "下列哪项是 snippet 做不到的？",
+      "options": [
+        "作为 prop 传给子组件",
+        "存进 $state 或从 .svelte.js 模块导出",
+        "接收参数",
+        "被 {@render} 多次"
+      ],
+      "answer": 1,
+      "explanation": "snippet 只能声明在组件内,不是运行时值(呼应 svelte-snippet-children 第一、五节)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Svelte 5 组件接口的\"三通道\"是指？",
+      "options": [
+        "props / events / slots",
+        "provide / inject / emits",
+        "数据用 prop、事件用 onXxx 回调、模板用 snippet",
+        "ref / state / derived"
+      ],
+      "answer": 2,
+      "explanation": "props 传数据、回调传事件、snippet 传模板(呼应 svelte-snippet-children 第五节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "子组件如何判断父有没有传名为 header 的 snippet？",
+      "options": [
+        "if ($$slots.header)",
+        "typeof header === 'component'",
+        "header.mounted 为真",
+        "{#if header}(或判断 header != null)"
+      ],
+      "answer": 3,
+      "explanation": "snippet 就是普通 prop,直接判空(呼应 svelte-snippet-children 第三节)。"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "title": "vite-vitest 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Vitest 对 Vite 项目的核心红利是什么？",
+      "options": [
+        "运行速度比所有测试框架快",
+        "自带断言库不需要 expect",
+        "只能用 TypeScript 写测试",
+        "共享 vite.config 的解析与 transform 管道，alias/插件/env 零额外配置"
+      ],
+      "answer": 3,
+      "explanation": "测试跑在 Vite 的世界里：一套配置管构建与测试（呼应 vite-vitest 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "测组件需要 document/window，Vitest 靠什么配置提供？",
+      "options": ["environment: 'jsdom'（或 happy-dom）", "globals: true", "pool: 'threads'", "provider: 'v8'"],
+      "answer": 0,
+      "explanation": "默认环境是 node，DOM 测试要显式声明 jsdom/happy-dom（呼应 vite-vitest 第一、三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "vi.mock('./api', factory) 在文件顶部书写，实际执行时机是？",
+      "options": [
+        "按书写位置原样执行",
+        "被 hoist 到该文件所有 import 之前生效",
+        "第一个 it 运行时才注册",
+        "afterEach 阶段统一回放"
+      ],
+      "answer": 1,
+      "explanation": "vi.mock 提升到模块顶部，先于 import 绑定——放条件语句里会失效（呼应 vite-vitest 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "\"单跑绿、全跑红\"最典型的成因与对策是？",
+      "options": [
+        "CPU 不够；换 --pool=forks",
+        "测试文件太多；拆分目录",
+        "mock 状态跨测试泄漏；beforeEach 里 vi.resetAllMocks()",
+        "随机种子；固定 seed 参数"
+      ],
+      "answer": 2,
+      "explanation": "mock 的调用记录与实现会被后续测试看见，重置纪律是头号卫生线（呼应 vite-vitest 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "要测 ResizeObserver 驱动的真实布局行为，应选哪条组件测试路线？",
+      "options": [
+        "jsdom + @testing-library",
+        "happy-dom + userEvent",
+        "快照测试",
+        "Browser Mode（Playwright 驱动真浏览器）"
+      ],
+      "answer": 3,
+      "explanation": "DOM 模拟环境缺真实布局/观察器 API，图形滚动截图回归要真浏览器（呼应 vite-vitest 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "vitest --changed 的语义是？",
+      "options": [
+        "只跑与 git 变更相关影响的测试",
+        "只跑上次失败的用例",
+        "文件变动即重跑（watch 默认）",
+        "对比两个分支的测试结果"
+      ],
+      "answer": 0,
+      "explanation": "--changed 按 diff 分析受影响测试文件，PR 门禁省时间；r 重跑失败是 watch 内快捷键（呼应 vite-vitest 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "纯 Node 零依赖的小工具库，测试选型倾向是？",
+      "options": [
+        "Vitest + jsdom 全套",
+        "Browser Mode",
+        "node:test——免依赖、CI 镜像小",
+        "Playwright"
+      ],
+      "answer": 2,
+      "explanation": "不碰 Vite 管道的代码不需要 Vitest 红利；node-testing 学的内置 runner 在此归位（呼应 vite-vitest 第五节）。"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "title": "svelte-stores 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte store 的本质是什么?",
+      "options": [
+        "语言内置的响应式原语",
+        "实现了 subscribe 方法的普通对象",
+        "Proxy 代理对象",
+        "编译器生成的信号图节点"
+      ],
+      "answer": 1,
+      "explanation": "store 只是可订阅对象,响应魔法来自编译器对 $ 前缀的处理(呼应 svelte-stores 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "组件里 $count 的订阅/退订时机是?",
+      "options": [
+        "手动 useEffect 配对管理",
+        "首次读取后永久订阅,页面刷新才断",
+        "组件挂载时编译器注入订阅、销毁时自动退订",
+        "每次 set 时临时订阅"
+      ],
+      "answer": 2,
+      "explanation": "$ 前缀=编译器自动 subscribe+销毁退订(呼应 svelte-stores 第一节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "readable 第二参(启动函数)里返回的函数什么时候执行?",
+      "options": [
+        "最后一个订阅者退订时(清理)",
+        "每次 set 之后",
+        "模块加载时一次",
+        "永远不会,需手动调用"
+      ],
+      "answer": 0,
+      "explanation": "惰性:有订阅者才启动、全退订即清理(呼应 svelte-stores 第一节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "在组件外的工具函数里想一次性拿 store 当前值,用?",
+      "options": [
+        "$store",
+        "get(store)",
+        "store.peek()",
+        "store.snapshot"
+      ],
+      "answer": 1,
+      "explanation": "$ 前缀只能在组件/模块响应式作用域用,过程式取值用 get(呼应 svelte-stores 第一节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Svelte 5 官方对 store 的定位是?",
+      "options": [
+        "仍是首选,runes 只管内联状态",
+        "已删除,混用会编译报错",
+        "仅限服务端使用",
+        "runes 为默认首选;异步流数据源/存量代码仍适合 store"
+      ],
+      "answer": 3,
+      "explanation": "官方口径与新定位(呼应 svelte-stores 第三节)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "下列哪个是 store 的经典坑?",
+      "options": [
+        "$count = 5 直接赋值会编译错误,要 count.set(5)",
+        "derived 不会跟随上游更新",
+        "writable 不能被多个组件同时订阅",
+        "get() 会留下永久订阅"
+      ],
+      "answer": 0,
+      "explanation": "$x 是订阅镜像不可赋值(呼应 svelte-stores 第四节坑1)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "runes 与 store 之间桥接使用哪对 API?",
+      "options": [
+        "toReadable / fromWritable",
+        "derived 双向自动",
+        "$ 前缀自动互转",
+        "toStore / fromStore"
+      ],
+      "answer": 3,
+      "explanation": "Svelte 5 提供 toStore/fromStore(呼应 svelte-stores 第三节)。"
+    }
+  ]
+}

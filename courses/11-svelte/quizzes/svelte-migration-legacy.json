@@ -1,0 +1,97 @@
+{
+  "title": "svelte-migration-legacy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "runes 档位默认为 'auto'，它的判定粒度与依据是？",
+      "options": [
+        "按项目：svelte.config.js 里一次性声明",
+        "按文件：该文件出现任何 rune 即进 runes 模式，否则 legacy 模式",
+        "按组件：mount 进来的算 runes，class new 出来的算 legacy",
+        "按 import 顺序：先出现 runes 的文件决定全仓档位"
+      ],
+      "answer": 1,
+      "explanation": "世界观按文件钉：逐文件探测 rune 使用情况。同一文件内新旧语法禁止混用（编译报错），跨文件随意混——'迁移=让文件逐个搬家'的机制基础。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "迁移期要让某个文件临时保留 Svelte 4 语法（全局已钉 runes: true），官方通道是？",
+      "options": [
+        "文件名改为 .legacy.svelte",
+        "// @ts-nocheck 注释",
+        "文件顶部 <svelte:options runes={false} />",
+        "在 .svelterc 里登记豁免清单"
+      ],
+      "answer": 2,
+      "explanation": "<svelte:options runes={false}/> 是单文件豁免章（每文件编译器选项在 L7 讲过）。豁免是负债——收口期要逐个立 issue 清算，防止永久化。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "legacy 的 `$: double = a * 2` 与 `$: console.log(count)` 分别迁到？",
+      "options": [
+        "都迁到 $derived（$ 开头都是响应式声明）",
+        "都迁到 $effect（赋值语句副作用等价）",
+        "$derived 与 $effect 无所谓，两者可互换",
+        "前者 $derived（有左值依赖右值=派生），后者 $effect（无左值=纯副作用）"
+      ],
+      "answer": 3,
+      "explanation": "$: 一符两职是迁移最大语义坑：判型标准看'是否在产出值供渲染使用'。这也是 codemod 最爱留标注请人判的类型。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "createEventDispatcher 写的 `dispatch('change', detail)` 在 runes 组件里的对位实现是？",
+      "options": [
+        "let { onchange } = $props(); onchange?.(detail)",
+        "dispatchEvent(new CustomEvent('change'))，Svelte 5 仍要求先 createEventDispatcher",
+        "let { change } = $props(); change(detail)",
+        "$host.dispatch(detail)"
+      ],
+      "answer": 0,
+      "explanation": "事件=回调 prop 是 runes 世界观：prop 名带 on 前缀（onchange），payload 直接是参数（没有 CustomEvent/detail 包装）。注意场景分岔：自定义元素场景才轮到 $host.dispatchEvent（L10 第一关）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`<Card><div slot=\"footer\">…</div></Card>` 这段宿主代码在 Svelte 5 里的命运是？",
+      "options": [
+        "立即失效，必须改成 <svelte:fragment name=\"footer\">",
+        "抛运行时错误，slot 属性被彻底删除",
+        "仍然可用——slot=\"...\" 作为 snippet prop 的语法糖保留",
+        "只在 legacy 模式文件里可用，runes 组件的宿主一律要改"
+      ],
+      "answer": 2,
+      "explanation": "v5 保留 slot=\"name\" 属性写法（等价传 name={snippet}），迁移面因此小得多；真正要动的是接收端：$$slots.footer → let { footer } = $props() + {@render footer?.()}。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "npx sv migrate svelte-5 跑完后，还剩一批带迁移标注的 $: 语句没转。最合理的解释是？",
+      "options": [
+        "codemod 只对 .js 文件生效，.svelte 从不处理",
+        "这些行需要'理解组件契约'才能判型（派生还是副作用），超出机械替换半径——人审处理",
+        "Svelte 5 已放弃自动迁移，codemod 只 bump 依赖",
+        "命令行缺 --all 参数，重跑即可全转"
+      ],
+      "answer": 1,
+      "explanation": "能力半径判据：一行内可局部判定的替换能做，需要上下文语义的留标注。跑完必查 git diff + sv check + 测试三件套——codemod 是加速器不是自动驾驶。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "团队迁移五步节奏中，第一步'只升运行时不改任何语法'的战略目的是？",
+      "options": [
+        "让 git 历史更干净，方便 blame",
+        "语法改动不兼容 v5 运行时，只能后置",
+        "减少第一周的代码改动量，KPI 好交代",
+        "把'升级事故'与'迁移事故'解耦——两个风险变量分两次引爆，出问题立刻知道是谁"
+      ],
+      "answer": 3,
+      "explanation": "升级（依赖版本）与迁移（语法世界观）各自都可能引入 bug；混在一个窗口做，事故归因就成了一锅粥。解耦是变更管理通用手法（数据库 schema 变更与应用代码变更分批发同款逻辑）。"
+    }
+  ]
+}

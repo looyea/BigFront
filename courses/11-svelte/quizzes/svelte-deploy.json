@@ -1,0 +1,97 @@
+{
+  "title": "svelte-deploy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "纯 Svelte 项目（sv create 不选 Kit）执行 npm run build，底层实际发生什么？",
+      "options": [
+        "vite build，Svelte 编译发生在 vite-plugin-svelte 的 transform 环节，产出标准 dist/",
+        "svelte.compile 逐文件编译后由官方 CLI 打包上传",
+        "先生成 SSR 函数再渲染成静态 HTML",
+        "tsc 编译 + webpack 打包两段式"
+      ],
+      "answer": 0,
+      "explanation": "纯 Svelte 工程就是 Vite 工程（L7 职责链），部署视角下没有 Svelte 专属环节；编译器只负责 .svelte→JS，产物编排全是 Vite 的活。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "应用部署在 https://x/console/ 下，刷新页面正常但首页资源 404，第一检查点是？",
+      "options": [
+        "Nginx 的 try_files 配置",
+        "CDN 缓存是否过期",
+        "vite.config.js 的 base 是否为 '/console/'",
+        "svelte.config.js 的 compilerOptions 是否配错"
+      ],
+      "answer": 2,
+      "explanation": "资源 404（产物里引用的 /assets/*.js 少了前缀）指向 base；try_files 管的是'刷新路由 404'（服务端回退），两类 404 的归因边界要分清（呼应 10-vite-deploy 同款排查题）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "缓存头纪律'assets immutable、index.html no-cache'的推导逻辑是？",
+      "options": [
+        "assets 文件大所以缓存久一点，index.html 小无所谓",
+        "assets 文件名带内容 hash（变内容必变名），index.html 是引用清单、缓存它就会新旧错配",
+        "浏览器对 .js 和 .html 的缓存策略是写死的，配置只是安慰剂",
+        "immutable 只对内网生效，公网一律 no-store"
+      ],
+      "answer": 1,
+      "explanation": "hash 变=文件变，长缓存零风险；index.html 名字不变内容变，缓存它=发布失败经典事故（用户拿旧清单配新 chunk 直接白屏）。这是全课程部署课的公共正解。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "哪个信号最能提示'这个后台系统不该上 SSR'？",
+      "options": [
+        "团队里有人用过 Next.js",
+        "页面需要用 localStorage",
+        "首页加载需要下 300KB JS",
+        "所有页面都在登录之后、无 SEO 诉求，且公司为省算力只想开静态桶"
+      ],
+      "answer": 3,
+      "explanation": "SSR 换的是首屏可见性与 SEO，付的是常驻算力与运维面。登录态后台两头都不沾——静态部署+好分包就是正确答案（课文第四节账本）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "CI 流水线里把 npx sv check 与 lint 挡在 vite build 之前，是因为？",
+      "options": [
+        "vite build 不会因 a11y 警告/响应式反模式失败，质量闸门得自己设在构建前",
+        "sv check 会顺便执行构建，放后面就重复劳动",
+        "build 之后的产物无法再运行任何命令",
+        "npm run build 会篡改源码导致 check 失真"
+      ],
+      "answer": 0,
+      "explanation": "编译器警告不阻断构建（设计使然），构建也不是质检员——L7 三件套顺序（eslint→prettier→sv check→build）在部署课上收口（呼应 vite-ci-perf 的门禁思想）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "'不可变版本目录 + 软链原子切换'（releases/<git-sha>/ + current 软链）解决的核心问题是？",
+      "options": [
+        "让 git 历史更干净",
+        "减少 node_modules 磁盘占用",
+        "回滚提速且有确定性：切回上一软链即可，不重跑构建",
+        "让 CDN 能缓存 index.html"
+      ],
+      "answer": 2,
+      "explanation": "发布=切指针，回滚=切回去：秒级、可重复、不引入'重新构建产物又不一样'的变量。CDN 缓存 index.html 反而是它要防的事故（呼应十包部署课公共收口）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "纯 Svelte 应用常被选去'寄生'老服务端渲染页面（JSP/Velocity 壳），课文给的集成面是？",
+      "options": [
+        "index.html 挂载点 + mount(App, { target }) 契约 + 静态资源路径，三处对齐即可",
+        "必须把老页面全部重写成 Svelte",
+        "需要引入 SvelteKit 做反向代理",
+        "老页面必须升级为 React 才能互操作"
+      ],
+      "answer": 0,
+      "explanation": "没有框架级 HTML 所有权之争（Kit 才关心整页），mount 到哪、资源从哪加载就是全部集成面——这也是 L10 Web Components 路线的前置语境。"
+    }
+  ]
+}

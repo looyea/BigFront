@@ -1,0 +1,97 @@
+{
+  "title": "svelte-spread-rest 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "$$restProps 与 $$props 的区别是？",
+      "options": [
+        "restProps 是 props 的引用别名",
+        "restProps = 全部 props 减去已在 $props() 解构声明的部分",
+        "restProps 只包含事件监听",
+        "props 是只读的,restProps 可写"
+      ],
+      "answer": 1,
+      "explanation": "声明过的进 $props(),剩下的进 rest(呼应 svelte-spread-rest 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "封装 Button 组件时,让父传的未知属性(disabled/aria-*/onclick)落到内部原生 <button>,需要？",
+      "options": [
+        "什么都不做,Svelte 自动透传到根元素",
+        "设置 inheritAttrs: false",
+        "手动写 {...$$restProps} 展开到目标元素",
+        "Svelte 不支持属性透传"
+      ],
+      "answer": 2,
+      "explanation": "Svelte 无自动 fallthrough,spread 手动透传(呼应 svelte-spread-rest 第一、六节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "父组件传 class,组件内部也有自己的 class,Svelte 的行为是？",
+      "options": [
+        "自动拼接两个 class",
+        "总是外部优先",
+        "总是内部优先",
+        "spread 后被显式 class 覆盖,需把 $$restProps.class 拆出手动拼接"
+      ],
+      "answer": 3,
+      "explanation": "class/style 要手动合并是重点坑(呼应 svelte-spread-rest 第三节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于事件监听与 $$restProps,正确的是？",
+      "options": [
+        "事件不会进入 $$restProps",
+        "小写事件属性也是普通属性,天然随 $$restProps 一起透传",
+        "事件只能通过 context 传递",
+        "必须为每个事件显式声明 onXxx prop"
+      ],
+      "answer": 1,
+      "explanation": "Svelte5 事件即小写属性(呼应 svelte-spread-rest 第四节、svelte-events 第一节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "组件内判断父是否传入名为 header 的 snippet,惯用写法是？",
+      "options": [
+        "if ($$slots.header)",
+        "header.nodeType 判断",
+        "{#if header}(snippet 就是普通 prop)",
+        "只能无条件渲染"
+      ],
+      "answer": 2,
+      "explanation": "$$slots 已是历史,prop 判空即可(呼应 svelte-spread-rest 第五节)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "<input type=\"text\" {...$$restProps} class=\"ui\"> 中,同名属性冲突如何处理？",
+      "options": [
+        "后写的属性覆盖先写的(spread 里的 type 可覆盖前面的默认 text)",
+        "先写的属性总是生效",
+        "编译报错",
+        "随机合并"
+      ],
+      "answer": 0,
+      "explanation": "spread 顺序即优先级(呼应 svelte-spread-rest 第二节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 $$props 的使用建议,正确的是？",
+      "options": [
+        "模板里应优先用 $$props.xxx 读一切",
+        "所有 prop 都必须从 $$props 取",
+        "用它替代 $props() 声明",
+        "公开接口收敛到 $props() 声明,$$props 仅用于\"是否传入\"等边缘检测"
+      ],
+      "answer": 3,
+      "explanation": "显式接口优先,$$props 克制使用(呼应 svelte-spread-rest 第五节)。"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "title": "exp-prisma 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Prisma 相对 sequelize/typeorm 这类传统 ORM 的核心差异是？",
+      "options": [
+        "schema.prisma 单一事实源 + 代码生成让查询带完整 TS 类型",
+        "不需要数据库就能跑",
+        "只支持 PostgreSQL",
+        "运行时反射建表更快"
+      ],
+      "answer": 0,
+      "explanation": "generate 出的 PrismaClient 类型跟 schema 走，改列错名编译期即炸（呼应 exp-prisma 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "生产环境应用 schema 变更，正确的命令是？",
+      "options": ["npx prisma db push", "npx prisma migrate dev", "npx prisma migrate deploy", "npx prisma studio"],
+      "answer": 2,
+      "explanation": "deploy 只按迁移目录重放已审核的 SQL；dev 会生成迁移（开发用），db push 无历史（呼应 exp-prisma 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "db push 与 migrate dev 的本质区别是？",
+      "options": [
+        "前者更快所以更推荐",
+        "前者直接把 schema 推上去且不生成可进 git 的迁移历史，无法审计回滚",
+        "后者不能改表结构",
+        "两者完全等价"
+      ],
+      "answer": 1,
+      "explanation": "迁移文件是代码要进 git 人工 review；db push 适合原型（呼应 exp-prisma 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "User 模型里 posts Post[]、Post 里 author User @relation(fields:[authorId])，关系怎么读？",
+      "options": [
+        "多对多",
+        "一对一",
+        "Post 持有外键的一对多，外键在 User 表",
+        "Post 持有外键的一对多，authorId 列在 Post 表"
+      ],
+      "answer": 3,
+      "explanation": "@relation(fields:) 写在哪侧、外键列就在哪张表；数组端是'多'（呼应 exp-prisma 第二节口诀）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "findMany({ take: 20, include: { author: true } }) 对数据库实际发了几条查询？",
+      "options": [
+        "1 条（include 编译成 JOIN）",
+        "20 条",
+        "21 条——主查询 1 条 + 每条记录补 1 条关系查询（N+1）",
+        "取决于 connection_limit"
+      ],
+      "answer": 2,
+      "explanation": "include 是分批子查询不是 JOIN；列表接口要 select 裁列或改手写 JOIN（呼应 exp-prisma 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "$transaction(async (tx) => { … }) 里最常见的'假事务'错误是？",
+      "options": [
+        "回调里用了外层 prisma 实例而不是 tx",
+        "没有写 await",
+        "timeout 设得太小",
+        "数组形态与回调形态混用"
+      ],
+      "answer": 0,
+      "explanation": "外层 prisma 发的语句不在事务连接上，回滚不到它——回调内一律用 tx（呼应 exp-prisma 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "pm2 起 4 个实例、每个 PrismaClient connection_limit=10，数据库侧应预留的连接大约是？",
+      "options": ["10", "14", "与实例数无关只要 10", "40（实例数 × limit），必须小于 max_connections 并留运维余量"],
+      "answer": 3,
+      "explanation": "每进程独立连接池；算错账就是 too many connections 事故（呼应 exp-prisma 第六节、exp-perf）。"
+    }
+  ]
+}

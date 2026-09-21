@@ -1,0 +1,92 @@
+{
+  "title": "vite-ci-perf 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "CI 里 actions/setup-node 的 cache: pnpm 缓存的是？",
+      "options": [
+        "构建产物 dist",
+        "pnpm 全局 store（包内容寻址存储），命中即跳过下载",
+        "Docker 镜像层",
+        "node_modules/.vite"
+      ],
+      "answer": 1,
+      "explanation": "层 1 缓存的是 store；node_modules 本身每次按锁文件链接（呼应 vite-ci-perf 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Turbo 任务缓存 key 的构成不包括？",
+      "options": ["输入文件哈希", "依赖任务哈希", "团队成员名单", "影响产物的环境变量"],
+      "answer": 2,
+      "explanation": "key=输入+上游任务+env 白名单+平台；与人无关，这正是 remote cache 能共享的原因（呼应 vite-ci-perf 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "turbo.json 里 build 任务漏写 outputs: ['dist/**'] 的后果是？",
+      "options": [
+        "缓存命中但产物回放不全，下游拿不到文件",
+        "构建直接报错",
+        "Turbo 自动推断无需声明",
+        "只是日志变少"
+      ],
+      "answer": 0,
+      "explanation": "声明式缓存：outputs 决定命中后往回写什么，漏了等于 cache 了个寂寞（呼应 vite-ci-perf 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Remote Cache 的核心价值是？",
+      "options": [
+        "让本地磁盘变小",
+        "缓存成为组织资产——任一机器算过的任务全团队（含 CI）回放",
+        "替代 git",
+        "加速 npm 下载"
+      ],
+      "answer": 1,
+      "explanation": "本地构建推 CI 回放/反向，第二人起全流水线只算增量（呼应 vite-ci-perf 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "生产环境 sourcemap 选 'hidden' 的工程意图是？",
+      "options": [
+        "彻底不生成省时间",
+        "生成并上传错误监控，但 HTML 不留 //# sourceMappingURL 暴露给用户",
+        "加密源码防爬虫",
+        "只在 dev 生成"
+      ],
+      "answer": 1,
+      "explanation": "错误上报要符号化、源码又不该随包公开——hidden 两头都占（呼应 vite-ci-perf 第三节、vite-build）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "bundle 预算门禁（size-limit 等）解决的根本问题是？",
+      "options": [
+        "体积退化靠 review 自觉不可靠，把阈值变成 CI 纪律",
+        "彻底禁止新增依赖",
+        "让构建更快",
+        "替代性能测试"
+      ],
+      "answer": 0,
+      "explanation": "每个 PR 对基线 diff，+600KB 直接红——机器纪律取代人肉盯梢（呼应 vite-ci-perf 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Core Web Vitals 三指标与阈值对应正确的是？",
+      "options": [
+        "LCP≤2.5s、INP≤200ms、CLS≤0.1",
+        "LCP≤1.0s、INP≤50ms、CLS≤0.5",
+        "FCP≤2.5s、TTL≤200ms、CLS≤0.1",
+        "LCP≤4.0s、FID≤100ms、CLS≤0.25"
+      ],
+      "answer": 0,
+      "explanation": "三项'良好'线必背；FID 已被 INP 取代是常考陷阱（呼应 vite-ci-perf 第五节）。"
+    }
+  ]
+}

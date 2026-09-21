@@ -1,0 +1,97 @@
+{
+  "title": "svelte-global-state 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么组件 import 一个 .svelte.js 模块后,读它的 $state 字段就能自动响应?",
+      "options": [
+        "ES 模块单例 + 模板读取字段即建立信号依赖,任何写入精准通知所有读者",
+        "因为 import 会触发组件重渲染",
+        "模块被编译器转成了 writable store",
+        "靠 setInterval 轮询 diff"
+      ],
+      "answer": 0,
+      "explanation": "模块单例+细粒度信号=全局态原理(呼应 svelte-global-state 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": ".svelte.js 模块顶层写 $effect 会怎样?",
+      "options": [
+        "编译报错,runes 只能出现在组件里",
+        "立即执行一次后不再执行",
+        "允许;注册副作用,依赖字段每次变化时执行",
+        "仅在浏览器插件环境生效"
+      ],
+      "answer": 2,
+      "explanation": "模块顶层 $effect 合法,用于持久化写回(呼应 svelte-global-state 第三节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "开发时热更新导致全局购物车被清零,官方推荐的保命手段是?",
+      "options": [
+        "关闭 Vite 的 HMR",
+        "把单例存进 import.meta.hot.data 复用",
+        "用 sessionStorage 每次重建",
+        "把状态写回 URL"
+      ],
+      "answer": 1,
+      "explanation": "import.meta.hot.data 跨模块重载存活(呼应 svelte-global-state 第四节、10-vite)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "SSR 环境下模块级 $state 单例最大的风险是?",
+      "options": [
+        "首屏变慢",
+        "水合不一致警告",
+        "内存泄漏必崩",
+        "Node 进程内模块只实例化一次,跨请求共享——A 用户能读到 B 用户写的值"
+      ],
+      "answer": 3,
+      "explanation": "跨请求泄漏是全局态原罪(呼应 svelte-global-state 第四节②)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "需要\"全局读写 + 可持久化 + 跨标签页同步\"的状态,最省心的落地是?",
+      "options": [
+        "在组件内部 $state 存两份",
+        "用 localStorage 手动读写不缓存",
+        "把 localStorage 当后端,用 BroadcastStorageEvent 同步各标签页里的响应模块",
+        "把 localStorage 当后端,监听 storage 事件同步各标签页里的响应模块"
+      ],
+      "answer": 3,
+      "explanation": "storage 事件跨标签页同步(呼应 svelte-global-state 第三节延伸)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "全局态用工厂函数(createCounter)而不是直接导出对象,收益不包括?",
+      "options": [
+        "单测时各建实例互不污染",
+        "SSR 下可以按请求创建实例",
+        "运行性能比对象字面量快一个数量级",
+        "同一模块可同时导出单例与局部工厂"
+      ],
+      "answer": 2,
+      "explanation": "工厂收益是隔离性而非数量级性能(呼应 svelte-global-state 第二节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "SvelteKit 页面\"SSR 首屏带数据\"的官方数据通道是?",
+      "options": [
+        "模块单例预取",
+        "load 函数 + devalue 序列化水合",
+        "onMount 里 fetch",
+        "context 注入接口地址"
+      ],
+      "answer": 1,
+      "explanation": "load/devalue 是正路,12-sveltekit 专讲(呼应 svelte-global-state 第四、五节)。"
+    }
+  ]
+}

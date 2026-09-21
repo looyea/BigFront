@@ -24,7 +24,8 @@
       "lessons": [
         { "id": "vue-template-syntax", "title": "模板语法与指令", "goal": "插值 {{}} 与 v-once/v-bind/v-on 缩写、指令参数与动态参数、修饰符、v-html 与 XSS 风险、v-cloak、模板表达式约束（呼应 Express/OWASP XSS）" },
         { "id": "vue-conditional-list", "title": "条件与列表渲染", "goal": "v-if vs v-show 的取舍与性能、v-else/v-else-if、v-for 遍历对象/区间、key 的作用与为什么避免用 index、v-for 与 v-if 同元素优先级、v-memo" },
-        { "id": "vue-class-style-transition", "title": "class/style 绑定与过渡动画", "goal": "对象/数组语法绑定 class、style 自动前缀、绑定 CSS 变量、<Transition>/<TransitionGroup>、钩子过渡与 FLIP、列表动画（呼应 DOM/CSS）" }
+        { "id": "vue-class-style-transition", "title": "class/style 绑定与过渡动画", "goal": "对象/数组语法绑定 class、style 自动前缀、绑定 CSS 变量、<Transition>/<TransitionGroup>、钩子过渡与 FLIP、列表动画（呼应 DOM/CSS）" },
+        { "id": "vue-forms-validation", "title": "表单绑定与校验生态", "goal": "v-model 全家族(modifiers/参数绑定/组件多 v-model)、自定义输入组件的 modelValue+update:modelValue 契约、原生约束校验与 novalidate、vee-validate+zod schema 校验体系、错误提示与无障碍、提交防抖与不可变提交态（呼应 react-forms、svelte-forms、02-ts zod）" }
       ]
     },
     {
@@ -34,7 +35,8 @@
       "lessons": [
         { "id": "vue-component-basics", "title": "组件：props、emits 与 slot", "goal": "组件注册(全局/局部)、props 单向数据流与校验、emits 声明与自定义事件、默认/具名/作用域插槽 slot、v-model 组件、fallthrough attrs（呼应 node-modules 的复用思想）" },
         { "id": "vue-lifecycle", "title": "生命周期与 keep-alive", "goal": "创建/挂载/更新/卸载各钩子(onMounted/onUpdated/onUnmounted)、setup 与渲染关系、SSR 钩子、<KeepAlive> 缓存组件 include/exclude、activated/deactivated" },
-        { "id": "vue-refs-expose", "title": "模板引用与 defineExpose", "goal": "template ref(ref 绑定 DOM/组件)、useTemplateRef、组件默认封闭与 defineExpose、ref 数组、函数 ref、何时该用 ref 何时该用数据驱动" }
+        { "id": "vue-refs-expose", "title": "模板引用与 defineExpose", "goal": "template ref(ref 绑定 DOM/组件)、useTemplateRef、组件默认封闭与 defineExpose、ref 数组、函数 ref、何时该用 ref 何时该用数据驱动" },
+        { "id": "vue-directives-teleport", "title": "自定义指令与 Teleport", "goal": "指令注册与命名、钩子周期(bind/updated/unmounted 与参数/修饰符)、内置指令的编译本质、v-focus 等经典案例、何时该用指令何时该用组件、<Teleport> 逃逸父级样式/层级(z-index 堆叠上下文)、disabled 开关与多目标（呼应 svelte-actions、vue 指令 vs React 无指令模型）" }
       ]
     },
     {
@@ -44,7 +46,8 @@
       "lessons": [
         { "id": "vue-provide-inject", "title": "依赖注入：provide 与 inject", "goal": "跨层组件通信、provide/inject 与响应式结合、Symbol key 避免冲突、注入默认值、用 InjectionKey 做 TS 类型（呼应 02-ts generics）、反模式警告" },
         { "id": "vue-composables", "title": "组合式函数（Composables）", "goal": "以 use 开头的逻辑复用约定、在 setup 中调用、返回 ref/reactive、可组合、副作用清理与 effectScope、通用库(vueuse)思想、替代 mixin 的原因" },
-        { "id": "vue-async-suspense", "title": "异步组件与 Suspense", "goal": "defineAsyncComponent(加载/错误/延迟/超时)、按需加载与代码分割（呼应 10-vite 分包）、<Suspense> 实验性、配合路由懒加载（呼应 vue-router-guard）" }
+        { "id": "vue-async-suspense", "title": "异步组件与 Suspense", "goal": "defineAsyncComponent(加载/错误/延迟/超时)、按需加载与代码分割（呼应 10-vite 分包）、<Suspense> 实验性、配合路由懒加载（呼应 vue-router-guard）" },
+        { "id": "vue-use-i18n", "title": "VueUse 与国际化生态", "goal": "VueUse 核心函数实操(useLocalStorage/useDebounceFn/useEventListener/useElementSize)、源码阅读与自写 useXxx 约定、vue-i18n 9 组合式 API(useI18n)、复数/插槽内翻译/日期数字格式化、locale 切换与路由联动预告（呼应 07-next/08-nuxt 的 i18n 专课、01-es Intl）" }
       ]
     },
     {

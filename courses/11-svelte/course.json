@@ -86,6 +86,26 @@
         { "id": "svelte-sveltekit-bridge", "title": "通往 SvelteKit：从组件到全栈", "goal": "纯 Svelte 缺什么（路由/SSR/表单端点）、SvelteKit 能带来什么、本包与 12-sveltekit 的分工预告（呼应 vue-ssr-nuxt、react-nextjs、07-nextjs、08-nuxt）" },
         { "id": "svelte-deploy", "title": "构建与部署", "goal": "vite build SPA 产物、base、history 回退、hash 缓存/CDN、静态 vs SSR 部署差异（呼应 react-deploy、vue-deploy、10-vite-deploy）" }
       ]
+    },
+    {
+      "id": "L9",
+      "title": "进阶专题：特殊元素、错误与Effect深水区",
+      "subtitle": "svelte:window · boundary · $effect.root/$memo",
+      "lessons": [
+        { "id": "svelte-special-elements", "title": "特殊元素与动态组件", "goal": "<svelte:window>/<svelte:document>/<svelte:body> 全局事件与绑定、<svelte:element this=...> 动态元素、动态组件的 Svelte 5 写法、<svelte:head> 复习（呼应 svelte-template、vue 动态组件）" },
+        { "id": "svelte-error-boundary", "title": "<svelte:boundary> 错误边界", "goal": "Svelte 5 新元素 boundary 的 failed snippet/reset、能捕获哪些错误（渲染/effect/事件）、reset 重试策略、对照 React Error Boundary 与 Vue errorHandler（呼应 react-error-boundary 话题）" },
+        { "id": "svelte-effects-advanced", "title": "Effect 深水区：root/pre/tracking 与 $memo", "goal": "$effect.pre/$effect.root/$effect.tracking、untrack、tick/flushSync、$state.snapshot、$memo 状态保留、跨组件 effect 作用域（深化 svelte-reactive-runes）" }
+      ]
+    },
+    {
+      "id": "L10",
+      "title": "渲染形态与迁移",
+      "subtitle": "Web Components · 纯 Svelte SSR · 4→5 实战",
+      "lessons": [
+        { "id": "svelte-web-components", "title": "编译为 Web Components", "goal": "customElement: true 编译选项、Shadow DOM 与样式隔离、事件外发 CustomEvent、props 反射与属性命名、在非 Svelte 项目/框架中嵌 Svelte 组件（呼应 05-react、04-vue 的 WC 互操作话题）" },
+        { "id": "svelte-ssr-hydration", "title": "纯 Svelte 的 SSR 与水合", "goal": "render()/renderString API、hydrate 挂载、首屏数据注入与序列化、水合不匹配的后果、与 SvelteKit 分工边界（呼应 svelte-compiler-architecture、07-nextjs、08-nuxt）" },
+        { "id": "svelte-migration-legacy", "title": "Svelte 4 → 5 迁移实战", "goal": "legacy 模式混跑策略、compileOptions/逐文件迁移、$$slots/on:click/createEventDispatcher 到 runes 的映射表、codemod、团队推广节奏（呼应 svelte-overview 第三节）" }
+      ]
     }
   ]
 }

@@ -1,0 +1,97 @@
+{
+  "title": "svelte-web-components 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "组件顶部写了 <svelte:options customElement=\"my-widget\" />，customElements.define 在什么时机被调用？",
+      "options": [
+        "首次渲染到 DOM 时",
+        "调用 mount() 时",
+        "该组件模块被 import 时自动注册",
+        "必须手动调用 register() API"
+      ],
+      "answer": 2,
+      "explanation": "带 tag 的 customElement 组件在 import 时即自动 define——这是'引进来就能用 <my-widget>'的机制基础；不想自动注册可省略 tag，再用静态属性 MyWidget.element 手动 define（库作者控名路径）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "让 prop 能同步为 DOM 元素属性，组件脚本必须满足的前提是？",
+      "options": [
+        "显式解构 $props()（let { name } = $props()），编译器才知道暴露哪些 prop",
+        "给每个 prop 加 export 关键字",
+        "在 svelte.config.js 里逐个列白名单",
+        "前提不存在，所有 prop 自动同步"
+      ],
+      "answer": 0,
+      "explanation": "官方文档明示：let props = $props() 不点名属性的写法，编译器无从知道要暴露哪些 prop，DOM 属性同步直接失效——这是自定义元素排障的第一检查位。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "宿主页面写 <my-widget count=\"5\">，组件内 count 收到的默认值是？",
+      "options": [
+        "数字 5，attribute 会自动做类型推断",
+        "字符串 '5'——attribute 通道默认按 String 翻译",
+        "undefined，attribute 永远进不了 prop",
+        "布尔 true，只要属性存在即为真"
+      ],
+      "answer": 1,
+      "explanation": "attribute 只有字符串世界，默认 type 是 String；要数字语义需在 props 选项里声明 type: 'Number'（Array/Object 则走 JSON 解析）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "prop 值在组件内被更新后，想让 DOM attribute 同步反映新值，需要？",
+      "options": [
+        "什么都不做，Svelte 默认双向同步",
+        "调用 el.setAttribute 手动写回",
+        "把 prop 声明为 bind:attribute",
+        "在 props 选项里对该 prop 设 reflect: true"
+      ],
+      "answer": 3,
+      "explanation": "默认 prop 更新不回写 DOM（排障名句'属性怎么没更新'的答案）；reflect: true 开启反射。attribute 选项还能自定义属性名（如 maxLength 映射 my-name）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下哪个属性名在自定义元素上会触发 addEventListener 语义而不是 prop 传递？",
+      "options": [
+        "data-value",
+        "onchange",
+        "myCallback",
+        "value"
+      ],
+      "answer": 1,
+      "explanation": "on 开头的属性被解释为事件监听（<my-widget onchange={fn}> ≈ addEventListener('change')）——想传普通回调 prop 请改名或走 property 赋值，这是命名禁区。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "shadow: \"none\" 关闭 Shadow DOM 后，官方明示的两个后果是？",
+      "options": [
+        "样式不再封装，且无法使用 slot",
+        "失去 SSR 能力与 context",
+        "组件不能接收 props 和事件",
+        "性能下降一半且不能 define"
+      ],
+      "answer": 0,
+      "explanation": "无 shadow root 意味着样式裸奔（scoped CSS 退化）且 slot 机制不可用——换来的是全局样式亲和力，设计系统想让宿主主题穿透时常这么选。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "把 <slot /> 包在组件的 {#if false} 里，slotted 内容（宿主写进标签之间的 DOM）会怎样？",
+      "options": [
+        "根本不会被解析，等同注释",
+        "只有 slot 落到 DOM 时才被创建",
+        "抛编译错误：slot 不允许条件渲染",
+        "照样被创建——DOM slot 是急渲染，与 Svelte 组件 slot 惰性语义相反"
+      ],
+      "answer": 3,
+      "explanation": "自定义元素的 slot 走浏览器原生分配：无论 <slot> 是否被渲染，slotted 节点都已存在；且 let: 数据回传无通道。这条'Svelte slot 惰性 vs WC slot 急'是坑表最反直觉的一条。"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "title": "svelte-sveltekit-bridge 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "纯 Svelte 应用手搓路由，用 popstate 监听已能切换页面，距离'生产级路由'还缺什么？",
+      "options": [
+        "什么都不缺，popstate 方案就是完整的",
+        "链接拦截（SPA 内跳转不整页刷新）、动态段、路由级代码分割、滚动恢复、预取等一整套",
+        "只差把 if/else 换成 switch 语句",
+        "只差引入一个 Vuex 式的全局路由 store"
+      ],
+      "answer": 1,
+      "explanation": "能跑≠生产级：a 标签默认行为要拦截、:id 动态段、按路由拆 chunk、滚动位置恢复、链接预取、标题管理、404 等都是工程量——这正是官方回答 SvelteKit 的存在理由。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "SvelteKit 目录里，secret（如数据库连接串）应该放在哪个文件才能保证不进客户端 bundle？",
+      "options": [
+        "+page.svelte 里用 if 挡住",
+        "+page.ts",
+        "src/lib 下的任意 .js 文件",
+        "+page.server.ts"
+      ],
+      "answer": 3,
+      "explanation": "*.server.ts 由构建保证只在服务端执行、代码永不进客户端包。+page.svelte 双端都跑、+page.ts 也可能在浏览器执行，放 secret 等于公开（呼应 next/Nuxt 的服务端边界同款题）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Kit 表达'客户端/服务端边界'的方式与 Next.js App Router 的差别是？",
+      "options": [
+        "Kit 靠文件名（*.server.ts）物理隔离，Next 靠 'use client' 指令标记",
+        "两者完全相同，都是编译期指令",
+        "Kit 没有边界概念，所有代码都在服务端跑",
+        "Next 靠文件后缀，Kit 靠 tsconfig 配置"
+      ],
+      "answer": 0,
+      "explanation": "Kit 的边界写在文件系统里：server 文件根本不参与客户端构建；Next 用模块顶部的指令声明边界。前者更'物理'，后者更细粒度（同文件族按指令切分）——面试考的是边界机制的哲学差异。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "下列哪项不是 SvelteKit 与 Svelte '特别亲'的理由？",
+      "options": [
+        "路由级代码分割与预加载直接吃 Vite+编译器管线红利",
+        "form actions 把 HTML 表单渐进增强做成一等公民，与 L5 学的 action 机制同原语",
+        "adapter 谱系让同一份代码在静态桶/Node/serverless 间切换部署形态",
+        "Kit 内置了官方状态管理库，取代了 svelte/store"
+      ],
+      "answer": 3,
+      "explanation": "Kit 不管全局状态（ runes/社区库的领域，呼应 svelte-global-state）。前三项分别是构建协作、表单哲学、部署谱系——都是本课第三节原文。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "团队要做的是一个嵌入老客户系统的'日期区间选择器'小组件包，无 SEO 无服务端。课程给的项目形态建议是？",
+      "options": [
+        "上 SvelteKit，官方全家桶总没错",
+        "纯 Svelte 组件库路线（library mode 打包，必要时 L10 的 Web Components 形态），不背全栈框架",
+        "必须用 Next.js，因为组件要嵌在别的系统里",
+        "用 SvelteKit + adapter-node 常驻服务"
+      ],
+      "answer": 1,
+      "explanation": "本课判据：要 SEO/服务端数据/表单端点才上 Kit；嵌入式组件用纯 Svelte 打包更轻（04-vue 组件库同款结论），互操作问题留给 customElement 编译目标。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于'上 Kit 的代价'，下列哪条说法不成立？",
+      "options": [
+        "心智面翻倍：组件层之外还要学路由/load/hooks 一层",
+        "svelte/kit/vite 版本联动，升级要成套",
+        "SSR 部署形态引入常驻算力与缓存运维面，比纯静态托管重",
+        "Kit 会强制禁用 runes 语法，组件要改回 Svelte 4 写法"
+      ],
+      "answer": 3,
+      "explanation": "Kit 与 runes 零冲突——+page.svelte 就是普通 Svelte 5 组件。前三条是课文第四节的真实代价清单；第四条是编造的'框架税'，选型论证里混入假成本最误导决策。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "11-svelte 本包与 12-sveltekit 包的知识分工是？",
+      "options": [
+        "11 讲旧版本，12 讲新版本",
+        "11 讲 React，12 讲它的替代品",
+        "11 打底组件与编译器世界观（含 SSR/WC 原理），12 展开应用框架的路由/load/hooks/adapter 工程",
+        "两包内容完全重复，任选一包学即可"
+      ],
+      "answer": 2,
+      "explanation": "分工地图：语言层/编译层在 11，应用框架工程在 12，脚下的构建工具在 10-vite。L8–L10 是三座引桥，学完本包再进 12 包会清楚'Kit 每个约定背后编译器的动作'。"
+    }
+  ]
+}

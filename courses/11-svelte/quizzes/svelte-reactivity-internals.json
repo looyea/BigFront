@@ -1,0 +1,97 @@
+{
+  "title": "svelte-reactivity-internals 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 5 中，组件的 <script> 体在响应式运行期被执行几次？",
+      "options": [
+        "每次状态变化都重新执行一次",
+        "每次父组件更新时重新执行",
+        "只在初始化时执行一次，之后靠信号图更新",
+        "每个微任务 flush 时执行一次"
+      ],
+      "answer": 2,
+      "explanation": "Svelte 5 编译后没有'组件函数重跑'的概念：脚本体只在初始化执行，建立 source/derived/effect 图，之后的更新由图上的靶向 effect 完成。这与 React 的重渲染模型根本不同。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 $derived 的求值时机，正确的是？",
+      "options": [
+        "任何依赖它的 $state 写入时立即重算",
+        "被读取时才拉取最新值，且同一 flush 内多处读只算一次",
+        "每个宏任务开始时统一重算所有派生",
+        "只在组件挂载时计算一次，之后手动刷新"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 5 是 push-pull 混合：写时只推脏标记不计算，读时才惰性拉取重算并缓存。没人读的 $derived 永不重算——这就是它比'每次渲染全量重算'省的地方。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "obj 是 $state 对象，obj.meta = obj.meta（同引用回写）通常会导致？",
+      "options": [
+        "报错：不允许自赋值",
+        "死循环：effect 反复触发",
+        "整个对象被克隆一份新引用",
+        "不触发任何更新，因为相等性判断是 ==="
+      ],
+      "answer": 3,
+      "explanation": "信号写入用 === 判等，同引用回写被短路，下游不脏。这是头号'改了不更新'元凶。要触发更新必须换引用（如展开新建对象）或改到更深处被代理的属性。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "$effect 里想读变量 b 但不希望 b 变化时重跑 effect，应该？",
+      "options": [
+        "把读取包进 untrack(() => b)",
+        "把 b 声明为 $state.raw",
+        "在 effect 末尾把 b 置空",
+        "改用 $derived.by 包住整个副作用"
+      ],
+      "answer": 0,
+      "explanation": "untrack 提供的回调内读取不登记依赖，effect 只被其余真依赖触发。$state.raw 改变的仍是依赖关系而非追踪；$derived.by 必须是纯计算，不能装副作用。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 $inspect，正确的是？",
+      "options": [
+        "它会打进生产包，需注意移除",
+        "它只能在 .svelte 组件里用，.svelte.js 文件中不可用",
+        "它仅开发模式生效，生产构建自动剔除",
+        "它会强制同步刷新 DOM 后打印"
+      ],
+      "answer": 2,
+      "explanation": "$inspect 是开发期调试原语，编译器在生产构建时把它整体剥掉，可以放心留在代码里。$inspect.trace() 还能追溯一次写入波及的 effect 集合。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "count++ 之后立刻 console.log(el.textContent) 读到旧值，原因是？",
+      "options": [
+        "textContent 不是响应式属性，永远读不到新值",
+        "DOM 更新排在微任务 flush，此刻还没执行",
+        "编译器把 count 的更新优化掉了",
+        "必须 await tick() 之后 count 本身才会变新"
+      ],
+      "answer": 1,
+      "explanation": "写入只标脏，effect（含 DOM 更新）排队到微任务统一 flush，所以同步读 DOM 是旧的。count 变量本身是同步就变了——D 错在混淆了'信号值'与'DOM'。await tick() 或 flushSync 可等到 DOM 就位。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下面哪个'不响应'的归因是错的？",
+      "options": [
+        "把数组存在 $state.raw 里再做 push——raw 不做深代理，属正常表现",
+        "解构了 $state 对象的属性后改原对象——解构拿走的是快照值",
+        "class 实例的私有 #field 被修改——私有字段不进代理，不响应",
+        "在事件回调里修改 $state——事件回调中写入不生效"
+      ],
+      "answer": 3,
+      "explanation": "事件回调里写 $state 完全正常（count++ 就是最常见写法）。其余三条都是真实机制：raw 不深代理、解构即取值脱离信号、#private 字段不被代理追踪。"
+    }
+  ]
+}

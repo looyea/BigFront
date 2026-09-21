@@ -1,0 +1,97 @@
+{
+  "title": "svelte-compiler-architecture 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "在编译产物里看到模板变成了 $.template(`<button>...</button>`) 这样的 HTML 字符串，意味着什么？",
+      "options": [
+        "运行时要把字符串 eval 成组件，存在 XSS 风险",
+        "运行时再用 HTML 解析器把字符串解析成虚拟 DOM 树",
+        "浏览器端只做 cloneNode 克隆真实节点，没有建虚拟树这一步",
+        "这是 SSR 专属产物，客户端用不到它"
+      ],
+      "answer": 2,
+      "explanation": "$.template 把静态模板编译成字符串常量，运行时 cloneNode 出真实 DOM——既没有 eval，也没有 VDOM，这正是'编译期写好剧本'的起点。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "let count = $state(0) 在 runes 模式的编译产物里变成了什么？",
+      "options": [
+        "普通 let 声明（响应式由编译器在引用处织入信号读写）",
+        "count = signal(0) 这样的运行时包装器调用",
+        "Object.defineProperty 定义的 getter/setter 对",
+        "Proxy(new Number(0)) 代理对象"
+      ],
+      "answer": 0,
+      "explanation": "runes 是编译器关键字而非运行时函数：局部 $state 编译后就是普通 let，读写处由编译器织入 $.get/$.set 等信号操作——所以'$state 不是库、是语法'。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Svelte 5 里状态变化后，更新的真实粒度是什么？",
+      "options": [
+        "整个组件函数重新执行一遍，和 React 一样",
+        "新旧虚拟 DOM diff 后打补丁",
+        "从根节点开始递归 patch 整棵组件树",
+        "只执行绑定了该脏信号的 effect 微函数（如只改一个文本节点）"
+      ],
+      "answer": 3,
+      "explanation": "编译器把每个动态绑定拆成独立 effect，状态脏了只跑关联的 effect——不重跑组件、不 diff。代价从're-render'变成'effect 数量'，所以 L6 性能课提醒 effect 滥用照样炸。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "下列哪个'运行时部件'在 Svelte 5 的客户端运行时里确实不存在？",
+      "options": [
+        "effect 调度器",
+        "vnode 与 diff 算法（reconciler）",
+        "$state 对象的 Proxy 化逻辑",
+        "模板克隆的 helper 函数"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 运行时只剩信号/effect/模板/DOM 属性操作等一小撮 helper；vnode、diff、reconciler 属于 React/Vue 的运行时世界，在 Svelte 里这些活被编译期分掉了。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Svelte 5 里把一个已编译组件挂到页面，正确的 API 是？",
+      "options": [
+        "new App({ target })（class 实例化）",
+        "ReactDOM.createRoot(el).render(<App/>)",
+        "mount(App, { target, props })",
+        "App.$mount(el)"
+      ],
+      "answer": 2,
+      "explanation": "组件不再是 class，官方客户端 API 是 svelte 包导出的 mount/hydrate/unmount/flushSync；new App() 是 Svelte 4 及以前的世界（$mount 是 Vue 的命令式挂载，别串台）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 hydration（水合）在编译层的实现，说法正确的是？",
+      "options": [
+        "带 hydrate 选项编译后，模板克隆改为认领 SSR 留下的真实 DOM，只挂 effect 不建节点",
+        "水合就是把服务端 HTML 字符串删掉重新渲染一遍",
+        "水合是运行时框架自动关闭不了的功能",
+        "Svelte 不支持水合，只能上 SvelteKit 才有"
+      ],
+      "answer": 0,
+      "explanation": "hydrate 是 client 产物的一个开关：借注释锚点把 SSR DOM 认领进组件树、补挂 effect。纯 Svelte 就支持（L10 有专关），SvelteKit 只是替你编排了这套流程。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "读一篇 2022 年的 Svelte 教程，满篇 create_fragment、apropos、$$ctx，你的正确反应是？",
+      "options": [
+        "Svelte 5 的新运行时术语，照着敲代码",
+        "Svelte 3/4 时代的产物函数名，思想（定向更新）仍成立，但 API 形态已过时",
+        "这是 Vue 编译器的术语，文章走错片场",
+        "编译器内部名不会出现在任何公开资料里，文章是编的"
+      ],
+      "answer": 1,
+      "explanation": "create/update/apropos 一族是 Svelte 4 及以前的编译产物形态，5 被 template+effect 模型取代。'编译成定向更新'的思想一脉相承，但照抄老 API 会直接编译报错——版本嗅觉题。"
+    }
+  ]
+}

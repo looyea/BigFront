@@ -1,0 +1,97 @@
+{
+  "title": "svelte-typescript 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "在 .svelte 组件里启用 TypeScript 的正确方式是？",
+      "options": [
+        "把文件改名为 .svelte.ts",
+        "写 <script lang=\"ts\">",
+        "在 svelte.config.js 开 typescript: true",
+        "文件头部加 // @typescript 注释"
+      ],
+      "answer": 1,
+      "explanation": "组件仍是 .svelte，标注 lang=\"ts\" 即可（经 vitePreprocess 走 esbuild 转译）。.svelte.ts 是给共享逻辑模块用的扩展名，不是组件的。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "let value = $state(0); 的 value 类型是？",
+      "options": [
+        "any，需要手动标注 number",
+        "Writable<number>，要 .get() 取值",
+        "number | undefined",
+        "number，由初始值自动推导"
+      ],
+      "answer": 3,
+      "explanation": "runes 的类型靠推导：$state(0) 即 number，读写都是普通变量语法。没有 Writable 包装（那是 store 的世界），也不需要 Vue defineProps 式的类型传入。"
+      },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "组件要接收一个渲染行模板的 snippet，props 类型怎么写？",
+      "options": [
+        "row: (item) => string",
+        "row: Snippet<[Row]>",
+        "row: () => JSX.Element",
+        "row: SlotType<Row>"
+      ],
+      "answer": 1,
+      "explanation": "Snippet<[Row]> 是 svelte 官方类型别名，参数元组声明 snippet 接收的参数；JSX.Element 是 React 世界的，SlotType 不存在。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": ".svelte 文件里的类型检查是怎么实现的？",
+      "options": [
+        "tsc 原生认识 .svelte 扩展名",
+        "浏览器运行时校验，编译期无检查",
+        "svelte2tsx 把组件翻译成 tsx 供语言服务检查，诊断再映射回原文件",
+        "由 Vite 的 esbuild 在 dev server 里顺带完成"
+      ],
+      "answer": 2,
+      "explanation": "TS 官方编译器不认识 .svelte；svelte2tsx 生成等价 tsx，语言服务/svelte-check 在其上检查后映射回源文件。Vue 的 vue-tsc 是同一思路的工程方案。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "泛型列表组件 List.svelte 要对 item 类型参数化，官方支持写法是？",
+      "options": [
+        "<script lang=\"ts\" generics=\"T\">",
+        "export type T; 放在文件第一行",
+        "function List<T>(props) { … } 包裹导出",
+        "Svelte 不支持泛型组件，只能 unknown + 断言"
+      ],
+      "answer": 0,
+      "explanation": "Svelte 5 提供组件级 generics 属性，调用端可从 items 反推 T；退化方案（unknown+断言）存在，但官方支持泛型组件本体。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "在 .svelte.ts 共享模块里导出状态，课文推荐的类型安全形态是？",
+      "options": [
+        "export const count = $state(0) 直接导出变量",
+        "export default new Map() 藏所有状态",
+        "工厂函数 + getter 只读暴露（get count() { return count }）",
+        "export let state; 再在 init() 里赋值"
+      ],
+      "answer": 2,
+      "explanation": "直接导出 $state 变量会断链（外部赋值脱离信号通道，课文 L4 同款纪律）；getter 形态外部拿到只读 number 类型，读写走方法，类型与封装双赢。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "CI 里对 Svelte+TS 项目做静态检查的命令行工具是？",
+      "options": [
+        "tsc --noEmit 单独跑就够",
+        "vue-tsc",
+        "eslint --ext .svelte 就能查出所有类型错误",
+        "svelte-check（或 npx sv check）"
+      ],
+      "answer": 3,
+      "explanation": "纯 tsc 不解析 .svelte；eslint 类型规则要额外配 parser+project 且覆盖面不同。svelte-check/sv check 走 svelte2tsx 管线，是官方推荐的出错误清单方式，与 vue-tsc 之于 Vue 对位。"
+    }
+  ]
+}

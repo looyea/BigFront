@@ -1,0 +1,92 @@
+{
+  "title": "nuxt-i18n-content-layers 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "@nuxtjs/i18n 的 strategy: 'prefix_except_default' 产生的 URL 形态是？",
+      "options": [
+        "所有语言都带前缀：/zh/about 与 /en/about",
+        "默认语言不带前缀：/about（zh）与 /en/about",
+        "全部不带前缀，靠 cookie 区分",
+        "每语言一个子域名"
+      ],
+      "answer": 1,
+      "explanation": "_except_default=默认语言享受无前缀短 URL，其余带前缀（呼应 nuxt-i18n-content-layers 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "对比 next-i18n 手工方案，@nuxtjs/i18n 模块替你办妥的事包括？",
+      "options": [
+        "只注入翻译函数，路由要自己管",
+        "自动翻译字典内容",
+        "替你写好译文文案",
+        "前缀重定向协商、hreflang 注入、路由本地化、vue-i18n 装配一条龙"
+      ],
+      "answer": 3,
+      "explanation": "middleware+alternates 手工拼的全套在 Nuxt 是一个 modules 数组项（呼应 nuxt-i18n-content-layers 第一节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "\"切换语言停在当前页\"在 Nuxt 里用哪个 API？",
+      "options": ["localePath('about')", "switchLocalePath('en')", "useLocale().go('en')", "router.push('/en')"],
+      "answer": 1,
+      "explanation": "switchLocalePath 基于当前路由换语言段；localePath 是指定目标路由（呼应 nuxt-i18n-content-layers 第一节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "@nuxt/content v3 里 page 与 data 两种集合类型的区别是？",
+      "options": [
+        "page 存文本、data 存二进制",
+        "page 只能 markdown，data 只能 JSON",
+        "page 有 slug 可直接成路由页面，data 是纯结构化记录（作者/设置）",
+        "没有区别"
+      ],
+      "answer": 2,
+      "explanation": "type:'page' 集合可被 <ContentRenderer> 按 slug 渲染成页；data 供查询不自带路由（呼应 nuxt-i18n-content-layers 第二节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "v3 里取 docs 集合 tag=guide 的最新 5 篇，正确写法是？",
+      "options": [
+        "queryContent(['docs']).where('tag','=','guide').limit(5)",
+        "$fetch('/api/content/docs?tag=guide')",
+        "useContent('docs').filter('guide').slice(0,5)",
+        "queryCollection('docs').where('tag','=','guide').order('date','desc').limit(5).all()"
+      ],
+      "answer": 3,
+      "explanation": "v3 是单数链式 queryCollection(name)+终端方法（all/first）；queryContent 复数参数是 v2 老口径（呼应 nuxt-i18n-content-layers 第二节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Layers 的 extends 方向与优先级，正确的是？",
+      "options": [
+        "层 extends 主项目；方向不可逆",
+        "主项目 extends 层；数组前者覆盖后者",
+        "主项目 extends 层；数组后列的层覆盖先列的，主项目本体最高",
+        "方向随意，Nuxt 自动推断"
+      ],
+      "answer": 2,
+      "explanation": "主项目继承层；extends 按『后者覆盖前者』叠加，项目自身始终最高（呼应 nuxt-i18n-content-layers 第三节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Nuxt 模块与 Layer 的分界一句话？",
+      "options": [
+        "模块收费、层免费",
+        "模块只能官方发、层只能自己写",
+        "模块=带 setup 钩子的逻辑包改构建行为；层=完整目录（页面/组件/config 增补）可被继承",
+        "两者是同一个东西的两种拼写"
+      ],
+      "answer": 2,
+      "explanation": "模块注入能力、层承载内容；层内部还能用模块（呼应 nuxt-i18n-content-layers 第三节、nuxt-modules）。"
+    }
+  ]
+}

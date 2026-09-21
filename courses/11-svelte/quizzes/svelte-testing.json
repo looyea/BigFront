@@ -1,0 +1,97 @@
+{
+  "title": "svelte-testing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 5 项目中 @testing-library/svelte 的 render 调用签名是？",
+      "options": [
+        "render(Component, { initial: 5 })——props 直接平铺",
+        "render(Component, { props: { initial: 5 } })",
+        "render({ component: Component, props })",
+        "mount(Component, { props })"
+      ],
+      "answer": 1,
+      "explanation": "第二参是 { props } 包装对象（v4 平铺写法已废）。mount() 是 Vue Test Utils 的入口名——三家 API 形似神异，以各自文档为准。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "组件挂载 .svelte 文件到测试环境，靠的是什么？",
+      "options": [
+        "vitest 内置 .svelte 解析器",
+        "把组件手工预编译成 js 再 import",
+        "jsdom 原生支持 Svelte 格式",
+        "vite 配置里的 svelte() 插件让测试走同一条编译管线"
+      ],
+      "answer": 3,
+      "explanation": "Vitest 复用 Vite 管线，svelte() 插件在 test 下同样生效，.svelte 被即时编译成 JS。jsdom 只是 DOM 实现，不认识任何组件格式。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "点击按钮后组件要 await fetch 再渲染结果，断言怎么写才稳？",
+      "options": [
+        "fireEvent.click 后直接 expect(getByText(…))",
+        "setTimeout(…, 1000) 后再断言",
+        "waitFor(() => expect(…).toBeInTheDocument())",
+        "await new Promise(r => r(0)) 一次即可"
+      ],
+      "answer": 2,
+      "explanation": "fireEvent 的 await 只推一个微任务轮次，等不到 fetch 链完成；waitFor 轮询到超时是标准解。裸 setTimeout 硬等既慢又脆（反模式）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "被测组件依赖父级 setContext 提供的 store，单独 render 它拿不到，怎么办？",
+      "options": [
+        "组件内 getContext 自动降级为默认值，无需处理",
+        "写一个壳组件 <Provider><Child/></Provider> 再 render 壳",
+        "在测试文件里全局 setContext",
+        "用 mock 替换 getContext 模块导出"
+      ],
+      "answer": 1,
+      "explanation": "context 沿组件树向上找，独立挂载没有祖先 provider（L4 的独立 mount 陷阱在测试里的镜像）。壳组件方案测的还是真实渲染路径；全局 setContext 不存在。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "测一个 60 秒倒计时组件（setInterval + $state），正确的时钟策略是？",
+      "options": [
+        "vi.useFakeTimers() + advanceTimersByTimeAsync 推进",
+        "真实等待 60 秒保证忠实还原",
+        "把组件里的 setInterval 改成 setTimeout 再测",
+        "vi.mock('svelte') 屏蔽响应式"
+      ],
+      "answer": 0,
+      "explanation": "假定时器秒推 60 轮，Async 版才能同时推动微任务里的 effect flush。真等 60s 不可接受；为测试改实现是倒果为因；mock 掉 svelte 等于不测。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "过渡动画的视觉效果（如 fly 位移过程）应该放在哪一层验证？",
+      "options": [
+        "Vitest 组件测试，jsdom 能跑 CSS 动画",
+        "Node 环境纯函数测试",
+        "快照测试对比动画中间帧",
+        "Playwright E2E，真实浏览器里断言最终态/截图"
+      ],
+      "answer": 3,
+      "explanation": "jsdom 没有合成器与动画时钟，transition 过程不可测——组件测试断言最终 DOM 即可；动画验收属于真实浏览器层，这同时是无头 CI 与人工验收的分工线。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "上一个用例的 setInterval 泄漏到下一个用例继续跑，最可能的原因是？",
+      "options": [
+        "组件卸载时的 $effect 清理没执行——漏了 cleanup/unmount",
+        "Vitest 默认并行导致定时器天然共享",
+        "jsdom 不支持 clearInterval",
+        "Svelte 编译器会自动重挂载组件"
+      ],
+      "answer": 0,
+      "explanation": "render 的 unmount/cleanup 会走 $effect 清理与 action destroy；跳过 cleanup 时组件仍活着、定时器自然幽灵串门。并行 worker 各有独立环境，不共享定时器。"
+    }
+  ]
+}

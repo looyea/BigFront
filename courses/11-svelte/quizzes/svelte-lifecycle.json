@@ -1,0 +1,97 @@
+{
+  "title": "svelte-lifecycle 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 5 中，与旧 onDestroy 等价的现代写法是？",
+      "options": [
+        "在 $effect 里返回清理函数，销毁时自动执行",
+        "继续 import { onDestroy } 并从 svelte 调用",
+        "给组件加 on:destroy 事件",
+        "在 <script> 顶层写 try/finally"
+      ],
+      "answer": 0,
+      "explanation": "$effect 的返回值就是清理函数——重跑前和组件销毁时都会执行，'注册+清理'同源声明。onDestroy 属于 legacy 世界，新代码不再使用。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "挂载后按 bind:this 拿元素引用、执行 focus，最合适的位置是？",
+      "options": [
+        "<script> 顶层直接 el.focus()",
+        "onclick 事件处理器里",
+        "onMount 回调（或已挂载后的 $effect）",
+        "$derived 表达式里"
+      ],
+      "answer": 2,
+      "explanation": "脚本体执行时 DOM 还没构建；onMount 在节点插入文档后触发，此时 bind:this 已赋值。$derived 必须是纯计算，严禁副作用。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "count++ 之后需要'等 DOM 更新完成再读尺寸'，最贴合默认节奏的做法是？",
+      "options": [
+        "setTimeout 兜底等 0ms",
+        "await tick() 之后再读",
+        "while 轮询直到 DOM 变化",
+        "把 count 改成 $state.raw"
+      ],
+      "answer": 1,
+      "explanation": "tick() 返回本次 flush 完成时的 Promise，是官方的'DOM 就位'信号。setTimeout 时机无保证，轮询是反模式，raw 与更新时机无关。需要同步完成才用 flushSync。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "服务端渲染期间，下面哪项会执行？",
+      "options": [
+        "onMount 回调",
+        "$effect 函数体",
+        "use: 动作(action)",
+        "<script> 同步体里的普通计算"
+      ],
+      "answer": 3,
+      "explanation": "SSR 没有 DOM：onMount、$effect、action 全部不跑，只有脚本同步体执行。所以摸 window 的代码必须挪进 onMount/事件里，否则服务端直接崩。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "{#if open} 翻假再翻真后，条件块里子组件的 $state 值会？",
+      "options": [
+        "保持原值，因为实例被缓存",
+        "归零——组件被销毁并全新重建",
+        "变成 undefined 并报错",
+        "自动存入 localStorage 再恢复"
+      ],
+      "answer": 1,
+      "explanation": "{#if} 翻假即销毁子树，翻真是新实例，所有局部 $state 重新初始化。想保状态就把数据提升到不会被销毁的父层/全局（L9 还将介绍 $memo 等保留手段）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 $effect 的更新时机，正确的是？",
+      "options": [
+        "DOM 更新前同步执行",
+        "与 DOM 更新完全同时、无法区分先后",
+        "DOM 更新之后（微任务 flush 阶段）执行",
+        "下一个宏任务才执行"
+      ],
+      "answer": 2,
+      "explanation": "默认 $effect 在 DOM patch 之后跑（对应旧 afterUpdate）；想在 DOM 更新前观测用 $effect.pre。两者都在同一次微任务 flush 内，不是宏任务。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "浏览器首屏 SSR 水合完成后，页面顶层的进场 transition 没播，为什么？",
+      "options": [
+        "transition 指令在水合场景下被编译器整体禁用",
+        "因为 intro 播放前提是'节点新挂载'，水合节点视为已存在，这是预期行为",
+        "必须给 transition 加 local: 修饰符才会播",
+        "这是 Svelte 的 bug，需升级到补丁版本"
+      ],
+      "answer": 1,
+      "explanation": "intro 动画只属于'新挂载'路径；SSR/水合首屏的节点被视为已存在，按设计跳过进场动画以避免闪烁——这是特性不是 bug。需要首屏补播时，用 action 形态手动播（见 svelte-actions 第二节的 use:fly 手法）。"
+    }
+  ]
+}

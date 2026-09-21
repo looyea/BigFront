@@ -1,0 +1,92 @@
+{
+  "title": "vue-forms-validation 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "v-model 在原生 input 元素上的展开式是？",
+      "options": [
+        ":value + @change 赋值",
+        ":value + @input 赋值（读 target.value）",
+        "单向 props 绑定",
+        "直接双向操作 DOM"
+      ],
+      "answer": 1,
+      "explanation": "v-model=\"x\" = :value=\"x\" + @input=\"x = $event.target.value\"；lazy 修饰符才换成 change（呼应 vue-forms-validation 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "自定义组件要支持 <MyInput v-model=\"x\">，子组件必须履行的契约是？",
+      "options": [
+        "用 provide/inject 传值",
+        "定义 emits: ['input'] 即可",
+        "接收 modelValue prop 并 emit update:modelValue",
+        "暴露同名 ref"
+      ],
+      "answer": 2,
+      "explanation": "组件级 v-model 默认落在 modelValue/update:modelValue 成对上（呼应 vue-forms-validation 第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "表单加 novalidate 属性的正确理解是？",
+      "options": [
+        "彻底放弃原生校验属性",
+        "禁止提交",
+        "只关闭 required",
+        "关掉浏览器默认弹出提示，属性仍保留作声明、可配合 checkValidity 自绘提示"
+      ],
+      "answer": 3,
+      "explanation": "\"声明保留、呈现接管\"——type/required 仍供无障碍与 :invalid 伪类使用（呼应 vue-forms-validation 第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "vee-validate 中接入 zod schema 的桥接函数是？",
+      "options": ["useSchema(zodSchema)", "validationSchema: 'zod'", "zodResolver 是 vee-validate 唯一入口", "toTypedSchema(zodSchema)"],
+      "answer": 3,
+      "explanation": "useForm({ validationSchema: toTypedSchema(schema) })，类型还能推导到模板（呼应 vue-forms-validation 第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "\"用户离开输入框后才显示错误\"这种体验靠什么实现？",
+      "options": [
+        "watch 输入值手动记录",
+        "CSS :valid 伪类",
+        "useField 解构出的 meta.touched",
+        "zod 的 .refine"
+      ],
+      "answer": 2,
+      "explanation": "meta.touched 标记字段是否被访问过，错误显示以它 gating（呼应 vue-forms-validation 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "后端返回 422 与 { fields: { email: '已注册' } }，前端最规范的处理是？",
+      "options": [
+        "弹 alert 提示整体失败",
+        "把文案写进 schema 重新校验",
+        "忽略，让用户重试",
+        "setFieldError('email', msg) 把服务端错误回填进字段的统一错误通道"
+      ],
+      "answer": 3,
+      "explanation": "schema 错与传输层错共用同一 UI 通道，用户看到的是字段旁的提示（呼应 vue-forms-validation 第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "防连点重复提交，前端侧最完整的做法是？",
+      "options": [
+        "提交按钮固定 disable 三秒",
+        "useForm 的 isSubmitting 期间禁用按钮，且服务端配幂等兜底",
+        "提交后清空表单即可",
+        "前端无法防，只能靠后端"
+      ],
+      "answer": 1,
+      "explanation": "提交锁 isSubmitting 是第一道，网络重试/双开标签仍需后端幂等（呼应 vue-forms-validation 第五节、09-express）。"
+    }
+  ]
+}

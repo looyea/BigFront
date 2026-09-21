@@ -49,12 +49,13 @@
     {
       "id": "L5",
       "title": "RESTful API 实战",
-      "subtitle": "CRUD / 版本化 / 校验 / 分页 / 鉴权 / JWT",
+      "subtitle": "CRUD / 版本化 / 校验 / 分页 / 鉴权 / JWT / 关系型数据库",
       "lessons": [
         { "id": "exp-rest", "title": "REST 设计原则与 CRUD 实战", "goal": "设计规范的资源路由；HTTP 方法语义；状态码；幂等性" },
         { "id": "exp-validation", "title": "参数校验", "goal": "express-validator / zod / joi 选型；body/query/params/header 校验；错误响应统一格式" },
         { "id": "exp-auth", "title": "鉴权：JWT / Session / OAuth2", "goal": "注册-登录-JWT 签发-验证-刷新完整链路；bcrypt；权限中间件" },
-        { "id": "exp-pagination", "title": "分页、排序与过滤", "goal": "offset/limit / cursor / 复合排序 / 动态过滤 / 响应元数据" }
+        { "id": "exp-pagination", "title": "分页、排序与过滤", "goal": "offset/limit / cursor / 复合排序 / 动态过滤 / 响应元数据" },
+        { "id": "exp-prisma", "title": "Prisma：关系型数据库与类型安全查询", "goal": "schema.prisma 建模与关系（一对多/多对多中间表）、migrate dev/db push 与迁移哲学、PrismaClient 类型安全 CRUD/include 嵌套查询与 select 裁列、事务 $transaction（数组批量 vs 交互式）、连接池、N+1 与 select 裁列（呼应 exp-testing 里 mongoose 的 mock 话题、02-ts 生成器、exp-pagination 游标分页、exp-perf 连接池）" }
       ]
     },
     {

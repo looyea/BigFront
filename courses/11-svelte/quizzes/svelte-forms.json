@@ -1,0 +1,97 @@
+{
+  "title": "svelte-forms 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "单个复选框要绑定布尔状态,用哪个绑定?",
+      "options": [
+        "bind:value",
+        "bind:model",
+        "bind:checked",
+        "手动 checked + onchange"
+      ],
+      "answer": 2,
+      "explanation": "单框布尔是 bind:checked,别口误成 bind:value(呼应 svelte-forms 第二节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "一组 checkbox 收集多选结果(数组)的写法?",
+      "options": [
+        "共同 bind:group 一个数组变量,各配 value",
+        "每个各 bind:value 一个数组元素",
+        "bind:checked 数组",
+        "bind:value 拼逗号字符串"
+      ],
+      "answer": 0,
+      "explanation": "复选/单选组走 bind:group(呼应 svelte-forms 第二节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "<input type=\"number\" bind:value={n}> 把输入框清空时 n 变成?",
+      "options": [
+        "null",
+        "0",
+        "抛 TypeError",
+        "NaN,需要兜底处理"
+      ],
+      "answer": 3,
+      "explanation": "number 输入清空得 NaN,用 get/set 绑定兜底(呼应 svelte-forms 第一节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "让自定义组件支持父组件 bind:value,子组件内要?",
+      "options": [
+        "let { value = $bindable() } = $props()",
+        "直接给 prop 赋值",
+        "用 context 传函数",
+        "defineModel + emit"
+      ],
+      "answer": 0,
+      "explanation": "$bindable 声明即开双向通道(呼应 svelte-forms 第三节、svelte-props 第四节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "字段很多的表单想\"非受控\"提交(零逐字段状态),惯用?",
+      "options": [
+        "逐字段 ref 遍历",
+        "onsubmit 里 new FormData(e.currentTarget) + Object.fromEntries 一把抓",
+        "每个 input 都 bind:this",
+        "只能受控,没有非受控路线"
+      ],
+      "answer": 1,
+      "explanation": "FormData 是非受控正道(呼应 svelte-forms 第四节路 B)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Svelte 模板里如何阻止表单默认提交?",
+      "options": [
+        "onsubmit:prevent 指令",
+        "form 标签加 .prevent",
+        "在 onsubmit={handler} 里调 e.preventDefault()",
+        "bind:submit=false"
+      ],
+      "answer": 2,
+      "explanation": "handler 内调 preventDefault,或用 on:submit|preventDefault 修饰符写法(呼应 svelte-forms 第四节、svelte-events 第三节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "体验更好的校验策略是?",
+      "options": [
+        "点提交才首次校验",
+        "只靠浏览器红框提示",
+        "服务端校验就够",
+        "blur/input 时机跑规则存 errors $state,错误文案 aria-describedby 关联输入"
+      ],
+      "answer": 3,
+      "explanation": "即时校验+无障碍关联(呼应 svelte-forms 第五节)。"
+    }
+  ]
+}

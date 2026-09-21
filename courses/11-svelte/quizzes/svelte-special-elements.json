@@ -1,0 +1,97 @@
+{
+  "title": "svelte-special-elements 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "官方文档建议 mouseenter/mouseleave 这类事件挂 <svelte:body>，核心技术依据是？",
+      "options": [
+        "mouseenter/mouseleave 不冒泡，挂在祖先容器上收不到子树内的进出事件流",
+        "body 上的事件处理速度比 window 快",
+        "window 对象禁止绑定鼠标类事件",
+        "只有 body 能拿到指针坐标"
+      ],
+      "answer": 0,
+      "explanation": "mouseenter/mouseleave 天生不冒泡（与 pointerover 系不同），'整个页面区域的进/出'信号在 body 上最直接——<svelte:body> 的存在理由就是这类 body 专属事件；挂 window 语义变成'进出浏览器视口'，不是同一件事。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Svelte 5 里给 <svelte:window> 绑键盘事件的正确写法是？",
+      "options": [
+        "on:keydown={handler}",
+        "onkeydown={handler}",
+        "@keydown={handler}",
+        "bind:keydown={handler}"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 5 把事件统一为小写 on{event} 属性（与元素写法合流）；on: 冒号语法是 legacy（runes 钉死的工程里编译报错）；@ 是 React 系没有的记号，bind: 用于值绑定不用于事件。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "<svelte:element this=\"h1\"> 的 this 从 'h1' 响应式变成 'h2' 时，会发生什么？",
+      "options": [
+        "原地把标签名改成 h2，DOM 节点复用",
+        "只更新 CSS 选择器匹配，事件丢失",
+        "元素被重建（换标签即换身份），子内容重新渲染",
+        "编译期报错：this 不允许是响应式值"
+      ],
+      "answer": 2,
+      "explanation": "标签名变化=元素身份变化，Svelte 走销毁重建路径（不同标签无法原地复用）；this 可以是响应式表达式，编译期只校验类型（合法标签名字符串或空值）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Svelte 5 中让 Thing 变量指向的组件随状态切换而更换，需要的写法是？",
+      "options": [
+        "<svelte:component this={Thing} />（必须特殊标签）",
+        "<Thing />（组件标签本身已响应式）",
+        "{@component Thing}",
+        "mount(Thing)（必须命令式）"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 5 组件标签直接引用作用域变量，Thing 变了自动换——<svelte:component> 只为迁移兼容仍在；后两个是编造语法（mount 可用于命令式挂载但不是本题答案）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "{#each blocks as block} 里渲染 block.component 组件，Svelte 5 的合法写法是？",
+      "options": [
+        "<Block.component />（必须大写开头）",
+        "{@render block.component()}",
+        "<svelte:element this={block.component} />",
+        "<block.component />（点号语法即组件）"
+      ],
+      "answer": 3,
+      "explanation": "点号成员表达式即使小写也按组件解析（Svelte 4 会创建名叫 block.component 的元素——换代陷阱）；@render 只能调 snippet 不是组件；svelte:element 的 this 收标签名不收组件。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "<svelte:window bind:scrollY={y}> 的 bind: 语义是？",
+      "options": [
+        "只读：y 随滚动更新，写 y 无效果",
+        "双向：读滚动位置进 y，程序里给 y 赋值会真的滚动页面",
+        "单向：把 y 的值写进 DOM，DOM 变化不回传",
+        "仅 SSR 期间生效的预注水绑定"
+      ],
+      "answer": 1,
+      "explanation": "bind: 是双向契约：y 是 $state，写 y 等价 window.scrollTo。这也是'声明式挂全局'短于手搓三件套的原因（课文第一节末段）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "组件里 <svelte:head> 声明的 <title>/<meta>，在 SSR 场景的去向是？",
+      "options": [
+        "被浏览器忽略，只在纯客户端渲染生效",
+        "打进 JS bundle，运行时再插进 head",
+        "被 render() 收集的 head 字段返回，由服务端拼进 HTML 的 <head>",
+        "必须改用 Kit 的 +layout 才能进 head"
+      ],
+      "answer": 2,
+      "explanation": "SSR 编译目标把 head 元素收集为独立字符串（render() 返回 { head, body }），服务端模板负责安置——纯 Svelte 就有这机制，Kit 只是替你接好线（呼应 L10 SSR 关）。"
+    }
+  ]
+}

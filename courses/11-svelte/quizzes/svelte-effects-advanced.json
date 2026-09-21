@@ -1,0 +1,97 @@
+{
+  "title": "svelte-effects-advanced 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "一次状态变更的 flush 时序，正确的是？",
+      "options": [
+        "$effect → DOM 更新 → $effect.pre → tick resolve",
+        "DOM 更新 → $effect.pre → $effect → tick resolve",
+        "$effect.pre → DOM 更新 → $effect → tick 的续体 resolve",
+        "四者顺序不确定，只保证都在同一个宏任务里"
+      ],
+      "answer": 2,
+      "explanation": ".pre 抢在 DOM 变更前（读旧 DOM 的窗口），普通 $effect 在 DOM 更新后，await tick() 的续体在更新刷完后 resolve——整条轴在微任务边界完成。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "列表内容即将重排，你想先保住当前 scrollTop 再让视图更新，应该用？",
+      "options": [
+        "$effect.pre 里读 listEl.scrollTop 存进状态",
+        "普通 $effect 里读 scrollTop（时序等价）",
+        "untrack 里读 scrollTop",
+        "flushSync 包住读操作"
+      ],
+      "answer": 0,
+      "explanation": "这正是 .pre 的岗位：DOM 被更新碾过之前抢救现场。普通 $effect 跑到时 DOM 已按新数据重排，scrollTop 是被改过的值（课文第二节滚动锚点例）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "$effect.root 的行为特征是？",
+      "options": [
+        "只在根组件执行的 effect",
+        "同步立即执行一次且阻塞渲染的 effect",
+        "把内部 effect 的优先级调高到 DOM 更新之前",
+        "创建不参与追踪、不随组件卸载自动清理的作用域，返回手动清理函数"
+      ],
+      "answer": 3,
+      "explanation": "root 是'手动挡'作用域：给生命周期比组件长的对象（子应用、实例池）建响应式图，dispose 由你调——忘记返回/调用清理函数就是泄漏源（呼应 svelte-lifecycle 逃逸对象）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "要把深层 $state 对象 postMessage 给 Worker，直接扔会发生什么、正确写法？",
+      "options": [
+        "什么都不发生，Proxy 自动解包",
+        "结构化克隆对 Proxy 的行为不可靠（可能报错或丢掉预期语义），用 $state.snapshot(obj) 拍成普通对象再发",
+        "消息会自动带上响应式能力，Worker 里也能继续 $state",
+        "只能 JSON.stringify 再手动 parse，snapshot 不可用于此场景"
+      ],
+      "answer": 1,
+      "explanation": "$state.snapshot 是'出网闸口'：产出脱离反应式的静态克隆（可序列化部分）。JSON 往返可行但会丢 Map/Set 等类型且更慢；snapshot 是框架语义下的标准答案。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "flushSync 的合法调用位置是？",
+      "options": [
+        "事件处理器里（同步要求 DOM 立刻就位）",
+        "$effect 回调内部",
+        "组件渲染执行期间",
+        "服务端 render() 调用期间"
+      ],
+      "answer": 0,
+      "explanation": "flushSync 禁止在 effect 内与渲染中调用（会直接报错——等于要求框架在自己的事务中途重开事务）；SSR 没有 DOM 更无从谈起。事件处理器是它的合法主战场。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "$effect.tracking() 返回 true 的含义与典型用途是？",
+      "options": [
+        "当前 effect 正在死循环，触发调试告警",
+        "当前代码正运行在某个 $state 的 setter 里",
+        "此刻处于追踪作用域内——自写 rune/工具函数可分叉：追踪内返回响应式表达式，追踪外返回直值",
+        "页面处于开发者工具 inspected 状态"
+      ],
+      "answer": 2,
+      "explanation": "tracking 是'我现在被依赖收集器看着吗'的探针，两副面孔工具函数的官方基石（对应 VueUse toValue 的设计位）。其余选项都是编造的语义。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 $memo 与'组件切换状态保留'，本课给的正确姿势是？",
+      "options": [
+        "$memo 已是稳定 rune，新项目直接采用",
+        "$memo 命运多舛（预发布撤下、实验通道进出），落码前查当期文档；生产先用 CSS 隐藏/状态提升/存根重放/持久化四案",
+        "Svelte 官方宣布永不支持任何状态保留方案",
+        "用 {#key} 包裹组件即可自动保留状态"
+      ],
+      "answer": 1,
+      "explanation": "确定性资产是'问题+四替代方案'；{#key} 语义恰好相反（key 变了强制重建）。版本敏感特性先查文档再落码是本课的技术事实纪律（README 守则）。"
+    }
+  ]
+}

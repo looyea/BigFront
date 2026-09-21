@@ -1,0 +1,97 @@
+{
+  "title": "svelte-ssr-hydration 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 5 中服务端 render() 函数的正确导入路径是？",
+      "options": [
+        "import { render } from 'svelte/server'",
+        "import { render } from 'svelte'",
+        "import { renderToString } from 'svelte/ssr'",
+        "import { ssr } from 'svelte/compiler'"
+      ],
+      "answer": 0,
+      "explanation": "v5 把服务端渲染器物理隔离进 'svelte/server'（v4 时代 render 混在 'svelte' 里）；renderToString 是 React 的记号；且它只在 server 编译目标 + Node 环境存在。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "RenderOutput 被设计成 SyncRenderOutput & PromiseLike<SyncRenderOutput>，这解决了什么矛盾？",
+      "options": [
+        "兼容 Svelte 4 的旧 API，await 只是可选装饰",
+        "让渲染结果可以被 JSON 序列化",
+        "无异步组件时可当同步对象直用，有顶层 await 的组件树必须 await——一个返回类型同时服务两态",
+        "支持流式渲染时逐 chunk 读取"
+      ],
+      "answer": 2,
+      "explanation": "v5 异步渲染下 render 结果'多数时候同步可用、含异步组件时要 await'，PromiseLike 交叉类型正是这个现实的忠实建模；流式输出是 Kit 层的另一套机制，不是该类型直接提供的。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "组件里 <svelte:head> 声明的 <title>/<meta>，SSR 时去了哪里？",
+      "options": [
+        "留在 body 字符串里原地输出",
+        "被 render() 收集为独立的 head 字符串，由服务端模板自行安置",
+        "客户端 hydrate 后才被创建，SSR 阶段不存在",
+        "自动写入磁盘上的 head.html 供模板引用"
+      ],
+      "answer": 1,
+      "explanation": "head/body 分治：render() 把 head 声明汇成独立字符串，拼进 <head> 是你的样板代码的责任——'框架给你的只是发动机'（呼应 L9 特殊元素 quiz 同款考点的 SSR 全链路版）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "hydrate() 与 mount() 的核心契约差异是？",
+      "options": [
+        "hydrate 更快，因为跳过了事件绑定",
+        "mount 用于根组件，hydrate 只能挂子组件",
+        "mount 会创建全新 DOM，hydrate 复用已有 DOM 节点",
+        "以上三种都不是准确表述：两者对 DOM 的行为完全相同"
+      ],
+      "answer": 2,
+      "explanation": "hydrate 对服务端产出的现成 DOM'只认领不重建'：事件、绑定、effect 挂到已有节点上，一个节点都不重新创建；'复用所以省一次渲染'正是 SSR 收益闭环。其余选项都是编造的差异。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "把数据注入 HTML 时 JSON.stringify(data).replace(/</g, '\\\\u003c') 防的是？",
+      "options": [
+        "数据里的中文被浏览器错误解码",
+        "HTML 解析器对 < 的空白处理差异",
+        "</script> 提前闭合标签脚本造成的 XSS 注入",
+        "JSON 中 < 字符属于非法字符"
+      ],
+      "answer": 2,
+      "explanation": "数据不可信时一个 </script> 就能关闭当前脚本块并注入后续内容；\\u003c 在 JS 字符串里语义不变、在 HTML 解析器眼里不再是标签字符——注入即公开、序列化必转义是手搓 SSR 两条铁律。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "水合不匹配（hydration mismatch）在生产环境的表现是？",
+      "options": [
+        "页面白屏并抛未捕获异常",
+        "不中断页面，就地打补丁重建错位节点——可能表现为闪动/错位",
+        "自动回退为纯客户端渲染",
+        "由 <svelte:boundary> 的 failed 块接管"
+      ],
+      "answer": 1,
+      "explanation": "dev 抛错高亮是唯一抓得到它的时机；prod 静默修补，症状是'闪一下/按钮错位'这类无名 bug。boundary 管渲染中抛出的错误，渲染结果不一致不是异常流，两套心智模型别串线。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "SSR body 输出被 CDN 的'HTML 压缩美化'插件合并了空白并删掉注释节点，最可能的后果是？",
+      "options": [
+        "只是体积优化，无任何副作用",
+        "首屏变慢但功能正常",
+        "head 标签丢失",
+        "水合锚点被破坏，客户端认领失败引发大面积不匹配"
+      ],
+      "answer": 3,
+      "explanation": "Svelte 5 的 SSR 输出埋注释节点作对位锚点（if 分支/each 边界/文本切分），吃掉锚点=拆桥——这条'别动 body 输出'纪律是手搓 SSR 与基础设施团队签的隐形合同。"
+    }
+  ]
+}

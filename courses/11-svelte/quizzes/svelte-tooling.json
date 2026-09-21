@@ -1,0 +1,97 @@
+{
+  "title": "svelte-tooling 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "新建 Svelte 项目的官方命令行是？",
+      "options": [
+        "npx sv create my-app",
+        "npx create-svelte my-app",
+        "npx degit sveltejs/template my-app",
+        "npm init svelte@next my-app"
+      ],
+      "answer": 0,
+      "explanation": "工程体系重组后 sv 是唯一官方 CLI（create/add/check/migrate）。create-svelte、degit template 均已退役——按老命令教程敲会拿到过时工程。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "vite-plugin-svelte 在工程里的角色是？",
+      "options": [
+        "替代 Vite 的打包器",
+        "只做 CSS 提取",
+        "把 .svelte 接入 Vite 管线：调编译器、转发编译选项、负责组件 HMR",
+        "管理 npm 依赖版本"
+      ],
+      "answer": 2,
+      "explanation": "Vite 负责模块图与 dev server，插件是接头：编译 .svelte、拆块给 preprocessor、HMR 保组件状态。它不打包也不管依赖。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "svelte.config.js 里 compilerOptions.runes 不设置（默认）时的行为是？",
+      "options": [
+        "全部组件按 Svelte 4 语法编译",
+        "按文件探测：出现 runes 走新模式，否则走 legacy",
+        "编译直接报错要求显式设置",
+        "自动把旧代码升级成 runes"
+      ],
+      "answer": 1,
+      "explanation": "默认档是为迁移期共存设计：新旧组件同仓互不干扰。新项目建议钉死 runes: true，让旧 API 直接编译报错、一次性清账。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "想让单个组件强制启用 runes（项目整体未钉死），可用？",
+      "options": [
+        "文件名加 .runes 后缀",
+        "// @runes 注释",
+        "vite.config.js 里按 glob 配 plugins",
+        "<svelte:options runes={true} />"
+      ],
+      "answer": 3,
+      "explanation": "svelte:options 支持组件级 runes 开关，是渐进迁移的最小粒度。其余三种都是杜撰的魔法语法。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "格式化 .svelte 文件（脚本+模板+样式三段）应配置？",
+      "options": [
+        "prettier-plugin-svelte",
+        "仅 ESLint --fix 就够",
+        "VS Code 内置格式化器",
+        "js-beautify 模板模式"
+      ],
+      "answer": 0,
+      "explanation": "prettier 本体不认识 .svelte，需官方插件解析三段结构并统一缩进/引号纪律；ESLint 管质量规则不管排版，两者互补。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "为什么 Svelte 没有 Vue Devtools / React DevTools 那样的官方运行时检查器？",
+      "options": [
+        "团队没时间做，社区禁止讨论",
+        "浏览器 devtools 已能显示信号图，无需重复造",
+        "更新逻辑编译进产物、无运行时组件树可遍历，可观测性靠可读产物与 $inspect",
+        "Svelte 组件运行时是 Web Components，已被原生工具覆盖"
+      ],
+      "answer": 2,
+      "explanation": "运行时框架保有组件树/diff 数据，devtools 才有东西可读；编译器派的'树'只存在于编译期。替代手段：读编译产物 + $inspect/$inspect.trace。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "CI 流水线上对 Svelte 工程做'类型+模板'静态诊断的命令是？",
+      "options": [
+        "svelte-check --tsconfig ./tsconfig.json（或 npx sv check）",
+        "vite build --mode check",
+        "npm test",
+        "eslint --fix ."
+      ],
+      "answer": 0,
+      "explanation": "sv check/svelte-check 走 svelte2tsx 管线出诊断清单，是 CI 静态检查位；build 只保证编过、test 是行为验证、eslint 覆盖面不同——四者都在 CI 里各司其职。"
+    }
+  ]
+}

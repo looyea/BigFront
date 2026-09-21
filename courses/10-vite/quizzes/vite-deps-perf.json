@@ -1,0 +1,87 @@
+{
+  "title": "vite-deps-perf 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "依赖预构建的第一动机是？",
+      "options": [
+        "让代码更安全",
+        "消灭 node_modules 散装模块的请求瀑布流（600 请求变 1）",
+        "生成 sourcemap",
+        "压缩 CSS"
+      ],
+      "answer": 1,
+      "explanation": "no-bundle dev 在依赖侧的账由预构建统一结算（呼应 vite-deps-perf 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "预构建产物默认存放在哪里？",
+      "options": ["dist/", "node_modules/.vite/deps", ".vite 在项目根目录", "cacheDir 只有一处无法定位"],
+      "answer": 1,
+      "explanation": "默认 cacheDir 下 node_modules/.vite/deps，排查时整目录删掉强制重建（呼应 vite-deps-perf 第一、三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "dev 运行中频繁出现 \"new dependencies optimized, reloading\"，首要检查项是？",
+      "options": [
+        "optimizeDeps.entries 是否覆盖全部真实入口",
+        "Node 版本是否最新",
+        "磁盘剩余空间",
+        "浏览器缓存没清"
+      ],
+      "answer": 0,
+      "explanation": "扫描盲区里的动态入口运行中才被\"发现\"，触发重建+整页 reload（呼应 vite-deps-perf 第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "monorepo 里 workspace 包 @acme/ui（src 直出、正在改源码）被预构建导致改动不生效，应？",
+      "options": [
+        "把它也发布到 npm",
+        "关闭 HMR",
+        "optimizeDeps.exclude: ['@acme/ui']，并 include 它的 CJS 传递依赖",
+        "删掉 pnpm-workspace.yaml"
+      ],
+      "answer": 2,
+      "explanation": "linked 包排除预构建才能直读源码；其依赖里的 CJS 需点名 include（呼应 vite-deps-perf 第二节、vite-deploy）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Vite 6 里让 dev 启动时就预 transform 一批热点文件的配置是？",
+      "options": ["server.warmup", "optimizeDeps.include", "build.preload", "server.fs.allow"],
+      "answer": 0,
+      "explanation": "warmup 走环境 API 的文件预热，换首屏/首跳不卡（呼应 vite-deps-perf 第三节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "评估冷启动优化效果，最合适的度量组合是？",
+      "options": [
+        "凭感觉刷新两下",
+        "问同事快不快",
+        "只看 CPU 占用率",
+        "vite --debug 看 optimized 耗时 + --cpu-prof 火焰图 + 首屏请求数"
+      ],
+      "answer": 3,
+      "explanation": "没有数字的调优是炼丹——三样仪表盘各有分工（呼应 vite-deps-perf 第四节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "\"exclude 体积大的纯 ESM 包\"能提速的原理是？",
+      "options": [
+        "exclude 让浏览器不加载它",
+        "预构建设计目标是给非 ESM/散装依赖收拢，打包良好的 ESM 本身无需再过一遍",
+        "exclude 会删除依赖",
+        "exclude 让 Rollup 接管 dev"
+      ],
+      "answer": 1,
+      "explanation": "预构建成本≈O(体积)，对已优化 ESM 是纯浪费；跳过后浏览器按模块直接命中（呼应 vite-deps-perf 第三、四节）。"
+    }
+  ]
+}

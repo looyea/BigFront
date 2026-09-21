@@ -1,0 +1,87 @@
+{
+  "title": "vue-use-i18n 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "useLocalStorage('theme', 'light') 相比手写 JSON.parse(localStorage.theme) 的核心优势不包括？",
+      "options": [
+        "返回的 ref 变化自动写回 localStorage",
+        "多个组件调用同 key 自动保持值同步",
+        "序列化/反序列化与默认值兜底内置",
+        "能存储超过浏览器配额的大对象"
+      ],
+      "answer": 3,
+      "explanation": "配额限制依然存在——useLocalStorage 解决的是响应式同步与样板代码，不是容量（呼应 vue-use-i18n 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "VueUse 函数参数普遍能同时接受 ref 和普通值，靠的是？",
+      "options": ["类型断言", "内部用 toValue/unref 归一读取", "自动深拷贝", "Proxy 拦截"],
+      "answer": 1,
+      "explanation": "MaybeRefOrGetter 参数 + toValue 归一，是 VueUse 全库统一契约（呼应 vue-use-i18n 第一节、vue-composables 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "自写组合式函数'合格线'里最容易被漏掉的一条是？",
+      "options": [
+        "函数名以 use 开头",
+        "返回一个对象",
+        "在 setup 同步调用并登记副作用清理（onScopeDispose/对应钩子）",
+        "必须放在 @vueuse/core 目录"
+      ],
+      "answer": 2,
+      "explanation": "监听器/定时器不登记清理就是泄漏；名字与位置只是约定（呼应 vue-use-i18n 第二节检查清单）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "vue-i18n 9 组合式 API 里，格式化数字 1234.5 为带货币符号的本地写法用哪个函数？",
+      "options": ["t()", "n()", "d()", "f()"],
+      "answer": 1,
+      "explanation": "n=number、d=datetime、t=翻译；n 底层是 Intl.NumberFormat（呼应 vue-use-i18n 第三、四节、01-es Intl）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "英文复数文案 \"'{n} item | {n} items'\" 体现的是 vue-i18n 的什么机制？",
+      "options": [
+        "管道分隔的复数形式，按 n 自动选单/复数",
+        "字符串或运算兜底",
+        "fallbackLocale 切换",
+        "具名插槽插值"
+      ],
+      "answer": 0,
+      "explanation": "单竖线分隔单复数（更多语言可有多样形 category），中文只写一形即可（呼应 vue-use-i18n 第四节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "\"请访问 [帮助页]\" 一句中含链接组件，国际化的正确做法是？",
+      "options": [
+        "拆成 t('please') + <a> + t('visit') 三段拼接",
+        "把 HTML 写进翻译键用 v-html 渲染",
+        "用 <i18n-t> 插值组件整句翻译，链接作为具名插槽",
+        "这种句子不翻译，保留原文"
+      ],
+      "answer": 2,
+      "explanation": "拼接破坏语序（各语言动词/宾语位置不同），v-html 引入 XSS 风险（呼应 vue-use-i18n 第四节、vue-template-syntax 的 v-html 警示）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "切换 locale 后希望表单校验错误文案也随之切换，架构上的关键是？",
+      "options": [
+        "schema 里直接写死中文错误信息",
+        "schema 只吐错误键，模板层用 t() 渲染文案",
+        "每次切换 locale 重新提交一遍表单",
+        "让 vee-validate 自动翻译任意字符串"
+      ],
+      "answer": 1,
+      "explanation": "'错键不错文'——错误通道传 key，呈现层查词典（呼应 vue-use-i18n 第五节、vue-forms-validation 第四、五节）。"
+    }
+  ]
+}

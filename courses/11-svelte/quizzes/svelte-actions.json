@@ -1,0 +1,97 @@
+{
+  "title": "svelte-actions 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte action 的函数契约是?",
+      "options": [
+        "(node, param) => { update?(p), destroy?() }",
+        "(node) => void 只准副作用",
+        "() => ({ render })",
+        "(props) => JSX"
+      ],
+      "answer": 0,
+      "explanation": "返回值携带可选 update/destroy(呼应 svelte-actions 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "action 函数何时执行?",
+      "options": [
+        "编译期",
+        "组件脚本顶层求值时",
+        "元素插入文档后立即执行(拿到的是真实节点)",
+        "浏览器空闲时"
+      ],
+      "answer": 2,
+      "explanation": "挂载后有真节点才跑,可直接测量/聚焦(呼应 svelte-actions 第一节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "use:x={param} 的 param 变化时会发生什么?",
+      "options": [
+        "action 函数整个重跑一遍",
+        "若返回过 update(newParam),update 被调用",
+        "元素被销毁重建",
+        "参数变化不会被感知"
+      ],
+      "answer": 1,
+      "explanation": "增量更新走 update 钩子(呼应 svelte-actions 第一节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "<Comp use:tip/> 把 action 挂在组件标签上会?",
+      "options": [
+        "自动作用于所有子树",
+        "冒泡到根元素生效",
+        "静默忽略",
+        "编译报错——action 只能用于元素"
+      ],
+      "answer": 3,
+      "explanation": "action 是元素级指令(呼应 svelte-actions 第四节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "longpress(node, cb) 里父换了回调函数,action 内仍调用旧 cb,为什么?",
+      "options": [
+        "事件监听被缓存不可变",
+        "Svelte 禁止传函数作参数",
+        "参数以快照传入,要响应变化须在 update(newCb) 里重存",
+        "需要 nextTick"
+      ],
+      "answer": 2,
+      "explanation": "参数快照与 update 的职责(呼应 svelte-actions 第三、四节)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "SSR 渲染阶段 action 会执行吗?",
+      "options": [
+        "会,在服务器上用虚拟 DOM",
+        "不会——没有 DOM,水合到浏览器后才运行",
+        "只执行 destroy",
+        "执行两遍"
+      ],
+      "answer": 1,
+      "explanation": "action 依赖真节点,纯浏览器阶段(呼应 svelte-actions 第四节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "action 与 React hooks 的定位差异?",
+      "options": [
+        "两者都是状态逻辑复用",
+        "action 相当于高阶组件",
+        "hooks 管 DOM 行为,action 管状态",
+        "action 复用 DOM 行为(类 Vue 指令),hooks 复用状态逻辑"
+      ],
+      "answer": 3,
+      "explanation": "复用维度不同(呼应 svelte-actions 第五节)。"
+    }
+  ]
+}

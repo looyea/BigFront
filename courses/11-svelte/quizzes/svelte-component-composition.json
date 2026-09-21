@@ -1,0 +1,97 @@
+{
+  "title": "svelte-component-composition 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 里如何\"注册\"一个子组件？",
+      "options": [
+        "app.component() 全局注册",
+        "<script> 里 ES import 进来即可使用",
+        "在 components: {} 选项里声明",
+        "按文件名自动全局匹配"
+      ],
+      "answer": 1,
+      "explanation": "import 即注册,没有全局组件表(呼应 svelte-component-composition 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "组件名必须大写开头的根本原因是？",
+      "options": [
+        "编译器用小写识别原生 DOM 元素、大写识别组件",
+        "社区风格约定,并无强制",
+        "TypeScript 的要求",
+        "只有 SvelteKit 才强制"
+      ],
+      "answer": 0,
+      "explanation": "大写是编译器区分组件/元素的开关(呼应 svelte-component-composition 第一节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "想让父组件\"命令式\"调用子组件方法(如 focus/play),Svelte 方式是？",
+      "options": [
+        "子组件 export function,父组件 bind:this 拿实例调用",
+        "defineExpose 显式暴露",
+        "useImperativeHandle",
+        "只能靠全局事件总线"
+      ],
+      "answer": 0,
+      "explanation": "export function + bind:this(呼应 svelte-component-composition 第四节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "多组件共享状态的推荐演进路径是？",
+      "options": [
+        "一开始就上全局 store",
+        "靠 Parent.$$.context 手动取内部上下文",
+        "提升到最近公共父用 props;跨深层用 context;真全局才用共享模块",
+        "让组件互相 $effect 同步"
+      ],
+      "answer": 2,
+      "explanation": "提升→context→全局模块的阶梯(呼应 svelte-component-composition 第三、六节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "{#if show}<Heavy/>{/if} 与 CSS display:none 隐藏的差别？",
+      "options": [
+        "完全等价,只是写法不同",
+        "{#if} 会真正销毁组件并执行清理;CSS 隐藏保留实例与状态",
+        "CSS 隐藏才是真销毁",
+        "{#if} 每次都重建所以更慢,不推荐"
+      ],
+      "answer": 1,
+      "explanation": "块级条件=挂载/卸载生命周期(呼应 svelte-component-composition 第五节)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Svelte 5 里做组件懒加载(代码分割)的标准手段是？",
+      "options": [
+        "defineAsyncComponent",
+        "React.lazy + Suspense",
+        "无法对组件做动态 import",
+        "(await import('./X.svelte')).default,常配 {#await} 使用"
+      ],
+      "answer": 3,
+      "explanation": "动态 import + {#await}(呼应 svelte-component-composition 第五节、10-vite)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "下列哪个是组合反模式？",
+      "options": [
+        "把共享状态提升到公共父",
+        "用 snippet 下放渲染策略",
+        "用 $effect 持续把 props 同步进本地 $state",
+        "用回调 prop 上报事件"
+      ],
+      "answer": 2,
+      "explanation": "props 镜像进 state 会陈旧一帧/循环(呼应 svelte-component-composition 第六节)。"
+    }
+  ]
+}
