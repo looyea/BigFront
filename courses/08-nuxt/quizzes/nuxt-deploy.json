@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-deploy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "生产运行一个自托管 Nuxt SSR 应用，正确做法是？",
+      "options": ["npm run dev 常驻", "npx nuxt start 需要源码在旁", "把整个项目连同 node_modules 拷上服务器跑 nuxt", "node .output/server/index.mjs（.output 已自带依赖闭包）"],
+      "answer": 3,
+      "explanation": "build 产物 .output 是自包含的可运行单元，无需 nuxt 命令与全量依赖（呼应 nuxt-deploy 第 1 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "改用 --preset=static 做纯静态站后，下列哪项会失效？",
+      "options": ["prerender 预渲染页面", "带构建哈希的静态资源", "server/** 接口、route middleware 与鉴权拦截", "客户端路由跳转"],
+      "answer": 2,
+      "explanation": "静态预设没有服务端运行时，一切需要 Node/Edge 执行的能力都不可用（呼应 nuxt-deploy 第 2 节、next-deploy 第 3 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "同一份构建产物要跑测试/预发/生产三环境，Nuxt 推荐的配置给法是？",
+      "options": ["三个环境分别 build 三次", "写三套 nuxt.config 分支", "运行期注入 NUXT_ 前缀环境变量（runtimeConfig 启动时读取）", "把值写死进 app.config"],
+      "answer": 2,
+      "explanation": "runtimeConfig 运行期解析，改值重启即可，一次构建多环境部署天然成立（呼应 nuxt-deploy 第 3 节、nuxt-runtime-config 第 5 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "容器里 .output 服务起来了，但宿主机/外部 curl 不通（进容器 curl localhost 通），最应先查？",
+      "options": ["Node 版本", "是否安装 sharp", "HTML 是否被缓存", "HOSTNAME 是否为 0.0.0.0（默认只听回环）"],
+      "answer": 3,
+      "explanation": "监听回环地址时端口映射出去也连不上，和 Next standalone 同一个坑（呼应 nuxt-deploy 第 3、4 节、next-deploy 第 4 节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Nginx 对 /_nuxt/* （带构建哈希的产物）合适的缓存策略是？",
+      "options": ["no-store 保证最新", "max-age=300", "让浏览器每次协商", "public, max-age=31536000, immutable"],
+      "answer": 3,
+      "explanation": "内容变则文件名哈希变、URL 变，一年不可变缓存零风险且大幅减回源（呼应 nuxt-deploy 第 5 节、next-deploy 第 5 节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "多副本自托管时发现某接口缓存在 A 实例更新了、B 实例还是旧的，原因是？",
+      "options": ["defineCachedEventHandler 默认缓存在各实例内存，未共享", "Nginx 没配 gzip", "sharp 没装", "浏览器强缓存"],
+      "answer": 0,
+      "explanation": "进程内缓存不跨实例，需切 Redis/unstorage 等共享存储作缓存层（呼应 nuxt-deploy 第 5、6 节、nuxt-server-routes）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "为什么强烈建议 X-Forwarded-Proto / -For 透传给 Node？",
+      "options": ["提升压缩率", "让静态资源命中缓存", "影响 secure cookie 判定、canonical/绝对 URL 生成、客户端 IP 与限流、日志正确性", "让 HMR 正常工作"],
+      "answer": 2,
+      "explanation": "反代后 Node 看到的默认是内网 http 请求，不透传会误判协议与来源（呼应 nuxt-deploy 第 5 节、nuxt-seo-meta 的 canonical）。"
+    }
+  ]
+}

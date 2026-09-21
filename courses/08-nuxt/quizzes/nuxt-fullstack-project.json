@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-fullstack-project 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么\"渲染与缓存策略\"要在写业务代码之前定？",
+      "options": ["因为它决定后续目录结构、取数方式、鉴权能否缓存、SEO 与性能预算，牵一发动全身", "因为 Nuxt 强制要求先写 routeRules", "因为它只影响部署", "其实无所谓，最后再补也一样"],
+      "answer": 0,
+      "explanation": "渲染模式决定数据在哪跑、能否进缓存、身份怎么读——后写会全盘返工（呼应 nuxt-fullstack-project 第 1 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "工作台 /app/** 是登录后的私有页，合理的策略是？",
+      "options": ["prerender 加速", "swr 60 缓存 HTML 减少服务端压力", "ssr:true 且 HTML 明确 no-store，未登录 302 前置", "ssr:false 纯客户端渲染"],
+      "answer": 2,
+      "explanation": "私有内容绝不能进共享 HTML 缓存（越权），且应在服务端 302 而非返回带身份 HTML 再前端跳（呼应 nuxt-fullstack-project 第 1、3 节、nuxt-perf 第 9 题）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "详情页首屏需要正文+作者+评论摘要，最省往返的做法是？",
+      "options": ["客户端用 Promise.all 并发三个 useFetch", "BFF：一个 /api/note-detail 服务端并行聚合，客户端一次 useFetch 拿全部并进 payload", "把三份数据全塞进 Pinia 常驻", "onMounted 里串行 await 三次"],
+      "answer": 1,
+      "explanation": "BFF 聚合 + SSR 短路让客户端只发一次、首屏直出，且内部调用几乎零开销（呼应 nuxt-fullstack-project 第 4 节、nuxt-server-routes）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "鉴权链路里\"401 未登录\"的正确通道是？",
+      "options": ["showError 弹全局错误页", "返回 500 让用户刷新", "把它当引导：route middleware 跳 /login?redirect=…（校验站内），不渲染错误页", "在 error.vue 里判断 401 再跳"],
+      "answer": 2,
+      "explanation": "401 是可预期引导而非崩溃，走导航通道保留体验与上下文（呼应 nuxt-fullstack-project 第 3 节、nuxt-error-debug 第 8 题）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "数据层每个查询都强制带 workspaceId/owner 维度，属于哪一层防护、为什么不能省？",
+      "options": ["第一层，仅为性能（走索引）", "第三层兜底：即便 handler 权限判定被绕过，也拿不到别人租户的行", "部署层，用于分库", "可有可无，中间件判过就够了"],
+      "answer": 1,
+      "explanation": "判据是\"假设第二层不存在，第三层会不会泄露\"——数据层 scoped query 是最后底线（呼应 nuxt-fullstack-project 第 2 节、nuxt-middleware-auth 第 4 节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "要把\"上游导出服务偶发超时\"做成不拖垮整页，正确做法是？",
+      "options": ["让 SSR 直接抛错返回 500", "去掉超时设置一直等", "在 Nginx 配无限重试", "软失败：返回旧缓存/骨架，页面仍 200，仅不可恢复时才进 error.vue"],
+      "answer": 3,
+      "explanation": "区分\"数据降级\"与\"页面崩溃\"，公开页不应因依赖失败而 500（呼应 nuxt-fullstack-project 第 7 节、nuxt-error-debug 第 7 题）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于测试在综合项目里的分工，最合理的是？",
+      "options": ["只写 E2E，覆盖一切", "只写单测，跑得快即可", "单测逻辑、集成测 API 契约(状态码/缓存头/鉴权)、E2E 测关键流程 + SSR 直出回归", "上线后靠监控发现，不写测试"],
+      "answer": 2,
+      "explanation": "分层各司其职，尤其 SSR 框架要留\"跨边界\"的 e2e/集成断言（呼应 nuxt-fullstack-project 第 7 节、nuxt-testing）。"
+    }
+  ]
+}

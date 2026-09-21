@@ -1,0 +1,62 @@
+{
+  "title": "nuxt-error-debug 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "服务端 handler 里表达\"资源不存在\"最规范的是？",
+      "options": ["return { error: 'not found' }", "throw createError({ statusCode: 404, statusMessage: '未找到' })", "throw new Error('404')", "return null"],
+      "answer": 1,
+      "explanation": "createError 带 HTTP 语义与可外露的 statusMessage，客户端能据 statusCode 分支；裸 Error 会变成 500（呼应 nuxt-error-debug 第 1 节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 app/error.vue，下列说法错误的是？",
+      "options": ["它按 error.statusCode 分支显示", "它可以安全地把 error.stack 显示给用户以帮助排查", "它在 fatal 错误时渲染", "它应尽量自包含、不依赖全局布局"],
+      "answer": 1,
+      "explanation": "展示 stack 是典型的敏感信息泄露，生产里绝不能出现（呼应 nuxt-error-debug 第 3、5 节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "局部可恢复的请求失败（比如列表加载出错想让用户点重试），首选？",
+      "options": ["用 useFetch 返回的 error ref + refresh() 就地处理", "调 showError 弹全局错误页", "抛 createError({fatal:true})", "reload 整个页面"],
+      "answer": 0,
+      "explanation": "能就地恢复的别升级成白屏；showError/fatal 是给不可恢复错误用的（呼应 nuxt-error-debug 第 2 节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "createError 的哪个字段在生产环境默认不会下发给浏览器？",
+      "options": ["statusCode", "statusMessage", "message（内部详情）", "data"],
+      "answer": 2,
+      "explanation": "message 面向开发者、常含内部细节，h3/Nitro 生产不外露；细节应进服务端日志（呼应 nuxt-error-debug 第 1、5 节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "要在某个组件子树内捕获其抛出的错误并渲染兜底 UI（不影响全站），用？",
+      "options": ["window.onerror", "app/error.vue", "onUnmounted", "onErrorCaptured（Vue 错误边界）"],
+      "answer": 3,
+      "explanation": "onErrorCaptured 是组件级错误边界，return false 阻止继续上抛；error.vue 是应用级 fatal 兜底（呼应 nuxt-error-debug 第 3 节、next-boundaries）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "怀疑\"SSR 阶段服务端到底取到了什么数据\"，最直接的排查手段是？",
+      "options": ["在浏览器 Network 看 XHR", "看 window.__NUXT__ / view-source 的 payload，并看 nuxt dev 终端的服务端日志", "清缓存重试", "加更多 console.log 到 <template>"],
+      "answer": 1,
+      "explanation": "SSR 阶段浏览器里看不到执行，只有它的产物（payload）与服务端日志能反映真相（呼应 nuxt-error-debug 第 6 节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "一个公开可索引页面因偶发上游超时而抛错，SSR 会返回什么？对 SEO 的影响与对策？",
+      "options": ["返回 200 空页，无影响", "返回 404，永久掉排名", "返回 500，可能被判定为不可用；应优雅降级（兜底数据/缓存/软失败）而非硬 500", "自动重试到成功为止"],
+      "answer": 2,
+      "explanation": "SSR 抛错=该请求非 200；公开页不应因数据失败而 500，要降级到可用内容（呼应 nuxt-error-debug 第 4、7 节、nuxt-usefetch 的失败不 500）。"
+    }
+  ]
+}
