@@ -1,6 +1,6 @@
 {
   "id": "01-es",
-  "title": "JavaScript 现代语法 ES6→ES2024",
+  "title": "JavaScript 现代语法 ES6→ES2025",
   "order": 1,
   "tier": "青铜 · 一切的地基",
   "tagline": "从零吃透 JS 语言本身：作用域、类型、函数、集合、迭代器、元编程、模块化、异步、每年新增的糖，一直到把 JS 库发布上 npm 的部署全链路。后面 7 个框架都建在这块地基上。",
@@ -89,13 +89,17 @@
     {
       "id": "L9",
       "title": "现代语法时间线",
-      "subtitle": "ES2018 → ES2024 分组细讲",
+      "subtitle": "ES2015(ES6) → ES2025(ES16) 逐年细讲",
       "lessons": [
+        { "id": "es-2015-2017", "title": "ES2015-2017：class 收尾 / includes / ** / async-await 元年", "goal": "把 ES6 主干按时间线归位，补齐 2016 的 includes、2017 的 async/await 与 Object.values/entries" },
         { "id": "es-2018", "title": "ES2018：对象展开 / 异步迭代 / Promise.finally", "goal": "熟悉当年新增的四大件" },
+        { "id": "es-2019", "title": "ES2019：flat/flatMap / fromEntries / 稳定 sort / 可选 catch", "goal": "掌握数组拍平、键值对互转与一批体验质量改进" },
         { "id": "es-2020", "title": "ES2020：可选链 / ?? / BigInt / allSettled / import.meta", "goal": "现代工程每天都在用的语法" },
+        { "id": "es-2021", "title": "ES2021：逻辑赋值 / Promise.any / replaceAll / 数字分隔符 / WeakRef", "goal": "会用 ??= 惰性初始化、Promise.any 竞速与弱引用" },
         { "id": "es-2022", "title": "ES2022：class fields / #private / at() / error.cause / top-level await", "goal": "class 与错误处理的一次到位" },
-        { "id": "es-2024", "title": "ES2023-2024：Array.fromAsync / toReversed / grouping / transfer", "goal": "不可变数组方法与 ArrayBuffer 转移" },
-        { "id": "es-modern", "title": "近年新语法巡礼（综合）", "goal": "把上面四条串起来，形成选型直觉" }
+        { "id": "es-2024", "title": "ES2023-2024(ES14-ES15)：Array.fromAsync / toReversed / grouping / transfer", "goal": "不可变数组方法与 ArrayBuffer 转移（第 14-15 版）" },
+        { "id": "es-2025", "title": "ES2025(ES16)：Iterator Helpers / Promise.try / RegExp.escape / Math.sumPrecise", "goal": "掌握惰性等式链的迭代器助手与几把安全小刀，并厘清版本边界" },
+        { "id": "es-modern", "title": "近年新语法巡礼（综合）", "goal": "把 ES2015→ES2025 整条时间线串起来，形成选型直觉" }
       ]
     },
     {

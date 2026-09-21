@@ -1,0 +1,62 @@
+{
+  "title": "ES2025 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "相比 `arr.map().filter().slice()`，Iterator Helpers 的**核心优势**是：",
+      "options": ["单步执行更快", "惰性求值：逐个流过、不产生中间数组，且能处理无限/大流", "能原地修改数组", "代码字符更少"],
+      "answer": 1,
+      "explanation": "Iterator Helpers 是**惰性**管道——`take` 可短路无限生成器，且不像 Array 链每步都新建中间数组，省内存、能对流式/无限源求值。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "下列 Iterator 助手方法中，属于**终端操作**（触发求值、返回非迭代器）的是：",
+      "options": ["map", "filter", "take", "toArray"],
+      "answer": 3,
+      "explanation": "`map/filter/take/drop/flatMap` 是惰性中间操作（返回新 Iterator）；`toArray/reduce/forEach/find/some/every` 才是终端操作。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`Promise.try(() => { throw new Error('x') })`（回调**同步**抛错）会：",
+      "options": ["返回一个 rejected Promise（可被 .catch 捕获）", "当场同步抛出错误", "返回 undefined", "静默忽略错误"],
+      "answer": 0,
+      "explanation": "`Promise.try` 保证结果**永远是 Promise**——同步抛错会被捕获成 rejected，从而统一交给链尾 `.catch`，省去 try/catch 样板。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`RegExp.escape(str)` 的作用是：",
+      "options": ["把字符串编译成正则对象", "校验正则是否合法", "转义字符串里的正则元字符，以便安全拼进 `new RegExp`", "给正则自动加 g 标志"],
+      "answer": 2,
+      "explanation": "`RegExp.escape` 把 `.` `*` `+` `?` 等元字符转义，防止把不可信输入拼进正则导致语法错误或注入。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`Math.sumPrecise([0.1, 0.2, 0.3])` 相对 `reduce((a,b)=>a+b,0)` 改进的是：",
+      "options": ["精确求和后只舍入一次，避免累加误差", "把结果四舍五入成整数", "返回 BigInt 求和", "并行求和更快"],
+      "answer": 0,
+      "explanation": "`Math.sumPrecise` 内部精确累加、**最后仅舍入一次**，得 0.6；而逐步 `+` 会累积浮点误差得 0.6000000000000001。结果仍是普通 Number。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下哪一项**不属于** ES2025（第 16 版）语言规范新增？",
+      "options": ["Iterator Helpers", "Promise.try", "Set.prototype.union 等集合方法", "RegExp.escape"],
+      "answer": 2,
+      "explanation": "Set 集合方法（union/intersection/…）是 **ES2024（第 15 版）**。Iterator Helpers、Promise.try、RegExp.escape 才是 ES2025 新增。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "一条 Iterator 助手链（如 `it.map(...).filter(...)`）被 `toArray()` 消费后，再迭代它得到：",
+      "options": ["重新自动计算一遍", "空（迭代器已耗尽），需重新 from 或先落数组", "报错 TypeError", "回到上次的缓存结果"],
+      "answer": 1,
+      "explanation": "迭代器**只能消费一次**，耗尽后再取即为空。要复用必须 `Iterator.from` 重新包，或 `toArray()` 存成数组再操作。"
+    }
+  ]
+}

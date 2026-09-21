@@ -3,7 +3,7 @@
 一个**可运行、可打卡、可扩展**的大前端「打怪升级」学习平台。暗色主题（借鉴 VS Code Dark+ / Solarized），
 专为「对大前端零概念、想在本地边学边往 GitHub 提交」的你而做。
 
-覆盖方向：JavaScript(ES6→ES2024) · TypeScript · Node.js · Vue 3 · React · 微信小程序 · Next.js · Nuxt。
+覆盖方向：JavaScript(ES6→ES2025) · TypeScript · Node.js · Vue 3 · React · 微信小程序 · Next.js · Nuxt。
 
 ---
 

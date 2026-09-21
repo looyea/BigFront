@@ -17,8 +17,8 @@
 | **ES2021** | `&&=`/`||=`/`??=`、`String.replaceAll`、`Array.at`（提议）、`WeakRef`、`FinalizationRegistry`、`Numeric separators`（`1_000_000`） | 逻辑赋值 + 数字美化 |
 | **ES2022** | Class fields/`#private`/`static{}`、Top-level await、`Object.hasOwn`、`Array.at`、`error.cause`、RegExp `d` flag | **Class 大年** |
 | **ES2023** | `Array.findLast/findLastIndex`、`toSorted/toSpliced/with/withAll`（不可变数组方法）、Hashbang（`#!/usr/bin/env node`）| **不可变数组**来了 |
-| **ES2024** | `Object.groupBy/Map.groupBy`、`Promise.withResolvers`、`ArrayBuffer.transfer`、`String.isWellFormed/toWellFormed`、`Atomics.waitAsync` | 收尾与整理 |
-| **ES2025**（已落） | `Iterator.prototype.map/filter/take/drop/flatMap/reduce/forEach/toArray`、`RegExp v flag`、`Promise.try`、`Duplicate prototype properties` 允许 | 迭代器助手 |
+| **ES2024** | `Object.groupBy/Map.groupBy`、`Promise.withResolvers`、`Array.fromAsync`、**Set 方法**（union/intersection/difference/…）、`RegExp v flag`、Well-formed `JSON.stringify`、`ArrayBuffer.transfer` | 集合方法 + 收尾 |
+| **ES2025**（已落，详见 es-2025 关） | **Iterator Helpers**（`Iterator.from().map/filter/take/drop/flatMap/toArray`）、`Promise.try`、`RegExp.escape`、`Math.sumPrecise`、允许同名 get/set | 迭代器助手 |
 
 ---
 
