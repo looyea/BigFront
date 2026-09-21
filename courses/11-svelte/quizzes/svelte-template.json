@@ -1,0 +1,97 @@
+{
+  "title": "svelte-template 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 里 `{#each todos as t (t.id)}` 括号中的 (t.id) 作用是？",
+      "options": [
+        "给每条加序号显示",
+        "作为 key,帮助编译器复用/移动正确的 DOM",
+        "过滤掉重复项",
+        "作为排序依据"
+      ],
+      "answer": 1,
+      "explanation": "keyed each 让编译器知道哪条数据对应哪个 DOM(呼应 svelte-template 第三节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "{#await}/{:then}/{:catch} 主要解决什么问题？",
+      "options": [
+        "条件渲染权限",
+        "列表分页",
+        "样式切换",
+        "对 Promise 的 loading/成功/失败三态建模"
+      ],
+      "answer": 3,
+      "explanation": "{#await} 内建三态(呼应 svelte-template 第四节、vue-effect/async-suspense)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 {@html expr},正确的是？",
+      "options": [
+        "会自动转义内容防 XSS",
+        "只能渲染字符串常量",
+        "把 expr 当原始 HTML 渲染,存在 XSS 风险需自行消毒",
+        "完全等价于 {@const}"
+      ],
+      "answer": 2,
+      "explanation": "{@html} 不转义,需消毒(呼应 svelte-template 第一节、react-jsx)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "{@const} 的用途是？",
+      "options": [
+        "在模板块内定义局部常量",
+        "定义全局变量",
+        "声明组件 props",
+        "引入外部样式"
+      ],
+      "answer": 0,
+      "explanation": "{@const} 是块内局部常量(呼应 svelte-template 第五节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "用数组索引当 each 的 key,最典型的问题是？",
+      "options": [
+        "首屏变慢",
+        "CSS 不生效",
+        "在头部插入/删除或排序时出现状态串位、DOM 复用错乱",
+        "无法渲染对象"
+      ],
+      "answer": 2,
+      "explanation": "index-key 与 React 同源陷阱(呼应 svelte-template 第三节、react-lists-keys)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "相比 React 的 `cond && <A/>`,Svelte 的 {#if} 一个优势是？",
+      "options": [
+        "能写更复杂的表达式",
+        "{#if} 是块级,不会像 && 那样把 0/false 误渲染到页面",
+        "不需要编译",
+        "可以嵌套 Promise"
+      ],
+      "answer": 1,
+      "explanation": "{#if} 无假值渲染坑(呼应 svelte-template 第二节、react-jsx)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 bind:this,正确的是？",
+      "options": [
+        "会触发额外一轮渲染",
+        "只能用于表单元素",
+        "会自动订阅 store",
+        "获取 DOM 或组件实例引用,挂载后才可用、不触发渲染"
+      ],
+      "answer": 3,
+      "explanation": "bind:this 拿引用不触发渲染(呼应 svelte-template 第六节、react-refs)。"
+    }
+  ]
+}

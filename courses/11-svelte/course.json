@@ -1,0 +1,91 @@
+{
+  "id": "11-svelte",
+  "title": "Svelte 5：编译派 UI",
+  "order": 11,
+  "tier": "钻石 · 编译时魔法",
+  "tagline": "Svelte 把框架编译进产物、运行时没有虚拟 DOM。Svelte 5 用 runes（$state / $derived / $effect / $props）重写了响应式内核。这一包吃透组件与响应式本身，全栈能力交给下一包 12-sveltekit。密集对照 04-vue 与 05-react。",
+  "icon": "🪄",
+  "color": "#ff3e00",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "心智与响应式内核",
+      "subtitle": "编译器派 / runes 三件套 / props",
+      "lessons": [
+        { "id": "svelte-overview", "title": "Svelte 是什么：编译器 vs 运行时框架", "goal": "说清 Svelte 把逻辑编译进产物、无虚拟 DOM、无 runtime diff 的心智；Svelte 5 的 runes 革命与 4 及更早的 store/$: 声明式响应有何不同；何时选 Svelte（呼应 vue-reactivity-theory、react-render-model）" },
+        { "id": "svelte-reactive-runes", "title": "runes 内核：$state / $derived / $effect", "goal": "掌握三大 rune：$state 深响应状态、$derived 派生、$effect 副作用；理解信号式细粒度依赖追踪，与 React useState/useEffect、Vue ref/computed/watch 一一对照（呼应 react-usestate、react-useeffect、vue-computed-watch）" },
+        { "id": "svelte-props", "title": "$props 与组件输入输出", "goal": "用 $props() 接收 props、默认值、$bindable 双向、props 只读与单向数据流、rest props（呼应 react-component props、vue-props-emits）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "模板、事件与样式",
+      "subtitle": "each/if/await · on: · scoped style",
+      "lessons": [
+        { "id": "svelte-template", "title": "模板语法：{#each}/{#if}/{#await}/{#key}", "goal": "掌握控制块、插值、{@const}、{@html}、bind:this 元素引用、keyed each；对照 Vue 模板指令（呼应 vue-template-syntax、react-lists-keys）" },
+        { "id": "svelte-events", "title": "事件处理与自定义事件", "goal": "on:click 与事件修饰符、把事件当 props 回调（runes 替代 createEventDispatcher）、事件对象（呼应 vue-events、react 事件）" },
+        { "id": "svelte-styling", "title": "作用域样式与 CSS", "goal": "<style scoped> 编译期作用域、:global、CSS 自定义属性传值、@keyframes、class:x 变化（呼应 vue-style-scoped）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "组合、Snippet 与内容分发",
+      "subtitle": "{#snippet}/{@render} · children · 组合",
+      "lessons": [
+        { "id": "svelte-snippet-children", "title": "Snippet 与 children", "goal": "用 {#snippet}/{@render} 传「渲染函数」，children prop、带参 snippet、snippet 与 Vue slot / React children·render props 对照（呼应 react-composition、vue 组件 slot）" },
+        { "id": "svelte-component-composition", "title": "组件组合与实例交互", "goal": "组件导入、props 传递、export function 暴露方法、bind:this 调组件方法、组合优于继承（呼应 vue-component-basics、react-composition）" },
+        { "id": "svelte-spread-rest", "title": "$$props / $$restProps 与透传", "goal": "rest props、把未声明属性 spread 到根元素、class/style 合并、封装组件透传技巧（呼应 vue fallthrough attrs、react props spread）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "状态管理与跨组件通信",
+      "subtitle": "context · stores · 全局态",
+      "lessons": [
+        { "id": "svelte-context", "title": "setContext / getContext 依赖注入", "goal": "用 context 跨层传状态与方法、与 props 的边界、结合 runes 做 provider（呼应 vue-provide-inject、react-context）" },
+        { "id": "svelte-stores", "title": "svelte/store：writable/derived 与 $ 前缀", "goal": "可读可写 store、derived、$store 自动订阅、Svelte 5 中 store 的定位与向 runes 迁移（呼应 react-state-mgmt、vue pinia）" },
+        { "id": "svelte-global-state", "title": "模块单例 + $state 的全局状态", "goal": "用 .svelte.js/.ts 模块导出 $state 做全局态、class 服务、持久化与订阅（呼应 react-state-mgmt、vue-state-patterns）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "表单、动画与进阶交互",
+      "subtitle": "bind: · transition · use:",
+      "lessons": [
+        { "id": "svelte-forms", "title": "数据绑定与表单", "goal": "bind:value/checked/group/files、$bindable props 双向、表单校验与受控、进度/懒绑定（呼应 react-forms、vue v-model）" },
+        { "id": "svelte-transitions-animations", "title": "过渡、动画与弹簧", "goal": "transition:/in:/out:、animate:、local:、crossfade、spring/ tween 缓动（呼应 vue 过渡、react 动画库思路）" },
+        { "id": "svelte-actions", "title": "use: 动作（节点指令）", "goal": "用 action 封装 DOM 复用逻辑、参数与 update、destroy 清理、action vs $effect 分工（呼应 vue 自定义指令）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "响应式深入、生命周期与性能",
+      "subtitle": "信号内核 · effect 清理 · 优化",
+      "lessons": [
+        { "id": "svelte-reactivity-internals", "title": "响应式内核与 $inspect 调试", "goal": "信号/依赖图、$derived 惰性求值、untrack、effect 的 pre/flush、$inspect 调试、常见失效坑（呼应 vue-reactivity-theory、react 渲染时机）" },
+        { "id": "svelte-lifecycle", "title": "生命周期与 SSR 安全", "goal": "onMount/onDestroy 演进到 $effect 清理、tick、SSR 与客户端差异、避免 window 直接访问（呼应 vue-lifecycle、react effect-patterns）" },
+        { "id": "svelte-performance", "title": "性能优化", "goal": "细粒度更新天然优势、keyed each、减少不必要 effect、lazy 组件与代码分割、profiling（呼应 react-performance、vue-performance、10-vite）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "TypeScript、测试与工具链",
+      "subtitle": "svelte-check · testing-library · CLI",
+      "lessons": [
+        { "id": "svelte-typescript", "title": "Svelte 与 TypeScript", "goal": "<script lang=ts>、props 类型与泛型组件、svelte-check/语言工具、runes 的类型（呼应 02-typescript、vue-typescript）" },
+        { "id": "svelte-testing", "title": "组件与端到端测试", "goal": "@testing-library/svelte + Vitest、Svelte 5 的 render()/getAllBy、fireEvent、Playwright E2E（呼应 react-testing、vue-testing、node-testing）" },
+        { "id": "svelte-tooling", "title": "工程与工具链", "goal": "vite + @sveltejs/vite-plugin-svelte、svelte.config.js、prettier-plugin-svelte、编译器选项与 CLI（呼应 10-vite）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "编译架构、SvelteKit 引桥与部署",
+      "subtitle": "产物形态 · 通往全栈 · 上线",
+      "lessons": [
+        { "id": "svelte-compiler-architecture", "title": "编译产物与渲染机制", "goal": "Svelte 如何编译成 DOM 操作、无 VDOM、hydration、Custom Elements、SSR 字符串渲染（呼应 vue 编译器概念、react render model）" },
+        { "id": "svelte-sveltekit-bridge", "title": "通往 SvelteKit：从组件到全栈", "goal": "纯 Svelte 缺什么（路由/SSR/表单端点）、SvelteKit 能带来什么、本包与 12-sveltekit 的分工预告（呼应 vue-ssr-nuxt、react-nextjs、07-nextjs、08-nuxt）" },
+        { "id": "svelte-deploy", "title": "构建与部署", "goal": "vite build SPA 产物、base、history 回退、hash 缓存/CDN、静态 vs SSR 部署差异（呼应 react-deploy、vue-deploy、10-vite-deploy）" }
+      ]
+    }
+  ]
+}

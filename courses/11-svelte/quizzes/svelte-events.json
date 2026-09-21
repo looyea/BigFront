@@ -1,0 +1,97 @@
+{
+  "title": "svelte-events 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 on:click 与小写 onclick={...} 的关系,正确的是？",
+      "options": [
+        "on:click 已废弃不可用",
+        "onclick 是拼写错误",
+        "两者必须同时写才生效",
+        "on:click 是历史指令,onclick 是 Svelte 5 把 DOM 事件当小写属性 prop,两种都可用"
+      ],
+      "answer": 3,
+      "explanation": "Svelte5 里 DOM 事件即小写属性(呼应 svelte-events 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "给事件处理函数传额外参数,正确写法是？",
+      "options": [
+        "onclick={() => remove(id)}",
+        "onclick={remove(id)}",
+        "onclick={remove.call(id)}",
+        "onclick=remove(id)"
+      ],
+      "answer": 0,
+      "explanation": "包一层箭头函数,否则渲染即执行(呼应 svelte-events 第二节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "用修饰符阻止表单默认提交,正确写法是？",
+      "options": [
+        "on:submit.prevent",
+        "@submit.preventDefault",
+        "on:submit|preventDefault={submit}",
+        "onsubmit={preventDefault}"
+      ],
+      "answer": 2,
+      "explanation": "Svelte 用竖线修饰符 |preventDefault(呼应 svelte-events 第三节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Svelte 5 里子组件向父组件传\"事件\"的推荐做法是？",
+      "options": [
+        "把回调当 prop(onXxx)传下去再调用",
+        "createEventDispatcher",
+        "$emit",
+        "document.dispatchEvent"
+      ],
+      "answer": 0,
+      "explanation": "回调 prop 取代事件派发器(呼应 svelte-events 第四节、svelte-props 第三节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "哪个修饰符表示\"只触发一次后自动解绑\"？",
+      "options": [
+        "capture",
+        "self",
+        "once",
+        "passive"
+      ],
+      "answer": 2,
+      "explanation": "|once(呼应 svelte-events 第三节表)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`<svelte:window onkeydown={fn}>` 的作用是？",
+      "options": [
+        "弹出一个新浏览器窗口",
+        "在 window 上绑定事件,免去手动 add/removeEventListener",
+        "打开外部链接",
+        "把内容渲染到 <head>"
+      ],
+      "answer": 1,
+      "explanation": "svelte:window 绑全局事件(呼应 svelte-events 第五节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "修饰符 self 的含义是？",
+      "options": [
+        "阻止事件冒泡",
+        "仅当事件目标是本元素自身(非子元素冒泡上来)才触发",
+        "仅用户真实操作触发",
+        "在捕获阶段触发"
+      ],
+      "answer": 1,
+      "explanation": "|self 限定 event.target 为自身(呼应 svelte-events 第三节)。"
+    }
+  ]
+}

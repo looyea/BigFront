@@ -3,7 +3,7 @@
 一个**可运行、可打卡、可扩展**的大前端「打怪升级」学习平台。暗色主题（借鉴 VS Code Dark+ / Solarized），
 专为「对大前端零概念、想在本地边学边往 GitHub 提交」的你而做。
 
-覆盖方向：JavaScript(ES6→ES2025) · TypeScript · Node.js · Vue 3 · React · 微信小程序 · Next.js · Nuxt。
+覆盖方向：JavaScript(ES6→ES2025) · TypeScript · Node.js · Express · Vue 3 · React · Svelte/SvelteKit · Solid · 微信小程序 · Next.js · Nuxt · Vite（各包完成度见第九节）。
 
 ---
 
@@ -99,7 +99,7 @@ npm.cmd start
 ```bash
 git init                 # 若尚未初始化
 git add -A
-git commit -m "feat: 大前端学院学习平台 v1（框架 + ES/TS 完整包 + 6 框架骨架包）"
+git commit -m "feat: 大前端学院学习平台（框架 + 10 个满配课程包 + Svelte 等续写中）"
 git branch -M main
 git remote add origin https://github.com/<你的用户名>/<仓库名>.git
 git push -u origin main
@@ -112,7 +112,7 @@ git push -u origin main
 | --- | --- |
 | 前端外壳 | Vue 3 + Vite + vue-router + marked(Markdown 渲染) + highlight.js(代码高亮) |
 | 后端 | Node.js + Express 5（课程扫描、进度持久化、判分） |
-| 数据存储 | 纯文件 `data/progress.json`（零外部数据库依赖） |
+| 数据存储 | 纯文件 `data/progress.md`（Markdown 进度档案，零外部数据库依赖） |
 | 主题 | 暗色（VS Code Dark+ / Solarized 灵感） |
 
 ## 八、目录速览
@@ -127,7 +127,7 @@ BigFront/
 │     ├─ components/     # FloatingNav 悬浮导航 / Quiz 小测
 │     ├─ api.js          # 接口 + 进度 + 时长打点
 │     └─ styles/theme.css
-├─ courses/              # 8 个课程包（内容层）
+├─ courses/              # 11 个课程包（内容层）
 │  └─ <包>/interviews/   # 面试题库（与关卡同名同目）
 └─ data/
    ├─ progress.md          # 当前学习进度档案（自动重建，可手改，纳入 Git）
@@ -137,11 +137,20 @@ BigFront/
 
 ## 九、内容完成度说明
 
-- ✅ **完整**（课文+示例+小测+作业+**面试题**）：`01-es`(6 关) 与 `02-typescript`(5 关) —— 首批地基。
-- 🚧 **骨架已通、首两关有实质内容、可继续扩写**：Node / Vue / React / 小程序 / Next / Nuxt。
-  每关课文底部都标注了「🚧 骨架关卡」及**应去哪个文件补充**，随学随填。
-- 🎓 **面试题**：当前 23 关**一一配有** `interviews/<lessonId>.md`（面向就业的课末实战）；
-  后续新增关卡时，服务会在「完整性自检」中提醒缺失。
+> 截至本次更新：平台已扫描到 **11 个课程包**，其中 **10 个已满配**、`11-svelte` 正按阶段续写；累计已产出 **243 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。
+
+- ✅ **已满配**（课文 + 小测 + 作业 + 面试题；可运行示例 `examples/` 为首批两包附带）：
+
+| 课程包 | 阶段 | 关卡 |   | 课程包 | 阶段 | 关卡 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `01-es`（ES6→ES2025 逐年） | 10 | 35 |   | `07-nextjs` | 8 | 24 |
+| `02-typescript` | 8 | 25 |   | `08-nuxt` | 8 | 24 |
+| `03-nodejs` | 8 | 23 |   | `09-express` | 8 | 20 |
+| `04-vue` | 8 | 24 |   | `10-vite` | 5 | 14 |
+| `05-react` | 8 | 24 |   | `06-miniprogram` | 8 | 24 |
+
+- 🚧 **进行中**：`11-svelte`（Svelte 5 编译器派）—— 大纲已登记 **8 阶段 / 24 关**，其中 L1、L2 共 **6 关**的三件套已完成，L3–L8 正逐阶段续写（每关课文底部以「🚀 下一关」标注续写方向）。计划随后新增 `12-sveltekit`、`13-solid` 两个满配包。
+- 🎓 **面试题**：上述 **243 关**均一一配有 `interviews/<lessonId>.md`（每关 12 题、面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前 `11-svelte` 尚余 L3–L8 待补项）。
 
 > 技术事实若不确定版本演进，请一律以各框架**官方文档 / MDN / TC39** 为准——本课程反复提醒：
 > 警惕过时教程与 AI 幻觉。

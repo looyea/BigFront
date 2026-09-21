@@ -1,0 +1,97 @@
+{
+  "title": "svelte-overview 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 最核心的定位是什么？",
+      "options": [
+        "一个纯状态管理库",
+        "一个只在服务端运行的框架",
+        "一个编译器：把组件编译成直接操作 DOM 的代码，产物运行时几乎没有框架",
+        "一个基于虚拟 DOM diff 的运行时库"
+      ],
+      "answer": 2,
+      "explanation": "Svelte 是编译器派，构建期把 .svelte 降级成手写式 DOM 操作（呼应 svelte-overview 第一节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Svelte 5 相对 Svelte 4，响应式写法最主要的变化是？",
+      "options": [
+        "引入 $state/$derived/$effect 等 runes，把响应式显式化",
+        "取消组件、改用函数",
+        "强制使用 TypeScript",
+        "改回命令式 DOM 操作"
+      ],
+      "answer": 0,
+      "explanation": "runes 取代了隐式的响应式赋值与 $: 声明（呼应 svelte-overview 第三节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 Svelte 产物中的虚拟 DOM，正确的是？",
+      "options": [
+        "会包含与 react-dom 等价的运行时体积",
+        "必须靠虚拟 DOM 才能更新",
+        "只有 SSR 时才用到虚拟 DOM",
+        "运行时的组件产物里不会有虚拟 DOM 或 diff 循环，而是精确的 DOM 更新"
+      ],
+      "answer": 3,
+      "explanation": "无虚拟 DOM、无 reconcile 是编译器派的关键（呼应 svelte-overview 第一节、react-render-model 对照）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Svelte 4 里的 `$: double = count * 2;` 表示什么？",
+      "options": [
+        "一条 CSS 规则",
+        "声明式响应式语句：count 变化时自动重算 double",
+        "异步 await 语法",
+        "给变量加类型注解"
+      ],
+      "answer": 1,
+      "explanation": "$: 是旧版标签式派生写法，Svelte 5 用 $derived 取代（呼应 svelte-overview 第三节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Svelte 5 允许在普通模块（如 counter.svelte.js）的顶层写 runes，主要意义是？",
+      "options": [
+        "该文件只能用于测试",
+        "该文件只能放样式",
+        "提升加载速度",
+        "可在组件外建立响应式状态，实现跨组件共享状态"
+      ],
+      "answer": 3,
+      "explanation": ".svelte.js 模块用 runes 是全局状态新姿势（呼应 svelte-overview 第四节、L4 svelte-global-state）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 $state 与 $state.raw 的区别，正确的是？",
+      "options": [
+        "$state 是深度响应，$state.raw 只追踪引用替换",
+        "两者完全等价",
+        "$state.raw 用于函数",
+        "$state 只能用于 const"
+      ],
+      "answer": 0,
+      "explanation": "$state 深代理、raw 浅（呼应 svelte-reactive-runes 第一节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Svelte 的编译期思想和下面哪个最接近？",
+      "options": [
+        "解释执行的脚本引擎",
+        "打包图片资源",
+        "Vue SFC 编译器把模板编译为 render",
+        "浏览器的垃圾回收"
+      ],
+      "answer": 2,
+      "explanation": "同属构建期把高层写法降级为高效代码（呼应 svelte-overview 第一节、vue-sfc-compiler-macros、10-vite）。"
+    }
+  ]
+}

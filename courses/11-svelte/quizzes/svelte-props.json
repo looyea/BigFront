@@ -1,0 +1,97 @@
+{
+  "title": "svelte-props 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 5 中声明组件 props 的标准写法是？",
+      "options": [
+        "export let a",
+        "const props = defineProps()",
+        "let { a } = $props()",
+        "this.props.a"
+      ],
+      "answer": 2,
+      "explanation": "Svelte 5 用 $props() 解构;export let 是 Svelte 4 写法(呼应 svelte-props 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "在子组件里给一个从 $props 解构出来的变量重新赋值(a = 5),会发生什么？",
+      "options": [
+        "报错——$props 的 props 是只读的",
+        "自动变成子组件私有状态",
+        "同步回父组件",
+        "被静默忽略"
+      ],
+      "answer": 0,
+      "explanation": "props 只读,要本地可变就拷进 $state(呼应 svelte-props 第二节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Svelte 5 里子组件如何把数据往父组件传(取代 createEventDispatcher)？",
+      "options": [
+        "必须用 createEventDispatcher",
+        "不能往上传",
+        "用 $emit",
+        "把回调当 prop 传下去再调用(onXxx?.(...))"
+      ],
+      "answer": 3,
+      "explanation": "回调 prop 取代事件派发器(呼应 svelte-props 第三节、react-component)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "要让一个 prop 支持父组件 bind: 双向绑定,子组件需要？",
+      "options": [
+        "写 $bind",
+        "用 $bindable() 标记该 prop",
+        "写 v-model",
+        "props 默认可双向"
+      ],
+      "answer": 1,
+      "explanation": "$bindable() + 父 bind: 实现双向(呼应 svelte-props 第四节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Svelte 5 如何接收标签之间的内容(children)？",
+      "options": [
+        "children 作为一个 prop,用 {@render children?.()} 渲染",
+        "只能用 <slot>",
+        "无法接收内容",
+        "用 this.children"
+      ],
+      "answer": 0,
+      "explanation": "children 是 snippet prop(呼应 svelte-props 第五节、L3 svelte-snippet-children)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "解构出来的 prop 变量,当父组件更新该 prop 时子组件会？",
+      "options": [
+        "不会更新,解构即快照",
+        "只有加 $state 才会更新",
+        "会更新,因为每个 prop 被编译成 getter 保持响应",
+        "需要手动 watch 才更新"
+      ],
+      "answer": 2,
+      "explanation": "prop 是 getter,解构仍响应(呼应 svelte-props 第一节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "给 prop 设默认值的正确写法是？",
+      "options": [
+        "withDefaults(defineProps(), {...})",
+        "只能在模板里写 a ?? 默认",
+        "props.default = 值",
+        "let { a = 默认值 } = $props()"
+      ],
+      "answer": 3,
+      "explanation": "解构默认值即 prop 默认(呼应 svelte-props 第一节)。"
+    }
+  ]
+}

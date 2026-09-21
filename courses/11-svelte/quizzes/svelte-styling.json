@@ -1,0 +1,97 @@
+{
+  "title": "svelte-styling 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 的组件作用域样式是如何实现的？",
+      "options": [
+        "运行时给节点注入 data 属性",
+        "借助 CSS Modules 文件",
+        "编译期给选择器加唯一哈希类,零运行时开销",
+        "靠人工命名约定 BEM"
+      ],
+      "answer": 2,
+      "explanation": "编译期加哈希类是 Svelte 招牌(呼应 svelte-styling 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": ":global() 的作用是？",
+      "options": [
+        "禁止任何全局样式",
+        "只作用于当前组件",
+        "删除未用到的规则",
+        "让选择器不加哈希,从而作用到外部/全局元素"
+      ],
+      "answer": 3,
+      "explanation": ":global 逃逸作用域(呼应 svelte-styling 第二节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "把组件 JS 的值传给 CSS 自定义属性,推荐写法是？",
+      "options": [
+        "在元素上写 style:--x={v}",
+        "只能 :root { --x: v }",
+        "在 <style> 里写 v-bind(x)",
+        "只能手动 document.style.setProperty"
+      ],
+      "answer": 0,
+      "explanation": "style:--x 把 JS 值变成 CSS 变量(呼应 svelte-styling 第三节)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Svelte 组件里没被用到的 <style> 规则会怎样？",
+      "options": [
+        "保留并给出警告",
+        "编译直接报错",
+        "会被摇树删除,不进产物",
+        "全部内联到 JS 字符串"
+      ],
+      "answer": 2,
+      "explanation": "未用规则被删除,利于体积(呼应 svelte-styling 第一节)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 Svelte 5 里组件上的 `class:` 指令,正确的是？",
+      "options": [
+        "仍是推荐写法",
+        "已废弃,应把 class 当普通 prop 传递",
+        "只能用于全局样式",
+        "会自动加哈希"
+      ],
+      "answer": 1,
+      "explanation": "组件不再用 class: 指令(呼应 svelte-styling 第五节、svelte-spread-rest)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "把 <title>/<link> 等注入文档 head 用哪个内置元素？",
+      "options": [
+        "<svelte:window>",
+        "<svelte:body>",
+        "<svelte:options>",
+        "<svelte:head>"
+      ],
+      "answer": 3,
+      "explanation": "svelte:head 注入 head(呼应 svelte-styling 第六节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "要\"仅在本组件的 .card 之内,影响全局的 .widget\",正确选择器是？",
+      "options": [
+        ":global(.card .widget)",
+        ".card :global(.widget)",
+        "@global .card .widget",
+        "无法组合"
+      ],
+      "answer": 1,
+      "explanation": "作用域前缀 + :global 组合(呼应 svelte-styling 第二节)。"
+    }
+  ]
+}

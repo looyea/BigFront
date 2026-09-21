@@ -1,0 +1,97 @@
+{
+  "title": "svelte-reactive-runes 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 5 的 $state 对对象和数组的响应方式是？",
+      "options": [
+        "浅响应,只有整体替换才更新",
+        "默认深度响应,可直接改内部属性/数组元素",
+        "完全不响应,需手动通知",
+        "需要额外调用 markRaw"
+      ],
+      "answer": 1,
+      "explanation": "$state 对对象/数组做深代理,直接 push/赋值内部即触发(呼应 svelte-reactive-runes 第一节)。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "想存一个大对象、内部不被追踪、只有整体替换引用才触发更新,应该用？",
+      "options": [
+        "$state",
+        "$derived",
+        "$effect",
+        "$state.raw"
+      ],
+      "answer": 3,
+      "explanation": "$state.raw 只追踪引用替换,不做深代理(呼应 svelte-reactive-runes 第一节)。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 $derived,正确的是？",
+      "options": [
+        "只在被读取时计算且自动追踪依赖、带缓存",
+        "每次渲染都强制重算",
+        "必须手写依赖数组",
+        "只能返回函数"
+      ],
+      "answer": 0,
+      "explanation": "$derived 惰性求值+缓存,依赖自动收集(呼应 svelte-reactive-runes 第二节、vue-computed-watch)。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 $effect 的清理,正确的是？",
+      "options": [
+        "$effect 只在状态变化时才运行,初始化不跑",
+        "$effect 必须写在 script 之外",
+        "$effect 回调 return 的函数是清理函数,在重跑前/组件销毁时执行",
+        "$effect 不能读写 $state"
+      ],
+      "answer": 2,
+      "explanation": "$effect 初始也跑、返回清理函数(呼应 svelte-reactive-runes 第三节、react-useeffect)。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Svelte 5 响应式如何确定依赖关系？",
+      "options": [
+        "需要像 React 一样手动写依赖数组",
+        "在 $derived/$effect/模板里读到的 $state 会被自动登记为依赖",
+        "只能依赖 $derived 不能依赖 $state",
+        "依赖关系在运行时随机确定"
+      ],
+      "answer": 1,
+      "explanation": "读即订阅,无需依赖数组(呼应 svelte-reactive-runes 第四节)。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "untrack 的作用是？",
+      "options": [
+        "取消组件所有副作用",
+        "永久忽略某个 $state",
+        "把 $derived 变成 $state",
+        "在其回调里读信号但不建立依赖,该信号变化不会重跑本 effect"
+      ],
+      "answer": 3,
+      "explanation": "untrack 排除不想要的依赖(呼应 svelte-reactive-runes 第三节)。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "要表达\"随 count 变化的奇偶判断\"这种纯计算,首选哪个 rune？",
+      "options": [
+        "$derived",
+        "$effect",
+        "$props",
+        "$inspect"
+      ],
+      "answer": 0,
+      "explanation": "纯派生用 $derived,有副作用才用 $effect(呼应 svelte-reactive-runes 第二、三节)。"
+    }
+  ]
+}
