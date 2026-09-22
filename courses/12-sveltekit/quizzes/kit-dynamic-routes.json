@@ -1,0 +1,90 @@
+{
+  "title": "kit-dynamic-routes 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "type": "single",
+      "prompt": "路由 src/routes/foo/[...rest] 对 URL /foo（后面什么都没有）的匹配结果是？",
+      "options": [
+        "不匹配，/foo 会落到其他路由或 404",
+        "匹配，但 params.rest 为 undefined",
+        "匹配，params.rest 是空字符串——rest 参数能匹配空",
+        "构建期直接报错，rest 路由必须有后续段"
+      ],
+      "answer": 2,
+      "explanation": "官方明示 [...rest] 连零段都匹配（/a/z 能被 a/[...rest]/z 式结构覆盖），params.rest 为空字符串。想强制至少一段要么在 load 里校验，要么挂 matcher——这正是官方推荐的校验手段。"
+    },
+    {
+      "prompt": "同一应用里同时存在 src/routes/shop/checkout 与 src/routes/shop/[id] 两套路由，访问 /shop/checkout 时命中谁？",
+      "type": "single",
+      "options": [
+        "永远命中 /shop/checkout——无参路由比带参路由更具体、优先级更高",
+        "永远命中 /shop/[id]，checkout 进 params.id",
+        "取决于哪个目录先创建",
+        "两个都渲染，嵌套输出"
+      ],
+      "answer": 0,
+      "explanation": "排序规则第一条：更具体的路由优先，无参数 > 有参数。创建顺序不参与优先级；想改变裁决只能动结构、matcher 或段名（字母序只在平手时生效）。"
+    },
+    {
+      "type": "single",
+      "prompt": "目录结构 src/routes/[...rest]/[[maybe]] 的后果是？",
+      "options": [
+        "合法，[[maybe]] 在 rest 吃剩后捡最后一个段",
+        "非法设计——可选参数不能跟在 rest 参数之后，[[maybe]] 永远匹配不到",
+        "合法，且 [[maybe]] 会优先于 rest 匹配",
+        "Kit 自动把 [[maybe]] 提升为 rest 的前置段"
+      ],
+      "answer": 1,
+      "explanation": "参数按贪婪方式匹配，[...rest] 把尾巴全吃掉，后面的 [[optional]] 永远轮不上。官方文档直接点名这个组合不成立。"
+    },
+    {
+      "type": "single",
+      "prompt": "想创建 .well-known 路由（如 /.well-known/ai.txt），官方推荐的目录名写法是？",
+      "options": [
+        "src/routes/dot-well-known/ 并在 load 里 rewrite",
+        "src/routes/\\.well-known/ 用反斜杠转义",
+        "src/routes/%2Ewell-known/ 用 URL 百分号编码",
+        "src/routes/[x+2e]well-known/ 用十六进制转义前导点"
+      ],
+      "answer": 3,
+      "explanation": "[x+nn] 是官方编码语法（nn 为字符十六进制码），. 是 2e。官方建议用它绕开 TypeScript 对前导点目录支持不佳的问题。反斜杠在 Windows 文件系统本身就有特殊含义，%2E 不会被解码成目录名的一部分。"
+    },
+    {
+      "type": "single",
+      "prompt": "src/routes/a/b/+page@.svelte 文件名的含义是？",
+      "options": [
+        "该页面不存在合法布局，运行时回退默认布局",
+        "该页面以 /a 的布局为父，跳过 /a/b 层布局",
+        "该页面跳过中间层级，直接以根布局 src/routes/+layout.svelte 为父",
+        "@ 后为空是非法语法，构建报错"
+      ],
+      "answer": 2,
+      "explanation": "+page@ 尾段指定布局重置到哪一层：根布局用空串（+page@.svelte），指定层写段名（+page@a.svelte）。这是官方给的\"个别页面跳出布局链\"刀法。"
+    },
+    {
+      "type": "single",
+      "prompt": "src/routes/(app)/dashboard/+page.svelte 对应的 URL 是？",
+      "options": [
+        "/(app)/dashboard",
+        "/dashboard——括号组目录不出现在 URL 里",
+        "/app/dashboard",
+        "/%28app%29/dashboard"
+      ],
+      "answer": 1,
+      "explanation": "(group) 只参与文件系统组织与布局分层，对 URL 完全透明。组内还能直接放 +page（比如首页归属某个组时）。"
+    },
+    {
+      "type": "single",
+      "prompt": "同层并存的 src/routes/articles/[slug] 与 src/routes/articles/[date] 结构完全同构，访问 /articles/2024-01-01 时？",
+      "options": [
+        "两个路由都执行，数据合并",
+        "随机命中一个，每次部署可能不同",
+        "报路由冲突错误，构建失败",
+        "前几条排序规则全部平手，按字母序 tie-break 命中 [date]（d 在 s 前）"
+      ],
+      "answer": 3,
+      "explanation": "排序最后一条是字母序 tie-break——[date] 排在 [slug] 前。这就是\"同层两个参数段语义冲突别赌字母表\"的原因：要么改结构表达差异，要么用 matcher 分胜负。"
+    }
+  ]
+}

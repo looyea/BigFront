@@ -1,0 +1,90 @@
+{
+  "title": "kit-server-modules 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "type": "single",
+      "prompt": "下列哪组是 ServerLoadEvent 相对 LoadEvent 追加的专属成员？",
+      "options": [
+        "fetch、params、url——服务端才有网络能力",
+        "cookies、locals、request、platform、clientAddress",
+        "parent、depends、untrack——依赖追踪只在服务端",
+        "data、setHeaders、route"
+      ],
+      "answer": 1,
+      "explanation": "ServerLoadEvent 继承 RequestEvent 的 cookies/locals/platform/request/clientAddress；fetch/params/url/parent/depends/untrack 两类 load 都有（universal 的 data 另有含义：承载 server 返回值）。"
+    },
+    {
+      "type": "single",
+      "prompt": "+page.server.js 的 load 返回以下哪个值会违反 devalue 序列化契约？",
+      "options": [
+        "new Map([['k', 1]]) 与 new Set([1, 2])",
+        "循环引用的对象树",
+        "new Date() 与 10n（BigInt）",
+        "导出的 Svelte 组件构造器与闭包函数"
+      ],
+      "answer": 3,
+      "explanation": "devalue 覆盖 JSON 之外还支持 BigInt/Date/Map/Set/RegExp 与循环引用——A/C/B 全合法。函数与类实例不可序列化，要发给客户端得靠 transport hooks 或改走 universal load。"
+    },
+    {
+      "type": "single",
+      "prompt": "同目录 +page.server.js 与 +page.js 都导出 load，页面组件最终拿到的 data 来自？",
+      "options": [
+        "只有 universal load 的返回值——server 的返回作为 event.data 交给 universal 加工，不直达页面",
+        "server load 返回值，universal 只做副作用",
+        "两者浅合并，同名键 server 赢",
+        "运行时随机，取决于哪个先完成"
+      ],
+      "answer": 0,
+      "explanation": "官方接力链：server load 先跑，返回值成为 universal load 入参的 data 属性；页面只消费 universal 的返回。这正是『服务端敏感数据进、可序列化结果出』的闸门设计。"
+    },
+    {
+      "type": "single",
+      "prompt": "浏览器侧组件 import 了 src/lib/server/db.ts，会发生什么？",
+      "options": [
+        "运行时 404",
+        "构建直接失败——$lib/server 的私域由打包器执法，不是 lint 建议",
+        "Tree-shaking 静默移除，一切正常",
+        "正常打包但 DB 连接降级为 mock"
+      ],
+      "answer": 1,
+      "explanation": "src/lib/server 是编译器保护目录：客户端可达代码一旦引用它，构建报错。私有逻辑放对目录即安全，无需人肉审计 import。"
+    },
+    {
+      "type": "single",
+      "prompt": "应用部署在 my.domain.com，server load 里用 event.fetch 请求下列哪个地址能带上页面请求的 cookie？",
+      "options": [
+        "api.domain.com——同主域自动放行",
+        "domain.com——父域向上兼容",
+        "sub.my.domain.com——更具体的子域在透传白名单内",
+        "任何其他域只要加 credentials: 'include' 就能拿到全部 cookie"
+      ],
+      "answer": 2,
+      "explanation": "官方规则：目标是本站或更具体子域才透传 cookie（my.domain.com 与其子域收得到；domain.com、api.domain.com 收不到）。且 credentials:'include' 时其余 cookie 反而一律不转（归属域信息不可知），需要 handleFetch 定制。"
+    },
+    {
+      "type": "single",
+      "prompt": "+server.js 的 GET 处理函数抛了 error(500)，客户端收到的响应是？",
+      "options": [
+        "最近层的 +error.svelte 渲染的错误页",
+        "空 body 的 500 响应",
+        "自动重定向到 /500 页面",
+        "按 Accept 头返回 JSON 错误体或 src/error.html 兜底页——+error.svelte 不参与端点错误"
+      ],
+      "answer": 3,
+      "explanation": "端点没有组件树，+error.svelte 与 +layout 对它都无效；抛错按请求的 Accept 头协商成 JSON 或 error.html。端点的横切逻辑归 handle hook。"
+    },
+    {
+      "type": "single",
+      "prompt": "SSR 期间 server load 里 event.fetch('/api/x')（本站 +server.js 路由）走的是什么链路？",
+      "options": [
+        "直接调用该端点的处理函数，不经 HTTP 往返——同 URL 响应还会在之后被水合复用",
+        "通过 localhost TCP 真实回环请求",
+        "构建期预取表查找，运行时永不触达端点",
+        "被 Vite dev server 拦截，生产无法使用"
+      ],
+      "answer": 0,
+      "explanation": "官方特性清单：内网请求直达 handler 无 HTTP 开销；且 SSR 中的响应会被捕获内联，水合读缓存不重发。B 是常见想象，错。"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "title": "kit-project-structure 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Svelte 官方脚手架工具链合流后，创建 Kit 项目的当前推荐命令是？",
+      "options": [
+        "npm create svelte@latest",
+        "npx sv create my-app",
+        "npm init kit-app",
+        "npx create-svelte-kit"
+      ],
+      "answer": 1,
+      "explanation": "sv CLI 是官方工具链统一入口（create/check/test/tidy/migrate），create-svelte 是其前代；课文第一节列了它的三个交互决策项。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "两个配置文件 svelte.config.js 与 vite.config.ts 的分工是？",
+      "options": [
+        "前者管运行时、后者管编译时",
+        "随便写哪个都生效，互为别名",
+        "前者管编译器与 Kit（adapter/paths/prerender），后者挂 sveltekit() 插件与打包器插件链",
+        "前者已废弃，全部配置收进 vite.config.ts"
+      ],
+      "answer": 2,
+      "explanation": "Kit 配置（adapter、alias、prerender、csp）在 svelte.config.js 的 kit 字段；vite.config.ts 管插件链与 dev server——这分裂从 11 包 L7 一路继承而来（排除项 D 是常见误记，vite 插件化改造后 kit 段仍在 svelte.config）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "把共享组件放 $lib 而不是 routes 目录内，核心理由是？",
+      "options": [
+        "$lib 里的文件会被自动预取",
+        "模块边界写进文件位置：$lib=全局资产层，routes 内=路由私有",
+        "只有 $lib 支持 TypeScript",
+        "routes 目录禁止放 .svelte 文件"
+      ],
+      "answer": 1,
+      "explanation": "$lib 是架构纪律的物理线而非 import 缩短糖；反向暗纪律同样重要：服务端密钥模块不该藏进 $lib 被页面 import——.server.ts 后缀才是私有性保险（课文第三节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "'dev 一切正常，CI 构建后就白屏'——第一课该跑的复现命令是？",
+      "options": [
+        "npm run dev --force",
+        "npx svelte-kit sync",
+        "npm run preview（先 npm run build）",
+        "npx sv check"
+      ],
+      "answer": 2,
+      "explanation": "preview 跑的是 build 产物，dev 走的是另一条运行时路径——产物类问题（环境变量、adapter、缓存头）只有在 preview 才重现（10-vite 的 dev/build 双人格同款教训）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "从 $env/static/private 导入的变量，其'私密性'由什么保证？",
+      "options": [
+        "运行时的权限检查中间件",
+        "变量名大写约定 + code review",
+        ".env 文件本身设置了文件权限 600",
+        "构建期编译器拦截：该 import 出现在客户端代码路径会直接 build 报错"
+      ],
+      "answer": 3,
+      "explanation": "编译期物理裁剪，不靠约定不靠审查——这是 Kit 与 Next（NEXT_PUBLIC_ 靠前缀约定+tree-shaking 理解）的机制级差异；所以'要不要 PUBLIC_'是安全评审问题（课文第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 $env/dynamic/private，正确的说法是？",
+      "options": [
+        "运行期读 process.env，改值免重 build，但只能在服务端代码里 import",
+        "与 static/private 完全等价，只是别名",
+        "客户端也能 import，值在水合数据里注入",
+        "专供浏览器端运行时环境变量使用"
+      ],
+      "answer": 0,
+      "explanation": "dynamic 家族都是运行期读取（server-only import），代价是失去构建期内联优化；public 版的 dynamic 同样在 server 侧 import 后传给页面，不是浏览器直读。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": ".svelte-kit/ 目录的正确对待方式是？",
+      "options": [
+        "手工编辑里面的生成代码以修 bug",
+        "进版本库，保证团队产物一致",
+        "生成物不进版本库；改路由后类型报红时跑 svelte-kit sync 重新生成",
+        "删掉它等于删项目，不可再生"
+      ],
+      "answer": 2,
+      "explanation": "types/、output/ 都是按 routes 现状派生的生成物，删了重跑即恢复；手改生成物=下次 sync 全灭+事故溯源地狱（L9 internals 会解剖它的 manifest 产物）。"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "lesson": "kit-prerender-static",
+  "title": "prerender 静态化 · 自测",
+  "questions": [
+    {
+      "q": "『任意两个用户直接访问它、从服务器拿到的内容必须相同』这条判据用于判断？",
+      "options": [
+        "能否使用 form action",
+        "能否关闭 csr",
+        "是否需要 SSR",
+        "一个页面能否被预渲染"
+      ],
+      "answer": 3,
+      "explain": "这是官方给出的『能否预渲染』基本规则：产物全体用户共享一份，内容因人而异的页不适合预渲染。"
+    },
+    {
+      "q": "prerender 页面选项的继承模型是？",
+      "options": [
+        "只能在 +page.server.js 设，layout 无法参与",
+        "根 layout 设默认、子 layout/page 覆盖同名值，可逐路由收放",
+        "一旦根 layout 设 true 就无法在任何子页关掉",
+        "子层设了会被父层无条件覆盖回去"
+      ],
+      "answer": 1,
+      "explain": "遵循页面选项通用继承律：子覆盖父，故可『全站默认 prerender=true、个别动态页设 false』。"
+    },
+    {
+      "q": "预渲染器默认靠什么机制发现要渲染的页面？",
+      "options": [
+        "从 entries 起点出发、扫描页面里的 <a> 链接爬取",
+        "读取 package.json 的 pages 字段",
+        "遍历 src 目录下所有 .svelte 文件",
+        "必须在 svelte.config 里逐条列出每个 URL"
+      ],
+      "answer": 0,
+      "explain": "默认 crawl=true，从入口出发顺 <a> 链接发现新页；一般无需手动指定，除非目标页没有可爬到的链接。"
+    },
+    {
+      "q": "出现『routes marked as prerenderable but were not prerendered』报错，下列哪个不是正确修法？",
+      "options": [
+        "把该路由补进 kit.prerender.entries 或加 <a> 链接指过去",
+        "把 prerender=true 改成 'auto' 让它可动态兜底",
+        "把整个站改成 ssr=false",
+        "确保有已预渲染且 SSR 开启的页链接到它"
+      ],
+      "answer": 2,
+      "explain": "该页标 true 却没被爬到。修法①补入口/链接②改 'auto'③让已渲染页链接到它。把全站 ssr=false 只会毁掉预渲染（存空壳），不是解法。"
+    },
+    {
+      "q": "entry generator（导出 entries 函数）主要解决什么？",
+      "options": [
+        "为动态 [param] 路由提供参数取值清单，让每个实例都能被预渲染",
+        "生成 sitemap.xml",
+        "定义路由别名映射",
+        "指定预渲染并发数"
+      ],
+      "answer": 0,
+      "explain": "爬虫无从得知必填参数取值；entries 返回 params 对象数组（可 async 从 DB/CMS 拉），把 /blog/hello 等全部实例烧出来。对应 Next 的 generateStaticParams。"
+    },
+    {
+      "q": "kit.prerender.concurrency 默认 1，什么时候调高有意义？",
+      "options": [
+        "任何情况都调越高越好",
+        "关闭爬虫时",
+        "网络瓶颈型预渲染（拉远程 CMS）时，可边等网络边渲其它",
+        "只有本地无依赖时"
+      ],
+      "answer": 2,
+      "explain": "JS 单线程，纯计算调高无益；但预渲染受网络等待主导时，提高 concurrency 能并行推进、加速构建。"
+    },
+    {
+      "q": "预渲染产物的 HTTP 缓存头（如 immutable）由谁负责配置？",
+      "options": [
+        "托管层（Nginx/CDN/Pages）配置，Kit 只负责生成文件",
+        "SvelteKit 自动写入每个 HTML 的 meta",
+        "adapter-node 强制设置且不可改",
+        "由浏览器根据文件名自动推断"
+      ],
+      "answer": 0,
+      "explain": "Kit 生成文件，缓存策略是你与宿主之间要显式谈拢的账：哈希资源可 immutable 长缓存、HTML 入口要 no-cache/短缓存。"
+    }
+  ]
+}

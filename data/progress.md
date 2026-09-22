@@ -8,8 +8,8 @@
 
 - 创建时间: 2026-09-20T00:52:51.376Z
 - 首次学习: 2026-09-20T04:24:44.406Z
-- 最近学习: 2026-09-21T03:29:13.564Z
-- 累计时长毫秒: 441783
+- 最近学习: 2026-09-22T05:04:09.126Z
+- 累计时长毫秒: 2135381
 
 ## 关卡 (lessons)
 
@@ -19,13 +19,19 @@
 | 01-es:es-scope | false | 0 | 0 | false |  | 0 |
 | 01-es:es-closure | false | 0 | 0 | false |  | 0 |
 | 01-es:es-2015-2017 | false | 0 | 0 | false |  | 0 |
+| 11-svelte:svelte-overview | false | 0 | 0 | false |  | 0 |
+| 12-sveltekit:kit-overview | false | 0 | 0 | false |  | 0 |
+| 04-vue:vue-reactivity | false | 0 | 0 | false |  | 0 |
+| 06-miniprogram:mp-overview | false | 0 | 0 | false |  | 0 |
+| 07-nextjs:next-overview | false | 0 | 0 | false |  | 0 |
 
 ## 每日 (days)
 
 | 日期 | 时长毫秒 |
 | --- | --- |
 | 2026-09-20 | 439783 |
-| 2026-09-21 | 2000 |
+| 2026-09-21 | 855051 |
+| 2026-09-22 | 840547 |
 
 ## 事件 (events)
 

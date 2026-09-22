@@ -1,0 +1,90 @@
+{
+  "title": "kit-error-boundaries 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "type": "single",
+      "prompt": "expected error 与 unexpected error 的分界判据是？",
+      "options": [
+        "看状态码：4xx 是 expected、5xx 是 unexpected",
+        "看抛出位置：load 里的是 expected、组件里的是 unexpected",
+        "是否由你亲手用 @sveltejs/kit 的 error() helper 抛出",
+        "看有没有 message 字段"
+      ],
+      "answer": 2,
+      "explanation": "官方按『是否 error() 抛』分身份：expected 原样进 page.error 且不过 handleError；unexpected 默认套通用壳 {message: Internal Error} 且必经 handleError。状态码只是结果不是判据。"
+    },
+    {
+      "type": "single",
+      "prompt": "把 load 全体包进 try/catch 后，页面里的 redirect(303, ...) 失效了。为什么？",
+      "options": [
+        "303 在 action 之外不可用",
+        "redirect 与 error 都是『抛』——被你的 catch 截住，SvelteKit 再也收不到信号；用 isRedirect 判出再 re-throw",
+        "redirect 只在 +page.server.js 生效",
+        "try/catch 会让 load 变成非 async"
+      ],
+      "answer": 1,
+      "explanation": "JSDoc 红线：别 catch 住 thrown redirect/error。正确姿势是 catch 里 if (isRedirect(e)) throw e（或 isHttpError 同理）再处理真异常。"
+    },
+    {
+      "type": "single",
+      "prompt": "+layout.server.js 的 load 抛了 error(500)，按官方落点规则谁来接？",
+      "options": [
+        "该布局同目录的 +error.svelte",
+        "永远直接进 src/error.html",
+        "子页面组件内联显示",
+        "该布局『之上』最近的 +error.svelte——布局旁的边界不接自己层级的错"
+      ],
+      "answer": 3,
+      "explanation": "官方规则：layout load 出错，最近边界在树中该布局的上方而非旁边。只有根 layout 出错才走 fallback 页（根布局里放不下自己的边界）。"
+    },
+    {
+      "type": "single",
+      "prompt": "根 +layout.js 的 load 抛错时，用户看到的是？",
+      "options": [
+        "根 +error.svelte",
+        "空白页",
+        "fallback 错误页（默认极简页或自定义 src/error.html）",
+        "上次成功渲染的缓存页"
+      ],
+      "answer": 2,
+      "explanation": "根布局本应包含 +error.svelte，自举死锁——官方明确此场景用 fallback page。src/error.html 是纯 HTML，只有 %sveltekit.status% 与 %sveltekit.error.message% 占位符会被替换。"
+    },
+    {
+      "type": "single",
+      "prompt": "+server.js 端点里抛错，+error.svelte 不参与，响应形态由什么决定？",
+      "options": [
+        "请求的 Accept 头：要 HTML 给 fallback 页、要 JSON 给错误对象序列化",
+        "适配器类型",
+        "错误状态码的奇偶",
+        "svelte.config.js 的 errorFormat 配置"
+      ],
+      "answer": 0,
+      "explanation": "官方 Responses 节：handle 或端点里的错误按 Accept 二选一（fallback 页 / JSON）。端点世界只有 Request→Response，layout/error 组件都不在场。"
+    },
+    {
+      "type": "single",
+      "prompt": "action 里校验失败，官方推荐的『软着陆』手段与理由匹配正确的是？",
+      "options": [
+        "throw error(400)——错误页最能提示用户",
+        "return fail(400, data)——走 form prop 回显，页面不崩、load 照常重跑、值可回填",
+        "return json(400)——端点写法借用",
+        "redirect 回原页——最彻底的重置"
+      ],
+      "answer": 1,
+      "explanation": "fail 是带状态的返回值不是抛掷：状态进 page.status、数据进 form。硬抛 error(400) 会渲染错误页，无 JS 时用户整页丢失表单内容——提交期错误优先软着陆地用 fail。"
+    },
+    {
+      "type": "single",
+      "prompt": "2.54 的 experimental.handleRenderingErrors 开启后，渲染期错误被接住时 +error.svelte 如何拿到错误对象？",
+      "options": [
+        "仍读 page.error，与 load 抛错完全一致",
+        "只能读 console",
+        "错误作为 prop 直接传入——因为渲染已开始，page 对象（含 error）不再更新",
+        "错误只进 handleError，不到组件"
+      ],
+      "answer": 2,
+      "explanation": "官方注记：此时用 svelte:boundary 包裹，错误先过 handleError 再以 prop 交给边界（let { error } = $props()）；page.error 不更新，因多边界可能并行接错。实验特性不受 semver 保护。"
+    }
+  ]
+}

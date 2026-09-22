@@ -1,0 +1,90 @@
+{
+  "title": "kit-streaming 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "type": "single",
+      "prompt": "不开流式优化时，一页的多个 load（layout+page）执行模型是？",
+      "options": [
+        "按层级串行：根 layout → 子 layout → page，逐个 await",
+        "按文件名字母序依次执行",
+        "全部并发执行，但页面要等所有 load 返回后才渲染",
+        "只执行 page 的 load，layout 数据懒加载"
+      ],
+      "answer": 2,
+      "explanation": "官方 Parallel loading 节：所有 load 并发跑避免瀑布，但结果全部就绪前不出页——最慢的 load 决定首屏，这正是流式要改写的等式。"
+    },
+    {
+      "type": "single",
+      "prompt": "要让慢评论接口不拖正文首屏，+page.server.js 的正确编排是？",
+      "options": [
+        "comments: loadComments(slug) 不 await 直接放返回值，且放在 await 语句之前发起",
+        "comments: await loadComments(slug)——await 后放进展",
+        "把评论拆去独立的 +server.js 端点让浏览器二次 fetch",
+        "comments: Promise.resolve(loadComments(slug))——包一层就流式"
+      ],
+      "answer": 0,
+      "explanation": "server load 返回对象里的未解析 Promise 会被流式下发；官方示例心法是 await 放最后——先让慢查询起飞再 await 快数据，两个查询并行。C 是可行的老办法但不是流式编排。"
+    },
+    {
+      "type": "single",
+      "prompt": "同样的 Promise 写法放进 +page.js（universal load）的返回值，SSR 页面下会发生什么？",
+      "options": [
+        "照常流式，两栖 load 无差别",
+        "构建报错：universal load 禁止返回 Promise",
+        "Promise 被服务端自动 await 完再出页",
+        "不流式——SSR 渲染器等不到它，浏览器重跑 universal load 时该 Promise 被重新创建"
+      ],
+      "answer": 3,
+      "explanation": "官方警告：页面若服务端渲染，universal load 返回的 Promise 不会流式，会在浏览器重跑 load 时重建。要流式请把 Promise 放进 server load。"
+    },
+    {
+      "type": "single",
+      "prompt": "部署到 AWS Lambda 后，流式页面的实际表现是？",
+      "options": [
+        "报错拒绝部署",
+        "所有 Promise resolve 完才一次性出页——平台缓冲响应，流式收益归零",
+        "自动降级为 ssr=false 的 SPA",
+        "与 Node 环境完全一致"
+      ],
+      "answer": 1,
+      "explanation": "官方点名 Lambda/Firebase 等不支撑流式的平台会缓冲整个响应；用反代（NGINX）时也要关缓冲，否则同样的事再次发生。"
+    },
+    {
+      "type": "single",
+      "prompt": "在流式 Promise 的 resolve 链里，下列哪个操作是官方明确『做不到』的？",
+      "options": [
+        "读取 cookies 决定返回内容",
+        "对数据再跑一层过滤",
+        "throw redirect(307, '/login') 改变跳转",
+        "向模板暴露中间状态供 {:await} 渲染"
+      ],
+      "answer": 2,
+      "explanation": "响应已开始流式后 headers 与状态码覆水难收：setHeaders 与 throw redirect 在流出的 Promise 里无效。鉴权/重定向决策必须发生在开始出页之前。"
+    },
+    {
+      "type": "single",
+      "prompt": "流式 Promise 的失败兜底义务是？",
+      "options": [
+        "非 event.fetch 创建的 Promise 要自己挂 noop catch 防服务端崩溃；event.fetch 的由 Kit 自动处理",
+        "所有 Promise 都必须自己挂 catch，Kit 不做任何处理",
+        "模板写了 {:catch} 就绝对安全，服务端无需关心",
+        "Promise.all 包住全部资源即可自动兜底"
+      ],
+      "answer": 0,
+      "explanation": "渲染开始前就 reject 且无人处理的 Promise 会让服务端崩在 unhandled rejection。官方规则：load 里用 event.fetch 发起的由 Kit 兜底；其余（直调 DB 驱动等）补 .catch(() => {}) 标记已处理。"
+    },
+    {
+      "type": "single",
+      "prompt": "从 SvelteKit 1.x 升级来的项目发现『return 顶层 Promise 后页面依旧全量才出』，最可能的原因是？",
+      "options": [
+        "适配器版本太旧",
+        "浏览器扩展拦截了流",
+        "Node 版本低于 18",
+        "1.x 语义是顶层 Promise 自动 await、只有嵌套 Promise 流式；2.x 起顶层不 await 才流"
+      ],
+      "answer": 3,
+      "explanation": "官方版本说明：1.x 顶层 Promise 会被自动 await。升 2.x 后语义改变，老代码若仍按 1.x 心智 await 一切，流式自然没发生——排查顺序先查自己写法再怪环境。"
+    }
+  ]
+}

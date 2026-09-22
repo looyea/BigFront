@@ -1,0 +1,90 @@
+{
+  "title": "kit-navigation-preload 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "type": "single",
+      "prompt": "官方新建项目脚手架里，全站数据预取默认是怎么配置的？",
+      "options": [
+        "src/routes/+layout.js 里导出 preload = 'hover'",
+        "src/app.html 的 <body data-sveltekit-preload-data=\"hover\">",
+        "svelte.config.js 的 kit.preload 配置项",
+        "默认关闭，需逐链接加属性"
+      ],
+      "answer": 1,
+      "explanation": "预取是纯 DOM 属性驱动，默认模板直接把 hover 挂在 app.html 的 body 上，全站链接悬停即预取——不在配置文件、不在 load。"
+    },
+    {
+      "type": "single",
+      "prompt": "data-sveltekit-preload-code 的四个取值里，哪两个只对\"导航完成后当场存在于 DOM\"的链接生效？",
+      "options": [
+        "hover 与 tap",
+        "四个取值都无此限制",
+        "tap 与 eager",
+        "eager 与 viewport"
+      ],
+      "answer": 3,
+      "explanation": "eager 与 viewport 需要 Kit 主动扫描链接，官方为避免 DOM 观察性能陷阱，只认导航完成时已在场的链接；{#if} 后渲染的链接要等 hover/tap 触发。"
+    },
+    {
+      "type": "single",
+      "prompt": "用户在系统里开启了省流量模式（navigator.connection.saveData 为 true），预取行为是？",
+      "options": [
+        "数据与代码预取自动全部失效，无需开发者处理",
+        "仅数据预取失效，代码预取照常",
+        "照常预取，除非显式加 data-sveltekit-preload-data=\"false\"",
+        "构建期报警告，要求开发者手动关闭预取"
+      ],
+      "answer": 0,
+      "explanation": "官方明话：选择了减少数据用量的用户面前，preload-data 与 preload-code 属性一律被忽略——内置的尊重用户策略。"
+    },
+    {
+      "type": "single",
+      "prompt": "某链接同时写 data-sveltekit-preload-data=\"hover\" 与 data-sveltekit-preload-code=\"tap\"，实际效果是？",
+      "options": [
+        "代码按 tap 预取、数据按 hover 预取，各管各的",
+        "preload-code 优先级更高，整体退化为 tap",
+        "preload-code=\"tap\" 不产生额外效果——它必须比 preload-data 更激进才有意义",
+        "属性冲突，构建报错"
+      ],
+      "answer": 2,
+      "explanation": "预取代码是预取数据的前提步骤：hover 预取数据时必然已在 hover 时预取代码。tap 比 hover 保守，写了等于没写。官方明确该属性只在更激进档位时才有效果。"
+    },
+    {
+      "type": "single",
+      "prompt": "全局 hover 预取已开启，但侧边栏广告位不该预取（防误触刷量），官方方案是？",
+      "options": [
+        "<a rel=\"nofollow\"> 标记广告链接",
+        "侧边栏容器上加 data-sveltekit-preload-data=\"false\" 反向豁免",
+        "给每个广告链接加 data-sveltekit-reload",
+        "属性只能开启不能关闭，只能移除全局配置"
+      ],
+      "answer": 1,
+      "explanation": "所有 data-sveltekit-* 选项都支持 \"false\" 值在局部关闭继承；data-sveltekit-reload 是整页导航，杀鸡用牛刀还改了导航语义。"
+    },
+    {
+      "type": "single",
+      "prompt": "rel=\"external\" 与 data-sveltekit-reload 的共同点与差异是？",
+      "options": [
+        "都让链接走浏览器整页导航而非 Kit 接管；rel=external 额外在预渲染时被忽略",
+        "完全等价，只是 HTML 属性与 Kit 属性的写法差异",
+        "rel=external 只影响爬虫，data-sveltekit-reload 才影响导航",
+        "两者都会禁用预渲染"
+      ],
+      "answer": 0,
+      "explanation": "官方：带 data-sveltekit-reload 的链接点击触发整页导航；rel=\"external\" 受到同样待遇，另外 prerender 阶段会忽略这类链接（不顺着它爬）。"
+    },
+    {
+      "type": "single",
+      "prompt": "关于编程式预取 API，正确的是？",
+      "options": [
+        "preloadData 从 $app/state 导入，只取数据不取代码",
+        "preloadCode 需要传入 load 函数作为回调",
+        "preloadData(href) 从 $app/navigation 导入，返回含 type/status/data 的 Promise；preloadCode 支持 /blog/* 通配",
+        "编程式预取会自动绕过 saveData 设置"
+      ],
+      "answer": 2,
+      "explanation": "两个函数都在 $app/navigation。preloadData 与 hover/tap 触发的行为同一条链、返回 load 结果的 Promise；preloadCode 只 import 代码且接受通配路径。绕过 saveData 是官方禁止的方向。"
+    }
+  ]
+}

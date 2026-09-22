@@ -1,0 +1,97 @@
+{
+  "title": "kit-routing-basics 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "同目录同时放 +page.ts 与 +page.server.ts，官方的执行契约是？",
+      "options": [
+        "编译报错：同族数据文件互斥",
+        "谁先创建谁生效，另一份被忽略",
+        "server load 先跑，返回值作为 event.data 交给 universal load",
+        "universal 先跑，server 结果与其浅合并"
+      ],
+      "answer": 2,
+      "explanation": "共存是官方支持模式（文档明示：两者优先级 server 先行，其返回即 universal 的 data 参数）——'环境敏感数据进、可序列化结果出'的同目录漏斗；'互斥'是常见误记，排障时先去 types 看两文件是否都在。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "新写的 +layout.svelte 里忘了放 {@render children()}，症状是？",
+      "options": [
+        "编译报错，无法启动",
+        "该布局层及更深的子页面内容全部不显示（只剩布局自身骨架）",
+        "只有根路径 / 受影响",
+        "自动降级为不使用该布局"
+      ],
+      "answer": 1,
+      "explanation": "children snippet 是子路由的唯一出口——不渲染出口，整棵子树在视觉上蒸发，但不报错（静默伤）。根布局若整个省略，Kit 有默认 {@render children()}，写了反而断（课文第一节契约列）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "父布局 load 返回 { user, nav }，子页面 load 返回 { user }。页面组件里 data.user 的值来自？",
+      "options": [
+        "子页面——data 合并是 key 级遮蔽，同名子赢",
+        "父布局——父级数据优先级更高",
+        "运行时随机：取决于哪个 load 先完成",
+        "两份自动深合并成新对象"
+      ],
+      "answer": 0,
+      "explanation": "逐 key 就近遮蔽：data.user 是子页面的，data.nav 继续来自父级——不是整包替换也不是深合并（课文第二节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "某目录同时有 +page.svelte 与 +server.ts。GET /该路径 与 POST /该路径 分别由谁处理？",
+      "options": [
+        "两个方法都走 +page 的表单 action",
+        "GET 404，POST 走 +server.ts",
+        "GET 由 +page 页面渲染，POST 由 +server.ts 的导出处理——且后者不套 +layout.svelte",
+        "谁先创建谁全收"
+      ],
+      "answer": 2,
+      "explanation": "+page 管 GET 的页面呈现，其他方法落 +server.ts；且 +server 是裸 HTTP，布局组件与它无涉——想给 API 加统一壳要在 hooks.handle 里做（课文第一节组合规则，L5 回收）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "给一个在 server load 里用 event.fetch 调外部 API 的页面开 prerender=true，会发生什么？",
+      "options": [
+        "照常构建，运行时再取数据",
+        "fetch 自动降级为缓存数据",
+        "外部 API 被构建机的 IP 限流，但产物可用",
+        "构建失败——prerender 要求该页可在无请求环境下产出，外部 fetch 与之冲突"
+      ],
+      "answer": 3,
+      "explanation": "预渲染=构建期出 HTML，而 server load 的 fetch 依赖运行时请求上下文——硬冲突，build 直接报 prerender 失败（冲突账本 L6 全面对；逃生口：换成直接 https 调用+允许 prerender 的 fetch 模式，那是 L6 的题）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "已在 /blog/a，SPA 导航到 /blog/b。哪一层 load 不会重跑？",
+      "options": [
+        "blog 层 +layout 的 load（与当前路由的公共祖先不重跑），只有 [slug] 层的跑",
+        "所有 load 一律重跑，SPA 导航=整页刷新",
+        "只有根 +layout 不跑，其余全跑",
+        "[slug] 层不跑，blog 层反而跑"
+      ],
+      "answer": 0,
+      "explanation": "增量 load：新旧路由的公共祖先链跳过重算——导航丝滑的本钱，也是'我的 layout load 怎么不执行'的标准答案（课文第四节第 6 步）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "+error.svelte 里读取错误信息的官方通道是？",
+      "options": [
+        "props 里的 error 参数",
+        "$page.error 与 $page.status",
+        "globalThis.__KIT_ERROR__",
+        "onError 生命周期钩子"
+      ],
+      "answer": 1,
+      "explanation": "错误落点是路由就近原则（哪层 +error 接住看错误发生深度），内容经 $page.error/status 呈现；预期错误经 error() 抛出、未预期走 handleError——全景 L4 展开。"
+    }
+  ]
+}

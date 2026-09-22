@@ -1,0 +1,83 @@
+{
+  "lesson": "kit-typescript",
+  "title": "端到端类型 · 自测",
+  "questions": [
+    {
+      "q": "手写 RequestHandler<{ foo: string; ... }> 泛型的两个主要缺点是？",
+      "options": [
+        "运行变慢、包体积变大",
+        "无法在 JS 项目使用、需要额外插件",
+        "写起来繁琐，且路由目录改名后类型与现实脱节（不便携）",
+        "会污染全局 App 命名空间"
+      ],
+      "answer": 2,
+      "explain": "官方原话：手写 Params 泛型 cumbersome（繁琐）且 less portable——把 [foo] 改名 [qux] 类型就不再反映现实，故改用 generated types。"
+    },
+    {
+      "q": "import('./$types') 能命中 .svelte-kit/types/.../$types.d.ts，依赖生成 tsconfig 里的哪一项？",
+      "options": [
+        "isolatedModules",
+        "rootDirs（把 src 与 .svelte-kit/types 视作同一虚拟目录）",
+        "noEmit",
+        "verbatimModuleSyntax"
+      ],
+      "answer": 1,
+      "explain": "rootDirs: ['..', './types'] 让 TS 把路由目录与生成的 types 目录视为同级兄弟，$types 才能被相对 import。前提是 tsconfig extends 了 .svelte-kit/tsconfig.json。"
+    },
+    {
+      "q": "关于 PageProps（2.16+），正确的是？",
+      "options": [
+        "它就是 PageData 的别名",
+        "只在 Svelte 4 模式下可用",
+        "它等于 LayoutData 加上 children",
+        "它定义组件整体 props：data: PageData，且有 actions 时含 form: ActionData"
+      ],
+      "answer": 3,
+      "explain": "2.16 起 PageProps={data:PageData, form:ActionData(有 actions 时)}；LayoutProps={data:LayoutData, children:Snippet}。它是组件 props 形状，比单纯 load 返回的 PageData 多带 form/children。"
+    },
+    {
+      "q": "event.locals.user 想要全站带类型，应在哪里声明？",
+      "options": [
+        "每个 +page.svelte 里各自断言",
+        "在 vite.config 的 define 里注入",
+        "src/app.d.ts 的 App.Locals 接口",
+        "$lib/server/types.d.ts 里 export"
+      ],
+      "answer": 2,
+      "explain": "App 命名空间（src/app.d.ts）声明跨站共享形状，App.Locals 定义 event.locals；填了它 handle/load/+server 里 event.locals.user 才有类型。"
+    },
+    {
+      "q": "生成的 RouteParams 里，[...rest] 与 [[optional]] 分别是什么类型？",
+      "options": [
+        "都是 string",
+        "string[] 与 string",
+        "都是 string[]",
+        "string（rest 是单个拼接串）与 string | undefined（可选段）"
+      ],
+      "answer": 3,
+      "explain": "rest 参数是一个含斜杠的字符串不是数组；可选段可能缺省故为 string | undefined。别假设可选段一定有值。"
+    },
+    {
+      "q": "给路由段挂了 matcher（如 [id=numeric]）后，params.id 的类型会？",
+      "options": [
+        "仍是 string，要数字得自己 Number()",
+        "自动变成 number",
+        "变成 numeric",
+        "编译报错"
+      ],
+      "answer": 0,
+      "explain": "matcher 只影响运行时匹配、不影响类型收窄，动态段类型永远是 string；数字需手动转换。"
+    },
+    {
+      "q": "关于 .svelte-kit 目录与其中的 tsconfig，正确的是？",
+      "options": [
+        "应手工编辑 .svelte-kit/tsconfig.json 来加 paths",
+        ".svelte-kit 是提交的源码目录，需要进版本库",
+        ".svelte-kit 是构建产物、outDir，不该手改/入库；要改生成配置用 kit.typescript.config",
+        "删掉 .svelte-kit 就永久丢失类型"
+      ],
+      "answer": 2,
+      "explain": ".svelte-kit 是每次构建/prepare 重新生成的产物目录，不入库、不手改；扩展生成的 tsconfig 走 svelte.config.js 的 kit.typescript.config。"
+    }
+  ]
+}

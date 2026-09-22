@@ -1,0 +1,90 @@
+{
+  "title": "kit-route-matchers 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "type": "single",
+      "prompt": "定义一个名为 uuid 的参数 matcher，正确的文件位置与用法是？",
+      "options": [
+        "src/params/uuid.ts 导出 match 函数，路由目录写成 [id=uuid]",
+        "src/routes/uuid.ts 导出 default 函数，路由目录写成 [id:uuid]",
+        "svelte.config.js 的 matchers 配置项里注册，目录名不变",
+        "src/hooks.server.ts 里 app.locals.uuid = 校验函数"
+      ],
+      "answer": 0,
+      "explanation": "约定极简：src/params 目录下文件名即 matcher 名，导出名为 match 的函数；挂载语法是参数名后接 =matcher名。没有注册中心，也没有冒号语法。"
+    },
+    {
+      "type": "single",
+      "prompt": "访问 /fruits/rocketship，而路由是 fruits/[page=fruit]（fruit matcher 不含 rocketship）。SvelteKit 的行为是？",
+      "options": [
+        "立刻返回 404，不再尝试任何其他路由",
+        "重定向到 /fruits 列表页",
+        "抛 500，matcher 返回 false 被视为服务端异常",
+        "按排序规则继续尝试其他能匹配的路由，全部失败才 404"
+      ],
+      "answer": 3,
+      "explanation": "matcher 失配只是把这条路由从候选里划掉，Kit 沿排序兜底链继续找（裸 [page]、catch-all 等），全败才 404。这保证了激进加 matcher 不会堵死流量。"
+    },
+    {
+      "type": "single",
+      "prompt": "关于 matcher 的执行时机，正确的说法是？",
+      "options": [
+        "只在服务端处理请求时执行",
+        "服务端与浏览器都会执行",
+        "只在构建期执行，产物里是编译好的路由表",
+        "只在开发模式执行，生产构建会移除"
+      ],
+      "answer": 1,
+      "explanation": "官方明示 Matchers run both on the server and in the browser——首请求服务端裁决，客户端导航浏览器再裁决。所以 matcher 必须是纯函数，双端行为不一致会造成分裂路由。"
+    },
+    {
+      "type": "single",
+      "prompt": "src/params/ 目录里的 fruit.test.ts 文件会发生什么？",
+      "options": [
+        "被当成名为 fruit.test 的 matcher，污染命名空间",
+        "构建报错：params 目录只允许 matcher 模块",
+        "*.test.js/*.spec.js 被排除在 matcher 之外，可放心给 matcher 写同址单测",
+        "被忽略但也无法运行测试，测试必须放 tests/ 目录"
+      ],
+      "answer": 2,
+      "explanation": "官方规定 params 目录中除 *.test.js / *.spec.js 外每个模块都对应一个 matcher——留出的正是单测通道，测试与被测 matcher 比邻而居。"
+    },
+    {
+      "type": "single",
+      "prompt": "ParamMatcher 契约下，match 函数的签名是？",
+      "options": [
+        "(event: LoadEvent) => boolean",
+        "(param: string) => Promise<boolean>",
+        "(params: Record<string, string>) => boolean",
+        "(param: string) => boolean"
+      ],
+      "answer": 3,
+      "explanation": "类型定义就一行：(param: string) => boolean——单个参数段的字符串值进，合法性布尔出。没有 event、不支持异步、也看不到其他参数。"
+    },
+    {
+      "type": "single",
+      "prompt": "/orders/[id] 需要拒绝\"id 在数据库中不存在\"的请求，正确落点是？",
+      "options": [
+        "src/params/orderId.ts 里 await db.order.findUnique 判断存在性",
+        "load 函数里查询，查不到 throw error(404)",
+        "+layout.server.ts 里统一拦截所有订单路由",
+        "matcher 无法异步，所以这种需求 Kit 做不到"
+      ],
+      "answer": 1,
+      "explanation": "matcher 只有字符串入参且必须纯同步纯函数，管格式与白名单；\"存在性\"是数据问题，归 load（throw error(404)）。两层分工是官方设计意图，不是能力缺失。"
+    },
+    {
+      "type": "single",
+      "prompt": "官方文档建议用什么手段处理 [...rest] 参数\"连空都能匹配\"带来的脏输入？",
+      "options": [
+        "给 rest 参数挂 matcher（或 load 里）校验参数值有效",
+        "禁止使用 [...rest]，改用可选参数枚举所有深度",
+        "在 adapter 层重写 URL 补齐一段",
+        "rest 参数会自动 trim，无需处理"
+      ],
+      "answer": 0,
+      "explanation": "官方原文：务必校验 rest 参数值的有效性，例如使用 matcher。rest 匹配空是特性不是 bug，守门交给 matcher 或 load。"
+    }
+  ]
+}

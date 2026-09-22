@@ -1,0 +1,83 @@
+{
+  "lesson": "kit-deploy-node",
+  "title": "生产拓扑 · 自测",
+  "questions": [
+    {
+      "q": "adapter-node 产物在生产环境加载 .env 的正确说法是？",
+      "options": [
+        "生产不自动加载，需 node -r dotenv/config build 或 Node20.6+ 的 --env-file=.env",
+        "和 dev 一样自动读 .env",
+        "只能写进 svelte.config.js",
+        "把值编译进 bundle 后运行时读"
+      ],
+      "answer": 0,
+      "explain": "dev/preview 自动读 .env，生产不自动——要么 dotenv 预加载，要么 --env-file 标志。"
+    },
+    {
+      "q": "自托管在反向代理后、没设 ORIGIN/代理头，最可能踩到哪个报错？",
+      "options": [
+        "Cannot find module",
+        "Hydration mismatch",
+        "Cross-site POST form submissions are forbidden",
+        "Maximum call stack size exceeded"
+      ],
+      "answer": 2,
+      "explain": "Kit 无法可靠得知真实 origin，CSRF origin 比对拿错站点，表单 action 被误判跨站。设 ORIGIN 或 PROTOCOL_HEADER/HOST_HEADER 修正。"
+    },
+    {
+      "q": "XFF_DEPTH 为什么让 Kit 从右往左数可信代理、而非读 X-Forwarded-For 最左地址？",
+      "options": [
+        "最左地址总是内网 IP 无法解析",
+        "从右数性能更好",
+        "XFF 头不存在，只能靠约定",
+        "最左地址易被客户端伪造（spoofing），从右数可信代理个数才可靠"
+      ],
+      "answer": 3,
+      "explain": "攻击者可在列表左侧塞假地址；从右往左按已知可信代理数取值能避开伪造。读最左只适合『真实比可信更重要』如地理定位场景。"
+    },
+    {
+      "q": "用 handler.js 自建 Express 服务器时，关于环境变量正确的是？",
+      "options": [
+        "所有变量都照常生效",
+        "只有 ORIGIN/PROTOCOL_HEADER/HOST_HEADER/ADDRESS_HEADER/XFF_DEPTH/BODY_SIZE_LIMIT 等生效；PORT/SHUTDOWN_TIMEOUT 等生命周期变量要自己实现",
+        "只有 PORT/HOST 生效",
+        "环境变量一律失效，只能硬编码"
+      ],
+      "answer": 1,
+      "explain": "文档明列：自定义 server 只认 handler 自身读的那批变量；PORT/HOST/SOCKET_PATH/SHUTDOWN_TIMEOUT/IDLE_TIMEOUT 等仅默认 node build server 认。"
+    },
+    {
+      "q": "要在服务停掉前优雅关闭数据库连接，应监听哪个事件？",
+      "options": [
+        "process 的 exit 事件",
+        "unhandledRejection",
+        "sveltekit:shutdown（HTTP server 关完所有连接后发出、支持 async）",
+        "beforeunload"
+      ],
+      "answer": 2,
+      "explain": "sveltekit:shutdown 在所有连接关闭后发出、支持异步、即使有 dangling 工作也保证触发，比 Node exit 可靠。"
+    },
+    {
+      "q": "adapter-node 下，一个 npm 包是被打进 bundle 还是外部化，由什么决定？",
+      "options": [
+        "放在 package.json 的 devDependencies 会被 Rollup 打进；放 dependencies 会外部化留待运行时",
+        "看包版本号大小",
+        "全部外部化，永不打包",
+        "写在 vite.config 的 define 里"
+      ],
+      "answer": 0,
+      "explain": "官方规则：devDependencies → 打进产物；dependencies → 外部化，故运行镜像需 npm ci --omit dev 保留生产依赖。"
+    },
+    {
+      "q": "同一份代码，自托管 adapter-node 相比 Vercel/Netlify 平台适配器的典型取舍是？",
+      "options": [
+        "自托管必然没有 HTTPS",
+        "自托管冷启动更高",
+        "自托管无法跑表单 action",
+        "自托管无常驻进程冷启动、可精细控制进程/连接，代价是 TLS 与缓存头需自己配"
+      ],
+      "answer": 3,
+      "explain": "常驻 Node 无 serverless 冷启动、控制粒度全（连接池、优雅停机），但要自己经反代拿 TLS、配缓存头；平台则自动化这些但受函数冷启与平台约定约束。"
+    }
+  ]
+}

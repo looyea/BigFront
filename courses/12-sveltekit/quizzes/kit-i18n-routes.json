@@ -1,0 +1,83 @@
+{
+  "lesson": "kit-i18n-routes",
+  "title": "多语言路由 · 自测",
+  "questions": [
+    {
+      "q": "要让 /about 与 /en/about 命中同一个页面，路由段应写成？",
+      "options": [
+        "[...lang]/about",
+        "[[lang]]/about",
+        "[lang]/about",
+        "(lang)/about"
+      ],
+      "answer": 1,
+      "explain": "可选参数 [[lang]] 让 lang 可缺省，/about 与 /en/about 指向同一页面；[lang] 是必填、[...] 是 rest、(lang) 是布局组。"
+    },
+    {
+      "q": "关于可选段 [[optional]] 的一条硬约束，正确的是？",
+      "options": [
+        "可选段不能跟在 rest 段之后，因为参数贪婪匹配会让它永远取不到值",
+        "可选段只能出现在路由最后一段",
+        "一个路由里最多只能有一个可选段",
+        "可选段必须搭配 matcher 才允许出现"
+      ],
+      "answer": 0,
+      "explain": "官方规则：[...rest]/[[optional]] 非法，因为参数按贪婪匹配、尾部可选段永远用不上。"
+    },
+    {
+      "q": "把 [[lang]] 收紧成'只认合法语言码'的正确做法是？",
+      "options": [
+        "在 load 里 if 判断非法就 throw",
+        "用 kit.paths 白名单限制",
+        "在 handle 里正则改写 pathname",
+        "写 src/params/lang.js 导出 match，并在路由里用 [[lang=lang]]"
+      ],
+      "answer": 3,
+      "explain": "param matcher：src/params 下一个模块即一个 matcher，导出 match(param) 返回布尔；路由写成 [名=matcher名]。"
+    },
+    {
+      "q": "matcher 的运行位置是？",
+      "options": [
+        "仅在预渲染构建期",
+        "服务端和浏览器都会跑",
+        "仅服务端",
+        "仅浏览器端"
+      ],
+      "answer": 1,
+      "explain": "官方明确 matchers run both on the server and in the browser，客户端导航的非法前缀同样被拒。"
+    },
+    {
+      "q": "关于 reroute 静默重写与 handle+redirect 两条协商路线，正确的是？",
+      "options": [
+        "reroute 会改变地址栏 URL，redirect 不改",
+        "两者都会在每次导航触发重定向环",
+        "reroute 保持地址栏不变（URL 在匹配前被改写），redirect 显式改 URL、更利于规范化 SEO",
+        "只有 redirect 能读到 cookie 做协商，reroute 不能"
+      ],
+      "answer": 2,
+      "explain": "reroute 在 URL 与路由匹配前运行、可返回新路径而地址栏不变；handle+redirect 会显式跳带前缀 URL、URL 唯一利于 SEO，但多一次往返。"
+    },
+    {
+      "q": "把当前语言与翻译函数分发到组件树，本关推荐的正道是？",
+      "options": [
+        "服务端模块顶层存 let currentLang，各页直接 import 读",
+        "load 里 return 语言、根 layout 用 setContext 传 $t 函数，子组件 getContext",
+        "在每个 +page.svelte 里各自 fetch 文案",
+        "用 $app/stores 订阅 page 手动同步到一个全局 store"
+      ],
+      "answer": 1,
+      "explain": "标准两步：+layout.server.js 从 params 决定语言并 return，+layout.svelte 用 setContext 把 t 函数往下发；服务端顶层共享变量会串用户，违反状态纪律。"
+    },
+    {
+      "q": "多语言 SEO 里 x-default 的 hreflang 通常指向？",
+      "options": [
+        "必须指向 404 页以排除收录",
+        "首页固定的英文页",
+        "每个语言的 sitemap 条目",
+        "语言选择页或默认语言"
+      ],
+      "answer": 3,
+      "explain": "x-default 是约定，指向语言选择器或默认语言；hreflang 值要与实际可达 URL 一一对应，canonical 收敛重复内容。"
+    }
+  ]
+}

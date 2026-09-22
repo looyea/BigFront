@@ -1,0 +1,83 @@
+{
+  "lesson": "kit-security-headers",
+  "title": "安全头与内置防线 · 自测",
+  "questions": [
+    {
+      "q": "Kit 内置的 CSRF origin 检查作用于哪类请求？",
+      "options": [
+        "所有 GET 请求",
+        "所有 fetch 请求包括 JSON",
+        "静态资源请求",
+        "POST/PUT/PATCH/DELETE 的表单提交（urlencoded/multipart/text-plain）"
+      ],
+      "answer": 3,
+      "explain": "内置检查针对 POST/PUT/PATCH/DELETE 的表单提交校验 origin 头；GET 按语义安全，JSON 提交跨站要过 CORS 预检，属另一道闸。"
+    },
+    {
+      "q": "csp.mode='auto' 的默认取舍是？",
+      "options": [
+        "动态渲染页用 nonce、预渲染页用 hash",
+        "全部用 nonce",
+        "全部用 hash",
+        "动态页用 hash、预渲染页用 nonce"
+      ],
+      "answer": 0,
+      "explain": "预渲染页 HTML 构建期定死、无法每请求换 nonce（官方视为不安全并禁止），故 auto 对动态页用 nonce、对预渲染页用 hash。"
+    },
+    {
+      "q": "预渲染页通过 <meta http-equiv> 下发 CSP 时，哪组指令会被浏览器忽略？",
+      "options": [
+        "script-src 与 style-src",
+        "default-src 与 connect-src",
+        "frame-ancestors、report-uri、sandbox",
+        "img-src 与 font-src"
+      ],
+      "answer": 2,
+      "explain": "meta 形式下 frame-ancestors、report-uri、sandbox 被忽略；要靠这些必须走真正的响应头。"
+    },
+    {
+      "q": "关于 csrf.checkOrigin 与 trustedOrigins，正确的是？",
+      "options": [
+        "checkOrigin 是新 API，trustedOrigins 已废弃",
+        "checkOrigin 已 deprecated，新写法用 trustedOrigins 填允许的完整 origin（含协议），['*'] 信任一切但不推荐",
+        "两者都必须同时配置才生效",
+        "trustedOrigins 只填域名不带协议"
+      ],
+      "answer": 1,
+      "explain": "官方把 checkOrigin 标为 deprecated，推荐 trustedOrigins 数组，每项含协议的完整 origin；['*'] 等价全局放行但不推荐。"
+    },
+    {
+      "q": "防御开放重定向，下列哪个 next 值必须被拒绝？",
+      "options": [
+        "//evil.tld/path",
+        "/dashboard",
+        "/user/profile?tab=1",
+        "/login?next=/home"
+      ],
+      "answer": 0,
+      "explain": "以 // 开头是协议相对 URL，会跳到别域；safeRedirect 要求 / 开头且不含 //（或用 host 白名单），/dashboard 等纯站内路径才放行。"
+    },
+    {
+      "q": "关于 {@html expr}，下列正确的是？",
+      "options": [
+        "它对内容自动转义，可安全渲染任意用户输入",
+        "它只在 SSR 生效、客户端会被禁用",
+        "它等价于默认插值 {expr}",
+        "它直接注入 HTML 不做转义，只应喂受信内容，用户提交的 HTML 须先净化"
+      ],
+      "answer": 3,
+      "explain": "{@html} 是注入 HTML 的逃生舱，不转义；默认 {变量} 才转义。用户提交的 HTML 必须先经 DOMPurify 等净化。"
+    },
+    {
+      "q": "在 handle 里想给 resolve 返回的 response 加响应头，遇到 Response.redirect() 之类的产物应？",
+      "options": [
+        "直接 response.headers.set，不受影响",
+        "删除该 response 重新 new 一个",
+        "先 response.clone() 再改头，因为这类 response 的 headers 是不可变的",
+        "改用 event.cookies.set 代替设头"
+      ],
+      "answer": 2,
+      "explain": "Response.redirect() 等返回的对象 headers 不可变，直接 set 抛 TypeError；需 clone 后再改。"
+    }
+  ]
+}

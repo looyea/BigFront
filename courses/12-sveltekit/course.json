@@ -1,0 +1,102 @@
+{
+  "id": "12-sveltekit",
+  "title": "SvelteKit：全栈应用框架",
+  "order": 12,
+  "tier": "钻石 · 全栈一体化",
+  "tagline": "11-svelte 把组件与响应式讲透，L8 引桥关画好了 Kit 的地图——这一包把地图走成路：+文件族路由、load 数据协议、表单 action、hooks 中间件、安全与部署。render() 是发动机，整车在这里逐件拆装。密集对照 07-nextjs 与 08-nuxt。",
+  "icon": "🧰",
+  "color": "#ff77c9",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "入册与工程地基",
+      "subtitle": "整车地图 / 项目骨架 / 路由文件族",
+      "lessons": [
+        { "id": "kit-overview", "title": "SvelteKit 是什么：从引桥到主桥", "goal": "拿 11-svelte L8 的缺口清单反向开账：路由/数据/SSR/部署四大件 Kit 各用什么兑现；与 Next.js App Router、Nuxt 3 的文件系统路由三种流派对照；何时选 Kit 的判据（呼应 svelte-sveltekit-bridge、svelte-ssr-hydration、nextjs-overview、nuxt-overview）" },
+        { "id": "kit-project-structure", "title": "项目骨架：sv create、src/routes、$lib 与环境", "goal": "npx sv create 的工程决策项、routes 在 src 内与项目根两种布局、$lib 别名与模块边界纪律、svelte-kit sync 与生成物、dev/build/preview 三命令各验什么、.svelte-kit 目录解剖、$env 静态/动态环境变量（呼应 svelte-tooling、svelte-deploy、vite-config）" },
+        { "id": "kit-routing-basics", "title": "+文件族契约：page/layout/server/error 全家福", "goal": "每个 + 文件的职责矩阵与组合规则；嵌套布局的复用边界、(groups) 分组目录与 named layout（+layout@）；一个请求从 URL 到页面渲染的全流程走查（呼应 nuxt-routing、next-app-router）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "路由进阶",
+      "subtitle": "动态段 / matcher / 导航与预取",
+      "lessons": [
+        { "id": "kit-dynamic-routes", "title": "动态路由：[param]、[...rest] 与匹配优先级", "goal": "动态段/剩余段/可选段、同层冲突的匹配优先级规则、params 到 load 与页面 $page.params 的流转、重命名参数的迁移成本（呼应 next-dynamic-routes、kit-route-matchers）" },
+        { "id": "kit-route-matchers", "title": "参数 matcher：给路由上形状约束", "goal": "matchers/*.ts 的 match 函数与类型生成、内置规则复用、matcher 失配时的 404 语义、用 matcher 替代路由内手动校验的价值（呼应 next-validation、kit-typescript）" },
+        { "id": "kit-navigation-preload", "title": "SPA 导航、goto 与预取体系", "goal": "<a> 默认拦截机制与 data-sveltekit-reload/-noscroll/-preclose、goto 与 willNavigate 拦截、preloadData/preloadCode 的 API 与 rel=prefetch、$app/state 与 $app/stores 的代际交接（呼应 next-navigation、svelte-lifecycle）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "load 数据协议",
+      "subtitle": "universal / server / 流式"
+      ,
+      "lessons": [
+        { "id": "kit-load-universal", "title": "+page.ts / +layout.ts：universal load 全契约", "goal": "load 事件对象（url/params/data/depends/invalidate 等）、SSR+客户端两栖执行纪律、layout data 向下合并与遮蔽规则、depends/invalidate 失效协议、为什么 fetch 必须走 event.fetch（呼应 next-data-fetching、nuxt-usefetch）" },
+        { "id": "kit-server-modules", "title": "+page.server.ts 与 +server.ts：服务端专属模块", "goal": "server 模块的私有性契约（代码永不出境）、credentials: same-origin/include 对 fetch 的影响、+server.ts 作为 API endpoint 的最小形态、prerender 与 ssr 开关矩阵（呼应 svelte-ssr-hydration、next-route-handlers）" },
+        { "id": "kit-streaming", "title": "流式渲染：顶层 await、Promise data 与骨架屏", "goal": "SSR 分块输出的时机控制（await data 何时出页）、data 里放 Promise 交给模板 {#await}、stream 开关与 shell、慢接口不拖首屏的编排法（呼应 next-streaming、svelte-template #await）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "表单与错误处理",
+      "subtitle": "actions / 校验 / error 边界",
+      "lessons": [
+        { "id": "kit-form-actions", "title": "Form Actions：<form> 的原生进化与渐进增强", "goal": "default/具名 action、FormData→server 侧数据整形、action 返回值的呈现协议、enhance 指令接管提交、无 JS 时表单依然可用的设计哲学（呼应 svelte-form-validation、next-server-actions）" },
+        { "id": "kit-form-validation", "title": "校验体系：zod、superForms 与错误回显", "goal": "服务端校验为底、客户端校验为表的分工、Zod 集成模式、字段级错误与值回显、sveltekit-superforms 生态位（呼应 vue-forms-validation、express 校验中间件）" },
+        { "id": "kit-error-boundaries", "title": "error()/redirect()/json() 与 +error.svelte", "goal": "三个服务端抛出工具的状态码语义、+error.svelte/$page.error 的落点规则、预期错误与未预期错误的分界、load 抛错与 action 抛错的呈现差异（呼应 svelte-error-boundary、next-error-handling）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "Hooks 与安全",
+      "subtitle": "handle 管道 / 会话鉴权 / CSP",
+      "lessons": [
+        { "id": "kit-hooks-handle", "title": "hooks.server.ts：handle 中间件管道", "goal": "handle({event, resolve}) 的执行模型、洋葱式前后织入（日志/计时/改写响应头）、request 钩子与 response 包装、client hooks 的 handleMismatch/handleError（呼应 express-middleware、next-middleware）" },
+        { "id": "kit-auth-session", "title": "会话与鉴权：cookies、session 模式与授权收口", "goal": "cookies API 的 get/set/delete 与 httpOnly 纪律、登录态放 +layout.server 的共享模式、逐路由授权（load 里 redirect）vs 中间件拦截的取舍、乐观 UI 与服务端真相（呼应 exp-session-jwt、nuxt-server-routes）" },
+        { "id": "kit-security-headers", "title": "安全清单：CSP、CSRF 与注入防线", "goal": "csp 配置项与 nonce 模式、Kit 内置 CSRF（origin check）机制与雷区、redirect 白名单、$page.url 数据的 XSS 面、cookie 安全属性全家桶（呼应 svelte-ssr-hydration 转义纪律、express-security）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "适配与部署",
+      "subtitle": "adapters / prerender / 生产拓扑",
+      "lessons": [
+        { "id": "kit-adapters", "title": "adapters：一份代码的 N 种落地形态", "goal": "adapter-static/adapter-node/平台适配器的产物差异、fallback 页与纯 CSR 模式、prerender+ssr 开关如何改变 adapter 选型、adapter-auto 的边界（呼应 svelte-deploy、next-deploy、nuxt-deploy）" },
+        { "id": "kit-prerender-static", "title": "prerender：静态化的粒度与爬虫", "goal": "prerender 开关的继承与逐路由覆写、链接爬虫发现机制与 origins/crawlee 限制、动态内容混合预渲染（prerender entry）、静态资源缓存头账本（呼应 nuxt-hybrid-rendering）" },
+        { "id": "kit-deploy-node", "title": "生产拓扑：standalone Node、Docker 与云", "goal": "adapter-node 产物的 server 启动与静态托管分工、环境变量注入纪律、Dockerfile 要点、健康检查与日志、Vercel/Netlify/自托管三条路的对照（呼应 svelte-deploy、node-deploy、docker 主题）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "进阶专题",
+      "subtitle": "API 设计 / i18n / 状态与导航控制",
+      "lessons": [
+        { "id": "kit-api-design", "title": "+server.ts 的 API 工程：REST、流与缓存", "goal": "各 HTTP 方法导出的路由组织、错误响应一致性、Response 流式返回、Cache-Control/ETag 策略、内部 API 与公共 API 的边界隔离（呼应 express-rest-api、next-route-handlers）" },
+        { "id": "kit-i18n-routes", "title": "多语言路由：[[lang]] 模式与语言协商", "goal": "可选动态段承载 locale、matcher 限定语言码、handle hook 里协商重定向、文案的 load 注入与 context 分发、hreflang 与 SEO 闭环（呼应 nuxt-i18n-content-layers、next-i18n）" },
+        { "id": "kit-navigation-state", "title": "导航状态深水区：$app/state、stores 与新代际", "goal": "$app/stores 到 $app/state 的迁移动机（信号化）、page/updated/willUnload 的订阅纪律、导航竞态与 AbortController、滚动恢复控制（呼应 svelte-reactive-runes、svelte-stores）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "类型、测试与排障",
+      "subtitle": "generated types / vitest+Playwright / 事故手册",
+      "lessons": [
+        { "id": "kit-typescript", "title": "端到端类型：generated types 与 params 收窄", "goal": "kit.config 生成 types 的开关与产物、$page.params 按路由收窄机制、load 返回值到数据的类型流转、ActionData/ActionBar 的类型协议（呼应 svelte-typescript、11-svelte L7）" },
+        { "id": "kit-testing", "title": "测试矩阵：vitest 单测与 Playwright e2e", "goal": "load/action 纯函数化的可测性红利、mock $app 模块的手法、Playwright 对 SSR+水合全链路的 e2e 覆盖、测试环境与服务端钩子的隔离（呼应 svelte-testing、vite-vitest）" },
+        { "id": "kit-debug-playbook", "title": "事故手册：Kit 高频报错读法与拆弹", "goal": "『500 白屏』的 handle 日志路径、水合失败在 Kit 的呈现、load 死循环（invalidate 自依赖）、$lib 越界导入、env 打进 bundle 的事故复盘（呼应 svelte-effects-advanced 排障谱系）" }
+      ]
+    },
+    {
+      "id": "L9",
+      "title": "内核与终战",
+      "subtitle": "内部机制 / 性能审计 / 生产毕业考",
+      "lessons": [
+        { "id": "kit-internals", "title": "解剖整车：manifest、resolve 与协商流", "goal": "构建期生成的 nodes/matchers manifest 结构、resolve 的匹配-加载-渲染流水线、SSR 时 render() 在 Kit 的调用位点（引桥题终极兑现）、客户端导航为何是『load+局部重渲』（呼应 svelte-compiler-architecture、svelte-sveltekit-bridge）" },
+        { "id": "kit-performance", "title": "性能审计：TTFB、水合成本与 bundle 账", "goal": "SSR 缓存分层（页面/数据/静态资源）、hydration 成本的测量与削减、代码分割粒度与 preload 策略、图片与字体、Core Web Vitals 在 Kit 的取数位置（呼应 vite-ci-perf、svelte-perf）" },
+        { "id": "kit-capstone", "title": "终战项目：全栈应用生产毕业清单", "goal": "综合验收：路由族设计→load 编排→表单 action→鉴权→adapter 部署→监控日志的完整链路 checklist；对照 07/08 包毕业项目互评维度（呼应 svelte-deploy、next-capstone、nuxt-capstone）" }
+      ]
+    }
+  ]
+}

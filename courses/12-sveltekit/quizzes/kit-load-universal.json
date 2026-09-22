@@ -1,0 +1,90 @@
+{
+  "title": "kit-load-universal 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "type": "single",
+      "prompt": "首访一个 SSR 页面时，+page.js 的 load 实际执行了几次？为什么第二次不打网络？",
+      "options": [
+        "一次；水合完全复用服务端结果，函数不会再跑",
+        "两次；第二次的 fetch 响应早已在 SSR 时被内联进 HTML，水合直接读缓存",
+        "两次；第二次请求被浏览器的 HTTP 缓存命中",
+        "无数次；load 是响应式声明，水合只是重建订阅"
+      ],
+      "answer": 1,
+      "explanation": "官方纪律：SSR 跑一次、hydration 再跑一次（复用 fetch 响应，这些响应在渲染时被捕获内联进 HTML），此后客户端导航都在浏览器跑。"
+    },
+    {
+      "type": "single",
+      "prompt": "load 里读 event.url.hash，SSR 首请求时拿到的值是？",
+      "options": [
+        "undefined——hash 在服务端不可得，官方明示 load 里访问不了",
+        "空字符串 ''，因为 URL 规范规定缺失时为空",
+        "完整 hash 值，和浏览器一致",
+        "抛出运行时错误"
+      ],
+      "answer": 0,
+      "explanation": "文档原话：url.hash cannot be accessed during load, since it is unavailable on the server——浏览器发送请求时从不把 # 后的内容带给服务端。"
+    },
+    {
+      "type": "single",
+      "prompt": "根 layout load 返回 {a:1,b:2}，子 page load 返回 {b:3,c:4}。+page.svelte 里 data 的值是？",
+      "options": [
+        "{b:3,c:4}——page 遮蔽整个 layout 数据",
+        "{a:1,b:2,c:4}",
+        "{a:1,b:3,c:4}——向下合并、同名键深层赢",
+        "构建报错：键冲突"
+      ],
+      "answer": 2,
+      "explanation": "官方规则：多个 load 返回同名键时最后一个赢——layout 数据先向下游合并，page 的 b 覆盖 layout 的 b，得到 {a:1,b:3,c:4}。"
+    },
+    {
+      "type": "single",
+      "prompt": "某 load 里只调用过 url.searchParams.get('x')。用户从 ?x=1&y=1 导航到 ?x=1&y=2，该 load 会重跑吗？",
+      "options": [
+        "会——searchParams 是整体追踪的",
+        "会——url.search 字符串变了，命中 URL 追踪规则",
+        "取决于 y 是否在路由定义中声明",
+        "不会——查询参数逐个独立追踪，只有被读过的 x 变化才触发重跑"
+      ],
+      "answer": 3,
+      "explanation": "官方明示查询参数独立追踪：x=1→x=2 会重跑，但 y 从 1→2（x 不变）不会——依赖粒度到单个查询参数。"
+    },
+    {
+      "type": "single",
+      "prompt": "为什么 server load 不会因为 fetch(url) 而自动登记对该 URL 的失效依赖？",
+      "options": [
+        "实现遗漏，官方已在 roadmap 里修复",
+        "server load 在客户端导航时根本不执行，无需依赖",
+        "安全考量：防止内部请求路径等机密通过依赖清单泄露到客户端",
+        "性能考量：避免服务端维护依赖表"
+      ],
+      "answer": 2,
+      "explanation": "官方原话：Server load functions will never automatically depend on a fetched url to avoid leaking secrets to the client。server load 里要手动失效信号用 depends() 显式声明。"
+    },
+    {
+      "type": "single",
+      "prompt": "invalidate 让某 load 重跑、data 更新后，对应的 +page.svelte 组件发生什么？",
+      "options": [
+        "组件不重建：data prop 更新，组件内部 state 原样保留；要清态可在 afterNavigate reset 或用 {#key}",
+        "组件完整销毁重建，一切 state 清零",
+        "只更新 DOM，$state 声明的变量会被冻结",
+        "触发路由级 remount，所有布局一起重建"
+      ],
+      "answer": 0,
+      "explanation": "重跑 load 更新 data prop 但不重建组件——内部 state 保留是特性。官方给的两个清态出口：afterNavigate 回调里手动重置、{#key} 块包裹强制重建。"
+    },
+    {
+      "type": "single",
+      "prompt": "关于 setHeaders，下列哪种行为是官方定义的错误？",
+      "options": [
+        "在 +page.js 的 load 里调用它透传 cache-control",
+        "在不同 load 里第二次设置同名 header（哪怕意图是覆盖），以及试图用它设置 set-cookie",
+        "把它用于需要被 CDN 缓存的公开页面",
+        "在 ssr=false 的页面上期待它生效"
+      ],
+      "answer": 1,
+      "explanation": "官方两条红线：同一 header 设置多次（即使在不同 load 里）即错误；set-cookie 不能走 setHeaders，要用 server load 的 cookies.set。B 场景 ssr=false 时它压根不执行（那属于无效果，不算报错）。"
+    }
+  ]
+}

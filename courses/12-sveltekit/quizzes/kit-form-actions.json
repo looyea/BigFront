@@ -1,0 +1,90 @@
+{
+  "title": "kit-form-actions 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "type": "single",
+      "prompt": "default action 与具名 action 在官方规则里的共存政策是？",
+      "options": [
+        "可以并存，default 兜底、具名优先",
+        "可以并存，但具名不得超过 3 个",
+        "互斥——具名寻址的查询参数会残留在 URL 里劫持后续 default 提交",
+        "互斥——因为 default 只能处理 GET"
+      ],
+      "answer": 2,
+      "explanation": "官方明说不能并存：POST 到具名 action 后若不重定向，?/register 留在 URL，下一次 default POST 会被残留参数带进具名 action，语义含混索性禁止。"
+    },
+    {
+      "type": "single",
+      "prompt": "同一个 <form> 里要让『登录』『注册』两个按钮投到不同 action，官方姿势是？",
+      "options": [
+        "两个 form 嵌套各自 action",
+        "按钮上写 formaction=\"?/register\"",
+        "onclick 里手动 fetch 切换",
+        "给 form 写两个 action 属性"
+      ],
+      "answer": 1,
+      "explanation": "formaction 属性让同一个表单数据 POST 到与父 form 不同的 action，是官方示例的标准做法。A 是 HTML 非法嵌套（form 不能互嵌），C 放弃了渐进增强。"
+    },
+    {
+      "type": "single",
+      "prompt": "action 成功返回（无 redirect）后，接下来发生什么？",
+      "options": [
+        "什么都不自动发生，数据要手动刷新",
+        "只有 URL 变 hash 标记提交完成",
+        "浏览器必发一次对同 URL 的 GET（PRG 协议）",
+        "页面重渲染：action 返回值进 form prop，且页面 load 函数重跑"
+      ],
+      "answer": 3,
+      "explanation": "官方 Loading data 节：action 跑完后页面重渲染（除非 redirect/意外错误），form prop 拿到返回值，且 load 会重跑——所以 action 改了库、页面数据自动是新的。303 那条 PRG 往返是 redirect 语义，不是成功返回的必经路。"
+    },
+    {
+      "type": "single",
+      "prompt": "登出 action 里 cookies.delete('sessionid') 之后，本次响应链还需要补什么才不留旧登录态？",
+      "options": [
+        "手动 event.locals.user = null——handle 不会为后续 load 重跑",
+        "再调用一次 invalidateAll() 即可",
+        "重启 dev server 清缓存",
+        "什么都不用，handle 会自动重跑"
+      ],
+      "answer": 0,
+      "explanation": "handle 只在提交这次请求跑过、不为 action 后的 load 重跑——它塞进 locals 的旧 user 还在。官方 logout 示例两件套：cookies.delete 紧跟 locals 清空。"
+    },
+    {
+      "type": "single",
+      "prompt": "use:enhance 传了自定义回调后，默认六件套行为（含 invalidateAll）发生了？",
+      "options": [
+        "照常全部执行，回调只是旁听",
+        "被覆盖——要调 update() 或 applyAction(result) 找回默认行为",
+        "只覆盖 invalidateAll 一项",
+        "构建期报错强制二选一"
+      ],
+      "answer": 1,
+      "explanation": "官方规则：返回回调即覆盖提交后的默认逻辑；update()（接受 invalidateAll/reset 参数）或 applyAction(result) 把六件套请回来。"
+    },
+    {
+      "type": "single",
+      "prompt": "自己 fetch 提交 action 后解析响应，为什么 JSON.parse 不合格、必须 deserialize？",
+      "options": [
+        "因为响应体是 XML 格式",
+        "因为 fetch 拿不到 Set-Cookie",
+        "因为 action 返回值走 devalue 协议，可能含 Date/BigInt 等 JSON 表达不了的值",
+        "因为 Kit 的响应头缺 content-type"
+      ],
+      "answer": 2,
+      "explanation": "官方注明：form actions 与 load 一样支持返回 Date 或 BigInt，JSON.parse 会把这些还原成字符串/挂掉，须用 $app/forms 的 deserialize。"
+    },
+    {
+      "type": "single",
+      "prompt": "method=\"GET\" 的 <form> 在 SvelteKit 里的待遇是？",
+      "options": [
+        "视同 <a>：走客户端路由改 URL 并触发 load，不调用 action",
+        "构建报错，表单必须 POST",
+        "默认命中名为 default 的 action",
+        "强制整页刷新"
+      ],
+      "answer": 0,
+      "explanation": "官方 GET vs POST 节：搜索框这类无需 POST 的表单会被当作 <a> 同款用客户端路由处理（/search?q=...），还能配 data-sveltekit-reload 等属性。actions 只吃 POST，因为 GET 不该有副作用。"
+    }
+  ]
+}

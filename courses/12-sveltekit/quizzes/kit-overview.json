@@ -1,0 +1,97 @@
+{
+  "title": "kit-overview 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "11-svelte 手搓路由关里需要人肉维护的 'URL→组件映射表'，在 Kit 里由什么机制接管？",
+      "options": [
+        "运行时的 router.map() 注册 API",
+        "src/routes 目录结构本身，构建期生成 manifest",
+        "svelte.config.js 里的 routes 数组配置",
+        "+layout.svelte 里的 {#if $page.url} 分支"
+      ],
+      "answer": 1,
+      "explanation": "文件系统路由：目录即路由，构建期扫 routes 生成匹配表——映射从'运行时胶水代码'变成'编译期产物'，这是引桥关四本缺口账的第一笔兑现。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "三家全栈框架里，Kit 保证'服务端代码不进客户端 bundle'的方式是？",
+      "options": [
+        "文件名后缀物理隔离（.server.ts），编译期裁剪",
+        "文件顶部的 'use server' 指令",
+        "tsconfig 的 serverOnly 编译选项",
+        "运行时 process.env.NODE_ENV 判断"
+      ],
+      "answer": 0,
+      "explanation": "Kit 与 Nuxt（server/ 目录）站'物理边界'一边，Next 用指令标记靠打包器理解——文件名/目录约定在编译期直接裁掉，误打包概率最低（课文第二流派表的事故学意义）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "'一个 URL 对应一组正交职责的 + 文件'这句设计哲学，对照的是 Next 哪个路线？",
+      "options": [
+        "Next 也用同名文件族，只是前缀不同",
+        "Next 的 API Routes 单文件路线",
+        "Next App Router 的 RSC：一个文件里服务端与客户端两种世界观",
+        "Next 的 middleware 集中式路由"
+      ],
+      "answer": 2,
+      "explanation": "Kit 的文件边界=职责边界（渲染/数据/接口/异常各一个文件）；RSC 是单文件多世界观+指令分界——两条路线没有对错，但'谁不小心把密钥打进 bundle'的事故面差很多。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 Kit 的渲染策略开关，正确的说法是？",
+      "options": [
+        "ssr 只能在 svelte.config.js 全局开或关",
+        "每个 +page/+layout 文件里 export const ssr/prerender，路由级声明且可继承",
+        "在 +page.svelte 组件内用 canSsr 变量控制",
+        "由 adapter 类型唯一决定，应用侧不可声明"
+      ],
+      "answer": 1,
+      "explanation": "路由级导出常量是 Kit 渲染策略的声明位（layout 设定子路由继承）——对照 Nuxt routeRules 集中式、Next 隐式推断式，Kit 是'就近声明'派（课文第三节反直觉点 3）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "'11 包手搓 SSR 里写的 render() 与 Kit 的关系'，本包用的比喻是？",
+      "options": [
+        "render() 是发动机，Kit 是整车——Kit 内部调用它编排全管线",
+        "Kit 重写了渲染器，render() 已废弃",
+        "两者并行可选：页面勾选用哪个",
+        "render() 只服务 Svelte 5，Kit 是 Svelte 4 专属"
+      ],
+      "answer": 0,
+      "explanation": "L8 引桥题 11 埋的比喻正式上岗：Kit 的 SSR 流水线里渲染那一步就是 svelte/server 的 render()——学手搓 SSR 的意义在第 3 步'load 接力'与第 6 步'增量导航'处显形（L9 internals 兑现）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "下面哪个场景命中'不该上 Kit'判据？",
+      "options": [
+        "面向公众、SEO 敏感的营销站",
+        "页面+接口+鉴权同源部署的内部管理台",
+        "需要渐进增强的表单密集应用",
+        "无路由需求、嵌进老系统的单页挂件组件"
+      ],
+      "answer": 3,
+      "explanation": "单页挂件用 Vite+Svelte 甚至 customElement 就够——为路由上整车是'付整车钱买自行车'（课文第四节 ❌ 判据；注意选项 B：内部系统若已有同源接口+鉴权需求，恰恰是 ✅ 判据）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "对已经吃透 11-svelte 的学习者，Kit 的学习成本结构是？",
+      "options": [
+        "几乎全新：Kit 有自己的组件模型与响应式",
+        "一半是新框架：Kit 重写了渲染层",
+        "60% 的'新'只是把已会的事编排好了：组件/响应式/SSR 概念零翻译",
+        "完全零新增：Kit 只是路由插件"
+      ],
+      "answer": 2,
+      "explanation": "组件还是 Svelte 5、数据协议 load 与 SSR 管线都是 11 包概念的 Kit 化编排——真正的新增是 +文件族契约、失效协议与 hooks 管道这三样（本包主线）。D 的'只是路由插件'低估了编排层的工程量。"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "lesson": "kit-hooks-handle",
+  "title": "hooks.handle 管道 · 自测",
+  "questions": [
+    {
+      "q": "关于 handle 里的 resolve(event)，下列说法正确的是？",
+      "options": [
+        "resolve 只在客户端导航时调用，SSR 阶段不参与",
+        "resolve 返回值可以是任意对象，不必是 Response",
+        "resolve 永不抛错，总返回带正确状态码的 Response；但 resolve 之外的 handle 代码抛错是致命的",
+        "resolve 若路由报错会抛出异常，需要 try/catch 包裹"
+      ],
+      "answer": 2,
+      "explain": "官方明确 resolve(...) 永远返回 Promise<Response> 带正确状态码；handle 里 resolve 之外抛错会被当作致命错误，按 Accept 头回 JSON 或 fallback 页。"
+    },
+    {
+      "q": "要把多个 handle 中间件按洋葱顺序组合，正确做法是？",
+      "options": [
+        "用 sequence(a, b, c) 组合，前一个的 resolve 调用后一个",
+        "在 hooks.server.js 里写多个 export function handle",
+        "在 svelte.config.js 的 kit.handles 数组里注册",
+        "让它们都 export 同名 handle 由 Kit 自动合并"
+      ],
+      "answer": 0,
+      "explain": "单个模块只能有一个 handle 导出；多层中间件用 sequence 辅助函数串联，形成外层先进后出的洋葱序。"
+    },
+    {
+      "q": "event.locals 的主要用途与生命周期是？",
+      "options": [
+        "跨请求全局缓存，所有用户共享一份",
+        "把数据传给客户端组件 props",
+        "存放只在构建期可见的环境变量",
+        "在 handle 里塞请求级数据，供后续 server load 与 +server 端点读取"
+      ],
+      "answer": 3,
+      "explain": "locals 是请求级容器，在 handle 里填充、被 server load 和 +server.js 读取，类型靠 App.Locals 声明；每个请求独立，不跨请求共享。"
+    },
+    {
+      "q": "handleFetch 拦截的是哪一类请求？",
+      "options": [
+        "浏览器发出的所有 fetch",
+        "服务端执行时（SSR/预渲染）由 event.fetch 发出的请求",
+        "表单 action 的 POST 提交",
+        "静态资源请求"
+      ],
+      "answer": 1,
+      "explain": "handleFetch 只在服务端/预渲染期生效，改写 endpoint/load/action/handle 等里 event.fetch 的出网请求，如把公网域名换成内网直连。"
+    },
+    {
+      "q": "关于 reroute，下列哪条是错的？",
+      "options": [
+        "它会改变浏览器地址栏和 event.url 的值",
+        "它跑在 handle 之前，返回改写后的 pathname 决定选哪条路由",
+        "它被视为纯、幂等函数，客户端对同一 URL 只调一次并缓存",
+        "它适合做 i18n 别名映射，如 /de/ueber-uns 映射到 /de/about"
+      ],
+      "answer": 0,
+      "explain": "reroute 不改地址栏也不改 event.url，它只是内部把 URL 映射到另一条路由；正因是纯幂等映射才能被缓存。故『会改变地址栏』是错的。"
+    },
+    {
+      "q": "两端 handleError 的区别，准确的是？",
+      "options": [
+        "客户端 handleError 也会接 error() 抛出的预期错误",
+        "两者签名完全相同，可写在一个文件",
+        "服务端接 RequestEvent、客户端接 NavigationEvent，且都只对意外错误触发",
+        "handleError 允许再抛错，交给上层兜底"
+      ],
+      "answer": 2,
+      "explain": "服务端 HandleServerError 入参含 RequestEvent、客户端 HandleClientError 是 NavigationEvent；二者都只处理 unexpected 错误，且官方红线是 handleError 自身绝不能抛。"
+    },
+    {
+      "q": "要在 load/action 返回的自定义类实例跨服务端/客户端边界存活，应使用？",
+      "options": [
+        "JSON.stringify 手动序列化",
+        "transport hooks 提供 encode/decode 编解码器",
+        "把实例挂到 event.locals",
+        "开启 ssr=false"
+      ],
+      "answer": 1,
+      "explain": "devalue 默认不支持自定义类型；在 hooks.js 的 transport 里为该类型配 encode/decode，即可让 load 与 form action 返回的实例跨边界还原。"
+    }
+  ]
+}

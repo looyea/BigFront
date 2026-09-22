@@ -1,0 +1,83 @@
+{
+  "lesson": "kit-capstone",
+  "title": "生产毕业清单 · 自测",
+  "questions": [
+    {
+      "q": "为什么客户端不能只靠 $page.data 做授权判断？",
+      "options": [
+        "因为 $page.data 只在 SSR 有值",
+        "$page.data 是乐观视图、可被篡改，不能作为授权依据，需在 server load 二次守卫",
+        "$page.data 会自动加密",
+        "授权只在前端做即可"
+      ],
+      "answer": 1,
+      "explain": "客户端数据是可被用户改的乐观视图；真正授权必须落在 +page.server/+layout.server 的 server 侧守卫（L4/L5）。"
+    },
+    {
+      "q": "load 返回值'序列化进 HTML'的双重身份是？",
+      "options": [
+        "只是性能优化，无安全风险",
+        "只是安全隐患，应完全不返回数据",
+        "它既供水合复用省一次请求，又把字段明文暴露在 HTML 里成为泄露面",
+        "它只影响 SEO"
+      ],
+      "answer": 2,
+      "explain": "数据内联是性能红利，同时 load 返回内容会进 HTML——所以只放渲染必需字段，别漏密钥（L3/L8）。"
+    },
+    {
+      "q": "表单 action 成功之后，正确的收尾是？",
+      "options": [
+        "直接 return 一个 JSON",
+        "redirect(303) 跳出以防重复提交（fail 只用于失败回填）",
+        "再手动 window.location.reload()",
+        "抛一个 error(500)"
+      ],
+      "answer": 1,
+      "explain": "写操作成功后 303 重定向（Post/Redirect/Get）避免刷新重复提交；fail(4xx/5xx) 用于校验失败回填（L4）。"
+    },
+    {
+      "q": "与 Next Route Handler 不同，Kit 的 +server.js 端点默认？",
+      "options": [
+        "没有任何自动缓存，需自己用 CDN + Cache-Control 显式加",
+        "自动缓存 60 秒",
+        "强制 no-store 且不可改",
+        "自动做增量静态再生"
+      ],
+      "answer": 0,
+      "explain": "Kit 端点无自动缓存（L7），要缓存得自己在响应设 Cache-Control 并交给 CDN/edge——这是与 Next 缓存模型的显式差异。"
+    },
+    {
+      "q": "标准'登出'应包含哪三件事？",
+      "options": [
+        "清 cookie、失效相关缓存、跳转到登录页",
+        "只删数据库行",
+        "只刷新页面",
+        "只清 localStorage"
+      ],
+      "answer": 0,
+      "explain": "登出三件套：撤销会话 cookie、让服务端缓存/locals 失效、跳登录页，避免残留可复用状态（L5）。"
+    },
+    {
+      "q": "handleError 里对'未预期错误'的正确处理是？",
+      "options": [
+        "全部吞掉返回 200",
+        "只在 dev 打印，生产静默",
+        "原样把堆栈吐给客户端方便调试",
+        "打结构化日志并上报，带 url/route.id 摘要，且 expected 错误不上报以免噪音"
+      ],
+      "answer": 3,
+      "explain": "未预期错误进 handleError 做结构化上报（带上下文），error() 抛的预期错误不过 handleError、也不该上报（L5/L8）。"
+    },
+    {
+      "q": "哪项是 Kit 毕业项目里最有说服力的'渐进增强'证据？",
+      "options": [
+        "把所有内容塞进一个组件",
+        "禁用 JavaScript 后，核心提交流程仍能完成（form action + enhance）",
+        "用最大号字体",
+        "首页做了 prerender"
+      ],
+      "answer": 1,
+      "explain": "action 配合 enhance 让无 JS 也能提交，是 Kit 一等公民，作为毕业加分证据最能体现渐进增强（L4/capstone）。"
+    }
+  ]
+}
