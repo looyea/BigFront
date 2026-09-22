@@ -1,0 +1,48 @@
+{
+  "lesson": "solidstart-routing",
+  "title": "SolidStart 路由 · 自测",
+  "questions": [
+    {
+      "q": "文件 src/routes/blog/index.tsx 对应的 URL 是？",
+      "options": ["/blog/index", "/blog/:id", "/blog/*", "/blog"],
+      "answer": 3,
+      "explain": "目录=路径段、index=该目录本身：blog/index.tsx → /blog。"
+    },
+    {
+      "q": "docs/[...slug].tsx 匹配 /docs/foo/baz 时，useParams().slug 的值是？",
+      "options": ["\"baz\"", "[\"foo\",\"baz\"]", "\"foo/baz\"", "\"foo\""],
+      "answer": 2,
+      "explain": "catch-all 路由给一个参数：最后有效段之后的所有 URL 段拼成斜杠分隔字符串。"
+    },
+    {
+      "q": "routes/ 下同时存在 blog.tsx 与 blog/ 目录，blog.tsx 的作用是？",
+      "options": ["只服务 /blog 页面", "blog 目录不存在时兜底", "API 路由", "作为 blog 子路由的嵌套布局（渲染 props.children）"],
+      "answer": 3,
+      "explain": "与目录同名的文件充当该子树布局；官方提醒 blog/index.tsx 只服务索引路由，两者别混。"
+    },
+    {
+      "q": "为了让 /socials 的入口文件在编辑器里可辨识（避免一堆 index.tsx），约定写法是？",
+      "options": ["socials.main.tsx", "routes/socials/(socials).tsx", "socials.default.tsx", "routes/(index)/socials.tsx"],
+      "answer": 1,
+      "explain": "官方『Rename Index』：把 index 改名成所在目录名加圆括号，仍被当作该路由默认导出。"
+    },
+    {
+      "q": "routes/users(details)/[id].tsx 这套括号转义解决的问题是？",
+      "options": ["让 /users/1 不嵌套在 users 布局之下（URL 嵌套、布局独立）", "把 URL 变成 /users/details/1", "禁用该路由", "生成两个重复路由"],
+      "answer": 0,
+      "explain": "转义嵌套：路径保持 /users/:id 形态，但路由不挂在 users 段布局下，可自带 users(details).tsx 布局。"
+    },
+    {
+      "q": "路由分组 (static)/about-us/index.tsx 里括号部分对 URL 的影响是？",
+      "options": ["URL 变 /static/about-us", "URL 变 /(static)/about-us", "不进 URL，仍是 /about-us", "报错"],
+      "answer": 2,
+      "explain": "route groups 只为目录组织服务、不影响 URL——官方给『文件像组织结构、URL 像产品需求』的解法。"
+    },
+    {
+      "q": "想在路由文件里挂 preload 等路由级行为，官方方式是？",
+      "options": ["default export 上加静态属性", "导出 route 对象（satisfies RouteDefinition）", "在 app.tsx 集中声明", "写进 vite.config.ts"],
+      "answer": 1,
+      "explain": "文件系统路由识别导出的 route 对象，可同时 default export UI 并挂路由级配置（如 preload）。"
+    }
+  ]
+}

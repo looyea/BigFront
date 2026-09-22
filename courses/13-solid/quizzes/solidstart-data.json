@@ -1,0 +1,48 @@
+{
+  "lesson": "solidstart-data",
+  "title": "SolidStart 数据加载 · 自测",
+  "questions": [
+    {
+      "q": "SolidStart v2 数据加载的两件套及其分工是？",
+      "options": ["createResource 读 / Suspense 定义", "fetch 定义 / effect 读", "query 定义带缓存的数据访问 / createAsync 在组件里读结果", "store 存 / produce 取"],
+      "answer": 2,
+      "explain": "官方：Data loading is built around Solid Router's query API and createAsync——query 管拿与缓存，createAsync 管组件内订阅结果。"
+    },
+    {
+      "q": "query(async () => {...}, \"posts\") 第二个参数 \"posts\" 是什么？",
+      "options": ["请求头", "函数显示名，无实际作用", "Redis 表名", "缓存键——同一键的查询被去重/共享"],
+      "answer": 3,
+      "explain": "具名缓存键让同一查询跨组件、跨导航（含 preload）命中同一份缓存，不各拉各的。"
+    },
+    {
+      "q": "在 query 函数体首行加 \"use server\" 后发生什么？",
+      "options": ["函数体只在服务端运行，客户端只得到调用入口", "函数被删除", "变成同步函数", "自动加缓存"],
+      "answer": 0,
+      "explain": "v2 文档：\"use server\" 让 query 体按需只在服务器执行——因此可以直接摸 session/环境变量/DB。"
+    },
+    {
+      "q": "export const route = { preload: ({params}) => getPost(params.id) } 的效果是？",
+      "options": ["把路由设为不可懒加载", "给路由加权限校验", "进入/靠近该路由时提前把查询热好，组件消费直接接果", "让页面静态预渲染"],
+      "answer": 2,
+      "explain": "route.preload 在渲染页面前预热同一缓存键的 query，用户点进来时数据已在路上。"
+    },
+    {
+      "q": "v2 文档的路由组件例子里，动态参数通过什么途径进入查询函数？",
+      "options": ["全局变量", "props.params（如 getPost(props.params.id)）", "环境变量", "URL 字符串手工 split"],
+      "answer": 1,
+      "explain": "官方例子把类型化的 props.params 传给 query 函数做参数化取数；useParams 亦可命令式读取。"
+    },
+    {
+      "q": "查询结果的缓存失效与高级 query 行为由谁负责？",
+      "options": ["SolidStart 编译器", "Nitro", "createAsync 自动处理", "Solid Router（底层缓存语义查其参考）"],
+      "answer": 3,
+      "explain": "v2 文档明说：Cache invalidation and advanced query behavior are handled by Solid Router。"
+    },
+    {
+      "q": "createAsync 的结果尚未就绪时，页面占位靠什么机制？",
+      "options": ["自动 reload", "返回 null 需手工判空", "Suspense 边界（root 已有全局一层，需精细骨架就就近再包）", "loading 布尔 + effect"],
+      "answer": 2,
+      "explain": "异步边界由 Suspense 承接：Start 的 root 布局全局包一层防 hydration 错误，精细骨架屏在组件内就近包。"
+    }
+  ]
+}

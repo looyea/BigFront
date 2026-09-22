@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-control-flow",
+  "title": "控制流组件 · 自测",
+  "questions": [
+    {
+      "q": "为什么 `{items().map(t => <li>{t}</li>)}` 对会变的列表失效？",
+      "options": [
+        "map 不支持 JSX",
+        "必须先 sort 再 map",
+        "组件只执行一次，.map 只在那一刻算出一个固定元素数组，之后 items 变化无人重跑",
+        "items() 不能直接调用"
+      ],
+      "answer": 2,
+      "explain": "JSX 表达式只求值一次；会变的数据要交给内部建 createMemo 的 <For>/<Index>。"
+    },
+    {
+      "q": "<For each={...}>{(item, index) => ...}</For> 里两个参数的形态是？",
+      "options": [
+        "item 是值、index 是访问器(要 index())",
+        "item 和 index 都是普通值",
+        "item 是访问器、index 是数字",
+        "只有一个参数 item"
+      ],
+      "answer": 0,
+      "explain": "For 的 item 是当前元素值、index 是 Accessor<number>，用要写 index()——与 Index 正好相反。"
+    },
+    {
+      "q": "<Index each={...}>{(item, index) => ...}</Index> 里两参数形态是？",
+      "options": [
+        "item 是值、index 是访问器",
+        "两者都是访问器",
+        "index 是字符串",
+        "item 是访问器(要 item())、index 是静态数字"
+      ],
+      "answer": 3,
+      "explain": "Index 按位置绑定：item 是 Accessor<T> 需 item()，index 是固定 number。"
+    },
+    {
+      "q": "一个会被重排、每行含输入框的列表，该用哪个、为什么？",
+      "options": [
+        "<Index>，因为按位置渲染更快",
+        "<For>，keyed 记忆 item→DOM，重排只移动节点不重建，输入框焦点/DOM 状态保住",
+        "直接 .map，加个 key 就行",
+        "两者都不行，只能手写 DOM"
+      ],
+      "answer": 1,
+      "explain": "For 用 mapArray 按身份锁定 DOM，重排不重挂，最能保住每行局部 DOM 状态（如焦点、已输入内容）。"
+    },
+    {
+      "q": "<Show when={user()}>{u => ...}</Show> 非 keyed 回调里 u 是什么、条件转假后再读会怎样？",
+      "options": [
+        "u 是收窄后的 accessor(要 u())；条件转假后再读它会抛错，节点不重建",
+        "u 是值，随时可读",
+        "u 是 index",
+        "回调形式在 Solid 不存在"
+      ],
+      "answer": 0,
+      "explain": "非 keyed 回调拿到收窄 accessor（v1.7+ 为 TS）；keyed 才把 u 当值、且值变即重建 children。"
+    },
+    {
+      "q": "<Switch>/<Match> 什么时候显示 fallback？",
+      "options": [
+        "永远显示 fallback",
+        "第一个 Match 就显示 fallback",
+        "所有 <Match when> 都为假时显示 fallback",
+        "只有报错时显示"
+      ],
+      "answer": 2,
+      "explain": "Switch 渲染第一个 when 为真的 Match；都不真则 fallback——惰性、按分支建订阅的 if/else 链。"
+    },
+    {
+      "q": "什么情况下直接用 `.map` 渲染列表其实是安全的？",
+      "options": [
+        "列表永远不变（一次性静态数据）时",
+        "任何时候都安全",
+        "只要加了 key 就安全",
+        "列表超过 100 项时"
+      ],
+      "answer": 0,
+      "explain": "问题只出在'会变'。若数据恒定不重渲染，.map 一次算完就是最终结果，无需 <For>。"
+    }
+  ]
+}

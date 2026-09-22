@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-suspense-transition",
+  "title": "Suspense 与 Transition · 自测",
+  "questions": [
+    {
+      "q": "<Suspense> 依据什么决定要不要显示 fallback？",
+      "options": [
+        "依据全局 loading 计数器",
+        "只要子树里有 createResource 就永远显示 fallback",
+        "当边界内读到'被 Suspense 追踪的异步依赖'且其未 resolve 时显示 fallback，resolve 后换真内容",
+        "依据 CSS animation 状态"
+      ],
+      "answer": 2,
+      "explain": "Suspense 识别边界内对被追踪异步依赖的读取(如 pending 的 resource)，据此兜底。"
+    },
+    {
+      "q": "官方说 Suspense '非阻塞'，具体指挂起期间发生什么？",
+      "options": [
+        "子树照常执行、建好响应式 owner，只是内容暂不落 DOM、由 fallback 顶着",
+        "整个应用被冻结直到数据回来",
+        "子树完全不执行",
+        "浏览器主线程被 Promise 卡住"
+      ],
+      "answer": 0,
+      "explain": "非阻塞=不冻结应用；子树继续运行建 owner，边界揭示后才把解析内容落 DOM。"
+    },
+    {
+      "q": "嵌套两层 Suspense，孙组件读到 pending 资源，哪层切 fallback？",
+      "options": [
+        "两层都同时切",
+        "外层切、内层不动",
+        "都不切，直到最外层 resolve",
+        "最近的祖先边界切 fallback，外层不受牵连(就近边界)"
+      ],
+      "answer": 3,
+      "explain": "异步依赖由最近的边界处理，实现'只塌那一块'的局部兜底。"
+    },
+    {
+      "q": "挂起边界内的 onMount / createEffect 什么时候执行？",
+      "options": [
+        "从不执行",
+        "等该边界解析(resolve)之后才执行",
+        "每次渲染都执行",
+        "在显示 fallback 时立刻执行"
+      ],
+      "answer": 1,
+      "explain": "官方：suspended 子树内的 onMount/createEffect 在边界解析后才跑——别指望它们 loading 期触发。"
+    },
+    {
+      "q": "useTransition() 返回什么、start(fn) 做了什么？",
+      "options": [
+        "[pending, start]：start 把 fn 里的更新标为过渡并返回 Promise，pending() 报告是否仍在过渡中",
+        "只返回一个布尔值",
+        "[data, setData]，和 signal 一样",
+        "一个立即同步执行的函数，无 pending"
+      ],
+      "answer": 0,
+      "explain": "start 调度过渡(客户端微任务异步)，过渡期保留旧 UI、pending() 可做进度/禁用。"
+    },
+    {
+      "q": "关于 transition 的客户端 vs 服务端行为，正确的是？",
+      "options": [
+        "两端都一样异步调度",
+        "服务端 pending() 为 true 且不跑",
+        "客户端 start 在微任务异步调度、pending() 反映进行；服务端 pending() 恒 false、过渡同步跑完",
+        "客户端同步、服务端异步"
+      ],
+      "answer": 2,
+      "explain": "SSR 无闪屏概念故同步跑完、pending 恒 false；浏览器才异步调度并暴露 pending。"
+    },
+    {
+      "q": "多个兄弟 Suspense 想按顺序整齐揭示、而不是各自好了就跳出来，用什么？",
+      "options": [
+        "把它们塞进同一个 createResource",
+        "<SuspenseList revealOrder='forwards|backwards|together' tail=...>（实验性）包裹这些兄弟边界",
+        "用 batch 强制同步",
+        "用 startTransition 逐个 await"
+      ],
+      "answer": 1,
+      "explain": "SuspenseList 登记各子边界 inFallback 汇总成有序揭示；注意官方标注为实验特性。"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-stores",
+  "title": "createStore 深层状态 · 自测",
+  "questions": [
+    {
+      "q": "什么时候该用 createStore 而不是 createSignal？",
+      "options": [
+        "存标量数字/布尔",
+        "管理深层嵌套对象/数组、要按具体字段局部更新",
+        "只想整体替换一个对象",
+        "永远只用 signal 就够"
+      ],
+      "answer": 1,
+      "explain": "官方：store 用 Proxy 把响应性延伸到嵌套属性/数组元素、按变化属性细粒度更新；标量用 signal。"
+    },
+    {
+      "q": "在追踪作用域里读取 store 的值，正确写法是？",
+      "options": [
+        "必须 store() 再取属性",
+        "每个属性都要包 createMemo",
+        "只能靠 getStore(key) 函数",
+        "直接 store.userCount、store.users[0].username，不用函数调用"
+      ],
+      "answer": 3,
+      "explain": "store 是 Proxy，get 拦截即建依赖，读起来像普通对象——这与 signal 要 count() 不同。"
+    },
+    {
+      "q": "组件顶层写 `console.log(store.users.at(-1))`，改数据后它不打印，为什么？",
+      "options": [
+        "store 的 signal 是懒建的——这行不在追踪作用域里，没建立依赖",
+        "at(-1) 语法不支持",
+        "store 不能被打印",
+        "必须用 JSON.stringify 才行"
+      ],
+      "answer": 0,
+      "explain": "只有在追踪作用域(JSX/effect)里读到某路径，才为该路径建订阅；顶层裸读不算依赖。"
+    },
+    {
+      "q": "往数组追加一项，spread 写法和'用 length 当索引的路径写法'的关键区别是？",
+      "options": [
+        "完全等价，没有区别",
+        "spread 更快，路径写法有 bug",
+        "spread 整体替换数组→依赖整个数组的 effect 都失效；路径写法只通知新索引/length 相关订阅",
+        "路径写法不能追加，只能修改"
+      ],
+      "answer": 2,
+      "explain": "spread 造新数组替换、失效面大；`setStore('users', len, item)` 直改原数组、更新更局部高效。"
+    },
+    {
+      "q": "`setStore('users', 0, { id: 109 })` 只给了一个字段，其它字段会？",
+      "options": [
+        "全部被清空",
+        "保留——新对象与现有值浅合并，未提及字段不动",
+        "报类型错误",
+        "变成 undefined"
+      ],
+      "answer": 1,
+      "explain": "对象值走浅合并，等价于 (u)=>({...u, id:109})，不必手动 spread 旧字段。"
+    },
+    {
+      "q": "整表从服务端刷新、实际只有一行变了，用哪个工具能只触发那一行的更新？",
+      "options": [
+        "reconcile（对新旧数据做 diff，只更新真正变化的部分）",
+        "unwrap",
+        "createSignal",
+        "batch"
+      ],
+      "answer": 0,
+      "explain": "reconcile 把外部整份数据和现有 store 比对，只让变了的那部分触发反应。produce 用于可变草稿、unwrap 取裸对象。"
+    },
+    {
+      "q": "关于一次 setter 调用改多个元素（如多索引/范围），正确的是？",
+      "options": [
+        "会为每个元素各触发一次下游 effect",
+        "必须手动包 batch 才行",
+        "单次 setter 调用自动包进 batch，所有元素更新完才触发下游，避免中间态反复通知",
+        "只能一个一个改，不能批量"
+      ],
+      "answer": 2,
+      "explain": "多改语法比循环单Setter高效，正因它自动 batch：一次更新到位再通知下游。"
+    }
+  ]
+}

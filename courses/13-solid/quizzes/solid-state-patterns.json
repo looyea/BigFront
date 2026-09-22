@@ -1,0 +1,48 @@
+{
+  "lesson": "solid-state-patterns",
+  "title": "状态组织 · 自测",
+  "questions": [
+    {
+      "q": "官方示例里『为 tasks/numberOfTasks 各开 signal + memo 算 completedTasks』的主要问题是？",
+      "options": ["运行太慢", "无法渲染列表", "context 用不了", "啰嗦，且每次改 tasks 要手动同步别的状态、容易失同步、频繁重算"],
+      "answer": 3,
+      "explain": "多个零散 signal 需要手动维持一致性，漏同步就出 bug，派生值还反复重算——这是引入 store 的动机。"
+    },
+    {
+      "q": "往 store 的 tasks 数组末尾追加一项，正确的路径写法是？",
+      "options": ["setState(\"tasks\", state.tasks.length, { ...新项 })", "push 到 state.tasks", "setState({ tasks: [...state.tasks, 新项] })", "state.tasks[state.tasks.length] = 新项"],
+      "answer": 0,
+      "explain": "路径 setter：setState(\"tasks\", 下标, 值) 定点追加，比整档替换更精准、只更新受影响节点。"
+    },
+    {
+      "q": "produce 在状态管理里的主要好处是？",
+      "options": ["做异步请求", "让 store 变成不可变", "一次修改对象的多个属性，而无需写多次 setState", "自动持久化到本地"],
+      "answer": 2,
+      "explain": "produce 用『变更草稿』的方式一次改多字段，官方明说省去多次 setStore 调用。"
+    },
+    {
+      "q": "像 completedTasks 这种能从源数据推出的值，最佳做法是？",
+      "options": ["存进 store 每次手动更新", "在 onMount 里算一次存好", "用 createEffect 去 setState 同步它", "用 createMemo 派生，不存、也不在 effect 里 set"],
+      "answer": 3,
+      "explain": "派生值交给 memo（惰性+缓存），存了要手动同步易出错、用 effect set 还可能触发额外渲染甚至无限循环。"
+    },
+    {
+      "q": "为什么在组件函数体里 setState(\"numberOfTasks\", …) 可能不响应式更新？",
+      "options": ["因为 numberOfTasks 是只读", "store 的属性 signal 是懒建的，写入需落在追踪作用域里", "因为必须用 produce", "因为字符串 key 非法"],
+      "answer": 1,
+      "explain": "store 属性按需创建，非追踪作用域里的裸写没有读取者、不会建响应式更新——这是换 store 后的新坑。"
+    },
+    {
+      "q": "多层组件传 state 和函数造成的 prop drilling，官方给的解法是？",
+      "options": ["全局变量", "把状态全塞进根组件", "createContext + Provider 提供 value + 后代 useContext", "用 localStorage 共享"],
+      "answer": 2,
+      "explain": "把 store/动作放进 Context 的 value，后代直接 useContext 取用，取代逐层透传。"
+    },
+    {
+      "q": "一个独立的基本类型状态（如开关、计数），官方推荐的容器是？",
+      "options": ["createSignal", "createStore", "createResource", "createMemo"],
+      "answer": 0,
+      "explain": "单个独立值用 signal 最轻；成组/嵌套才用 store，异步用 resource，派生用 memo。"
+    }
+  ]
+}

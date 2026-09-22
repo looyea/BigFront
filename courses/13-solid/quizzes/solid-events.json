@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-events",
+  "title": "事件委托与原生 · 自测",
+  "questions": [
+    {
+      "q": "onClick 与 on:click 把监听器分别加在哪里？",
+      "options": [
+        "都加在元素上",
+        "onClick 加在 document(委托)、on:click 加在该元素(原生 addEventListener)",
+        "onClick 加在 window、on:click 加在 document",
+        "都加在 document 上"
+      ],
+      "answer": 1,
+      "explain": "on__/onClick 委托到 document 冒泡分派；on: 直接 addEventListener 到元素——这决定后续所有差异。"
+    },
+    {
+      "q": "为什么委托事件大小写不敏感、而原生 on: 事件大小写敏感？",
+      "options": [
+        "纯粹随机",
+        "委托只能小写、原生只能大写",
+        "两者都区分大小写",
+        "委托由 Solid 按标准事件名归一；原生把名字原样交给 addEventListener，名字必须精确匹配"
+      ],
+      "answer": 3,
+      "explain": "onClick=onclick 都行；on:Custom-Event 必须和派发的事件名逐字符一致，因为它是真的 addEventListener。"
+    },
+    {
+      "q": "一个很少触发的 mousemove，官方建议怎么写？",
+      "options": [
+        "用原生 on:mousemove，因为委托的收益只在大量同类事件时才成立",
+        "必须用委托 onMouseMove 才快",
+        "用 setInterval 轮询",
+        "不能监听 mousemove"
+      ],
+      "answer": 0,
+      "explain": "委托性能来自'给大量元素省监听'；偶发事件享受不到，反而常驻一个 document 监听，用原生更好。"
+    },
+    {
+      "q": "在委托的 onClick 里调用 event.stopPropagation()，常出现什么意外？",
+      "options": [
+        "报错",
+        "阻止了默认行为",
+        "拦不住元素上用原生 addEventListener 另挂的监听（因委托监听在 document）；要精确阻断就在元素上用 on:click",
+        "会连带移除该元素"
+      ],
+      "answer": 2,
+      "explain": "官方例子：父 div 原生监听 + 子 button 委托 onClick+stopPropagation → 父仍先触发；button 改 on:click 才真正阻断。"
+    },
+    {
+      "q": "`<div onClick={props.onClick} />`，父后来换了 props.onClick，点击却还用旧的——为什么？怎么办？",
+      "options": [
+        "事件处理器不是响应式的：传 signal/引用不会随其更新；包一层 onClick={()=>props.onClick?.()} 现读最新",
+        "因为 props 不可读",
+        "因为 onClick 拼错了",
+        "重启组件即可"
+      ],
+      "answer": 0,
+      "explain": "增删监听开销大，Solid 不把 handler 做成响应式绑定；要用最新值就在回调里现读（第二号铁律）。"
+    },
+    {
+      "q": "在 <input> 上，onInput 与 onChange 的触发时机是？",
+      "options": [
+        "onInput 每次值变化即触发；onChange 仅失焦后触发（跟原生行为）",
+        "两者都每次按键触发",
+        "onChange 每次触发、onInput 失焦触发",
+        "都只在表单 submit 时触发"
+      ],
+      "answer": 0,
+      "explain": "Solid 尊重 DOM 原生语义，这跟 React 里 onChange≈每次输入 的习惯不同，是迁移高频坑。"
+    },
+    {
+      "q": "委托事件处理器里，为什么不能把 event.currentTarget 存下来异步用？数组绑定 onClick={[h,'x']} 解决什么？",
+      "options": [
+        "currentTarget 一直是 null；数组绑定用于传事件类型",
+        "currentTarget 分派结束后置 null，只能在处理器同步里取；数组绑定把第二个元素作为 handler 首参，避免 bind/闭包开销",
+        "currentTarget 是 target 的别名；数组绑定无实际作用",
+        "currentTarget 会内存泄漏；数组绑定用来做防抖"
+      ],
+      "answer": 1,
+      "explain": "委托下 currentTarget 分派后即失效；[handler,data] 让 data 当第一参数，省掉 handler.bind 造闭包。"
+    }
+  ]
+}

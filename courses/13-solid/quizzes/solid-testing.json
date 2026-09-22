@@ -1,0 +1,48 @@
+{
+  "lesson": "solid-testing",
+  "title": "测试 · 自测",
+  "questions": [
+    {
+      "q": "@solidjs/testing-library 的 render 调用形态是？",
+      "options": ["render(<App />)", "render(App)", "render(() => <App />)", "mount(() => <App />)"],
+      "answer": 2,
+      "explain": "官方点名的关键差异：render 收\"返回组件的函数\"，与 preact/react 版直接传元素不同。"
+    },
+    {
+      "q": "为什么这个库没有 rerender 方法？",
+      "options": ["Solid 不重渲染——变化由响应式状态触发的副作用直接改 DOM，用全局 signal 操纵即可", "性能太差被移除", "用 render 再调一次代替", "只支持服务端渲染"],
+      "answer": 0,
+      "explain": "官方说明：Solid merely executes side effects…there is no rerender method。"
+    },
+    {
+      "q": "按官方说法，哪些场景才真的需要 waitFor / findBy？",
+      "options": ["所有断言前都建议加", "signal 更新后", "store 变更后", "transition、Suspense、Resource、路由导航等真异步边界"],
+      "answer": 3,
+      "explain": "Solid 响应式变化相当即时，rarely need waitFor——真异步边界才需要等待。"
+    },
+    {
+      "q": "用 render 的 location 选项起内存路由测参数化页面，官方提醒要？",
+      "options": ["先手动 render Router", "配合 findBy 异步查询（搭建非即时）", "禁掉 SSR", "用 vi.mock 打桩路由"],
+      "answer": 1,
+      "explain": "location 建的内存路由 setup 不是瞬时的，示例里就是 await findByText(...)。"
+    },
+    {
+      "q": "Solid 版 renderHook 的返回值与 React 版的差异是？",
+      "options": ["完全相同", "只能测组件内 hook", "多了 shadowDOM 字段", "没有 container/queries，代之以可配合 runWithOwner 的 owner（cleanup 自动调）"],
+      "answer": 3,
+      "explain": "Solid 外部响应式状态不需要 DOM 宿主运行，故 renderHook 不返回容器与查询。"
+    },
+    {
+      "q": "Vitest 下测试莫名报\"dispose 是 undefined\"/router 加载不了，官方点名的原因是？",
+      "options": ["solid-js/@solidjs/router 被加载了双份（vite 内部 server 与 node 各一份）", "Node 版本过低", "jsdom 未安装", "测试文件后缀错误"],
+      "answer": 0,
+      "explain": "Known issues 一节原述；插件 2.8.2+ 已包办大部分配置，双份实例仍要留意。"
+    },
+    {
+      "q": "用 Jest 跑 Solid 组件测试时为什么推荐 solid-jest？",
+      "options": ["加速快照", "让 Jest 在 Node 里解析到 Solid 的浏览器版本而非服务端版本", "提供 render 函数", "转换 JSX"],
+      "answer": 1,
+      "explain": "官方安装节：Jest 默认会解析到服务端版本的 solid-js，solid-jest 修正解析。"
+    }
+  ]
+}

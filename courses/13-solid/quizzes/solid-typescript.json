@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-typescript",
+  "title": "TypeScript 类型 · 自测",
+  "questions": [
+    {
+      "q": "Solid 项目 tsconfig 里 \"jsx\" 必须设成什么、为什么？",
+      "options": [
+        "\"preserve\"，因为 Solid 的 JSX 转换与 TypeScript 的 JSX 转换不兼容，转换交给 solid 编译器",
+        "\"react\"，和 React 项目一样",
+        "\"react-jsx\"，自动运行时",
+        "\"preserve\"，为了让 JSX 变成 React.createElement"
+      ],
+      "answer": 0,
+      "explain": "TS 只保留 JSX 做类型检查，实际转换由 babel-preset-solid 做；配合 jsxImportSource:\"solid-js\" 提供 JSX 类型。"
+    },
+    {
+      "q": "createSignal<number>() 与 createSignal(0) 的类型差别是？",
+      "options": [
+        "完全相同",
+        "前者是 Accessor<number>、后者带 | undefined",
+        "前者 Accessor<number|undefined>（无初值）、后者靠推断得 Accessor<number>（无 | undefined）",
+        "后者必须写类型参数否则报错"
+      ],
+      "answer": 2,
+      "explain": "无初值时可能 undefined；给默认值既自动推断类型又消掉 | undefined。"
+    },
+    {
+      "q": "useContext(Ctx) 的返回类型为什么默认带 | undefined，推荐怎么安全消除？",
+      "options": [
+        "因为 context 永远是 undefined",
+        "祖先链上可能没有 Provider；用工厂+ReturnType 定型并在 useXxx 里对空值抛错守卫，比 ! 断言安全",
+        "因为 TS 不支持 context 泛型",
+        "只能靠非空断言 ! 消除"
+      ],
+      "answer": 1,
+      "explain": "createContext<T>() 是 Context<T|undefined>；抛错守卫能在误用时给出可读错误，胜过默默 ! 断言。"
+    },
+    {
+      "q": "要写一个泛型组件 <T>(props:{items:T[]})，用 Component<{...}> 可以吗？",
+      "options": [
+        "可以，Component 支持泛型参数",
+        "可以，但要写成 Component<T>",
+        "不行，Component 系列类型不能造泛型组件，需显式写泛型（函数声明 <T> 或箭头 <T,>）",
+        "不行，Solid 不支持泛型组件"
+      ],
+      "answer": 2,
+      "explain": "Component 类型无法承载组件自身的泛型；箭头版还要 <T,> 尾逗号避免被当成 JSX，函数声明最省心。"
+    },
+    {
+      "q": "为什么 `{user() && user().name}` 在 TS 里报 'possibly undefined'？",
+      "options": [
+        "因为 .name 不存在",
+        "因为 && 优先级问题",
+        "因为 optional chaining 被禁用",
+        "因为 user() 是函数调用，TS 不认为两次调用返回同一个非空值，无法像普通对象那样收窄"
+      ],
+      "answer": 3,
+      "explain": "accessor 每次调用被当作可能不同，&& 收窄失效；这是 Solid 独有的反直觉点。"
+    },
+    {
+      "q": "对上一条，用 `<Show when={user()}>{u => ...}</Show>`（非 keyed）回调里的 u 是什么？",
+      "options": [
+        "已收窄的非空 accessor（读要 u()），且不重建 children",
+        "值本身，且值变即重建",
+        "一个 index",
+        "原始可能为 undefined 的 signal"
+      ],
+      "answer": 0,
+      "explain": "非 keyed 回调拿到收窄后的 accessor（u()），不重建；keyed 才把 u 当值且值变即重建。"
+    },
+    {
+      "q": "在 <div on:mousemove={...}/> 上 TS 默认报类型错，正确解法是？",
+      "options": [
+        "改成 onClick 就好",
+        "扩展 JSX 命名空间：declare module \"solid-js\" 里让 CustomEvents extends HTMLElementEventMap（或 Pick 需要的），自定义事件则声明其类型",
+        "关闭 strict 模式",
+        "Solid 不支持 on: 事件"
+      ],
+      "answer": 1,
+      "explain": "原生 on: 事件不在 Solid 默认类型里；扩 JSX.CustomEvents（可 extends/Pick HTMLElementEventMap）即可用。"
+    }
+  ]
+}

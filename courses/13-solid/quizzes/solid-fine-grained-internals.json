@@ -1,0 +1,48 @@
+{
+  "lesson": "solid-fine-grained-internals",
+  "title": "细粒度响应式内核 · 自测",
+  "questions": [
+    {
+      "q": "observer 是在什么时候被登记为某 signal 的订阅者的？",
+      "options": ["setter 被调用时", "observer 执行过程中读到该 signal 的 getter 时", "createSignal 创建时", "组件挂载时统一登记"],
+      "answer": 1,
+      "explain": "getter 被读到时，把『当前正在执行的 observer』加入自己的订阅集合——这就是自动依赖收集，是动态而非声明的。"
+    },
+    {
+      "q": "setter 通知订阅者的前提是什么？",
+      "options": ["每次都通知", "值类型是对象时", "只要被调用就通知", "新值 !== 旧值（用 === 比较，相等则短路不通知）"],
+      "answer": 3,
+      "explain": "setter 先比较 value === newValue，相等直接 return 不通知，避免无谓更新。"
+    },
+    {
+      "q": "为什么 createEffect 里 setTimeout 回调中读 count 不会被追踪？",
+      "options": ["因为依赖登记是同步的，回调真正执行时已没有登记的当前 subscriber", "因为 setTimeout 被 Solid 屏蔽", "因为 count 是只读的", "因为 effect 不能包含异步"],
+      "answer": 0,
+      "explain": "『登记→运行→注销』是线性同步完成的；异步回调跑时已脱离追踪上下文，需手动用 on 指定依赖。"
+    },
+    {
+      "q": "温度 memo 例子中，displayTemp 为 false 时修改 unit，memo 会重算吗？",
+      "options": ["会，unit 永远是它的依赖", "取决于 unit 是否变化", "不会，此时早返回，unit 不是它当前的依赖", "会，但结果被缓存不重跑"],
+      "answer": 2,
+      "explain": "体现动态依赖：早返回分支下没读 temperature/unit，它们当前就不是依赖，改它们不触发重算。"
+    },
+    {
+      "q": "嵌套 effect 中，内层 effect 读到的信号会成为外层的依赖吗？",
+      "options": ["会，内外共享依赖", "不会，每个 effect 彼此独立", "只有基本类型会", "会，但仅首次"],
+      "answer": 1,
+      "explain": "内层读的信号不登记给外层，信号变化只重跑内层——强制 effect 相互独立、避免意外耦合。"
+    },
+    {
+      "q": "关于 createEffect 与 createRenderEffect 的时序，正确的是？",
+      "options": ["createEffect 延迟到渲染后运行，render effect 立即运行", "两者都立即运行", "createEffect 立即，render effect 延迟", "两者都延迟"],
+      "answer": 0,
+      "explain": "render effect 立即跑以在元素进 DOM 前设好属性；createEffect 延迟到渲染后、用于对外部系统的副作用。"
+    },
+    {
+      "q": "组件销毁沿哪棵树进行、清理用什么登记？",
+      "options": ["沿 DOM 树，用 useEffect 返回函数", "沿 Owner 树，但无法手动清理", "沿渲染顺序，用 batch", "沿 Owner 树，用 onCleanup 登记清理"],
+      "answer": 3,
+      "explain": "销毁沿 Owner 树（子先于父），资源释放在 onCleanup 里做，否则卸载后仍有引用=内存泄漏。"
+    }
+  ]
+}

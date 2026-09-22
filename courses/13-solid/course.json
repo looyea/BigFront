@@ -1,0 +1,101 @@
+{
+  "id": "13-solid",
+  "title": "SolidJS：细粒度响应式的编译派 UI",
+  "order": 13,
+  "tier": "钻石 · 细粒度响应式",
+  "tagline": "11-svelte 用 runes 把信号引入组件语法、12-sveltekit 补齐全栈；Solid 走的是另一条更彻底的路——signal 是唯一的原语，JSX 在编译期被拆成一次性执行的精确 DOM 命令，运行期没有虚拟 DOM、组件默认不重渲。这一包从响应式内核讲到 SolidStart 全栈，密集对照 05-react、11-svelte、12-sveltekit。",
+  "icon": "🧊",
+  "color": "#2c4fbb",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "心智与响应式内核",
+      "subtitle": "细粒度派 / createSignal / 自动追踪",
+      "lessons": [
+        { "id": "solid-overview", "title": "Solid 是什么：细粒度响应式 + 编译期 JSX、无虚拟 DOM", "goal": "说清 Solid 的两条支柱——signal 细粒度响应式（只更新真正变化的那个订阅者）与编译期把 JSX 拆成命令式 DOM 操作（组件只执行一次、不重渲）；与 React 重执行整函数、Svelte 编译器消灭 runtime 的三方路线对照；何时选 Solid（呼应 svelte-overview、react-render-model）" },
+        { "id": "solid-signals", "title": "createSignal：getter/setter 与'读即订阅、写即通知'", "goal": "掌握 createSignal 返回的 getter/setter 元组、以函数调用形式读值、setter 的值相等短路（同值不通知）、以函数形式更新；理解'在追踪作用域里读才会被订阅'，解构/提前求值/异步里读为何丢失响应（呼应 solid-effect-tracking、react-usestate）" },
+        { "id": "solid-effect-tracking", "title": "createEffect 与同步依赖追踪的本质", "goal": "用观察者模式手写一个最小响应系统解释 currentSubscriber/订阅集/通知链路；理解 Solid 同步收集依赖的时序（setTimeout 里读不追踪）、createEffect 只跑被依赖触发的副作用；掌握 batch/untrack/on 三个控制追踪的工具（呼应 svelte-reactivity-internals、vue-reactivity-theory）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "派生、状态与生命周期",
+      "subtitle": "createMemo / createStore / Owner",
+      "lessons": [
+        { "id": "solid-memo", "title": "createMemo：可缓存的派生 signal", "goal": "用 createMemo 缓存派生计算、返回的是 signal、只在依赖变化时重算；理解早返回会改变被追踪的依赖集、memo 作为'断链/去抖'的手段；与 Svelte $derived、Vue computed、React useMemo 对照（呼应 svelte-reactive-runes、vue-computed-watch）" },
+        { "id": "solid-stores", "title": "createStore：嵌套对象的细粒度状态", "goal": "createStore + setter 直接改、路径级订阅、produce 做类可变局部改、reconcile 吸收不可变返回；讲清'signal 存标量/整体替换、store 存深层对象按路径订阅'的选型；与 Svelte store、Vue reactive 对照（呼应 solid-signals、vue-reactive）" },
+        { "id": "solid-lifecycle", "title": "生命周期与 Owner 作用域", "goal": "onMount/onCleanup、createEffect 与 createRenderEffect 的时机差异；理解 Owner/Owner 树如何界定作用域、路由或组件卸载时 dispose 连带清理所有 observer、为什么异步回调要 createRoot/manual cleanup（呼应 svelte-effects-advanced、react-useeffect）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "组件、模板与组合",
+      "subtitle": "执行一次的函数 / 控制流组件 / Context",
+      "lessons": [
+        { "id": "solid-components", "title": "组件是只执行一次的函数、props 是 getter", "goal": "组件在挂载时执行一次、返回真实 DOM、之后不随状态变化重跑；props 通过 getter 惰性读取（解构即脱离响应）、用 props.x 或 mergeProps/splitProps 保持追踪、spread 展开；对照 React 函数每次重渲的根本差异（呼应 solid-effect-tracking、react-component）" },
+        { "id": "solid-control-flow", "title": "控制流组件：<For>/<Index>/<Show>/<Switch>", "goal": "为什么 Solid 不用 Array.map 与 && 三元渲染列表/条件——需要 keyed 复用 DOM、需要惰性与精确更新；掌握 For（记忆、不重跑回调）、Index、Show（when 变化才切换）、Switch/Match；与 Vue v-if/v-for、React map 对照（呼应 vue-template-syntax、react-lists-keys）" },
+        { "id": "solid-context-composition", "title": "Context 与组合模式", "goal": "createContext/useContext 跨层传递响应式值、避免 prop drilling；Portal 渲染到 body 外；用'把 signal 作为 props/返回对象'做自定义 hook 式复用、children/动态组件；与 React Context、Svelte context 对照（呼应 kit-load-universal 的 setContext 注入链、react-context）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "模板能力、事件与类型",
+      "subtitle": "ref / classList / 事件委托 / TS",
+      "lessons": [
+        { "id": "solid-refs-styles", "title": "ref、classList、style 与属性绑定", "goal": "用 ref 拿 DOM 引用（回调式 ref）、classList 做条件类名合并、style 对象绑定、spread/attribute 与 prop 的区别、Signal 直接绑进属性即自动更新；对照 Vue 动态 class/style、Svelte class:x（呼应 svelte-styling、vue-template-syntax）" },
+        { "id": "solid-events", "title": "事件处理与事件委托", "goal": "on:click（冒泡委托）vs onClick（原生直绑）的区别与取舍、事件参数、passive/capture 修饰、自定义事件；理解 Solid 对常见事件走委托以配合'不重渲'的收益（呼应 svelte-events、vue-events、react 事件合成）" },
+        { "id": "solid-typescript", "title": "Solid 的 TypeScript 集成", "goal": "JSX.IntrinsicElements 与 solid-js 的 JSX 命名空间配置、signal/store/props 的类型流转、ComponentProps、tsconfig 的 jsxImportSource；与 11-svelte/12-sveltekit 的 generated types 思路对照，强调 Solid 靠标准 TS + 编译器插件（呼应 svelte-typescript、kit-typescript）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "异步、Resource 与错误边界",
+      "subtitle": "createResource / Suspense / ErrorBoundary",
+      "lessons": [
+        { "id": "solid-resource", "title": "createResource：把异步折叠成 signal", "goal": "createResource(source, fetcher) 返回 [signal, {loading,error,refetch,mutate}]、source 变化自动重取、lazy/streaming；与 SvelteKit load、React 数据库(SWR/Query)、Vue asyncData 对照，说明 Solid 的取舍（呼应 kit-load-universal、kit-streaming）" },
+        { "id": "solid-suspense-transition", "title": "Suspense、SuspenseList 与 startTransition", "goal": "Suspense 用资源挂起回退、SuspenseList 编排多块顺序、defer + startTransition 做非阻塞更新与并发过渡；理解'细粒度 + 资源'如何让局部流式渲染落地（呼应 kit-streaming、react-suspense）" },
+        { "id": "solid-error-boundary", "title": "ErrorBoundary 与错误控制流", "goal": "ErrorBoundary 捕获渲染/资源抛错、fallback、onError 与 thrown 值归一化；讲清 Solid 无自动全局错误冒泡时的边界设计、与 SvelteKit +error、Next error.tsx 的错误分层对照（呼应 kit-error-boundaries、next-error-loading）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "进阶响应式与性能",
+      "subtitle": "订阅图 / 状态模式 / 性能审计",
+      "lessons": [
+        { "id": "solid-fine-grained-internals", "title": "订阅图内幕：producers、consumers 与过度订阅", "goal": "从图论角度解释 signal=producer、effect/memo=consumer、更新只沿边传播、无整组件重渲染；识别'读一次就订阅一次'造成的过度订阅、用 memo 收敛、避免在 effect 里制造循环；呼应 L1 手写系统与 solid-reactivity-internals（呼应 svelte-reactivity-internals）" },
+        { "id": "solid-state-patterns", "title": "跨组件状态模式", "goal": "把 signals/store 装进工厂函数做领域状态、createAsync、与 context 组合成全局 store；对比 Solid 无需外部状态库(Vuex/Pinia/Redux/Zustand)也能细粒度、何时才引库；与 Svelte stores、React 状态库生态对照（呼应 svelte-stores、react 状态管理）" },
+        { "id": "solid-performance", "title": "性能审计：为什么它快、什么时候会退化", "goal": "无 vdom/diff 的收益与代价、bundle 与编译器、什么写法把'不重渲'的优势抵消掉（顶层大 store、错误 memo、在 map 里造 signal）；Lighthouse/WebPageTest 度量口径与 Svelte/Next 性能关一致复用（呼应 kit-performance、vite-ci-perf、svelte-perf）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "SolidStart 全栈（上）",
+      "subtitle": "Meta 框架 / 文件路由 / loaders-actions",
+      "lessons": [
+        { "id": "solidstart-overview", "title": "SolidStart 是什么：对标 SvelteKit/Next 的 Meta 框架", "goal": "SolidStart = Vite + 文件路由 + SSR/流式 + server RPC 的组合式框架；与 12-sveltekit、07-nextjs、08-nuxt 的定位与能力对照；目录约定、createApp、路由入口（呼应 kit-project-structure、kit-overview）" },
+        { "id": "solidstart-routing", "title": "文件路由与数据路由", "goal": "src/routes 约定式路由、动态段、catch-all、layout/nested route、withBase/Router、编程式导航与链接；对照 solid-router 与 Start 的关系，及 SvelteKit 高级路由的可选段/matcher 差异（呼应 kit-routing-basics、kit-i18n-routes）" },
+        { "id": "solidstart-data", "title": "route loaders 与 actions", "goal": "路由级 loader（服务端取数、返回可序列化）与 action（表单写操作、重校验），在组件里用 useRoute() 读取；与 SvelteKit load/form action、Next Route 数据模式三方对照（呼应 kit-load-universal、kit-form-actions）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "SolidStart 全栈（下）：服务端、部署与测试",
+      "subtitle": "server$ / SSR 流式 / 测试矩阵",
+      "lessons": [
+        { "id": "solidstart-server-functions", "title": "Server Functions 与 RPC（createServer$ / 'use server'）", "goal": "用 server$ 标注服务端函数、客户端调用走 RPC、闭包与环境隔离、cache/序列化边界；与 SvelteKit 端点/+page.server、Next Server Actions 对照，说明 CSRF/校验红线（呼应 kit-api-design、next-route-handlers）" },
+        { "id": "solidstart-ssr-deploy", "title": "SSR、流式、SSG 与 adapter 部署", "goal": "SSR/流式 HTML/prerender/无 JS 的 islands 式退化、按路由配置渲染模式；vite 集成与部署目标（Node/edge/serverless）；对照 kit-adapters/kit-streaming 的两阶段构建与平台能力（呼应 kit-adapters、kit-deploy-node）" },
+        { "id": "solid-testing", "title": "测试矩阵：Vitest + solid-testing-library", "goal": "组件测（渲染进 jsdom、fireEvent、断言细粒度更新）、server function/loader 的纯函数化可测、SSR 快照与 Playwright e2e 覆盖水合全链路；复用 kit-testing/svelte-testing 的分层法（呼应 kit-testing、svelte-testing）" }
+      ]
+    },
+    {
+      "id": "L9",
+      "title": "内核与终战",
+      "subtitle": "编译器×运行时 / React 迁移 / 毕业清单",
+      "lessons": [
+        { "id": "solid-internals", "title": "解剖整车：编译器、reactive root 与无 vdom 的 reconcile", "goal": "把'JSX→signal 图→命令式 DOM'的编译产物讲透：babel/swc 插件如何把模板变成 createElement+effect、reactive root 与 Owner 栈、无 vdom 下 diff 被'更新即订阅'取代；兑现 L1/L6 的机制债（呼应 solid-overview、svelte-compiler-architecture、kit-internals）" },
+        { "id": "react-to-solid-migration", "title": "从 React 到 Solid：心智转换与 React-ism 陷阱", "goal": "逐个拆掉 React 惯性：不要'每次重渲'思维、useState→signal、useEffect 滥用→createEffect/on、不可变→直接改 store、Context 滥用→signal 直连；给迁移评估与'收益 vs 生态'决策框架（呼应 react 各关、kit-overview 的框架选型）" },
+        { "id": "solid-capstone", "title": "终战项目：全栈 Solid 应用生产毕业清单", "goal": "综合验收：响应式建模→组件/控制流→Resource/Suspense→SolidStart 路由与 server function→SSR/部署→性能与安全→监控日志 的完整 checklist；对照 12-sveltekit kit-capstone 与 07/08 毕业项目互评维度（呼应 kit-capstone、next-capstone、nuxt-capstone）" }
+      ]
+    }
+  ]
+}

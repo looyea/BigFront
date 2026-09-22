@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-signals",
+  "title": "createSignal · 自测",
+  "questions": [
+    {
+      "q": "createSignal(1) 返回什么？",
+      "options": [
+        "一个数字 1",
+        "一个 { value, set } 对象",
+        "一个 [getter, setter] 元组",
+        "一个 Promise"
+      ],
+      "answer": 2,
+      "explain": "返回两元素数组：getter(count) 与 setter(setCount)，是 Solid 所有响应式的原子。"
+    },
+    {
+      "q": "为什么读 signal 要写成 count() 而不是 count？",
+      "options": [
+        "因为只有函数调用才可能被拦截、从而把当下读者登记为订阅者",
+        "因为 count 是保留字",
+        "为了性能，函数比变量快",
+        "没有原因，纯风格"
+      ],
+      "answer": 0,
+      "explain": "getter 里执行 subscribers.add(currentSubscriber)，靠'调用'这个动作建立依赖边；直接取变量无从拦截。"
+    },
+    {
+      "q": "setCount(5) 在 count 当前已是 5 时会怎样？",
+      "options": [
+        "仍通知所有订阅者重跑",
+        "值相等短路，不通知、下游不更新",
+        "抛错",
+        "触发一次完整组件重渲染"
+      ],
+      "answer": 1,
+      "explain": "setter 比较 value===newValue 相同则 return，不通知——所以'原地改对象内部再 set 同一引用'会被当成没变。"
+    },
+    {
+      "q": "哪种写法会丢失响应式（拿到的是定格快照）？",
+      "options": [
+        "const current = () => count();",
+        "在 createEffect 回调里读 count()",
+        "JSX 里写 {count()}",
+        "const snapshot = count();"
+      ],
+      "answer": 3,
+      "explain": "把 count() 结果存进普通变量即定格为快照，之后不再变；要响应就得保留对 getter 的调用（函数/内联读）。"
+    },
+    {
+      "q": "深层嵌套对象要按路径细粒度更新，应选哪个 API？",
+      "options": [
+        "createStore（L2）",
+        "继续用 createSignal 存整个对象",
+        "useState",
+        "普通 let 变量"
+      ],
+      "answer": 0,
+      "explain": "createSignal 只在整体引用变化时通知；深层对象按路径订阅要用 createStore（signal 存标量/整体替换，store 存深层对象）。"
+    },
+    {
+      "q": "setCount(c => c + 1) 相比 setCount(count() + 1) 稳在哪？",
+      "options": [
+        "前者会触发两次通知",
+        "没有区别",
+        "前者基于 setter 收到的当下值计算，避免闭包里读到过期的 count()",
+        "后者会破坏相等短路"
+      ],
+      "answer": 2,
+      "explain": "函数式更新拿到的就是当前值，不依赖外部闭包里那次 count() 读取的时机，异步/批量下更安全。"
+    },
+    {
+      "q": "关于'在追踪窗口外读 signal'，下列说法正确的是？",
+      "options": [
+        "setTimeout 里读 count() 仍会被外层 effect 追踪",
+        "await 之后读 signal 一定被追踪",
+        "把 count() 提前求值传给只跑一次的表达式，会传成快照、失去响应",
+        "signal 一旦创建就永远全局追踪所有读"
+      ],
+      "answer": 2,
+      "explain": "自动追踪只覆盖同步执行段；提前求值传参/异步里读都发生在追踪窗口外，拿到的是不更新快照。"
+    }
+  ]
+}

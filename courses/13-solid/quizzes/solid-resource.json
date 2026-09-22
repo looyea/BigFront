@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-resource",
+  "title": "createResource 异步资源 · 自测",
+  "questions": [
+    {
+      "q": "createResource 被称为'非阻塞'是指什么？它替你省掉了 React 里的什么？",
+      "options": [
+        "取数时冻结界面、取完再解冻；省掉了 Suspense",
+        "取数期间 UI 依旧响应、不卡住；省掉手写的 data/loading/error 三个 useState + 触发取的 useEffect",
+        "它会阻塞到数据回来才渲染；省掉 fetch",
+        "它是同步返回数据；省掉 Promise"
+      ],
+      "answer": 1,
+      "explain": "官方：非阻塞保证取数期间应用仍响应；loading/error/latest/state 都内建在返回的 signal 上。"
+    },
+    {
+      "q": "createResource(userId, fetchUser) 里，userId() 为 null/false/undefined 时 fetcher 会？",
+      "options": [
+        "照常跑、传 null 进去",
+        "抛错",
+        "无限重试",
+        "不调用——source 为假值时短路，不取数"
+      ],
+      "answer": 3,
+      "explain": "source 求值为 undefined/null/false 时 fetcher 不跑；'ID 为空不发请求'靠这个短路，无需手写 if。"
+    },
+    {
+      "q": "五态里 pending 和 refreshing 的关键区别是什么？",
+      "options": [
+        "pending 首次取、latest 为 undefined；refreshing 重取但保留上一次的值(latest=T)",
+        "两者完全相同",
+        "refreshing 会清空旧值",
+        "pending 表示出错"
+      ],
+      "answer": 0,
+      "explain": "refreshing 是'重取中但仍持有旧值'，正是 transition 不闪屏、保留旧界面的底层态。"
+    },
+    {
+      "q": "mutate 与 refetch 分别会不会发网络请求？",
+      "options": [
+        "都会",
+        "都不会",
+        "mutate 不发请求(仅就地覆盖本地值/乐观更新)；refetch 重跑 fetcher(会取数)",
+        "refetch 不发、mutate 发"
+      ],
+      "answer": 2,
+      "explain": "mutate 跳过 fetcher 直接改值；refetch 重新执行 fetcher(可传 info 进 info.refetching)。"
+    },
+    {
+      "q": "给 createResource 传 initialValue 带来哪两个好处？",
+      "options": [
+        "让它变成同步、去掉 Promise",
+        "让 fetcher 不跑；类型变 any",
+        "关掉 Suspense；去掉 loading 属性",
+        "资源直接从 ready 态开始、首帧不闪空；类型去掉 | undefined"
+      ],
+      "answer": 3,
+      "explain": "initialValue 使初值即就绪(不 unresolved)、user() 首帧就有值，类型也不含 undefined。"
+    },
+    {
+      "q": "写一个每秒 refetch 的轮询并保证组件销毁后停止，用到哪两个 API？",
+      "options": [
+        "refetch + onCleanup(清 setInterval)",
+        "mutate + onMount",
+        "createEffect + batch",
+        "lazy + untrack"
+      ],
+      "answer": 0,
+      "explain": "setInterval 里调 refetch()，用 onCleanup(()=>clearInterval) 随 Owner 回收，避免定时器泄漏。"
+    },
+    {
+      "q": "fetcher 里 throw/请求失败时，resource 进入哪个态、错误可从哪读？",
+      "options": [
+        "回到 unresolved；只能靠 console",
+        "ready；错误被吞掉",
+        "errored；可从 resource.error 读到，若经渲染/Suspense 冒泡则被 ErrorBoundary 捕获",
+        "一直 pending；无法感知"
+      ],
+      "answer": 2,
+      "explain": "失败→errored，user.error 可读；官方 tip：预计出错就把 createResource 包进 ErrorBoundary。"
+    }
+  ]
+}

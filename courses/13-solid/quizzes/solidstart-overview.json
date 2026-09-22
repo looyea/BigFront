@@ -1,0 +1,48 @@
+{
+  "lesson": "solidstart-overview",
+  "title": "SolidStart 总览 · 自测",
+  "questions": [
+    {
+      "q": "新建一个 SolidStart 项目的官方脚手架命令是？",
+      "options": ["npm create vite solid", "npm init solid", "npx solid-start new", "npm gen solid"],
+      "answer": 1,
+      "explain": "v2 文档：create-solid 系列入口（npm init solid / pnpm create solid / bun create solid…），随后按提示选模板。"
+    },
+    {
+      "q": "SolidStart v2 的应用配置住在哪个文件？",
+      "options": ["solid.config.ts", "vinxi.config.ts", "vite.config.ts 的 solidStart() 插件", "app.config.ts"],
+      "answer": 2,
+      "explain": "v2 配置面收敛到 vite.config.ts：plugins: [solidStart()]，可带 middleware、devOverlay 等选项。（v1 时代才跑在 Vinxi 上。）"
+    },
+    {
+      "q": "app.tsx 在项目里的角色是？",
+      "options": ["HTML 根：客户端与服务端共同的渲染外壳", "只服务端用的入口", "路由表定义文件", "全局样式入口"],
+      "answer": 0,
+      "explain": "官方：app.tsx 是应用的 HTML root，两端渲染共用的 shell，内部挂 Router 与 FileRoutes。"
+    },
+    {
+      "q": "Router 的 root 组件里不把 props.children 包进 Suspense，官方预告会出现什么？",
+      "options": ["路由 404", "SEO 降级", "服务端函数不执行", "一些意外的水合错误"],
+      "answer": 3,
+      "explain": "每个路由组件都被自动 lazy 加载，没有 Suspense 兜住异步边界，官方明说可能出现意外的 hydration 错误。"
+    },
+    {
+      "q": "import { db } from \"~/lib/db\" 里的 ~ 解析到哪里？",
+      "options": ["项目仓库根", "node_modules", "应用根 src/（即 src/lib/db）", "public/"],
+      "answer": 2,
+      "explain": "SolidStart 内置 ~ 别名指向 appRoot，默认下 ~/lib/db 即 src/lib/db，免写相对爬楼。"
+    },
+    {
+      "q": "src/routes 下一个文件被识别为 API 路由的条件是？",
+      "options": ["放在 api 子目录即可", "导出 HTTP 方法名（如 GET、POST）", "default export 一个异步函数", "文件名以 .api.ts 结尾"],
+      "answer": 1,
+      "explain": "v2 约定：default export 组件 = UI 路由；导出 HTTP 方法名 = API 路由。<FileRoutes /> 只收 UI 路由。"
+    },
+    {
+      "q": "关于开发期 toolbar（dev toolbar），正确的说法是？",
+      "options": ["它仅开发期存在、不进生产构建，可用 devOverlay:false 隐藏", "它生产也会显示", "它是浏览器扩展", "它只能看路由列表"],
+      "answer": 0,
+      "explain": "v2 文档：开发期加一个检查应用错误与服务端函数调用的 toolbar，生产构建不含；solidStart({ devOverlay:false }) 可关。"
+    }
+  ]
+}

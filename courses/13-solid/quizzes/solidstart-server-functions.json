@@ -1,0 +1,48 @@
+{
+  "lesson": "solidstart-server-functions",
+  "title": "服务端函数与数据变更 · 自测",
+  "questions": [
+    {
+      "q": "使用 \"use server\" 指令需要 import 什么？",
+      "options": ["@solidjs/start/server", "createServerFunction$", "vinxi/http", "什么都不用——它是编译器识别的指令字符串"],
+      "answer": 3,
+      "explain": "官方参考页：\"use server\" 是服务端函数编译器认的 directive，No import is required。"
+    },
+    {
+      "q": "文件级写法\"use server\"的效果是？",
+      "options": ["整个模块导出的函数都是服务端函数", "只有第一个导出是", "仅类型检查用", "该文件被打包排除"],
+      "answer": 0,
+      "explain": "文件首行放指令，模块导出函数整体转成服务端函数；函数级则是各自函数体首行标注。"
+    },
+    {
+      "q": "SolidStart v2 服务端函数载荷的默认序列化模式是？",
+      "options": ["json", "js", "structuredClone", "base64"],
+      "answer": 0,
+      "explain": "官方 defineConfig：v1 为兼容默认 js，v2 默认改为 json（CSP 友好）。"
+    },
+    {
+      "q": "为什么 json 模式最适配严格 CSP？",
+      "options": ["它压缩率更高", "它自动加密载荷", "客户端用 JSON.parse 反序列化、不依赖 eval", "它跳过序列化"],
+      "answer": 2,
+      "explain": "js 模式（Seroval）载荷更小但客户端反序列化要 unsafe-eval；json 避开 eval，严格 CSP 下最安全。"
+    },
+    {
+      "q": "single-flight mutation 生效的两个前提是？",
+      "options": ["用 fetch + createResource", "SSR 开启 + 客户端 hydrate", "query 加缓存键 + 组件包 Suspense", "action 在服务端函数中执行 + 被改的数据有 preload（跳转时预加载放目标页）"],
+      "answer": 3,
+      "explain": "官方明确两要件；满足后表单提交只发一个 POST，action 完成自动重校验、结果同响应流回。"
+    },
+    {
+      "q": "single-flight mutation 里\"自动重校验\"发生在什么时机？",
+      "options": ["下一次访问该路由时", "action 完成后，在同一次请求响应里服务端 revalidate 并流回结果", "页面空闲时后台刷新", "需手动调用 refetch"],
+      "answer": 1,
+      "explain": "因数据被 preload，框架可在同一响应里触发服务端重校验并把新数据流回——这就是\"两次请求压成一次\"。"
+    },
+    {
+      "q": "服务端函数内想拿当前请求的 headers/url，用哪个函数？",
+      "options": ["getRequestEvent()", "useLocation()", "getServerFunctionMeta()", "window.request"],
+      "answer": 0,
+      "explain": "getRequestEvent 提供请求事件上下文；getServerFunctionMeta 查的是当前服务端函数的元信息。"
+    }
+  ]
+}

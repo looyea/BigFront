@@ -1,0 +1,48 @@
+{
+  "lesson": "react-to-solid-migration",
+  "title": "React→Solid 迁移 · 自测",
+  "questions": [
+    {
+      "q": "React 里 React.memo / useMemo 挡重渲染 / useCallback 稳引用，迁到 Solid 时应？",
+      "options": ["原样保留", "换成 Solid 同名 API", "基本删掉——那是为\"防组件重渲染\"服务的，Solid 不重渲染", "合并进 createEffect"],
+      "answer": 2,
+      "explain": "Solid 组件只跑一次、无重渲染，这套优化没有作用对象；要留的是用 createMemo 缓存真计算，性质不同。"
+    },
+    {
+      "q": "把 `setCount(count + 1)`（依赖旧值）直译成 Solid 信号写法，最稳妥的是？",
+      "options": ["setCount(count + 1)", "setCount(count => count + 1)", "setCount(c => c() + 1)（函数式更新 + 访问器）", "count() + 1"],
+      "answer": 2,
+      "explain": "Solid 里传函数拿旧值、且读的是访问器 c()；函数式更新最贴合语义、不依赖闭包当前值。"
+    },
+    {
+      "q": "React 里 `useEffect(()=>setFull(first+' '+last),[first,last])` 这种派生，迁到 Solid 应？",
+      "options": ["改成 createMemo(()=>first()+' '+last())", "保留 useEffect 形态", "放进 onMount 算一次", "改用 on 包裹"],
+      "answer": 0,
+      "explain": "派生值用 memo，不该存进 state 再用 effect set（React 里本就反模式，Solid 更明确：别在 effect set 信号）。"
+    },
+    {
+      "q": "React 老手写 Solid 的第一大返工点是？",
+      "options": ["忘记写 key", "对 props / store 解构或提前求值，破坏响应式", "用了 class 组件", "忘记 import React"],
+      "answer": 1,
+      "explain": "Solid 的 props 是稳定 Proxy、属性是 getter：必须 props.x 惰性读，解构/提前求值会丢响应式（编译器会告警）。"
+    },
+    {
+      "q": "`{isLoggedIn && <Dashboard/>}` 迁到 Solid 惯用写法是？",
+      "options": ["保持 && 不变", "<Index when={isLoggedIn}>", "直接三元表达式", "<Show when={isLoggedIn()}><Dashboard/></Show>"],
+      "answer": 3,
+      "explain": "&& 是一次性求值不响应；Show 的 when 每轮重读条件，才是响应式条件渲染。"
+    },
+    {
+      "q": "`list.map(x => <Li key={x.id}/>)` 迁到 Solid 应换成？",
+      "options": ["<For each={list()}>{(x) => <Li/>}</For>", "保持 map 不变", "<Show each={list()}>", "list().forEach 里手动插入"],
+      "answer": 0,
+      "explain": "普通 .map 非响应式、源一变整段重建；For 按 item 引用 keyed，只增删变化项、复用其余 DOM。"
+    },
+    {
+      "q": "关于 createEffect 与 useEffect 依赖处理的区别，正确是？",
+      "options": ["两者都必须写依赖数组", "Solid 的 createEffect 不支持指定依赖", "Solid 自动追踪回调里实际读到的信号、无需依赖数组（要显式用 on）", "Solid 靠依赖数组浅比较"],
+      "answer": 2,
+      "explain": "Solid 运行期\"读时登记\"自动确定依赖，省掉手写 deps；需精确控制用 on(deps,fn,{defer})。"
+    }
+  ]
+}

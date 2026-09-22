@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-memo",
+  "title": "createMemo 派生 · 自测",
+  "questions": [
+    {
+      "q": "createMemo(fn) 返回什么、什么时候重算？",
+      "options": [
+        "返回一个普通值，只在创建时算一次",
+        "返回一个 setter，手动触发重算",
+        "返回一个只读 signal(getter)，只在它同步读到的依赖变化时才重算，否则吐缓存",
+        "返回一个 Promise"
+      ],
+      "answer": 2,
+      "explain": "memo 像 effect 一样按依赖更新，但返回 signal 并缓存计算，是派生值的正解。"
+    },
+    {
+      "q": "用 createEffect(() => setBig(count() > 5)) 来做派生，主要问题是？",
+      "options": [
+        "big 会慢一帧（effect 在更新阶段才跑），还可能形成互相写入的回环",
+        "完全没问题，官方推荐",
+        "会更快，因为 effect 是异步的",
+        "会让 count 失去响应"
+      ],
+      "answer": 0,
+      "explain": "派生要用 memo（即时一致、惰性、可复用）；用 effect 同步有中间态且易自激。"
+    },
+    {
+      "q": "memo 回调里 `if (!on()) return 'off'`，on 为 false 时改 unit 会不会触发重算？",
+      "options": [
+        "会，所有 signal 都常驻依赖",
+        "不会——该次执行没同步读到 unit，unit 就不在本次依赖集里",
+        "取决于 unit 是不是 store",
+        "会，但慢一帧"
+      ],
+      "answer": 1,
+      "explain": "依赖由'实际同步读到什么'动态决定；早返回那支没读到的 signal 不被订阅（官方温度示例）。"
+    },
+    {
+      "q": "对一个每帧变化的 scrollY，用 memo 收敛过度订阅的正确做法是？",
+      "options": [
+        "下游 effect 直接读 scrollY()",
+        "删掉 scrollY 改用局部变量",
+        "把 60 个 signal 合成一个大对象",
+        "showTop=createMemo(()=>scrollY()>300)，下游只订阅 showTop"
+      ],
+      "answer": 3,
+      "explain": "memo 当'断链'：把高频源压成粗粒度派生值，下游只在布尔翻转时触发。"
+    },
+    {
+      "q": "createMemo 的 equals:false 表示什么？",
+      "options": [
+        "每次依赖变化都通知下游（关掉相等短路）",
+        "禁用 memo 的缓存",
+        "让 memo 变成 effect",
+        "关闭依赖追踪"
+      ],
+      "answer": 0,
+      "explain": "默认用 === 短路相同值；equals:false 关掉它，也可传自定义比较决定要不要通知。"
+    },
+    {
+      "q": "什么时候其实不该套 memo、直接内联表达式更好？",
+      "options": [
+        "派生计算很贵（排序/聚合）",
+        "一次性、极廉价的读，如 JSX 里 {count()*2}",
+        "同一个派生值被多处复用",
+        "需要把高频源收敛成低频结论"
+      ],
+      "answer": 1,
+      "explain": "内联时 Solid 已为该绑定建最小 effect；廉价又只用一次还套 memo 只是多一张响应式节点。"
+    },
+    {
+      "q": "createMemo 回调能拿到的 prev 参数是什么？",
+      "options": [
+        "上一次的依赖 signal",
+        "下一次将变的值",
+        "一个固定的 0",
+        "上一次 memo 的计算结果，便于增量计算"
+      ],
+      "answer": 3,
+      "explain": "fn(prev, init)：prev 是上次结果、init 标记是否首次，可据此做增量/基于旧值算。"
+    }
+  ]
+}

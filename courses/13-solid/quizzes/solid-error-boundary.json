@@ -1,0 +1,83 @@
+{
+  "lesson": "solid-error-boundary",
+  "title": "ErrorBoundary 错误边界 · 自测",
+  "questions": [
+    {
+      "q": "下面哪一类错误是 <ErrorBoundary> 捕不到的？",
+      "options": [
+        "子树渲染 JSX 时抛的错",
+        "更新响应式计算(memo/effect/绑定)时抛的错",
+        "被 Suspense 读取的 resource 在渲染/更新流中冒泡出的错",
+        "onClick 事件处理器里 throw 的错"
+      ],
+      "answer": 3,
+      "explain": "边界只管'Solid 驱动的渲染/更新'；事件处理器、渲染更新流之外调度的回调里抛的错接不到。"
+    },
+    {
+      "q": "在 onClick 里 throw，ErrorBoundary 没反应，正确处置是？",
+      "options": [
+        "啥也不用做，它迟早会接住",
+        "在处理器里自己 try/catch，或用 window.onerror/unhandledrejection 全局兜",
+        "改成委托事件就能被边界接住",
+        "包一层 Suspense"
+      ],
+      "answer": 1,
+      "explain": "事件/游离异步错误不在边界捕获范围，需自行 try/catch 或挂全局错误监听。"
+    },
+    {
+      "q": "函数式 fallback(err, reset) 里的 reset() 做什么？",
+      "options": [
+        "卸载整个应用",
+        "把错误重新抛给父边界",
+        "清空当前错误状态并重新渲染 children，可用于瞬时错误就地重试",
+        "刷新整页(window.location.reload)"
+      ],
+      "answer": 2,
+      "explain": "reset 清错误态、重跑 children；网络抖一下这类可恢复错误点重试即恢复。"
+    },
+    {
+      "q": "一个边界的 fallback 自己在渲染时又抛错，会怎样？",
+      "options": [
+        "由更外层的 ErrorBoundary 捕获(可做多级降级)",
+        "直接白屏崩溃无法处理",
+        "被同一个边界再次捕获形成死循环",
+        "被静默忽略"
+      ],
+      "answer": 0,
+      "explain": "错误沿 Owner 树继续上抛，外层边界接管——内层给'重试'、外层给'回首页'。"
+    },
+    {
+      "q": "createResource 失败时，user.error 属性与 ErrorBoundary 捕获是什么关系？",
+      "options": [
+        "完全互斥，只能选一个用",
+        "两条路径：可在 JSX 判 user.error 做内联提示；当失败经 Suspense/渲染读取冒泡时则由 ErrorBoundary 捕获，建议配合用",
+        "user.error 永远为 undefined",
+        "有 resource 就不需要 error 属性"
+      ],
+      "answer": 1,
+      "explain": "user.error 温和内联提示 + ErrorBoundary 兜没预判到的抛错，二者配合最稳。"
+    },
+    {
+      "q": "同时需要'加载兜底'和'错误兜底'时，Suspense 和 ErrorBoundary 谁包谁？",
+      "options": [
+        "把两者并排做兄弟、不分内外",
+        "内层放 ErrorBoundary、外层放 Suspense",
+        "谁在外都行，无差别",
+        "ErrorBoundary 在外、包住 Suspense 及其内容(外层管错、内层管加载)"
+      ],
+      "answer": 3,
+      "explain": "让 ErrorBoundary 在外层，才能接到内层子树渲染/更新冒泡出的错误。"
+    },
+    {
+      "q": "命令式地捕获错误、并给错误附加'发生在哪个组件'的诊断信息，用哪两个 API？",
+      "options": [
+        "catchError 与 modifyFailure",
+        "try/catch 与 console.error",
+        "batch 与 untrack",
+        "onError 与 onErrorCaptured"
+      ],
+      "answer": 0,
+      "explain": "ErrorBoundary 底层就是 catchError + Owner.context[ERROR]；modifyFailure 可包装错误附诊断。"
+    }
+  ]
+}
