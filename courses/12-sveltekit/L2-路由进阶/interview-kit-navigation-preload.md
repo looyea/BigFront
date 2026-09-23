@@ -1,6 +1,6 @@
 # kit-navigation-preload 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 用户点击一个站内 <a> 后，SvelteKit 到渲染完成之间发生了什么？
 **来源**：Kit 客户端导航机制高频题的转述。
@@ -63,3 +63,25 @@ Next `<Link>` 默认对**视口内**链接预取页面 JS 与（App Router 下�
 `goto` 是 `$app/navigation` 导出的**函数**，不是 HTML 属性。正解一（优先）：这就是普通站内链接，`<a href="/x">` 让 Kit 接管即可，根本不需要 goto；正解二（确需程序化，如先埋点再跳）：`<button onclick={async () => { track(); await goto('/x'); }}>`。goto 特有的 opts（keepFocus/noScroll/replaceState）与属性族能力重合，能用 href 就别用 goto——可访问性与中键新开标签都白送。
 
 🚀 **下一站 L3**：kit-load-universal——load 函数全解：event 契约、依赖追踪与失效重取。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  preload-code 与 preload-data 分别拉取什么？为什么默认只建议开 data 级？ 
+
+ preload-data 执行目标路由的 load 拿数据，preload-code 还要预取渲染该路由的 JS chunk；code 级命中率低时浪费带宽与连接，data 级能让内容先渲染，默认 hover+viewport 的取舍就是收益与成本的折中。 
+
+**来源**： https://svelte.dev/docs/kit/advanced-routing#Preloading 
+
+### 14.  预取的数据会不会用过期？它与 invalidate 的关系是什么？ 
+
+ 预取结果按依赖键缓存在当前导航事务内，真点击时命中即复用；若期间发生过 invalidate/依赖变化，缓存作废重新执行 load，所以预取不是独立缓存层，不会绕开失效体系。 
+
+**来源**： https://svelte.dev/docs/kit/load#Reloading-from-load 
+
+### 15.  怎么度量预取给后端带来的额外流量？你如何设计开关与灰度？ 
+
+ 在 load/端点打来源标记（purpose 头区分导航、预取），统计预取命中率与无效预取率；低命中率页面按路由或设备等级降级（saveData、慢网直接跳过错级预取），用 feature flag 控制 data 属性下发。 
+
+**来源**： https://web.dev/articles/preload-responses ； https://svelte.dev/docs/kit/configuration#paths 

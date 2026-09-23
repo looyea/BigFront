@@ -1,6 +1,6 @@
 # exp-auth 面试题精选
 
-> 共 12 题，覆盖 **认证授权 / JWT / 密码存储 / Token 存放 / 刷新吊销 / OAuth2 / 越权** 七类。
+> 共 15 题，覆盖 **认证授权 / JWT / 密码存储 / Token 存放 / 刷新吊销 / OAuth2 / 越权** 七类。
 
 ---
 
@@ -97,3 +97,25 @@ localStorage：JS 完全可读 → XSS 可直接偷 token（但天然免疫 CSRF
 Insecure Direct Object Reference：客户端直接传对象 ID（`/posts/5`），后端不校验归属就操作 → 改 ID 即可读写他人数据。防御：**每个涉及具体资源的操作都做属主校验**——`if (post.authorId !== req.user.sub && !isAdmin) return 403/404`。可提取通用中间件/guard；无法用属主判断时用权限表。别只靠前端隐藏按钮或不可猜 ID（用 UUID 也需校验）。
 
 **来源**：OWASP Top 10 — "A01 Broken Access Control / IDOR"; PortSwigger — "IDOR"; CWE-639
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  设计"同一账号多端登录 + 设备管理 + 一键全员下线"的令牌体系，把状态放哪、TTL 怎么配？
+
+模型先立：身份会话（session，一次登录）与访问凭证（token，会话的派生物）两层——设备列表管理的是 session，token 只带 session_id。状态放置：session 记录进 Redis（user→sessions 反向索引，含设备 UA/指纹、IP、地理位置、最后活跃），access token 保持自包含验签（不查存储），refresh token 每次使用轮换（rotation，旧 rtk 复用=会话劫持信号→整条 session 吊销并通知）。TTL 策略：access 5-15 分钟、refresh 按设备类型分级（网页 30 天滑动、移动 90 天、TV 更长）、session 绝对上限（refresh 续命也不能无限，半年强制重登）防爆破得逞后永续驻留。全员下线：删 sessions 索引即让所有 refresh 失效 + 版本号方案（user.tokenVersion 递增编进 access claims，验证时比对缓存的版本号——用一次 Redis GET 换"立即吊销"能力，关键敏感操作接口才走这档）；改密码触发全员下线是默认预期（NIST 800-63 精神）。设备指纹的诚实边界：UA 可伪造、指纹可重装漂移，它的定位是"异常提醒与人工核对的信息"而不是鉴权因子。监控面：新设备登录通知邮件/推送（用户侧发现盗号的最后防线）、同 session 异地并发使用告警。收口句："JWT 无状态所以不能吊销"是半句话——准确说法是"验证路径无存储查询，所以吊销要另建状态"，这题就是考你状态该另建在哪。
+
+**来源**：OAuth 2.0 规范（refresh token）；Auth0 文档（Session management）；掘金《改密码后旧设备为什么还在登录》
+
+### 14.  RBAC 在你的 Express 项目里怎么落地？角色爆炸和"数据级权限"两个坑各怎么解？
+
+落地骨架三表：role、permission、role_permission（映射可配置）+ 用户-角色关联；Express 形态：authn 中间件解出身份 → authz 层提供 requirePerm(can:xxx) 路由级中间件 + service 层复查（路由中间件挡"入口"，service 挡内部调用路径——两处同源规则函数）。角色爆炸的病根与解法：把"角色"当权限的直接容器，每客户/每场景新增一角色（47 个角色的终点是没人敢删）；解法是"角色=打包模板、能力=实际授予"两层——授予落到 user-permission 直挂（角色派生+少量例外直授），定期审计"从未被使用的角色"回收，新角色审批制。数据级权限（行级）：RBAC 只管"能不能调这个操作"，"能不能碰这条数据"要额外机制——① 谓词注入（查询层强制拼 owner/team_id 条件，防的是忘加 where 而不是拒答）；② ABAC/规则引擎（资源属性+环境判断：本人创建的 7 天内可编辑——规则声明化如 casbin/OPA，复杂到一定规模后比 if 森林可维护）；③ 混合：粗粒度入口 RBAC + 行级谓词。事故防线：权限变更的操作审计（谁授了谁的什么、何时）本身是安全事件源；测试矩阵（角色 × 资源的预期可访问表）进 CI——权限系统的回归成本极高，矩阵测试是唯一便宜解。收口句：权限设计没有银弹，成熟度标志是"回答得出：新增一种人要改几个地方、改一处权限谁会被影响"。
+
+**来源**：NIST RBAC (INCITS 351)；OPA 文档；知乎《我们的角色表加了 47 行之后》
+
+### 15.  完整走一遍微信扫码登录（OAuth2 授权码 + 二维码变种）的接线，说清 state、pkce 各挡什么，以及回调之后你的系统里发生了什么。
+
+时序六步：① 前端请求登录页时服务端生成 state（随机+短 TTL 存 Redis，含回跳地址快照）下发二维码端点；② 用户扫码确认后平台重定向到 redirect_uri?code=..&state=..；③ 后端校验 state（挡 CSRF 与"把攻击者的 code 塞给你登录"的会话固定式攻击）→ 用 code + client_secret（+ PKCE 的 code_verifier）在后端换 token——code 泄露面从浏览器收缩到 TLS 通道内；④ 拿 access token 调用户信息接口，校验返回的 id_token 签名与 aud/iss（防令牌挪用）；⑤ 按 (provider, openid/unionid) 查 identity 表：有则登录、无则建号（昵称头像此时才可信落库——用户提交的注册信息只来自这个 API，绝不采信前端传参）；⑥ 签发本站会话（自有 JWT/session，第三方 token 单独加密存储用于刷新/解绑），重定向完成且 URL 里绝不携带任何本站令牌。各挡什么再钉一遍：state 挡 CSRF/登录混淆、PKCE 挡授权码截获换 token（公网分发的移动端无 secret 时尤其）、后端换 token 挡前端接触 secret、id_token 验签挡假身份。微信特有细节：unionid 打通同主体多应用、扫码的"已扫码未确认"中间态轮询、redirect_uri 白名单精确到路径（前缀匹配会被开放重定向组合拳利用）。收口：第三方登录的产物是"一个可信的外部身份声明"，你的系统把它变成内部会话的每一步都该像处理外部输入一样校验——这条线讲清楚，这题就赢了。
+
+**来源**：OAuth 2.1 草案；微信开放平台网站应用文档；OWASP OAuth 攻击场景

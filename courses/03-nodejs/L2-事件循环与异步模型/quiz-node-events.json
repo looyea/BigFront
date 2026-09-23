@@ -8,11 +8,11 @@
       "prompt": "ee.emit('x') 的行为是？",
       "options": [
         "异步：把调用排进下一个微任务",
-        "同步：当场按注册顺序调用完所有 x 监听才返回",
         "异步：排进宏任务队列",
-        "随机顺序调用"
+        "随机顺序调用",
+        "同步：当场按注册顺序调用完所有 x 监听才返回"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "emit 是同步的，它立即按注册顺序依次调用该事件的所有监听器；异步的只是『谁在何时 emit』（呼应 node-event-loop）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "继承 EventEmitter 后，对象在关键节点 emit 事件，关注方自行 on/once 订阅，双方解耦——这正是 http.Server、ws 的设计范式（呼应 node-events 第五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "监听器执行中途调用 removeAllListeners/off 删除了后面的监听器，本轮 emit：",
+      "options": [
+        "全停",
+        "不受影响——emit 对监听器数组做浅拷贝快照后遍历，删改只影响下次 emit",
+        "报错",
+        "跳过被删的但仍跑完"
+      ],
+      "answer": 1,
+      "explanation": "「emit 遍历快照」同时解释了 once 的实现（先自删再调用）与「emit 期间新 on 的监听器本轮收不到」——写插件系统时这是可依赖的语义。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "emitter.setMaxListeners(n) 与 events.defaultMaxListeners 的关系是：",
+      "options": [
+        "前者优先于全局默认；库作者应给自己实例调高而不是动全局（全局是应用级权力）",
+        "后者覆盖前者",
+        "二者必须一致",
+        "仅是性能参数"
+      ],
+      "answer": 0,
+      "explanation": "阈值只为触发泄漏告警不限制性能；第三方库偷偷 setDefaultMaxListeners(Infinity) 会把全应用的泄漏探测器关掉——code review 盯这条。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "手写一个「事件 → Promise」的一次性等待（等价 events.once），必须处理的两个边界是：",
+      "options": [
+        "不用处理",
+        "同时监听 error（否则 reject 丢失/进程崩）与清理：resolve/reject 任一路径都要移除另一监听器（AbortSignal/finally 防泄漏）",
+        "只要 try/catch",
+        "只要超时"
+      ],
+      "answer": 1,
+      "explanation": "once(emitter,name) 内置了这两件事；手写版漏 error 监听=emit error 时进程崩溃，漏清理=反复等待攒一堆监听器——本关泄漏题的正向构造版。"
     }
   ]
 }

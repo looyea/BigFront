@@ -1,6 +1,6 @@
 # kit-form-actions 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) Form Actions 为什么只接受 POST？GET 表单去了哪里？
 **来源**：HTML 语义与框架设计题的转述。
@@ -63,3 +63,25 @@ fetch 请求默认被路由到 **+server.js 端点**（URL 撞车时端点优先
 两个硬条件缺一即**运行时报错**（官方明说）：method 必须是 POST（不写 method 默认 GET，也中招）、目标必须是 +page.server.js 里的 actions（指向 +server.js 端点的路径不行）。它不能救 GET 表单——那类表单本来就不需要 enhance（客户端路由已经无刷行了）。这题顺带考古术语混战：官方文档自嘲 "the enhance action and `<form action>` are both called 'action'. These docs are action-packed"——答题时区分清楚 action(表单提交函数) / action(directive, use:xxx) / form action 属性三义。
 
 🚀 **下一组**：kit-form-validation 面试题——双端校验分工、FormData 整形与 superForms 生态。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  设计一个防双击重复下单的提交：前端 enhance 与后端幂等键分别做什么？ 
+
+ 客户端 disable 提交按钮只挡 UI 层；真正的幂等靠 action 内校验请求携带的一次性 token（hidden input 预发 + Redis SETNX 或库唯一约束），返回既有订单实现重放安全，两层缺一不可。 
+
+**来源**： https://svelte.dev/docs/kit/form-actions#Progressive-enhancement 
+
+### 14.  无 JS 与 use:enhance 两条提交路径的测试策略怎么定？ 
+
+ 契约层保证 action 返回值可序列化（失败带全量 input/errors），两路只是渲染差异；Playwright 项目一份开 JS 一份强制禁 JS 跑同一用例集，重点断言回显、跳转、cookie 副作用一致。 
+
+**来源**： https://svelte.dev/docs/kit/form-actions#Optional-settings 
+
+### 15.  同一页面多个表单共享 action 返回值导致串扰，你怎么治理？ 
+
+ 具名 action 隔离提交目标，$page.form 只会属于当前提交；跨表单共享状态上移到 store/load 而不是靠 form 字段；回显字段命名空间化（errors 按表单分组）是 code review 常设红线。 
+
+**来源**： https://svelte.dev/docs/kit/form-actions#Named-default 

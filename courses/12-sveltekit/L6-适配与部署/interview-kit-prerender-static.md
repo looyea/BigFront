@@ -1,6 +1,6 @@
 # kit-prerender-static 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 给出"一个页面能否被预渲染"的官方判据，并解释其底层原因。
 **来源**：预渲染基本规则必考题的转述。
@@ -63,3 +63,25 @@ Next：`generateStaticParams`+`export`/`revalidate`（ISR 有后台再验证的�
 用 adapter-node 或平台适配器（因为有动态仪表盘）。`(marketing)` 组 layout `prerender=true` 全静态化吃 CDN 长缓存；`(app)/dashboard` 组 `prerender=false` 走 SSR + 鉴权（L5），实时数据放 server load 或客户端。个性化块即使在被预渲染的营销页里，也用 `onMount` 客户端 fetch 兜（接受轻微空窗）。换 adapter 不动业务码，是 Kit 混合渲染的核心红利。
 
 🚀 **下一组**：L6 课后作业——预渲染粒度与爬虫机制的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  entry generator 导出 entries 函数的典型场景与实现要点？ 
+
+ 动态博客/电商 SKU 等未被静态链接穷举的页面，在 +layout.server.js（或根 load）导出 entries() 从 CMS/DB 枚举 URL；要点：分页穷尽、失败要 throw 让构建中断、与 concurrency 配合控吞吐。 
+
+**来源**： https://svelte.dev/docs/kit/pages-and-errors 
+
+### 14.  大站预渲染慢（拉远程 CMS），三条提速手段与各自边界？ 
+
+ 提 concurrency（受 CMS 限流约束）、缓存远程响应到本地快照（一致性换速度）、增量预渲染（只重建变更路由，需平台/CDN 按页失效配合）；超阈值站点应转向 SSR+ISR 式按需渲染。 
+
+**来源**： https://svelte.dev/docs/kit/configuration#prerender 
+
+### 15.  Kit 预渲染与 Next SSG/ISR、Nuxt 静态生成在失效与再验证上的差异？ 
+
+ Kit 无内建 ISR：预渲染产物是死的，再验证靠部署层（CDN 过期回源重建）或改动态渲染+缓存头；Next 把 revalidate 内建到路由，Nuxt 类似 nitro route rules，选型时把『内容变更频率』作为第一问。 
+
+**来源**： https://nextjs.org/docs/app/building-your-application/rendering/static-site-generation ； https://svelte.dev/docs/kit/exports 

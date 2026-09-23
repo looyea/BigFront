@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "从 store 解构 state/getter 时，要保持响应性必须用？",
-      "options": ["toRaw", "storeToRefs", "reactive", "JSON 拷贝"],
-      "answer": 1,
+      "options": [
+        "toRaw",
+        "reactive",
+        "storeToRefs",
+        "JSON 拷贝"
+      ],
+      "answer": 2,
       "explanation": "store 是 reactive，直接解构丢响应；storeToRefs 保留（action 可直接解构）（呼应 vue-pinia-basics 第二节）。"
     },
     {
@@ -15,20 +20,25 @@
       "type": "single",
       "prompt": "相比 Vuex，Pinia 在改动 state 上的最大简化是？",
       "options": [
-        "取消 mutations，action 里直接改 state（同步异步统一）",
         "不允许改 state",
         "只能用 $patch",
-        "必须用 commit"
+        "必须用 commit",
+        "取消 mutations，action 里直接改 state（同步异步统一）"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "Pinia 合并 mutation/action，直接在 action 改（呼应 vue-pinia-basics 第四节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "setup 式 store 相比选项式的好处主要是？",
-      "options": ["体积更小", "能用 ref/computed/watch、组合与类型推导更自然", "运行更快", "不需要 id"],
-      "answer": 1,
+      "options": [
+        "能用 ref/computed/watch、组合与类型推导更自然",
+        "体积更小",
+        "运行更快",
+        "不需要 id"
+      ],
+      "answer": 0,
       "explanation": "setup 式贴近组合式函数、TS 友好（呼应 vue-pinia-basics 第一节、vue-composables）。"
     },
     {
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "store 的 getter 默认行为类似于？",
-      "options": ["每次访问都重算的函数", "基于 state 缓存的 computed", "watch", "一次性快照"],
+      "options": [
+        "每次访问都重算的函数",
+        "基于 state 缓存的 computed",
+        "watch",
+        "一次性快照"
+      ],
       "answer": 1,
       "explanation": "getter 缓存；返回函数形式则不缓存（呼应 vue-pinia-basics 第三节、vue-reactivity 第四节）。"
     },
@@ -56,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "一个 store 里想调用另一个 store 的 action，正确做法是？",
-      "options": ["import 另一个 store 的 state 直接改", "在自己的 action 里 use 另一个 store 再调其 action", "用全局变量", "不能组合"],
+      "options": [
+        "import 另一个 store 的 state 直接改",
+        "在自己的 action 里 use 另一个 store 再调其 action",
+        "用全局变量",
+        "不能组合"
+      ],
       "answer": 1,
       "explanation": "在 action 中 useXxx() 拿实例、调其 action（呼应 vue-pinia-basics 第五节）。"
     },
@@ -64,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "defineStore 第一个参数（id）的作用是？",
-      "options": ["仅注释用", "唯一标识，供 devtools 与 SSR 水合/热更新识别", "决定路由路径", "指定存储 key 前缀"],
+      "options": [
+        "仅注释用",
+        "唯一标识，供 devtools 与 SSR 水合/热更新识别",
+        "决定路由路径",
+        "指定存储 key 前缀"
+      ],
       "answer": 1,
       "explanation": "id 是 store 的唯一名（呼应 vue-pinia-basics 第五节、vue-pinia-advanced SSR）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Pinia action 里 `this.list.push(...)` 改 state 在 devtools 里显示的来源标记，与组件里直接改的区别由什么决定？",
+      "options": [
+        "无区别",
+        "devtools 记录 patch 但「谁 改 的」依赖 caller 堆栈/action 包 装——action 内 改动 挂 action 名（可 追 溯 语义），组件 裸 改 只 有 patch 记 录，这正是 「鼓励 走 action」的 可 观 测 性 理由 而 非 教 条",
+        "组件里改不记录",
+        "只有 $patch 记录"
+      ],
+      "answer": 1,
+      "explanation": "「无 mutation 会 不 会 乱」的 完 整 答 案：功 能 上 没 有 制 约，纪律 上 三 个 代价——可 观 测（action 是 语义 锚 点）、可 拦 截（$onAction 只 见 action）、可 迁 移（换 后 端/加 乐 观 更 新 时 改动 收 在 action 的 才 改 得 动，本关 mutation 题 的 账 单 版）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "组件里 `watch(() => store.user.token, ...)` 永not fires，检查清单第一优先级是：",
+      "options": [
+        "deep 没开",
+        "token 是否真的变过——store 的 state 是 reactive 深代理，token 换发后若代码把旧字符串手动赋回（或后端返回同值）不触发；更常见的是取 token 用了 storeToRefs 后又对 ref 再 .value 造成读到快照（用法混乱而非响应失效）",
+        "watch 不支持 store",
+        "要配 immediate"
+      ],
+      "answer": 1,
+      "explanation": "store 本身 就 是 响应 式 源，「watch 不 响」先 查 **赋 值 端 真的 换 了 引 用/值 吗**（console + $subscribe 验 证），再 查 读 取 端 快照 化；把 「store 不 响应」当 第 一 怀 疑 对 象 是 新 手 诊 断 顺 序 错误（本关 解 构 响应 题 的 排 查 系 版）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "两个 store 互相 import（A 的 action 用 B、B 也 用 A）的后果是：",
+      "options": [
+        "完全合法随便用",
+        "循环依赖在运行时取决于实例化时序：useA 里调 useB 时 B 尚未创建会立即再入创建（Pinia 有防重入但语义仍脆）——规避：把「编排逻辑」上提到第三个 store 或组合式函数，保持 store 依赖单向图",
+        "编译期直接禁止",
+        "自动合并为一个 store"
+      ],
+      "answer": 1,
+      "explanation": "「store 调 store」正 常（本关 跨 store 题 的 合法 面），**双向** 才 是 坏 味道：测 试 要 同时 起 两 家、删 一 个 另 一 个 炸、SSR 状 态 序 列 化 顺序 耦 合——依赖 图 出 环 = 拆 分 边 界 画 错 了（与 模 块 循环 import 同 一 判 据，本包 架构 关 的 微 缩 版）。"
     }
   ]
 }

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "JSX 的 {} 里不能直接放什么？",
       "options": [
+        "if/for 这类语句",
         "三元表达式",
         "函数调用",
-        "if/for 这类语句",
         "逻辑与 &&"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "{} 只接受表达式，if/for 是语句（呼应 react-render-control 第一节、react-jsx 第二节）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "动态 import 实现代码分割（呼应 react-render-control 第四节、10-vite 动态 import）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 下列哪些值作为 JSX children 会被「忽略不渲染」，哪个不会？",
+      "options": [
+        "false、null、undefined、0 全部被忽略",
+        "false/null/undefined 被忽略，但 0 与空字符串 '' 会被渲染成文本——这正是 `{count && <X/>}` 在 count=0 时会「漏出 0」的根因",
+        "只有 null 被忽略",
+        "都会被渲染"
+      ],
+      "answer": 1,
+      "explanation": "`&&` 短路返回左侧假值本身（0 是 number 会被当节点渲染），而 false/null/undefined 被 React 有意视为「无内容」。修法：用三元 `count ? <X/> : null`、或 `count > 0 && <X/>`、或 `!!count && <X/>`。这是最经典的渲染条件小坑。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " `<Suspense fallback>` 的 fallback 实际「捕获」的是什么？",
+      "options": [
+        "捕获任何 async 函数",
+        "捕获子树渲染期间「抛出的 Promise」——React.lazy 的 chunk、支持 Suspense 的数据资源在 pending 时 throw promise，Suspense 接住并画 fallback；普通未接住的异步/抛错不归它管",
+        "捕获 setState",
+        "捕获错误（那是 Suspense 的活）"
+      ],
+      "answer": 1,
+      "explanation": "Suspense 的机制是「渲染中 throw promise → 最近的上层 Suspense 兜住 → 画 fallback → resolve 后重渲染」。捕获「错误/拒绝」是 ErrorBoundary 的职责，两者常成对包裹同一个异步子树：Suspense 管 loading、ErrorBoundary 管 error。理解 throw-promise 协议才能明白为何 lazy、use(promise)、Suspense 数据源能协同。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 关于 React.lazy + Suspense 的约束，正确的是？",
+      "options": [
+        "lazy 组件无需 Suspense 也能安全用",
+        "default 导出必须是组件；lazy 要配 Suspense 兜 loading，且 chunk 加载失败会 throw 需外层 ErrorBoundary 兜错；命名导出要先 `.then(m => ({default: m.X}))` 或走 babel 插件",
+        "lazy 只能用于首屏",
+        "SSR 完全不支持 lazy"
+      ],
+      "answer": 1,
+      "explanation": "三个真实约束：① Suspense 负责「加载中」，ErrorBoundary 负责「加载失败」，缺一个就会白屏或永久骨架；② lazy 期望 default 导出；③ 更细的（流式 SSR、预取、路由级代码分割）常交给框架（Next/React Router）而非手写 lazy。把 loading/error/成功三态分别归位，是本关「异步又可能失败的组件怎么组织」的标准答案。"
     }
   ]
 }

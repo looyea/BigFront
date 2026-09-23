@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-debug-playbook",
-  "title": "事故手册 · 自测",
+  "title": "kit-debug-playbook 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "handle 里在 resolve(...) 之外抛出异常，会怎样呈现？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "handle 里在 resolve(...) 之外抛出异常，会怎样呈现？",
       "options": [
         "由最近的 +error.svelte 接住",
         "被静默忽略、页面照常渲染",
@@ -11,10 +13,12 @@
         "自动重定向到首页"
       ],
       "answer": 2,
-      "explain": "resolve 永不抛错但 resolve 之外的 handle 代码抛错是致命的，Kit 按 Accept 头给 JSON 或 fallback 页，不走 +error.svelte。"
+      "explanation": "resolve 永不抛错但 resolve 之外的 handle 代码抛错是致命的，Kit 按 Accept 头给 JSON 或 fallback 页，不走 +error.svelte。"
     },
     {
-      "q": "在 load 里用 try/catch 包住了 error()/redirect() 抛出的东西且没重抛，后果是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "在 load 里用 try/catch 包住了 error()/redirect() 抛出的东西且没重抛，后果是？",
       "options": [
         "SvelteKit 拿不到控制流，预期错误/重定向不生效",
         "性能提升，减少抛出",
@@ -22,10 +26,12 @@
         "无任何影响，只是风格问题"
       ],
       "answer": 0,
-      "explain": "error()/redirect() 靠抛出被 SvelteKit 捕获来实现控制流；被 catch 吞掉不重抛，框架就收不到。要 catch 得用 isHttpError/isRedirect 判出后原样重抛。"
+      "explanation": "error()/redirect() 靠抛出被 SvelteKit 捕获来实现控制流；被 catch 吞掉不重抛，框架就收不到。要 catch 得用 isHttpError/isRedirect 判出后原样重抛。"
     },
     {
-      "q": "下列哪项最可能直接引发 hydration mismatch？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "下列哪项最可能直接引发 hydration mismatch？",
       "options": [
         "在 +page.server.js 里 return 纯数据",
         "首帧用 Date.now()/Math.random() 或 if(browser) 渲染出与服务端不同的结构",
@@ -33,10 +39,12 @@
         "给每个 load 加 depends key"
       ],
       "answer": 1,
-      "explain": "非确定性值与服务端不同、或用 browser 标志切首帧标记导致两端 HTML 不一致，都是水合失配的典型根因；应把这俩挪到 $effect/onMount 后填充。"
+      "explanation": "非确定性值与服务端不同、或用 browser 标志切首帧标记导致两端 HTML 不一致，都是水合失配的典型根因；应把这俩挪到 $effect/onMount 后填充。"
     },
     {
-      "q": "某 load 里 fetch('/api/x')，末尾又调用 invalidate('/api/x')，会发生？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "某 load 里 fetch('/api/x')，末尾又调用 invalidate('/api/x')，会发生？",
       "options": [
         "被 Kit 自动去重，只跑一次",
         "仅在下次导航时刷新一次",
@@ -44,10 +52,12 @@
         "load 依赖被自己标脏→无限重跑，形成死循环/请求风暴"
       ],
       "answer": 3,
-      "explain": "invalidate 让依赖该资源的所有 load 重跑；在 load 内标脏自己依赖的 URL 会自触发死循环。变更后的刷新应由 action/afterNavigate 触发。"
+      "explanation": "invalidate 让依赖该资源的所有 load 重跑；在 load 内标脏自己依赖的 URL 会自触发死循环。变更后的刷新应由 action/afterNavigate 触发。"
     },
     {
-      "q": "把 $lib/server/db.js 导入到 +page.svelte，结果是？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "把 $lib/server/db.js 导入到 +page.svelte，结果是？",
       "options": [
         "运行时才报错",
         "构建直接失败：Cannot import $lib/server into client-side code（这是 server-only 防呆）",
@@ -55,10 +65,12 @@
         "只有 dev 环境会报错"
       ],
       "answer": 1,
-      "explain": "Kit 用 $lib/server 目录约定划客户端硬边界，越界导入在构建期就被拦截；正解是经 server load/endpoint/handle 使用。"
+      "explanation": "Kit 用 $lib/server 目录约定划客户端硬边界，越界导入在构建期就被拦截；正解是经 server load/endpoint/handle 使用。"
     },
     {
-      "q": "把密钥泄露到客户端 bundle 的一条典型路径是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "把密钥泄露到客户端 bundle 的一条典型路径是？",
       "options": [
         "把密钥配成 PUBLIC_ 前缀（进 $env/static/public 被编进前端），或绕过 private 防呆用 import.meta.env/define 注入前端",
         "把密钥放进 $env/static/private",
@@ -66,10 +78,12 @@
         "在 handle 里把密钥存进 event.locals"
       ],
       "answer": 0,
-      "explain": "只有 public 模块的值会进客户端；把私密值误配 PUBLIC_ 前缀或直接用 Vite define/import.meta.env 注入前端会造成泄露。$env/static/private 有客户端禁引防呆。"
+      "explanation": "只有 public 模块的值会进客户端；把私密值误配 PUBLIC_ 前缀或直接用 Vite define/import.meta.env 注入前端会造成泄露。$env/static/private 有客户端禁引防呆。"
     },
     {
-      "q": "关于 load 返回值与密钥安全，正确的说法是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 load 返回值与密钥安全，正确的说法是？",
       "options": [
         "load 返回值只留在服务端，永不出前端",
         "load 返回值需手动加密才会到前端",
@@ -77,7 +91,46 @@
         "只有 universal load 的返回值才到前端，server load 的不会"
       ],
       "answer": 2,
-      "explain": "无论 server 还是 universal load，return 的数据都会作为 page.data 下发到浏览器；应只 return 前端真要展示的字段，密钥留在服务端内部使用。"
+      "explanation": "无论 server 还是 universal load，return 的数据都会作为 page.data 下发到浏览器；应只 return 前端真要展示的字段，密钥留在服务端内部使用。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 生产 500 白屏且服务端日志空白，第一优先级排查？ ",
+      "options": [
+        " 数据库慢查询 ",
+        " 崩溃点是否在日志/监控初始化之前（init 钩子顺序）或 handleError 自身抛错 ",
+        " CDN 缓存 ",
+        " 浏览器版本 "
+      ],
+      "answer": 1,
+      "explanation": " 两端 handleError 禁止再抛；init/中间件顺序错会让致命错误静默，这是官方文档点名的排错入口。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " SSR 首屏内容闪一下再稳定，最典型成因？ ",
+      "options": [
+        " CSS 太多 ",
+        " 组件水合后又用客户端状态重算/重取了同一数据，导致二帧不一致 ",
+        " DNS 慢 ",
+        " prerender 过深 "
+      ],
+      "answer": 1,
+      "explanation": " 典型是把 load 已提供的数据又在 onMount 里 fetch 覆盖；对齐单一数据源或复用内联数据即消。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 某页面无限重发 /api/x 请求且越来越卡，最可能？ ",
+      "options": [
+        " 网络抖动 ",
+        " load 里 fetch 该端点后又写了触发 invalidate/依赖漂移的副作用，形成回环 ",
+        " 端点太慢 ",
+        " 浏览器插件 "
+      ],
+      "answer": 1,
+      "explanation": " 失效风暴特征：响应内再改依赖键（如 setHeaders/读可变对象）；断点是给该 load 的调用栈打来源计数。 "
     }
   ]
 }

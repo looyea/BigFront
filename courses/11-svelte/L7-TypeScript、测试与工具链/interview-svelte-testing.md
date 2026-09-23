@@ -1,6 +1,6 @@
 # svelte-testing 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与测试专项面经高频主题的转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与测试专项面经高频主题的转述。
 
 ---
 
@@ -78,3 +78,25 @@ Svelte 5 没有公开 `act`——因为更新由微任务自动 flush，测试�
 **来源**：跨框架开发者体验讨论汇编
 
 理由：① 无 act/渲染批处理心智——事件后微任务 flush 天然对齐；② 无 memo/stale closure 家族 bug（组件体不重跑）；③ 挂载即真编译产物、无 hydration 双路径分歧（SSR 测试归 E2E）。反例：runes 的位置限制让"测试里直接 new 组件状态"不可能（必须经 props/交互驱动），比 React 直接测 hook（renderHook）少了个快捷通道；Vue 有专属 TestUtils 操作实例，Svelte 的等价物更薄。答题价值在"没有银弹"的边界感。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  全局 .svelte.js 单例状态会让测试相互污染，你怎么在测试里隔离它？
+
+问题：模块顶层 $state 单例在所有测试文件/用例间共享（前一个用例改了、后一个读到脏值，且并发跑顺序不定）。隔离手段（从好到差）：① 设计成工厂（createX() 每用例 new 一份，从源头避免单例——与 global-state 工厂题同源），测试直接注入实例；② 提供显式 reset() 并 beforeEach 调用；③ ViTest 的 vi.resetModules() + 动态 import 重载模块（拿干净单例）；④ 若用 store，beforeEach 里 store.set(初始值)。根本原则："可测性驱动状态设计"——一个模块若无法在测试前重置到已知态，说明它的单例设计有可测性问题（对应既有"全局单例让测试怎样"题）。加分句：这条链把"测试"和"架构"连起来了——测试困难常是设计信号（单例过多、隐藏依赖），逼自己写出"每用例可从零装配"的状态层，顺带也解决了 SSR 泄漏与 HMR 清仓的同源问题（一石三鸟，是状态设计质量的统一检验）。
+
+**来源**：测试隔离与模块单例；reset 模式；Vitest 模块重置；既有"全局单例污染测试"深化
+
+### 14.  假定时器与 Svelte 的微任务 flush 相撞导致测试挂起/超时，怎么破？
+
+成因：Svelte 的 DOM 更新在 microtask 里 flush，而 vi.useFakeTimers 若把 queueMicrotask/promises 也 fake 了，await tick()/异步断言会"等一个永不到来的微任务"→超时（对应既有"相撞"题）。破法：① 收窄 fake 范围——vi.useFakeTimers({ toFake: [...] }) 把 queueMicrotask/promises 排除（Vitest 也提供只 fake 定时器不动微任务的配置，呼应 vitest 关 toFake 题）；② 需要推进定时器时用 vi.advanceTimersByTimeAsync（异步版，会顺带 flush 微任务）而不是同步版；③ 涉及 fetch/flush 的断言用 findBy/waitFor（真实微任务）配假定时器要验证二者不冲突。加分句：本质是"两套异步调度器（测试的假时钟 vs Svelte 的微任务队列）必须对齐"——能定位到"卡住的 await 是在等被 fake 掉的微任务"，就跨过了组件测试里最玄学的一类 flaky；解法哲学和 vitest 关一致：假定时器按最小需要 fake，能不 fake 微任务就别 fake。
+
+**来源**：vi.useFakeTimers 与 Promise/microtask；tick/flush 时序；既有"假定时器与微任务 flush 相撞"深化
+
+### 15.  CI 上组件测试本地全绿、流水线偶发挂（flaky），给出你的系统性排查方向。
+
+排查方向按概率：① 时序依赖——用了真实 setTimeout/网络/动画未 fake 或等待不足（CI 更慢更容易超时错位，对应假定时器题），断言靠 waitFor 而非固定 sleep；② 状态泄漏——全局单例/模块状态跨用例污染（本地单文件顺序跑掩盖、CI 并行分片暴露，对应隔离题）；③ 并行竞争——多 worker 共享资源（端口、文件、localStorage、mock 计时）冲突，减并发或隔离资源；④ 环境差异——时区/locale/Node 版本/UI 字体影响快照与格式化断言；⑤ 动画/过渡——transition 未禁用使 DOM detach 延迟（测试里关动画是通用纪律，呼应 transitions 关 reduced-motion/intro）；⑥ 随机/时间相关数据未固定（用 vi.setSystemTime 冻结）。方法：把 flaky 用例单独用 --repeats/--seed 稳定复现，去掉"偶发"才能定位。加分句：flaky 的本质几乎都是"测试隐式依赖了不确定因素（时间/顺序/共享态/环境）"——消除 flaky 不是加重试次数，而是把隐式依赖变显式（冻结时间、重置状态、禁动画、mock 环境），这也是"可测性=可确定性"的实践定义（呼应既有 CI flaky 题的根因层）。
+
+**来源**：测试 flaky 排查；并发与时序；CI 资源差异；既有"CI 偶发挂"深化

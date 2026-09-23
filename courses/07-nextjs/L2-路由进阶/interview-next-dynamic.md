@@ -1,4 +1,4 @@
-# next-dynamic 面试题（12 题）
+# next-dynamic 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点 Next.js 动态与高级路由高频面经，中文重述。
 
@@ -65,3 +65,19 @@ middleware 在**边缘/请求层**改写（鉴权重定向、AB 分流、i18n �
 **12. 十万级 slug 的商品站，SEO 页与性能如何兼得？给完整方案。**
 **来源**：InfoQ《电商大站的混合渲染架构》
 Top 热门 generateStaticParams 预生成 + ISR 定时翻新；长尾 dynamicParams 现渲 + 边缘缓存 + stale 容忍；参数校验防扫库攻击；sitemap 分片供爬虫；监控 404/500 比率反哺白名单——综合题，覆盖本课全部四节（呼应 next-revalidate、node-deploy-perf 的 CDN 分层）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  Next 15 为什么把 params / searchParams 改成 Promise？这与异步/流式渲染有什么关系？**
+**来源**：Next.js 官方《Upgrading to Next.js 15: async params/searchParams》；Vercel 博客《Partial Prerendering 设计动机》
+渲染本质是"把组件树产出成 HTML 流"。老模型里 params/searchParams 作为同步入参，框架必须在渲染开始前就备好它们（等 URL 解析、等 cookies/headers 就绪），这迫使整棵树的"起点"被这些数据卡住。Promise 化后，"这段渲染需要 params"变成组件内部的 await：在 await 之前，静态外壳可以先 flush 出去、把用到 params 的子树用 Suspense 边界挂起，等 params 就绪再流式补齐。这与 PPR（把静态/动态在同一页拼起来）是一体两面——静态段预渲染、动态段运行时补。工程影响：① 未 await 前不要访问其属性；② 顶层同步解构要改 async；③ 想继续"整页动态"就正常 await、想拿回预渲染收益就把 await 下推到小边界。一句话：Promise 化是"让数据依赖变成可延迟、可局部化"，从而打开流式与部分预渲染的空间。
+
+**14.  并行路由(@) + 拦截路由(.) 组合出"模态详情"这套玩法，背后的 URL 语义权衡是什么？**
+**来源**：掘金《用并行+拦截路由做图片模态》；Next.js 官方文档 Parallel Routes / Intercepting Routes
+目标 UX：列表里点某项→详情以 modal 浮层展示（列表仍留在背景）、但详情又有独立可分享 URL、刷新/后退都正确。实现：详情页既是并行路由@folder 的槽位（覆盖渲染），又是拦截路由(.)photo/[id]（点击时不导航、原地弹出）；直接访问/刷新该 URL 时走全屏详情（full-page）。URL 权衡与坑：① modal 打开时 URL 变（可分享/可后退），但视觉仍是列表——后退应关 modal 而非离开列表，需要正确的关闭姿势（router.back()，不是硬 push 列表）；② 拦截路由只作用于站内 Link 导航、直接输入 URL 不被拦截，要保证"同一组件既能当 modal 又能当 page"的数据取用与默认值一致，避免水合不匹配；③ 并行 slot 的 default.tsx 缺失会白屏；④ 缓存/RSC payload 在多 slot 下更难推理。收益是"一套组件、两种呈现、URL 诚实"；代价是把导航语义复杂化，团队必须建立"关闭=后退、URL 始终是真相"的纪律。
+
+**15.  大规模 SSG + dynamicParams=false 下，"生成时枚举"策略与降级你如何设计？**
+**来源**：InfoQ《十万页预渲染：Next.js 大规模 SSG 实践》；SegmentFault《generateStaticParams 构建超时怎么办》
+痛点：generateStaticParams 需在构建期枚举全部参数（如 10 万商品 id），构建时长/内存爆炸，且新商品不在清单→404。设计：① 分层生成——把"值不值得构建期预生成"按热度切分，热门前 N 千走 generateStaticParams 静态化、长尾不设 false 而允许运行时按需生成 + 首次 SSR 后 ISR 缓存（on-demand）；② 增量再生——发布新内容时调 revalidatePath/revalidate 或用"构建后 webhook 触发单页再生"，不靠全站重构建；③ 用 route segment 的 revalidate + stale-while-revalidate 把 CDN 变"陈旧可容忍 + 后台补"；④ 若坚持纯静态，把集合分页/分片给 generateStaticParams（支持多页枚举）避免一次撑爆；⑤ 兜底——为未预生成参数准备一个"稍后生成/重定向到搜索"的优雅 404 而非白屏。原则：dynamicParams=false 是"收紧攻击面/保证纯静态"的武器，但要用在枚举可控、更新能触达再生的场景，否则宁可 true + on-demand 缓存。

@@ -1,6 +1,6 @@
 # next-i18n 面试题精选
 
-> 共 12 题，覆盖 路线与选型 / 路由与协商 / RSC 翻译分层 / SEO 与工程 四类 + 跨框架对照。
+> 共 15 题，覆盖 路线与选型 / 路由与协商 / RSC 翻译分层 / SEO 与工程 四类 + 跨框架对照。
 
 ---
 
@@ -93,3 +93,25 @@ Vue SPA：vue-i18n 的 `useI18n` + locale messages，路由前缀自己接线（
 收益：目标语言的可读 URL 对 SEO 与分享确实更好；成本：路由映射表成为第三份要维护的"翻译"（页面、字典之外），新增语言/改页面名都动它，重定向图谱翻倍。判断：内容营销站可做且用 next-intl `pathnames` 统一管理；工具/后台类产品保持英文 slug，把复杂度花在刀刃上。**能把成本和收益一起摆出来，比答"能做"值钱**（呼应 next-i18n 第二节）。
 
 **来源**：next-intl — "Localized pathnames"；SEO 实践通识
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Next 内置 i18n 路由（Pages 时代）与 App Router 自建 [locale] 段，能力上各丢了什么、多了什么？
+
+内置方案给：框架级前缀路由与协商（Accept-Language/cookie 的 redirects 三模式）、next/link 自动带 locale、getStaticProps 下按 locale 预生成；丢：与 App Router 完全不兼容（官方明示 unsupported），且策略黑盒（跳转逻辑不可深改）。自建 [locale] 段给：一切都在作者手里——locale 解析进 layout、per-request NextIntlClientProvider、静态生成用 generateStaticParams 按 locale×slug 枚举、middleware 协商可定制（登录态/地区例外）、语言切换保留当前路径；代价要认清：hreflang 要自己声明（layout metadata 遍历全 locale）、无前缀路径的 308/rewrite 策略自管、默认 locale 是否折叠前缀要定规矩（canonical 跟着变）、每个动态路由都要记得 locale 维度枚举否则一半页丢预渲染。结论句：内置=省心的租约，自建=自己扛运营细节——从 Pages 迁 App 时 i18n 通常是重写量最大的一块，要有预期。
+
+**来源**：Next.js 官方 i18n 限制说明；next-intl 文档《App Router 设计动机》
+
+### 14.  翻译工作流（文案抽取、翻译记忆、回种）你会怎么搭？动态内容（CMS 文章）的翻译策略呢？
+
+静态 UI 文案流水线：① 消息目录单一事实源（JSON/YAML 按命名空间分文件，key 语义化非文案哈希）；② 抽取与校验进 CI——扫描 t() 调用防漏翻、"key 存在但某 locale 缺失"直接 fail、插值参数一致性检查（{count} 写错就爆炸）；③ 翻译界面用带翻译记忆的 CAT 平台（Lokalise/Crowdin 类），Git 双向同步、审校后回种仓库；④ 上下文问题（一词多义）靠 key 命名带场景（nav.login vs form.login）而非注释。动态内容按量分级：编辑制 CMS 多语言字段（翻译状态机：草稿→待译→发布）适合核心页；机器翻译兜底长尾 + 人工修正队列回写；最忌"前端运行时调翻译 API"（延迟、费用、不可收录）。发布联动：新文章只发默认语言→后台翻译完→revalidateTag 目标语言列表，hreflang 按"已发布语言集合"动态出——未发布的别声明，等于给爬虫 404。
+
+**来源**：InfoQ《前端 i18n 的工程流水线》；掘金《我们给 Next 站搭的翻译 CI》
+
+### 15.  hreflang 集群、语言前缀、canonical 三者怎么互相咬合才不出"自我竞争/错误地区投喂"？常见破法列三个。
+
+咬合规则：每个语言版页面都① 声明指向"本页各语言版（含自身）"的 hreflang 集群（x-default 给语言选择页/默认语言）；② canonical 指向自己所在语言版的规范 URL（含协议与尾斜杠统一）；③ sitemap 列全部语言 URL、且与集群集合一致——三者是同一份"语言版清单"的三种投影，必须同源生成。常见破法：① 集群互指缺角（A 指 B、B 不指 A）——Google 直接忽略，动态枚举漏了未发布语言就缺角；② canonical 与 hreflang 打架（canonical 都指默认语言）——非默认语言版全部失去收录资格；③ 自动跳转坑——按 IP/Accept-Language 302 到语言版，爬虫和分享链接被劫持进单一语言，正确是"URL 前缀为准 + 跳转只作建议（可关）"；④ 默认语言前缀折叠（/ 与 /en 同内容）双 URL 竞争——定死一种并全站统一。
+
+**来源**：Google 官方 hreflang 指南；SegmentFault《多语言站收录异常排查记》

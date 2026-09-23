@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "以下代码执行后 `a` 的值：\n\n```js\nlet a = 0;\na ??= 5;\n```",
-      "options": ["5", "抛错", "0", "undefined"],
+      "options": [
+        "5",
+        "抛错",
+        "0",
+        "undefined"
+      ],
       "answer": 2,
       "explanation": "`??=` 只在 a 为 **null/undefined** 时才赋值。0 不是 nullish → 保留 0。这正是它与 `||=` 的关键差别。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "`let a = 0; a ||= 5;` 之后 a 等于：",
-      "options": ["5", "0", "undefined", "false"],
+      "options": [
+        "5",
+        "0",
+        "undefined",
+        "false"
+      ],
       "answer": 0,
       "explanation": "`||=` 在 a 为 **falsy** 时赋右值。0 是 falsy → a 变成 5。对比 q1：`??=` 保留 0，`||=` 覆盖 0。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "`'a-b'.replaceAll(/-/, '_')`（正则没带 g）会：",
-      "options": ["只替换第一个", "替换全部", "无变化", "抛 TypeError"],
+      "options": [
+        "只替换第一个",
+        "替换全部",
+        "无变化",
+        "抛 TypeError"
+      ],
       "answer": 3,
       "explanation": "`replaceAll` 传正则时**强制要求 g 标志**，否则抛 `TypeError: String.prototype.replaceAll called with a non-global RegExp argument`。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "`Promise.any([...])` 中所有 promise 都 rejected 时，reject 的原因是：",
-      "options": ["TypeError", "AggregateError（含 errors 数组）", "RangeError", "第一个 reject 的 reason"],
+      "options": [
+        "TypeError",
+        "AggregateError（含 errors 数组）",
+        "RangeError",
+        "第一个 reject 的 reason"
+      ],
       "answer": 1,
       "explanation": "`Promise.any` 只要有一个成功就 resolve；全失败时抛 **AggregateError**，其 `.errors` 收集了所有 reject 原因。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "下列哪个数字字面量是**非法**的？",
-      "options": ["1__0", "1_000", "0xFF_00", "1_000.5"],
+      "options": [
+        "1__0",
+        "1_000",
+        "0xFF_00",
+        "1_000.5"
+      ],
       "answer": 0,
       "explanation": "数字分隔符不能连续出现两个下划线（`1__0` 非法），也不能在首、尾或紧邻小数点处。其余都合法。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "`new WeakRef(obj).deref()` 的返回值是：",
-      "options": ["永远返回原对象", "返回 true/false", "原对象，或已被回收时返回 undefined", "总是抛错"],
+      "options": [
+        "永远返回原对象",
+        "返回 true/false",
+        "原对象，或已被回收时返回 undefined",
+        "总是抛错"
+      ],
       "answer": 2,
       "explanation": "`deref()` 在目标**未被 GC 回收**时返回对象，**已回收**时返回 `undefined`——所以每次用前都要判空。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "关于数字分隔符 `const n = 1_000;`，正确的是：",
-      "options": ["n 是字符串", "n 与普通 1000 完全相同的 number", "会有精度损失", "运行时需 polyfill"],
+      "options": [
+        "n 是字符串",
+        "n 与普通 1000 完全相同的 number",
+        "会有精度损失",
+        "运行时需 polyfill"
+      ],
       "answer": 1,
       "explanation": "下划线只是**字面量书写语法**，解析后与 `1000` 完全等价，`typeof n === 'number'`。Babel/引擎直接忽略下划线，零运行时成本。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`Promise.any(ps)` 全部 reject 时抛出的错误是：",
+      "options": [
+        "第一个 rejection 的原错误",
+        "AggregateError（`.errors` 收集全部原因）",
+        "TypeError",
+        "最后一个错误"
+      ],
+      "answer": 1,
+      "explanation": "any 的全败语义用 AggregateError 聚合，`err.errors` 是数组；配合 error.cause（ES2022）链路化排查是标准姿势。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`let a = 0; a &&= 5;` 之后 a 的值与右侧求值情况：",
+      "options": [
+        "5，右值被求值",
+        "0，右值未被求值（短路）",
+        "undefined",
+        "抛错"
+      ],
+      "answer": 1,
+      "explanation": "逻辑赋值 = 「短路 + 只在需要时赋值」：`a &&= f()` 里 f 在 a 假值时根本不执行——副作用别藏在 &&= 右边当 if 用，可读性极差。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`new WeakRef(obj).deref()` 何时返回 undefined？",
+      "options": [
+        "obj 属性被删光时",
+        "obj 已被 GC 回收后",
+        "调用两次 deref",
+        "永不为 undefined"
+      ],
+      "answer": 1,
+      "explanation": "deref() 是 WeakRef 唯一取值口：对象还活着给你引用，已被回收给 undefined——所有用法的模板就是 `const o = ref.deref(); if (o) ...`。"
     }
   ]
 }

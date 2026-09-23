@@ -1,6 +1,6 @@
 # exp-static 面试题精选
 
-> 共 12 题，覆盖 **express.static / HTTP缓存分层 / ETag / Content Hash / CDN / 缓存刷新** 六类。
+> 共 15 题，覆盖 **express.static / HTTP缓存分层 / ETag / Content Hash / CDN / 缓存刷新** 六类。
 
 ---
 
@@ -99,3 +99,25 @@ SW 可编程缓存（Workbox 预缓存 app shell、运行时缓存 API）。风�
 由 mime 库根据**扩展名**推断（`.js`→`text/javascript`、`.html`→`text/html`）。扩展名缺失/错误 → 回退 `application/octet-stream` → 浏览器当下载处理。中文乱码通常是缺 charset（应 `text/html; charset=utf-8`）→ 用 setHeaders 显式设置，或确保文件本身 UTF-8。可用 `res.set('Content-Type', ...)` 覆盖。
 
 **来源**：express.static / send — "Content-Type / mime"; MDN — "MIME types / charset"; serve-static — "setHeaders"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  用 express.static 对外 serve 文件，完整过一遍它的安全配置面与每个选项的攻击场景。
+
+选项逐项过：① root/index——目录必须绝对路径且来自代码常量，绝不能拼 req 输入（path.join 拼接外部输入=路径穿越经典面，serve-static 自身防穿越但运维改造成自定义 fs 后就防不住）；② dotfiles 默认 ignore，allow 的动机（serve .well-known 证书校验目录）要用具体规则而不是全局开；③ index 列表开启=目录枚举（上传目录开了等于公开文件清单，配合可猜文件名直接拖库备份）；④ follow symlink——上传目录里一个软链指向 / 就是 LFI 跳板（历史 CVE 场景），永远别对用户上传目录开；⑤ extensions 数组（自动补 .html/.json）可能让同一路径命中意外文件类型。更深一层：Content-Type 由扩展名推断，可上传文件名若被 serve，攻击者传 .html 获得"你域名下的同源页面"（存储型 XSS 借你的域执行）——用户内容永远独立域 + X-Content-Type-Options: nosniff。审计动作：CI 里用 curl 遍历探测 .git/config、.env、.DS_Store、备份 zip（编辑器留下的 index.js~ 是最常见泄露源），把"静态根清单"当 API 一样做变更审查。收口：express.static 五分钟能挂上，它的攻击面审查要一小时——多数人把顺序过反了。
+
+**来源**：serve-static 官方选项文档；OWASP 文件包含（LFI） Cheat Sheet；掘金《一个 dotfiles: allow 拖垮的营销站》
+
+### 14.  一个日活百万的站点，静态资源从构建到用户浏览器，完整讲一遍你的分发与缓存架构。
+
+链路分层：构建层（资产 hash 命名+manifest 产物）→ 分发层（对象存储单一源 + CDN 多 vendor 或主备）→ 边缘缓存（按文件类型分 Cache-Control 模板：hash 资产 immutable 一年、html 协商/短缓存、接口不缓存）→ 浏览器缓存。发版原子性：新 html 引用的新资产必须先全部上传成功再切 html（"资产先于入口"的顺序，反过来=用户拿到新入口配 404 资产的白屏窗口）；旧版本资产保留一个缓存过期周期再清理（正在浏览旧页面的用户还要用它们）。CDN 治理：命中率监控（miss 直穿源站=成本与延迟双杀）、URL 规范统一（尾斜杠/大小写/参数排序造 key 分裂）、刷新策略按"路径刷新兜底、版本化免刷新"设计（hash 体系本不该依赖刷新，需要刷新的是错误配置了弱缓存的资产——这是配置审计信号）。源站防护：CDN 回源限定网段/签名回源，否则攻击者绕 CDN 直打源站等于没上 CDN。多实例角度：静态文件绝不在应用 pod/服务器磁盘上留"唯一副本"，对象存储是唯一事实源，应用只发 API——这条做到，ETag 漂移、发布不一致、扩容慢三类问题一次清零。
+
+**来源**：MDN Caching；CloudFront/S3 静态托管最佳实践；InfoQ《一次发版引发的白屏复盘》
+
+### 15.  容器化/K8s 部署 Express 时，静态资源还放在镜像里吗？给出版本化的存储方案。
+
+镜像内静态的隐性成本：镜像膨胀（每次发版全量资产随镜像走 registry→node 拉取链路，构建与调度变慢）、多副本各存一份内存/磁盘浪费、CDN 刷新与镜像发布两套系统难原子对齐。方案对比：① 镜像保留（小站点、无 CDN、求简单）——可接受但要 build 阶段裁剪（只打包 public 产物，源码与 devDeps 出镜像，多阶段构建）；② 对象存储 + CDN（主流）——CI 独立上传步骤（内容寻址天然幂等），应用镜像变纯计算；③ 独立静态服务 pod——多一个要运维的服务，收益只在"不能出公网"的内网环境。进阶决策点：前后端是否同镜像同版本——SPA + API 同域部署时，html 入口留在应用（sendFile）还是也上 CDN（带源站 fallback）取决于灰度系统：入口走 CDN 则发版与灰度全在 CDN 配置层，应用只做 API；入口在应用则 Nginx/Ingress 要能按版本路由 html 请求。K8s 细节：Pod 里不挂 PV 存静态（节点漂移/多副本分叉），initContainer 拉资产是反模式（拉取成为启动依赖）。收口句："计算无状态、存储上服务"在静态资源上的投影就是：文件的家是对象存储，镜像的家是计算，混住的家庭都难打扫。
+
+**来源**：12-Factor 构建层（Backing Services）；Knative/S3 静态托管实践；SegmentFault《我们的镜像从 80MB 涨到 400MB》

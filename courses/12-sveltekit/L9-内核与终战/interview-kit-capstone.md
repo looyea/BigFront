@@ -1,6 +1,6 @@
 # kit-capstone 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (D) 给一个全栈 Kit 毕业项目做上线前评审，你的 checklist 分几块？
 **来源**：生产就绪评审总纲题的转述。
@@ -61,3 +61,25 @@ Kit 的 `+server.js` 端点**没有任何自动缓存**——响应头你说了�
 **来源**：发布门禁取舍题的转述。
 
 ① **无密钥泄露**：扫 bundle/HTML 确认 `$env/*/private`、`$lib/server` 未被客户端引用、load 不返回机密——安全不可回滚；② **鉴权走服务端**：敏感页在 `.server` load 二次守卫，堵住越权读数据——直接对应真实漏洞；③ **preview 下 SSR/水合无致命错误**（resolve 外不抛、hydration 无非确定性值、build 产物 Lighthouse 达线）——保证不是"dev 正常 prod 白屏"。其余可迭代，这三条一崩就是事故。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  给全栈 Kit 毕业项目定三条上线前必过硬门禁，选什么、为什么？ 
+
+ 安全扫描（secretlint+依赖审计+产物 grep 密钥）、生产 build 的 e2e 金路径（含禁 JS 回退）、性能预算（Lighthouse CI 与包体积阈值）；三条分别兜住资损、功能回归与体验劣化，其余都可迭代。 
+
+**来源**： https://svelte.dev/docs/kit/faq#deployment
+
+### 14.  生产一批 500，5 分钟内定位『哪条链路、哪个变更』的应急流程？ 
+
+ Sentry 聚合按 release 分组锁定引入版本→按 route.id 分布缩小路由→看该窗口 load/端点的慢依赖→无灰度则回滚发布；前提是把 route/version/release 三标签在两端打全。 
+
+**来源**： https://svelte.dev/docs/kit/errors 
+
+### 15.  复盘整个 Kit 学习链路：哪些 11 包手搓能力被框架接管，你还保留了什么判断力？ 
+
+ 路由表、SSR 管线、表单端点、预渲染被接管；保留对渲染策略选型（prerender/ssr/csr）、数据分层（server/universal load）、错误与鉴权边界的架构判断——框架替你写胶水，不替你定边界。 
+
+**来源**： https://svelte.dev/docs/kit/faq 

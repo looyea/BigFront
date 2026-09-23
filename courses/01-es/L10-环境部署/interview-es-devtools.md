@@ -1,6 +1,6 @@
 # es-devtools 面试题精选
 
-> 共 12 题，覆盖 **断点技巧 / Network 分析 / Performance 火焰图 / 内存泄漏 / Core Web Vitals / 实用功能** 六类。来源仅列文章或规范标题。
+> 共 15 题，覆盖 **断点技巧 / Network 分析 / Performance 火焰图 / 内存泄漏 / Core Web Vitals / 实用功能** 六类。来源仅列文章或规范标题。
 
 ---
 
@@ -105,3 +105,25 @@ Overrides（Persistence → Overrides）把**线上资源映射到本地文件�
 - 组合技：`console.log('%cSuccess!', 'color:green;font-weight:bold')` 加样式做高亮分界。
 
 **来源**：MDN — "console.table()" / "console.groupCollapsed()"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 一次完整的内存泄漏排查流程怎么走？常见泄漏源有哪些？
+
+流程：Memory 面板三连快照（操作前/操作后/GC 后），对比 **Objects allocated between #1 和 #2 且 Detached 数量持续增长** 的对象 → 看 Retainers 定位持有者；或 Allocation on timeline 边操作边录制，红柱即泄漏批次。常见源 Top5：未清理的 setInterval/addEventListener（组件卸载没 remove）、console.log 持有大对象引用（DevTools 开着就不放）、闭包捕获整个响应体、 detached DOM 被 JS 引用、全局缓存无上限。修复侧：AbortController 一把清监听、WeakMap/WeakRef 缓存、LRU 上限。
+
+**来源**：Chrome DevTools《Memory FAQ》三种快照法；web.dev《Find and fix memory leaks》系列。
+
+### 14. 线上生产环境的报错堆栈怎么和本地源码对上？Source Map 的部署姿势？
+
+生产 JS 用 `sourcemap` 生成但不公开：`//# sourceMappingURL` 指向内部服务或直接上传 Sentry/Bugsnag（secret source map）——用户拿不到源码，排障端还原堆栈。DevTools 侧：Sources → 手动 add source map 也能事后解析；`Blackbox script` 把第三方库从调试栈里隐藏，单步不陷进去。反例警告：公网暴露完整 source map ≈ 开源你的构建产物，敏感项目至少做「上传不发布」。webpack `hidden-source-map` / vite `build.sourcemap: "hidden"` 就是为此。
+
+**来源**：Sentry docs《Secret Source Maps》；webpack devtool 选项 hidden-source-map 说明。
+
+### 15. 移动端/内网页面怎么调试？讲讲远程调试工具链。
+
+安卓 Chrome：USB + `chrome://inspect`（adb forward，DevTools 直连页面进程，Console/Network/Performance 全套）；iOS：Safari 开发菜单 + Web Inspector（真机需连 Mac；模拟器免）。WebView 内嵌页：App 开 `setWebContentsDebuggingEnabled(true)`。无 USB 场景：eruda/vConsole 注入页内面板、或用 remode/whistle 类代理抓网络+注入。HTTPS 内网 IP 调试记得证书与 secure context（剪贴板/SW 需要）。跨端小程序：各厂 DevTools 协议（CDP 派生）。
+
+**来源**：Chrome DevTools 远程调试官方文档；eruda/vConsole README。

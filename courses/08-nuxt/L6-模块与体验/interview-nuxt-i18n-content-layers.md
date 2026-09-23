@@ -1,6 +1,6 @@
 # nuxt-i18n-content-layers 面试题精选
 
-> 共 12 题，覆盖 i18n 模块 / Content 内容层 / Layers 继承体系 / 架构对照 四类。
+> 共 15 题，覆盖 i18n 模块 / Content 内容层 / Layers 继承体系 / 架构对照 四类。
 
 ---
 
@@ -89,3 +89,25 @@ i18n：Next 要 middleware+[locale] 段+next-intl 手工接线；Nuxt 一个 @nu
 会——自动导入+模块+层链让"这个组件哪来的"变难答。防御清单：①层数预算（≤3 层，超了改拆包）；②模块准入：读 changelog 与 issue 再进 nuxt.config；③`nuxt info`/`.nuxt/` 生成物进新人培训，让"魔法有说明书"；④关键路径（鉴权/计费页）优先显式 import（nuxt-auto-imports 讲过的"显式导入正当场景"在此复用）（呼应 nuxt-auto-imports、nuxt-directory）。
 
 **来源**：Nuxt — "Auto-imports 可维护性讨论"；工程实践通识
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  多语言站的内容工作流：翻译文案、URL slug、图片本地化三件事分别在哪层解决？
+
+三件事三种落点：① UI 文案——i18n 语言包（键值对，构建期进包或 lazy），翻译流程走"键为真相、译文进翻译平台/TMS 再同步回仓库"，禁止在组件里硬编码可翻译字符串（扫描规则配进 lint）；② 内容文案与 slug——结构化内容进 CMS/content collections 按 locale 建模（一篇文档多语言版共享 id、各 locale 有自己的 slug 字段），localized route 的 paths 映射引用内容字段——slug 是内容不是 UI，别塞语言包；③ 图片本地化——按 locale 目录/字段指向不同资源（banner 带中文文字的图必须独立版本），NuxtImg 的 src 走内容字段解析。协同点：hreflang 与语言切换器的 URL 来源要同一套解析（都从 i18n 模块的 localePath 出），两套实现必然漂移；预览环境按 locale 建（编辑只看到自己语言的渲染）。反模式警告：Google 翻译挂件冒充多语言=收录与体验双输，机器翻译版要么 noindex 要么不进索引地图。
+
+**来源**：@nuxtjs/i18n 文档（localePath/localizedRoute）；SegmentFault《slug 本地化的三种存储模型》
+
+### 14.  Git 内容仓（@nuxt/content）什么时候该换成 Headless CMS？换与不换的成本各在哪？
+
+不换的理由（Content 赢的面）：内容与代码同仓同 PR 流（审核=git review）、类型化集合给编辑即时校验反馈、无外部服务依赖（成本与可用性）、预览=分支部署天然、版本回滚=git revert——开发者主导、编辑≤几人、发布节奏可排期的团队，Git 方案五年不过时。该换的信号（每条都是 Git 模型救不了的）：编辑自助发布不能等构建（CMS 的发布即生效 vs Content 的 push 触发重部署）、非技术编辑要所见即所得与角色权限、内容被多端复用（App/小程序吃同一内容 API）、结构化关系与多语言工作流（翻译状态机）、内容量到需要检索/ CDN 级缓存。换的成本清单：内容建模与迁移脚本、预览环境与生产双链路、缓存失效设计（webhook 触发 ISR revalidate 而非重建）、供应商锁定与导出条款、"内容 bug 不再走 PR"的质量流程重建（校验从 CI 挪进 CMS schema）。中间态最诚实：代码仓放结构化长文、营销页/多端内容进 CMS——按"编辑自主度需求"分界而不是站队技术。
+
+**来源**：@nuxt/content 官方与 Headless CMS 生态对比；InfoQ《内容平台化临界点》
+
+### 15.  Layer 机制做多品牌产品底座（设计系统/合规壳），升级与差异化的治理怎么设计？
+
+底座设计：平台 Layer 提供 app.vue 壳、鉴权/埋点/错误页等"合规必须件"与组件 tokens；品牌项目 extends 平台层，差异走三条合法通道——覆盖（品牌目录下同名组件/配置覆写）、扩展点（平台层暴露插槽与配置项而非让人 fork 文件）、env/runtimeConfig（值差异不进代码）。升级治理：平台层版本化发布（npm 私包语义化，禁 main 漂移引用），品牌项目 lockfile 锁版本、升级按依赖升级流程（变更日志+视觉回归 e2e）；平台层内部"待迁移清单"公开（废弃 API 双活一个 minor 周期），逼升级的代价平台层自己付。腐化防线：品牌层里 grep "覆盖了多少平台文件"做健康度报表，覆盖数失控=平台层的扩展点设计失败，要回头补机制而不是骂业务团队。边界重申（呼应 modules 题）：品牌间是"同一应用的皮肤差异"→ Layer；是"不同应用共享能力"→ 模块+npm 库，混用会让"改平台动所有产品"的半径失控。
+
+**来源**：Nuxt 官方 layers 文档；掘金《白标产品线的层架构一年实践》

@@ -1,6 +1,6 @@
 # node-async-errors 面试题精选
 
-> 共 12 题，覆盖 **try/catch 与调用栈 / error-first 与 Promise 化 / Promise 链与并行 / 进程级兜底 / Web 框架错误 / 错误设计** 六类。
+> 共 15 题，覆盖 **try/catch 与调用栈 / error-first 与 Promise 化 / Promise 链与并行 / 进程级兜底 / Web 框架错误 / 错误设计** 六类。
 
 ---
 
@@ -97,3 +97,25 @@
 自内向外：**① 领域层**抛类型化的自定义 Error（带 `code`/`statusCode`/`cause`，别抛字符串）；**② 业务/编排层**用 async/await + try/catch，能处理就地处理、不能处理则包 `cause` 往上抛；**③ 边界层**（HTTP）Express 错误中间件统一收口：分类、记 requestId 日志、脱敏响应（第 10 题）；**④ 进程层**注册 `unhandledRejection`+`uncaughtException` 作为**最后防线**：记录 + flush + 退出，交给 **pm2/systemd/K8s 重启**（crash-only，呼应 node-deploy-perf）；**⑤ 可观测**：错误上报（Sentry）+ loop lag/崩溃次数指标。铁律：错误**要么被处理、要么被抛出**，绝不"只 console.log 一下就咽掉"，也不在崩溃监听器里假装一切正常（呼应 node-async-errors 全篇）。
 
 **来源**：Node.js — "Error handling guidance"; 社区 — "robust error handling in Node services / crash-only"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 长驻进程（非 CLI）里 uncaughtException 监听器的正确姿势是什么？为什么 domain 死了、AsyncLocalStorage 接棒？
+
+长驻进程硬原则：uncaughtException 里只做「记录 + 触发优雅关闭」，不做恢复继续跑——栈已解卷、锁可能未释放、句柄状态不一致，「catch 了继续服务」= 制造脏状态僵尸（Node 官方原话：handler 里唯一的合理动作是同步写日志后 process.exit）。domain 之死：它靠 hook EventEmitter 上下文做「就近吞错」，语义黑洞（谁在处理错误不明）、性能差、鼓励吞错；AsyncLocalStorage 只做「上下文传播」（请求级 traceId、用户信息注入日志），不碰错误流向——责任清晰。架构答案：错误沿 async 边界显式冒泡到统一 handler（本关分层处理题），进程级只兜「真没接住的」，兜住即重启（配合 cluster/K8s 自愈）。
+
+**来源**：Node 官方 process 文档对 uncaughtException「last resort」警告原文；domain 模块 deprecated 说明与 AsyncLocalStorage 提案动机。
+
+### 14. 异步代码 throw 没有天然同步栈可捕，Node 有哪些手段让「错误现场」可见？
+
+层次：① V8 异步栈轨迹（--async-stack-traces 时代产物，现默认）尽力跨 promise/回调串「async frames」，inspect 里看到「async frames above」；② AsyncLocalStorage 在每个请求边界建上下文，错误日志带 traceId 横向串联多行；③ 包装术：runInAsyncScope/手工 try 包回调库入口（EventEmitter 监听器里 throw 是逃逸的——emit 外层 catch 看运气，本关 events 题呼应）；④ 结构化：Error.cause 保存「我因谁失败」+ AggregateError 保存批量，日志侧渲染整棵树；⑤ 兜底：Sentry/cls 中间件把 ALS traceId 注入所有出站头（分布式续链）。面试表达：「错误现场=调用链可见 + 因果链可见 + 请求链可见」三链齐全，只背 try/catch 是小学生。
+
+**来源**：V8 bug tracker/Node 对 async stack traces 的支持说明；Sentry Node SDK ALS 集成文档。
+
+### 15. 设计一个 Node 服务的错误分类与处理矩阵（从 fs/网络/校验/三方到进程级）。
+
+先分类再定策略：① **预期业务错误**（400 校验、404 资源不存在、余额不足）：不告警不打 error 级日志，带 code/status 的 AppError 子类，冒泡到全局 handler 转响应；② **依赖瞬时错误**（ENOENT 之外网络超时/ECONNRESET/限流）：可重试——带退避与次数（本关 allSettled 相邻），幂等才重试；③ **依赖永久错误**（EACCES/配置缺失/证书过期）：fail fast 启动期即炸优于运行期炸；④ **不变量违例**（断言失败、undefined.foo）：bug，uncaughtException 记录+退出重启 + 告警必须响；⑤ **外部输入异常**（JSON parse 失败）：400 边界拒收。横切：每请求 traceId、错误码表进文档、用户可见消息与内部 cause 分离（本关「不能把 err.message 裸吐给客户端」题的展开）、告警按类别分级（②看趋势、④必响铃）。矩阵落 wiki，新人 oncall 直接用。
+
+**来源**：Google SRE Book《Handling overloads / 错误分类》思想移植；Node 官方 Error 子类与 error.code 约定文档。

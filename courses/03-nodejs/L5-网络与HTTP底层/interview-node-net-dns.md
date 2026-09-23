@@ -1,6 +1,6 @@
 # node-net-dns 面试题精选
 
-> 共 12 题，覆盖 **TCP 语义 / socket 与流 / 粘包分帧 / UDP / DNS 解析 / 事件循环路径 / 实战与调优** 七类。
+> 共 15 题，覆盖 **TCP 语义 / socket 与流 / 粘包分帧 / UDP / DNS 解析 / 事件循环路径 / 实战与调优** 七类。
 
 ---
 
@@ -108,3 +108,25 @@ HTTP 用**混合分帧**：① 请求行 + 头部各以 CRLF 分隔、头部以*
 直接下 `net`/`dgram` 的场景：① **自定义协议/私有 TCP 服务**（数据库代理、消息队列客户端、设备长连接、游戏服务器）——需要自己在字节流上分帧（第 4 题）；② **实现协议本身**（写一个 HTTP/SMTP/WebSocket 库、TLS 握手，呼应 node-https-tls 底层）；③ **UDP 专用**：DNS、组播/广播发现、实时媒体、遥测（第 6 题）；④ **Unix domain socket** 做本机 IPC（比 TCP 快、无需端口，配合 `child_process`，呼应 node-child-process）。日常"调 REST API/发网页请求"用 `http`/`fetch` 即可，别重造轮子——但要懂它们底下就是本关这些原语（呼应 node-http、09-express）。
 
 **来源**：Node.js — "net / dgram use cases"; 社区 — "when to use raw TCP vs HTTP"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. dgram socket 的 "connected"（connect()）与 "unconnected" 模式差别？何时必须连？
+
+unconnected：send(msg, port, host) 每包独立路由、收所有对端来的包（服务器姿势）；connected：底层 UDP 绑定固定对端（Linux TCP_FASTOPEN 类比 connect 后只能收发该对端，且**ICMP 端口不可达会冒成 ECONNREFUSED error 事件**——unconnected 静默丢包，connected 能感知「没人监听」）。必须连的理由：① 客户端要错误反馈与单对端语义；② 性能（免每包路由查找）；③ 防 spoof 收包混扰。另注意 connected 后 send 再传地址会报错、MTU 与分片行为不变（应用层仍要限单包 <1472 或走 IP 分片赌运气——本关分帧题在 UDP 侧的镜像）。
+
+**来源**：Node dgram 文档 socket.connect 段（connected datagram socket 与错误报告）；RFC 768 端口不可达行为。
+
+### 14. dns.lookup 与 dns.resolve 除了线程池/事件循环之外，语义差异还有哪些坑？
+
+数据源：lookup 走 OS getaddrinfo（吃 /etc/hosts、mDNS、NSS、VPN 分流、IPv6 优先与 Happy Eyeballs）；resolve 直接问配置的 DNS 服务器（**绕过 hosts 与本地解析器**——「hosts 里改了不生效」「容器内 resolve 与 lookup 结果不一致」的根源）。返回形状：resolve 永远是字符串数组、lookup 按 verbatim/顺序（系统可能重排）；SRV/CNAME 只有 resolve 系认。坑：① 连接池按 IP 建连时 resolve 的轮转结果让「每次连不同后端」（客户端负载均衡副作用）；② lookup 结果可能被 Node 内部缓存路径复用而 resolve 无缓存——压测「解析耗时差异」；③ 容器排障先确定「谁在解析」（nsswitch vs CoreDNS）。默认 net/http 全走 lookup——所以改 hosts 能挡域名、清 DNS 缓存无效。
+
+**来源**：Node dns 文档 lookup/resolve 对比与 verbatim 选项说明；getaddrinfo(3) man 与 NSS 配置说明。
+
+### 15. 用 net 写一个带鉴权的简单 TCP 服务，列出你会做的安全与健壮措施。
+
+准入：listen 绑 127.0.0.1/内网口（本关 0.0.0.0 题实装）、首包鉴权（token/HMAC+时间戳防重放）超时即断；缓冲纪律：读侧「声明长度≤N」+ 帧计数上限（本关分帧 DoS 题）；生命周期：socket.setTimeout 空闲踢、server.maxConnections、连接级错误全捕获 destroy（漏 error=崩进程）；数据面：write 背压（drain 前不堆）、半关闭 end/destroy 分清；可观测：连接数/字节数/慢客户端（send buffer 增长）指标；协议防御：未知帧类型直接断（strict parsing）、禁止把对端数据当指令 eval；部署：进程内限流（每 IP 连接数）、外部 TLS 终结或 starttls；测试：慢速客户端（slowloris 式）与半帧注入用例——「自己实现协议」的代价是把 TCP 帮你挡过的攻击面全过一遍（本关何时该用 net 题的答：除非自定义协议/代理，否则 HTTP/gRPC/现成消息层优先）。
+
+**来源**：Node net/dgram 文档安全注意事项；OWASP Socket 层 DoS（slowloris）防御指南。

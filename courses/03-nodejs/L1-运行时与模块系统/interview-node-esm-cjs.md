@@ -1,6 +1,6 @@
 # node-esm-cjs 面试题精选
 
-> 共 12 题，覆盖 **身份判定 / 静态结构与动态 import / live binding / 互操作与混用 / 顶层 await / 选型与迁移** 六类。
+> 共 15 题，覆盖 **身份判定 / 静态结构与动态 import / live binding / 互操作与混用 / 顶层 await / 选型与迁移** 六类。
 
 ---
 
@@ -134,3 +134,25 @@ main();
 统一叙事是 **ESM 是语言级标准**（TC39 定义），浏览器 `<script type=module>` 与 Node 用**同一套 import/export 语义**——这是方向，长期一切收敛到 ESM。CJS 被保留不是"设计混乱"，而是**兼容性现实**：十几年积累的 `require` 代码与 `module.exports` 生态是 Node 繁荣的根基，Node 奉行的铁律是"**永不让现有代码失效**"（backwards compatibility），所以 CJS 会长期存在、且与 ESM 互操作。理性心态：**新写走 ESM，存量按成本渐进，混用吃透互操作矩阵**（呼应 node-esm-cjs 第七节、node-modules 第 12 题、ts-modules）。
 
 **来源**：Node.js — "Modules: ESM and CommonJS"; TC39 — "ES Modules"; 社区 — "modules without chaos"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. ERR_REQUIRE_ESM 的成因与至少三种实战解法？
+
+成因：require 是同步 API，ESM 求值可能含顶层 await/异步链接阶段——同步语义无法安全嵌入，Node 直接拒绝。解法分级：① 升级依赖等其提供 CJS 出口（多数「纯 ESM 化」包如 chalk@5/got@12 是主动断的，选版本前先查）；② createRequire(import.meta.url) 把 require 带回 ESM 侧（只救「我是 ESM 需要吃 CJS」方向）；③ 动态 import() + await（顶层或懒加载），把同步调用改异步链——框架钩子不允许 async 时用「启动期预 import、运行期同步取」缓存法；④ Node 22.12+/23 实验性 require(esm)（无 TLA 的 ESM 可被 require，最终终局，看版本铺开）。预防：发布方双格式（tsup/双 exports），纯 ESM 是激进选项不是默认选项。
+
+**来源**：Node 官方《CommonJS and ECMAScript modules》互操作指南；Node 22.12 require(esm) changelog（Geoffrey Booth 系列 PR）。
+
+### 14. 顶层 await 的「传染性」与死锁风险具体指什么？怎么约束使用？
+
+传染：模块含 TLA → 该模块的**父导入链全部要 async 化**才能等它（require 彻底无法消费 ESM 主因之一）。死锁：循环依赖 A↔B 且任一含 TLA → 链接阶段直接报 "Detected cycle while resolving ... async dependency"（CJS 循环只拿半成品，ESM 是硬错）。风险还在于「隐式阻塞」：入口模块 await DB 连接前，其副作用对所有下游就绪时刻都未定义（框架按 import 顺序初始化时尤其阴间）。纪律：① 只允许**入口/脚本级**用 TLA（构建工具靠它做异步配置，vite.config.ts 即标准案例）；② 库代码禁用（ts/ESLint no-async-top-level 类规则或文档规约）；③ 库初始化用显式 `await init()` 幂等函数，把就绪语义交给调用方。
+
+**来源**：Node 官方 ESM 文档「Top-level await & cycles」；TC39 TLA 规范动机段（Vite 配置案例）
+
+### 15. 把大型 CJS 项目渐进迁到 ESM，给出规划与先动哪些文件？
+
+路线：① 盘点：`node --experimental-detect-module`/madge 看依赖图与动态 require 热区（变量拼路径、mock 依赖解析的点位=迁移成本表）；② 从**叶子**（无被依赖的工具层）改名 .mjs/加 type:module，保持旧文件走 .cjs——两制共存靠扩展名裁决而非 package 字段一刀切；③ 消灭 require 热区：动态 require 换 import()（接受 async 扩散）、require.resolve 换 import.meta.resolve；④ 依赖面：纯 ESM 依赖倒逼入口先迁；测试/构建链（jest ESM 支持、ts config module 组合）先验证再放量；⑤ 出口：全部落地后统一 type:module、回滚 .cjs 白名单。里程碑：每 PR 可双向运行（coexist），回滚=改回扩展名；「迁完」定义：.cjs 与 require 清零。反模式：第一天全仓 rename——动态 require 全断、CI 雪崩。
+
+**来源**：Node 官方《Packaging: ESM》迁移指南；sindresorhus「ESM only packages」立场与 Counterpoint 争论合集。

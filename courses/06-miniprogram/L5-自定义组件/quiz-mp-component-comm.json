@@ -14,7 +14,7 @@
       ],
       "answer": 2,
       "explanation": "自定义事件用 bind:事件名（呼应 mp-component-comm 第二节）。"
-      },
+    },
     {
       "id": "q2",
       "type": "single",
@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "与 React 受控组件同义，务必与内部态方案二选一（呼应 mp-component-comm 第一节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 子组件 this.triggerEvent('pay', { id: 1 }) 后，父页面在组件标签上接收的正确写法是？",
+      "options": [
+        "onPay={...}",
+        "bind:pay=\"onParentPay\"（或 bindpay），事件名 pay 前加 bind:，处理函数写在组件/页面方法里，载荷从 e.detail 取",
+        "@pay",
+        "v-on:pay"
+      ],
+      "answer": 1,
+      "explanation": "小程序自定义事件用 bind:事件名 / catch:事件名 绑定，e.detail 即 triggerEvent 的第二个参数、e.type 是事件名。bind 不阻止、catch 可阻止自定义事件冒泡（配合 composed）。别写成 Vue 的 @ 或 React 的 onXxx。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " triggerEvent 默认触发的事件，能否自动\"冒泡穿过组件边界\"到达祖先页面？",
+      "options": [
+        "默认可穿透任意层",
+        "默认只在直接父组件触发、不跨多级冒泡；要让祖先也能收到需 triggerEvent 第三参 { composed: true } 使其跨越组件边界向上冒泡",
+        "永远收不到",
+        "要用全局事件才行"
+      ],
+      "answer": 1,
+      "explanation": "自定义事件默认\"就近父级\"，这是刻意隔离、避免深层组件树里事件乱窜。composed:true 才跨组件边界继续冒泡（类似 DOM composed 事件）。设计通用组件时默认不 composed，只有明确想让上层统一接管（如埋点、行点击委托）才开。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 组件用 <slot/> 时，插槽里那段 WXML 的数据作用域属于谁？",
+      "options": [
+        "属于组件内部（能用子组件 data）",
+        "属于父级作用域——slot 内容是父写的、用的是父的 data/方法，组件只决定\"插在哪、何时插\"",
+        "两者共享",
+        "取决于组件是否开 addGlobalClass"
+      ],
+      "answer": 1,
+      "explanation": "slot = 父写内容、子放位置：编译期决定内容、运行期决定落点。所以插槽里引用的是父数据，样式也主要由父（页面）管（除非组件用 externalClasses 定制插槽容器）。小程序无\"作用域插槽\"，要让子数据进父内容只能反过来——子把需要的文本/结构作为 properties 由父以字符串传入，或父通过数据驱动。"
     }
   ]
 }

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "关于 Node.js 的本质，最准确的说法是？",
       "options": [
-        "它是 Chrome 浏览器的服务端版本",
         "它是 V8 + libuv + 内置模块构成的 JS 运行时，没有 DOM/window",
+        "它是 Chrome 浏览器的服务端版本",
         "它是一种新的编程语言",
         "它必须依赖浏览器才能执行 JS"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Node = V8 执行 JS + libuv 提供异步 I/O/事件循环 + 内置模块；它是浏览器之外的 JS 运行时，没有 window/document。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "`node app.js foo bar` 时，process.argv 的内容是？",
       "options": [
         "['foo', 'bar']",
-        "[node路径, app.js路径, 'foo', 'bar']",
         "['app.js', 'foo', 'bar']",
+        "[node路径, app.js路径, 'foo', 'bar']",
         "{'foo':'bar'}"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "argv 前两项固定是 node 可执行路径与脚本路径，用户参数从索引 2 开始，所以常写 process.argv.slice(2)。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "process.cwd() 与 __dirname 的区别是？",
       "options": [
         "两者完全等价",
-        "cwd 是运行命令时所在目录，__dirname 是当前脚本文件所在目录",
         "__dirname 是全局对象属性，任何模块都能改",
-        "cwd 只在 ESM 存在"
+        "cwd 只在 ESM 存在",
+        "cwd 是运行命令时所在目录，__dirname 是当前脚本文件所在目录"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "cwd 取决于“你在哪个目录敲命令”，__dirname 取决于脚本文件本身位置；读写项目内文件应基于 __dirname 拼路径。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "CPU 密集的同步长计算会阻塞整个事件循环，拖垮所有并发请求；应交给 worker_threads/cluster 或外部服务。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "关于 NODE_PATH 与环境变量对模块查找的作用，正确的有：",
+      "options": [
+        "NODE_PATH 是官方推荐的依赖组织方式",
+        "require 查找顺序：node_modules 逐级上溯；NODE_PATH 仅作历史兜底且已不推荐（依赖应显式声明）",
+        "NODE_PATH 会加速加载",
+        "环境变量只能靠 os 模块读取"
+      ],
+      "answer": 1,
+      "explanation": "NODE_PATH 是遗留机制：绕过 package.json 的隐式依赖会让部署机「本地能跑线上崩」；现代方案是 workspaces/显式安装。env 统一在 process.env 下，不必靠 os 模块。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "脚本末尾调用 process.exit(0) 而输出重定向到文件时可能丢日志，原因是：",
+      "options": [
+        "文件权限不足",
+        "写文件时 stdout 是同步之外的场景（管道为异步写），exit 立即截断未刷完的缓冲区",
+        "OS 缓存不回收",
+        "Node 不允许重定向"
+      ],
+      "answer": 1,
+      "explanation": "stdout 接终端是同步写、接管道/文件是异步写——process.exit 不等 flush；「不硬退、自然退或设 exitCode」是脚本不丢输出的关键（与本关 console.log 后 exit 题同源纪律）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "NODE_OPTIONS 环境变量的定位是：",
+      "options": [
+        "用户参数的载体（等价 argv）",
+        "给 node 运行时本身传旗标（--max-old-space-size、--require、--env-file 等），CI/容器里「改不了启动命令也能改运行时行为」的通道",
+        "仅 Windows 可用",
+        "与命令行旗标冲突时报错"
+      ],
+      "answer": 1,
+      "explanation": "容器基础镜像/平台生成的启动命令动不了时，NODE_OPTIONS 就是注入 --require ts-node、堆上限、dns 策略等的正规口；也是不少供应链攻击（ preload 恶意模块）的入口，CI 里要审计。"
     }
   ]
 }

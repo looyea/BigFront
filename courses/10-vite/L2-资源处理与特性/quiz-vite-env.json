@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "vite build --mode staging 会额外加载哪个文件？",
-      "options": [".env", ".env.staging", ".env.production", ".env.local"],
-      "answer": 1,
+      "options": [
+        ".env.staging",
+        ".env",
+        ".env.production",
+        ".env.local"
+      ],
+      "answer": 0,
       "explanation": "--mode staging → 按优先级加载 .env → .env.local → .env.staging → .env.staging.local。"
     },
     {
@@ -16,11 +21,11 @@
       "prompt": "为什么 import.meta.env.VITE_FOO 在生产构建后被替换为字符串字面量？",
       "options": [
         "运行时查表",
-        "Vite 做编译时静态文本替换 → Tree Shake 能删除不可达分支",
         "Service Worker 注入",
+        "Vite 做编译时静态文本替换 → Tree Shake 能删除不可达分支",
         "依赖后端 API"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "静态替换 → if(false){...} 被 Rollup 删除 → 减少产物体积。不是运行时对象查找。"
     },
     {
@@ -29,18 +34,23 @@
       "prompt": "define: { __DEV__: JSON.stringify(true) } 中 JSON.stringify 是必须的，为什么？",
       "options": [
         "性能优化",
-        "define 是文本替换——不加 stringify 会把 true 当代码变量名（而不是布尔字面量）",
         "Express 兼容",
-        "防止 XSS"
+        "防止 XSS",
+        "define 是文本替换——不加 stringify 会把 true 当代码变量名（而不是布尔字面量）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "不 stringify：__DEV__ → true（代码标识符 true 碰巧合法）。但如果值是字符串 'hello'，不 stringify → 替换成裸 hello → 变量未定义。JSON.stringify 确保加引号。"
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": "DATABASE_URL 不带 VITE_ 前缀，前端能拿到吗？",
-      "options": ["能", "不能——只有 VITE_ 前缀变量暴露在客户端", "加 process.env. 就行", "取决于 Node 版本"],
+      "options": [
+        "能",
+        "不能——只有 VITE_ 前缀变量暴露在客户端",
+        "加 process.env. 就行",
+        "取决于 Node 版本"
+      ],
       "answer": 1,
       "explanation": "安全设计：无 VITE_ 前缀的变量只在 vite.config.ts / 插件里可读 → 不会进 bundle → 防密钥泄露。"
     },
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "修改 .env 文件后 Vite 会怎样？",
-      "options": ["自动 HMR 生效", "需要重启 dev server", "自动 full-reload", "报错"],
+      "options": [
+        "自动 HMR 生效",
+        "需要重启 dev server",
+        "自动 full-reload",
+        "报错"
+      ],
       "answer": 1,
       "explanation": ".env 只在 server 启动时加载——改文件后需手动重启（或 Vite 6 部分场景自动 restart）。"
     },
@@ -64,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "默认前缀 'VITE_' 只返回带前缀的；传 '' = 全部返回 → 用于 vite.config 内部（proxy target 等不暴露给客户端的配置）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " Vite 默认只暴露带什么前缀的 env 变量给客户端代码？",
+      "options": [
+        "全部",
+        "VITE_ 前缀——无标记的变量被视为服务端机密不会注入客户端 bundle（import.meta.env 只有 VITE_* 与内建 MODE/DEV 等），这是防密钥泄露的默认护栏",
+        "ENV_ 前缀",
+        "_process 前缀"
+      ],
+      "answer": 1,
+      "explanation": "\"默认不暴露\"是安全设计的正确姿势；envPrefix 可改但方向永远是收窄。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 同名变量同时出现在 shell 环境与 .env 文件时，Vite 的优先级是？",
+      "options": [
+        "shell 环境优先",
+        "系统 shell 的环境变量优先于 .env 文件（.env 系列是默认值层，CI/容器注入的真实 env 可覆盖）",
+        "按修改时间",
+        "直接冲突报错"
+      ],
+      "answer": 1,
+      "explanation": "这个次序让同一镜像在不同环境跑（CI 注入真钥、本地 .env 假钥）成立——反过来就全乱。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " .env 文件的加载优先级（同目录下）从高到低的排序正确的是？",
+      "options": [
+        ".env > .env.local > .env.mode > .env.mode.local",
+        ".env.[mode].local > .env.[mode] > .env.local > .env——越具体越优先，.local 恒高于非 local（本机覆盖仓库默认）",
+        ".env 总是最高",
+        "字典序"
+      ],
+      "answer": 1,
+      "explanation": "\"specificity wins + local wins\"两条轴合成的矩阵；.env.local 进 git 会把本机密钥泄露给全团队。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 库模式代码里读 import.meta.env.VITE_XXX 的问题是？",
+      "options": [
+        "运行时报错",
+        "库不该依赖宿主构建才有的注入值——发布出去的包 import.meta.env 由宿主应用决定，库读到 undefined 是常态；配置应从宿主参数传入或读自身运行时环境",
+        "体积变大",
+        "无法编译"
+      ],
+      "answer": 1,
+      "explanation": "应用模式的注入语义（构建期替换）在库产物里不成立——这是\"发布物与运行时解耦\"基本功。"
     }
   ]
 }

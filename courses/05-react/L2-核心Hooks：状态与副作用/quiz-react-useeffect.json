@@ -71,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "useEffect 的执行时机是？",
-      "options": ["render 之前同步", "构造函数里", "commit 到 DOM 并绘制之后异步", "与 useMemo 同时"],
+      "options": [
+        "render 之前同步",
+        "构造函数里",
+        "commit 到 DOM 并绘制之后异步",
+        "与 useMemo 同时"
+      ],
       "answer": 2,
       "explanation": "effect 在 paint 后异步跑（呼应 react-useeffect 第一、四节、react-render-model）。"
     },
@@ -79,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "漏写依赖数组里用到的变量，最可能的后果是？",
-      "options": ["编译直接失败", "React 自动补齐", "无任何影响", "effect 读到旧的快照值(行为错)且 ESLint 告警"],
+      "options": [
+        "编译直接失败",
+        "React 自动补齐",
+        "无任何影响",
+        "effect 读到旧的快照值(行为错)且 ESLint 告警"
+      ],
       "answer": 3,
       "explanation": "exhaustive-deps 规则就是防这个（呼应 react-useeffect 第二、五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`useEffect(fn)`（完全不传第二个参数）的行为是？",
+      "options": [
+        "只在挂载执行一次",
+        "每次组件渲染并提交后都会执行 fn（每次都用上一次的 cleanup 再跑）",
+        "永不执行",
+        "仅依赖变化时执行"
+      ],
+      "answer": 1,
+      "explanation": "省略依赖数组 ≠ 空数组。`useEffect(fn)` = 每次 commit 后都重跑（含每次 state/props 变化）；`useEffect(fn, [])` = 仅挂载跑一次（卸载跑 cleanup）；`useEffect(fn, [a,b])` = a/b 变化时先 cleanup 再跑。三者语义清晰区分是 effect 的基本功，React Compiler 也不能替你猜意图。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "在 effect 的「清理函数」内部做 async 操作（如 await 后再取消订阅），问题是？",
+      "options": [
+        "正常工作",
+        "cleanup 必须是同步的——React 不会等待其 Promise，异步部分可能在下一次 effect 已启动后才完成，导致竞态/清理未生效；要异步收尾需在别处处理",
+        "会报错中止渲染",
+        "会自动 await"
+      ],
+      "answer": 1,
+      "explanation": "cleanup 的职责是在「重跑前 / 卸载时」同步释放资源（clearTimeout、removeEventListener、abort controller）。它返回 Promise 也不会被 await，异步清理破坏「先清后建」的时序保证。若清理有异步成本（如 flush 上报），应设计成幂等的同步登记 + 后台 flush，别指望 cleanup 帮你 await。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "effect 依赖里写了 `props.id`，但回调里还读了一个每次渲染都新建的内联函数 `onDone`，把它也加进依赖会怎样、正确做法？",
+      "options": [
+        "没问题，函数天然稳定",
+        "内联函数每次新引用 → effect 每帧重跑；应把 onDone 用 useCallback 稳定，或干脆从依赖里移除并在 ref 里读最新，或用 eslint 注释说明刻意省略",
+        "直接删函数定义即可",
+        "把函数塞进 useState"
+      ],
+      "answer": 1,
+      "explanation": "依赖数组用 Object.is 比较，函数/对象每帧新引用会让 effect「看起来没变却狂跑」。稳定引用三招：useCallback 包裹、用 useRef 存最新函数并从 deps 移除、或把依赖收窄到真正触发重跑的原始值。这正对应本包 memo 关「Provider/依赖传内联对象是新引用陷阱」的同一根因。"
     }
   ]
 }

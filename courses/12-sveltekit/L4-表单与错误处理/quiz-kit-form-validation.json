@@ -3,6 +3,7 @@
   "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
+      "id": "q1",
       "type": "single",
       "prompt": "双层校验体系里，客户端与服务端的分工判据是？",
       "options": [
@@ -15,6 +16,7 @@
       "explanation": "客户端挡手滑不挡 curl，任何 action 入参都要重新过服务端校验；客户端层的价值是即时反馈与省往返。enhance 只是提交方式增强，不改变裁决权归属。"
     },
     {
+      "id": "q2",
       "type": "single",
       "prompt": "表单里 age 是 <input type=\"number\">，zod schema 用 z.number() 直收 FormData 值却必挂，为什么？",
       "options": [
@@ -27,6 +29,7 @@
       "explanation": "FormData 的世界里值只有字符串（和 File），即便 type=number 也是 '25'。coerce 或先手动转型是标准解。C 是编造：Kit 不改 HTML 语义。"
     },
     {
+      "id": "q3",
       "type": "single",
       "prompt": "未勾选的 checkbox 在 request.formData() 里的形态是？",
       "options": [
@@ -39,6 +42,7 @@
       "explanation": "HTML 表单规范如此：未勾选的 checkbox 根本不进提交数据。所以 z.boolean() 裸用会因 undefined 报错，要 optional/refine 处理。『浏览器会发 off』是把 radio/其他控件的记忆错位。"
     },
     {
+      "id": "q4",
       "type": "single",
       "prompt": "把双端共享的 zod schema 放进 src/lib/server/ 会发生什么？",
       "options": [
@@ -51,6 +55,7 @@
       "explanation": "L3 的目录执法反向生效：$lib/server 的防线是『浏览器可达即构建炸』。双端要 import 的 schema 是公域资产，放 lib 根并保持零副作用。"
     },
     {
+      "id": "q5",
       "type": "single",
       "prompt": "novalidate 属性的准确语义是？",
       "options": [
@@ -63,6 +68,7 @@
       "explanation": "novalidate 关的是『提交前自动拦截+原生提示』这套 UI 行为；规则仍声明在元素上，checkValidity()/invalid 事件随你调用来自定义错误 UI。B/D 是常见的半对半错记忆。"
     },
     {
+      "id": "q6",
       "type": "single",
       "prompt": "sveltekit-superforms 在本课认知里的准确定位是？",
       "options": [
@@ -75,6 +81,7 @@
       "explanation": "它是社区生态库（非官方），核心卖点是同一 schema 双端执行 + form/errors/constraints 状态托管 + 多表单 id 区分。文档与面试引用时注意『非官方』口径。"
     },
     {
+      "id": "q7",
       "type": "single",
       "prompt": "fail(400, { input, errors }) 里的 input 回传，和 use:enhance 的哪件默认行为配对成『报错不清值』体验？",
       "options": [
@@ -85,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "enhance 接管后表单元素被重置（清空），模板里 value={form?.input?.email} 靠 action 回传的原值二次填充——两者合拍才有『只清错的字段、用户不用重敲』。D 焦点重置是另一件独立的事。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 表单里 required/minlength 等 HTML 约束验证的定位是？ ",
+      "options": [
+        " 可省略，JS 校验全覆盖 ",
+        " 零成本第一道防线且无 JS 也生效，但绝不可当作安全边界 ",
+        " 仅影响样式 ",
+        " 会禁用原生提交 "
+      ],
+      "answer": 1,
+      "explanation": " HTML 约束给即时反馈且渐进增强友好；但抓包改包可直接绕过，服务端校验才是安全线。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " zod 的 safeParse 与 parse 在 action 里该怎么选？ ",
+      "options": [
+        " parse 更安全 ",
+        " action 里用 safeParse，把 issues 映射成字段错误回显，不让异常冒成 500 ",
+        " 两者随意 ",
+        " 只用 try/catch 包 parse "
+      ],
+      "answer": 1,
+      "explanation": " safeParse 返回判别联合（success/data/error），把非法输入变成结构化回显路径，正是 fail(400, { input, errors }) 的原料。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 服务端校验失败回显时，为什么必须把用户原始 input 一起返回？ ",
+      "options": [
+        " 便于调试日志 ",
+        " 否则回填只剩服务端默认值，用户输入全部丢失，半回显比不回显更伤信任 ",
+        " 为了 SEO ",
+        " 触发 invalidate 需要 "
+      ],
+      "answer": 1,
+      "explanation": " $page.form 驱动组件回显；返回 input 才能让用户只改错字段而非重填整表，这是回显协议的核心字段。 "
     }
   ]
 }

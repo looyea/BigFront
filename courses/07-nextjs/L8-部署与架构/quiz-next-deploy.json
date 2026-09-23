@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "output: 'standalone' 解决的核心问题是？",
-      "options": ["提升页面渲染速度", "把 SSR 转为纯静态", "自动生成 SEO 标签", "按依赖图裁剪出最小 server.js + 所需依赖，免带全量 node_modules"],
-      "answer": 3,
+      "options": [
+        "按依赖图裁剪出最小 server.js + 所需依赖，免带全量 node_modules",
+        "提升页面渲染速度",
+        "把 SSR 转为纯静态",
+        "自动生成 SEO 标签"
+      ],
+      "answer": 0,
       "explanation": "standalone 产物是部署瘦身方案，镜像从几百 MB 降到几十 MB；静态化是 output:'export' 的职责（呼应 next-deploy 第 3 节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "把数据库密码配成了 NEXT_PUBLIC_DB_PASSWORD，会造成什么后果？",
-      "options": ["构建时报错直接拦截", "密码被内联进浏览器 bundle，任何访问者可见", "仅服务端可读所以无影响", "密码会被自动加密，安全"],
+      "options": [
+        "构建时报错直接拦截",
+        "密码被内联进浏览器 bundle，任何访问者可见",
+        "仅服务端可读所以无影响",
+        "密码会被自动加密，安全"
+      ],
       "answer": 1,
       "explanation": "NEXT_PUBLIC_ 前缀的变量在构建期内联进客户端 JS，等于公开；密钥只能用非 public 变量运行期读取（呼应 next-deploy 第 2、4 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "纯静态导出（output: 'export'）方案下，还能使用下列哪项能力？",
-      "options": ["Server Actions", "middleware 鉴权", "构建期生成的 SSG 页面", "ISR 定期再生成"],
+      "options": [
+        "Server Actions",
+        "middleware 鉴权",
+        "构建期生成的 SSG 页面",
+        "ISR 定期再生成"
+      ],
       "answer": 2,
       "explanation": "静态导出没有服务端运行时，凡是 ƒ 动态与需要 Node/Edge 执行的能力全不可用，只有构建产物 HTML/资源可以（呼应 next-deploy 第 1 节能力矩阵）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "容器里 standalone 服务启动后外部一直连不上（curl 本机通、宿主机不通），最应先检查？",
-      "options": ["node 版本是否为偶数版", "镜像是否超过 100MB", "HOSTNAME 是否设为 0.0.0.0（默认只听回环地址）", "是否安装了 sharp"],
+      "options": [
+        "node 版本是否为偶数版",
+        "镜像是否超过 100MB",
+        "HOSTNAME 是否设为 0.0.0.0（默认只听回环地址）",
+        "是否安装了 sharp"
+      ],
       "answer": 2,
       "explanation": "server.js 读 HOSTNAME 决定监听地址，容器内默认 127.0.0.1 时端口映射出去也无法访问（呼应 next-deploy 第 4 节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "Nginx 对 /_next/static/* 的正确缓存策略是？",
-      "options": ["no-store 保证最新", "max-age=300 短缓存", "让浏览器每次都协商验证", "public, max-age=31536000, immutable 长缓存"],
+      "options": [
+        "no-store 保证最新",
+        "max-age=300 短缓存",
+        "让浏览器每次都协商验证",
+        "public, max-age=31536000, immutable 长缓存"
+      ],
       "answer": 3,
       "explanation": "文件名的构建哈希保证内容变则 URL 变，immutable 一年缓存零风险且大幅减回源（呼应 next-deploy 第 5 节、next-perf 第 4 节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "同一份 standalone 镜像要跑测试/预发/生产三环境，配置应该怎么给？",
-      "options": ["三套 NEXT_PUBLIC_ 值分别构建三个镜像", "运行时注入非 public 环境变量（如 API_BASE、DB_URL）", "写死在 next.config.js 里", "用 git 分支区分配置"],
+      "options": [
+        "三套 NEXT_PUBLIC_ 值分别构建三个镜像",
+        "运行时注入非 public 环境变量（如 API_BASE、DB_URL）",
+        "写死在 next.config.js 里",
+        "用 git 分支区分配置"
+      ],
       "answer": 1,
       "explanation": "NEXT_PUBLIC_ 是构建期内联的，改值必须重新构建——\"同一镜像多环境\"只能依赖运行期读取的服务端变量；选 A 就变成三个镜像了（呼应 next-deploy 第 4 节）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "多实例自托管时，revalidateTag 失效不生效的典型原因是？",
-      "options": ["tag 名大小写敏感写错了", "缓存层只存在于各实例内存，失效通知没有跨实例共享", "sharp 未安装", "浏览器强缓存未过期"],
+      "options": [
+        "tag 名大小写敏感写错了",
+        "缓存层只存在于各实例内存，失效通知没有跨实例共享",
+        "sharp 未安装",
+        "浏览器强缓存未过期"
+      ],
       "answer": 1,
       "explanation": "实例 A 上的失效不会通知实例 B 的本地 Full Route Cache，需要平台缓存层或自建 cacheHandler/广播失效（呼应 next-deploy 第 1 节、next-revalidate 第 6 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " output: standalone 解决的核心问题是？",
+      "options": [
+        "静态导出上 CDN",
+        "产出只含运行依赖与追踪文件的最小 server.js 服务：镜像体积从 GB 到百 MB 级、构建环境与运行环境解耦（node_modules 不再全拷）",
+        "自动优化图片",
+        "免配置上 K8s"
+      ],
+      "answer": 1,
+      "explanation": "standalone 的文件追踪（nft/trace）把\"这个服务真正需要什么\"算出来；配合多阶段 Dockerfile：builder 构建、runner 只拷 .next/standalone + static + public 三件套。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 环境变量三类里，NEXT_PUBLIC_ 前缀的真实含义是？",
+      "options": [
+        "生产环境专用变量",
+        "构建期求值并内联进客户端 bundle——运行时再改环境变量对它无效，且它天然公开，放任何密钥都是泄露",
+        "Node 服务不可见",
+        "仅 Edge 可用"
+      ],
+      "answer": 1,
+      "explanation": "这是部署面试第一高频：\"构建时与运行时分离\"对 NEXT_PUBLIC 意味着必须重新构建才生效；同时它是\"会出现在 JS 里\"的同义词。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 多实例自托管发现 revalidateTag 只在\"碰巧同一台机器\"时生效，根因是？",
+      "options": [
+        "CDN 不配合",
+        "默认数据/全路由缓存在实例本地（内存/文件系统），失效只打到接收请求的那个实例——要么共享缓存层（Redis/自定义 CacheHandler），要么接受窗口并把失效广播到全部实例",
+        "Next 的 bug",
+        "只能单实例部署"
+      ],
+      "answer": 1,
+      "explanation": "托管平台的全局缓存层是自托管缺失的一环；同类行为差异还有 standalone 的 .next/cache、ISR 再生的跨实例可见性——部署架构决定缓存语义。"
     }
   ]
 }

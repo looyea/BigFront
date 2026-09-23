@@ -1,6 +1,6 @@
 # react-lists-keys 面试题精选
 
-> 共 12 题，覆盖 A 列表渲染 / B key 与 diff / C index 之害 / D 派生列表·Vue 对照四类。
+> 共 15 题，覆盖 A 列表渲染 / B key 与 diff / C index 之害 / D 派生列表·Vue 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：① 保证 key 稳定以最大化复用；② **虚拟化**——只渲染视口内的行（react-window / react-virtualized / 自写 IntersectionObserver），把 DOM 节点数从 O(n) 降到 O(可见数)；③ 行组件 `React.memo` + 稳定 props/回调，避免任一状态变化导致整列重渲染；④ 昂贵派生 `useMemo`；⑤ 必要时 `useDeferredValue`/`startTransition` 降优先级（呼应 react-memo-hooks、react-performance）。
 
 **来源**：React 官方文档 — Scaling React、react-window 文档、useDeferredValue
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  同层 diff 时，React 依据 key 具体如何做「复用 / 移动 / 删除」的判定？placeChild 与删除标记的判据是什么？
+
+React 用两段遍历：① 先从头同步遍历新旧 children，遇到 key+type 都相同就复用（生成 update 的 Fiber），一旦 key/类型对不上就 break；② 剩余旧 children 放进以 key 索引的 Map 供后面新节点查表复用，查不到就新建、并给旧节点打 deletion。移动判定：遍历新列表时维护 lastPlacedIndex，对每个复用节点取它在旧列表的 index，若 `< lastPlacedIndex` 说明它需要移动（插入位置在已排好的后面），否则 `lastPlacedIndex = 该 index` 不动。最终配合 LIS/最小化移动决定实际 DOM 搬移。讲清这条就能解释「为什么中间插入但保持 key 稳定只移动少数节点、而 index key 会让所有节点误判需移动」。
+
+**来源**：React 源码 react-reconciler/Sibling 与 updateChildren 的 keyToIndex Map、lastPlacedIndex 逻辑。
+
+### 14.  嵌套列表 / 树形结构怎么设计稳定且唯一的 key？为什么「整条路径 index」常常不够？
+
+理想是「节点自身携带的全局稳定 id」（后端主键、uuid v7），与层级无关，最省心。当只能拼路径时，用「父路径 + 本层 id」组合键，但要警惕：① 纯 index 路径在任一层重排/删除后全链路错位（问题被层数放大）；② 节点在树里跨父移动（拖拽把 A 的子节点挪到 B 下），其 index 路径必然变→触发整棵子树卸载重建，state 全丢。所以只要允许移动/重排，就必须用不依赖位置的稳定 id。可折中：为每个数据实体维护一个「进入树时分配的、与位置无关」的 uid，渲染 key 用它。这与「数据没 id 怎么办」是同一命题的嵌套版。
+
+**来源**：React 列表 key 最佳实践；树/可拖拽结构稳定 key 设计社区经验。
+
+### 15.  若列表数据真的没有任何唯一 id 且内容可变，如何构造「尽量稳定」的 key？最终解是什么？
+
+退而求其次可合成「准稳定 key」：挑几个「在项的生命周期内不变、且组合后区分度高」的业务字段拼接（如 `skuId + 首次出现的创建时间戳 + 价格档位`），避免用「会随编辑变化的字段」（用会被改的 name 当 key 等于没有 key）。若内容会变又不想错位，宁可退回 index（前提是列表不重排/不中部删）或强制每行不可有内部状态（无输入/勾选/动画）。但这些都是创可贴——真正的解是推动数据模型「每一行都有一个不透明、不可变、唯一的 id」，前端渲染层不该替数据层背这个债。面试把这层「临时缓解 vs 根因在数据」讲出来，比背「别用 index」更深。
+
+**来源**：React「Index as a key is an anti-pattern」及无 id 数据建模建议；社区稳定合成 key 实践。

@@ -7,20 +7,25 @@
       "type": "single",
       "prompt": "Vite HMR 通过什么方式通知浏览器有模块更新？",
       "options": [
-        "轮询 HTTP 接口",
         "WebSocket 长连接推送",
+        "轮询 HTTP 接口",
         "Server-Sent Events",
         "修改 HTML 后让浏览器自动检测"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Vite dev server 启动 WS 服务（/__vite_hmr），文件变更时 server 主动推 update 消息 → 客户端即时响应。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "如果一个被修改的模块及其所有父模块都没有 hot.accept()，会发生什么？",
-      "options": ["什么都不做", "Full page reload", "报错崩溃", "只更新该模块"],
-      "answer": 1,
+      "options": [
+        "什么都不做",
+        "报错崩溃",
+        "Full page reload",
+        "只更新该模块"
+      ],
+      "answer": 2,
       "explanation": "HMR 边界找不到 → Vite 发 full-reload 消息 → 浏览器整页刷新。"
     },
     {
@@ -29,11 +34,11 @@
       "prompt": "import.meta.hot.dispose 的用途是？",
       "options": [
         "接收新模块",
-        "在旧模块被替换前做清理（取消订阅/定时器/观察者）",
         "阻止更新",
-        "发送事件到服务端"
+        "发送事件到服务端",
+        "在旧模块被替换前做清理（取消订阅/定时器/观察者）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "dispose 回调在模块被替换前执行——清理副作用（IntersectionObserver.disconnect、clearInterval 等）。"
     },
     {
@@ -66,9 +71,66 @@
       "id": "q6",
       "type": "single",
       "prompt": "修改 vite.config.js 会导致什么？",
-      "options": ["只热更改变的那个路由", "Dev server 重启", "无任何影响", "仅刷新 CSS"],
+      "options": [
+        "只热更改变的那个路由",
+        "Dev server 重启",
+        "无任何影响",
+        "仅刷新 CSS"
+      ],
       "answer": 1,
       "explanation": "vite.config 是 server 本身的行为配置——改动需重启 dev server（重新加载插件、重新解析 proxy 等）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " Vite dev 的 HMR WebSocket 端点默认如何确定？",
+      "options": [
+        "固定 3000 端口",
+        "默认与 dev server 同源（同 host 同端口路径 /）；server.hmr 可显式覆盖 protocol/host/clientPort——反向代理或 HTTPS 隧道下必须手动对齐，否则 ws 连不上退化为轮询或全断",
+        "走 SSE 通道",
+        "由浏览器决定"
+      ],
+      "answer": 1,
+      "explanation": "\"页面能打开但改了不生效\"第一步就看 ws 握手是否 101——代理层没转发 Upgrade 是最高频原因。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 多个浏览器标签同时打开 dev 页面时，HMR 的行为是？",
+      "options": [
+        "只更新活动标签",
+        "广播模型——更新消息发给所有连接的客户端，每个标签独立应用补丁（各自保有自己的运行时状态）",
+        "排队逐个更新",
+        "需要手动刷新"
+      ],
+      "answer": 1,
+      "explanation": "广播是无状态的必然选择：server 不追踪\"哪个客户端需要什么版本\"，每个 ws 客户端一视同仁。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 在容器/WSL2 里跑 Vite，改了挂载卷外的同步工具监听不到的文件没反应，常用解法是？",
+      "options": [
+        "重启容器",
+        "server.watch.usePolling: true（轮询替代 inotify 事件——跨文件系统边界的监听失效通用解），并调 watch.interval 平衡 CPU",
+        "改用 build watch",
+        "无法解决"
+      ],
+      "answer": 1,
+      "explanation": "事件监听依赖底层文件系统能力，网络盘/容器挂载常拿不到——polling 是性能换可靠性的标准妥协。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " HMR 消息里 timestamp 字段的实际作用是？",
+      "options": [
+        "性能统计",
+        "为同一模块的多次更新提供时序参考并用于失效判定（如样式 URL 追加时间戳绕开缓存），防止\"内容相同时间不同被当无变化\"或反向的缓存粘连",
+        "加密盐",
+        "仅作日志"
+      ],
+      "answer": 1,
+      "explanation": "CSS 补丁的 href?t=、资源的查询参数去重都靠它——\"改了样式不生效\"若浏览器缓存了旧 CSS 就是这个机制在工作。"
     }
   ]
 }

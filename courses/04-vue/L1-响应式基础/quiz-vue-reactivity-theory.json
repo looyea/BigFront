@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Vue 3 用 Proxy 取代 Object.defineProperty 做响应式，最直接的好处是？",
       "options": [
-        "能侦测新增/删除属性和数组索引变化，且可懒代理",
         "彻底不再需要 effect",
         "不再需要 .value",
+        "能侦测新增/删除属性和数组索引变化，且可懒代理",
         "性能一定比 Vue2 差但功能更强"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "Proxy 拦截整个对象的操作，新增/删除/数组索引都能感知，且深层属性按需代理（呼应 vue-reactivity-theory 第一节、ES 包 Proxy）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "依赖收集的核心数据结构 targetMap 的三层结构是？",
       "options": [
-        "WeakMap<对象, Map<key, Set<effect>>>",
         "Map<effect, 对象>",
         "Array<{key, effect}>",
-        "Set<对象> 一层即可"
+        "Set<对象> 一层即可",
+        "WeakMap<对象, Map<key, Set<effect>>>"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "WeakMap 存原始对象→Map 存属性 key→Set 存依赖它的 effect（呼应 vue-reactivity-theory 第三节）。"
     },
     {
@@ -71,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "要存放一个 ECharts 实例或超大只读列表且不希望深层被代理，应选？",
-      "options": ["reactive", "shallowRef 并用 triggerRef 手动触发", "computed", "toRefs"],
+      "options": [
+        "reactive",
+        "shallowRef 并用 triggerRef 手动触发",
+        "computed",
+        "toRefs"
+      ],
       "answer": 1,
       "explanation": "shallowRef 只关心 .value 替换，深层不侦听，需要时 triggerRef 手动触发（呼应 vue-reactivity-theory 第六节、vue-performance）。"
     },
@@ -79,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "从 reactive 对象解构属性会丢失响应性，用哪个 API 解构后仍保持响应？",
-      "options": ["markRaw", "toRefs", "shallowReactive", "customRef"],
+      "options": [
+        "markRaw",
+        "toRefs",
+        "shallowReactive",
+        "customRef"
+      ],
       "answer": 1,
       "explanation": "toRefs 把每个属性转成共享读写的 ref，解构后仍是活的（呼应 vue-reactivity-theory 第六节、vue-reactivity 解构坑）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "effect 嵌套（computed 内部、watch 回调里再触发副作用）依赖 activeEffect 栈解决，栈还防了什么：",
+      "options": [
+        "内存泄漏",
+        "依赖错收——执行内层 effect 时外层不能误收内层读取的依赖；trigger 时还要防止 effect 自触发死循环（_run 的嵌套执行守卫）",
+        "循环 import",
+        "模板重渲染"
+      ],
+      "answer": 1,
+      "explanation": "栈 的 两个 职责：track 归 对 前，「谁 读 的 算 谁」；trigger 阶段 「避免 运行中 的 effect 被 自己 的 写 再次 拉 起」（会 报「Maximum recursive updates」前 的 守卫）。computed 惰性 求值 时 的 依赖 也 靠 栈 与 调用方 隔离（本关 栈 题 的 完整 面）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "trigger 后「同一微任务里对同一 effect 多次调度」的去重发生在：",
+      "options": [
+        "Proxy set 阶段直接拦截",
+        "scheduler 入队时把 effect 放进微任务队列的 Set（去重），合并后再跑——所以连改 100 次只渲染一次",
+        "渲染器每帧自己 diff",
+        "nextTick 只执行第一个回调"
+      ],
+      "answer": 1,
+      "explanation": "「批量更新」不是 渲染器 魔法，是 调度层 的 Set 去重+微任务 flush；理解这层 才 明白 为何 `count.value++; count.value++` 中间 插 一行 `console.log(count.value)` 能 看到 2 却 只 渲染 一次（状态 即时、渲染 合并）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Vue 依赖图\"双向链表\"（Link）结构优化解决的问题是：",
+      "options": [
+        "序列化",
+        "effect 依赖集与 dep 订阅集在长时间运行中的内存回收与遍历效率——链表复用避免 Set 清空重建的 GC 压力（3.4 响应式重写主题）",
+        "模板编译",
+        "SSR 注水"
+      ],
+      "answer": 1,
+      "explanation": "3.4 的 Link 链表：deps 变更 时 旧 dep 通过 版本 判定 保留，不 再 每 次 cleanup 全 清；长跑 页面 里 数万 effect 的「订阅 churn」显著 下降。本关 cleanup 旧依赖 题 的 下一 章——面试 能 报 出「3.4 Link」是 响应式 理论 加分 项。"
     }
   ]
 }

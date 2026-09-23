@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "props 镜像进 state 会陈旧一帧/循环(呼应 svelte-component-composition 第六节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte 里使用一个子组件前需要做什么？",
+      "options": [
+        "全局注册",
+        "import 进来即可直接在模板用（import Card from ../Card.svelte; <Card/>）——无全局注册、无 components 选项，ESM 导入就是注册",
+        "声明在 JSON",
+        "放进 <slot>"
+      ],
+      "answer": 1,
+      "explanation": "组件即模块导入，天然按使用范围引入（tree-shakable，对应既有\"如何注册/与 Vue 全局注册不同\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 想实现 <Card><Card.Header/></Card> 这种点号复合组件，Svelte 的原生支持是？",
+      "options": [
+        "开箱即用",
+        "Svelte 无内置点号命名空间糖——需要手动导出组合（在 Card.svelte 里 export const 挂子组件，或用命名约定 + 显式 import），或用库辅助",
+        "必须用 context",
+        "用 snippet 自动实现"
+      ],
+      "answer": 1,
+      "explanation": "点号语法是 React/某些库约定，Svelte 需显式拼装（对应既有 Card.Header 组合题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 表单/弹框这类\"内部状态要能一键重置\"的组件，最省事的组合重置技巧是？",
+      "options": [
+        "手动清空每个字段",
+        "用 {#key resetToken} 包裹子组件，改 resetToken 即销毁重建整块子树（内部状态自然清零）",
+        "bind:this 调 reset",
+        "remount 整个 App"
+      ],
+      "answer": 1,
+      "explanation": "{#key} 触发重建是\"重置内部状态\"的声明式技巧（与 template 关 {#key} 题、既有\"一键重置\"题呼应）。"
     }
   ]
 }

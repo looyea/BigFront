@@ -1,6 +1,6 @@
 # solid-refs-styles 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) Solid 里 ref 的赋值发生在什么时机？为什么这个时机决定了你要不要用它？
 **来源**：ref 时序题的转述。
@@ -63,3 +63,25 @@ React 要 `useRef`、`forwardRef` 包组件、`useImperativeHandle` 暴露方法
 用 **signal-as-ref**（或回调里 `setRowEl(i, el)`），因为虚拟滚动的行元素会不断被替换/回收，`let el` 只在首次创建写一次、之后指向旧节点。signal 能在每次该单元格重新绑定新元素时被 setter 刷新，配合 `<For>` keyed 让每行的 signal 各自独立、回收时置空，引用永远指向当前真实 DOM。
 
 🚀 实操请去做 L4 作业：复现 signal-as-ref 于 Show/虚拟列表、ref 转发、指令双能力、classList vs style 动态。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  命令式改过 ref 元素（手动 style/class）后再被响应式绑定更新，会踩什么坑？ 
+
+ 细粒度写入按绑定通道覆盖，手动改动同名通道会被无声冲掉；规范是命令式改动与声明式绑定不相交，或统一改到 CSS 变量/类 token 这类受控通道上。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/ref 
+
+### 14.  class、classList、className、tokenList 四种写法，各自语义与选型？ 
+
+ class 是 Solid 扩展（可函数式/可对象）、className 走原生 attribute、classList 对象逐键、tokenList 逐 token 比对；高频切换选 classList/tokenList 的键级更新，字符串拼接 class 是粗化退化。 
+
+**来源**： https://www.solidjs.com/docs/latest/jsx#class-and-className 
+
+### 15.  实现一个图片懒加载 use 指令：观察、加载、卸载清理与 SSR 怎么设计？ 
+
+ 指令内 IntersectionObserver 观察，进入视口赋 src（一次性），onCleanup 里 unobserve+关闭；SSR 输出 loading=lazy 兜底、指令不运行；可配置参数走表达式对象传入，注意其更新会重入指令。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#use%3A 

@@ -1,6 +1,6 @@
 # svelte-tooling 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与工程化面经高频主题的转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与工程化面经高频主题的转述。
 
 ---
 
@@ -75,3 +75,25 @@ pre-commit（lefthook/husky）：lint-staged 跑 eslint --fix + prettier（秒�
 **来源**：脚手架生态变迁讨论 — create-vite vs sv
 
 当前官方推荐链：**sv（新站点文档首页指路）**——交互式选 TS/Kit/lint/test，产物含 svelte-check 接线；`npm create vite@latest -- --template svelte(-ts)` 仍维护但面向"只要最小 SPA"场景，集成度低（无 check/测试预设）。历史层：`create-svelte`、`degit sveltejs/template` 已退役。答题价值不在背名字，而在展示"查三源交叉验证（官网/ npm 发布时间 / GitHub 归档声明）"的核实方法论——课程内容反复埋的"版本嗅觉"母题（呼应 svelte-overview 信息素养节）。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  从 Vite 视角画出一个 .svelte 文件被加载的完整链路：vite-plugin-svelte 在其中做了哪些事？
+
+链路：浏览器/Vite 请求 import App.svelte → Vite resolve（.svelte 扩展名解析）→ vite-plugin-svelte 的 transform 钩子：调 Svelte compilerModule 编译（generate client/server、注入 HMR runtime、按 svelte.config.js 的 compilerOptions/preprocess 处理）→ 产出标准 JS（含 DOM 操作与信号代码）→ 交给 Vite 继续（esbuild 处理内部 TS、依赖预构建处理 import）。插件额外职责：① 预处理协调（script/template/style 三段各自 preprocessor 在编译前跑）；② HMR（把组件编辑映射成保留状态的 hot update，对应"保留组件状态"题）；③ CSS 提取/注入协调（作用域样式、生产 extract 到 link，呼应 styling FOUC）；④ 虚拟模块与 sourcemap 拼接。加分句：定位 Svelte+Vite 的问题要会"分段"——是 vite-plugin-svelte 的编译阶段（看 svelte 编译报错/编译器选项）、还是 Vite 的解析/预构建阶段（看依赖/路径）、还是 esbuild 转译阶段（看 TS/JSX）；能说出"svelte 编译在 transform、TS 擦除在其后的 esbuild"这条顺序，报错归因就快（呼应 compiler-architecture 关的编译产物题）。
+
+**来源**：vite-plugin-svelte 工作原理；Svelte 编译器 transform；Vite 插件管道；既有".svelte 被加载完整链路"深化
+
+### 14.  svelte.config.js、vite.config.ts、tsconfig.json 三者在 Svelte 工程里各管什么？为什么要分开？
+
+分工：① svelte.config.js——Svelte 编译器与语言工具的选项（compilerOptions、preprocess、extensions、onwarn），管"怎么编译 .svelte"；② vite.config.ts——打包/DevServer/插件（含注册 vite-plugin-svelte 并把 svelte.config 接进来），管"怎么打包与 serve"；③ tsconfig.json——TS 编译期选项与路径别名（$lib 等），管"类型怎么查/模块怎么解析"。为什么分开：三套关注点由不同工具消费（svelte-check 读 svelte.config+tsconfig、Vite 读 vite.config、编辑器语言服务读全部），解耦让"改编译行为不必动打包配置"。协作点：vite-plugin-svelte 是桥梁（它读 svelte.config.js 并暴露给 Vite），$lib 别名要在 svelte.config 与 tsconfig 两处一致（否则运行时能解析、类型查不到，对应既有"配置分离与协作"题）。加分句：常见踩坑是把别名只配在一处（vite resolve.alias 有、tsconfig paths 无→运行 OK 编辑红波浪线，或反之）——理解"三配置各自被谁读"就能系统排查所有『能跑但类型红/类型过但跑挂』的问题（呼应 vite-setup 关 alias 双配题的 Svelte 版）。
+
+**来源**：Svelte 配置分层；svelte-check/vite 协作；既有"svelte.config 与 vite.config 关系"深化
+
+### 15.  为什么 Svelte 没有 Vue Devtools / React DevTools 那种组件树检查器？生态替代是什么？
+
+根因：Svelte 编译后没有"运行时组件树/VDOM"可供检视——组件被编译成命令式 DOM 操作函数，运行期不存在一个持久的"组件实例树"结构供 Devtools 遍历（React/Vue 有 VDOM/响应式组件树所以能反射出来，对应既有"没有 VDOM 意味着什么"题）。这不是缺陷是架构后果：没了运行时树也就没了它的开销。替代调试面：① $inspect（runes 状态变更追踪，Svelte 5 的官方响应式调试，呼应 reactive-runes $inspect 题）；② 浏览器 Elements 面板直接看真实 DOM（Svelte 产物 DOM 结构贴近源码模板，可读性好）；③ Sources 断点（源码经 sourcemap 映射，Svelte 编译产物本身也相对可读）；④ 实验/社区扩展与 IDE 内联提示。加分句：能把"没有 Devtools"重构为一个理解框架本质的机会——"你在找的那棵可视化组件树在这个架构里运行期根本不存在，所以没有工具可反射它；你要调试的东西改用 $inspect + 真实 DOM 视图"；顺势讲清 Svelte"运行时无组件树"这一点，比抱怨工具缺失更能体现你懂它（呼应 compiler-architecture 关"更新粒度/运行时部件"题）。
+
+**来源**：Svelte 调试工具现状；compiler 输出可读性；浏览器 DevTools + $inspect；既有"为什么没有组件树 Devtools"深化

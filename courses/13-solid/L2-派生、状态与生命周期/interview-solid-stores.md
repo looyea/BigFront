@@ -1,6 +1,6 @@
 # solid-stores 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) createStore 靠什么机制把响应性延伸到嵌套属性和数组元素？
 **来源**：store 底层机制题的转述。
@@ -63,3 +63,25 @@ produce：以"可变草稿"方式一次改多个字段（`u=>{u.a=1;u.b=2}`）�
 用 store（`createStore(rows)`）。改单个字段走路径 `setStore('rows', i, 'field', v)`，只通知订阅了 `rows[i].field` 的那个单元格，其余 4999 行不动。若用 signal 存整个 rows 数组，任一字段改都整体替换→全表重渲染。配合 `<For>`（keyed）让每行 DOM 稳定，达到"改一格只刷一格"。
 
 🚀 实操请去做 L2 作业：复现懒建 signal 坑、浅合并、spread vs 路径追加、reconcile 只更新变化行。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  store 对嵌套对象/数组的追踪粒度是怎么实现的？ 
+
+ 读取深层路径时代理按路径登记订阅，写路径（setter/produce/直接代理写）只通知精确前缀匹配的监听者；数组方法被翻译成路径变更，这就是 length 当索引追加会过度通知的原理。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createstore 
+
+### 14.  富文本/表单这类深度可变 JSON 树，你会选 store 还是 signal+不可变更新？ 
+
+ 树大且改动局部→store 路径通知胜在重渲染面小；需要时间旅行/协同（undo、CRDT）→不可变+signal 便于快照比较；混用时以 store 承载编辑态、派生统计走 memo，边界是可变性所有权。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#produce 
+
+### 15.  store 里再嵌 store、或 store 与 signal 互相引用，会有什么问题？ 
+
+ 代理嵌套会重复包装造成追踪混乱，官方建议用 unwrap 剥离内层再存入；signal 存进 store 后读取得到的是 signal 本体需显式调用，两种容器混用会侵蚀类型推断，设计上应避免。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#unwrap 

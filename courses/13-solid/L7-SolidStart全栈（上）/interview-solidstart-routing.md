@@ -1,6 +1,6 @@
 # SolidStart 路由 · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 写出这几条文件对应的 URL：routes/index.tsx、routes/blog/index.tsx、routes/blog/post.tsx、routes/about.tsx。
 
@@ -61,3 +61,25 @@
 
 先确认文件**default export 了组件**（没有它就不是页面）；再看是否把 API 风格导出（GET/POST）误当页面；核对大小写与路径映射（index 语义）；最后确认没被误放进括号分组造成理解偏差。路由表由文件扫描生成，"文件在但导出不合约定"是最常见断点。
 **来源**：v2「must default export a component」约定反推的排坑题转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  代码声明式路由树对大团队协作的实际利弊？ 
+
+ 利：路由即类型、集中可审计、重命名安全、测试可 mock 局部树；弊：根文件成合并热点、路由数膨胀后需要分文件拼接；缓解是按业务域拆树片段再组合，配 lint 防绕过声明直拼路径。 
+
+**来源**： https://github.com/solidjs/solid-start ； https://tanstack.com/router 
+
+### 14.  路由 loader 里取数失败，用户看到什么由哪些层决定？ 
+
+ loader 抛错被路由级 ErrorBoundary 接住，未配则冒到根/全局错误页；要区分 404（渲染 NotFound 或 redirect）与 5xx（边界+上报）；loader 返回错误标记 vs 抛异常的取舍：状态码语义与局部兜底能力。 
+
+**来源**： https://docs.solidjs.com/ 
+
+### 15.  设计带语言前缀（/zh/、/en/）与可选静态段的路由结构，你会怎么搭？ 
+
+ 语言作为布局段包一棵子树（共享 layout+params 校验），或 reroute 层重写去前缀命中同一树；可选段用通配+兜底重定向避免路由歧义；hreflang/canonical 与 301 规范化是 SEO 侧配套。 
+
+**来源**： https://github.com/solidjs/solid-start 

@@ -1,6 +1,6 @@
 # solid-suspense-transition 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) <Suspense> 是怎么知道"该显示 fallback"的？
 **来源**：Suspense 触发机制题的转述。
@@ -63,3 +63,25 @@
 页码 signal 作 source 或 `refetch(page)`；追加不替换可用 mutate 合并旧+新，或让 fetcher 依 `info.value` 累加。翻页包进 `start(...)` 过渡：旧列表保留（refreshing）、底部单独一个小 `<Suspense fallback={<Spinner/>}>` 就近兜底——整列表不塌。切忌把整个列表包一个顶层 Suspense，否则翻页全列表闪回 fallback。
 
 🚀 实操请去做 L5 作业：复现就近边界、effect 延后、transition 防闪、SuspenseList 编排、SSR 同步过渡五道题。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  用 useTransition 给路由/标签切换做 pending 样式与禁点击，具体怎么落？ 
+
+ startTransition 包导航信号写入，pending() 驱动根容器 class（进度条、opacity、pointer-events）；注意 pending 是全局计数，多个并发过渡合并；退出条件在 promise settle 后自动翻转，无需手动清理。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#usetransition 
+
+### 14.  嵌套 Suspense 的揭示顺序怎么控制？避免半页先跳出来？ 
+
+ 挂起在哪个边界就在哪个边界替换 fallback；要兄弟整齐就把多个 promise 汇到共同父边界（外层一个 fallback、或 Promise.all 后再落边界）；乱跳多半是 promise 穿透层级不一致，重排边界归属即可。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/fetching-data 
+
+### 15.  Suspense 服务端渲染时如何避免渐进流式在爬虫与移动端上的兼容坑？ 
+
+ 流式 HTML 依赖 $RB 类内联脚本推进占位替换，禁 JS 环境只剩骨架；对 SEO 关键内容应把取数上提到路由级同步等待（预渲染/阻塞加载），Suspense 只留给交互后更新，两轨分开。 
+
+**来源**： https://docs.solidjs.com/ ； https://github.com/solidjs/solid-start 

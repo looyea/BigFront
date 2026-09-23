@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-signals",
-  "title": "createSignal · 自测",
+  "title": "solid-signals 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "createSignal(1) 返回什么？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "createSignal(1) 返回什么？",
       "options": [
         "一个数字 1",
         "一个 { value, set } 对象",
@@ -11,10 +13,12 @@
         "一个 Promise"
       ],
       "answer": 2,
-      "explain": "返回两元素数组：getter(count) 与 setter(setCount)，是 Solid 所有响应式的原子。"
+      "explanation": "返回两元素数组：getter(count) 与 setter(setCount)，是 Solid 所有响应式的原子。"
     },
     {
-      "q": "为什么读 signal 要写成 count() 而不是 count？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么读 signal 要写成 count() 而不是 count？",
       "options": [
         "因为只有函数调用才可能被拦截、从而把当下读者登记为订阅者",
         "因为 count 是保留字",
@@ -22,10 +26,12 @@
         "没有原因，纯风格"
       ],
       "answer": 0,
-      "explain": "getter 里执行 subscribers.add(currentSubscriber)，靠'调用'这个动作建立依赖边；直接取变量无从拦截。"
+      "explanation": "getter 里执行 subscribers.add(currentSubscriber)，靠'调用'这个动作建立依赖边；直接取变量无从拦截。"
     },
     {
-      "q": "setCount(5) 在 count 当前已是 5 时会怎样？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "setCount(5) 在 count 当前已是 5 时会怎样？",
       "options": [
         "仍通知所有订阅者重跑",
         "值相等短路，不通知、下游不更新",
@@ -33,10 +39,12 @@
         "触发一次完整组件重渲染"
       ],
       "answer": 1,
-      "explain": "setter 比较 value===newValue 相同则 return，不通知——所以'原地改对象内部再 set 同一引用'会被当成没变。"
+      "explanation": "setter 比较 value===newValue 相同则 return，不通知——所以'原地改对象内部再 set 同一引用'会被当成没变。"
     },
     {
-      "q": "哪种写法会丢失响应式（拿到的是定格快照）？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "哪种写法会丢失响应式（拿到的是定格快照）？",
       "options": [
         "const current = () => count();",
         "在 createEffect 回调里读 count()",
@@ -44,10 +52,12 @@
         "const snapshot = count();"
       ],
       "answer": 3,
-      "explain": "把 count() 结果存进普通变量即定格为快照，之后不再变；要响应就得保留对 getter 的调用（函数/内联读）。"
+      "explanation": "把 count() 结果存进普通变量即定格为快照，之后不再变；要响应就得保留对 getter 的调用（函数/内联读）。"
     },
     {
-      "q": "深层嵌套对象要按路径细粒度更新，应选哪个 API？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "深层嵌套对象要按路径细粒度更新，应选哪个 API？",
       "options": [
         "createStore（L2）",
         "继续用 createSignal 存整个对象",
@@ -55,10 +65,12 @@
         "普通 let 变量"
       ],
       "answer": 0,
-      "explain": "createSignal 只在整体引用变化时通知；深层对象按路径订阅要用 createStore（signal 存标量/整体替换，store 存深层对象）。"
+      "explanation": "createSignal 只在整体引用变化时通知；深层对象按路径订阅要用 createStore（signal 存标量/整体替换，store 存深层对象）。"
     },
     {
-      "q": "setCount(c => c + 1) 相比 setCount(count() + 1) 稳在哪？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "setCount(c => c + 1) 相比 setCount(count() + 1) 稳在哪？",
       "options": [
         "前者会触发两次通知",
         "没有区别",
@@ -66,10 +78,12 @@
         "后者会破坏相等短路"
       ],
       "answer": 2,
-      "explain": "函数式更新拿到的就是当前值，不依赖外部闭包里那次 count() 读取的时机，异步/批量下更安全。"
+      "explanation": "函数式更新拿到的就是当前值，不依赖外部闭包里那次 count() 读取的时机，异步/批量下更安全。"
     },
     {
-      "q": "关于'在追踪窗口外读 signal'，下列说法正确的是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于'在追踪窗口外读 signal'，下列说法正确的是？",
       "options": [
         "setTimeout 里读 count() 仍会被外层 effect 追踪",
         "await 之后读 signal 一定被追踪",
@@ -77,7 +91,46 @@
         "signal 一旦创建就永远全局追踪所有读"
       ],
       "answer": 2,
-      "explain": "自动追踪只覆盖同步执行段；提前求值传参/异步里读都发生在追踪窗口外，拿到的是不更新快照。"
+      "explanation": "自动追踪只覆盖同步执行段；提前求值传参/异步里读都发生在追踪窗口外，拿到的是不更新快照。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " signal 里存对象后直接改对象内部字段（set 未调用），视图会更新吗？ ",
+      "options": [
+        " 会，Proxy 拦截 ",
+        " 不会：signal 只在 setter 调用且值变化时通知，内部突变不在协议内 ",
+        " 取决于对象大小 ",
+        " 开发模式会 "
+      ],
+      "answer": 1,
+      "explanation": " signal 是值容器不做深代理；深层可变状态是 store 的职责，这正是两 API 并存的理由。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 关于 signal 的读写调用位置，正确的是？ ",
+      "options": [
+        " 只能在组件内 ",
+        " 任意普通 JS 都可读写；只有在追踪作用域内读才会建立订阅 ",
+        " 写必须在组件内 ",
+        " 读必须在 effect 内 "
+      ],
+      "answer": 1,
+      "explanation": " signal 是普通函数，可在模块顶层、工具函数任意使用；响应式只是读取时机的属性，不是使用场所的限制。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Solid 对 hooks 调用规则（条件/循环内不可调用）的态度是？ ",
+      "options": [
+        " 与 React 相同 ",
+        " 无此规则：createSignal 等是普通函数，可在分支里创建，归属由 owner 决定 ",
+        " 仅生产环境宽松 ",
+        " 由 lint 强制 "
+      ],
+      "answer": 1,
+      "explanation": " 没有调度器槽位数组，就没有顺序枷锁；资源回收靠 owner 树而非调用次序。 "
     }
   ]
 }

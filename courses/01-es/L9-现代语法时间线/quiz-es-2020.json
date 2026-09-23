@@ -6,23 +6,38 @@
       "id": "q1",
       "type": "single",
       "prompt": "以下代码打印什么？\n\n```js\nconst a = 0;\nconsole.log(a || 'x', a ?? 'y');\n```",
-      "options": ["x y", "x x", "0 y", "0 x"],
-      "answer": 2,
+      "options": [
+        "0 y",
+        "x y",
+        "x x",
+        "0 x"
+      ],
+      "answer": 0,
       "explanation": "`||` 看 falsy → 0 走右 = 'x'；`??` 只看 nullish → 0 保留 = 0。这就是 `??` 的意义。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "`user?.profile?.city` 里 profile 是 `null`，整个表达式的值：**",
-      "options": ["抛 TypeError", "undefined", "null", "空字符串"],
-      "answer": 1,
+      "options": [
+        "抛 TypeError",
+        "null",
+        "空字符串",
+        "undefined"
+      ],
+      "answer": 3,
       "explanation": "`?.` 遇到 null/undefined → 短路整个链返回 undefined（不是 null）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "`a || b ?? c` 的结果是：",
-      "options": ["按从左到右执行", "SyntaxError，需要加括号", "等价 a ?? c", "自动 a || (b ?? c)"],
+      "options": [
+        "按从左到右执行",
+        "SyntaxError，需要加括号",
+        "等价 a ?? c",
+        "自动 a || (b ?? c)"
+      ],
       "answer": 1,
       "explanation": "规范禁止 `||` / `&&` 与 `??` 直接混用——必须写 `(a || b) ?? c` 或 `a || (b ?? c)`。"
     },
@@ -43,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "以下代码结果：\n\n```js\nlet x = 0;\nconst y = null;\ny?.foo(x++);\nconsole.log(x);\n```",
-      "options": ["1", "0", "抛错", "undefined"],
+      "options": [
+        "1",
+        "0",
+        "抛错",
+        "undefined"
+      ],
       "answer": 1,
       "explanation": "`?.` **短路整个调用表达式**——y 是 null 时 `y?.foo(...)` 不执行调用，参数也不会求值，x++ **不发生**。"
     },
@@ -51,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "`JSON.stringify({ id: 1n })` 会：",
-      "options": ["正常输出", "抛 TypeError（BigInt 不能序列化）", "输出字符串", "输出数字"],
+      "options": [
+        "正常输出",
+        "抛 TypeError（BigInt 不能序列化）",
+        "输出字符串",
+        "输出数字"
+      ],
       "answer": 1,
       "explanation": "BigInt 无法被 JSON.stringify——抛 `Do not know how to serialize a BigInt`。要么转字符串要么用自定义 replacer。"
     },
@@ -59,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "`globalThis` 在 Node.js 里等价于：",
-      "options": ["window", "self", "global", "process"],
+      "options": [
+        "window",
+        "self",
+        "global",
+        "process"
+      ],
       "answer": 2,
       "explanation": "浏览器 → window；Web Worker → self；Node → global。globalThis 统一了这个概念。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`null?.toString()` 的结果是：",
+      "options": [
+        "抛 TypeError",
+        "undefined——短路整个后续调用链",
+        "‘null’",
+        "空字符串"
+      ],
+      "answer": 1,
+      "explanation": "?. 遇到 null/undefined 短路**整个尾部表达式**（包括方法调用/下标），返回 undefined；`obj?.a.b.c` 后续点号也在短路范围内。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`10n / 3n` 的结果是：",
+      "options": [
+        "3.333...",
+        "3n（整数除法截断）",
+        "RangeError",
+        "Infinity"
+      ],
+      "answer": 1,
+      "explanation": "BigInt 只有整数语义：除法向零截断；与 Number 混用算术除 `10n / 3` 才抛 TypeError。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`\"a1 b2\".matchAll(/\\w+/)`（没带 g 旗标）会：",
+      "options": [
+        "正常返回两个匹配",
+        "抛 TypeError——matchAll 强制要求 global 旗标",
+        "只返回第一个",
+        "返回 null"
+      ],
+      "answer": 1,
+      "explanation": "matchAll 的入参必须是 /.../g，否则 TypeError；返回的是**迭代器**（带 index/groups），旧的 `regex.exec` 循环写法可以退休了。"
     }
   ]
 }

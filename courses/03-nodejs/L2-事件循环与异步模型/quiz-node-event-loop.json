@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "同步代码跑完后，Node 在进入事件循环下一阶段之前会先排空哪个队列？",
       "options": [
-        "宏任务队列",
         "process.nextTick 队列，然后是微任务(Promise)队列",
+        "宏任务队列",
         "只有 setTimeout 队列",
         "I/O 回调队列"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "nextTick 队列优先级最高、先于微任务队列；两者会在每个任务/阶段之间被彻底排空，之后才进入事件循环的宏任务阶段。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "事件循环利用率/延迟能量化 tick 间隔是否被拉长，直接反映“有同步任务霸占主线程”。RSS 只测内存、不测循环阻塞。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "timer.unref() 的作用是：",
+      "options": [
+        "清除该 timer",
+        "让该句柄不计入「保持进程存活」的引用计数——事件循环排空时即便 timer 未触发也正常退出",
+        "暂停事件循环",
+        "转移到线程池"
+      ],
+      "answer": 1,
+      "explanation": "unref 是「不再为这个 socket/timer 续命」：后台心跳/轮询器用它，退出逻辑不再被拖住；ref() 恢复；server 也支持——CLI 工具里后台保活连接不 unref 就是「进程挂住不退」的标准答案。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "timers 阶段同一轮里到期多个回调，执行特性是：",
+      "options": [
+        "按注册顺序",
+        "按登记队列 FIFO 全部跑完，但回调内的耗时让后续 timer「合并到期、一起补发」——100ms 与 105ms 同轮触发是常态",
+        "并发执行",
+        "每个都要等下一轮"
+      ],
+      "answer": 1,
+      "explanation": "阶段进入时快照到期集合依次执行，超时≠精度承诺（本关 setTimeout 精度题的另一面）；对时间敏感的调度用 worker/系统级定时器或校准时间戳差值，不用「回调次数」计数。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "crypto.pbkdf2、dns 解析、部分 fs 操作跑在线程池上，线程池默认大小与调整方式是：",
+      "options": [
+        "固定 4 线程不可改",
+        "默认 4，libuv ≥1.54 支持 UV_LIBUV_DEFAULT_POOL_SIZE / Node 的 UV_THREADPOOL_SIZE（上限 1024），启动前设置",
+        "跟随 CPU 核数",
+        "由 V8 控制"
+      ],
+      "answer": 1,
+      "explanation": "线程池饥饿场景（大量 pbkdf2+文件读并发）表现为「I/O 也不快」——调大是止血；注意 net/dns 的分工：dns.lookup 走线程池、dns.resolve 走 c-ares 事件循环，本关 dns 题的延伸纪律。"
     }
   ]
 }

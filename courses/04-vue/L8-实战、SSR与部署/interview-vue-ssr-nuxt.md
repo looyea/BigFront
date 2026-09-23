@@ -1,6 +1,6 @@
 # vue-ssr-nuxt 面试题精选
 
-> 共 12 题，覆盖 A 动机与流程 / B 水合与数据 / C 纪律与陷阱 / D Nuxt 与选型类。
+> 共 15 题，覆盖 A 动机与流程 / B 水合与数据 / C 纪律与陷阱 / D Nuxt 与选型类。
 
 ## 一、动机与流程（A 类）
 
@@ -57,3 +57,25 @@ SSR：每次请求服务器渲染，适合高度动态、个性化。SSG（预�
 ### 12. Nitro/H3 服务端引擎和 Express 有什么异同？
 同：都是 Node 侧 HTTP 中间件模型（请求→handler→响应），能写 REST 接口（呼应 09-express）。异：Nitro 跨平台（Node/edge/静态/Serverless 一份代码多目标），H3 是更轻的 web 框架并带事件/拦截器风格 API，`server/api/*` 文件即路由。概念可迁移，实现与部署目标不同。
 **来源**：Nitro 文档、H3 文档、Express vs 现代 Node 框架
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. SSR 的性能账要会算：TTFB 增加、FCP 减少、TTI 变化依赖什么因素？什么业务场景这笔账不划算？
+
+逐项：TTFB += 渲染 耗 时（数据 获取 串 行 度 是 命 门：并 行 预 取 + 边缘 缓 存 可 压 到 与 静 态 接 近；串 行 RPC 则 TTFB 爆炸）；FCP -= （HTML 即 含 内容，无 JS 也 可 见，收 益 与 网 络/机 型 强 相 关，弱 网 低 端 机 收 益 巨 大）；TTI ≈ 不 变 或 略 差（ hydration JS 仍 要 下 载 执 行，且 SSR HTML 更 大 解 析 也 花 时 间）——这 是 「SSR 不 是 银 弹」的 定量 表 达；进 一 步 的 最 优 解 常 是 **静 态 化 优先**（能 SSG/ISR 的 绝 不 实 时 SSR，个 性 化 信 息 边 缘 ESI/客 户 端 补）与 流 式（SSR streaming/渐进 渲 染 把 TTFB 变 「首 字节 即 回」、大 页 面 FCP 更 早）。不 划 算 场 景：登 录 后 重 应 用（无 SEO 诉 求、操 作 密 度 集 中 在 TTI 之 后）、团 队 无 服 务 端 运维 经 验（故 障 面 扩 到 进 程/内 存/缓存 一致 性，本包 部署 关 进 程 题 的 风 险 侧）、流 量 绝 大 部 分 已 装 过 首 页（缓 存 HTML 复 访 收 益 归 零）。决 策 输 出 形 式：按 页 面 渲 染 模 式 分 级（营 销 页 SSG/详情 页 ISR/应 用 CSR 壳），而 不 是 全 站 一 刀 切——「混 合 渲 染 是 组 织 决策 而 非 技 术 决策」（Nuxt route rules 就 是 这 个 决 策 的 配 置 化 形 态）。
+
+**来源**：web.dev SSR 性能权衡数据与 streaming SSR 实践；Nuxt route rules（hybrid rendering）文档。
+
+### 14. SSR 状态注水的完整链路：从 Pinia server 端初始化到客户端接管，哪些环节会漏？漏了各是什么症状？
+
+链路 四 环：① 每 请求 新 pinia（createNuxtApp 包 治 了，裸 SSR 业 主 负 责）+ action 在 服务 端 await（onServerPrefetch/useAsyncData）；② 序 列 化：`pinia.state.value` 进 payload —— 漏 点 1：state 里 有 不 可 序 列 化 物（Date/Map/函 数/第 三 方 实例，本包 advanced 持 久 化 序 列 化 同 款 考 点，症 状=丢 数 或 payload 爆 炸）；③ HTML 注 入（`window.__INITIAL_STATE__`/Nuxt payload script）—— 漏 点 2：XSS（序 列 化 内 容 未 转 义，注 入 script 块 的 `</script>` 逃 逸 是 固 定 工 程 题）；④ 客 户 端 hydrate：新 pinia 先 创 再 填——漏 点 3：填 充 前 有 组件 已 读 store（守 卫 抢 跑，本包 pinia 组件 外 翻 车 三 的 SSR 版，症 状=闪 现 未 登录 态）；漏 点 4：填 充 后 又 触 发 首 次 请 求（缺 key 缓 存/`pending` 复 用 判 定，症 状=两 次 重 复 请 求 事 件 同 时 出 现 在 Network）。检 查 手 段：生 产 HTML 搜 payload 大 小、Network 面 板 数 首 屏 业 务 请求 数、hydration 后 第 一 帧 录 屏 看 状 态 闪 现。
+
+**来源**：Pinia SSR 状态水合官方流程图；Nuxt payload/seroval 序列化与 XSS 转义实践。
+
+### 15. Nuxt 的服务端能力边界在哪里？什么情况下应该把「放在 Nuxt server」的功能拆回独立后端？
+
+合 适 留 在 Nitro：BFF 聚合（裁 剪 多 后 端 服务 响 应 给 前 端，减 往 返 与 字段 面）、密 钥 代 持（第 三 方 API secret 的 中转，本包 部署 关 密 钥 题 的 Nuxt 答 案）、轻 状态（Cookie 解析/页 面 级 缓存/简 单  webhook 适 配 器）、ISR/预 渲 染 的 数据 供 给 方。该 拆 走 的 信 号：① 写 主 数 据（事 务/并 发 控制/审 计 属 于 专 业 后 端，Node 边 缘 实例 不 适 合 长 事 务）；② 复 杂 权 限 模 型（越 来 越 多 业 务 判 断 在 server/api 与 主 后 端 双 处 维 护 = 腐 化 开 始）；③ 被 其 他 客 户 端 复 用（App/小 程 序 也 要 的 接 口 不 该 寄 生 在 web 框 架 里）；④ 资 源 模 型 不 匹 配（CPU 密 集/长 连接 与 SSR 的 状 态 无 亲 性 部 署 混 在 一 起 相 互 挤 压）。判 据 总 结：Nitro 是 「这 个 web 应 用 的 专 属 服务 端」（BFF/渲 染 属 主 权 ），不 是 「你 的 后 台」；把 这 条 线 画 住，Nuxt 全 栈 的 便 利 与 混 乱 只 隔 一 个 界 定 问 句：「这 段 服务 端 代 码 离 开 这 个 页 面 还 相 关 吗？」
+
+**来源**：Nuxt 文档 server engine 定位与 BFF 模式；全栈框架职责边界社区讨论。

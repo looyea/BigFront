@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "helmet() 主要做什么？",
       "options": [
-        "加密响应体",
         "批量设置一组安全 HTTP 响应头（CSP/HSTS/nosniff/X-Frame-Options 等）",
+        "加密响应体",
         "拦截所有跨域请求",
         "压缩响应"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "helmet 是一组设置安全响应头的中间件集合，缓解点击劫持、MIME 嗅探、XSS、协议降级等。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "带 credentials 的 CORS，origin 为什么不能设成 '*'？",
       "options": [
         "性能原因",
-        "规范禁止：允许携带凭证时必须精确回显来源 origin，'*' 会被浏览器拒绝",
         "会 404",
+        "规范禁止：允许携带凭证时必须精确回显来源 origin，'*' 会被浏览器拒绝",
         "只有 GET 允许 *"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Access-Control-Allow-Credentials: true 时 Allow-Origin 不能是通配 → 必须指定确切域名，否则浏览器拦截。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "防 SQL 注入最根本的手段是？",
       "options": [
         "过滤单引号",
-        "使用参数化查询 / ORM 占位符，永不字符串拼接 SQL",
         "限制输入长度",
-        "前端校验"
+        "前端校验",
+        "使用参数化查询 / ORM 占位符，永不字符串拼接 SQL"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "参数化让输入永远是'数据'不是'代码'。手写过滤引号极易被绕过（编码/多字节）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "纵深防御里 CSP 是兜底——转义/清洗是主力，万一漏了 CSP 限制脚本来源再挡一层。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 排序字段名来自 query 参数（?sort=createdAt），参数化查询为什么帮不了你？正确做法是？",
+      "options": [
+        "转义反引号即可",
+        "预编译参数只能绑\"值\"不能绑标识符——order by 的列名必须走服务端白名单映射（入参 key → 可信列名字典），任何\"过滤危险字符\"都是绕过的邀请函",
+        "用 ORM 就自动安全",
+        "长度限制"
+      ],
+      "answer": 1,
+      "explanation": "\"值可以参数化、结构不能\"是注入防御的第一原理；动态列/表/方向一律白名单枚举，这没有例外。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " JWT 签名密钥轮换的推荐机制是？",
+      "options": [
+        "换钥即停旧钥",
+        "密钥集（JWKS）带 kid：新签用新钥、验签时按 token 头 kid 选钥（新旧并行窗口共存），窗口=token 最长 TTL 后即可撤旧钥——吊销被黑密钥靠缩短窗口而非删除",
+        "每次重启随机",
+        "加密存储即可不轮换"
+      ],
+      "answer": 1,
+      "explanation": "\"双读单写\"是所有密钥轮换的原语：验证端宽容、签发端严格，才能不中断地完成换代。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 依赖 CVE 治理在现实的 npm 项目里怎么做？",
+      "options": [
+        "npm audit 全报给开发",
+        "分级 SLA：critical/high 限期（如 48h 内修或临时 WAF/降级缓解）、transitive 依赖评估可达性（这个漏洞代码路径我们根本不进），配 lockfile diff 审查、自动 PR（renovate/dependabot）与例外豁免登记——报告噪声大的工具没人看等于没装",
+        "只用零依赖包",
+        "等官方全部修完"
+      ],
+      "answer": 1,
+      "explanation": "安全治理的可执行形态是\"分级+时限+可达性判断+豁免记录\"，四件缺一都会退化成季度性恐慌。"
     }
   ]
 }

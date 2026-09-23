@@ -1,4 +1,4 @@
-# nuxt-directory 面试题（12 题）
+# nuxt-directory 面试题（15 题）
 
 > 主题：目录约定、别名系统、生成物排查、配置分层。
 
@@ -81,3 +81,25 @@
 **答**：模板即治理，清单：① 目录骨架含 app/server/shared 三区与 README 说明"什么代码放哪"；② ESLint 规则强制 pages/ 内只放页面、server 代码禁 import app 层（import 边界插件）；③ .env.example + runtimeConfig 双栏示范（public/私密），CI 正则扫密钥；④ tsconfig 壳 + lint/typecheck/test 三件套预接；⑤ 生成物 gitignore 三件套 + CI 里 prepare→build→test 的顺序固化；⑥ 一份 ADR 模板放 docs/，要求每个结构级偏离写理由。好的脚手架让新人第一行代码就落在正确位置——07 包 next-fullstack-project 的 M0 里程碑正是同款思想。
 
 **来源**：CSDN《前端脚手架的治理价值》；掘金《把架构决策写进模板里》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  大型 Nuxt 应用的目录组织：feature 拆分、跨端共享、server 域边界，你定哪些规矩？
+
+**答**：三条边界：① app 内按"路由域+feature"混合——pages 跟着 URL 走（文件路由硬约束），组件/composables 按 feature 收拢（app/features/<域>/ 或至少 app/composables/<域>-*），全站通用才进 components/ 顶层，防自动导入变成垃圾抽屉；② shared/ 是"两端契约层"：只放类型、zod schema、常量、纯函数——一旦出现 import vue/nitro 侧 API 就该被 lint 拦下（ESLint no-restricted-imports 按目录配）；取数逻辑放 server/services、客户端放 app/composables，命名对齐降低认知；③ server 按业务域建 api/<域>/ + services/，禁止 api 文件互相 import 出"面条 handler"；数据库/外部客户端在 server/utils 单例化但连接池懒初始化（冷启动）。配套：路径别名纪律（~/ 与 @@/ 的语义要团队统一）、模块边界用 ESLint boundaries 或 code owner 制。
+
+**来源**：Nuxt 官方文档 Directory structure；InfoQ《Vue 全栈大仓的目录治理》。
+
+### D5.  nuxt.config、app.config、runtimeConfig 三个"配置面"，分别给谁看、什么时候变、改了会怎样？
+
+**答**：按"读者×变化时机"分：nuxt.config=给构建与框架的声明（模块、目录、nitro 路由、构建期行为）——改了要重启 dev、变更即"架构决策"要评审；runtimeConfig=给运行时的值（服务端密钥、public 下发变量）——启动时由环境变量覆盖，改值重部署不重建（构建/运行分离的落点），且必须先声明字段才能被 NUXT_ 覆盖（fail-fast 设计）；app.config=给 UI 的响应式配置（主题色、文案开关）——编译进包、改值重构建、客户端可运行期改（reactive）。高频事故：① 密钥该进 runtimeConfig 非 public 栏却写进了 nuxt.config/app.config（构建期内联=泄露）；② 拿 runtimeConfig.public 当配置中心塞 50 个字段（全进 payload，首字节变重）；③ 用 process.env 散落读写绕过声明（失去覆盖校验与类型）。收口句："三个配置面=构建期合同、运行时注入、UI 常量——问『谁在什么时候需要它』即可选对"。
+
+**来源**：Nuxt 官方 Configuration / runtime config / app config 文档。
+
+### D6.  .nuxt、.output、node_modules、.env——哪些进版本库？新同事 clone 后 IDE 满屏红，你的三步排障？
+
+**答**：版本库：.nuxt 与 .output 绝不进库（构建生成物，.gitignore 默认模板含）；.env 不进库、进库的是 .env.example（列 key 不列值）；node_modules 不进（lockfile 进）。满屏红三步：① nuxt prepare——生成 .nuxt/tsconfig.json 与 #imports 声明，九成问题在此解决；② IDE 指向对的 tsconfig——VSCode Vue 插件认 .nuxt/tsconfig.json，重启 TS 服务/Volar；monorepo 里确认路径没被 workspace 改写；③ 仍在红=自动导入目标本身缺失——检查文件是否在约定目录、导出是否命名导出、是否被 ignore 规则排除（显式 import 永远可兜底）。深层预防：CI 跑 typecheck、nuxt prepare 进 postinstall、README 写三步——把"新环境可跑"当可回归特性对待。
+
+**来源**：Nuxt 官方 deployment / tsconfig 说明；SegmentFault《Nuxt 项目 IDE 红色波浪线自救》。

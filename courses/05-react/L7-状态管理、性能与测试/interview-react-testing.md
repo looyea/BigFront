@@ -1,6 +1,6 @@
 # react-testing 面试题精选
 
-> 共 12 题，覆盖 A 理念 / B 查询与断言 / C 交互与异步 / D mock·快照·Vue 对照四类。
+> 共 15 题，覆盖 A 理念 / B 查询与断言 / C 交互与异步 / D mock·快照·Vue 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：① 分层：纯逻辑用 `renderHook`/单测，UI 组件用 RTL 测"查询+交互+断言"，关键流程留少量 E2E；② 依赖治理：MSW 统一 mock 接口（成功/失败/延迟分支各测）、自定义 render 注入 Provider；③ 查询守可访问性优先、断言用 jest-dom 语义 matcher；④ 交互 `userEvent` + `await`、异步 `findBy/waitFor` 不硬等；⑤ 快照谨慎、别测实现细节；⑥ 配 CI 覆盖率但对"行为覆盖"而非"行覆盖"负责。体现的是"测行为、稳、快、可维护"的权衡观。
 
 **来源**：Testing Library 最佳实践、Kent C. Dodds — Testing Principles、Vitest/Jest 文档
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  mock 网络请求该用 MSW、还是 axios/fetch mock？组件测试与集成测试里如何选？
+
+三种层次：① mock 底层函数（jest.mock axios 模块）——最脆弱，绑死了「你用什么发请求」的实现，换库/换写法测试即碎，还测不到真实拦截器/序列化；② stub 全局 fetch（vi.fn 返回构造 Response）——比 mock 库贴近 HTTP，但要手搓每条响应、易漏边界；③ MSW（Service Worker 层拦截）——在被测代码「照常发真请求」的前提下于网络边界返回 mock，测的是「调用某个端点+处理该响应」，与用哪个 HTTP 库无关，最接近集成、也最能跨端复用（同一套 handlers 给单测/e2e/本地）。选择：组件的业务行为测优先 MSW；只在「验证某函数确实带特定参数发了请求」这种窄场景才用轻量 spy。红线：别 mock 你要测的那个东西本身。
+
+**来源**：Testing Library / MSW 官方对「mock 服务器而非请求库」的推荐；Kent C. Dodds 测试金字塔与 MSW 实践。
+
+### 14.  涉及定时器、CSS 动画、过渡/ Suspense 的组件，怎么测才不 flaky？
+
+定时器：用 vi.useFakeTimers + advanceTimersByTime 精确推进，测完 useRealTimers 复原，别真等。动画/过渡：RTL 环境（jsdom）本就不跑真实 CSS 过渡，元素「瞬间」出现/消失，所以多数直接断言最终态即可；若在真浏览器（Playwright 组件测试/e2e）跑，则要 disable animation（注入 `* {animation:none}` 或用动画等待工具）或显式 waitFor 元素稳定，别 await 一个猜测时长。Suspense/异步：await findBy/waitFor，配合 MSW 可控延迟。React 18 并发：更新被调度到微任务，务必用 act 语义（RTL 的 userEvent/findBy 已包 act），别裸调 setState 后同步断言。原则：把「时间」和「动画」从测试里请出去——要么 fake、要么等结果信号，绝不用 sleep 赌时长。
+
+**来源**：Vitest/Jest fake timers 文档；Testing Library「异步与 act」；Playwright 动画禁用策略。
+
+### 15.  如何向面试官体系化地讲「一个 React 组件的测试策略」？
+
+按「价值/成本」分层答：① 纯函数/工具→单元测（快、便宜，覆盖边界）；② 组件→以行为为主的中粒度测（渲染→用户操作 userEvent→断言可见结果），一个组件测「它对外承诺的交互」而非每个内部状态；③ 关键流程→跨组件集成测（页级/工作流，Provider 齐全、MSW 打底），这是回归保护性价比最高的一层；④ 极少数的黄金路径→e2e（Playwright）覆盖登录/下单等真链路；⑤ 快照仅对「不希望被无意改动的输出」（如格式化工具产出的 DOM 结构）谨慎使用并 review 每次更新。配套：可测性设计（合理 role/label、避免过度耦合内部）、每例隔离、用覆盖率找盲区而非追 100%、把 mutation/回归而非覆盖率当质量信号。核心信号：我会先测「用户会痛的东西」，而不是给每个 hook 写测试。
+
+**来源**：Testing Library 哲学（测行为不测实现）与测试金字塔/奖杯模型社区综述。

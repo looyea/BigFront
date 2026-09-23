@@ -95,3 +95,21 @@ console.log(new B().x);
   console.log(b.value);   // 2（同一个实例）
   ```
 - 来源：多份中文八股；MDN class private。
+
+---
+
+**13）#私有字段与 Symbol 私隐、WeakMap 私隐、TS private 的本质差异？**
+- 参考要点：TS private 编译后蒸发——运行时仍是普通属性；Symbol 键「准私有」（能 getOwnPropertySymbols 拿到，跨 realm 甚至能反射）；WeakMap 真隔离但引用即密钥、API 繁琐、实例元数据要全局表。`#field` 是**语法级**：不可枚举、外部访问 SyntaxError、`#x in obj` 唯一合法探测；性能上 V8 把 # 访问编成固定槽位（比对象属性查找更快）。代价：无法代理/反射魔改（框架做 property intercept 会卡住）。
+- 来源：MDN《Private class features》；2ality《Private properties in JavaScript》四方案对比。
+
+---
+
+**14）Top-Level await 会造成什么死锁？为什么库作者要慎用？**
+- 参考要点：模块求值图里 TLA 让「完成」延后：若存在**循环依赖**且环上任一模块用了 TLA，互相等待形成死锁（规范直接报 Dependency cycle via + top-level await）；上游 import 它的模块也要 await 传播（异步涟漪）。npm 库顶层 await 还会把 CJS 消费者全部堵死（require 同步语义无法等待）。守则：应用层 ESM 随便用，公共库最多入口延迟加载处用，且避免库内部成环。
+- 来源：MDN《Top-level await》限制章节；Node.js docs「top-level await in cycles」。
+
+---
+
+**15）Class 字段（x = 1）为什么不用放进 constructor？历史为什么一波三折？**
+- 参考要点：字段初始化发生在 **super() 返回后、构造器体执行前**，直接 `this.x = 1` 会**触发 setter**（与定义属性不同，历史大坑最终定死）；字段语法让「形状提前确定」利于 V8 hidden class 内联。历史：2016 曾被 TC39 整体回退（与装饰器耦合、this 语义争议），2022 独立回归。static 字段 + static {} 块补齐静态侧初始化与一次性异步引导（配置预取）。
+- 来源：tc39/proposal-class-fields（含 reverted 时间线）；MDN《Public class fields》setter 触发说明。

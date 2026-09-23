@@ -1,6 +1,6 @@
 # vue-use-i18n 面试题精选
 
-> 共 12 题，覆盖 VueUse 认知 / 契约与源码 / 自写 composable / vue-i18n 机制 / 国际化工程 五类。
+> 共 15 题，覆盖 VueUse 认知 / 契约与源码 / 自写 composable / vue-i18n 机制 / 国际化工程 五类。
 
 ---
 
@@ -93,3 +93,25 @@
 错误文案在 schema 里写死（`z.string().min(2,'至少2字符')`），校验执行时已把字符串固化进 errors。根治：**错键不错文**——schema 只吐 `errors.nameShort` 键，模板 `t(errKey)` 渲染，locale 一变文案自动变；服务端 422 同理返回错误码。这是把错误通道设计成"可翻译协议"（呼应 vue-use-i18n 第五节、vue-forms-validation 第四、五节）。
 
 **来源**：i18n + 表单校验整合实践（vee-validate 文档 "Server-side & i18n errors"）
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 设计一套带组件的富文本国际化（句子里嵌链接/加粗），从 message 格式选型到类型安全给完整方案。
+
+格 式 选 型：vue-i18n 富 文 本 消息 = 词 条 里 放 `<a>帮助页</a>` 片段 + `<i18n-t keypath="...">` 或 `t` 返回 AST 渲染（占 位 符 方案：把 句子 拆 成 `visit {link} for help` 再 拼 会 死 定——德语 动 词 置 尾/日语 语 序 不 同，**句子 必须 完 整 一 条**）。实现：`<i18n-t keypath="nav.help"><template #link><RouterLink to="/help">{t('nav.helpPage')}</RouterLink></template></i18n-t>`——结构 标 签 由 各 语 言 词 条 自 由 摆 位。类型 安全：词 条 文件 用 单 一 源（默 认 语 JSON）+ 生成 `.d.ts`（vue-i18n 的 `defineI18nConfig`/json 导入 声明），键 写 错 编译 期 爆（vite-plugin 校验）；插 值 参数 用 `MessageKeys`/`Params` 泛 型 约束 到 词条 形状（i18n.d.ts  augment）。约 定：占 位 符 命 名 不 用 `{0}`（翻 译 平 台 上 无 语 义 易 翻 错 位），`_missing` 钩 子 开发 环境 抛 错 生产 上 报（本关 缺 键 拦截 题 的 运行 时 保 险）。
+
+**来源**：vue-i18n 富文本消息与 i18n-t 组件文档；intlify 类型增强（JSON 词条推导）方案。
+
+### 14. 表单库错误文案、路由标题、toast 这三类「非模板文案」怎么纳入 i18n 且不把全局单例捅进组件树？
+
+共同 难 点：这 三 类 都 在 **setup 之外** 生 成（zod schema 模 块 级 定 义、路 由 表 静 态 对 象、toast 工 具 函 数），拿 不 到 useI18n 的 组件 作用 域。解 法 统 一 姿势=**延 迟 求 值 + 全 局 composer 显 式 单 例**：`const { t } = i18n` （createI18n 返 回 的 实例 级 t）始 终 可 用，但 要 求 「文案 不 能 是 什 么」——schema 里 不 能 存 `t('...')` 的 **结果**（切 语 言 不 重 生 效，本关 表 单 联动 题 的 根 因），要 存 **键 名/函数**，消 费 时 刻（渲 染 错 误/toast 弹 出/路 由 meta 被 读）才 `t(key)`。路 由 标题：`meta: { titleKey }` + documentTitle 组合 函数 里 `watch(route)` 翻 译；toast：`toast.error(t(key), params)` 参 数 透 传。architect 判 据：「跨 界 面 的 文案 生 产 者 只 负 责 键 和 参 数，渲 染 者 负 责 语 言」——这 条 划 完，三 类 问 题 是 同 一 个 问 题。
+
+**来源**：vue-i18n 非组件环境（i18n.global）文档；vee-validate+zod 错误信息本地化官方配方（键名/延迟翻译）。
+
+### 15. 多语言站点的 SEO 与运行时 locale 协商：hreflang、URL 策略、首屏语言判定三件套怎么定？
+
+URL 策 略 优先 `/zh/` 路径 前 缀（子 域 名 割 裂 权 重、域 名 TLD 不 可 靠），每 个 页 面 输 出 全 语 种 `hreflang` + `x-default`；**不 要 靠 302 按 Accept-Language 强跳**（爬 虫 视 角 只 看 到 一 个 语 种 + 用户 手 动 切 语 言 后 被 弹 回，正 解=首 访 协 商 一 次 写 cookie/localStorage，之 后 尊 重 选 择）。SSR 侧：语 言 决 定 **响应 头/HTML lang/词 条 服 务 端 选 择** 三 处 一致（否 则 hydration 文 案 不 匹 配 警 告，本包 SSR 关 的 i18n 变 体）；Nuxt i18n 模 块 把 i18n 变 量 融 进 路 由（i18n 开 关 + 屏 蔽 i18n 路 由 注 册 的 细 节 值 得 了 解）。日 期/数字 的 本 地 化 **不 进 i18n 词 条 库**，直 用 Intl（`Intl.DateTimeFormat(locale)`），注 意 SSR 的 Node ICU 完整 度（node 13+ 默 认 full-icu，更 老 环境/极 端 瘦 身 镜像 会 静默 退 化 成 en 格 式——同 构 两 端 日 期 格 式 不 一 致 的 冷 知 来 源，本包 部 署 关 镜像 题 的 功 能 面）。
+
+**来源**：Google hreflang 规范与本地化 SEO 指南；MDN Intl 与 Node full-icu 变更说明；Nuxt i18n 模块文档。

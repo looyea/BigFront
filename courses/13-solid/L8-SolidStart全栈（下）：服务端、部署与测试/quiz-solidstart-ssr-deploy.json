@@ -1,48 +1,136 @@
 {
-  "lesson": "solidstart-ssr-deploy",
-  "title": "SSR 模式与部署 · 自测",
+  "title": "solidstart-ssr-deploy 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "defineConfig 参数表里 ssr 的默认值是？",
-      "options": ["undefined", "true", "false", "\"auto\""],
+      "id": "q1",
+      "type": "single",
+      "prompt": "defineConfig 参数表里 ssr 的默认值是？",
+      "options": [
+        "undefined",
+        "true",
+        "false",
+        "\"auto\""
+      ],
       "answer": 1,
-      "explain": "官方参数表：ssr boolean、默认 true（服务端渲染）；设 false 走纯客户端渲染。"
+      "explanation": "官方参数表：ssr boolean、默认 true（服务端渲染）；设 false 走纯客户端渲染。"
     },
     {
-      "q": "prerender: { crawlLinks: true } 的行为是？",
-      "options": ["只渲染 routes 数组列出的页", "给每页生成 SEO 链接标签", "构建期从入口顺 <a> 链接爬遍全站、逐页产出静态 HTML", "运行时缓存访问过的页"],
+      "id": "q2",
+      "type": "single",
+      "prompt": "prerender: { crawlLinks: true } 的行为是？",
+      "options": [
+        "只渲染 routes 数组列出的页",
+        "给每页生成 SEO 链接标签",
+        "构建期从入口顺 <a> 链接爬遍全站、逐页产出静态 HTML",
+        "运行时缓存访问过的页"
+      ],
       "answer": 2,
-      "explain": "crawlLinks 让预渲染器沿链接遍历全站路由；点名单页则用 routes: [\"/\", \"/about\"]。"
+      "explanation": "crawlLinks 让预渲染器沿链接遍历全站路由；点名单页则用 routes: [\"/\", \"/about\"]。"
     },
     {
-      "q": "预渲染产物在运行时的处理方式是？",
-      "options": ["静态文件直接服务，无服务端处理", "每请求重渲染", "仅缓存 5 分钟", "回源构建"],
+      "id": "q3",
+      "type": "single",
+      "prompt": "预渲染产物在运行时的处理方式是？",
+      "options": [
+        "静态文件直接服务，无服务端处理",
+        "每请求重渲染",
+        "仅缓存 5 分钟",
+        "回源构建"
+      ],
       "answer": 0,
-      "explain": "官方对 SSG 的定义：构建期出静态 HTML、静态文件运行时不经服务端处理——快加载、好 SEO。"
+      "explanation": "官方对 SSG 的定义：构建期出静态 HTML、静态文件运行时不经服务端处理——快加载、好 SEO。"
     },
     {
-      "q": "server.preset 不传时，SolidStart 的默认部署预设是？",
-      "options": ["vercel", "cloudflare_module", "static", "node"],
+      "id": "q4",
+      "type": "single",
+      "prompt": "server.preset 不传时，SolidStart 的默认部署预设是？",
+      "options": [
+        "vercel",
+        "cloudflare_module",
+        "static",
+        "node"
+      ],
       "answer": 3,
-      "explain": "官方：不传参默认 Node 服务器预设；provider 环境有时能自动探测。"
+      "explanation": "官方：不传参默认 Node 服务器预设；provider 环境有时能自动探测。"
     },
     {
-      "q": "部署到 Cloudflare 必须额外做的两件事是？",
-      "options": ["手写 service worker", "关闭 SSR", "rollupConfig.external 加 __STATIC_CONTENT_MANIFEST 与 node:async_hooks，wrangler.toml 开 nodejs_compat", "把序列化改成 js"],
+      "id": "q5",
+      "type": "single",
+      "prompt": "部署到 Cloudflare 必须额外做的两件事是？",
+      "options": [
+        "手写 service worker",
+        "关闭 SSR",
+        "rollupConfig.external 加 __STATIC_CONTENT_MANIFEST 与 node:async_hooks，wrangler.toml 开 nodejs_compat",
+        "把序列化改成 js"
+      ],
       "answer": 2,
-      "explain": "SolidStart 依赖 AsyncLocalStorage；Netlify/Vercel/Deno 开箱支持，Cloudflare 需这两处显式开启。"
+      "explanation": "SolidStart 依赖 AsyncLocalStorage；Netlify/Vercel/Deno 开箱支持，Cloudflare 需这两处显式开启。"
     },
     {
-      "q": "v2 的部署协作机制换成了什么？",
-      "options": ["用 Vite Environment API 构建两端、对接 Nitro v3 / Cloudflare、Netlify 的 Vite 插件", "只能部署到 node", "改用 webpack5", "由 wrangler 独占"],
+      "id": "q6",
+      "type": "single",
+      "prompt": "v2 的部署协作机制换成了什么？",
+      "options": [
+        "用 Vite Environment API 构建两端、对接 Nitro v3 / Cloudflare、Netlify 的 Vite 插件",
+        "只能部署到 node",
+        "改用 webpack5",
+        "由 wrangler 独占"
+      ],
       "answer": 0,
-      "explain": "v2 概览：基于 Vite v8+ 的 Environment API 做 client/server 构建，因而直接吃 deployment plugins 生态。"
+      "explanation": "v2 概览：基于 Vite v8+ 的 Environment API 做 client/server 构建，因而直接吃 deployment plugins 生态。"
     },
     {
-      "q": "v2 声明 router-agnostic 的含义是？",
-      "options": ["不需要 Router 组件", "只能用自带 router", "路由层可换：官方 Solid Router v1 或 TanStack Solid Router v1", "路由完全静态化"],
+      "id": "q7",
+      "type": "single",
+      "prompt": "v2 声明 router-agnostic 的含义是？",
+      "options": [
+        "不需要 Router 组件",
+        "只能用自带 router",
+        "路由层可换：官方 Solid Router v1 或 TanStack Solid Router v1",
+        "路由完全静态化"
+      ],
       "answer": 2,
-      "explain": "框架层（预渲染/服务端函数/序列化）与路由层解耦，两种官方认可 router 皆可用。"
+      "explanation": "框架层（预渲染/服务端函数/序列化）与路由层解耦，两种官方认可 router 皆可用。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 部署后静态资源的缓存策略基线是？ ",
+      "options": [
+        " 全部 no-cache 最安全 ",
+        " 带 hash 的构建产物 immutable 长缓存，HTML/入口不缓存或短缓存配版本控制 ",
+        " 全交浏览器默认 ",
+        " 只缓存图片 "
+      ],
+      "answer": 1,
+      "explanation": " 文件名即版本时长缓存零风险；HTML 缓存住会引用旧 chunk，发布切换失效，两类头必须分开。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 生产密钥的正确注入方式是？ ",
+      "options": [
+        " 提交 .env 到仓库 ",
+        " 平台 secret/环境变量在部署环境注入，.env 只留本地开发且进 gitignore ",
+        " 写死在配置文件常量 ",
+        " 前端 localStorage "
+      ],
+      "answer": 1,
+      "explanation": " 仓库即公开面；构建机与运行时环境分别注入各自需要的变量，最小暴露面原则。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 多平台部署（Node/边缘/静态）同一套代码，靠什么解耦？ ",
+      "options": [
+        " 手写三套服务 ",
+        " 适配器/预设抽象：构建产物按目标平台输出，业务代码只依赖标准 Request/Response ",
+        " 只支持 Node ",
+        " 运行时 UA 判断 "
+      ],
+      "answer": 1,
+      "explanation": " router-agnostic + 平台 preset 的意义正在于此：换平台改配置不改业务码。 "
     }
   ]
 }

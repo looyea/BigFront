@@ -1,4 +1,4 @@
-# nuxt-cookie-session 面试题（12 题）
+# nuxt-cookie-session 面试题（15 题）
 
 ## A. 基础认知
 
@@ -67,3 +67,25 @@
 **答**：价值全在体验与成本：未登录时不渲染敏感 UI、不发无意义请求、给用户明确引导，以及把明显越流的探测挡在门外减少服务端压力。边界是它**没有任何安全效力**——浏览器是攻击者完全控制的运行时，路由守卫、隐藏按钮、`__NUXT__` 里的状态都能被绕过或伪造。所以正确的架构是"前端拦是门面，服务端 middleware 是门禁，数据层校验是底线"三层各自独立成立（呼应 nuxt-middleware-auth、next-middleware-auth 与 exp-auth）。任何只在前端成立的权限，评审时应直接判为缺陷。
 
 **来源**：《零信任下的前端与后端职责》、《鉴权三层模型》
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  用 Nuxt 设计一套完整的会话体系：cookie 属性、存储、旋转、吊销、并发刷新，逐项给决定和理由。
+
+逐项给账：① 载体——session cookie 存 httpOnly cookie（JS 读不到=XSS 降权），名字带前缀可管理（sid_app）；② 属性——Secure 无条件、SameSite=Lax 默认（回跳/嵌入特例单独评审）、Path=/、HttpOnly，会话 cookie 不给 Expires（关浏览器即死是特性）；③ 存储——服务端 Redis：key=session id、value={userId, 设备指纹, 权限快照, 最后活动时间}，TTL=空闲超时+绝对上限双轨（绝对上限防长期盗用）；④ 旋转——登录成功与权限变更时换新 sid（防会话固定），旧 sid 短窗口双活保当前操作不断；⑤ 吊销——登出删 Redis key；改密/风控触发按 userId 批量删（"踢下线"能力是选型服务端 session 的核心理由）；⑥ 并发刷新——空闲临期时滑动续期，多标签同刷用"刷新加锁/新 token 写回旧 sid 的 304 式协议"避免互相踩——细节在 middleware-auth 的 401 单飞题展开。⑦ Nuxt 落点：解析 cookie→event.context.user 放 server middleware，登出清场走 nuxt-state 那套清单，前后端同仓让这条链没有跨域 CORS 税。
+
+**来源**：OWASP Session Management Cheat Sheet；Nuxt 官方 useCookie 文档
+
+### 14.  前后端分离跨子域部署（app.example.com 与 api.example.com）时，cookie 方案要改哪些地方？有没有更好的路？
+
+先纠概念：example.com 与 api.example.com 是"同站不同源"（site 相同），SameSite=Lax/Strict 仍可用——真正跨站（a.com 调 b.com）才要 None+Secure 且直面第三方 cookie 封禁（Safari ITP、Chrome 逐步限制），这是要尽量避免的局。同站跨子域的配置账：① cookie Domain=.example.com 收窄使用（能共享的只有全局会话，别拿它当默认——子域越权面扩大）；② CORS 开 credentials:true+精确 Origin 白名单（不能 *），预检请求量要计入性能；③ CSRF 面变大：SameSite 仍在但跨子域 XSS 互相传染，状态变更接口仍要 token 校验。更好的路两条：同域反代（app.example.com/api → 后端，cookie 回归第一方零 CORS，运维给力的首选）；或干脆"前端域不发会话、API 域发+网关代理解析"（BFF 收口，呼应 nuxt-server-routes）。跨站嵌 iframe 的登录态（第三方支付页里嵌自家页）：ITP 基本判死，用"弹出到顶层完成操作再回跳"替代嵌入。收口句：先争取"同站"，再优化"同源"，跨站是最后且要计维护成本的手段。
+
+**来源**：MDN Same-site 定义；SegmentFault《跨域 cookie 的四条死路与一条活路》
+
+### 15.  从安全工程角度 review"前端自己判断登录态"的方案：哪些判断可以前端做、哪些必须服务端说了算、边界怎么画？
+
+原则一句话：前端判断=体验层，服务端判断=安全层，任何"只有前端判"的门都不算门。前端可做的三件（各自纯体验理由）：① 路由守卫决定"跳不跳登录页"（少一次白屏，服务端会拒绝≠不用友好引导）；② 菜单/按钮按角色显隐（信息降噪，admin 链接给普通用户看只增加困惑与探测面）；③ 表单预校验（减少注定 403 的提交）。必须服务端做的：身份解析（cookie→user 每请求做，不信任何客户端传来的身份声明）、权限判定（数据查询永远带 owner/tenant 条件，"前端看不见"不是隔离）、限流与吊销（会话删了前端还显示登录=正常现象，操作自然 401 收敛）。画边界的方法：威胁建模问"攻击者能改客户端什么"（改 JS、改 localStorage、重放请求、扒 cookie），凡攻击路径能绕过的检查全部降级为 UX。文案规矩：内部文档别写"前端已鉴权"，写"前端已做可见性控制，服务端鉴权在 X 层"——措辞就是边界。
+
+**来源**：OWASP ASVS 访问控制章节；知乎《前端鉴权的三个合法用途与一个非法幻想》

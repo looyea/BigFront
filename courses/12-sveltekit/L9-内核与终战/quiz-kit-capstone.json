@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-capstone",
-  "title": "生产毕业清单 · 自测",
+  "title": "kit-capstone 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "为什么客户端不能只靠 $page.data 做授权判断？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么客户端不能只靠 $page.data 做授权判断？",
       "options": [
         "因为 $page.data 只在 SSR 有值",
         "$page.data 是乐观视图、可被篡改，不能作为授权依据，需在 server load 二次守卫",
@@ -11,10 +13,12 @@
         "授权只在前端做即可"
       ],
       "answer": 1,
-      "explain": "客户端数据是可被用户改的乐观视图；真正授权必须落在 +page.server/+layout.server 的 server 侧守卫（L4/L5）。"
+      "explanation": "客户端数据是可被用户改的乐观视图；真正授权必须落在 +page.server/+layout.server 的 server 侧守卫（L4/L5）。"
     },
     {
-      "q": "load 返回值'序列化进 HTML'的双重身份是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "load 返回值'序列化进 HTML'的双重身份是？",
       "options": [
         "只是性能优化，无安全风险",
         "只是安全隐患，应完全不返回数据",
@@ -22,10 +26,12 @@
         "它只影响 SEO"
       ],
       "answer": 2,
-      "explain": "数据内联是性能红利，同时 load 返回内容会进 HTML——所以只放渲染必需字段，别漏密钥（L3/L8）。"
+      "explanation": "数据内联是性能红利，同时 load 返回内容会进 HTML——所以只放渲染必需字段，别漏密钥（L3/L8）。"
     },
     {
-      "q": "表单 action 成功之后，正确的收尾是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "表单 action 成功之后，正确的收尾是？",
       "options": [
         "直接 return 一个 JSON",
         "redirect(303) 跳出以防重复提交（fail 只用于失败回填）",
@@ -33,10 +39,12 @@
         "抛一个 error(500)"
       ],
       "answer": 1,
-      "explain": "写操作成功后 303 重定向（Post/Redirect/Get）避免刷新重复提交；fail(4xx/5xx) 用于校验失败回填（L4）。"
+      "explanation": "写操作成功后 303 重定向（Post/Redirect/Get）避免刷新重复提交；fail(4xx/5xx) 用于校验失败回填（L4）。"
     },
     {
-      "q": "与 Next Route Handler 不同，Kit 的 +server.js 端点默认？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "与 Next Route Handler 不同，Kit 的 +server.js 端点默认？",
       "options": [
         "没有任何自动缓存，需自己用 CDN + Cache-Control 显式加",
         "自动缓存 60 秒",
@@ -44,10 +52,12 @@
         "自动做增量静态再生"
       ],
       "answer": 0,
-      "explain": "Kit 端点无自动缓存（L7），要缓存得自己在响应设 Cache-Control 并交给 CDN/edge——这是与 Next 缓存模型的显式差异。"
+      "explanation": "Kit 端点无自动缓存（L7），要缓存得自己在响应设 Cache-Control 并交给 CDN/edge——这是与 Next 缓存模型的显式差异。"
     },
     {
-      "q": "标准'登出'应包含哪三件事？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "标准'登出'应包含哪三件事？",
       "options": [
         "清 cookie、失效相关缓存、跳转到登录页",
         "只删数据库行",
@@ -55,10 +65,12 @@
         "只清 localStorage"
       ],
       "answer": 0,
-      "explain": "登出三件套：撤销会话 cookie、让服务端缓存/locals 失效、跳登录页，避免残留可复用状态（L5）。"
+      "explanation": "登出三件套：撤销会话 cookie、让服务端缓存/locals 失效、跳登录页，避免残留可复用状态（L5）。"
     },
     {
-      "q": "handleError 里对'未预期错误'的正确处理是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "handleError 里对'未预期错误'的正确处理是？",
       "options": [
         "全部吞掉返回 200",
         "只在 dev 打印，生产静默",
@@ -66,10 +78,12 @@
         "打结构化日志并上报，带 url/route.id 摘要，且 expected 错误不上报以免噪音"
       ],
       "answer": 3,
-      "explain": "未预期错误进 handleError 做结构化上报（带上下文），error() 抛的预期错误不过 handleError、也不该上报（L5/L8）。"
+      "explanation": "未预期错误进 handleError 做结构化上报（带上下文），error() 抛的预期错误不过 handleError、也不该上报（L5/L8）。"
     },
     {
-      "q": "哪项是 Kit 毕业项目里最有说服力的'渐进增强'证据？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "哪项是 Kit 毕业项目里最有说服力的'渐进增强'证据？",
       "options": [
         "把所有内容塞进一个组件",
         "禁用 JavaScript 后，核心提交流程仍能完成（form action + enhance）",
@@ -77,7 +91,46 @@
         "首页做了 prerender"
       ],
       "answer": 1,
-      "explain": "action 配合 enhance 让无 JS 也能提交，是 Kit 一等公民，作为毕业加分证据最能体现渐进增强（L4/capstone）。"
+      "explanation": "action 配合 enhance 让无 JS 也能提交，是 Kit 一等公民，作为毕业加分证据最能体现渐进增强（L4/capstone）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 毕业项目里，登录、鉴权、授权三条线的官方落点组合是？ ",
+      "options": [
+        " 全部写在 hooks.client.js ",
+        " handle 认证并写 event.locals，layout load 下发登录态供 UI，敏感操作在 server load/端点逐路由授权 ",
+        " 前端隐藏按钮即可 ",
+        " 只在数据库层触发器 "
+      ],
+      "answer": 1,
+      "explanation": " 认证一次收口、体验与 UI 走 layout、安全边界必须回到服务端逐点判定，三层各司其职。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 毕业项目上线前，哪条『渐进增强』证据最有说服力？ ",
+      "options": [
+        " 首屏 0 JS ",
+        " 禁 JS 后核心链路（注册/下单/发布）仍能靠表单完成 ",
+        " 全静态 ",
+        " 无 CSS "
+      ],
+      "answer": 1,
+      "explanation": " Kit 的 action+无 JS 回退是框架能力，真正证据是禁用 JS 的 e2e 用例全绿。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 项目同时有营销页（SEO）与后台（登录态），渲染形态的正确组合？ ",
+      "options": [
+        " 全站 SSR ",
+        " (marketing) 组 prerender 静态、后台组动态 SSR，共享一套组件库与类型 ",
+        " 全站 CSR ",
+        " 双仓库 "
+      ],
+      "answer": 1,
+      "explanation": " 单仓分组是官方推荐形态：SEO 页吃静态红利，动态页吃会话实时性，避免同步税。 "
     }
   ]
 }

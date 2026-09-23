@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "非受控组件读取输入值通常靠什么？",
-      "options": ["useState", "useRef 指向 DOM，提交时读 .value", "useEffect", "context"],
+      "options": [
+        "useState",
+        "useRef 指向 DOM，提交时读 .value",
+        "useEffect",
+        "context"
+      ],
       "answer": 1,
       "explanation": "值存 DOM，靠 ref 读（呼应 react-forms 第二节、react-refs）。"
     },
@@ -66,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "React 19 给 <form> 传 action={fn} 后，fn 的参数通常是？",
-      "options": ["event 对象", "FormData", "字符串", "ref"],
+      "options": [
+        "event 对象",
+        "FormData",
+        "字符串",
+        "ref"
+      ],
       "answer": 1,
       "explanation": "action 函数收到 FormData，可 .get(name) 取值（呼应 react-forms 第五节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "文件上传/提交时读一次适合非受控（呼应 react-forms 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 受控 checkbox 应该绑定哪个属性、配什么 onChange？",
+      "options": [
+        "value + onChange",
+        "checked + onChange——checkbox 的「值」语义在布尔 checked 上，value 对它表达的是「提交时的载荷」，受控必须驱动 checked",
+        "defaultChecked",
+        "selected"
+      ],
+      "answer": 1,
+      "explanation": "不同控件的受控属性不同：文本类 value、checkbox/radio 用 checked、select 用 value（对应 option 的 value）。把 checkbox 去受控 value 是常见 bug（勾不上）。radio 的受控是 checked + 相同 name + 各自 value。这条与 select/file 的受控细节是本关高频冷知识。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " React 里能否用受控方式给 `<input type=\"file\">` 设置选中文件？",
+      "options": [
+        "能，value 传路径",
+        "不能——出于安全，file input 的 value 只能被用户交互改变、程序只能读不能写；React 里它本质只能非受控（用 ref 读 files），受控的是「用户选中的 File 对象」放进 state 而非回写 input",
+        "传 accept 即可",
+        "用 defaultValue"
+      ],
+      "answer": 1,
+      "explanation": "浏览器禁止 JS 设定 file input 的值，所以没有「受控 file input」。惯用：ref/onChange 里读 `e.target.files` 存入 state 做预览与上传，但输入框本身保持非受控。这也是「哪类字段该走非受控」的典型例子（本关 Q7 的延伸）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 用一个 form 对象 state + `setForm(f => ({ ...f, [e.target.name]: e.target.value }))` 管理多字段，主要收益与前提是？",
+      "options": [
+        "无任何收益",
+        "收益：一个通用 onChange 处理所有字段、新增字段少改代码；前提是每个控件都要有唯一 name，且异步连改要用函数式更新避免相互覆盖",
+        "不需要 name",
+        "只适用于单字段"
+      ],
+      "answer": 1,
+      "explanation": "`[e.target.name]` 计算属性键把「字段名」变成运行时的 key，一个 handler 通吃。前提：受控控件都带 name；且写回必须 `f => ...` 函数式（否则同一批多次改或异步读旧 form 会丢更新，呼应 useState 关）。嵌套对象字段这套就不够了，得配合路径更新或上表单库。"
     }
   ]
 }

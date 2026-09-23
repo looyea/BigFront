@@ -1,6 +1,6 @@
 # solid-events 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) Solid 的 `onClick` 和 `on:click` 有什么本质区别？
 **来源**：委托 vs 原生题的转述。
@@ -63,3 +63,25 @@ Solid 允许把 handler 写成 `[函数, 附加参数]`：触发时以该参数�
 可以按事件分别选形态：需要精确阻断冒泡/自定的用原生 `on:pointermove`（元素级监听、stopPropagation 生效），而点击类高频共享的用委托 `onClick`。注意原生监听随元素卸载自动移除、委托监听常驻；对频繁 pointer 事件若想用捕获阶段可 `on:pointermoveCapture` 或在 onMount 里手动 `addEventListener(...,{capture:true})` + `onCleanup`。按"是否需要元素级精确控制"逐事件决定，而非全局二选一。
 
 🚀 实操请去做 L4 作业：复现 stopPropagation 失效、handler 非响应式、currentTarget 异步 null、onInput/onChange 差异四条线。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  设计一套全局快捷键系统（含模态栈、冲突消解），事件层怎么组织？ 
+
+ 单一 window keydown 入口+注册表（键位→处理器栈），模态栈顶优先消费并可 stopPropagation；区分 event.key 与 event.code（布局无关）；注册即返回 dispose，由 owner 生命周期回收，避免每组件各挂监听。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#oncleanup ； https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent 
+
+### 14.  事件处理里 await 之后为什么不能再信 currentTarget？异步场景的取数规范？ 
+
+ 浏览器在事件派发结束后重置 currentTarget（对象复用），await 后读到 null；规范是入口同步快照（const el = e.currentTarget、解构所需字段）再进异步，这与 Solid 无合成事件、直通原生有关，React 的持久化掩盖了同一事实。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/events 
+
+### 15.  表单提交拦截、防重复提交与渐进增强在 Solid 里怎么组合？ 
+
+ onSubmit 里 preventDefault 后走 async 逻辑并用 signal 禁用按钮；无 JS 场景保留原生 action/method 提交路径（SolidStart 表单即此思路）；server 端幂等键兜底双提交，三层各司其职。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/actions 

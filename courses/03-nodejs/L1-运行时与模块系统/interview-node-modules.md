@@ -1,6 +1,6 @@
 # node-modules 面试题精选
 
-> 共 12 题，覆盖 **模块包装与导出 / require 解析 / 缓存与单例 / 循环依赖 / CJS 特性 / 与 ESM 交界** 六类。
+> 共 15 题，覆盖 **模块包装与导出 / require 解析 / 缓存与单例 / 循环依赖 / CJS 特性 / 与 ESM 交界** 六类。
 
 ---
 
@@ -122,3 +122,25 @@ const __dirname = path.dirname(__filename);
 CJS 依然**完全可用、生态最广、心智简单**（同步、动态 require、`__dirname` 齐全），老项目/纯内部脚本继续用它毫无问题，没必要为赶时髦强迁。但要知道它的局限：① **非官方标准**（ESM 才是 TC39/语言级标准，浏览器与 Node 统一）；② **静态结构缺失**→ tree-shaking、并行预解析、跨工具优化受限；③ 新库越来越多**ESM-only**（不用 CJS 就 require 不到，呼应 ts-publish 第 6 题）；④ 顶层 await、live binding、`import()` 异步加载等能力 CJS 没有。理性结论：**存量 CJS 别动、新公共库优先 ESM（或双发）**，并清楚两者互操作规则（呼应 node-esm-cjs）。
 
 **来源**：Node.js — "Modules: ESM vs CommonJS"; sindresorhus — "Sindre's strict ESM stance"; 社区 "Node.js modules today"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 讲讲 require 的完整算法：从裸包名到拿到 exports，中间经过哪些判定？
+
+① 解析：非相对/绝对路径先查 node_modules 逐级上溯（含全局与 NODE_PATH 遗留）；② 目录按 package.json 的 main（无则 index.js/json/node）——注意裸 require 不看 exports 字段（exports 只约束 ESM 与新版自引用）；③ 扩展名尝试顺序 .js→.json→.node；④ 缓存命中（require.cache 按解析后的绝对路径）直接返回 exports；⑤ 未命中才新建 Module、编译执行（包装函数注入 exports/require/__dirname/__filename）、写入缓存。细节：执行**中途**就把模块放进缓存——这是循环依赖拿到「半成品」的原因；json 有独立 loader；改 loader 用 require.extensions（废弃）/module.register 时代终结。
+
+**来源**：Node 官方《CommonJS modules: All together... the summary》七步算法原文。
+
+### 14. exports 与 module.exports 的关系，初学最容易犯的三个错？
+
+关系：包装函数头部 `const exports = module.exports`，默认导出集是 module.exports 这个对象——给 exports 加属性=改导出对象；`exports = {...}`=只改局部变量，导出为空。三错：① 直接给 exports 赋新对象（应 module.exports= 或逐属性挂）；② 混用两写法（module.exports={...} 后又 exports.foo=1，后者丢失——经典 copy-paste 事故）；③ 依赖「先 require 后改」的时序做配置注入（可被缓存顺序打破，应显式 factory/setter）。识别口诀：一个模块只应有一个导出出口；TS 的 esModuleInterop 讨论（__esModule 标记）也是这条边界的现代回响。
+
+**来源**：Node 官方 modules 文档 exports vs module.exports 警告框；TS 深潜对 CJS 导出互操作的分析。
+
+### 15. 模块缓存在工程上能做什么、会造成什么坑？各给两个实例。
+
+能做：① 天然单例（连接池/配置对象放模块导出，全进程共享一份）；② 启动加速（重复 require 零成本）。坑：① 状态滞留——测试间互相污染（前一用例改了缓存里的 config），解法是 jest.resetModules/require.cache 删除重 require（本关题干考过）；②「半成品导出」放大循环依赖（缓存里放的是执行到一半的 exports）；③ 双实例：同一包两个物理路径（monorepo 嵌套 node_modules、软链）→ 缓存键不同 → instanceof/单例全失效（dual package hazard 的 CJS 面）。进阶纪律：库对「配置单例」用 Symbol.for 全局注册表兜底（lodash 的 __lodash_global），应用侧靠包管理器 dedupe。
+
+**来源**：Jest 文档 `jest.resetModules` / module registry；Node 官方《Modules: Caveats》软链双实例说明。

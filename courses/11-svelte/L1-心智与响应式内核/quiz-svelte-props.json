@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "解构默认值即 prop 默认(呼应 svelte-props 第一节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte 5 里 $props() 返回的对象，官方推荐的解构方式是？",
+      "options": [
+        "不解构，永远 props.x 访问",
+        "通常解构并给默认值（let { a = 1, b } = $props()）——解构后的变量仍是响应式的（编译器保持与 props 的联动），无需写 props 对象引用",
+        "必须用 rest 不能解构",
+        "只能用 $derived 转一层"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 5 解构即响应（与 Svelte 4 解构断响应式是根本差异，呼应既有\"解构后是否响应\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 组件要接收一个\"渲染函数片段\"（父传给子的模板），Svelte 5 用什么类型/形态？",
+      "options": [
+        "JSX.Element",
+        "Snippet（通过 {#snippet}/{@render} 或 props 里的 children，类型为 Snippet<([...])>）——children/插槽统一成\"可调用片段\"而非特殊插槽语法",
+        "string 模板",
+        "Function 无类型"
+      ],
+      "answer": 1,
+      "explanation": "props 收 snippet 时用 Snippet 类型标注（与 typescript 关的 snippet props 类型题配套）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 一个\"仅内部用的默认值可覆盖\"的 prop，父不传时用组件内默认，正确写法是？",
+      "options": [
+        "required 后判空",
+        "let { size = md } = $props()——解构默认值即\"父未传时采用\"，且父后续传入变化仍会响应",
+        "用 $state 初始值",
+        "在 onMount 里补"
+      ],
+      "answer": 1,
+      "explanation": "解构默认值是 Svelte 5 prop 默认值标准式（对应既有\"默认值正确写法\"题的深化）。"
     }
   ]
 }

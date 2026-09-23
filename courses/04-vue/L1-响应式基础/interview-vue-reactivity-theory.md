@@ -1,6 +1,6 @@
 # vue-reactivity-theory 面试题精选
 
-> 共 12 题，覆盖 原理选型 / 依赖收集 / effect 与 computed / 调度与 nextTick / 逃生舱 五类。
+> 共 15 题，覆盖 原理选型 / 依赖收集 / effect 与 computed / 调度与 nextTick / 逃生舱 五类。
 
 ---
 
@@ -93,3 +93,25 @@ trigger 不直接同步重渲染，而是把组件的更新 effect **推入去�
 `markRaw(obj)` 给对象打标记，**永不**被转成代理（如把组件定义、不可变实例放进响应式树，避免无谓代理）。`customRef` 让你自定义 `track`/`trigger` 时机，实现"防抖 ref""写入即 trim"等定制行为（呼应 vue-reactivity-theory 第六节）。
 
 **来源**：Vue.js — "markRaw / customRef"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 为什么 Proxy 必须配 Reflect？不用会出什么问题，给一个具体场景。
+
+Receiver 错位：proxy 的 get 拦截 里 若 直接 `target[key]`，target 上 被 访问 的 **getter** 内部 再 读 `this.x` 时 this=原始 target（不 是 proxy）→ 那 些 读取 **绕过 拦截 不 被 track**。Reflect.get(target,key,receiver) 把 receiver 传 下去，getter 内 this 仍 是 proxy，深层 依赖 正常 收集。具体 场景：`const state = reactive({ first:"a", last:"b", get full(){ return this.first+" "+this.last } })`——不用 Reflect，computed 读 full 时 first/last 不 进 依赖，改了 不 更新（Vue2 defineProperty 时代 同款 坑，且 当时 无法 修）。同类：in/has、deleteProperty、ownKeys 都 要 Reflect 对应 方法 保持 语义 与 receiver 链。一句话：Proxy 决定「拦截 什么」，Reflect 决定「拦截 之后 以 谁 的 身份 继续 执行」。
+
+**来源**：MDN Proxy/Reflect 文档 receiver 语义；Vue 源码 baseHandlers 使用 Reflect 的注释与 issue。
+
+### 14. computed 的 dirty 缓存与 effect 的 lazy 订阅是什么关系？为什么 computed 在没人读时不重算？
+
+computed 本身 是 一个 lazy effect：初始化 只 建 依赖 关系 **不 执行**；首次 读 .value → run → 缓存 值、_dirty=false，并 把自己 登记 到 每个 dep 的 订阅。之后 依赖 变化 → trigger 不 直接 重算，只 把 computed 标 _dirty 并 通知「订阅 了 这个 computed 的 effect」（push 到 调度 队列）。于是：没人 读 的 窗口 里 依赖 变 100 次 也 只是 dirty 标记 反复 置 true（惰性+缓存=「拉取 时 才 计算」）；被 watch/模板 订阅 时 才 会 进 调度。对比 watch：watch 是「推 模型」——源 变 就 排 回调。这 解释 了 两个 常见 疑问：① computed 里 的 console.log 不 准时 打印（惰性+缓存）；② computed 必须 同步（它 要 在 .value 读 的 那 一 刻 返回 确定 值，异步 无 语义 落点，本包 响应式 关 computed 异步 题 的 底层 解释）。3.4 globalVersion/dep 版本 让「dirty 判定」从 逐 dep 比对 变 O(1)。
+
+**来源**：Vue 源码 computed.ts（ReactiveComputed lazy/dirty 实现）与 3.4 响应式版本优化 PR 说明。
+
+### 15. nextTick 的实现从 MutationObserver→Promise→queueMicrotask 演进，你现在该依赖它做什么、不该做什么？
+
+本质：nextTick=「把 回调 排到 当前 微任务 队列 尾」，Vue 内部 的 渲染 调度 也 flush 在 微 任务——所以 await nextTick() 后 DOM 已 更新（watch flush:pre 的「pre」即 相对 此 时机）。该 做：DOM 更新 后 的 测量/第三方 库 同步 位置（focus、chart.resize）。不该 做：① 当「事件 循环 让位」用——想 跑 大 任务 中间 喘息 要 的是 **宏 任务**（setTimeout(0)/scheduler.yield），微 任务 之间 页面 不 渲染 不 响应 输入；② 用它 绕过 「响应式 批处理」（觉得 不 nextTick 就 读 不 到 新值 的 多半 是 概念 没 通）；③ 在 循环 里 堆 nextTick（队列 无限 延长=饿死 渲染，与 递归 nextTick 同 罪）。现代 替代：watch flush:post + 组件 级 nextTick 已 少 用；SSR 里 nextTick 语义 不同（无 DOM）——别 让 它 出现 在 同构 代码。
+
+**来源**：Vue 源码 scheduler 的 nextTick 通道选择注释（MutationObserver→Promise→queueMicrotask 历史）；MDN queueMicrotask 与任务队列说明。

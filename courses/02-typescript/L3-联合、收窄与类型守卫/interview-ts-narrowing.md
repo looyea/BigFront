@@ -1,6 +1,6 @@
 # ts-narrowing 面试题精选
 
-> 共 12 题，覆盖 **收窄机制 / typeof / truthiness / in / instanceof / switch / 边界** 七类。
+> 共 15 题，覆盖 **收窄机制 / typeof / truthiness / in / instanceof / switch / 边界** 七类。
 
 ---
 
@@ -104,3 +104,25 @@ TS 对**别名收窄（aliased conditions and discriminants）**的支持有前�
 对可辨识联合逐一处理后，剩余未处理分支的类型会变成 `never`。在 `default`/末尾写 `const _x: never = s;`——若还有未处理分支，`s` 就不是 `never`，赋值报错，逼你补全。这就是"用类型消失做穷尽证明"。一旦联合新增成员忘了处理，编译器在这一点报警（见 ts-guards 完整写法）。该技巧把"分支是否齐全"变成编译期可检查的命题。
 
 **来源**：TypeScript — "exhaustiveness via never"; "never as exhaustiveness check"; Total TypeScript
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 控制流分析（CFA）能跨哪些边界、跨不过哪些？列一张失效清单。
+
+能跨：同函数顺序分支、switch、提前 return、可选链判空、类型别名条件（TS4.4 `const ok = x !== undefined` 保收窄）、判别属性链（`obj.kind === "a"` 后 obj 收窄）。跨不过：① 回调/闭包里的可变捕获（上面刚考）；② 属性收窄被任何函数调用冲掉（可能被 mutate）；③ let 重赋值后；④ 跨语句的间接布尔（4.4 前的老版本）；⑤ `x.length` 这类深层表达式不传递（要 const 中间变量）。应对：长判断拆小函数参数传入（入参处重新收一次最稳），或判别键+常量抽取让 CFA 跟得上。
+
+**来源**：TS 4.4 release notes《Control flow analysis of aliased conditions and discriminants》；TS Deep-Dive CFA 章节。
+
+### 14. 面对一坨 unknown 的外部数据，你的收窄流水线长什么样？
+
+四级火箭：① 入口 `unknown` 定死（fetch/env/IPC/文件）；② 首选 **schema 解析**（zod/valibot：运行时校验+类型推导一体，parse 即收窄到目标类型，错误信息给路径）；③ 无 schema 场景手写守卫链：isRecord → 判别 kind → 逐字段 narrow，封装成 `parseUser(u): User | null`；④ 最后手段才 `as` 且必须带注释声明信任依据。原则：收窄发生在**边界一次**，业务层拿到的永远是强类型——满屏 if ((x as any)...) 等于没有类型系统。
+
+**来源**：zod 文档《Parse, don't validate》引用（Gilad Bracha）；Total TypeScript《unknown 处理四步》。
+
+### 15. switch 对可辨识联合收窄有什么额外红利？穷举检查怎么配？
+
+红利一：case 匹配后分支自动收窄到对应成员，fall-through 共享 case（`case "a": case "b":`）拿到并集；红利二：**exhaustiveness**——default 分支 `const _: never = action`，新增联合成员没处理立刻编译报错（Redux/Vue reducer 的保命符）。进阶：判别键非字面量（number 状态码）不吃这套；TS5.1 起函数首参收窄 + `switch(true)` 模式匹配可用守卫表达式。工程包一个 `assertNever(x: never, msg?)` 工具，运行时兜底抛错，双保险。穷举检查是「联合类型当枚举状态机用」的全部收益兑现点。
+
+**来源**：TS Handbook《Exhaustiveness checking》；TypeCasts《Exhaustiveness checking in depth》。

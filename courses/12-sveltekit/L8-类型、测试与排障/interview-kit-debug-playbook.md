@@ -1,6 +1,6 @@
 # kit-debug-playbook 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 生产环境页面 500 白屏，服务端日志却啥也没打，第一步查哪？
 **来源**：500 白屏排障开场题的转述。
@@ -63,3 +63,25 @@ action 成功后 Kit 重渲染页面并重跑 load，但**不重跑 `handle`**�
 ① 先看是**全站**还是**单页**：全站→多半 handle/全局 layout/init 炸了，查 stderr/handleError；单页→该路由 load/action/渲染。② 拿**裸 JSON 还是 error.html**：JSON=端点/handle 致命错，error.html=根 layout 错或 fallback。③ 开 `?` 请求看 `Accept: text/html` vs `application/json` 分叉，区分数据错还是渲染错。④ 白屏无日志→补 `handleError` 打点、确认没被 try/catch 吞抛错。⑤ 复现用 build+preview（非 dev），排除只在生产出现的水合/产物问题。⑥ 关缓存/预渲染变量逐步二分。
 
 🚀 **下一组**：L8 课后作业——generated types、测试矩阵与事故手册的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  密钥疑似泄露进前端产物，按什么顺序应急与取证？ 
+
+ 先轮换（泄露即失效）、再从 build 产物反查（grep 客户端 chunk 与预渲染 HTML）、定位混入路径（import 链/误用 $env/static 非 public），最后在 CI 加产物扫描门禁（secretlint 等）防复发。 
+
+**来源**： https://svelte.dev/docs/kit/keywords#server 
+
+### 14.  hydration 报错信息含糊，你的定位工具箱？ 
+
+ 二分注释可疑组件、对比 View Source 与 DOM 差异定位首个错位节点、检查浏览器扩展改写与非法嵌套（p 内 div）、开 vite dev 的警告堆栈；确认成因后修模板而非关 SSR。 
+
+**来源**： https://svelte.dev/docs/kit/state 
+
+### 15.  线上偶发：改了 server load 后部分客户端导航拿到旧数据，怀疑什么？ 
+
+ 版本轮询未开或间隔过大：?_data 请求命中旧 chunk/缓存；查 CDN 对 HTML 与 ?_data 的缓存策略、service worker（若有）拦截、以及 depends 未覆盖导致免跑旧值。三处逐排。 
+
+**来源**： https://svelte.dev/docs/kit/configuration#version 

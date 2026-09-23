@@ -3,6 +3,7 @@
   "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
+      "id": "q1",
       "type": "single",
       "prompt": "下列哪组是 ServerLoadEvent 相对 LoadEvent 追加的专属成员？",
       "options": [
@@ -15,6 +16,7 @@
       "explanation": "ServerLoadEvent 继承 RequestEvent 的 cookies/locals/platform/request/clientAddress；fetch/params/url/parent/depends/untrack 两类 load 都有（universal 的 data 另有含义：承载 server 返回值）。"
     },
     {
+      "id": "q2",
       "type": "single",
       "prompt": "+page.server.js 的 load 返回以下哪个值会违反 devalue 序列化契约？",
       "options": [
@@ -27,6 +29,7 @@
       "explanation": "devalue 覆盖 JSON 之外还支持 BigInt/Date/Map/Set/RegExp 与循环引用——A/C/B 全合法。函数与类实例不可序列化，要发给客户端得靠 transport hooks 或改走 universal load。"
     },
     {
+      "id": "q3",
       "type": "single",
       "prompt": "同目录 +page.server.js 与 +page.js 都导出 load，页面组件最终拿到的 data 来自？",
       "options": [
@@ -39,6 +42,7 @@
       "explanation": "官方接力链：server load 先跑，返回值成为 universal load 入参的 data 属性；页面只消费 universal 的返回。这正是『服务端敏感数据进、可序列化结果出』的闸门设计。"
     },
     {
+      "id": "q4",
       "type": "single",
       "prompt": "浏览器侧组件 import 了 src/lib/server/db.ts，会发生什么？",
       "options": [
@@ -51,6 +55,7 @@
       "explanation": "src/lib/server 是编译器保护目录：客户端可达代码一旦引用它，构建报错。私有逻辑放对目录即安全，无需人肉审计 import。"
     },
     {
+      "id": "q5",
       "type": "single",
       "prompt": "应用部署在 my.domain.com，server load 里用 event.fetch 请求下列哪个地址能带上页面请求的 cookie？",
       "options": [
@@ -63,6 +68,7 @@
       "explanation": "官方规则：目标是本站或更具体子域才透传 cookie（my.domain.com 与其子域收得到；domain.com、api.domain.com 收不到）。且 credentials:'include' 时其余 cookie 反而一律不转（归属域信息不可知），需要 handleFetch 定制。"
     },
     {
+      "id": "q6",
       "type": "single",
       "prompt": "+server.js 的 GET 处理函数抛了 error(500)，客户端收到的响应是？",
       "options": [
@@ -75,6 +81,7 @@
       "explanation": "端点没有组件树，+error.svelte 与 +layout 对它都无效；抛错按请求的 Accept 头协商成 JSON 或 error.html。端点的横切逻辑归 handle hook。"
     },
     {
+      "id": "q7",
       "type": "single",
       "prompt": "SSR 期间 server load 里 event.fetch('/api/x')（本站 +server.js 路由）走的是什么链路？",
       "options": [
@@ -85,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "官方特性清单：内网请求直达 handler 无 HTTP 开销；且 SSR 中的响应会被捕获内联，水合读缓存不重发。B 是常见想象，错。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " +server.js 里想处理所有 HTTP 动词，除逐个导出外可以？ ",
+      "options": [
+        " export default 一个含各动词方法的对象 ",
+        " 写两个同名 GET ",
+        " 用 svelte.config.js 注册动词 ",
+        " 不支持，必须逐个导出 "
+      ],
+      "answer": 0,
+      "explanation": " 允许导出 default 对象把各方法集中处理，冷门动词也可经 fallback 风格在 default 内自行分派。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 端点能否直接返回流式 Response（如 NDJSON 推送）？ ",
+      "options": [
+        " 不能，必须整体缓冲 ",
+        " 能，new Response(可读流) 即可，但需部署平台支持流式响应 ",
+        " 仅 GET 之外可用 ",
+        " 必须配 ssr=false "
+      ],
+      "answer": 1,
+      "explanation": " 端点返回值就是 fetch Response，body 可以是流；不支持流的平台（部分 serverless）会整体缓冲后再发。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " src/lib/server 目录的保护机制实际是？ ",
+      "options": [
+        " 仅 lint 规则约定 ",
+        " 构建期硬约束：客户端代码 import 它会直接报错 ",
+        " 运行时抛错 ",
+        " 仅 TS 类型隔离 "
+      ],
+      "answer": 1,
+      "explanation": " Kit 在打包层隔离 .server.js 与 lib/server，客户端 import 构建即失败，防密钥泄漏是执法而非约定。 "
     }
   ]
 }

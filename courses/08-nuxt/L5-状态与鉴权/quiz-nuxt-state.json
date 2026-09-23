@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "Nuxt 的 SSR 下，Pinia store 会不会出现\"A 用户的数据串给 B 用户\"？",
-      "options": ["会，必须每次请求前手动 reset", "不会，因为 Pinia 在 Nuxt 里被禁用了", "默认不会：每个请求新建一个 Vue app 与 pinia 实例，状态天然是请求级作用域", "取决于是否开启 ssr 配置"],
+      "options": [
+        "会，必须每次请求前手动 reset",
+        "不会，因为 Pinia 在 Nuxt 里被禁用了",
+        "默认不会：每个请求新建一个 Vue app 与 pinia 实例，状态天然是请求级作用域",
+        "取决于是否开启 ssr 配置"
+      ],
       "answer": 2,
       "explanation": "Nuxt SSR 每请求现场 createApp，store 随请求树一起创建与回收；串号通常是自己把 store 提到模块顶层造成的（呼应 nuxt-state 第 1、6 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "useState('k', () => new Map()) 在客户端拿到的值是什么？",
-      "options": ["空对象/失去内容的值（不可序列化类型进 payload 会丢结构）", "正常可用的 Map", "undefined 并抛错", "自动降级为数组"],
+      "options": [
+        "空对象/失去内容的值（不可序列化类型进 payload 会丢结构）",
+        "正常可用的 Map",
+        "undefined 并抛错",
+        "自动降级为数组"
+      ],
       "answer": 0,
       "explanation": "useState 初值要序列化进 payload，Map/Set/class/函数都会失真，只能用 JSON 往返无损的数据（呼应 nuxt-state 第 3 节、nuxt-hydration 的 payload 约束）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "\"用户强刷新后希望回到默认值\"与\"关掉浏览器再开还在\"分别该用什么？",
-      "options": ["两者都用 useState", "两者都用 localStorage", "前者 Pinia，后者 useState", "前者 useState（内存态），后者 useCookie 或本地存储（持久态）"],
+      "options": [
+        "两者都用 useState",
+        "两者都用 localStorage",
+        "前者 Pinia，后者 useState",
+        "前者 useState（内存态），后者 useCookie 或本地存储（持久态）"
+      ],
       "answer": 3,
       "explanation": "useState 随 payload 只活一次导航周期，不做持久化；持久必须写 cookie / storage（呼应 nuxt-state 第 2、3 节判定口诀）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "把取数写在 onMounted 里，在 SSR 页面会造成什么问题？",
-      "options": ["重复请求两次", "服务端 HTML 里没有数据，首屏与 SEO 全丢", "报 hydration mismatch 错误", "store 无法访问"],
+      "options": [
+        "重复请求两次",
+        "服务端 HTML 里没有数据，首屏与 SEO 全丢",
+        "报 hydration mismatch 错误",
+        "store 无法访问"
+      ],
       "answer": 1,
       "explanation": "onMounted 只在客户端执行，SSR 阶段根本不发请求，返回的 HTML 是空态——必须在 setup 顶层 await useFetch（呼应 nuxt-state 第 5 节、vue-lifecycle）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "两个不相关组件都调用 useState('count')，结果如何？",
-      "options": ["各自独立互不影响", "编译报错", "Nuxt 自动为第二者追加后缀", "共享同一个 ref——key 是全局注册表命名空间，不想共享就要写足够具体的 key"],
+      "options": [
+        "各自独立互不影响",
+        "编译报错",
+        "Nuxt 自动为第二者追加后缀",
+        "共享同一个 ref——key 是全局注册表命名空间，不想共享就要写足够具体的 key"
+      ],
       "answer": 3,
       "explanation": "这与 useFetch 的 key 撞车机制同源：同 key 同状态。跨组件共享靠它，误共享靠命名规范避免（呼应 nuxt-state 第 3 节、nuxt-usefetch 第 4 节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "在 server/api 里写 const cache = {} 缓存用户数据，风险是什么？",
-      "options": ["cache 是整个 Nitro 进程共享的，并发请求会串用户数据", "每次请求都会重置，缓存失效", "自动持久化到 .output 中", "没有风险，V8 会按请求隔离"],
+      "options": [
+        "cache 是整个 Nitro 进程共享的，并发请求会串用户数据",
+        "每次请求都会重置，缓存失效",
+        "自动持久化到 .output 中",
+        "没有风险，V8 会按请求隔离"
+      ],
       "answer": 0,
       "explanation": "Nitro 侧模块作用域是进程级的（与 Vue 侧每请求新 app 相反）；要缓存请用 useStorage() 并把用户 id 拼进 key（呼应 nuxt-state 第 6 节、nuxt-server-routes）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "关于 Nuxt 的 Pinia 模块自动水合机制，下列说法正确的是？",
-      "options": ["服务端把 pinia.state 整棵树写入 payload，客户端启动时覆盖回来", "必须手写 JSON.parse(window.__NUXT__) 才能恢复", "只在客户端生效，服务端 store 是空的", "需要配置 persist: true 才会水合"],
+      "options": [
+        "服务端把 pinia.state 整棵树写入 payload，客户端启动时覆盖回来",
+        "必须手写 JSON.parse(window.__NUXT__) 才能恢复",
+        "只在客户端生效，服务端 store 是空的",
+        "需要配置 persist: true 才会水合"
+      ],
       "answer": 1,
       "explanation": "官方模块在 vue:setup 时机为当前 app 建 pinia，SSR 结束把 state 序列化进 payload、客户端自动 hydrate，无需 persist 插件（呼应 nuxt-state 第 4 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " useState 与模块顶层 ref 在 SSR 下的关键差别是？",
+      "options": [
+        "没有差别都是响应式",
+        "useState 按请求隔离（状态存进当前 Nuxt 实例、服务端每请求一份且自动进 payload 水合）；模块顶层 ref 全进程共享——第一个用户写第二个用户读到，串号事故标准成因",
+        "useState 性能更高",
+        "顶层 ref 会自动进 payload"
+      ],
+      "answer": 1,
+      "explanation": "\"状态的生命周期应该挂在请求/会话上，不挂在进程模块上\"——useState 是把这条纪律做成了 API。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " SSR 页面刷新后 useState 的值默认会怎样？",
+      "options": [
+        "永久保留",
+        "随 payload 水合恢复首帧值——初始值/服务端写入值能回来，客户端后续修改不会跨刷新存活（要持久化得另走 localStorage/cookie/后端）",
+        "刷新即全丢连初始值都没有",
+        "自动存 Redis"
+      ],
+      "answer": 1,
+      "explanation": "useState 的语义是\"这一次页面加载内的共享状态+进 payload 的那份快照\"，不是存储——持久化三件套各有边界（cookie-session/state 分工）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 购物车要在 SSR 首屏 HTML 里就显示数量，Pinia 的正解是？",
+      "options": [
+        "onMounted 里取，SSR 帮不上",
+        "store 状态初始化挂服务端可跑的 action（useAsyncData/插件里 await 填充），Nuxt Pinia 模块自动把 store 状态序列化进 payload、客户端水合恢复——首屏 HTML 即真数",
+        "只能换 useState",
+        "关 SSR"
+      ],
+      "answer": 1,
+      "explanation": "Nuxt 的 Pinia 集成解决的就是\"服务端填、payload 带、客户端接\"三环；漏掉任一环都会看到\"数字闪一下才对\"。"
     }
   ]
 }

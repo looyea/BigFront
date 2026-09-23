@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "defineAsyncComponent 的工厂函数应返回什么？",
-      "options": ["一个组件对象", "一个解析出组件的 Promise（如 import()）", "一个字符串路径", "一个 ref"],
-      "answer": 1,
+      "options": [
+        "一个组件对象",
+        "一个字符串路径",
+        "一个解析出组件的 Promise（如 import()）",
+        "一个 ref"
+      ],
+      "answer": 2,
       "explanation": "返回 Promise<组件>，配合 import() 实现按需加载（呼应 vue-async-suspense 第一节）。"
     },
     {
@@ -16,18 +21,23 @@
       "prompt": "异步组件对打包产物的直接好处是？",
       "options": [
         "让组件运行更快",
-        "被拆成独立 chunk、用到才下载，缩小首屏 bundle",
         "自动做懒加载图片",
-        "去掉 tree-shaking"
+        "去掉 tree-shaking",
+        "被拆成独立 chunk、用到才下载，缩小首屏 bundle"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "import() 触发代码分割，首屏只下必要 chunk（呼应 vue-async-suspense 第一、四节、10-vite 分包）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "loadingComponent 常配哪个选项来避免网络快时加载态\"闪一下\"？",
-      "options": ["timeout", "delay", "suspensible", "onError"],
+      "options": [
+        "timeout",
+        "delay",
+        "suspensible",
+        "onError"
+      ],
       "answer": 1,
       "explanation": "delay 只有加载超过该时长才显示 loading（呼应 vue-async-suspense 第一节）。"
     },
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "路由懒加载 component: () => import('./View.vue') 本质用了本讲哪个机制？",
-      "options": ["effectScope", "异步组件 + 代码分割", "provide/inject", "computed"],
+      "options": [
+        "effectScope",
+        "异步组件 + 代码分割",
+        "provide/inject",
+        "computed"
+      ],
       "answer": 1,
       "explanation": "路由组件用异步组件机制按需拉取（呼应 vue-async-suspense 第四节、vue-router-guard-lazy）。"
     },
@@ -56,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "下列哪种组件最不该设成异步组件？",
-      "options": ["首屏立即可见的核心导航栏", "点击才打开的富文本编辑器弹窗", "某个低频后台页面", "图表详情页的图"],
+      "options": [
+        "首屏立即可见的核心导航栏",
+        "点击才打开的富文本编辑器弹窗",
+        "某个低频后台页面",
+        "图表详情页的图"
+      ],
       "answer": 0,
       "explanation": "首屏关键内容异步会多一次往返、延迟出现；异步用于低频/按需块（呼应 vue-async-suspense 第五节）。"
     },
@@ -64,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "关于 <Suspense> 的现状，正确的是？",
-      "options": ["完全稳定、生产首选", "仍是实验性，API/SSR 支持可能变，谨慎用于核心路径", "只能配 v-show", "已废弃"],
+      "options": [
+        "完全稳定、生产首选",
+        "仍是实验性，API/SSR 支持可能变，谨慎用于核心路径",
+        "只能配 v-show",
+        "已废弃"
+      ],
       "answer": 1,
       "explanation": "官方标注实验性，需留意兼容性（呼应 vue-async-suspense 第三节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "defineAsyncComponent 的工厂被调用几次？组件被卸载后再次挂载会重新下载 chunk 吗？",
+      "options": [
+        "每次挂载都重新执行工厂并下载",
+        "工厂只执行一次且 resolved 组件被缓存（模块层面由打包器保证 chunk 只下载一次）——但配 loader 内的自定义请求逻辑可能绕开该保证，重试/超时状态要自己复位",
+        "缓存但 chunk 每次重下",
+        "卸载即清缓存"
+      ],
+      "answer": 1,
+      "explanation": "两 层 缓存：Vue 层 resolved 组件 对象 + 浏览 器/webpack 层 模块 注册 表；「缓 存 题 」的 完 整 答 案 还 要 补：失败 后 resolved 不 写 入，再 挂 载 会 重 跑 工厂（这 是 自愈 也 是 重 试 入 口，本关 重试 题 的 机制 面）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "顶层 await 写在 <script setup> 里且组件不在任何 Suspense 边界内，运行结果是：",
+      "options": [
+        "正常工作",
+        "组件变成永不解析：渲染时该组件挂起等待，无 Suspense 接管就永远停在占位/null（Vue 会警告 unresolved），页面表现为「这个区块凭空消失」——异步依赖要么收敛到 onMounted/watchEffect，要么显式包 Suspense",
+        "同步等待阻塞渲染",
+        "编译期直接报错"
+      ],
+      "answer": 1,
+      "explanation": "编译 后 = 整 个 组件 变 异 步 setup 组件（suspensible 默认 行 为 向 上传 染：父 若 可 suspend 连 父 一 起 挂 起）——「一 个 顶 层 await 炸 掉 整 页 布局」的 传播 路径 值 得 背（本关 顶层 await 题 的 灾 难 半径 版）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Suspense 的 pending 态中，嵌套多层子组件各有一个异步 setup 时，fallback 消失的时机是：",
+      "options": [
+        "第一个 resolve 就切",
+        "等所有已挂载子树的异步依赖全部 resolve（递归聚合）；超时后（timeout 配 errorComponent 或 #timeout 插槽）切超时态，之后再补齐也会正常替换——但父级 Suspense 可能已定局",
+        "由 manual 指令控制",
+        "每次路由跳转"
+      ],
+      "answer": 1,
+      "explanation": "「全 或 无」聚合 + 可 配 timeout 插槽 是 Suspense 状 态 机 的 两 个 要点；深 水 区：resolve 后 fallback 消失 与 子 组件 自己 的 数据 loading 是 两 层 加载 态（别 把 业 务 loading 也 押 在 Suspense 上，本关 两 态 流 转 题 的 边 界 澄 清）。"
     }
   ]
 }

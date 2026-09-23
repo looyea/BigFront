@@ -6,23 +6,38 @@
       "id": "q1",
       "type": "single",
       "prompt": "下面哪个能合法写进 {{ }} 插值？",
-      "options": ["if (ok) 'A'", "ok ? 'A' : 'B'", "var x = 1", "count++（作为语句块）"],
-      "answer": 1,
+      "options": [
+        "if (ok) 'A'",
+        "var x = 1",
+        "ok ? 'A' : 'B'",
+        "count++（作为语句块）"
+      ],
+      "answer": 2,
       "explanation": "插值只能是表达式，三元合法；if/声明/多语句非法（呼应 vue-template-syntax 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": ":href 和 @click 分别是哪两个指令的缩写？",
-      "options": ["v-once / v-html", "v-bind / v-on", "v-model / v-show", "v-if / v-else"],
-      "answer": 1,
+      "options": [
+        "v-once / v-html",
+        "v-model / v-show",
+        "v-if / v-else",
+        "v-bind / v-on"
+      ],
+      "answer": 3,
       "explanation": ": 是 v-bind 缩写、@ 是 v-on 缩写（呼应 vue-template-syntax 第二、四节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "<input :disabled=\"isOff\"> 当 isOff 为 false 时，disabled 属性会？",
-      "options": ["渲染成 disabled=\"false\"", "被自动移除", "报错", "变成 disabled=\"\""],
+      "options": [
+        "渲染成 disabled=\"false\"",
+        "被自动移除",
+        "报错",
+        "变成 disabled=\"\""
+      ],
       "answer": 1,
       "explanation": "布尔属性遇假值(false/null/undefined)自动移除（呼应 vue-template-syntax 第二节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "要动态决定绑定的属性/事件名，用哪种语法？",
-      "options": [":{name}", ":[name] 和 @[name] 动态参数", "$:name", "v-dynamic:name"],
+      "options": [
+        ":{name}",
+        ":[name] 和 @[name] 动态参数",
+        "$:name",
+        "v-dynamic:name"
+      ],
       "answer": 1,
       "explanation": "方括号是动态参数，值自动转小写（呼应 vue-template-syntax 第三节）。"
     },
@@ -51,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "希望某段纯静态内容只渲染一次、之后不参与更新，用？",
-      "options": ["v-pre", "v-once", "v-cloak", "v-memo"],
+      "options": [
+        "v-pre",
+        "v-once",
+        "v-cloak",
+        "v-memo"
+      ],
       "answer": 1,
       "explanation": "v-once 首次渲染后跳过 patch（v-pre 是跳过编译，语义不同）（呼应 vue-template-syntax 第一、六节）。"
     },
@@ -59,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "@submit.prevent 里的 .prevent 作用是？",
-      "options": ["阻止事件冒泡", "阻止表单默认提交行为", "只触发一次", "使用捕获阶段"],
+      "options": [
+        "阻止事件冒泡",
+        "阻止表单默认提交行为",
+        "只触发一次",
+        "使用捕获阶段"
+      ],
       "answer": 1,
       "explanation": ".prevent 调 preventDefault 阻止默认；.stop 才阻止冒泡（呼应 vue-template-syntax 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "模板里 `@click=\"count++\"` 编译后的事件处理器是：",
+      "options": [
+        "直接执行表达式",
+        "编译器包成内联函数 `$event => (count++)`——所以模板里能写语句、还能用 $event 变量",
+        "报错",
+        "编译成 computed"
+      ],
+      "answer": 1,
+      "explanation": "内联 处理器=自动 包 函数；这 决定 两 件事：`@click=\"doIt()\"` 是 **立即 执行 取 返回值**（要 传 函数 写 `@click=\"doIt\"`），以及 $event 可 用 于 内联 处。`v-on` 这个「表达式 不是 回调」的 反差 是 新手 高频 坑。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "动态参数 `:[dynamicName]=\"value\"` 与 `@:[evt]=\"handler\"` 的限制是：",
+      "options": [
+        "只能用于事件",
+        "动态参数值必须是字符串（null 会移除该绑定）；表达式含特殊字符（大小写敏感与浏览器 HTML 原生属性小写化）时可能失效——建议一律配 kebab-case 并用引号包裹绑定",
+        "必须配 v-bind 对象",
+        "已废弃"
+      ],
+      "answer": 1,
+      "explanation": "「null 移除 绑定」是 官方 设计（v-bind 对象 展开 同款）；HTML 模板 里 动态 参数 会 被 浏览器 小写 化——`:[attr]` 中 attr 值 含 大写 在 DOM 内联 模板 翻车，SFC 编译 无 此 忧。本关 动态 参数 题 的 细则。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "模板表达式里能用 await 吗？",
+      "options": [
+        "随时可用",
+        "SFC 模板表达式自 3.0.5 起支持 await（编译为 setup 内的 async 渲染函数上下文，配 Suspense 使用），但顶层求值语义复杂——业务上仍推荐把异步放进组合式函数，模板只消费结果",
+        "永不支持",
+        "仅限 v-if 内"
+      ],
+      "answer": 1,
+      "explanation": "「模板 可以 写 表达式」不等于「模板 是 第二 个 编程 语言」：await/复杂 计算 进 模板 会 丢 失 复用 与 测试 面——官方 口风 与 本关 题 族 一致：模板 保持 笨，聪明 留 给 script。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # ts-decorators 面试题精选
 
-> 共 12 题，覆盖 **装饰器本质 / 老版与标准之争 / 类与方法装饰器 / DI 与元数据反射 / 参数装饰器 / 工程取舍** 六类。
+> 共 15 题，覆盖 **装饰器本质 / 老版与标准之争 / 类与方法装饰器 / DI 与元数据反射 / 参数装饰器 / 工程取舍** 六类。
 
 ---
 
@@ -129,3 +129,25 @@ function memoize<T extends Function>(value:T, _ctx): T {
 分三类。**跟着框架走**：选 NestJS/Angular/TypeORM 就接受老版装饰器 + `experimentalDecorators`/`emitDecoratorMetadata`（这是框架价签，团队文档写清调试方法）。**能不用就不用**：纯前端函数式（React hooks / Vue 组合式）或 Node 服务里，优先高阶函数、显式注册表、codegen、`satisfies`/泛型推断来表达"横切关注点"（缓存、日志、校验），更透明可测（呼应 ts-advanced、ts-functions）。**自研库慎用**：一旦发布就绑死用户编译开关与两套语义。总原则：装饰器解决的是"声明处元编程 + 集中登记"，只有在"就地声明比显式调用更 DRY 且团队能驾驭其魔法"时才用，否则显式优于隐式（呼应 ts-mapped 第 12 题"可读性优先"）。
 
 **来源**：Angular/NestJS 官方要求; 社区 — "composition over decorators"; Effective TS — Item 43
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 标准装饰器与 legacy 的核心分歧点在哪？parameter decorator 为什么出局？
+
+哲学：标准版从「反射改写 descriptor（元编程）」转向「声明式替换/登记（纯函数式）」——context.addInitializer 挂生命周期、`this` 与私有性安全。parameter 装饰器**没进标准**（TC39 明确拒绝：参数位置无稳定语义、只服务 DI 框架）：NestJS 的 `@Inject(TOKEN)` 依赖它记录「第几个参数什么依赖」→ 整个元数据反射链（reflect-metadata）都是 legacy 专属。破局方向：装饰器 + **类型层推断**（新提案 @@ 派生、或干脆显式 tokens 数组），与 Node type stripping/erasableSyntaxOnly 的冲突也是框架站队 legacy 的长期成本。
+
+**来源**：TC39 decorators 提案 FAQ（"Why not parameter decorators"）；Angular v15 起 standalone 弃装饰器路线。
+
+### 14. 讲清 emitDecoratorMetadata + reflect-metadata 驱动的 NestJS 依赖注入全链路。
+
+链路：① 编译器把参数/属性类型擦进 `design:paramtypes` 等元数据键（emitDecoratorMetadata，仅限「类型位置可引用值」的 class/原始类型——接口/泛型/type 别名变 Object，这就是 forwardRef/Inject(token) 的补位原因）；② reflect-metadata polyfill 提供 `Reflect.getMetadata`；③ @Injectable 触发 Nest 记录 provider 元数据；④ 容器构造实例时读 paramtypes 解析 token→递归构建→作用域（singleton/request/transient）与循环检测。全链 legacy 依赖三连：experimentalDecorators + emitDecoratorMetadata + reflect-metadata import——升级 TS 标准装饰器需框架改设计（Nest 长期计划）。
+
+**来源**：TS 文档 emitDecoratorMetadata 条目；NestJS《Custom providers/forwardRefs》文档。
+
+### 15. 「装饰器 vs 显式高阶函数/注册表」做技术决策，你会怎么评估？
+
+评估轴：① 声明密度（`@memoize` 一行 vs `memoize(fn)` 包裹 + 导出重命名——装饰器在「元信息多、跨层声明」（ORM 列映射、路由表）占优；② **可重构性**：装饰器是隐式魔法，grep/重命名/静态分析失明，显式函数可组合可单测；③ 生态锁定：legacy 装饰器绑 TS 方言，未来 Node strip-types/迁移成本；④ 团队心智：新人理解「执行时机/顺序」门槛。结论模板：框架内核/声明式密集场景用装饰器，业务代码优先显式组合——并把「哪种装饰器禁用」写进 eslint（no-legacy-decorators lint 规则）。
+
+**来源**：TC39 Stage 3 提案「Motivations」对装饰器适用场景界定；Angular signal API 去装饰器化讨论（#48131）。

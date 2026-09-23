@@ -8,11 +8,11 @@
       "prompt": "Vue 3 编译器里的\"静态提升(hoist)\"主要优化的是哪一步？",
       "options": [
         "更新时跳过 diff",
-        "把不变的节点只创建一次、提到 render 外复用，避免每次渲染重新 createVNode",
         "把 CSS 内联",
+        "把不变的节点只创建一次、提到 render 外复用，避免每次渲染重新 createVNode",
         "压缩打包体积"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "静态提升优化 VNode 创建阶段（呼应 vue-performance 第一节）。"
     },
     {
@@ -58,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "用了 shallowRef 后，原地 push 了新元素但视图没更新，正确补救是？",
-      "options": ["改用 shallowReactive", "调用 triggerRef(list) 手动触发", "再包一层 ref", "无法补救，只能整体替换"],
+      "options": [
+        "改用 shallowReactive",
+        "调用 triggerRef(list) 手动触发",
+        "再包一层 ref",
+        "无法补救，只能整体替换"
+      ],
       "answer": 1,
       "explanation": "深层变更不追踪，需要 triggerRef；当然也可整体替换 .value（呼应 vue-performance 第三节、vue-reactivity-theory triggerRef）。"
     },
@@ -66,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "v-for 里用 index 当 key 主要会引发什么问题？",
-      "options": ["打包体积变大", "列表逆序/删除时 key 错位导致错误复用节点、状态串位与多余重渲染", "触发 XSS", "让 computed 失效"],
+      "options": [
+        "打包体积变大",
+        "列表逆序/删除时 key 错位导致错误复用节点、状态串位与多余重渲染",
+        "触发 XSS",
+        "让 computed 失效"
+      ],
       "answer": 1,
       "explanation": "index 不稳定破坏 diff 复用，应用唯一 id（呼应 vue-performance 第五节、vue-conditional-list）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "顶部全量 import 会进同一 chunk，抵消分包（呼应 vue-performance 第六节、vue-router-guard-lazy、10-vite）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "用 Devtools Performance 面板测「点 击 后 到 可 交 互」，Vue 应用特有的火焰图标记是：",
+      "options": [
+        "无特有标记",
+        "vue 编译/运行时 函数 名（patch/renderComponent/flushJobs）+ 开发模式组件 render 包装（带组件名，生 产 无）——所 以 性 能 分析 必须 用 生 产 构建 复 测，dev 模式 本 身 就 慢 一 截 且 标 记 不 同",
+        "只 有 浏 览 器 原生 标记",
+        "performance.mark 自动注入"
+      ],
+      "answer": 1,
+      "explanation": "配套 组 件：Perfetto/火 焰 图 里 `flushJobs` 聚 合 了 渲 染 调度（本包 响应式 关 批 处理 的 可 视 化 存 在）；「dev 快 生 产 慢」反向 情 况 大 多 是 未 压 缩 警告 开销 之 外 的 source-map/热 更 新 残 留——测 试 习 惯 即 环 境 纪律（本关 测 量 题 的 前 置）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "一个「每秒推数据的实时表格」组件（WebSocket 更新），最合 Vue 心智的降压组合是：",
+      "options": [
+        "每个消息触发一次完整重渲染",
+        "数据层合流：shallowRef 持数组 + 批量帧调度（rAF 或固定间隔 flush 合并多次 ws 消息）+ 行虚拟滚动——三层分别砍响应成本、渲染次数、节点数",
+        "关掉 diff",
+        "用 setTimeout 轮询代替 ws"
+      ],
+      "answer": 1,
+      "explanation": "Vue 的 性 能 公式 = **渲染 次数 × 单 次 成本** 两 因 子 分 头 降：合 流 降 次 数（消 息 到 达 频 率 ≠ 渲染 频 率）、浅 响 应+虚拟 降 单 次 成本（本关 shallowRef/虚拟 题 的 实时 场 景 组 合 拳）；「先 问 用 户 需 要 看 到 几 fps」是 产品 层 前置。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "「首屏 JS 体积」治理里收益最不确定、应先做的一步是：",
+      "options": [
+        "换打包器",
+        "先测量：rollup-plugin-visualizer 看构成（常 见 真 凶：全 量 引 入 lodash/日 期 库/图 标 包、被 打 进 首 屏 的 编 辑 器/图表 异 步 件）——定 向 换 小 件/异 步 化 的 收益 远 大 于 工 具 链 迁移",
+        "手写渲染器",
+        "删 sourcemap"
+      ],
+      "answer": 1,
+      "explanation": "体 积 优 化 的 三 板 斧 顺 序：拆 异 步（路 由/按 需 组 件，本关 分 割 题）→ 换 实 现（date-fns 按 函 数 导 入/dayjs 替 moment、图 标 树 摇）→ 才 是 工 具 链 因 子（压 缩 预 设/external）；跳 过 测 量 直 接 换 工 具 的 团队 大 多 收 益 <5%（本包 部署 关 的 同 一 纪 律 在 包 体 积 轴 的 映 射）。"
     }
   ]
 }

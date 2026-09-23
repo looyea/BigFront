@@ -1,6 +1,6 @@
 # node-testing 面试题精选
 
-> 共 12 题，覆盖 运行器 / 断言 / mock / 集成测试 / 工程实践 五类。
+> 共 15 题，覆盖 运行器 / 断言 / mock / 集成测试 / 工程实践 五类。
 
 ---
 
@@ -93,3 +93,25 @@
 `before`/`after` 在套件（文件/describe）**首尾各跑一次**——适合起/停昂贵资源（服务器、DB 连接池）；`beforeEach`/`afterEach` **每个用例前后各跑**——适合重置状态（清库、建临时文件）。配对使用、`after` 必须释放 `before` 拿到的资源，防泄漏（呼应 node-testing 第四节）。
 
 **来源**：Node.js — "Test hooks (before/after/beforeEach/afterEach)"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 用 node:test 给一个「读配置→连 DB→起 HTTP」的服务写集成测试，你的基建设计？
+
+分层：单测（纯逻辑不碰 I/O）/集成（本真依赖）。DB：testcontainers 起一次性 PG（或 docker compose profile 本地+CI 同款），每文件独立 schema（迁移跑一次、数据 truncate 事务回滚）——「共享开发库跑测试」是 flaky 与互踩之源。HTTP：app.listen(0) 随机端口 + 用 fetch 打真 socket（本关 listen(0) 题），别 supertest 假注入（集成测的就是 HTTP 栈：header/超时/body 大小）。配置：测试专用 env（NODE_ENV=test 慎用——它会让很多库「偷懒」，显式 TEST_DB_URL 更诚实）；secrets 走 dotenv 的 .env.test 或 CI 注入。隔离：每用例自造数据（uuid 业务键），teardown 用 t.after 注册（本关 before/after 题的细粒度版）。速度闸门：集成套跑不动全量时按「变更影响目录」选择集（nx affected 思路）；CI 并行度=文件数（node --test 默认）。
+
+**来源**：node:test 文档（concurrency/after）；Testcontainers 官方 Node.js 指南与「flaky test」消除模式（独立 schema-per-file）。
+
+### 14. 断言风格 assert/strict 与 expect（chai/jest）怎么选？给「失败信息质量」视角的答案。
+
+失败信息=断言的 UX：assert/strict 深度 equal 报错带 diff（util.inspect 彩色对比），但「大对象哪一条不等」要眼看；expect().toMatchObject/toHaveProperty 组合表达力强、jest 快照/异步 matcher（rejects/resolves）是生态优势。选型：纯 Node 项目 assert/strict 零依赖够用（本关 strict vs 松题：==/=== 默认差），重断言表达/快照/大套件 → vitest/jest 的 expect。普适纪律：① 断言「业务含义」不逐字段（错误消息带上下文：assert.equal(count, 3, "退款应只生成 1 条流水")）；② 浮点/时间用容差（toBeCloseTo/近似）；③ 错误断言到 code 不到 message 文案（i18n 一改全红——本关 code 为 ENOENT 题）；④ 快照是「防意外变更」不是「期望值」（review 时人肉审 diff）。
+
+**来源**：Node assert/strict 文档 diff 行为；Vitest/Jest expect matcher 与快照定位说明。
+
+### 15. CI 里测试套件越来越慢且偶发红，从 node:test 视角给一套治理方案。
+
+慢：① 分账——--test-reporter=tap 出各文件耗时，揪 top5 慢文件；② 单测/集成分 job 并行（构建一次产物共享），集成里 DB 容器复用（service 容器+每文件 schema 而非每用例起停）；③ 文件级并行是 node --test 默认，CPU 密集用例多的话限 --test-concurrency；④ 时间旅行：mock timers 消灭 sleep、fixture 预压缩大文件。红（flaky）：① 隔离审计——共享 env/单例缓存/固定端口三大罪（本关并发边界题）；② 全量 --test-retries 禁用为默认（那是掩盖），本地 --test-only 复现 → 随机顺序（--test-shuffle? 社区工具）暴露顺序耦合；③ 超时：每个 await 点给 AbortSignal.timeout，「永挂」转「有栈可查的失败」；④ 检疫机制：连续 flaky 的用例打 @flaky 标签隔离出主路+工单，红灯不再被「重跑过了」淹没。度量：flaky 率与 P95 时长进周报，治理有数字才收口。
+
+**来源**：node --test CLI 选项文档（concurrency/reporter）；Google test flakiness 治理（检疫/重跑禁令）通行实践。

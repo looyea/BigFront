@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "哪个 API 的结果会被收集进 SSR payload 供水合复用？",
-      "options": ["$fetch", "axios", "useFetch / useAsyncData", "原生 XMLHttpRequest"],
+      "options": [
+        "$fetch",
+        "axios",
+        "useFetch / useAsyncData",
+        "原生 XMLHttpRequest"
+      ],
       "answer": 2,
       "explanation": "SSR 收集器只认 use* 族（其内部登记进 payload）；$fetch 是纯命令式工具（呼应 nuxt-usefetch 第 1 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "同页两个组件同时 useFetch('/api/user')，实际发出几次请求？",
-      "options": ["一次——默认按 URL 生成 key，进行中的同 key 请求去重共享", "两次——组件各自独立", "取决于是否 await", "SSR 两次、客户端一次"],
+      "options": [
+        "一次——默认按 URL 生成 key，进行中的同 key 请求去重共享",
+        "两次——组件各自独立",
+        "取决于是否 await",
+        "SSR 两次、客户端一次"
+      ],
       "answer": 0,
       "explanation": "key 注册表做并发去重，与 Next 请求记忆化同效（呼应 nuxt-usefetch 第 2 节、next-fetch-cache 第 2 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "详情页与列表页都 useFetch('/api/feed') 但参数不同且都靠 query 传，结果数据互相串了。最合适的修法是？",
-      "options": ["加 retry: 3", "把页面拆成两个 Nitro 实例", "改用 $fetch 绕开缓存", "显式区分 key（如 feed-list-1 / feed-detail-7）"],
+      "options": [
+        "加 retry: 3",
+        "把页面拆成两个 Nitro 实例",
+        "改用 $fetch 绕开缓存",
+        "显式区分 key（如 feed-list-1 / feed-detail-7）"
+      ],
       "answer": 3,
       "explanation": "key 撞车导致注册表复用错数据——参数必须编进 key 或 URL（呼应 nuxt-usefetch 第 2 节纪律）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "SSR 期间 useFetch 的接口挂了，默认行为是？",
-      "options": ["整页 503", "渲染照常但 data 为 undefined、error Ref 有值，页面需处理空态", "Nuxt 自动重试直到成功", "页面直接白屏"],
+      "options": [
+        "整页 503",
+        "渲染照常但 data 为 undefined、error Ref 有值，页面需处理空态",
+        "Nuxt 自动重试直到成功",
+        "页面直接白屏"
+      ],
       "answer": 1,
       "explanation": "取数失败不升级成渲染失败是默认安全网；想 500/错误页要自己 throw createError（呼应 nuxt-usefetch 第 4 节、nuxt-error-debug）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "动态路由 /post/[id] 想要切 id 自动重取数据，首选写法是？",
-      "options": ["onMounted 里手动 $fetch", "useFetch(() => `/api/posts/${route.params.id}`) 响应式 URL", "useAsyncData 固定 key", "watch 后 location.reload()"],
+      "options": [
+        "onMounted 里手动 $fetch",
+        "useFetch(() => `/api/posts/${route.params.id}`) 响应式 URL",
+        "useAsyncData 固定 key",
+        "watch 后 location.reload()"
+      ],
       "answer": 1,
       "explanation": "响应式 URL 让 useFetch 自动追踪参数重取，SSR/水合语义完整（呼应 nuxt-usefetch 第 3 节、nuxt-dynamic B2）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "点击\"喜欢\"按钮后让列表数据刷新，正确的组合是？",
-      "options": ["$fetch POST 变更 + 调用 useFetch 返回的 refresh()", "重新加载整页", "useFetch POST 请求", "改 payload 对象"],
+      "options": [
+        "$fetch POST 变更 + 调用 useFetch 返回的 refresh()",
+        "重新加载整页",
+        "useFetch POST 请求",
+        "改 payload 对象"
+      ],
       "answer": 0,
       "explanation": "命令式变更用 $fetch，声明式数据重取用 refresh——各司其职（呼应 nuxt-usefetch 第 1 节示例③）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "关于 retry 选项，正确的是？",
-      "options": ["SSR 与客户端都默认重试 3 次", "SSR 重试由 Nitro 控制无法关闭", "重试只作用于客户端请求，SSR 期不重试以免拖慢 TTFB", "retry 指失败后重新渲染组件"],
+      "options": [
+        "SSR 与客户端都默认重试 3 次",
+        "SSR 重试由 Nitro 控制无法关闭",
+        "重试只作用于客户端请求，SSR 期不重试以免拖慢 TTFB",
+        "retry 指失败后重新渲染组件"
+      ],
       "answer": 2,
       "explanation": "ofetch 层能力仅客户端路径启用；SSR 请求失败快速让位给 error 态是性能取舍（呼应 nuxt-usefetch 第 4 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " useFetch 与 $fetch 的本质分工是？",
+      "options": [
+        "useFetch 是 SSR 安全版 $fetch，两者只是写法不同",
+        "useFetch=组合式上下文里的\"取数+进 payload 水合+随响应式参数重取+去重缓存\"一体（setup 专用）；$fetch=一次性命令式请求，不进水合数据流（事件回调、服务端 handler 内、手动 refresh 场景）",
+        "useFetch 只能 GET",
+        "$fetch 不能带 cookie"
+      ],
+      "answer": 1,
+      "explanation": "\"要不要进 payload/要不要响应式\"两问决定选哪个；在 onMounted 里 useFetch 是层级错位，点按钮后 $fetch 才对。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 同一页两个组件都调 useFetch（/api/config），网络层发生几次请求？",
+      "options": [
+        "两次，各自独立",
+        "一次——key 相同（默认 URL 作 key）在请求飞行中即共享 Promise，且同数据共享 payload 条目",
+        "看组件挂载顺序",
+        "每次都走 payload 永不真请求"
+      ],
+      "answer": 1,
+      "explanation": "这是\"按 key 去重\"的设计红利；真要各自独立就显式给不同 key——但先想清楚为什么要两份。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " SSR 期间页面 useFetch 的接口挂了（非 2xx/超时），默认行为是？",
+      "options": [
+        "页面照常渲染空数据",
+        "整个 SSR 请求失败返回错误页——除非标 lazy: true（或 catch 处理），失败降级为客户端再取",
+        "自动重试 3 次再决定",
+        "只记录日志不影响渲染"
+      ],
+      "answer": 1,
+      "explanation": "默认\"数据即页面\"：核心取数失败就不出半成品页；lazy 把失败域挪到客户端——按\"这数据缺了页面还有意义吗\"选。"
     }
   ]
 }

@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "BullMQ 的任务状态与锁存在哪里？",
-      "options": ["Node 进程内存", "MySQL", "本地文件", "Redis"],
+      "options": [
+        "Node 进程内存",
+        "MySQL",
+        "本地文件",
+        "Redis"
+      ],
       "answer": 3,
       "explanation": "Redis 是唯一状态存储，队列/锁/重试计数全在里面——Redis 高可用即队列高可用（呼应 node-queues-jobs 第二节）。"
     },
@@ -53,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "任务被 worker 拿走后进程假死不再续约锁，BullMQ 的机制叫什么？",
-      "options": ["stalled 检测：锁看门狗超时后任务重投", "dead letter", "circuit breaker", "graceful shutdown"],
+      "options": [
+        "stalled 检测：锁看门狗超时后任务重投",
+        "dead letter",
+        "circuit breaker",
+        "graceful shutdown"
+      ],
       "answer": 0,
       "explanation": "锁续约断 → 判 stalled → 移入 stalled 集合并重投；同步阻塞代码会饿死续约（呼应 node-queues-jobs 第三节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "close=不再取新任务+等手上来活；硬退出会制造 stalled 重投甚至半途副作用（呼应 node-queues-jobs 第五节、node-deploy-perf）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "BullMQ 的「并发度」concurency 作用域正确的是：",
+      "options": [
+        "全局一个数",
+        "每个 worker 进程各自计数（总并发=进程数×concurrency）——要全局限并发得靠外部配额（令牌桶/信号量服务）",
+        "按队列名共享",
+        "仅测试有效"
+      ],
+      "answer": 1,
+      "explanation": "「4 实例各设 50 = 实际 200 并发」打爆下游 DB 连接池是本知识点的经典事故；下游敏感型任务用全局信号量（Redis 计数器带租约）或干脆调低单进程值。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "任务幂等键（deduplication key/jobId）在 BullMQ 里的正确用法是：",
+      "options": [
+        "随便传",
+        "add 时指定 id：同 id 存在（未完成/在保留期）即去重——键要取自「业务自然唯一键」（订单号+动作），并注意保留期（removeOnComplete）过后同键可再入队",
+        "id 只影响排序",
+        "重复 id 直接报错崩 worker"
+      ],
+      "answer": 1,
+      "explanation": "去重窗口=任务保留期，「终态后再来同键」需要业务层最终一致兜底；把 jobId 当幂等合同写进文档（本关 exactly-once 幻觉题的正解组件）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "队列 worker 的部署形态，主流推荐是：",
+      "options": [
+        "与 Web 同进程同镜像同副本",
+        "独立 Deployment/进程组：同代码不同启动命令，专用副本数与 HPA（按队列深度扩），Web 只入队",
+        "只能一台机器",
+        "serverless 必选"
+      ],
+      "answer": 1,
+      "explanation": "分离收益：扩缩轴不同（Web 按 QPS、worker 按 backlog）、故障隔离（转码 OOM 不带崩下单）、资源画像（CPU 密集 vs I/O 密集）；「同镜像不同 command」在 K8s 里成本几乎为零（本关清单题的架构面）。"
     }
   ]
 }

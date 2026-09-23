@@ -1,6 +1,6 @@
 # kit-hooks-handle 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) handle 的签名与执行时机？它和 load、action 的先后关系是怎样的？
 **来源**：SvelteKit 服务端中间件面试开场必考的转述。
@@ -63,3 +63,25 @@ handle 里凡有外部副作用（连库、发请求、写文件）先判 `build
 用 hooks.js 的 `transport`：`export const transport = { Money: { encode: v => v instanceof Money && [v.amount, v.currency], decode: ([a,c]) => new Money(a,c) } }`。服务端 encode 产出可序列化数组、客户端 decode 还原实例，load 与 form action 的返回值都享此通道。对比方案：放 universal load 里现场 new（不经序列化）适合无服务端数据的构造器；transport 适合"服务端产出、跨边界保真"。
 
 🚀 **下一组**：L5 课后作业——handle 管道、locals 总线与跨端错误处理的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  多 handle 中间件用 sequence 组合时，洋葱序异常处理要注意什么？ 
+
+ 外层 resolve 包裹内层，任一层在 resolve 之外抛错即致命；排错时按 sequence 顺序二分定位，并给每个中间件单测其『不调 resolve 短路返回』的路径。 
+
+**来源**： https://svelte.dev/docs/kit/hooks#Server-hooks-sequences 
+
+### 14.  把鉴权中间件写成 handle 还是每个 server load 里检查？给出你的决策依据。 
+
+ 全站性、需覆盖端点与静态之外所有请求的放 handle（一处收口、locals 复用）；路由差异化授权贴近 load，配合分组 layout 减少重复；两层互补：handle 认证、load 授权。 
+
+**来源**： https://svelte.dev/docs/kit/hooks#Server-hooks-handle 
+
+### 15.  reroute、handle 里 redirect、客户端导航前 beforeNavigate 三种 URL 干预，分别适合什么？ 
+
+ reroute 静默改写命中（URL 不变，适合 i18n 别名）；handle 里 redirect 改状态码与最终 URL（适合登录墙）；beforeNavigate 是客户端体验层拦截（未保存提示）。误用 reroute 做鉴权会破坏 404/跳转语义。 
+
+**来源**： https://svelte.dev/docs/kit/hooks#Server-hooks-handle 

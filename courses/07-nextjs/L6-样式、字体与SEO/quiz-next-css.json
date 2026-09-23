@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "App Router 里 import 全局 CSS 文件的规则是？",
-      "options": ["只能根 layout 一处", "任意服务端/客户端组件文件都可以，Next 提取合并进文档", "只能客户端组件", "必须在 next.config 登记"],
+      "options": [
+        "只能根 layout 一处",
+        "任意服务端/客户端组件文件都可以，Next 提取合并进文档",
+        "只能客户端组件",
+        "必须在 next.config 登记"
+      ],
       "answer": 1,
       "explanation": "旧 _app 限制已废除；防乱靠内容分工而非 import 位置（呼应 next-css 第一节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "CSS Modules 目前的使用限制是？",
-      "options": ["只有客户端组件能 import", "只能配 Tailwind 用", "不能含动画", "需要付费插件"],
+      "options": [
+        "只有客户端组件能 import",
+        "只能配 Tailwind 用",
+        "不能含动画",
+        "需要付费插件"
+      ],
       "answer": 0,
       "explanation": "module 对象被归为客户端能力，服务端组件文件里 import 会报错（呼应 next-css 第一节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "styled-jsx 在 App Router 项目里退场的主要原因是？",
-      "options": ["性能太差", "不支持响应式", "体积比 Tailwind 大", "运行时插桩方案与服务端组件不兼容"],
+      "options": [
+        "性能太差",
+        "不支持响应式",
+        "体积比 Tailwind 大",
+        "运行时插桩方案与服务端组件不兼容"
+      ],
       "answer": 3,
       "explanation": "它依赖组件运行时注入样式，RSC 渲染模型里无处挂接（呼应 next-css 第二节表）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "className={cn(...)} 里 tailwind-merge 解决的具体问题是？",
-      "options": ["类名拼写检查", "同类目冲突（bg-black vs bg-white）按后者意图裁决", "自动加前缀", "CSS 变量注入"],
+      "options": [
+        "类名拼写检查",
+        "同类目冲突（bg-black vs bg-white）按后者意图裁决",
+        "自动加前缀",
+        "CSS 变量注入"
+      ],
       "answer": 1,
       "explanation": "没有 merge，覆盖结果取决于声明顺序而非语义（呼应 next-css 第三节经验1）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "模板拼接的类名（text-${size}）上线后失效，原因是？",
-      "options": ["运行时变量未加载", "SSR 不支持模板字符串", "浏览器缓存了旧 CSS", "Tailwind 静态扫描无法发现完整类名而将其清除"],
+      "options": [
+        "运行时变量未加载",
+        "SSR 不支持模板字符串",
+        "浏览器缓存了旧 CSS",
+        "Tailwind 静态扫描无法发现完整类名而将其清除"
+      ],
       "answer": 3,
       "explanation": "purge 按字面量扫描全项目——动态样式要用完整类名字面量映射或 CSS 变量（呼应 next-css 第三节经验3）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "SSR 站点消除暗色模式闪白的推荐主方案是？",
-      "options": ["主题写 cookie，根 layout 读出后渲染到 html class", "水合后再 setState 切 class", "给全站加 suppressHydrationWarning", "禁用 JS"],
+      "options": [
+        "主题写 cookie，根 layout 读出后渲染到 html class",
+        "水合后再 setState 切 class",
+        "给全站加 suppressHydrationWarning",
+        "禁用 JS"
+      ],
       "answer": 0,
       "explanation": "让正确主题进入服务端 HTML 本身；脚本抢跑是次选，消音警告是下策（呼应 next-css 第四节三档）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "utility-first 在 RSC 时代'天然正确'的深层原因是？",
-      "options": ["写起来最快", "不需要构建", "class 字符串可序列化，无运行时跨界依赖", "自动适配暗色"],
+      "options": [
+        "写起来最快",
+        "不需要构建",
+        "class 字符串可序列化，无运行时跨界依赖",
+        "自动适配暗色"
+      ],
       "answer": 2,
       "explanation": "样式方案竞争变成了边界兼容性竞争（呼应 next-css 第二节结语、next-boundaries props 契约）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " CSS-in-JS（运行时方案如老 styled-components）在 App Router 里式微的根本原因是？",
+      "options": [
+        "性能天然差所以被淘汰",
+        "RSC 默认在服务端渲染，组件不能是客户端边界，而运行时 CSS-in-JS 要求每个 styled 组件都在客户端注入样式——边界被迫扩大；Next 官方转向 Tailwind CSS Modules 等零运行时方案",
+        "CSS 优先级冲突",
+        "不支持暗色模式"
+      ],
+      "answer": 1,
+      "explanation": "不是\"CSS-in-JS 慢\"这么简单，而是\"运行时注入\"与\"服务端组件不打包进客户端\"两个模型互斥；零运行时的原子化/模块方案让样式成为纯静态产物，天然适配 RSC。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 暗色模式在 SSR 站点\"闪白一下\"的根因与推荐主修法是？",
+      "options": [
+        "CSS 加载顺序问题，调整 import 顺序",
+        "主题判定发生在客户端 JS 执行后（读 localStorage/系统偏好），首帧 HTML 按默认主题渲染——修法：服务端读 cookie 偏好，在根 layout 给 <html> 直接写出 class（浏览器扩展除外时再配防 FOUC 的内联脚本兜底）",
+        "禁用过渡动画",
+        "用 next/dynamic"
+      ],
+      "answer": 1,
+      "explanation": "这是\"URL/请求期真相应在服务端定\"的典型场景：偏好写 cookie 让服务端可读，<html class=\"dark\"> 从服务器出来就是对的，水合后 JS 只负责切换。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " utility-first（Tailwind）在 RSC 时代被认为\"结构性契合\"，最准确的表述是？",
+      "options": [
+        "类名短所以 HTML 体积小",
+        "样式以字符串形式跟着组件走，组件可以留在服务端渲染而无需任何客户端样式运行时；配合构建期扫描生成静态 CSS，\"样式即标记的一部分\"与 RSC 边界零冲突",
+        "Tailwind 支持 SSR 专用 API",
+        "它生成 JS 更少所以水合快"
+      ],
+      "answer": 1,
+      "explanation": "老 CSS-in-JS 的痛不在体积而在\"边界被迫客户端化\"；Tailwind 把样式外置成纯 CSS 产物，RSC 组件输出的 HTML 带类名即可，没有运行时注入这回事。"
     }
   ]
 }

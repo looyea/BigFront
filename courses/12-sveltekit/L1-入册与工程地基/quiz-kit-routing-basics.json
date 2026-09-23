@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "错误落点是路由就近原则（哪层 +error 接住看错误发生深度），内容经 $page.error/status 呈现；预期错误经 error() 抛出、未预期走 handleError——全景 L4 展开。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 某目录只放 +layout.svelte 不放 +layout.js/ts，合法吗？ ",
+      "options": [
+        " 不合法，layout 必须有 load ",
+        " 合法，layout 组件可以纯壳无数据逻辑 ",
+        " 仅根目录允许这样 ",
+        " 必须同时有 +error.svelte "
+      ],
+      "answer": 1,
+      "explanation": " load 全部可选；+layout.svelte 可以只是导航壳。只有需要给子树预取数据或共享状态时才加 load 文件。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 同目录既有 +page.server.js 又有 +page.ts 时，两者数据怎么合并进页面？ ",
+      "options": [
+        " 随机覆盖 ",
+        " server load 先跑，其结果是 universal load 的 data 入参；universal 返回值与 server 值浅合并，同名 key 后者胜出 ",
+        " 只能二选一，否则构建报错 ",
+        " 两者互不可见 "
+      ],
+      "answer": 1,
+      "explanation": " 双管线接力：server load 输出作为 input.data 交给 universal load，universal 返回后做 key 级浅合并覆盖，这是 data 遮蔽机制的由来。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 站内跳转 /a 到 /b（同一 layout 下），默认哪些 load 会重跑？ ",
+      "options": [
+        " 全部重跑 ",
+        " 只有 /b 的 page load 与受参数影响的层重跑，未变化的 layout load 不重跑 ",
+        " 都不跑，只能手动 invalidate ",
+        " 只跑根 layout "
+      ],
+      "answer": 1,
+      "explanation": " Kit 按层级差量执行：layout 复用则跳过其 load；若 /b 的 load 依赖的 params 值与 /a 相同也免跑，这是性能默认友好的关键。 "
     }
   ]
 }

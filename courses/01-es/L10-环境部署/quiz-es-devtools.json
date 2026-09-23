@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "循环 10000 次里只想在 i===9999 时暂停，最高效的做法是？",
       "options": [
-        "在循环里加 if (i === 9999) debugger",
         "右键行号 → Add conditional breakpoint → 写 i === 9999",
+        "在循环里加 if (i === 9999) debugger",
         "用 console.log 打印然后肉眼看",
         "改用 for...of 循环"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "条件断点不需要修改代码（A 要改代码重新部署）、不污染日志（C）、精确命中。"
     },
     {
@@ -22,10 +22,10 @@
       "options": [
         "内存泄漏",
         "HTTP 错误响应",
-        "Long Task（主线程阻塞 >50ms）",
-        "CSS 解析失败"
+        "CSS 解析失败",
+        "Long Task（主线程阻塞 >50ms）"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "红三角 = Long Task（>50ms 主任务）——通常由复杂 JS 计算、大量 DOM 操作、或同步 XHR 导致——需要拆分。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "右键文件 → Add script to blackbox → 调试时 Step Into 会自动跳过这些文件（框架代码如 React/Vue 内部）——只关注自己的代码。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Performance 面板里红色角标的 Long Task 阈值是：",
+      "options": [
+        ">16ms",
+        ">50ms",
+        ">100ms",
+        ">1s"
+      ],
+      "answer": 1,
+      "explanation": "50ms 是 INP/长任务官方阈值：超过即标红并计入 blocking time；一帧预算 16.7ms，所以 >50ms 意味着至少掉 3 帧。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Memory 面板查「谁在引用这个对象」应看：",
+      "options": [
+        "Allocation instrumentation on timeline",
+        "Retainers / Retaining paths 树",
+        "Statistics 视图",
+        "Selection summary"
+      ],
+      "answer": 1,
+      "explanation": "Heap snapshot 选中对象后的 Retainers 链回答「被谁持有不放」——detach 的 DOM 常挂在被遗忘的闭包/全局数组上。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "LCP（Largest Contentful Paint）计的是：",
+      "options": [
+        "第一个像素渲染时间",
+        "视口内最大内容元素完成渲染的时刻",
+        "DOM 解析完成",
+        "最后一个网络请求结束"
+      ],
+      "answer": 1,
+      "explanation": "LCP 元素通常是 hero 图/大标题；优化抓手：预加载 hero 图、SSR/早清缓存、避免 render-blocking——它才是用户感知的「打开快」。"
     }
   ]
 }

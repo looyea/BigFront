@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "多层边界分层兜底（呼应 react-architecture 第五节、react-render-control）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 「feature-first 目录」相对「按类型分（components/hooks/services）」主要解决的是？",
+      "options": [
+        "编译速度",
+        "把「一起变化的东西放在一起」：某功能的组件/hook/测试/类型聚在同目录，改一个需求只碰一处，避免一个功能散落多个类型顶层目录造成的来回跳与耦合面扩大",
+        "强制单例 store",
+        "让文件更少"
+      ],
+      "answer": 1,
+      "explanation": "按类型分是「技术维度切」，功能一多，一个特性被劈到 components/hooks/utils 各处，改需求要跨树收集文件（shotgun surgery）。按 feature 分是「领域维度切」，内聚高、可整体删除/迁移；顶层只留真正跨功能的 shared。二者常混用：小项目按类型也无妨，复杂了再向 feature 收敛（本关「随复杂度生长」）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " barrel 文件（index.ts 统一 re-export）除「集中导入」外，公认的副作用是？",
+      "options": [
+        "没有任何副作用",
+        "容易造成循环依赖、削弱 tree-shaking（引一个从 barrel 拉一整包，若未配 sideEffects/ 打包器保守）、且改 barrel 使下游缓存/类型检查失效面变大",
+        "会改变组件运行时行为",
+        "只能配合 class 组件"
+      ],
+      "answer": 1,
+      "explanation": "barrel 是双刃：好处是定义 feature 的公共 API、隐藏内部结构、统一路径；坏处正是这题——「一个 index 引全站」会把无关模块也拉进依赖图。缓解：barrel 只暴露该 feature 对外契约、别层层聚合到顶层；打包器开启模块级 sideEffects 与优化。这与本关「避免到处 import 耦合一团」是一对张力。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " App Router 下标 `\\u0027use client\\u0027` 的推荐粒度是？",
+      "options": [
+        "在根 layout 标一次最省事",
+        "尽量下沉到真正需要交互/Hook/浏览器 API 的「叶子」客户端组件，把它当「岛」，其父链保持 Server Component；根标会把整棵子树拖进客户端 bundle",
+        "每个文件都标",
+        "不标也能用 useState"
+      ],
+      "answer": 1,
+      "explanation": "`\\u0027use client\\u0027` 是「客户端边界」声明：它及其 import 图都进客户端。标在树顶=放弃所有上层 RSC 收益、bundle 膨胀。正确心智：默认 Server，只有需要 state/.effect/事件/浏览器 API 的边界才切客户端，且边界处通过 props（可序列化）从 server 侧喂数据。"
     }
   ]
 }

@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-components",
-  "title": "组件与 props · 自测",
+  "title": "solid-components 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "Solid 组件'只执行一次'，那 props 变化时更新的是什么？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "Solid 组件'只执行一次'，那 props 变化时更新的是什么？",
       "options": [
         "组件函数被重新调用一遍",
         "组件内订阅了该 signal 的那些 DOM 绑定/effect，而非组件本身",
@@ -11,10 +13,12 @@
         "什么都不会更新，需要手动 refresh"
       ],
       "answer": 1,
-      "explain": "createComponent 只 untrack 调用一次；响应式来自它读 signal 时建立的订阅，更新落在具体绑定上。"
+      "explanation": "createComponent 只 untrack 调用一次；响应式来自它读 signal 时建立的订阅，更新落在具体绑定上。"
     },
     {
-      "q": "下面哪种写法会让标题不随 props 更新？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "下面哪种写法会让标题不随 props 更新？",
       "options": [
         "JSX 里写 {props.title}",
         "createEffect 里现读 props.title",
@@ -22,10 +26,12 @@
         "顶部 const { title } = props 之后用 title"
       ],
       "answer": 3,
-      "explain": "解构在函数执行那瞬把 getter 求成快照、之后不再更新；必须'在用的地方惰性读 props.x'。"
+      "explanation": "解构在函数执行那瞬把 getter 求成快照、之后不再更新；必须'在用的地方惰性读 props.x'。"
     },
     {
-      "q": "读 props 用 `props.x`，读 signal 用 `x()`，这个差别从哪来？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "读 props 用 `props.x`，读 signal 用 `x()`，这个差别从哪来？",
       "options": [
         "props 是 Proxy/带 getter 的对象，属性访问即触发订阅；signal 是函数，必须调用才触发",
         "props 不是响应式的",
@@ -33,10 +39,12 @@
         "纯粹语法习惯，没有机制差别"
       ],
       "answer": 0,
-      "explain": "编译器为每个 prop 生成 getter(Proxy)，读属性即订阅；signal 的 getter 是那个函数本身，得调用。"
+      "explanation": "编译器为每个 prop 生成 getter(Proxy)，读属性即订阅；signal 的 getter 是那个函数本身，得调用。"
     },
     {
-      "q": "子组件想把数据传回父组件，符合 Solid 单向流的两种做法是？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "子组件想把数据传回父组件，符合 Solid 单向流的两种做法是？",
       "options": [
         "直接 props.onChange 赋值 + 改 props.count",
         "子组件里 setState 父组件",
@@ -44,10 +52,12 @@
         "用 dangerouslySet 强行改 props"
       ],
       "answer": 2,
-      "explain": "props 只读；往上走靠回调，或把状态提升/经 context 共享 signal/store，绝不去改 props。"
+      "explanation": "props 只读；往上走靠回调，或把状态提升/经 context 共享 signal/store，绝不去改 props。"
     },
     {
-      "q": "`{...props}` 与 `splitProps`/`mergeProps` 的关键区别是？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "`{...props}` 与 `splitProps`/`mergeProps` 的关键区别是？",
       "options": [
         "完全等价，只是写法不同",
         "splitProps 会丢掉所有响应式",
@@ -55,10 +65,12 @@
         "展开运算符会立即求值所有 prop 丢 getter；merge/split 返回 Proxy 保住惰性订阅"
       ],
       "answer": 3,
-      "explain": "spread 触发每个 prop 的 getter 把值定格；mergeProps/splitProps 保持 Proxy 契约、可继续惰性更新。"
+      "explanation": "spread 触发每个 prop 的 getter 把值定格；mergeProps/splitProps 保持 Proxy 契约、可继续惰性更新。"
     },
     {
-      "q": "关于 props.children，正确的是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 props.children，正确的是？",
       "options": [
         "它在子组件作用域里每次重渲都重新求值",
         "它在父作用域作为 prop 传入时就已求值，子组件只是把它插到某 DOM 位置",
@@ -66,10 +78,12 @@
         "Solid 不支持 children"
       ],
       "answer": 1,
-      "explain": "children 在父作用域求值后作为 prop 传入；要'子回填值给父渲染'用 render prop / 回调函数 prop。"
+      "explanation": "children 在父作用域求值后作为 prop 传入；要'子回填值给父渲染'用 render prop / 回调函数 prop。"
     },
     {
-      "q": "要标注一个'可接收可选 children'的组件类型，用哪个？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "要标注一个'可接收可选 children'的组件类型，用哪个？",
       "options": [
         "VoidComponent",
         "ComponentProps",
@@ -77,7 +91,46 @@
         "FlowComponent"
       ],
       "answer": 2,
-      "explain": "ParentComponent 带可选 children；VoidComponent 禁 children；FlowComponent 要求特定形状 children。"
+      "explanation": "ParentComponent 带可选 children；VoidComponent 禁 children；FlowComponent 要求特定形状 children。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Solid 的 props 对象设计上满足哪两个关键性质？ ",
+      "options": [
+        " 冻结且深拷贝 ",
+        " 惰性 getter（读时响应式）且 spread 安全（展开只复制当前存在的键） ",
+        " 可写且自动同步 ",
+        " Proxy 全量代理 "
+      ],
+      "answer": 1,
+      "explanation": " 属性即 getter 让读进入追踪；spread 取快照的语义提醒你：解构后与父级脱钩。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 子组件里调用父传入的回调函数，回调中创建的 signal 归属谁？ ",
+      "options": [
+        " 父组件 ",
+        " 调用点的 owner（子组件），销毁随子组件 ",
+        " 全局 ",
+        " 最近 memo "
+      ],
+      "answer": 1,
+      "explanation": " 所有权跟执行位置而非定义位置；要让资源活在生产端就 bind/包装，想让随消费者回收就直接调用，这是回调设计的显式决策点。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 给带 children 的组件标注类型，官方推荐？ ",
+      "options": [
+        " Component<P> ",
+        " ParentProps<P>（自动含 children 类型） ",
+        " FC<P> ",
+        " PropsWithChildren "
+      ],
+      "answer": 1,
+      "explanation": " ParentProps 组合出 children 的合法类型；children 在父作用域求值，类型与运行时语义对齐。 "
     }
   ]
 }

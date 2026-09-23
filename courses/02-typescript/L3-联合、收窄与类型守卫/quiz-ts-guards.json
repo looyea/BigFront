@@ -8,11 +8,11 @@
       "prompt": "为什么 function isStr(x): boolean 不能收窄调用点，而 x is string 可以？",
       "options": [
         "两者都能收窄",
-        "boolean 只表示真/假，不携带'x 是某类型'的信息；类型谓词 x is string 告诉编译器'返回真时 x 就是 string'",
         "因为 is 会运行校验",
+        "boolean 只表示真/假，不携带'x 是某类型'的信息；类型谓词 x is string 告诉编译器'返回真时 x 就是 string'",
         "因为 boolean 是 any"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "类型谓词把'判断结果为真'与'变量是某类型'绑定，让控制流分析据此收窄。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "断言函数 asserts x is T 与守卫函数 x is T 的差别是？",
       "options": [
         "完全一样",
-        "断言函数不返回布尔：不满足就抛错，满足则后续代码视 x 已收窄；守卫函数返回布尔供 if 判断",
         "断言函数运行时更慢",
-        "守卫函数会抛错"
+        "守卫函数会抛错",
+        "断言函数不返回布尔：不满足就抛错，满足则后续代码视 x 已收窄；守卫函数返回布尔供 if 判断"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "asserts 适合'前置校验、过则放心用、不过即抛'；is 适合'分支判断'。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "schema 单一来源，parse 同时给运行时保证和静态类型，避免手写守卫/断言的疏漏。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`function isCat(a: string): a is Cat`（Cat 与 string 无交集）会：",
+      "options": [
+        "合法但无意义",
+        "报错：类型谓词的类型必须可赋给参数类型",
+        "自动把 a 转 unknown",
+        "返回 never"
+      ],
+      "answer": 1,
+      "explanation": "`x is T` 要求 T ⊆ 参数声明类型——谓词语义是「收窄」不是「变身」；想从任意值判起，参数写 unknown。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "断言函数 `asserts x is T` 的声明要求：",
+      "options": [
+        "箭头函数自动推断即可",
+        "必须显式写出返回类型注解（且不能挂对象属性上被解构调用）",
+        "函数体必须 return true",
+        "只能在 class 内用"
+      ],
+      "answer": 1,
+      "explanation": "断言是编译器对函数体的「信任委托」：显式签名让它可校验；解构/方法借用会丢 this 与签名链（TS 明确报错或失效）——先声明后使用，别藏间接层。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "联合新增成员后，带 `default: const _: never = x` 的 switch 会：",
+      "options": [
+        "静默通过",
+        "default 分支报错：新类型不能赋给 never——穷举被破坏的精确报警",
+        "运行时抛错",
+        "自动补齐 case"
+      ],
+      "answer": 1,
+      "explanation": "never 是穷举检查的探针：只有所有成员都被 case 吃掉，default 处 x 才是 never。这就是 assertNever 模式一行胜过千行注释的原因。"
     }
   ]
 }

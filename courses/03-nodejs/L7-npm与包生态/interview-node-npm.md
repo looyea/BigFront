@@ -1,6 +1,6 @@
 # node-npm 面试题精选
 
-> 共 12 题，覆盖 package.json / semver / lockfile / 依赖分类 / 包管理器 五类。
+> 共 15 题，覆盖 package.json / semver / lockfile / 依赖分类 / 包管理器 五类。
 
 ---
 
@@ -99,3 +99,25 @@ pnpm 用**内容寻址的全局存储 + 硬链接/符号链接**组织 `node_mod
 corepack（Node 16.9+ 内置）让项目**锁定并自动使用指定版本/种类的包管理器**：`"packageManager": "pnpm@9.1.0"` 后，团队成员执行 `pnpm`/`yarn`/`npm` 命令时由 corepack 分派到对应版本，无需各自手动全局安装、消除版本漂移与 lockfile 打架（呼应 node-npm 第八节）。
 
 **来源**：Node.js — "Corepack"、pnpm — "packageManager field / corepack"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. semver 区间在团队策略层面怎么管：lockfile、renovate、灰度三者分工？
+
+声明层（package.json 区间）表达**兼容意愿**、锁定层（lockfile）表达**本次真相**、机器人层（renovate/dependabot）把「升级」变成可评审小 PR。策略示例：应用：区间宽松（^）+ lockfile 全锁 + renovate 按标签批量升（patch 自动合并、major 单独评审）；库：区间下限尽量保守（peer 从宽声明）、CI 跑「最小版本（--legacy-peer-deps 时代用 npm install 无 lock）」+ 最新双矩阵防「你装旧版就崩」。冲突面：同一依赖两处不同区间 → npm 嵌套/pnpm 各版本共存（内存双实例风险回到本包 modules 关）；发布前 `npm ls` 0 invalid 是门禁。灰度：升级 PR 分「安全/功能/大版本」三档节奏，lockfile diff 审查（新增包数/维护者变更）当供应链审计做。
+
+**来源**：semver 官方区间文档；Renovate 配置策略（separateMajorMinor/组并 PR）与 npmRFC「minimal version compatibility」讨论。
+
+### 14. npm/yarn/pnpm 在 monorepo 里各自的杀手特性与痛点？选型给一版。
+
+npm：workspaces 原生零装、但幽灵依赖（提升式）+ 安装性能垫底；痛点=大规模 hoist 冲突。yarn classic→berry：PnP（无 node_modules、zip 直载）理论最优但**生态兼容税**（部分工具链假定物理目录，需 patches）；workspaces+constraints 成熟。pnpm：内容寻址 store（磁盘占用碾压）、严格解析（phantom 绝迹）、workspace protocol（catalog 统一版本）、与 node_modules 兼容共存——当前「monorepo 默认答案」；痛点=store 磁盘 IO 平台差异、bin 软链在 Win 的老 bug 史。附加件：Nx（任务图/缓存/影响分析，与包管器解耦）、turbo（同类更薄）。选型口径：JS 团队无平台预算 → pnpm+Nx/turbo 组合最快成型；重度 Windows/CI 磁盘受限实测先行；PnP 只有在「依赖规模巨大+接受生态摩擦」时才值。
+
+**来源**：各包管器官方 workspaces/性能对比文档；pnpm catalog 与 Nx caching 说明（2024 生态共识综述）。
+
+### 15. 把「装依赖」变成安全动作：你 CI 里会挂哪些 npm 相关检查？
+
+装机面：`npm ci`（只认 lockfile，禁自动改版本——本关 npm ci 题的 CI 侧）、--ignore-scripts 起步 + 白名单（prebuild/node-gyp 类确需的单独放行，postinstall 是供应链攻击第一入口）。审计面：lockfile diff 门禁（新增包数、作者/维护者突变、typosquat 名单比对——install 名与目标包名差一字符报警）、`npm audit`（高危阻断，中低进周报）、license 检查（GPL 传染进商业产品红线）。运行时面：provenance 校验（本包 publish 关：消费侧 npm audit signatures）、SBOM 产出（cyclonedx-npm）。权限面：私有 registry 代理（Verdaccio/Nexus 缓存+白名单源）、组织账号 2FA 强制 + granular tokens。演练：投一个假包走全链，看哪层漏。制度：「依赖=外部代码」心态，装它=引入一次 PR 评审。
+
+**来源**：npm 官方 supply chain 文档（provenance/签名/2FA）；Aqua/StepSecurity 依赖混淆与 install-script 攻击案例汇编。

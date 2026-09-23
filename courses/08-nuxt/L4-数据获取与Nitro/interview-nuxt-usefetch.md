@@ -1,4 +1,4 @@
-# nuxt-usefetch 面试题（12 题）
+# nuxt-usefetch 面试题（15 题）
 
 > 主题：三件套分工、key 与去重、SSR 数据流与缓存语义。
 
@@ -96,3 +96,25 @@ const { data } = await useFetch('/api/status', {
 **答**：① 首屏/SSR 路由数据只准 useFetch/useAsyncData，key 必须含全部变量参数（lint 校验模板串）；② 事件驱动的变更+重取：$fetch 写 + refresh 读，禁止手写两套 loading 态；③ 每个 useFetch 必须有 `pick/transform`（payload 预算 ≤ 每页 50KB，CI 测 HTML 体积）；④ 错误三分法（网络/业务/401）经全局拦截器归一，组件只看 error.kind；⑤ 动态路由页取数必须响应式 URL 或显式 key+refresh 二选一，禁 watch+location.reload 核弹。每条背后都是本关的某次事故原型——规范的本质是把踩过的坑焊进管道（呼应 next-testing D3 的门禁思路、nuxt-fullstack-project）。
 
 **来源**：SegmentFault《我们团队的 Nuxt 取数军规》；知乎《规范怎么写才不被绕开》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  useFetch/useAsyncData 的 key 体系：默认生成规则、手写 key 的时机、refreshNuxtData 与 payload 复用怎么协作？
+
+**答**：默认规则：useFetch 不写 key 用 URL（含路径）做 key；useAsyncData 必须手写 key（handler 无 URL 可推）。key 的三个身份：① payload 条目名——服务端写入、客户端水合读取，两侧 key 算法一致才有"不发第二发"；② 飞行中去重单位——key 同=共享；③ refreshNuxtData(key) 的作用域——key 设计=刷新半径设计。手写时机：参数化取数要带维度（key: `post-${id}`，否则切 id 时旧 payload 命中错数据）；同 URL 不同选项（一次带 query 一次不带）必须分开 key 否则互相覆盖。经典事故：列表页与详情页都取 /api/feed 未区 key，refreshNuxtData 刷列表把详情也打回加载态。进阶：payload 里同 key 只存一份（多组件共享是优点，数据体积审计要按 key 算大头）；clearNuxtData 用于登出清场（防上个用户的数据残留水合进下个会话，安全向）。收口：key 不是缓存键是"数据身份+刷新边界+水合契约"三重语义。
+
+**来源**：Nuxt 官方 useAsyncData 文档；掘金《key 没配好导致列表详情互相冲刷》。
+
+### D5.  详情页 /post/[id] 从"进页面才取数"改造成"hover 预取+秒开"，useFetch 体系里有哪几条路？各自的坑？
+
+**答**：路线一：NuxtLink 默认视口预取只管 chunk 不管数据——先认清"预取了还是白屏"的原因在这。路线二：usePrefetch(route, { params }) 绑交互事件（@pointerenter 手动触发版最可控），把目标页 useFetch 的 payload 提前写入——坑是 key 必须与目标页完全一致（含参数派生规则），否则预取的数据水合不命中、进页再发一遍双倍成本。路线三：接口层缓存——目标页取数走 defineCachedEventHandler(swr)，预取与否都命中边缘缓存，治本但依赖部署平台与缓存新鲜度设计。路线四：列表接口顺手带回详情摘要，详情页首帧用列表数据渲染骨架级内容+后台校准（SWR 思路，要处理两源不一致的闪烁）。坑位总结：预取过度=下游接口 QPS 翻倍（hover 就触发要给 debounce/白名单）；payload 膨胀（预取的数据也进首屏 HTML）；鉴权接口预取触发 302 链。选择句：低频高价值页路线二+三叠加，高频列表详情直接路线四。
+
+**来源**：Nuxt 官方 prefetch 与 usePrefetch 文档；SegmentFault《详情页秒开的三种做法对比》。
+
+### D6.  取数时机的三种归属——useFetch 默认（SSR 阻塞）、lazy、客户端手动触发——按什么原则选？错了各付出什么代价？
+
+**答**：默认（服务端阻塞 await）：适合"缺了它这页没有意义"的主数据（详情正文、订单详情）——代价是 TTFB 含接口耗时，接口一慢全站慢，错误直接 500 页。lazy：首屏出壳、数据客户端补——适合次要/个性化数据（推荐位、计数器、评论数），代价是多一次客户端请求与内容跳变（要配骨架/占位高度防 CLS），且 SEO 抓取可能拿不到内容（重要内容别 lazy）。客户端手动（onMounted/$fetch）：只放"交互后取"（翻页、联想搜索、表单提交）——把它当默认是反模式：SSR 首屏空数据等于自愿退化 SPA。错误代价对照：该 lazy 的写 await=首屏被最慢接口绑架；该 await 的写 lazy=核心内容 SEO 缺失+闪烁；手动取数放 setup 里=水合后双发（服务端 payload 一份、客户端又发一份）。评审两问："这数据缺了页面成立吗""搜索引擎/分享卡片需要它吗"——答案组合唯一定位三档。
+
+**来源**：Nuxt 官方 lazy 选项说明；InfoQ《首屏数据预算的评审方法》。

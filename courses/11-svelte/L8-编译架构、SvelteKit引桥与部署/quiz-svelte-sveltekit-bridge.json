@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "分工地图：语言层/编译层在 11，应用框架工程在 12，脚下的构建工具在 10-vite。L8–L10 是三座引桥，学完本包再进 12 包会清楚'Kit 每个约定背后编译器的动作'。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 纯 Svelte 应用里手搓路由，用 popstate 监听 + 手动切组件，与 SvelteKit 相比最缺的是什么？",
+      "options": [
+        "能切页面就行",
+        "缺 SSR/数据加载/代码分割/预取/滚动恢复/layout 嵌套等一整套（Kit 把这些做成了约定式文件系统路由，对应既有\"手搓路由缺什么\"题）",
+        "缺组件",
+        "缺 CSS"
+      ],
+      "answer": 1,
+      "explanation": "路由不难，难的是路由周边的应用框架能力——这正是 11-svelte 与 12-sveltekit 的分界（对应既有本包与 Kit 包边界题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " SvelteKit 项目里，数据库连接串这类 secret 应放在哪一侧？",
+      "options": [
+        "+page.ts 通用 load",
+        "只能放 +page.server.ts（服务端模块，代码不进客户端 bundle）/ 环境变量 $env——放错到共享 load 会泄露到浏览器（对应既有 secret 应放哪题）",
+        "放组件",
+        "放 store"
+      ],
+      "answer": 1,
+      "explanation": "SvelteKit 用文件名后缀表达 server/client 边界，secret 必须留在 .server 侧（对应\"客户端/服务端边界\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 做一个\"嵌进老客户系统的日期选择器小组件包\"，该选纯 Svelte 还是上 SvelteKit？",
+      "options": [
+        "必须 SvelteKit",
+        "纯 Svelte（库模式打包成组件/自定义元素）更合适——Kit 是应用框架，发组件库不需要路由/SSR（对应既有\"小组件包该不该上 Kit\"题）",
+        "两个都行没差别",
+        "用 Next"
+      ],
+      "answer": 1,
+      "explanation": "组件库走 Svelte 库打包（呼应 web-components/deploy），Kit 只在\"做应用\"时上（选型边界题）。"
     }
   ]
 }

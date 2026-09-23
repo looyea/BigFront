@@ -1,6 +1,6 @@
 # kit-server-modules 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) server load 的返回值要过什么契约？devalue 比 JSON 多支持哪些？
 **来源**：数据序列化机制高频题的转述。
@@ -63,3 +63,25 @@ Kit：SSR 期发出的内部/子域请求自动带原页面请求的 cookie/auth
 正向雷：私有 env（`$env/dynamic/private`）与 DB import 在浏览器侧执行时——前者拿不到值（构建剥离），后者直接崩；本地"看似正常"多半因为 ssr 首访仍服务端跑过、且你只看了首屏。反向：universal load 没有 cookies API（那是 RequestEvent 家族的成员），想在浏览器侧带 cookie 请求只能依赖 fetch 的默认凭证行为（同源自动携带），读不到也设不了 document.cookie 以外的等价物——需要 set-cookie 就必须回到 server 侧。
 
 🚀 **下一组**：kit-streaming 面试题——水位编排、环境陷阱与 1.x 语义迁移。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  同一个业务查询既给页面 load 用又给开放端点用，怎么复用不产生双份请求？ 
+
+ 把查询下沉到 $lib/server/service 纯函数，load 与端点各自薄封装调用；自家页面 load 直接 event.fetch 自家端点会得到缓存去重与凭证继承，但绕一跳 HTTP，取舍在于端点需要独立鉴权与限流时值得，否则直调 service 更省。 
+
+**来源**： https://svelte.dev/docs/kit/load#Fetching-from-the-server 
+
+### 14.  给开放平台设计 /api/v1 端点组：版本、鉴权、限流在 Kit 里怎么落？ 
+
+ 版本进路由目录（routes/api/v1/...）而非 header 魔法（Header 要兼容时也可）；鉴权在 hooks.server 按前缀统一挂 key 校验，限流用本地 Map 或 Redis 中间件放 handle 层；端点内只留业务，跨端复用靠 $lib/server。 
+
+**来源**： https://svelte.dev/docs/kit/advanced-routing#Endpoints 
+
+### 15.  ServerLoadEvent 相比 LoadEvent 多出的 dependencies/locals 等，对两端代码共享意味着什么纪律？ 
+
+ 用了只有服务端存在的成员（locals、cookies、platform）的代码只能放 .server 文件，否则 universal load 在客户端执行会 undefined；共享逻辑靠参数注入而非直接读 event，是防『本地正常线上崩』的结构性手段。 
+
+**来源**： https://svelte.dev/docs/kit/types#server ； https://svelte.dev/docs/kit/load 

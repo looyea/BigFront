@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "关于 error.js 组件，下列说法正确的是？",
-      "options": ["必须是服务端组件，才能拿到错误堆栈", "必须标记 'use client'", "必须同时导出 default 和 named error", "只能放在 app 根目录"],
+      "options": [
+        "必须是服务端组件，才能拿到错误堆栈",
+        "必须标记 'use client'",
+        "必须同时导出 default 和 named error",
+        "只能放在 app 根目录"
+      ],
       "answer": 1,
       "explanation": "error.js 依赖 React Error Boundary 机制在客户端渲染，'use client' 是硬性要求；它可以放在任何段目录，子段优先捕获（呼应 next-error-loading 第 2 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "用户在 error 页面看到的 error.digest 的作用是什么？",
-      "options": ["给用户复制反馈客服的编号，服务端日志中同 digest 可检索真实堆栈", "前端据此自动重试的次数", "React 内部 key，无实际意义", "标识用户会话的 ID"],
+      "options": [
+        "给用户复制反馈客服的编号，服务端日志中同 digest 可检索真实堆栈",
+        "前端据此自动重试的次数",
+        "React 内部 key，无实际意义",
+        "标识用户会话的 ID"
+      ],
       "answer": 0,
       "explanation": "出于安全考虑服务端堆栈不下发浏览器，只给 digest；工程侧按 digest 在日志中定位真实错误，是用户侧与工程师侧的缝合线（呼应 next-error-loading 第 2、4 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "global-error.js 与 error.js 最大的区别是？",
-      "options": ["前者只能捕获 404", "前者自动继承根 layout 的 UI", "global-error 兜底根 layout 自身崩溃，必须自己渲染 <html><body>；普通 error 只在布局内换内容", "两者完全等价，只是命名不同"],
+      "options": [
+        "前者只能捕获 404",
+        "前者自动继承根 layout 的 UI",
+        "global-error 兜底根 layout 自身崩溃，必须自己渲染 <html><body>；普通 error 只在布局内换内容",
+        "两者完全等价，只是命名不同"
+      ],
       "answer": 2,
       "explanation": "根 layout 崩了没有外层布局可用，所以 global-error 要自带 html/body，且生产构建后只渲染一次、热更新时会反复触发（呼应 next-error-loading 第 1 节表格）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "服务端代码里想让\"资源不存在\"返回 404 页并带正确状态码，应使用？",
-      "options": ["return <NotFound />", "response.status = 404 后渲染模板", "throw new Error('404')", "调用 next/navigation 的 notFound()"],
+      "options": [
+        "return <NotFound />",
+        "response.status = 404 后渲染模板",
+        "throw new Error('404')",
+        "调用 next/navigation 的 notFound()"
+      ],
       "answer": 3,
       "explanation": "notFound() 是声明式中断信号，渲染就近 not-found.js 且 HTTP 状态码为 404；手动渲染组件不会有 404 状态码（呼应 next-error-loading 第 3 节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "把 redirect('/login') 包进了一个宽泛的 try/catch 里，最可能发生什么？",
-      "options": ["跳转信号被当作普通错误吞掉，页面不跳转甚至报错", "Next 自动识别并重发跳转", "构建期直接报类型错误", "跳转照常，只是慢一点"],
+      "options": [
+        "跳转信号被当作普通错误吞掉，页面不跳转甚至报错",
+        "Next 自动识别并重发跳转",
+        "构建期直接报类型错误",
+        "跳转照常，只是慢一点"
+      ],
       "answer": 0,
       "explanation": "redirect/notFound/forbidden 都靠 throw 特殊信号中断执行，被 catch 捕获就失效了——信号路径上不要套 try/catch（呼应 next-error-loading 第 3 节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "error.js 里的 reset() 按钮做了什么？",
-      "options": ["整页 location.reload()", "清空服务端缓存", "清除该段错误状态并重新渲染其子树", "回退到上一个路由"],
+      "options": [
+        "整页 location.reload()",
+        "清空服务端缓存",
+        "清除该段错误状态并重新渲染其子树",
+        "回退到上一个路由"
+      ],
       "answer": 2,
       "explanation": "reset 只重置对应错误边界的 state 并重试渲染该子树，代价远小于整页刷新（呼应 next-error-loading 第 2 节）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "框架级的启动钩子与全局错误上报（如 Sentry 接入）推荐使用哪个文件？",
-      "options": ["middleware.ts", "next.config.js 的 webpack 段", "_app.tsx", "instrumentation.ts"],
+      "options": [
+        "middleware.ts",
+        "next.config.js 的 webpack 段",
+        "_app.tsx",
+        "instrumentation.ts"
+      ],
       "answer": 3,
       "explanation": "instrumentation.ts 的 register() 在服务端/Edge 运行时各执行一次，是 v14+ 官方推荐的全局初始化与错误钩子接入点（呼应 next-error-loading 第 4 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 资源不存在时要返回真 404（而非客户端软 404），正确姿势是？",
+      "options": [
+        "渲染一个写着\"404\"的页面",
+        "服务端调用 notFound()——框架输出 404 状态码并渲染最近的 not-found.tsx；客户端软 404 是 SEO 与监控的经典坑",
+        "redirect 到 /404",
+        "throw new Error()"
+      ],
+      "answer": 1,
+      "explanation": "状态码是 HTTP 契约的一部分：软 404 会被收录、被当作正常页统计；notFound 与 redirect 同为\"控制流异常\"，所以不能包进吞一切的 try/catch。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " error.tsx 的捕获范围是？",
+      "options": [
+        "全站所有错误",
+        "其下子树渲染期抛出的错误（含服务端组件错误经 digest 摘要传达）；自身不捕子树外、不捕事件处理器与异步回调、不捕 hydration 前的文档级问题（那要 global-error）",
+        "只捕客户端错误",
+        "只捕构建错误"
+      ],
+      "answer": 1,
+      "explanation": "错误边界语义=渲染期+子树内；addEventListener 回调、setTimeout 里的抛错不经过 React 渲染，要 window 级兜底——三层（边界/全局监听/平台上报）各司其职。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " redirect() 写在被 try/catch 包裹的服务端组件里，会发生什么？",
+      "options": [
+        "正常跳转，catch 不到",
+        "redirect 靠抛特殊错误实现——被 catch 吞掉后跳转失效，页面可能带着\"渲染已完成\"的假象继续走；框架会告警识别被捕获的框架错误，规范是控制流异常不要 catch",
+        "构建报错",
+        "变成 500"
+      ],
+      "answer": 1,
+      "explanation": "notFound() 同理；\"宽泛 catch 打日志\"的习惯在 RSC 里要加一条例外：框架控制流异常放行（或检查 isRedirectError 后再处理）。"
     }
   ]
 }

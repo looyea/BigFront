@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "375px 宽的设备上，1rpx 等于？",
-      "options": ["0.5px", "1px", "2px", "0.75px"],
+      "options": [
+        "0.5px",
+        "1px",
+        "2px",
+        "0.75px"
+      ],
       "answer": 0,
       "explanation": "375×2=750，故 1rpx=0.5px（呼应 mp-wxss 第二节表格）。"
     },
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "自定义组件默认的 styleIsolation 是？",
-      "options": ["isolated", "shared", "apply-shared", "page"],
+      "options": [
+        "isolated",
+        "shared",
+        "apply-shared",
+        "page"
+      ],
       "answer": 0,
       "explanation": "默认运行时真隔离，页面样式不进组件（呼应 mp-wxss 第四节）。"
     },
@@ -61,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "页面 wxss 与 app.wxss 对同一元素定义了同权重样式，谁生效？",
-      "options": ["app.wxss", "页面 wxss", "随机", "都不生效"],
+      "options": [
+        "app.wxss",
+        "页面 wxss",
+        "随机",
+        "都不生效"
+      ],
       "answer": 1,
       "explanation": "层叠规则：页面样式后于全局加入，胜出（呼应 mp-wxss 第三节）。"
     },
@@ -69,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "想让页面的一条样式作用于组件内部的某个节点，官方推荐的\"样式插槽\"机制是？",
-      "options": ["externalClasses（外部类）", "ID 选择器", "行内 style", "!important"],
+      "options": [
+        "externalClasses（外部类）",
+        "ID 选择器",
+        "行内 style",
+        "!important"
+      ],
       "answer": 0,
       "explanation": "隔离下父选不中子节点，externalClasses 是正解（呼应 mp-wxss 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 关于 rpx 在 iPad/宽屏上「把整个界面拉得过大」的问题，合理的应对是？",
+      "options": [
+        "全部改用 px",
+        "内容/布局宽度用 rpx 保等比，但字号、间距、边框等「不该随屏无脑放大」的用 px 或设上限（rpx 主要服务于「按 750 基准横向等比」，宽屏会放大）",
+        "全部用 %",
+        "禁用 rpx"
+      ],
+      "answer": 1,
+      "explanation": "rpx 以 750 设计稿为基准等比换算屏幕宽度，手机上很好，但 iPad/折叠大屏会把 1rpx 换算得很大，导致「字巨大」。成熟做法：横向弹性尺寸用 rpx，正文/边线/触控热区用 px（或按 media/设备信息降级），关键页对平板单独适配。这正呼应「什么时候不该用 rpx」。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 自定义组件默认 styleIsolation 为 isolated，其含义是？",
+      "options": [
+        "组件样式和页面完全互通",
+        "组件样式互不影响：页面的 wxss 选不中组件内部节点、组件也选不中页面/外部节点（除加到组件根/插槽的类），需要穿透要显式改 apply-shared/shared",
+        "等同全局 CSS",
+        "禁用组件内样式"
+      ],
+      "answer": 1,
+      "explanation": "isolated 是默认「双向隔离」，防止组件样式污染和被污染，代价是「想从外部改组件内部样式」必须显式调 styleIsolation：apply-shared=页面样式可影响组件(及其组件)、shared=组件样式可外溢。别乱改全局 shared（隔离一破就难回收），需要可定制就设计成「对外 props/类名」而非靠穿透。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 想让「1rpx 边框」在高分屏上稳定显示为细线而非「时隐时现/偏粗」，常见稳妥做法是？",
+      "options": [
+        "就用 1rpx solid",
+        "1rpx 换算后可能不足 1 物理像素导致渲染抖动——细线类常用 px（如 0.5px 兼容处理）或改用 background/box-shadow/transform scale 伪元素画线，保证在主流机型稳定",
+        "用 dotted 代替",
+        "加 !important"
+      ],
+      "answer": 1,
+      "explanation": "rpx→px 在 375 逻辑宽设备上 1rpx≈0.5px，小于 1 物理像素时各机型表现不一（发虚/忽粗忽细/在某些 DPR 下消失）。对「 hairline 细线」这种精度敏感的场景，业界普遍用 px 或伪元素 transform 方案而非 rpx，这是 rpx 精度陷阱的直接落点（呼应本关 Q3 小屏 1rpx 问题）。"
     }
   ]
 }

@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "开启 strictNullChecks 后，interface 里的 a?: T 其真实类型是？",
-      "options": ["T", "T | undefined", "null", "unknown"],
-      "answer": 1,
+      "options": [
+        "T | undefined",
+        "T",
+        "null",
+        "unknown"
+      ],
+      "answer": 0,
       "explanation": "可选属性等价于 T | undefined（除非开 exactOptionalPropertyTypes 改变赋值端语义）。"
     },
     {
@@ -16,18 +21,23 @@
       "prompt": "noImplicitAny 的主要作用是？",
       "options": [
         "禁止任何显式 any",
-        "当无法推断时不允许'默默'落成 any，逼你显式标注（你仍可主动写 any）",
         "禁用 unknown",
-        "强制泛型"
+        "强制泛型",
+        "当无法推断时不允许'默默'落成 any，逼你显式标注（你仍可主动写 any）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "它把'放弃类型'变成显式决定，堵住隐式 any 悄悄关闭下游检查（呼应 ts-any-unknown）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "noUncheckedIndexedAccess 打开后 arr[0] 的类型变成？",
-      "options": ["原元素类型", "原元素类型 | undefined", "never", "unknown"],
+      "options": [
+        "原元素类型",
+        "原元素类型 | undefined",
+        "never",
+        "unknown"
+      ],
       "answer": 1,
       "explanation": "它承认索引/越界可能取到 undefined，逼你判空或用 NonNullable/守卫（strict 不含，需单独开）。"
     },
@@ -74,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "下面哪个开关 NOT 被 strict: true 包含？",
-      "options": ["noImplicitAny", "strictNullChecks", "exactOptionalPropertyTypes", "noImplicitThis"],
+      "options": [
+        "noImplicitAny",
+        "strictNullChecks",
+        "exactOptionalPropertyTypes",
+        "noImplicitThis"
+      ],
       "answer": 2,
       "explanation": "exactOptionalPropertyTypes（及 noUncheckedIndexedAccess、noPropertyAccessFromIndexSignature）要单独开。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "非空断言 `x!.foo` 的准确语义是：",
+      "options": [
+        "运行时把 null 过滤掉",
+        "编译器闭嘴——运行时无任何插入，x 真为 null 时崩在下一行",
+        "自动转 optional chain",
+        "仅测试环境可用"
+      ],
+      "answer": 1,
+      "explanation": "! 是「我保证非空」的断言（与 as 同级信任委托），崩溃只是被延后转移；替代优先序：收窄 > ?. + 兜底 > 边界处一次 assert。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "noPropertyAccessFromIndexSignature 开启后，对 `{ [k: string]: any }` 的 obj.foo：",
+      "options": [
+        "鼓励写法",
+        "报错——索引签名键必须用 obj[\"foo\"] 访问（点号只给具名属性），强制区分「声明过的」与「动态键」",
+        "自动映射",
+        "与 no 无关"
+      ],
+      "answer": 1,
+      "explanation": "它把「索引签名访问」显式化：点号=有契约，方括号=动态查询——env/JSON 满天飞 obj.xxx 的仓库开了会现出原形。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "noImplicitOverride 防止的真实事故是：",
+      "options": [
+        "重复定义变量",
+        "基类方法改名/签名变化后，子类的「_override」退化成新增方法，多态静默失效——强制写 override 关键字核对",
+        "禁止私有继承",
+        "循环重写"
+      ],
+      "answer": 1,
+      "explanation": "`onResize` 变 `onResized` 后子类的旧实现不再覆盖任何东西、也不报错——override 关键字让编译器做「被覆盖成员存在性」校验。"
     }
   ]
 }

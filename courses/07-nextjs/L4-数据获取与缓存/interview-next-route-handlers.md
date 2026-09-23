@@ -1,4 +1,4 @@
-# next-route-handlers 面试题（12 题）
+# next-route-handlers 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点 Next.js API 层设计高频面经，中文重述。
 
@@ -65,3 +65,19 @@ Node 侧 formData 会把文件读进内存/临时盘，serverless 有请求体�
 **12. 设计题：为内部工具站写'带审批的导出接口'（发起→审批→下载），用 handler 体系怎么组织？**
 **来源**：SegmentFault《长任务 API 的模式》
 POST /api/exports 建任务（校验+配额）立即 202；后台/队列执行（handler 内别跑 5 分钟循环——serverless 超时）；GET /api/exports/[id] 查状态+签名 URL 下载；审批走 webhook/Action。模式总结：接口只做"状态机的一步"，慢活在边界外——与 node-child-process 的异步化哲学、mp-openapi 支付回调的同款世界观（呼应 next-forms-mutations 的 after()）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  Route Handler 里要做流式响应/SSE，浏览器、代理、部署平台三层各可能怎么"吃掉"你的流？逐项给验证方法。**
+**来源**：Next.js 官方 Route Handlers 流式响应说明；掘金《SSE 在 Serverless 上不流的三个原因》
+三层拦截点：① 浏览器——fetch 默认会等 body 完成？不，fetch 可读流式，但 EventSource 只支持 GET 且受 6 连接限制；用 curl -N 对照浏览器 Network 面板渐进渲染验证；② 代理/CDN——nginx proxy_buffering 默认开、部分 CDN 直接缓冲整响应，响应头加 X-Accel-Buffering: no、验证 x-cache 是否 HIT（缓冲通常不 HIT 但要确认边缘没攒块）；③ 平台——serverless 函数有最大响应时长与内存流缓冲（Vercel 的 maxDuration、边缘函数的执行时限），且免费层可能不支持长连接；压测法：先发一个每 5s 心跳的小流跑 6 分钟看断点位置。工程细节：心跳注释行防闲置断连、客户端 Last-Event-ID 续传、优雅退出时 controller.close() 让下游感知。加分句：能报出"我们线上是哪层把流压成块的、怎么定位的"就是做过的人。
+
+**14.  用 Route Handler 自建 REST API 的团队常犯哪些错？版本化、错误格式、鉴权你会怎么规范？**
+**来源**：InfoQ《BFF 与公共 API 的边界》；SegmentFault《Next.js 做 API 服务的踩坑集》
+常犯：① 无版本——URL 直接 /api/orders，改字段即破坏第三方，应从 /api/v1 起并承诺"不兼容变更只开新版本、旧版本给日落期"；② 错误格式漂移——有的 handler 抛文本、有的返回 {message}、Next 默认 500 页 JSON 混进来，规范：统一 { error: { code, message, details } } + 中央 wrapper 捕获未处理异常，杜绝泄露堆栈；③ 状态码语义随手写（业务失败也 200、创建成功也 200 无 Location）——建立 code↔status 映射表；④ 鉴权散写——每个 handler 手调 getSession，漏一个就是一个洞：抽 withAuth(role) handler 包装器 + 集成测试"未带凭据访问全部 v1 端点必须 401/403"；⑤ 把内部 BFF 与对外 API 混一棵树——内部端点被爬虫/扫描发现。加分句：Route Handler 解决"能不能写"，规范解决"敢不敢长期维护"。
+
+**15.  从 Express/Nest 迁业务到 Next Route Handlers，哪些"框架肌肉记忆"要放下、哪些能力反而变少？**
+**来源**：知乎《Next.js Route Handlers 能替代 Express 吗》；InfoQ《全栈框架里的 API 层定位》
+要放下的：① 中间件栈心智——没有全局 app.use 链，只有 per-route wrapper 与 middleware.ts（Edge 运行时、能力受限），依赖注入/装饰器那套 Nest 结构在函数式 handler 里没有对应物，规范靠封装而不是框架；② 长生命周期资源——不能模块顶层挂常驻连接池/定时任务（serverless 实例随时冷、多实例），连接靠惰性池+平台托管、任务外移到 cron/队列；③ 对 socket/WS 的幻想——请求-响应模型平台不支持，实时走 SSE 或独立服务。变少的能力：生态（无成熟 router/multer 类挂载习惯、文件上传要自己流式处理）、可观测性默认值（没有 pino 全局注入，要自己在 wrapper 里打日志）。反而顺的：与页面共享类型与数据层、部署单元合一、边缘就近。结论句：Route Handler 适合 BFF 与中小规模 API；重 API（多服务复用、复杂任务、长连接）仍该独立后端——把"能不能"和"该不该"分开答。

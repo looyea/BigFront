@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "esbuild / swc 相比 tsc 快很多，根本原因是？",
       "options": [
-        "它们把类型也检查得更聪明",
         "它们只做转译（删类型/降语法），完全不做类型检查",
+        "它们把类型也检查得更聪明",
         "它们会缓存 .tsbuildinfo 做增量",
         "它们把代码编译成了机器码"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "esbuild/swc 跳过类型推断，只删除类型语法并降级语法，因此快得多；代价是完全不做类型检查，类型门禁要另跑 tsc --noEmit。"
     },
     {
@@ -22,10 +22,10 @@
       "options": [
         "构建变慢",
         "产物体积变大",
-        "类型错误全部漏网，照样打包成功上线",
-        "自动生成 .d.ts 失败"
+        "自动生成 .d.ts 失败",
+        "类型错误全部漏网，照样打包成功上线"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "esbuild 不检查类型，缺了独立的类型门禁，类型全错也能打包成功——两条腿（转译 + 类型检查）必须都有。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "主流是关注点分离：ESLint（含类型感知规则）负责正确性与潜在 bug，Prettier/Biome 负责排版外观，避免二者打架。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Node 的 type stripping（--strip-types）拒绝运行 enum/namespace/参数属性，原因是：",
+      "options": [
+        "性能不够",
+        "这些语法需要**生成代码**才能运行，而 strip 只做「删除纯类型标注」——保持零转译器承诺",
+        "V8 不支持",
+        "等 TC39 标准化"
+      ],
+      "answer": 1,
+      "explanation": "「erasable by deletion」是底线（erasableSyntaxOnly 开关正是为对齐它）：类型即注释的纪律，让删类型=合法 JS 永远成立。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "esbuild/swc 比 tsc 快 10-100 倍的根本组合因素是：",
+      "options": [
+        "代码写得更少",
+        "Go/Rust 编译型语言 + 真并行分片 + 不做类型检查（只转译）",
+        "跳过了解析 AST",
+        "只支持 ESM"
+      ],
+      "answer": 1,
+      "explanation": "最大头是「不检查」：类型检查是全局程序级推理（跨文件、不可并行分治）；转译是单文件局部操作，天然可并行——这也是 tsgo 第一阶段只做检查并行的原因。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "eslint-config-prettier 在工具链分工里的职责是：",
+      "options": [
+        "执行 prettier",
+        "只关闭与 Prettier 冲突的格式类 ESLint 规则；格式化本身交给 prettier（或 dprint/oxfmt）",
+        "生成规则",
+        "替代 editorconfig"
+      ],
+      "answer": 1,
+      "explanation": "主流共识：lint 管「质量问题」、formatter 管「长相」；2024 后新选项是 oxc 系（oxlint+oxfmt）同语言统一——关键是别用 ESLint 干排版。"
     }
   ]
 }

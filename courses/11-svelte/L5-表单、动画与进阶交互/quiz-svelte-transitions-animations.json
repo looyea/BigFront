@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "send/receive 以 key 配对(呼应 svelte-transitions-animations 第二节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " {#if} 条件翻 false 时，挂了 transition: 的元素为什么会\"先播放出场动画再移除\"？",
+      "options": [
+        "不会，直接消失",
+        "transition 指令劫持了移除——Svelte 把出场动画播完（或到 duration）后才真正 detach DOM（对应既有\"出场动画如何捕获\"题）",
+        "靠 CSS 自己",
+        "靠 setTimeout"
+      ],
+      "answer": 1,
+      "explanation": "进场/出场都归 transition 管，出场是\"延迟移除直到动画结束\"（这是指令相比纯 CSS 动画的核心能力）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 进场要 fly、出场要 fade，怎么写？",
+      "options": [
+        "transition: 只能同一个",
+        "用 in:fly 和 out:fade 分别指定进场/出场过渡（in:/out: 可各用不同过渡）",
+        "不能区分",
+        "写两个 transition"
+      ],
+      "answer": 1,
+      "explanation": "transition: 是 in+out 同套；要分开用 in:/out: 分别配（对应既有\"in/out/transition 关系\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 用户对动画敏感（前庭功能障碍），正确的处理是？",
+      "options": [
+        "忽略",
+        "尊重 prefers-reduced-motion——Svelte 过渡可全局/局部禁用或降为极短（配合媒体查询，避免大幅位移/缩放）（对应既有\"reduced-motion 用户处理\"题）",
+        "只留 JS 动画",
+        "禁止关闭动画"
+      ],
+      "answer": 1,
+      "explanation": "可访问性硬要求：减弱动效模式下禁用/收敛过渡（既有 reduced-motion 题的落实）。"
     }
   ]
 }

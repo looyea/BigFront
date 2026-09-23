@@ -1,48 +1,136 @@
 {
-  "lesson": "solid-testing",
-  "title": "测试 · 自测",
+  "title": "solid-testing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "@solidjs/testing-library 的 render 调用形态是？",
-      "options": ["render(<App />)", "render(App)", "render(() => <App />)", "mount(() => <App />)"],
+      "id": "q1",
+      "type": "single",
+      "prompt": "@solidjs/testing-library 的 render 调用形态是？",
+      "options": [
+        "render(<App />)",
+        "render(App)",
+        "render(() => <App />)",
+        "mount(() => <App />)"
+      ],
       "answer": 2,
-      "explain": "官方点名的关键差异：render 收\"返回组件的函数\"，与 preact/react 版直接传元素不同。"
+      "explanation": "官方点名的关键差异：render 收\"返回组件的函数\"，与 preact/react 版直接传元素不同。"
     },
     {
-      "q": "为什么这个库没有 rerender 方法？",
-      "options": ["Solid 不重渲染——变化由响应式状态触发的副作用直接改 DOM，用全局 signal 操纵即可", "性能太差被移除", "用 render 再调一次代替", "只支持服务端渲染"],
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么这个库没有 rerender 方法？",
+      "options": [
+        "Solid 不重渲染——变化由响应式状态触发的副作用直接改 DOM，用全局 signal 操纵即可",
+        "性能太差被移除",
+        "用 render 再调一次代替",
+        "只支持服务端渲染"
+      ],
       "answer": 0,
-      "explain": "官方说明：Solid merely executes side effects…there is no rerender method。"
+      "explanation": "官方说明：Solid merely executes side effects…there is no rerender method。"
     },
     {
-      "q": "按官方说法，哪些场景才真的需要 waitFor / findBy？",
-      "options": ["所有断言前都建议加", "signal 更新后", "store 变更后", "transition、Suspense、Resource、路由导航等真异步边界"],
+      "id": "q3",
+      "type": "single",
+      "prompt": "按官方说法，哪些场景才真的需要 waitFor / findBy？",
+      "options": [
+        "所有断言前都建议加",
+        "signal 更新后",
+        "store 变更后",
+        "transition、Suspense、Resource、路由导航等真异步边界"
+      ],
       "answer": 3,
-      "explain": "Solid 响应式变化相当即时，rarely need waitFor——真异步边界才需要等待。"
+      "explanation": "Solid 响应式变化相当即时，rarely need waitFor——真异步边界才需要等待。"
     },
     {
-      "q": "用 render 的 location 选项起内存路由测参数化页面，官方提醒要？",
-      "options": ["先手动 render Router", "配合 findBy 异步查询（搭建非即时）", "禁掉 SSR", "用 vi.mock 打桩路由"],
+      "id": "q4",
+      "type": "single",
+      "prompt": "用 render 的 location 选项起内存路由测参数化页面，官方提醒要？",
+      "options": [
+        "先手动 render Router",
+        "配合 findBy 异步查询（搭建非即时）",
+        "禁掉 SSR",
+        "用 vi.mock 打桩路由"
+      ],
       "answer": 1,
-      "explain": "location 建的内存路由 setup 不是瞬时的，示例里就是 await findByText(...)。"
+      "explanation": "location 建的内存路由 setup 不是瞬时的，示例里就是 await findByText(...)。"
     },
     {
-      "q": "Solid 版 renderHook 的返回值与 React 版的差异是？",
-      "options": ["完全相同", "只能测组件内 hook", "多了 shadowDOM 字段", "没有 container/queries，代之以可配合 runWithOwner 的 owner（cleanup 自动调）"],
+      "id": "q5",
+      "type": "single",
+      "prompt": "Solid 版 renderHook 的返回值与 React 版的差异是？",
+      "options": [
+        "完全相同",
+        "只能测组件内 hook",
+        "多了 shadowDOM 字段",
+        "没有 container/queries，代之以可配合 runWithOwner 的 owner（cleanup 自动调）"
+      ],
       "answer": 3,
-      "explain": "Solid 外部响应式状态不需要 DOM 宿主运行，故 renderHook 不返回容器与查询。"
+      "explanation": "Solid 外部响应式状态不需要 DOM 宿主运行，故 renderHook 不返回容器与查询。"
     },
     {
-      "q": "Vitest 下测试莫名报\"dispose 是 undefined\"/router 加载不了，官方点名的原因是？",
-      "options": ["solid-js/@solidjs/router 被加载了双份（vite 内部 server 与 node 各一份）", "Node 版本过低", "jsdom 未安装", "测试文件后缀错误"],
+      "id": "q6",
+      "type": "single",
+      "prompt": "Vitest 下测试莫名报\"dispose 是 undefined\"/router 加载不了，官方点名的原因是？",
+      "options": [
+        "solid-js/@solidjs/router 被加载了双份（vite 内部 server 与 node 各一份）",
+        "Node 版本过低",
+        "jsdom 未安装",
+        "测试文件后缀错误"
+      ],
       "answer": 0,
-      "explain": "Known issues 一节原述；插件 2.8.2+ 已包办大部分配置，双份实例仍要留意。"
+      "explanation": "Known issues 一节原述；插件 2.8.2+ 已包办大部分配置，双份实例仍要留意。"
     },
     {
-      "q": "用 Jest 跑 Solid 组件测试时为什么推荐 solid-jest？",
-      "options": ["加速快照", "让 Jest 在 Node 里解析到 Solid 的浏览器版本而非服务端版本", "提供 render 函数", "转换 JSX"],
+      "id": "q7",
+      "type": "single",
+      "prompt": "用 Jest 跑 Solid 组件测试时为什么推荐 solid-jest？",
+      "options": [
+        "加速快照",
+        "让 Jest 在 Node 里解析到 Solid 的浏览器版本而非服务端版本",
+        "提供 render 函数",
+        "转换 JSX"
+      ],
       "answer": 1,
-      "explain": "官方安装节：Jest 默认会解析到服务端版本的 solid-js，solid-jest 修正解析。"
+      "explanation": "官方安装节：Jest 默认会解析到服务端版本的 solid-js，solid-jest 修正解析。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Vitest 里测组件随信号变化的更新，标准手法是？ ",
+      "options": [
+        " 调 render 返回的 rerender ",
+        " 把信号提升为测试变量，fireEvent/用户操作后在 act 微任务刷新里断言 DOM ",
+        " 重建整个组件 ",
+        " 只能快照 "
+      ],
+      "answer": 1,
+      "explanation": " Solid 无 rerender 概念：更新由信号驱动，测试从外部写信号或模拟交互，等 effect 队列冲刷后断言。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 组件内部用了路由参数/useSearchParams，单测怎么处理？ ",
+      "options": [
+        " 跳过此类组件 ",
+        " mock 路由模块返回可控信号，或包一层内存路由 Provider 组件作测试壳 ",
+        " 改生产代码去掉路由 ",
+        " 只能 e2e "
+      ],
+      "answer": 1,
+      "explanation": " 路由 API 是模块级入口，vi.mock 返回内存信号即可任意摆布 URL 态；包壳则保留真实 router 做集成测。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " loader 的最佳可测结构是？ ",
+      "options": [
+        " 逻辑全写在 loader 函数体 ",
+        " loader 只做接线：参数解析+调纯函数+组装返回，业务进纯函数用表驱动测 ",
+        " 不测 ",
+        " mock 整个框架 "
+      ],
+      "answer": 1,
+      "explanation": " 框架函数薄、纯逻辑厚，是 Kit/Start 通用的可测架构；表驱动一份用例覆盖参数分支。 "
     }
   ]
 }

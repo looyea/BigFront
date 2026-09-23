@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "站点部署在非根路径(如 /myapp/)时，需要正确设置什么，否则资源 404？",
-      "options": ["Cache-Control", "Vite 的 base / publicPath", "source map", "port"],
+      "options": [
+        "Cache-Control",
+        "Vite 的 base / publicPath",
+        "source map",
+        "port"
+      ],
       "answer": 1,
       "explanation": "子路径要设 base（呼应 react-deploy 第一、六节）。"
     },
@@ -27,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "Vite 项目里，客户端能读到的环境变量必须满足什么？",
-      "options": ["以 VITE_ 前缀命名（会被内联进浏览器包）", "任意名字都可", "必须放 .env.production 且无前缀", "只能运行时读"],
+      "options": [
+        "以 VITE_ 前缀命名（会被内联进浏览器包）",
+        "任意名字都可",
+        "必须放 .env.production 且无前缀",
+        "只能运行时读"
+      ],
       "answer": 0,
       "explanation": "VITE_ 前缀注入客户端（呼应 react-deploy 第四节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "构建期固化，改值要重构建（呼应 react-deploy 第四、六节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " BrowserRouter 打包成纯静态站点后，刷新 /user/1 得 404，正确的服务侧修复是？",
+      "options": [
+        "让前端监听 onbeforeunload 拦刷新",
+        "配置服务器把未匹配静态文件的路由「回退到 index.html」（如 Nginx try_files $uri /index.html、或托管平台的 SPA fallback），让 SPA 接管该 URL 再前端路由",
+        "改用 hash 路由是唯一解",
+        "禁用浏览器刷新按钮"
+      ],
+      "answer": 1,
+      "explanation": "SPA 只有一个真实 HTML，子路由是 JS 在前端解析的；刷新时浏览器直接向服务器要 /user/1，服务器没这文件就 404。解法是给静态服务器加「history 回退到 index.html」。HashRouter 能绕但牺牲 URL 美观/SEO/可分享，不作生产首选（本关 I4）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 站点部署在子路径 https://x/myapp/ 下出现资源 404，通常要设置什么？",
+      "options": [
+        "把文件重命名",
+        "构建时设定 base/public path 前缀（Vite `base: \"/myapp/\"`、Next basePath+assetPrefix、CRA homepage），让产物里资源引用与路由都带该前缀",
+        "关闭 CDN",
+        "改用绝对 http://"
+      ],
+      "answer": 1,
+      "explanation": "默认构建假设部署在根路径，资源以 `/assets/...` 绝对引用，放子目录就 404。设 base 前缀后打包器把引用改写为 `/myapp/assets/...`；配合路由的 basename（React Router basename、Vue Router createWebHistory(base)）才能让前端路由也认识该前缀。资源路径与路由 base 要一起改。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 把数据库密码配进 `VITE_DB_PWD` 并 import.meta.env 读取，问题是？",
+      "options": [
+        "没权限读所以安全",
+        "VITE_/NEXT_PUBLIC_ 前缀的变量在构建期被内联进公开 JS，任何访问者都能在 bundle 里看到——它压根不是密钥存储；机密只能留在服务端，前端只拿必要的公开值",
+        "会被自动加密",
+        "只在生产泄露"
+      ],
+      "answer": 1,
+      "explanation": "客户端环境变量的「前缀」只是「决定要不要打进公开 bundle」，不是保密机制。凡是进前端的字符串都可被提取，API 密钥/DB 连接串放这里=公开泄露。正解：机密留服务端（Route Handler/后端）代持，前端只发身份凭证去请求；且 `VITE_` 值改变要重新构建才生效（本关 I7）。"
     }
   ]
 }

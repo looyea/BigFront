@@ -6,23 +6,38 @@
       "id": "q1",
       "type": "single",
       "prompt": "客户端壳组件（Modal/Tabs）容纳服务端内容的正确方式是？",
-      "options": ["在壳里 import 服务端组件", "把内容写成 children 由服务端父级传入", "用 dangerouslySetInnerHTML", "把内容也标 'use client'"],
-      "answer": 1,
+      "options": [
+        "把内容写成 children 由服务端父级传入",
+        "在壳里 import 服务端组件",
+        "用 dangerouslySetInnerHTML",
+        "把内容也标 'use client'"
+      ],
+      "answer": 0,
       "explanation": "children 穿透术：元素在父级（服务端）已渲染完，壳只收序列化结果（呼应 next-boundaries 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "Server → Client 的 props 过'海关'时，下列哪项可以通过？",
-      "options": ["普通闭包函数", "数据库 ORM 的类实例", "Promise（React 19 起可直接传）", "捕获了密钥的 Symbol"],
-      "answer": 2,
+      "options": [
+        "普通闭包函数",
+        "数据库 ORM 的类实例",
+        "捕获了密钥的 Symbol",
+        "Promise（React 19 起可直接传）"
+      ],
+      "answer": 3,
       "explanation": "可序列化值通行，Promise 是 19 的新例外；函数只有 Server Action 这一特例（呼应 next-boundaries 第二节表）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "根 layout（服务端）挂客户端 ThemeProvider，为什么可行？",
-      "options": ["layout 会自动变成客户端组件", "Provider 是客户端组件，children 从服务端穿入其内部", "因为主题不是敏感数据", "其实不可行，只是没报错"],
+      "options": [
+        "layout 会自动变成客户端组件",
+        "Provider 是客户端组件，children 从服务端穿入其内部",
+        "因为主题不是敏感数据",
+        "其实不可行，只是没报错"
+      ],
       "answer": 1,
       "explanation": "客户端壳 + children 穿透的标准应用，全站岛根即在此（呼应 next-boundaries 第三节例码）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "服务端组件想读 locale/session，本课推荐做法是？",
-      "options": ["造一个服务端 Context 全家桶", "cookies()/headers() 现取后按需传 props", "全部放进 Redux", "window 上挂载"],
+      "options": [
+        "造一个服务端 Context 全家桶",
+        "cookies()/headers() 现取后按需传 props",
+        "全部放进 Redux",
+        "window 上挂载"
+      ],
       "answer": 1,
       "explanation": "请求态数据服务端直取，Context 退居岛内总线（呼应 next-boundaries 第三节结论）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "三方 UI 库报 window is not defined，三板斧第一招是？",
-      "options": ["页面顶部统一加 'use client'", "建一个 'use client' 出口文件 re-export 该库，业务只 import 出口", "改用 next/dynamic ssr:false（任何位置都行）", "降级 Next 版本"],
+      "options": [
+        "页面顶部统一加 'use client'",
+        "建一个 'use client' 出口文件 re-export 该库，业务只 import 出口",
+        "改用 next/dynamic ssr:false（任何位置都行）",
+        "降级 Next 版本"
+      ],
       "answer": 1,
       "explanation": "把库的客户端属性边界化在出口文件，避免全站点染（呼应 next-boundaries 第四节；ssr:false 只能客户端组件内用）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "边界设计中'把交互组件标 'use client' 后，其 import 的服务端专用组件会？",
-      "options": ["仍留在服务端", "构建报错拒绝", "被静默降级为客户端组件渲染", "自动转成 API"],
+      "options": [
+        "仍留在服务端",
+        "构建报错拒绝",
+        "被静默降级为客户端组件渲染",
+        "自动转成 API"
+      ],
       "answer": 2,
       "explanation": "import 方向铁律的反面：只有 children 穿透能保服务端身份（呼应 next-boundaries 第一节、next-server-client 面试第6题）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "决定 'use client' 标注位置时，本包的总原则是？",
-      "options": ["尽量往上标，一个岛管全站", "尽量往下标（push to leaves），边界越小越好", "每层都标一半", "只标页面级"],
+      "options": [
+        "尽量往上标，一个岛管全站",
+        "尽量往下标（push to leaves），边界越小越好",
+        "每层都标一半",
+        "只标页面级"
+      ],
       "answer": 1,
       "explanation": "边界下推使客户端 bundle 最小、服务端红利最大（呼应 next-boundaries 第五节决策流、next-perf 账本）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 客户端壳组件（如 Tabs）要容纳服务端内容，正确的数据流是？",
+      "options": [
+        "把 Tabs 改成服务端组件",
+        "children/props 过海关：Tabs 标客户端边界，其 children 由父级服务端组件渲染后以已渲染的 RSC payload 传入——服务端内容不进客户端 bundle",
+        "用内联 HTML 字符串注入",
+        "全局 store 同步"
+      ],
+      "answer": 1,
+      "explanation": "客户端组件的 props 里\"已经是组件元素\"的部分在服务器上完成渲染，跨界的只有序列化描述；这是组合模式（composition）在 RSC 下的形态，也是\"薄壳\"策略的机制基础。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 根 layout（服务端）想给全树挂主题 Context，为什么不能直接挂 Provider？惯用解法？",
+      "options": [
+        "可以，自动序列化",
+        "Context 是客户端运行时概念，服务端组件树没有 Provider 语义——解法是在服务端 layout 读取偏好/cookie，把值作为 props 传给一个极薄的客户端 Providers 岛，由它在客户端侧包 Provider",
+        "用 localStorage 轮询",
+        "改用全局变量"
+      ],
+      "answer": 1,
+      "explanation": "跨 server/client 的通道只有序列化 props 与请求域数据（cookie/header）。把\"每请求真相\"在服务端读好、以值下发，Context 只服务客户端子树——边界三原则的典型案例。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 三方 UI 库在 SSR 阶段报 window is not defined，符合本课思路的首选修复是？",
+      "options": [
+        "关掉整站 SSR",
+        "确认该库只在客户端使用：把它收进客户端岛并动态 import（ssr:false 仅限 client 上下文），或在岛内 useEffect 后初始化——而不是在服务端组件树里 import 副作用模块",
+        "塞进 public/",
+        "用 try/catch 忽略"
+      ],
+      "answer": 1,
+      "explanation": "报错本质是\"浏览器专属代码进入了服务端执行路径\"。RSC 边界给了结构化解法：把依赖浏览器的部分显式划入客户端岛并按需加载；try/catch 只是掩盖，Pages 时代 if (typeof window) 判空返回 null 的水合坑在 App 下同样要避免。"
     }
   ]
 }

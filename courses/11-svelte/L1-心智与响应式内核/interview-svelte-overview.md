@@ -1,6 +1,6 @@
 # svelte-overview 面试题精选
 
-> 共 12 题，覆盖 A 编译器心智 / B runes 概览 / C 响应式底层 / D 选型与生态。
+> 共 15 题，覆盖 A 编译器心智 / B runes 概览 / C 响应式底层 / D 选型与生态。
 
 ## 一、编译器心智（A 类）
 
@@ -57,3 +57,25 @@ Svelte 4 的响应式是**隐式魔法**：顶层变量重新赋值才响应、�
 ### 12. 老 Svelte 4 项目迁移到 5 的风险点主要在哪？
 主要在三处隐式响应式假设被打破：改对象不响应变成响应（语义变化）、`$:` 与 store 混用需逐处理解、组件 props `export let`→`$props`；Svelte 5 保留了兼容模式（legacy 模式）分步迁移，但混用两套心智是最大坑（呼应 svelte-overview 第三节、svelte-stores）。
 **来源**：Svelte 官方 — Migration/Svelte 5 迁移指南
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Svelte、Solid、Qwik 都被称"编译器系"框架，它们的编译产物与响应式模型差异在哪？
+
+共同点：都把"声明式 UI"编译成细粒度命令式 DOM 操作，运行期不做虚拟 DOM diff。分野在响应式内核与职责边界：① Solid=显式信号（createSignal/createMemo）+ 编译只做 JSX→template 与依赖静态化，响应式是运行时的一等公民（不靠编译器魔改语义，函数体只跑一次），心智是"信号 + 受控的 effect"；② Svelte 5=runes 语法（$state/$derived/$effect）经编译器把普通变量赋值升级为信号读写、把模板表达式编译成 effect，是"编译器改写语义"路线（同名的 let 在 .svelte.js 与 .svelte 里被区别对待即证据）；③ Qwik=可恢复性（resumability），几乎不 hydrate——服务端序列化应用状态到 HTML，客户端按事件"解块"加载所需代码，响应式是 signal（QRL 延迟引用），主打"零启动 JS"。选型读法：Solid 给最强响应式原语但要求你手动管粒度、Svelte 给最顺手的语法糖、Qwik 给极致首屏但生态最不成熟。收口句：三家都在解决"React 用 VDOM 兜底重渲染"的成本，区别只是"把复杂度放在编译期、运行期信号、还是序列化边界"——理解这条光谱比记 API 有价值。
+
+**来源**：Svelte 5 runes 文档；Solid signals 论文（server/primitives）；Qwik resumability 文档；ThePrimeagen 与 Ryan Carnato 的编译器框架对比演讲
+
+### 14.  Svelte 长期强调"渐进增强 / 无 JS 也能用"，这个传统从哪来、和 SvelteKit 什么关系？
+
+根源：Svelte 诞生于 Guardian 新闻站背景（Rich Harris），核心诉求之一是"内容站要在 JS 失败/受限环境仍可用"，因此 SvelteKit 把"HTML 表单 + 服务端 action"作为一等公民（form actions）：一个 <form method=POST action=...> 不写一行 JS 也能提交并生效，装了 JS 后 Kit 自动升级为 fetch 提交 + 乐观更新 + 保留回退（progressive enhancement 的实现）。技术支点：① 表单用原生 submit 而非 onclick 处理器承载 mutation（这样禁用 JS 也能走）；② 增强用 enhance(use:form) 只在 JS 环境接管；③ SSR 首屏始终渲染真实内容（非空壳）。与框架哲学的关系：Svelte 运行时小，使得"只在需要处加载交互 JS"成本更低，渐进增强是自然延伸而非额外负担（对比 SPA 默认全 JS）。诚实边界：真正要求"零 JS 可用"的场景在减少（目标环境都有 JS），但 form actions 的"服务端优先 + 无 JS 回退"仍是构建 CRUD/表单密集应用的稳健默认（呼应 sveltekit-bridge 关）。加分句：这道题的深层是"Web 的韧性（resilience）"——能用 HTML 默认行为解决的别抢给 JS，Svelte 是把这条老原则用编译器与 Kit 重新制度化了一遍。
+
+**来源**：SvelteKit form actions 文档（渐进增强）；Rich Harris 早期 Svelte 设计论述；webkit 无 JS 回退实践
+
+### 15.  让你在一个成熟 React 团队里推动 Svelte 试点，你会怎么设计低风险路径与成功度量？
+
+反模式先立：不要开"重写大赛"、不要拿核心业务当小白鼠、不要让试点变成"证道"运动（技术选型失败的最大来源是把它当信仰辩论）。低风险路径设计：① 选"绿项目"（新页面/新微前端子应用，无迁移债）而非改造存量；② 选"有代表性的中等复杂度"（带表单 + 列表 + 一次数据获取，能暴露响应式/表单/SSR 真问题，太简单的 todo 无信号价值）；③ 时间盒（2-3 周一人或两人，产出可运行 demo + 书面评估，到期强制复盘不续命）。度量维度（要量化才可比）：首屏 JS 体积（对 React 基线）、开发速度主观评分（同复杂度需求对比）、构建时长、上手培训成本（第二个人从零到独立提交的天数）、遇到的框架 workaround 数（踩坑密度是长期维护成本的前兆）。决策出口：三选一（扩大试点 / 维持观察 / 放弃）并显式写下"什么信号会让我们放弃"——避免沉没成本绑架。组织面：给试点者"允许失败"的公开授权（否则没人报真实问题）、让 React 资深者参与评估（不是外行评内行）。加分句：技术试点的真正产出不是那个 demo，是"一份让没参与的人敢做决策的评估文档"——把这一点讲出来，面试官就知道你经历过真实的选型治理而非追新。
+
+**来源**：CSS 团队 Svelte 采用案例；ThoughtWorks 技术雷达对 Svelte 的评级论述；前端技术试点（pilot）方法论

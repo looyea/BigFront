@@ -1,6 +1,6 @@
 # node-streams 面试题精选
 
-> 共 12 题，覆盖 **流的本质与分类 / 读模式与事件 / 写与 finish / 背压与 highWaterMark / Transform 与 objectMode / 实战与陷阱** 六类。
+> 共 15 题，覆盖 **流的本质与分类 / 读模式与事件 / 写与 finish / 背压与 highWaterMark / Transform 与 objectMode / 实战与陷阱** 六类。
 
 ---
 
@@ -120,3 +120,25 @@ fs.createReadStream(src)
 ① **忽略了背压**：手写 `on('data')+write` 没管 `write()` 返回 false，或自定义 Transform 的 `transform` 里同步 `push` 过多却从不限速——缓冲无上限堆积；② **下游根本没消费 / 消费极慢**（比如 pipe 的目标 Writable 卡在慢速网络，而你又没用 pipeline 的背压传导）；③ **累积引用**：在 `'data'` 里把每块 push 进一个数组"最后统一处理"（把流又退化回了 readFile），或某个大对象被闭包长期持有（呼应 node-events 监听器泄漏、node-deploy-perf）。排查方向：确认是否真在"边处理边丢"、有没有人为攒 chunk、背压有没有被自动机制接管。
 
 **来源**：Node.js — "performance considerations / backpressure"; 社区 — "node stream memory leak causes"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. streams 3（Node 16+ 重写）相对老流修了什么？迁移时行为差异有哪些？
+
+修：① 错误传播终于一致——任意环节 destroy(err) 都能沿 pipeline 到达终点（老流 error 事件各挂各的）；② 生命周期清晰：close/destroy/end 语义分离、autoDestroy 默认 true（消费完自动拆，老流要手动 destroy）；③ 读侧不再「push(null) 后还能写」等状态机裂缝；④ async iterator 原生。迁移差异：① 'readable'/'data' 混用模式仍可用但事件序有差；② 老代码里 `stream.on('end')` 的时机（数据全读出后 vs destroy 后）与 close 的先后变了；③ objectMode 的 null 推送老流当 EOF（push(null)）——streams3 仍如此但要用 undefined 规避的心可以放下（null 保留哨兵语义）；④ destroy 里回调错误要 err 传递（callback(err)）而非 emit。验收：把每个 pipe 链改 pipeline（本关 pipeline 关主题）后跑错误注入测试（中途 ECONNRESET）看是否干净收尾。
+
+**来源**：Node 官方《Streams: A new implementation》（v16 BREAKING CHANGE 清单）；streams 3 设计文档（destroy/autoDestroy 语义）。
+
+### 14. 一个「读 DB → 压缩 → 上传 S3」的流式作业，你会怎么搭管道、怎么处理失败与背压？
+
+骨架：pipeline(queryStream(对象流) → Transform 序列化成 JSON 行 → zlib.createGzip() → UploadStream(S3 multipart))。要点：① 对象流→字节流：序列化 Transform 的 highWaterMark 用 objectMode:1（对象计数），字节段默认 16KB——两段水位独立调（压缩比高时上游快，靠 gzip 段背压自然限速）；② S3 分片上传做自定义 Writable：攒够 part 大小（5MB）再 PUT，缓冲窗口=并发分片数×5MB，背压=write 返回 false 时等 part 上传完再 drain——**外部 I/O 必须进背压环**，fire-and-forget 上传=内存无界（本关「用了流还 OOM」题的标准案例）；③ 失败：pipeline 一处 catch，清理=abort multipart（拿 uploadId 在 finally abort，漏 abort 产生隐形存储费）；④ 可观测：bytes written/背压等待时间计数器；⑤ 进度/断点：记录已 flush part 号，可续传则从 checkpoint 续。测试：注入「S3 第 3 分片 500」验证 abort 与内存回落。
+
+**来源**：AWS SDK v3 multipart upload 指南；Node pipeline 文档组合流错误处理示例。
+
+### 15. 怎么给流写「单元测试」？给 Readable 造替身、断言输出、测错误传播各用什么？
+
+替身输入：Readable.from(asyncIterable)（最省事，塞自定义 async generator 造半包/慢速/抛错剧本）；断言输出：stream/consumers 的 buffer()/text()（小流一把抓，本关 consumers 题的测试面）或 pipeline(underTest, collectTransform) 收集数组断言；大流断言「内存有界」：自定义 counting Writable 记录 write 峰值队列长度。错误传播测试：源 push Error（destroy(err)）→ 断言 pipeline 的 catch 收到同 err、所有中间流 destroyed=true（防「错误蒸发」回归）。超时：AbortSignal.timeout 传 pipeline（本关 signal 题的测试版）；fake timers 测节流/背压等待。反模式：断言事件顺序的每个细节（耦合实现）——断言「最终收到什么+错误落在哪」。工具链：node:test + 上述原语即可，不引第三方。
+
+**来源**：Node stream/consumers 文档；Node-core-test 风格流测试示例（Readable.from + pipeline 错误注入）。

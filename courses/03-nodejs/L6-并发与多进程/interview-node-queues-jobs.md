@@ -1,6 +1,6 @@
 # node-queues-jobs 面试题精选
 
-> 共 12 题，覆盖 定位与选型 / BullMQ 机制 / 可靠性设计 / 调度与定时 / 生产运维 五类。
+> 共 15 题，覆盖 定位与选型 / BullMQ 机制 / 可靠性设计 / 调度与定时 / 生产运维 五类。
 
 ---
 
@@ -93,3 +93,25 @@ worker 取任务后要对锁续约（看门狗）；进程假死/长 GC/同步�
 ①web 与 worker 分 Deployment 独立扩缩（worker 按队列深度 HPA）；②SIGTERM → `worker.close()` 停止取新任务、等 active 完成 → 超时上限后退出并让 stalled 机制接管残余；③并发度 `concurrency` 显式设置并压测定，不能默认裸奔；④监控三数（waiting/failed/active）+ 告警阈值；⑤Redis 持久化（AOF）与高可用评估——它是单点（呼应 node-queues-jobs 第五节、node-deploy-perf graceful shutdown）。
 
 **来源**：BullMQ — "Graceful shutdown"；12-Factor Process Model
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. "队列保证 at-least-once，exactly-once 要靠设计"——把这句话拆成故障窗口清单与对策。
+
+重复来源（都是「处理完但确认失败」变体）：① 锁续期失败/看门狗超时（stalled 回收重投，本关宕机题）；② 消费端处理完在 ack 前崩溃；③ 生产者重试（网络抖动后重发同任务）；④ 运维重放（DLQ 排空整批重投）。对策按层：生产侧——dedup id（本关题1）+ 入队事务化（DB 落任务表+outbox 再入队）；消费侧——幂等 handler：**处理前查 ledger（jobId+步骤号 已做?）、处理后写 ledger**（DB 事务，与业务写同库）；外部副作用不幂等（发退款！）→ 出站调用的 idempotency key 交给对方（Stripe 模式）。别迷信「Redis 原子」：BullMQ 的移动+锁只保证「同时最多一个 worker 持有」，不保证「崩溃重放不重复执行」——这就是 at-least-once 的全部含义。架构句：幂等做在**业务状态机**层，不指望基础设施。
+
+**来源**：BullMQ 文档《Idempancy / jobs with same data》与attempts 章节；Stripe idempotency key 设计文档。
+
+### 14. stalled 任务的完整生命周期是什么？哪些代码行为会制造它，怎么配参数？
+
+机制：worker 取任务后维护锁（默认 duration 30s，每 duration/3 续期一次）；续期断（进程假死/GC 长暂停/事件循环被同步卡死 → 定时器不跑）→ BullMQ 检测 stalled → 移回 wait 重投（attempts 未完）→ 原 worker「诈尸」继续跑完 = **同一任务双 worker 并发**（本关宕机题的进阶面）。制造源：任务里跑同步大计算（本包 workers 关该 offload）、事件循环饥饿（event loop delay>锁周期）、网络分区打到 Redis。参数：lockDuration 按 P99 处理时长放大但别无限大（真死检测也慢）、stalledInterval 平衡探测开销；任务侧：可被中断的长任务自己**心跳+协作取消**（worker 检查 job.updateProgress/isCancelled）。监控：stalled 计数>0 就告警——它是「worker 假死」的哨兵而非任务错误。根治永远回到：单任务时长可控 + 幂等兜底。
+
+**来源**：BullMQ 官方《Stalled jobs》机制文档（锁/续期/watchdog 数值默认）；Redis 分布式锁租约讨论。
+
+### 15. 给「视频转码农场」做队列架构：优先级、公平性与成本各怎么设计？
+
+分层队列：用户可感（封面/预览，高优短任务）vs 后台（全量转码，低优可抢占）——**多队列+配额**（如 high 70%、low 30% 权重轮询消费），别塞一个队列靠 priority 数值插队（长任务饿死短任务：队头阻塞）。公平：多租户按「每租户并发上限」入队（令牌+队列 key 分片），防一个大客户垄断 worker；延迟/预约任务独立 scheduled 集（BullMQ repeat/delay 原生）。成本：worker 异构（GPU 队列只挂 GPU 消费者，按 queue 名订阅隔离）、backlog 深度驱动自动扩缩（K8s KEDA Redis scaler）、失败分型——永久失败（格式不支持）快速进 DLQ 别烧 attempts，瞬时失败（OSS 限流）才退避。可观测：每队列 backlog/最老任务年龄/重试放大率（重跑次数/入队数）。演练：注入「worker 全挂 10 分钟」看 backlog 恢复曲线与锁回收行为。
+
+**来源**：BullMQ Flows/优先级文档；KEDA Redis scaler 与批量计算公平调度（DRF 思想）通用实践。

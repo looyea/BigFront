@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-performance",
-  "title": "性能审计 · 自测",
+  "title": "kit-performance 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "对 Kit 应用做性能测试，正确的方式是？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "对 Kit 应用做性能测试，正确的方式是？",
       "options": [
         "在 dev 模式测，最能反映真实加载",
         "任何模式都行，无所谓",
@@ -11,10 +13,12 @@
         "只能上线后灰度测，本地无意义"
       ],
       "answer": 2,
-      "explain": "dev 行为与生产不同，官方要求 vite build 后跑 vite preview 做性能测试（preview 非完美复刻，platform 对象不适用）。"
+      "explanation": "dev 行为与生产不同，官方要求 vite build 后跑 vite preview 做性能测试（preview 非完美复刻，platform 对象不适用）。"
     },
     {
-      "q": "Kit 默认对 web 字体的处理是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "Kit 默认对 web 字体的处理是？",
       "options": [
         "自动预加载所有 @font-face 字重",
         "不自动预加载字体（怕拉进未真正用到的字重），需自行在 handle 里用 resolve 的 preload 过滤补",
@@ -22,10 +26,12 @@
         "把字体全部内联进 HTML"
       ],
       "answer": 1,
-      "explain": "Kit 自动预加载 .js/.css 但不预加载字体；正确做法是在 handle 里给 resolve 传 preload 过滤、并对字体子集化。"
+      "explanation": "Kit 自动预加载 .js/.css 但不预加载字体；正确做法是在 handle 里给 resolve 传 preload 过滤、并对字体子集化。"
     },
     {
-      "q": "开箱优化里的 request coalescing（请求合并）针对的是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "开箱优化里的 request coalescing（请求合并）针对的是？",
       "options": [
         "把多个 server load 的数据请求归并成一次 HTTP 往返",
         "把 CSS 和 JS 合并成一个文件",
@@ -33,10 +39,12 @@
         "合并多次 beforeNavigate 事件"
       ],
       "answer": 0,
-      "explain": "多个 server load 的数据拉取被归并成单次 HTTP 请求，这是 Kit 开箱就做的优化之一。"
+      "explanation": "多个 server load 的数据拉取被归并成单次 HTTP 请求，这是 Kit 开箱就做的优化之一。"
     },
     {
-      "q": "要用上 Kit 的'数据内联'（SSR fetch 结果水合时复用），在 load 里应当？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "要用上 Kit 的'数据内联'（SSR fetch 结果水合时复用），在 load 里应当？",
       "options": [
         "直接用 window.fetch",
         "使用 load 事件对象上的 fetch 代理发起请求",
@@ -44,10 +52,12 @@
         "用 new XMLHttpRequest"
       ],
       "answer": 1,
-      "explain": "必须用 load 提供的 fetch（event.fetch），Kit 才能记录并在浏览器端内联复用；裸调 globalThis.fetch 会绕过、导致二次请求。"
+      "explanation": "必须用 load 提供的 fetch（event.fetch），Kit 才能记录并在浏览器端内联复用；裸调 globalThis.fetch 会绕过、导致二次请求。"
     },
     {
-      "q": "@sveltejs/enhanced-img 的收益不包括以下哪项？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "@sveltejs/enhanced-img 的收益不包括以下哪项？",
       "options": [
         "构建期压缩并转现代格式",
         "生成正确 width/height 减少 CLS",
@@ -55,10 +65,12 @@
         "自动把后端 SQL 查询合并为一次 join"
       ],
       "answer": 3,
-      "explain": "enhanced-img 只管图片优化；把两次查询合成 join 属于后端/server load 的瀑布治理，与它无关。"
+      "explanation": "enhanced-img 只管图片优化；把两次查询合成 join 属于后端/server load 的瀑布治理，与它无关。"
     },
     {
-      "q": "为什么默认开 SSR 通常比 SPA 模式首屏更快？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "为什么默认开 SSR 通常比 SPA 模式首屏更快？",
       "options": [
         "SSR 会预渲染全部路由",
         "SPA 空壳页要先拉 JS、JS 再渲内容再拉数据，首屏前多好几趟串行往返（瀑布）",
@@ -66,10 +78,12 @@
         "SSR 完全不需要 JS"
       ],
       "answer": 1,
-      "explain": "SPA 模式制造最恶劣的首屏瀑布：空壳→拉 JS→渲染→再取数据；SSR 直出 HTML 避免这些往返。"
+      "explanation": "SPA 模式制造最恶劣的首屏瀑布：空壳→拉 JS→渲染→再取数据；SSR 直出 HTML 避免这些往返。"
     },
     {
-      "q": "Vite 为缓存友好把代码切成很多小文件，这套策略要求部署环境满足什么？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "Vite 为缓存友好把代码切成很多小文件，这套策略要求部署环境满足什么？",
       "options": [
         "必须用 HTTP/1.1",
         "必须禁用压缩",
@@ -77,7 +91,46 @@
         "需 HTTP/2 或更高，以便并行加载这些小文件"
       ],
       "answer": 3,
-      "explain": "大量小文件依赖并行加载，HTTP/1.1 队头阻塞会拖垮它，官方要求确保 host 用 HTTP/2+。"
+      "explanation": "大量小文件依赖并行加载，HTTP/1.1 队头阻塞会拖垮它，官方要求确保 host 用 HTTP/2+。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 对 Kit 应用做真实性能测试，正确口径是？ ",
+      "options": [
+        " dev 模式跑 Lighthouse ",
+        " 生产 build + preview（或真实环境）下测，禁用缓存扩展并固定网络条件 ",
+        " 只测首字节 ",
+        " 看本地体感 "
+      ],
+      "answer": 1,
+      "explanation": " dev 与生产管线差异巨大，官方文档明确要求在生产构建上度量。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " request coalescing（请求合并）解决的问题是？ ",
+      "options": [
+        " 静态资源合并 ",
+        " 并发相同 URL 的 SSR fetch 只发一次，多个 load 共享结果 ",
+        " 合并 JS chunk ",
+        " 合并表单 "
+      ],
+      "answer": 1,
+      "explanation": " 同一请求生命周期内 event.fetch 同 URL 自动去重，跨布局/页面重复引用不再放大。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Kit 默认对 web 字体的策略与官方建议的优化是？ ",
+      "options": [
+        " 自动 preload 全部字体 ",
+        " 不预加载；建议本地自托管子集化字体并按需 preload 关键字形文件 ",
+        " 强制 system-ui ",
+        " 禁用 woff2 "
+      ],
+      "answer": 1,
+      "explanation": " 字体清单未知，盲 preload 浪费带宽；自托管子集消除第三方握手并控 FOUT，是 web.dev 一致建议。 "
     }
   ]
 }

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "在 CJS 模块里，下面哪种写法会导致外部 require 到空对象？",
       "options": [
+        "exports = { add(){} }",
         "module.exports = { add(){} }",
         "exports.add = function(){}",
-        "exports = { add(){} }",
         "module.exports.add = function(){}"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "exports 只是 module.exports 的引用别名；给 exports 重新赋值只改了局部变量，module.exports 未变，最终导出为空。整体替换必须用 module.exports=。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "node: 前缀明确“这是内置模块”，即便 node_modules 里有同名包也不会被误用，语义更清晰，官方推荐。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "require 本身是个函数且带属性，以下哪个不是它的成员：",
+      "options": [
+        "require.cache",
+        "require.resolve",
+        "require.main",
+        "require.compile"
+      ],
+      "answer": 3,
+      "explanation": "require.cache（模块缓存表）、require.resolve（只跑解析返回路径）、require.main（入口模块，判断 require.main===module）是四大公共属性外加 extensions（已废弃）；编译由 V8 内部完成不暴露。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "条件执行中改写 module.exports 后，其他模块再 require 拿到的是：",
+      "options": [
+        "永远拿旧引用",
+        "缓存里 module.exports 的当前值——缓存存的是 module 对象，exports 被整体重指向后缓存跟着变（所以「先 require 后改 exports 属性」外部可见，重赋值则切断联系）",
+        "每次重新执行模块",
+        "报循环依赖错"
+      ],
+      "answer": 1,
+      "explanation": "缓存键下存 {exports: ...}；给 exports.foo 赋值=往 exports 对象上加属性（外部可见）；module.exports=新对象 是换指向——「导出快照 vs 导出引用」的分水岭在这里。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Node 12.16+ 推荐用 `node:` 前缀 require 内置模块（require(\"node:fs\")），动机是：",
+      "options": [
+        "加载更快",
+        "消除与第三方同名包的歧义/覆盖风险（npm 上曾有与内置模块同名的包），并让「内置 vs 外部」在代码里一眼可辨",
+        "语法要求",
+        "兼容 ESM"
+      ],
+      "answer": 1,
+      "explanation": "node:url 等前缀形式保证拿到的永远是运行时内置实现——防「node 版 typosquatting」；ESM 的 import 也支持该前缀，是新代码规范标配（eslint 有 prefer-node-protocol 规则）。"
     }
   ]
 }

@@ -1,4 +1,4 @@
-# next-testing 面试题（12 题）
+# next-testing 面试题（15 题）
 
 > 主题：服务端组件测试、Action/Handler 契约测试、E2E 策略与 Mock 边界。
 
@@ -81,3 +81,25 @@
 **答**：四层门禁：① 静态——tsc --noEmit、ESLint、依赖审计（npm audit/pnpm audit，呼应 node-publish）；② 构建——next build 零告警、bundle 体积红线（First Load JS 阈值告警，呼应 next-perf 第 2 节）、类型化路由检查 experimental.typedRoutes；③ 测试——单测/集成全绿 + Playwright 黄金路径；④ 运行验证——预发布环境冒烟：关键路由状态码、CWV 采集（Lighthouse CI 卡 LCP）、错误监控确认可上报。任何一层红就阻断合并/发布，门禁的价值在于不需要人肉记得。
 
 **来源**：CSDN《Next.js CI/CD 质量门禁设计》；掘金《从 build 日志到发布卡点》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  给一个 App Router 项目搭测试策略：金字塔怎么分？RSC、Action、middleware、E2E 各怎么覆盖？
+
+**答**：分层重划：① 单元——纯函数（数据转换、zod schema、tag 常量层）照旧；② 组件层二分：RSC 测"输出 HTML 包含已格式化的数据/条件渲染正确"（server renderer 工具 + mock headers/cache），客户端岛测交互（RTL，与 React 时代一致）；③ Action 当服务函数测：直接 await 调用，mock 数据层，断言"返回结构化 result + 该 revalidate 的被调用"——Action 是函数不是端点，测试成本低是它相对 REST 的隐性红利；④ middleware 纯函数测分支；⑤ E2E 收缩到"跨层胶水"：登录→建单→刷新看到新数据、无 JS 表单提交、并行路由模态的 URL/后退语义——这些恰是单测测不到的 RSC 新语义。⑥ 契约防回归：路由清单快照（URL 表 diff）、metadata 输出快照。反模式：用 E2E 测 Action 业务分支（慢且脆）、mock 一切导致"测了个寂寞"——缓存/边界行为要用集成环境（真 DB+内存缓存）兜住。
+
+**来源**：Next.js 官方 Testing 指南（Jest/Vitest 配置与示例）；InfoQ《全栈框架时代前端测试分层还成立吗》。
+
+### D5.  mock 了全局 fetch 之后，"同一组件树两次调用只发生一次请求"——测试怎么利用/规避 memoization 与缓存？
+
+**答**：机制回顾：同一渲染内相同 URL+选项的 fetch 被 React memoize（断言 mock 调用次数会"少一次"）；显式 revalidate 走数据缓存，跨用例存活（第二次用例可能一次网络都不发）。测试策略：① 作用域隔离——每个用例清模块注册表（vi.resetModules/重新 import），Next 提供 unstable_revalidate 类测试钩子或关缓存跑（force-no-store 的测试 env）；② 断言改"结果正确"而非"fetch 次数"，把"该缓存的确实缓存"单独立用例（两次渲染 mock 只调一次=缓存行为测试，反而变废为宝）；③ memoization 键被新对象 options 打断的经典坑——mock 实现里 JSON.stringify options 做键，让单测也能暴露"options 字面量导致缓存击穿"的真问题；④ 集成层（Playwright+真服务）验证一次访问内请求数不超预算。加分句：memoize/cache 从"测试障碍"重构成"缓存契约测试对象"，是 RSC 测试成熟度的标志。
+
+**来源**：Next.js 官方 Caching with memoization 文档；SegmentFault《单测里 fetch mock 断言次数总是差一次》。
+
+### D6.  CI 里跑 Next 测试最慢最烦的三件事（构建耦合、环境差异、E2E 不稳定），你分别怎么治？
+
+**答**：① 构建耦合：组件测试不需要真 next build——用 SWC 转译插件（next 官方 jest/vitest 集成）按需编译，别为跑单测起全量构建；E2E 需要产物但要一次构建到处跑：build 一次 → 并行分片跑用例（Playwright shard + CI matrix），别每个 job 各 build 各的；② 环境差异：单测环境 jsdom/node 没有真请求域 API——统一 mock 出口（next/headers 的稳定封装层，别在组件里裸调）；数据层测试用 testcontainers 起真 DB 别依赖共享测试库（偶发脏数据是 flake 之母）；③ E2E flake：消灭 sleep——用 web-first 断言（auto-wait 语义）、时间/随机文本打 data-testid 锚点而非文案断言；流式/PPR 页的"边界何时补齐"不确定→暴露 test id 的 ready 信号（Suspense 补齐后元素出现）等它；失败留 trace+视频、CI 自动重试只兜基础设施抖动（业务 flake 要根治不喂养）。治理度量：flaky 率与套件时长进周报，超阈值专项——测试基建当产品养。
+
+**来源**：InfoQ《前端 CI 提速》；掘金《Playwright 在 Next 项目的不稳定清单与对策》。

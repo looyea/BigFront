@@ -1,6 +1,6 @@
 # react-router-data 面试题精选
 
-> 共 12 题，覆盖 A Data Router 动机 / B loader / C action 与写后重取 / D 守卫·React Query·Vue 对照四类。
+> 共 15 题，覆盖 A Data Router 动机 / B loader / C action 与写后重取 / D 守卫·React Query·Vue 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：区分三类状态：① **路由级服务端数据**→ 交给 loader/React Query（进页面取、写后重取/失效），不再放组件 useEffect；② **真正跨页的客户端全局态**（主题、登录用户、购物车）→ Context/Zustand 这类 store（对应 Pinia，呼应 react-state-mgmt）；③ **局部 UI 态**→ 就近 useState。要点：把"服务端缓存"和"客户端状态"分开，别用一个大 store 手动缓存接口数据。这样 Vue 里 Pinia 手填接口的活，在 React 交给 Query/loader，Pinia 只保留真正的全局客户端态。
 
 **来源**：React 官方文档 — Managing State、TanStack Query — Server vs Client state、Vue/Pinia 文档对照
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Data Router 里 loader/action 的失败如何冒泡？errorElement 与根级错误边界怎么分工？
+
+loader/action 抛出的错误（含 throw 的 Response/错误对象）不会 crash 整页，而是被「最近的存在 errorElement（或根路由 default element）的错误边界」接住，路由组件不再渲染、错误经 useRouteError() 读取。分工：给易坏的子路由挂专属 errorElement（如列表页失败的局部错误页），根路由放一个兜底 errorElement（能拿到 isRouteErrorResponse、还能做「重新获取/登出」等全局动作）。要点：① 区分 4xx/5xx——loader 里应把非 2xx `throw new Response(...)` 或返回带 status，让上层可读；② 重定向不是错误（redirect 单独机制）；③ 组件树渲染错误仍归 ErrorBoundary，data 错误归 errorElement，两条路径别混。这套把「请求错误处理」从每个组件里的 try/catch 收敛到路由声明层。
+
+**来源**：React Router 错误处理文档（errorElement / useRouteError / isRouteErrorResponse）。
+
+### 14.  useFetcher 与 useRevalidator 各自解决什么「无导航的部分刷新」场景？
+
+useFetcher：创建一个「脱离当前导航」的独立数据请求（可以对任意 routeId 发 GET/POST 或提交 action），不改变 URL、不触发页面级 loading，适合行内交互——点赞、搜索建议、局部表单、拖拽后静默取数。它自带 idle/submitting/loading 状态，可就地渲染反馈。useRevalidator：当外部世界可能让当前页 loader 数据过期（websocket 推送、其它标签页写入、定时轮询），调用 `revalidate()` 重新跑「当前路由匹配链上的 loader」以拿最新，URL 不变。二者与 Query 的 invalidateQueries 精神相通，但作用域是「路由 loader 的缓存」而非「Query 缓存」。把「用户点了才刷新」和「后台静默对齐」分开，是 Data Router 组合这两个钩子的关键。
+
+**来源**：React Router useFetcher 与 useRevalidator 文档及示例（渐进增强、后台再验证）。
+
+### 15.  action 成功后 Data Router 会「自动重跑相关 loader」，这个 revalidation 的机制与粒度如何理解？
+
+任一 action 成功返回后，路由器会对「当前页面正在展示数据的那些路由分支的 loader」做一次重新调用（revalidation），从而让「提交表单→列表自动更新」无需手动刷新——这是 Data Router 相对「组件里 fetch + 手动 refetch」的最大心智红利。粒度：默认重跑受影响的活动路由 loader（不是全应用），并发进行、期间旧数据仍在屏上（可配合 useNavigation/useFetcher 的 state 显示「更新中」）。它靠的是「重新请求」而非乐观更新，所以要保证 loader 幂等、只读。这与 TanStack Query 的 invalidateQueries 哲学一致（写后失效再取），差别在缓存归属：Data Router 的「缓存」就是路由的 loaderData 槽位，一次性的、不如 Query 带 staleTime/跨组件共享。
+
+**来源**：React Router mutations/revalidation 文档（action 后自动再验证活动 loader）。

@@ -1,6 +1,6 @@
 # react-component 面试题精选
 
-> 共 12 题，覆盖 A 组件与 props / B children 与组合 / C 渲染心智 / D 受控与规范类。
+> 共 15 题，覆盖 A 组件与 props / B children 与组合 / C 渲染心智 / D 受控与规范类。
 
 ## 一、组件与 props（A 类）
 
@@ -57,3 +57,25 @@ key 帮 React 在**同一层的兄弟节点**间识别"哪个对应哪个"以复
 ### 12. 一个组件渲染很多遍很卡，你第一步排查什么、用什么工具？
 先确认是否真的多余重渲染（父渲染带动子、props 引用每次变）。用 **React DevTools Profiler** 录制、高亮重渲染，检查是否该 `memo`、props 是否新对象、状态是否放太高。区分"重渲染"与"重计算/重 DOM"（呼应 react-performance、react-memo-hooks）。
 **来源**：React DevTools Profiler 文档、优化渲染性能
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. React 组件的 props 是「本帧快照」——这个特性如何解释异步回包里读到旧值？和 Vue 的响应式 ref 差异在哪？
+
+函数组件每次渲染都以「当时的 props/state」为参数重新执行，你在某次渲染里创建的回调（setTimeout、事件订阅）闭包捕获的是那次渲染的快照；异步回来时读到的仍是旧快照而非最新值，这就是 stale closure。修法：需要最新值用函数式 `setState(prev=>...)`、或用 useRef 存镜像、或把值纳入依赖重建 effect。对比 Vue：`ref.value`/`reactive` 是被 Proxy 拦截的「活」引用，回调里 `foo.value` 永远读到当前值，没有快照概念——所以 Vue 少了许多 stale closure 烦恼，代价是失去「一次渲染内值恒定」的确定性。把这条讲透，就讲透了两个框架最底层的心智分水岭。
+
+**来源**：React「A Complete Guide to useEffect」（Dan Abramov，props/state 快照即闭包）；Vue 3 响应式 ref 解包语义文档。
+
+### 14. 「组件应保持纯」到底禁止了什么？为什么 React Compiler 依赖这条？副作用放哪里才对？
+
+纯指：给定相同 props/state 渲染出相同 UI，且渲染期间不产生可观察副作用——不改外部变量、不发请求、不 setState 别的组件、不依赖 Math.random/Date.now/全局可变单例。允许的是惰性求值的本地计算。禁止它的收益：diff 可安全重跑/中断（并发渲染要重放 render）、memo 与 Compiler 能靠「引用不变=结果不变」自动记忆化。Compiler 若遇到渲染期读改外部可变状态，无法证明安全就放弃优化甚至出错。副作用正解：事件处理器（用户触发，不在渲染路径）、effect（与外部系统同步，渲染提交后）、以及数据层（Suspense 资源/loader）。把「派生用 render、副作用用 handler/effect」这条线画清，是不依赖 Compiler 也该守的纪律。
+
+**来源**：React「Keeping Components Pure」文档；React Compiler 官方对 mutation/purity 的前提说明。
+
+### 15. 一个组件被反复渲染很卡，从「确认是否真重渲染」到定位根因的完整排查链路？
+
+Step1 证实：用 React DevTools Profiler 录制，看目标组件的 flamegraph 是否每次交互都高亮、渲染次数与耗时；或用 why-did-you-render/在函数体打条件 log 区分「渲染 vs 提交 DOM」。Step2 分类根因：① 父传新引用（内联对象/数组/函数 props）击穿 memo——useMemo/useCallback 或下沉常量；② Context value 每帧新建广播（见 Context 关）；③ state 粒度过粗，高频小状态带动大子树——拆分或 colocation；④ 派生值在渲染里重算大计算——用 useMemo。Step3 验证：修完再用 Profiler 对比 commit 数与耗时，量化收益。红线：先用工具证实再 memo，别凭感觉；无 React DevTools 时用 `performance.mark` 兜底。这与本包性能关、Compiler 关是同一套方法论的不同切面。
+
+**来源**：React DevTools Profiler 文档；「Optimizing Performance」与社区 why-did-you-render 排查实践。

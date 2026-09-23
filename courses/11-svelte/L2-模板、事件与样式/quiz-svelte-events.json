@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "|self 限定 event.target 为自身(呼应 svelte-events 第三节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte 5 里 <button onclick={handle}> 与旧 on:click={handle} 的关系是？",
+      "options": [
+        "完全等价无差别",
+        "onclick={...} 是\"事件作为 prop\"（新推荐、可配合 rest/条件），on:click 是\"事件指令\"（旧写法）；两者都连到原生事件但语义载体不同",
+        "onclick 不生效",
+        "on:click 已彻底删除且报错"
+      ],
+      "answer": 1,
+      "explanation": "小写 onclick={} 是 props 化事件、大写 on:click 是指令，Svelte 5 主推前者（对应 events 关既有对比题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 事件处理函数需要接收额外参数（如行 id）同时还想拿到 event，正确写法？",
+      "options": [
+        "handle(id) 拿不到 event",
+        "onclick={(e) => handle(e, id)} 或 onclick={handle.bind(null, id)}——用箭头包一层同时保留 event 与额外参数",
+        "不能传参",
+        "只能全局变量"
+      ],
+      "answer": 1,
+      "explanation": "带参处理器必须自己构造 (e)=>fn(e,arg)，否则写 fn(arg) 会立即执行且丢 event（对应既有\"传额外参数\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 要\"监听一次就自动解绑\"，Svelte 提供什么？",
+      "options": [
+        "once 属性",
+        "事件修饰符 |once（如 on:click|once 或对应写法）——触发一次后自动移除监听",
+        "manual remove",
+        "passive"
+      ],
+      "answer": 1,
+      "explanation": "|once 修饰符承载\"一次性监听\"（对应既有\"只触发一次自动解绑\"题；passive 是性能修饰非一次性）。"
     }
   ]
 }

@@ -87,3 +87,21 @@ console.log(new Uint8Array(buf)[0], new Uint8Array(t)[0]);
   const grouped = safeGroupBy(users, u => u.dept?.toWellFormed() ?? 'unknown');
   ```
 - 来源：MDN；多份 Unicode 安全处理文章。
+
+---
+
+**13）ArrayBuffer 家族的多线程版图：SAB、Atomics、transfer 怎么配合？**
+- 参考要点：SharedArrayBuffer 让多 Worker 看同一段内存；Atomics（wait/notify/compareExchange/waitAsync ES2024）提供同步原语——经典模式：主线程 Atomics.wait 挂起等 worker notify（UI 线程禁用 wait，会死锁，waitAsync 就是为可取消场景补的）。transfer 是「所有权转移」防双写竞态：转移后 detach。大流量数字信号走 SAB+Atomics 无锁环形队列；普通数据用 structuredClone+transfer 零拷贝投递。COOP/COEP 跨源隔离是 SAB 的部署前提（侧信道 Spectre 治理）。
+- 来源：MDN《Atomics.waitAsync》；web.dev《COOP+COEP 与 SharedArrayBuffer》；html.spec 内存模型。
+
+---
+
+**14）toWellFormed 和 normalize 各修什么？文本管线里的 surrogate 事故怎么防？**
+- 参考要点：normalize(NFC/NFD) 处理**组合字符等价**（e+́ 与 é）；toWellFormed 处理**编码残缺**（孤立代理对→U+FFFD 或剔除）。事故模板：按 code unit 截断字符串（定长字段/分片）切开 emoji 代理对 → 半个 surrogate 进 DB/JSON（配合 ES2019 well-formed stringify 变 ?）。防线：截断用 `Intl.Segmenter`（grapheme 意识）或 Array.from（码点数组）再 join；入库前 toWellFormed 洗一次；长度统计用 `Array.from(s).length` 别信 s.length。
+- 来源：MDN《String.prototype.toWellFormed》；Unicode TR15（Normalization）+ 代理对截断事故讨论。
+
+---
+
+**15）Promise.withResolvers 落地在哪些模式？和旧 Deferred 有何异同？**
+- 参考要点：三处高频：① 握手/队列（消息 ID → 外部事件 resolve，RPC 客户端）；② 手动控制异步流（流背压里等消费方 ready）；③ 测试（可控完成时机）。相比 jQuery/bluebird 的 Deferred：只有原生 promise（无状态查询/进度链），但换来规范语义——resolve 一次性、thenable 协议一致。注意：executor 捕获写法 `let r; new Promise(res => r = res)` 与 withResolvers 完全等价，后者只是省掉「可变变量」这层坏味道。
+- 来源：tc39/proposal-promise-with-resolvers 动机（stage-2.7 讨论帖）；MDN《Promise.withResolvers》。

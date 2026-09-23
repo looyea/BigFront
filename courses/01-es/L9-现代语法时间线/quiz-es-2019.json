@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "`[1, [2, [3]]].flat()` 的结果是：",
-      "options": ["[1, 2, 3]", "[1, 2, [3]]", "[1, [2, [3]]]", "抛错"],
+      "options": [
+        "[1, 2, 3]",
+        "[1, 2, [3]]",
+        "[1, [2, [3]]]",
+        "抛错"
+      ],
       "answer": 1,
       "explanation": "`flat()` 默认深度为 1，只拍掉最外层一层嵌套，内层 `[3]` 保留 → `[1, 2, [3]]`。要全拍平写 `.flat(Infinity)`。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "`flatMap(fn)` 相当于 `map(fn)` 之后再 `flat( ? )`，问号处是：",
-      "options": ["0（不平）", "Infinity", "2", "1"],
+      "options": [
+        "0（不平）",
+        "Infinity",
+        "2",
+        "1"
+      ],
       "answer": 3,
       "explanation": "`flatMap = map + flat(1)`，永远只拍一层。若映射结果嵌套更深，需再手动 `.flat(n)`。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "`Object.fromEntries(new Map([['a', 1]]))` 得到：",
-      "options": ["{ a: 1 }", "抛 TypeError", "[ ['a', 1] ]", "Map { a: 1 }"],
+      "options": [
+        "{ a: 1 }",
+        "抛 TypeError",
+        "[ ['a', 1] ]",
+        "Map { a: 1 }"
+      ],
       "answer": 0,
       "explanation": "fromEntries 接受任何「产出 [key, value] 的 iterable」，Map 正是——返回普通对象 `{ a: 1 }`。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "下列哪个是 ES2019 新增的合法写法（可选 catch 绑定）？",
-      "options": ["catch() {}", "catch: {}", "catch {}", "except(e) {}"],
+      "options": [
+        "catch() {}",
+        "catch: {}",
+        "catch {}",
+        "except(e) {}"
+      ],
       "answer": 2,
       "explanation": "ES2019 允许省略 catch 的参数与括号：`try {...} catch {...}`。当你不需要错误对象时用，省去未使用变量。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "`Symbol('abc').description` 返回：",
-      "options": ["'Symbol(abc)'", "'abc'", "undefined", "抛错"],
+      "options": [
+        "'Symbol(abc)'",
+        "'abc'",
+        "undefined",
+        "抛错"
+      ],
       "answer": 1,
       "explanation": "ES2019 加只读属性 `description`，直接给出创建时传入的字符串 `'abc'`；旧的 `String(sym)` 才会得到 `'Symbol(abc)'`。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "ES2019 对 `Array.prototype.sort` 提出的强制要求是：",
-      "options": ["必须原地排序", "必须使用快排", "必须升序", "必须是稳定排序"],
+      "options": [
+        "必须原地排序",
+        "必须使用快排",
+        "必须升序",
+        "必须是稳定排序"
+      ],
       "answer": 3,
       "explanation": "ES2019 规定 sort 必须稳定（相等元素保持原相对顺序）。此前各引擎实现不一（V8 曾对长数组用不稳定快排），导致跨环境结果不同。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "`[1, , 3].flat()` 的结果是：",
-      "options": ["[1, 3]", "[1, undefined, 3]", "[1, , 3]（保留空洞）", "长度为 3"],
+      "options": [
+        "[1, 3]",
+        "[1, undefined, 3]",
+        "[1, , 3]（保留空洞）",
+        "长度为 3"
+      ],
       "answer": 0,
       "explanation": "`flat` 会**剔除数组空洞（holes）**，`[1, , 3].flat()` → `[1, 3]`（注意：`undefined` 元素不会被剔除，剔除的是「洞」）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "ES2019 起 `JSON.stringify({ a: \"\\ud800\" })` 的输出是：",
+      "options": [
+        "\"{\\\"a\\\":\\\"\\\\ud800\\\"}\"",
+        "\"{\\\"a\\\":\\\"\\ufffd\\\"}\"——孤立代理对被替换为 U+FFFD",
+        "抛 TypeError",
+        "输出被截断"
+      ],
+      "answer": 1,
+      "explanation": "Well-formed JSON.stringify：孤立 surrogate（截断 emoji 产生）不再原样吐进 JSON 字符串，而是替换字符——保证 stringify 结果永远是合法 UTF-16 可解析文本。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`[1, [2, [3, [4]]]].flat(Infinity)` 的结果：",
+      "options": [
+        "[1, 2, [3, [4]]]",
+        "[1, 2, 3, 4]",
+        "RangeError",
+        "[1, [2, [3, 4]]]"
+      ],
+      "answer": 1,
+      "explanation": "flat(depth=1) 默认，传 Infinity 拉平任意深度；顺带 flat 会**丢弃数组空洞**（`[1,,3].flat()` → [1,3]），但保留显式 undefined。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`class A { static #x = 1 }` 里 `A.#x` 能被 `Object.keys(A)` 枚举到吗？",
+      "options": [
+        "能",
+        "不能——静态私有字段不可枚举不可外部访问",
+        "改成 #x() 方法才可见",
+        "取决于运行模式"
+      ],
+      "answer": 1,
+      "explanation": "# 私有成员（含 static）完全不进键枚举，类外访问直接 SyntaxError——探测存在性只能靠类内 `#x in obj` 私有字段检查。"
     }
   ]
 }

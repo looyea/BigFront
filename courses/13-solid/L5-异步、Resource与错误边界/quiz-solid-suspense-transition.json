@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-suspense-transition",
-  "title": "Suspense 与 Transition · 自测",
+  "title": "solid-suspense-transition 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "<Suspense> 依据什么决定要不要显示 fallback？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "<Suspense> 依据什么决定要不要显示 fallback？",
       "options": [
         "依据全局 loading 计数器",
         "只要子树里有 createResource 就永远显示 fallback",
@@ -11,10 +13,12 @@
         "依据 CSS animation 状态"
       ],
       "answer": 2,
-      "explain": "Suspense 识别边界内对被追踪异步依赖的读取(如 pending 的 resource)，据此兜底。"
+      "explanation": "Suspense 识别边界内对被追踪异步依赖的读取(如 pending 的 resource)，据此兜底。"
     },
     {
-      "q": "官方说 Suspense '非阻塞'，具体指挂起期间发生什么？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "官方说 Suspense '非阻塞'，具体指挂起期间发生什么？",
       "options": [
         "子树照常执行、建好响应式 owner，只是内容暂不落 DOM、由 fallback 顶着",
         "整个应用被冻结直到数据回来",
@@ -22,10 +26,12 @@
         "浏览器主线程被 Promise 卡住"
       ],
       "answer": 0,
-      "explain": "非阻塞=不冻结应用；子树继续运行建 owner，边界揭示后才把解析内容落 DOM。"
+      "explanation": "非阻塞=不冻结应用；子树继续运行建 owner，边界揭示后才把解析内容落 DOM。"
     },
     {
-      "q": "嵌套两层 Suspense，孙组件读到 pending 资源，哪层切 fallback？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "嵌套两层 Suspense，孙组件读到 pending 资源，哪层切 fallback？",
       "options": [
         "两层都同时切",
         "外层切、内层不动",
@@ -33,10 +39,12 @@
         "最近的祖先边界切 fallback，外层不受牵连(就近边界)"
       ],
       "answer": 3,
-      "explain": "异步依赖由最近的边界处理，实现'只塌那一块'的局部兜底。"
+      "explanation": "异步依赖由最近的边界处理，实现'只塌那一块'的局部兜底。"
     },
     {
-      "q": "挂起边界内的 onMount / createEffect 什么时候执行？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "挂起边界内的 onMount / createEffect 什么时候执行？",
       "options": [
         "从不执行",
         "等该边界解析(resolve)之后才执行",
@@ -44,10 +52,12 @@
         "在显示 fallback 时立刻执行"
       ],
       "answer": 1,
-      "explain": "官方：suspended 子树内的 onMount/createEffect 在边界解析后才跑——别指望它们 loading 期触发。"
+      "explanation": "官方：suspended 子树内的 onMount/createEffect 在边界解析后才跑——别指望它们 loading 期触发。"
     },
     {
-      "q": "useTransition() 返回什么、start(fn) 做了什么？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "useTransition() 返回什么、start(fn) 做了什么？",
       "options": [
         "[pending, start]：start 把 fn 里的更新标为过渡并返回 Promise，pending() 报告是否仍在过渡中",
         "只返回一个布尔值",
@@ -55,10 +65,12 @@
         "一个立即同步执行的函数，无 pending"
       ],
       "answer": 0,
-      "explain": "start 调度过渡(客户端微任务异步)，过渡期保留旧 UI、pending() 可做进度/禁用。"
+      "explanation": "start 调度过渡(客户端微任务异步)，过渡期保留旧 UI、pending() 可做进度/禁用。"
     },
     {
-      "q": "关于 transition 的客户端 vs 服务端行为，正确的是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 transition 的客户端 vs 服务端行为，正确的是？",
       "options": [
         "两端都一样异步调度",
         "服务端 pending() 为 true 且不跑",
@@ -66,10 +78,12 @@
         "客户端同步、服务端异步"
       ],
       "answer": 2,
-      "explain": "SSR 无闪屏概念故同步跑完、pending 恒 false；浏览器才异步调度并暴露 pending。"
+      "explanation": "SSR 无闪屏概念故同步跑完、pending 恒 false；浏览器才异步调度并暴露 pending。"
     },
     {
-      "q": "多个兄弟 Suspense 想按顺序整齐揭示、而不是各自好了就跳出来，用什么？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "多个兄弟 Suspense 想按顺序整齐揭示、而不是各自好了就跳出来，用什么？",
       "options": [
         "把它们塞进同一个 createResource",
         "<SuspenseList revealOrder='forwards|backwards|together' tail=...>（实验性）包裹这些兄弟边界",
@@ -77,7 +91,46 @@
         "用 startTransition 逐个 await"
       ],
       "answer": 1,
-      "explain": "SuspenseList 登记各子边界 inFallback 汇总成有序揭示；注意官方标注为实验特性。"
+      "explanation": "SuspenseList 登记各子边界 inFallback 汇总成有序揭示；注意官方标注为实验特性。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Solid 里 Suspense 与 ErrorBoundary 的实现关系是？ ",
+      "options": [
+        " 完全无关的两个库 ",
+        " 同族原语共享 fallback 机制，因此 Suspense 可带 error 兜底、ErrorBoundary 可带 pending 兜底，双兜底一个组件完成 ",
+        " 必须嵌套三层才都能用 ",
+        " ErrorBoundary 是 Suspense 的别名 "
+      ],
+      "answer": 1,
+      "explanation": " 两者都构建在统一的 control-flow 原语上，fallback 语义互通，这是 Solid 区别于 React 两树独立的设计。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " startTransition 里写信号触发的挂起，UI 默认表现是？ ",
+      "options": [
+        " 立即切 fallback ",
+        " 保持旧界面可见、pending() 为 true，完成后一次性切换 ",
+        " 白屏 ",
+        " 阻塞交互 "
+      ],
+      "answer": 1,
+      "explanation": " 过渡型更新不卸载旧内容，正是切 tab 时旧数据不闪、新数据整齐到达的实现基础。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 页面已有内容时新资源挂起，什么情况下用户会看到 fallback 而不是旧内容？ ",
+      "options": [
+        " 永远看不到 ",
+        " 该槽位首次渲染（无可保持的旧值）或更新未包在过渡里时 ",
+        " 只有 SSR ",
+        " 只有移动端 "
+      ],
+      "answer": 1,
+      "explanation": " 保持旧 UI 的前提是存在旧 UI 且更新可延迟提交；首次挂载与非过渡更新都直接走 pending 分支。 "
     }
   ]
 }

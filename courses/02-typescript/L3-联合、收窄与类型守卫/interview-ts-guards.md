@@ -1,6 +1,6 @@
 # ts-guards 面试题精选
 
-> 共 12 题，覆盖 **类型谓词 / 断言函数 / 穷尽检查 / assertNever / as const / 守卫设计** 六类。
+> 共 15 题，覆盖 **类型谓词 / 断言函数 / 穷尽检查 / assertNever / as const / 守卫设计** 六类。
 
 ---
 
@@ -103,3 +103,25 @@ function assertNever(x: never): never {
 把每个 action 定义成带 `type` 字面量判别字段的联合（`Action = {type:'add';n:number} | {type:'clear'}`），reducer 里 `switch(action.type)` 自动把 `action` 收窄到对应分支、访问其专属 payload，非法 action 结构写不出来；配合 `default: assertNever` 做穷尽——**新增一种 action 忘了在 reducer 处理就编译报错**，杜绝"漏 case 导致状态不更新"的经典 bug（呼应 ts-frameworks、Vue Pinia/Redux）。同理，把组件的异步状态建模成 `Result<T>` 可辨识联合，用 `isSuccess` 守卫分支，避免"loading 时读 data、成功时读 error"的空值崩溃。
 
 **来源**：Redux — "reducing with TypeScript / discriminated actions"; Vue — "typed events/pinia"; Total TypeScript reducer patterns
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 为什么用户自定义守卫必须显式写 x is T，编译器不从函数体推断？
+
+两点根因：① **可靠性**——函数体里 `return typeof x === "string" || x == null` 这类逻辑推不出「收窄应剔什么」，任何实现瑕疵都会把假收窄广播到全站（soundness 无法机械保证）；② **本地可检查**：签名即契约，实现换掉只要还满足契约就不影响调用方——这正是断言「信任但验证」的分工：编译器验证签名与实现的一致性（守卫体 return 的布尔类型检查），但把语义正确性交给人 + 测试。同类哲学：函数返回类型也不默认全推（公共 API 要显式锁契约）。
+
+**来源**：TS 1.6 类型守卫设计讨论 issue（#1368）；Anders《type predicates 的声明式契约》回帖。
+
+### 14. isX / assertX / parseX 三种边界函数怎么选型？给一套团队规范。
+
+isX（类型谓词，boolean）：判断继续走的流程，适合控制流分叉（渲染层 if）。assertX（断言，throw）：前置条件，适合「不满足就是 bug」的内部不变量——调用处零噪音收窄；坑：assert 必须独立函数直调，藏进 filter/map 回调不生效（断言不跨调用边界传递）。parseX（返回 T|null 或 T）：外部数据主通道，返回带错误信息（Result 风格）给业务层处理——边界层首选，因为外部世界「不合法」是常态不是 bug。规范：一个 schema 三种出口由 codegen 从同一源生成（zod 的 safeParse 派生），杜绝手写守卫与运行时逻辑漂移。
+
+**来源**：TS FAQ《Assertions in filter callbacks》；zod 文档 safeParse/自定义错误映射。
+
+### 15. 守卫只在编译期生效，运行时怎么保证「x is Cat」不说谎？
+
+x is Cat 运行时什么都没发生——谓词函数本身仍是 boolean 函数，说谎（实现与签名不符）编译器只查「返回是否 boolean」。防线三件套：① 守卫实现走**运行时可判别信号**（判别键/instanceof），而非「字段碰巧存在」；② 给守卫写单测（fuzz 假对象喂进去），守卫是边界层代码、测试优先级等同解析器；③ 高保障场景改 zod：schema 是唯一真源，「类型」从 parse 结果推导（z.infer），谓词由 schema 派生（`s.safeParse(v).success`），让运行时校验与类型同源。核心认知：守卫签名是**承诺**，承诺要有兑现机制。
+
+**来源**：TS Handbook 类型谓词「不改变运行时」说明；TypeSolutions《Type Guards at runtime》实践篇。

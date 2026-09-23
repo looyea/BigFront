@@ -1,6 +1,6 @@
 # react-state-mgmt 面试题精选
 
-> 共 12 题，覆盖 A 是否需要全局态 / B Context / C 外部 store / D 单向数据流·Vue 对照四类。
+> 共 15 题，覆盖 A 是否需要全局态 / B Context / C 外部 store / D 单向数据流·Vue 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：给决策框架而非站队：① 先排除——服务端数据用 Query，不进任何这三者；② 低频、跨切面、天然属组件树（主题/语言/登录）→ Context（配 useMemo + 拆读写）；③ 高频、多处细粒度订阅、需持久化/中间件/devtools → Zustand（轻量）或 RTK（重规范、大团队）；④ 能用局部 state + props 数据流解决的绝不全局化。答题时强调"作用域最小化 + 更新粒度 + 团队规范"三维度权衡，最能体现工程成熟度（呼应 react-context、react-data-fetching）。
 
 **来源**：React 官方文档 — Managing State、Zustand/Redux 文档、You Might Not Need Redux
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  把 Jotai（自底向上原子）、Zustand（单 store+selector）、Redux（单 store+dispatch+中间件）作范式对比，各适合什么规模？
+
+Jotai：以「atom」为最小单元、依赖自动串联，写起来最接近「派生即组合」，没有中心 store，天然细粒度、样板少；适合中等、状态图复杂、喜欢函数式组合的团队，缺点是跨切面调试/时间旅行不如 Redux 成熟。Zustand：一个（或多个）外部 store + hook selector，API 极简、无 Provider、可脱离 React 读写、按需订阅；适合绝大多数中大型 app 的全局客户端态，是当前性价比之王。Redux/RTK：单一 store + 严格 action→reducer 流 + 成熟 DevTools/中间件（ saga、审计、持久化、时间旅行）；适合超大型、要求强规范与可观测、多人协作、状态即产品核心的场景。选择不是「谁更强」而是「你要多少纪律换多少成本」：原子最轻、Zustand 居中、Redux 最重但最可审计。
+
+**来源**：Jotai/Zustand/Redux Toolkit 各自设计理念文档；三者范式对比社区综述。
+
+### 14.  给一份「让 Context 重渲染可控」的完整技术清单，并说明为什么外部 store 天然绕开这些麻烦。
+
+清单：① value 用 useMemo 稳定，别传每帧新建对象；② 按变化频率拆分 Provider（低频 state 与恒定的 dispatch/回调分开）；③ 缩小消费面——把读 context 的组件做到尽量小的叶子，静态结构作为 children 从外部传入（不消费就不随广播重渲）；④ 派生值在消费者里用 useMemo 算、别塞进 value 造成更大广播面。即便如此，Context 仍是「引用变→全体消费者重渲」的粗粒度模型。外部 store 之所以绕开：它用 useSyncExternalStore + selector 做「按切片订阅」，组件只在自己选中的值变化时渲染，且 store 可在 React 外读写、支持时间旅行/持久化中间件——等于把「选择性订阅」这个 Context 天生缺失的能力补齐。所以不是 Context 不好，而是它的广播语义决定了大规模下要费劲。
+
+**来源**：React Context 性能优化文档；外部 store（Zustand/Redux）selector 订阅模型对照。
+
+### 15.  「state colocation」和「lifting state up」如何平衡？“能局部就局部”在组件设计上到底意味着什么？
+
+两条相反方向的力：上提到共同父（兄弟共享）保证 SSOT，但提太高会让无关中间层被 re-render 与转发 props 拖累、组件耦合、复用变差；下沉到真正使用者（colocation）缩小重渲染半径、提高内聚，但过度下沉导致「同一份数据多处各存一份」的复制同步地狱。平衡判据：把状态放在「所有需要它的组件的最近共同祖先」——再高一点都算过度提升；能派生的不存；只在叶子关心的别提到路由层。操作层面：把「会变的一小块」连同它的 state 拆进独立子组件（本包性能关手法），父传下去的是不常变的 props/children；跨树共享又确实全局的才上 store/Context。所谓「能局部就局部」本质是「让状态离它驱动的最小渲染范围尽可能近」，与「别过早全局化」是同一原则的两面。
+
+**来源**：React「Managing State / state colocation」指引；Keep it local 的组件设计社区共识。

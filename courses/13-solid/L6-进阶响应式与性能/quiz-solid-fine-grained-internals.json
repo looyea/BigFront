@@ -1,48 +1,136 @@
 {
-  "lesson": "solid-fine-grained-internals",
-  "title": "细粒度响应式内核 · 自测",
+  "title": "solid-fine-grained-internals 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "observer 是在什么时候被登记为某 signal 的订阅者的？",
-      "options": ["setter 被调用时", "observer 执行过程中读到该 signal 的 getter 时", "createSignal 创建时", "组件挂载时统一登记"],
+      "id": "q1",
+      "type": "single",
+      "prompt": "observer 是在什么时候被登记为某 signal 的订阅者的？",
+      "options": [
+        "setter 被调用时",
+        "observer 执行过程中读到该 signal 的 getter 时",
+        "createSignal 创建时",
+        "组件挂载时统一登记"
+      ],
       "answer": 1,
-      "explain": "getter 被读到时，把『当前正在执行的 observer』加入自己的订阅集合——这就是自动依赖收集，是动态而非声明的。"
+      "explanation": "getter 被读到时，把『当前正在执行的 observer』加入自己的订阅集合——这就是自动依赖收集，是动态而非声明的。"
     },
     {
-      "q": "setter 通知订阅者的前提是什么？",
-      "options": ["每次都通知", "值类型是对象时", "只要被调用就通知", "新值 !== 旧值（用 === 比较，相等则短路不通知）"],
+      "id": "q2",
+      "type": "single",
+      "prompt": "setter 通知订阅者的前提是什么？",
+      "options": [
+        "每次都通知",
+        "值类型是对象时",
+        "只要被调用就通知",
+        "新值 !== 旧值（用 === 比较，相等则短路不通知）"
+      ],
       "answer": 3,
-      "explain": "setter 先比较 value === newValue，相等直接 return 不通知，避免无谓更新。"
+      "explanation": "setter 先比较 value === newValue，相等直接 return 不通知，避免无谓更新。"
     },
     {
-      "q": "为什么 createEffect 里 setTimeout 回调中读 count 不会被追踪？",
-      "options": ["因为依赖登记是同步的，回调真正执行时已没有登记的当前 subscriber", "因为 setTimeout 被 Solid 屏蔽", "因为 count 是只读的", "因为 effect 不能包含异步"],
+      "id": "q3",
+      "type": "single",
+      "prompt": "为什么 createEffect 里 setTimeout 回调中读 count 不会被追踪？",
+      "options": [
+        "因为依赖登记是同步的，回调真正执行时已没有登记的当前 subscriber",
+        "因为 setTimeout 被 Solid 屏蔽",
+        "因为 count 是只读的",
+        "因为 effect 不能包含异步"
+      ],
       "answer": 0,
-      "explain": "『登记→运行→注销』是线性同步完成的；异步回调跑时已脱离追踪上下文，需手动用 on 指定依赖。"
+      "explanation": "『登记→运行→注销』是线性同步完成的；异步回调跑时已脱离追踪上下文，需手动用 on 指定依赖。"
     },
     {
-      "q": "温度 memo 例子中，displayTemp 为 false 时修改 unit，memo 会重算吗？",
-      "options": ["会，unit 永远是它的依赖", "取决于 unit 是否变化", "不会，此时早返回，unit 不是它当前的依赖", "会，但结果被缓存不重跑"],
+      "id": "q4",
+      "type": "single",
+      "prompt": "温度 memo 例子中，displayTemp 为 false 时修改 unit，memo 会重算吗？",
+      "options": [
+        "会，unit 永远是它的依赖",
+        "取决于 unit 是否变化",
+        "不会，此时早返回，unit 不是它当前的依赖",
+        "会，但结果被缓存不重跑"
+      ],
       "answer": 2,
-      "explain": "体现动态依赖：早返回分支下没读 temperature/unit，它们当前就不是依赖，改它们不触发重算。"
+      "explanation": "体现动态依赖：早返回分支下没读 temperature/unit，它们当前就不是依赖，改它们不触发重算。"
     },
     {
-      "q": "嵌套 effect 中，内层 effect 读到的信号会成为外层的依赖吗？",
-      "options": ["会，内外共享依赖", "不会，每个 effect 彼此独立", "只有基本类型会", "会，但仅首次"],
+      "id": "q5",
+      "type": "single",
+      "prompt": "嵌套 effect 中，内层 effect 读到的信号会成为外层的依赖吗？",
+      "options": [
+        "会，内外共享依赖",
+        "不会，每个 effect 彼此独立",
+        "只有基本类型会",
+        "会，但仅首次"
+      ],
       "answer": 1,
-      "explain": "内层读的信号不登记给外层，信号变化只重跑内层——强制 effect 相互独立、避免意外耦合。"
+      "explanation": "内层读的信号不登记给外层，信号变化只重跑内层——强制 effect 相互独立、避免意外耦合。"
     },
     {
-      "q": "关于 createEffect 与 createRenderEffect 的时序，正确的是？",
-      "options": ["createEffect 延迟到渲染后运行，render effect 立即运行", "两者都立即运行", "createEffect 立即，render effect 延迟", "两者都延迟"],
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 createEffect 与 createRenderEffect 的时序，正确的是？",
+      "options": [
+        "createEffect 延迟到渲染后运行，render effect 立即运行",
+        "两者都立即运行",
+        "createEffect 立即，render effect 延迟",
+        "两者都延迟"
+      ],
       "answer": 0,
-      "explain": "render effect 立即跑以在元素进 DOM 前设好属性；createEffect 延迟到渲染后、用于对外部系统的副作用。"
+      "explanation": "render effect 立即跑以在元素进 DOM 前设好属性；createEffect 延迟到渲染后、用于对外部系统的副作用。"
     },
     {
-      "q": "组件销毁沿哪棵树进行、清理用什么登记？",
-      "options": ["沿 DOM 树，用 useEffect 返回函数", "沿 Owner 树，但无法手动清理", "沿渲染顺序，用 batch", "沿 Owner 树，用 onCleanup 登记清理"],
+      "id": "q7",
+      "type": "single",
+      "prompt": "组件销毁沿哪棵树进行、清理用什么登记？",
+      "options": [
+        "沿 DOM 树，用 useEffect 返回函数",
+        "沿 Owner 树，但无法手动清理",
+        "沿渲染顺序，用 batch",
+        "沿 Owner 树，用 onCleanup 登记清理"
+      ],
       "answer": 3,
-      "explain": "销毁沿 Owner 树（子先于父），资源释放在 onCleanup 里做，否则卸载后仍有引用=内存泄漏。"
+      "explanation": "销毁沿 Owner 树（子先于父），资源释放在 onCleanup 里做，否则卸载后仍有引用=内存泄漏。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Solid 响应式宣称读不到中间态，其执行模型是？ ",
+      "options": [
+        " 每次写立即跑光所有下游 ",
+        " 写入沿依赖图传播标记并即时求值到收敛，同一批内 memo/下游以最终值一致可见（push 标记+pull 计算的混合） ",
+        " 全部推迟到下一帧 ",
+        " 靠脏检查轮询 "
+      ],
+      "answer": 1,
+      "explanation": " Solid 是即时一致模型：无异步提交队列导致的旧值窗口，batch 只是显式合并传播范围。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 两个 memo 互相读取对方形成循环，运行时的行为是？ ",
+      "options": [
+        " 静默死循环 ",
+        " 检测到后抛出 Cycle detected 类错误 ",
+        " 自动断开一条 ",
+        " 随机求值一个 "
+      ],
+      "answer": 1,
+      "explanation": " 依赖图在传播时检测回边并显式报错，这是不做两遍 diff 的代价换来的一致性保证之一。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 同一个 effect 里对同一 signal 读三次，订阅登记几次？ ",
+      "options": [
+        " 三次 ",
+        " 一次：当前 observer 对同一 source 去重登记 ",
+        " 取决于读取位置 ",
+        " 零次 "
+      ],
+      "answer": 1,
+      "explanation": " 订阅集合以 observer 为粒度去重，重复读不放大依赖图，是内存与通知开销可控的细节。 "
     }
   ]
 }

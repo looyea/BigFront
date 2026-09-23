@@ -1,6 +1,6 @@
 # vite-css 面试题精选
 
-> 共 12 题，覆盖 **CSS Modules / 预处理器 / PostCSS / Tailwind / 生产提取 / 开发注入** 六类。
+> 共 15 题，覆盖 **CSS Modules / 预处理器 / PostCSS / Tailwind / 生产提取 / 开发注入** 六类。
 
 ---
 
@@ -103,3 +103,25 @@ Vite 把所有资源当 JS 模块处理 → CSS 被编译成 JS 模块 → 执�
 2024 年 Chrome 105+ / Safari 15.4+ / Firefox 121+ 全部原生支持。如果 `browserslist` 不要求更老浏览器 → **不需要降级**（直接写原生 :has()）。若需兼容老 Firefox → `postcss-has-pseudo`（但只能降级部分场景——有功能性限制）。
 
 **来源**：MDN — ":has()"; web.dev — "CSS :has() browser support"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  PostCSS、预处理器、Lightning CSS、原生特性四套 CSS 工具链在 Vite 里的分工与你团队的选型建议。
+
+先画管线序：源码(.scss) → 预处理器编译 → PostCSS（插件链）→ Vite 内置 CSS transform（构建 target 相关降级/lightningcss 替换此段）→ minify。选型分维：① 预处理器——2026 年的诚实答案是"嵌套/@use 等大半需求原生 CSS 已接住，Sass 剩余价值在逻辑与 mixin 体系"，新项目评估"原生嵌套+自定义属性"能否满足再决定；② PostCSS 的定位从"所有现代特性的编译器"收缩到"特定插件载体"（icss 类、构建期报告），autoprefixer 在 lightningcss 接管 target 降级后也可退场；③ Lightning CSS——编译与 minify 同引擎的提速选项（大 CSS 项目 build 明显受益），代价是部分 PostCSS 生态不兼容、降级策略与 browserslist 的 target 表达差异；④ 渐进增强策略变化：特性查询 @supports + :has()/容器查询原生可用，"编译期 polyfill CSS"多数场景不再必要。团队建议模板：存量 Sass 项目维持（迁移收益不抵风险），新项目从"原生+自定义属性设计令牌"起步，构建提速专项时才评估 lightningcss（用指标说话不用口号）。加分句：CSS 工具链的演进方向是"编译器职责还给浏览器，构建期只做确定性转换"——能讲这个趋势比会背配置项高一档。
+
+**来源**：Vite 官方 CSS 文档（Feature Support 矩阵）；Lightning CSS 文档；web.dev 现代 CSS 特性支持
+
+### 14.  组件作用域样式（SFC scoped / CSS Modules / Svelte style）三家实现原理对比，以及穿透全局样式的正确姿势。
+
+机制对比：Vue——编译期给模板节点加 data-v-hash 属性、选择器尾部加属性限定，运行时零成本但选择器权重被抬高（特异性膨胀是覆盖难根因）；CSS Modules——类名映射为局部作用符（哈希），纯命名层隔离（结构/全局选择器仍可泄漏，:global 显式开口）；Svelte——编译期选择器重写加 s-哈希类，且带未使用规则清理（独有红利）。三者共性：隔离都是"编译期约定"而非真运行时沙箱（Shadow DOM 才是），所以穿透都是内置逃生口：:deep()/ :global()/ :global() 各自语法，方向性差异（Vue 用 :deep 往下钻、Svelte 用 :global 声明全局再自组合）。穿透的治理：第三方库样式定制集中到单一 override 文件（命名空间注释：这是库样式非业务样式）、禁止散点 :deep 滥用（特异性军备竞赛的起点）、设计令牌优先（能走 CSS 变量注入的定制绝不用选择器覆盖——主题层与覆盖层的本质区别）。加分维度：动态类名（绑定三元）在 CSS Modules 的类型支持（styles 的 keyof 检查）与运行时差异；SSR 的样式收集各家管线（Vue 的 scoped 关键帧处理、Svelte 的按用提取）为 styling 与 ssr 两关共同埋的点。收口句：三家解决的是"作用域"、@layer 解决的是"层叠秩序"——两个正交维度的病别用同一把锤子。
+
+**来源**：Vue scoped 实现（属性选择器）；CSS Modules spec；Svelte 编译器样式作用域文档
+
+### 15.  设计系统的"主题切换（暗色/品牌皮肤）"在 Vite+组件框架下怎么做才不闪不重？
+
+令牌先行：颜色/圆角/间距收进 CSS 自定义属性（:root 与 [data-theme] 两层定义），组件只消费 var()——主题切换=换根属性集，零重渲染零 JS 样式循环。三难点：① 首帧闪烁（SSR 无用户偏好、客户端 JS 后注入 data-theme 则先白后暗一闪）——解法是预置内联脚本在 <head>（读 localStorage/cookie 的偏好立即设属性，框架 SSR 的 transformEarly/head 注入机制），偏好要双写 cookie（SSR 可读，服务端出正确主题首帧）；② 跟随系统（matchMedia change 监听 + "偏好=system/亮/暗"三态建模，别做布尔）；③ 组件库内硬编码色的清退（color-mix(in oklch) 做派生色减少令牌数量、CI 检查新增十六进制色进组件源码）。Vite 侧注意：主题 CSS 的产物形态（单文件全量 vs 按主题分包——令牌文件极小全量即可）、暗色图片/插画资产（prefers-color-scheme 媒体查询资源或 CSS 变量 url() 切换）。进阶：多品牌（同组件库供 N 个客户皮肤）——令牌包化（每品牌一个 CSS 产物构建期选定）vs 运行时 data-scope 全量（体积换灵活），按发布节奏选。加分句：主题的成熟度看"新增一个暗色变体要改几处代码"——答案是零（只加令牌文件）才算体系建成。
+
+**来源**：MDN prefers-color-scheme 与 color-scheme；theme-ui/Design Tokens 实践；web.dev 避免主题闪烁

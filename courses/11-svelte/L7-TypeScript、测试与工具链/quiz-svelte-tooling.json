@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "sv check/svelte-check 走 svelte2tsx 管线出诊断清单，是 CI 静态检查位；build 只保证编过、test 是行为验证、eslint 覆盖面不同——四者都在 CI 里各司其职。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 新建 Svelte 项目的官方命令行工具是？",
+      "options": [
+        "create-svelte 已废弃、用 npm create vite@latest 选 svelte",
+        "npx sv create（sv 是新的 Svelte CLI，整合了 create/check/add/migrate）——旧 create-svelte 的能力并入 sv（对应既有\"官方命令行\"题）",
+        "svelte-init",
+        "vue-cli"
+      ],
+      "answer": 1,
+      "explanation": "Svelte CLI 统一为 sv（create/add/check/migrate），是工具链入口（对应 sv add/sv check 系列题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " vite-plugin-svelte 在工程里扮演的角色是？",
+      "options": [
+        "打包 CSS",
+        "把 .svelte 文件接入 Vite 管线（调用 Svelte 编译器 transform、处理 HMR、暴露编译器选项）——Svelte+Vite 的桥梁（对应既有\"vite-plugin-svelte 角色\"题）",
+        "路由",
+        "状态管理"
+      ],
+      "answer": 1,
+      "explanation": "它是 Vite 与 Svelte 编译器的接缝（compilerOptions 透传、HMR 实现都在它这，呼应 tooling 关多题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 想让单个组件强制启用 runes 而项目整体未钉死，可用？",
+      "options": [
+        "改全局配置",
+        "组件里 <svelte:options runes={true}/>（per-file 强制 runes，配合全局 auto/legacy，对应既有\"单组件强制 runes\"题）",
+        "加注释",
+        "重命名文件"
+      ],
+      "answer": 1,
+      "explanation": "svelte:options 的 runes 开关提供文件粒度控制（与 migration-legacy 的 runes 档位题配套）。"
     }
   ]
 }

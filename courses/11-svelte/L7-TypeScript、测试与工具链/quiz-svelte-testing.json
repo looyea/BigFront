@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "render 的 unmount/cleanup 会走 $effect 清理与 action destroy；跳过 cleanup 时组件仍活着、定时器自然幽灵串门。并行 worker 各有独立环境，不共享定时器。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte 组件测试为什么必须走编译管线（vite/vitest 插件），不能像纯 JS 那样直接 import？",
+      "options": [
+        "可以无需编译",
+        ".svelte 不是浏览器/Node 能直接执行的模块，必须经 Svelte 编译器编译成 JS 才能挂载测试（所以配 vite-plugin-svelte + @testing-library/svelte）（对应既有\"为何必须走编译管线\"题）",
+        "因为要打包",
+        "因为要 TS"
+      ],
+      "answer": 1,
+      "explanation": "测试挂载的是编译后的组件（对应既有 render 编译依赖题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 点击按钮后组件要 await fetch 再渲染结果，断言应怎么写才稳？",
+      "options": [
+        "click 后立即 expect",
+        "用 findBy.../waitFor 等待异步 DOM 出现（fireEvent.click 后 await 组件内部 promise flush 到 DOM，对应既有\"异步结果断言\"题）",
+        "sleep 固定时长",
+        "不用断言"
+      ],
+      "answer": 1,
+      "explanation": "异步渲染靠 waitFor/findBy 轮询而非死等，避免时序 flaky（呼应\"假定时器与微任务 flush 相撞\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 被测组件依赖父级 setContext 提供的值，测试里怎么提供 context？",
+      "options": [
+        "无法测",
+        "包一层提供 context 的 wrapper 组件渲染进测试（或用 testing library 的 render 传 wrapper），让被测组件在正确的 context 下挂载（对应既有\"依赖 context 怎么测\"）",
+        "mock getContext",
+        "改组件源码"
+      ],
+      "answer": 1,
+      "explanation": "context 沿树注入，测试要复现这棵树（wrapper 法，呼应 testing 关 getContext/$bindable 测题）。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # ts-declarations 面试题精选
 
-> 共 12 题，覆盖 **`.d.ts` 本质 / 类型查找与 @types / declare 与 ambient / 生成声明 / skipLibCheck 与漂移 / 实战写声明** 六类。
+> 共 15 题，覆盖 **`.d.ts` 本质 / 类型查找与 @types / declare 与 ambient / 生成声明 / skipLibCheck 与漂移 / 实战写声明** 六类。
 
 ---
 
@@ -122,3 +122,25 @@ declare module "*.worker.ts" { const W: new () => Worker; export default W; }
 纯 `.d.ts` **不能**含运行时代码——它只是类型契约（函数体都不许有，见第 1 题）。若想让类型随"真实配置/数据"变化，有两条正路：① **代码生成**——用一个脚本读取 `openapi.json`/`prisma.schema`/i18n 资源，**生成** `.d.ts`（如 `openapi-typescript`、Prisma 生成类型、`vue-i18n` 的 `@intlify`），把"数据"编译成"类型"，纳入构建/CI（呼应 Express L7、07/08 的 typed API）；② **类型推断 + 泛型**——让类型从"作为值传入的模式对象"里 `infer` 出来（zod `z.infer`、tRPC、本关 `import type`），运行时校验 + 静态类型同源（呼应 ts-conditional-infer 第 7 题、ts-frameworks）。核心：动态性来自"生成"或"从值推断"，而非 `.d.ts` 自身执行逻辑。
 
 **来源**：openapi-typescript; Prisma — "generated types"; zod — "type inference from schema"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 给一个无类型老 JS 库写第一份 .d.ts，你的工序？
+
+① 定入口格式：CJS 老库用 `export = MyModule` + `import x = require()` 或 UMD（`export as namespace`），别硬套 ESM；② 从**实际用到的 API** 开始：先 `declare function fn(...args:any[]):any` 保编译，再逐函数精化（overload 由窄到宽排）；③ 回调建模 this: void / 参数命名与文档注释带进 hover；④ 类型来源标注（JSDoc typedef 自动转换或手写）；⑤ 配 `typesVersions` 前先用一个测试文件跑消费验证（attw 思路）；⑥ 发 DT（@types org）或包内自带二选一，别同时。纪律：宁可 any+TODO，不要「猜出来的精确」——错误精确比空白更难迁。
+
+**来源**：TS Handbook《Declaration files / Creating .d.ts from JS》；DefinitelyTyped 贡献指南《Don't WIP》。
+
+### 14. 从 .ts 源码 emit .d.ts 有哪些「生成不出来」的坑？api-extractor 解决什么？
+
+重灾区：① 声明 emit 需要**可命名**——匿名对象字面量/局部 type/未导出 helper 报 "has or is using private name"（解法：导出或 declare module 里 re-export）；② 复杂推导 hover 与 d.ts 里可读性崩坏（配 declarationMap 让「go to definition」跳回源码）；③ 内部类型泄漏成公共 API（api-extractor 的 @internal + .api.md 快照评审把公共 API 变成 review 对象）；④ 打包型（rollup-plugin-dts 合并单文件）与保真型（tsc 原样）二选一。库发布 SOP：declaration:true + declarationMap + api-extractor 门禁。
+
+**来源**：TS wiki《Declaration emit 限制》；Microsoft api-extractor README 动机篇。
+
+### 15. 包自带 types 和 @types/xxx 并存时消费者会发生什么？谁负责收敛？
+
+解析优先级：包内 `exports.types`/`types` 字段赢（DT 的 @types 只在包内无类型时兜底）；但**双份同名声明**（混用 imports）会 duplicate id / 类型不兼容「两个版本同名类互不认」。DT 流程：包自带类型后该 @types 包被**deprecate 存档**（自动脚本把 stub 指向真实 types），老项目仍可能 hoist 到旧 @types 造成「诡异不兼容」。治理：`npm ls @types/xxx` 排查、overrides 钉死、TS 报「duplicated」时优先怀疑双源；库发版 PR 里删 @types 要写 changelog 通知。
+
+**来源**：DefinitelyTyped 官方《Which packages should be in DefinitelyTyped?》；types-publisher 自动 deprecate 流程文档。

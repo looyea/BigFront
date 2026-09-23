@@ -1,6 +1,6 @@
 # exp-response 面试题精选
 
-> 共 12 题，覆盖 **res 方法族 / 流式响应 / SSE / 缓存控制 / 安全 / 生命周期** 六类。
+> 共 15 题，覆盖 **res 方法族 / 流式响应 / SSE / 缓存控制 / 安全 / 生命周期** 六类。
 
 ---
 
@@ -99,3 +99,25 @@ SSE：单向推送（Server→Client）、纯 HTTP、自动重连（Retry-After�
 res.locals 是请求级隔离的 JS 对象 → 模板里直接用 `<%= user.name %>` → 不暴露到 HTTP 响应头。res.set 写的是 HTTP 头 → 客户端可见（泄露内部信息如 user role/permissions）+ 有大小限制（8KB header）。res.locals 仅服务端模板消费。
 
 **来源**：Express API — "res.locals"; Pug/EJS docs — "locals"; OWASP — "Response headers should not contain sensitive data"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  res.redirect 的 301/302/303/307/308 你在真实项目里怎么选？讲清楚方法改写这个坑。
+
+核心分歧在"方法与 body 是否允许改写"：301/302 历史上被浏览器实现为"任何方法转 GET"（POST 跳 302 后 body 丢失是既成事实的标准漂移），303 是"显式规定转 GET"的合法化（PRG 模式：POST 创建→303 跳详情页，防刷新重复提交），307/308 是"方法严禁改写"的严格保持版（POST 到旧域名迁移必须 308，否则 body 消失）。选择矩阵：临时 URL 变更且要保方法→307；永久且要保→308；表单 POST 后的落地跳转→303；SEO 永久合并→301；历史遗留 302 别再新增。工程坑位：① 相对路径 redirect 在 base 不同的挂载点下拼错目标（Express 的 res.redirect 第二参可 relative 但依赖 X-Forwarded-*）；② 重定向 URL 来自用户参数=开放重定向漏洞，白名单校验是唯一解（登录跳回场景最高发）；③ HSTS 与 301 缓存的耦合——错误 301 会被浏览器永久缓存（302 不会），发错难回收，所以"临时迁移先 307 观察再转 301"。加分句：状态码选错是协议级 bug，修复要靠浏览器缓存过期——宁严格不历史。
+
+**来源**：RFC 9110 重定向状态码；MDN 307/308；知乎《302 之后 POST 变 GET 引发的丢单》
+
+### 14.  大文件下载接口用 pipe 直出，中断检测、限速、断点续传三件事怎么做？
+
+直出形态：res 是 Writable，fs.createReadStream(path, { start, end }) 按 Range 头开窗，用 stream.pipeline（不是 src.pipe）串接以传播错误与清理句柄——漏 pipe 的错误监听是 fd 泄漏经典源。中断检测：req/res 双监听 close + req.aborted，发现客户端断开立即 pipeline.destroy() 释放读流（不释放=磁盘带宽和 fd 被"已死的下载"占满）。限速：管道上不自动降速（背压只保内存不保带宽），要手工 Transform 令牌桶或在 Nginx 层 limit_rate（能到源头就不到源头）。断点续传：解析 Range（bytes=a-b / 多段 byteranges 要 206 multipart/byteranges 编码）、响应 Content-Range + Accept-Ranges，ETag/If-Range 保证续传拼的是同一版本文件（文件更新过则整份重发）。架构边界：应用直出大文件在 Node 单线程事件循环模型下 CPU 占用小但带宽与 fd 成本高，量大就 X-Accel-Redirect（发内部重定向头让 Nginx 直发文件，应用只做鉴权）或对象存储签名 URL——"应用参与字节流"应该是例外而不是默认。收口：下载接口的考题本质是"谁拥有什么资源"：鉴权归应用、字节流归更便宜的层。
+
+**来源**：MDN Range 请求；Node.js stream 文档（pipeline）；掘金《我们用直出把网关打挂的一个周末》
+
+### 15.  响应里混用 res.set / res.append / res.cookie / res.locals，说说各自语义与踩坑点。
+
+语义分层：res.set/res.header 是覆盖写；res.append 对同名头追加（数组语义，Set-Cookie 这类可重复头的正确写法，但 Express 对多数头 append 会拼逗号——只有协议上允许多值的头才该 append）；res.cookie 是 Set-Cookie 的结构化生成器（序列化 expires/maxAge/httpOnly/sameSite/partitioned，手拼字符串必漏编码）；res.locals 不上线，是本次响应链上的模板/中间件共享容器（每请求新对象，挂中间件产出的上下文）。高频坑：① 手动 res.setHeader("Set-Cookie", 多 cookie 字符串) 只发一条（要数组，append 或显式传数组）→ 部分浏览器拿不到关键 cookie 登录循环；② 同名头 append 到 Cache-Control（"no-store" + 中间件又加 "public"）→ CDN 行为诡异，控制类单值头永远覆盖、由唯一 owner 写；③ cookie 值超 4KB 静默丢弃、域写成子域正则化失败（apple.com vs apple.com 仿冒）；④ locals 上挂大对象（整份用户记录）传给所有下游渲染=内存与越权面。加分句：响应头是"多写入者的共享协议字段"，每个字段有唯一 owner（安全头归 helmet、cookie 归 auth、缓存归业务），append 型多头是 ownership 被破坏的信号。
+
+**来源**：Express 官方 res API 文档；MDN Set-Cookie；SegmentFault《一个 Set-Cookie 数组引发的登录循环》

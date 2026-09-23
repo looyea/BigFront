@@ -1,6 +1,6 @@
 # exp-deploy 面试题精选
 
-> 共 12 题，覆盖 **多进程 / Docker / 反代 / HTTPS / 探活 / 优雅关闭 / 发布 / 12-Factor** 八类。
+> 共 15 题，覆盖 **多进程 / Docker / 反代 / HTTPS / 探活 / 优雅关闭 / 发布 / 12-Factor** 八类。
 
 ---
 
@@ -100,3 +100,25 @@ Config：严格与代码分离，全放环境变量，区分 dev/prod，密钥�
 `NODE_ENV=production`、关 x-powered-by、开 view cache；无共享内存态（会话/限流进 Redis）；Docker 多阶段 + `--omit=dev` + 非 root + .dockerignore；反代 + trust proxy + TLS + HSTS；liveness/readiness 分离；优雅关闭（摘流量→close→关依赖→超时兜底）；结构化日志→stdout、密钥外部注入、启动 fail-fast；不可变镜像 tag + 可回滚 + 监控告警；DB 迁移向后兼容、与代码解耦；压测/benchmark 基线（见下一关）。
 
 **来源**：Express — "Production best practices / performance"; 12-Factor — "build, run, release"; Google SRE — "release engineering checklist"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  给 Node/Express 服务写一个生产级 Dockerfile，逐层讲你的每个决定。
+
+骨架决定：多阶段构建（builder 装 devDeps+编译 TS/prisma generate → 运行阶段只带 prod 产物与引擎）。逐行讲：① 基镜像选 node LTS 具体版本号（禁 latest：不可重现+意外大版本跳级），alpine 的 musl 取舍（体积小但 native 模块/时区/字体坑，含 sharp/bcrypt 等原生依赖时评估 debian slim——体积差几 MB 换排查省下几小时）；② 依赖层缓存：先 package*.json + npm ci（锁文件是唯一事实、ci 保可重现），后 COPY 源码，.dockerignore 挡 node_modules/.env/git（泄露与构建污染双防）；③ 权限：非 root 用户（node 镜像自带 node 用户，USER node）、文件属主显式 chown——K8s 的 runAsNonRoot 策略前置满足；④ 进程信号：exec node server.js（PID1 转发 SIGTERM，shell 包装吞信号=优雅关闭全废的经典坑）或加 tini；⑤ 健康检查：HEALTHCHECK 调 /healthz（镜像级兜底）+ 真正的探针在编排层；⑥ 配置零内置：密钥不 layer 不 env 默认值，全运行时注入；⑦ 产物卫生：prune devDeps、源码映射按需（生产带 sourcemap 上错误平台但不上公网 CDN）、清理 npm 缓存。进阶治理层：SBOM 生成（syft）+ 镜像 CVE 扫描（trivy）进 CI、镜像签名（cosign）验供应链、基础镜像月度更新策略（不是"出问题才更新"——补丁疲劳时要有自动 PR 消化）。加分句：Dockerfile 是"运行时的架构文档"——每一行都是一个"为什么不"的答案，评审 Dockerfile 比评审镜像配置有效得多。
+
+**来源**：Node 官方 Docker 最佳实践；Docker 官方最佳实践文档；InfoQ《基础镜像里的供应链问题》
+
+### 14.  发布之后怎么知道"没出事"？给 Express 服务设计发布观测与自动回滚的完整方案。
+
+指标四金刚按"发布敏感度"改造：错误率（HTTP 5xx + 业务错误码分布）、时延（P99 按端点而非全局均值——某个端点 P99 翻倍就是事故）、流量（断崖=入口问题）、饱和度（内存爬升/事件循环 lag/池等待）；发布专用补充：新错误签名检测（日志 error type 与历史集合 diff——没有先例的异常最值钱的告警）、依赖调用量突变（新代码少调了某接口=功能悄悄坏）。发布节奏与观测对齐：金丝雀阶段（1%→10%→50%→100%，每档停留一个"观测窗"≥ 低峰流量覆盖一个完整业务周期的时长），分析器自动比对 canary 与 baseline 的指标分布（同时间片对照比历史基线可靠——流量日内波动大）。判定分级：硬红线（错误率绝对阈值、新致命签名）秒级自动回滚；软指标（P99 涨 15%）人工确认窗。回滚工程化：镜像不可变 tag 一键指回（发布系统的第一操作）、回滚后告警自动关联发布事件（值班第一眼看到"哪个版本回滚的"）；数据回滚的诚实边界——expand-contract 纪律保证代码回滚不牵连 schema，破坏性变更没有自动回滚只有前向修复（这是把纪律前置的根本理由）。配置与特性开关独立于代码发布通道（开关变更也是发布，同样要观测窗与回滚）。事后复盘度量：MTTD/MTTR、发布引起的告警占比、回滚率趋势（回滚率上升先怀疑的是观测窗太短而不是测试变差）。
+
+**来源**：Google SRE（发布与回滚）；Weave Scope/Flagger 金丝雀分析实践；InfoQ《自动回滚上线一年后的误报清单》
+
+### 15.  K8s 上跑 Express，HPA 该看什么指标？冷启动、连接风暴与容量规划讲讲你的实践。
+
+CPU 做 HPA 指标在 Node 上的失真：事件循环饱和时 CPU 可以很低（都在等 I/O 排队）、GC 抖动时 CPU 很高但不缺容量——指标候选按"与排队直接相关"排序：事件循环 lag（perf_hooks monitorEventLoopDelay 导出自定义指标，最接近"忙不过来"的真信号）、活跃请求数/并发度（简单可靠）、P99 时延（滞后但贴 SLO）；CPU 保留作辅助与 VPA。连接风暴：扩容后新 pod 冷（V8 JIT 未热、Prisma 连接池新建、本地缓存空）——预热三件套：readiness 探针延后到"完成一轮自检请求"（内部打端点触发关键路径 JIT）、连接池初始化限额（启动期集中握手打挂 DB）、流量梯度（服务网格 slow start / 加权渐进）。缩容的对称面：连接 draining（preStop sleep + server.close 收尾 + 长连接 SSE/WS 需要主动通知客户端重连，pod 删了流才断=用户可见卡顿）、缩容下限（至少 2-3 副本+拓扑分布约束，单副本重启就是全站抖动）。容量规划实操：压测得"单 pod 在 P99 SLO 内的 QPS"，按峰值系数与故障冗余（N+1 起）定 min replicas；大促类已知脉冲不等 HPA（反应窗 1-3 分钟）改定时/预测扩容。HPA 参数细节：稳定窗（防抖动扩缩震荡）、scaleUp 快 scaleDown 慢的非对称策略、行为策略里禁 0。成本视角：request 设得虚高=集群浪费，Node 服务的内存增长曲线（缓存与泄漏的边界）要用压测后的 RSS 分布而不是感觉定 limit——limit 过紧 OOMKill 的现场与内存泄漏的事故报告长得一模一样，这是最易混淆的排查题。
+
+**来源**：Kubernetes HPA 自定义指标文档；Node 性能与 GC 调优实践；SegmentFault《HPA 按 CPU 扩了个寂寞》

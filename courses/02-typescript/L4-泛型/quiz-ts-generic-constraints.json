@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "T extends { length: number } 的作用是？",
       "options": [
-        "让 T 只能是数组",
         "把 T 的值域限定为'至少拥有 number 型 length 的类型'，函数体内即可安全访问 .length",
+        "让 T 只能是数组",
         "给 T 赋默认值",
         "禁止访问其他属性"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "约束承诺成员存在；string/数组等都满足，且返回处仍保留调用者精确类型。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "get<O, K extends keyof O>(o:O, k:K): O[K] 里 O[K] 表示什么？",
       "options": [
         "O 或 K",
-        "索引访问类型：O 中键为 K 的那个属性的值类型",
         "O 的键数量",
+        "索引访问类型：O 中键为 K 的那个属性的值类型",
         "O 与 K 的交叉"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "O[K] 把返回类型精确到'该键对应值的类型'，是键值一一对应的关键。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "function f<T extends object>(o: T, k: string) { return o[k]; } 为什么报错？",
       "options": [
         "object 不能索引",
-        "k 是任意 string，TS 无法保证它是 T 的合法键；应 K extends keyof T",
         "缺 return 类型",
-        "其实不报错"
+        "其实不报错",
+        "k 是任意 string，TS 无法保证它是 T 的合法键；应 K extends keyof T"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "索引一个泛型对象要求键类型是 keyof T；普通 string 太宽，索引访问不安全。"
     },
     {
@@ -58,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "function makeConst<T extends string>(s: T): T; 调用 makeConst('hi') 的返回类型是？",
-      "options": ["string", "'hi'（约束抑制了字面量拓宽）", "void", "unknown"],
+      "options": [
+        "string",
+        "'hi'（约束抑制了字面量拓宽）",
+        "void",
+        "unknown"
+      ],
       "answer": 1,
       "explanation": "T extends string 会捕获精确字面量类型而不拓宽为 string，返回也是 'hi'。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "用 O[K] 约束 v，实现'键-值类型对应'，是类型安全 setter 的标准写法。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`function get<T, K extends keyof T>(o: T, k: K): T[K]` 里 K 单独成参的原因是：",
+      "options": [
+        "语法要求两个字母",
+        "把「具体键字面量」锁进类型系统，返回类型 T[K] 才能精确到该键",
+        "K 只是别名可有可无",
+        "为了支持默认泛型"
+      ],
+      "answer": 1,
+      "explanation": "`k: keyof T` 返回退化为联合类型值；独立 K 记录调用时那个键的字面量，索引访问类型 T[K] 才跟着精确——「键-值联动」的模板。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`<B extends A, A>` 这种让前者约束引用「未声明」类型参数的写法：",
+      "options": [
+        "合法，声明顺序无关",
+        "报错——约束只能引用左侧已声明的类型参数",
+        "自动重排",
+        "仅 interface 允许"
+      ],
+      "answer": 1,
+      "explanation": "类型参数列表按左右作用域；反过来 `<A, B extends A>` 合法且常用（联动约束，如 React `useState<S, P>` 时代模式）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "满足 `F extends { length: number }` 约束的类型包括：",
+      "options": [
+        "只有数组",
+        "数组、字符串、任意带数字 length 属性的对象都满足",
+        "只有函数",
+        "只有类数组对象（arguments）"
+      ],
+      "answer": 1,
+      "explanation": "约束=结构检查：{length:5} 与 \"abc\"（length:3）都通过——这也是「鸭子类型」在 TS 里的形态：不认出身，只认形状。"
     }
   ]
 }

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "zod 的 object schema 默认如何处理未声明的多余字段？",
       "options": [
-        "全部保留并透传",
         "剥离（strip）掉，只保留 schema 声明的字段",
+        "全部保留并透传",
         "抛异常",
         "转成字符串"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "默认 strip → 客户端多传的 role/_id 等被丢弃，天然防 mass assignment 越权字段注入。"
     },
     {
@@ -21,19 +21,24 @@
       "prompt": "对 query 参数 ?page=2 做数字校验，正确做法是？",
       "options": [
         "z.number()",
-        "z.coerce.number()",
         "parseInt 后再 typeof",
+        "z.coerce.number()",
         "直接当数字用"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "req.query 的值永远是字符串，普通 z.number() 会失败。z.coerce.number() 先转类型再校验。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "z.coerce.boolean() 校验字符串 'false' 会得到什么？",
-      "options": ["false", "true（Boolean('false') 非空串为真）", "报错", "undefined"],
-      "answer": 1,
+      "options": [
+        "false",
+        "报错",
+        "undefined",
+        "true（Boolean('false') 非空串为真）"
+      ],
+      "answer": 3,
       "explanation": "Boolean('false') === true（非空字符串都真）。布尔 query 应用 z.enum(['true','false']).transform(v=>v==='true')。"
     },
     {
@@ -74,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "details[].field（如 email）→ 前端表单在该字段下红字提示，形成校验/错误/表单的协作契约。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " 校验一个长度可达 1000 项的批量数组，schema 上必须配的两道闸是？",
+      "options": [
+        "逐项转对象",
+        "max 长度硬顶（如 z.array(x).max(500)）+ 单项 schema 收紧——数组无上限=攻击者可控的内存与 CPU 放大器，parse 之前先挡住规模",
+        "禁用数组",
+        "只靠 rate-limit"
+      ],
+      "answer": 1,
+      "explanation": "\"规模的信任边界\"与\"内容的信任边界\"要分别设防：max 管前者，类型管后者。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 一个请求体按 type 字段走三种结构（表单/批量/导入），zod 用什么建模？",
+      "options": [
+        "一个大 schema 全可选字段（校验退化成摆设）",
+        "z.discriminatedUnion 按判别字段分支校验各分支的必备结构——联合类型收敛为\"每种 type 一个精确 schema\"",
+        "if 手写三套",
+        "合并成字符串透传"
+      ],
+      "answer": 1,
+      "explanation": "全可选+运行期手工判空是\"校验层自我放弃\"的典型；判别联合让非法组合在校验期就出局。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 跨字段规则（如 endDate 晚于 startDate）应放在哪层？",
+      "options": [
+        "前端即可",
+        "schema 层可表达（z 的 refine 挂在 object 级）且必须服务端生效；涉及数据库现状的规则（库存还够不够）则在 service 层——\"字段间\"归校验、\"数据与外部状态间\"归业务",
+        "交给 DB 约束",
+        "写在 controller 注释里"
+      ],
+      "answer": 1,
+      "explanation": "校验的三层递进：单字段（类型域）→ 同请求跨字段（refine）→ 跨系统状态（service），每层的错误码粒度也应不同。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " PATCH 接口复用创建 schema 做校验时，正确做法是？",
+      "options": [
+        "照抄一遍",
+        "从同一基 schema 派生 .partial()（全部可选）并按需再收紧（id 类字段禁改），保持\"一个事实源\"——手抄第二份的那天就是两规则分叉的开始",
+        "不校验 PATCH",
+        "前端控制即可"
+      ],
+      "answer": 1,
+      "explanation": "create/update 规则共享基座是 schema 复用的第一场景；z.object().pick/omit/partial 就是为这个姿势设计的。"
     }
   ]
 }

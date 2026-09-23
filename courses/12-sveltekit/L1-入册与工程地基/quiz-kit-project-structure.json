@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "types/、output/ 都是按 routes 现状派生的生成物，删了重跑即恢复；手改生成物=下次 sync 全灭+事故溯源地狱（L9 internals 会解剖它的 manifest 产物）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 想把 ~/components 指到 src/lib/components，正确配置位置是？ ",
+      "options": [
+        " vite.config.js 的 resolve.alias 唯一可行 ",
+        " svelte.config.js 的 kit.alias（它会同时喂给 Vite 与 TS） ",
+        " tsconfig.json 的 paths 手写后 Kit 自动感知 ",
+        " jsconfig.json 的 imports "
+      ],
+      "answer": 1,
+      "explanation": " kit.alias 是官方入口，Kit 会把别名同步给 Vite 与类型系统；$lib 本身就是 kit.alias 的默认值，可改可加。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " src/app.html 的定位是？ ",
+      "options": [
+        " 每个页面的外壳模板，含 %sveltekit.head% 等占位符 ",
+        " 仅开发期生效的调试页 ",
+        " 构建产物的一部分，不能手改 ",
+        " 等价于 +layout.svelte "
+      ],
+      "answer": 0,
+      "explanation": " app.html 是 SSR 输出 HTML 的骨架模板，%sveltekit.head%/%sveltekit.body% 是注入点；全局 meta、字体预加载、noscript 都在这里改。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 关于项目里的 .env 文件，正确的说法是？ ",
+      "options": [
+        " 生产运行时自动加载 ",
+        " 由 Vite 在构建/开发时读取，只有约定前缀且未被标记 private 的变量才会进客户端 ",
+        " 内容会原样提交进 git ",
+        " 只能放数据库连接串 "
+      ],
+      "answer": 1,
+      "explanation": " .env 走 Vite 加载与 $env 静态替换管线：默认暴露给客户端需非 private 命名空间，public 前缀才安全进 bundle；生产运行时读取要 dotenv 或平台注入。 "
     }
   ]
 }

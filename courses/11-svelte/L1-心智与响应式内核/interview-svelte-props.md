@@ -1,6 +1,6 @@
 # svelte-props 面试题精选
 
-> 共 12 题，覆盖 A 声明与只读 / B 通信（上传/双向）/ C 内容与透传 / D 对照与最佳实践。
+> 共 15 题，覆盖 A 声明与只读 / B 通信（上传/双向）/ C 内容与透传 / D 对照与最佳实践。
 
 ## 一、声明与只读（A 类）
 
@@ -57,3 +57,25 @@ props 是 getter，读到才建立依赖，未读不影响；但把大对象作�
 ### 12. 为什么不建议用 `$effect` 去"同步 props 到本地 state"？
 多数情况下直接把 prop 用于渲染即可，无需镜像到本地 `$state`；用 effect 同步会产生额外一轮渲染与"陈旧一帧"。只有确需"以 prop 为初值的独立可编辑副本"时才在初始化处 `$state(prop)`，而非用 effect 持续拷（呼应 svelte-reactive-runes 第九题、react 反模式）。
 **来源**：Svelte 官方文档 — you shouldn't need an effect to sync props
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Svelte 5 的 props 是"单次同步"还是"响应式持续"？$bindable 双向在编译器层如何实现？
+
+响应式模型：$props() 返回的是"live 对象"，解构出的变量在父更新对应 prop 时会被编译器同步刷新（不是只在初始化拿一次）——这是相对 Svelte 4 的关键改进（4 里解构会断链、要 export let + $: 或 rest）。$bindable 的实现：子组件把某 prop 声明为 $bindable()，父用 bind:x={state} 绑定；子内部对该变量赋值时，编译器生成的 setter 会回写父的 state（形成"父传值 + 子可回写"的双向）——本质是父把自己的 signal 访问器交给子，子写的是父的 signal。与 Vue v-model 对比：Vue 用 modelValue prop + update:modelValue 事件（显式一对），Svelte 的 bind: 是"同一变量的两端"（更贴近"共享 state"模型）；React 无内置双向，必手动 value+onChange（最显式）。工程红线：不要用 $effect 把 props 同步进本地 state（既有题的"不建议同步 props"），需要"以 prop 为初始值再本地可改"就用"受控/非受控二选一"或用 key 重置（{#key}）——$effect 同步会造成本地编辑被父覆盖的竞态。加分句：双向绑定看着省代码但把"数据流方向"变模糊，团队里应约定"默认单向、显式 bindable 才双向"，否则调试时找不出是谁改了谁（这是所有框架双向绑定的通病，不是 Svelte 特有）。
+
+**来源**：Svelte 5 $bindable 文档；runes props 响应式设计；$effect 与 props 同步反模式讨论
+
+### 14.  props 很多且含深层对象时，Svelte 的性能与心智要注意什么？
+
+性能面：① 深对象 prop 会被 $state 深代理包裹（若作为响应式消费），大对象代理成本随访问深度上升——纯展示的只读大数据考虑 $state.raw 或干脆不做响应式（只在引用变化时更新，呼应 props 关"props 很多/深层对象性能"既有题）；② 解构 live 对象是浅响应——嵌套字段访问要经过代理，"传整个 config 对象只用两个字段"会让无关字段变化也参与依赖，宜拆细粒度 prop 或在子内 $derived 精确取用。心智面：③ props 是只读契约（要子改父用回调/bindable），把"我要改它"的字段设计成事件或 bindable 而非偷偷本地改；④ children/snippet 通道与 props 通道的选型——静态内容用 children、要回传数据给父决定渲染用带参 snippet（对应 props 关"三通道"既有题）。反模式：用一个巨型 props 对象承载整个页面状态（等于关掉细粒度响应，退化成"什么都重渲染"）——Svelte 的优势恰在细粒度，prop 拆得合理才能享受。加分句：prop 设计的质量在"变更频率与相关性"——同一 prop 里的字段应"一起变、一起读"，把不同变化节奏的字段塞一个对象是性能与可读性的双重税。
+
+**来源**：Svelte props 性能讨论；fine-grained reactivity 与深代理成本；snippet children 文档
+
+### 15.  未声明的额外属性透传（rest props 到根元素）在封装组件时怎么用？事件类 prop 与回调类 prop 的边界？
+
+透传机制：Svelte 5 里"未在 $props() 声明"的属性不会自动消失，可用 rest 收集（let { children, ...rest } = $props()）再 {...rest} spread 到根元素，或 Svelte 的残余属性行为把未知属性透传（对应 spread-rest 关整组题）——封装 Button/Input 时这是"不把 aria-*/data-* 吞掉"的关键（可访问性属性必须能透到真实控件）。事件类 vs 回调类：onclick={fn} 是原生事件 prop（会真的 addEventListener 到根 DOM，且能被 rest 透传/被 spread 覆盖），而 onCustomEvent={fn} 之类"自定义回调 prop"不是 DOM 事件、只是普通函数属性（子手动调用）——两者都写 on 开头但语义完全不同（onclick 走 DOM 事件路径、onSubmit 走你自定义调用），混淆会导致"以为挂了其实没挂"。设计约定：封装组件对外接口要么用原生事件名（走 DOM）、要么明确文档"这是回调 prop 非事件"；混合时用 rest 透传原生事件 + 显式声明回调。加分句：这道题的隐藏考点是"封装组件的属性完整性"——一个好的 UI 原语必须让父能无障碍地塞进 aria/role/data/原生事件，否则下游要么包一层 div（破坏布局）要么放弃（可访问性债），这在设计系统里是硬指标。
+
+**来源**：Svelte 5 spread / $$restProps 文档；事件 prop onclick 语义；可访问性透传实践

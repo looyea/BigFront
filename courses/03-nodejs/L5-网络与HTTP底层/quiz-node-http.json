@@ -7,20 +7,25 @@
       "type": "single",
       "prompt": "在裸 http 服务器里，req 和 res 分别是什么？",
       "options": [
-        "都是普通对象",
         "req 是 IncomingMessage（读流），res 是 ServerResponse（写流）",
+        "都是普通对象",
         "req 是写流、res 是读流",
         "都是 Promise"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "req 承载请求行/头/体是 Readable，res 用 write/end 输出是 Writable（呼应 node-http 第一节、node-streams）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "如果 handler 里既不调 res.end() 也不报错，客户端会怎样？",
-      "options": ["立刻收到 200", "请求一直挂着直到超时", "自动 404", "进程退出"],
-      "answer": 1,
+      "options": [
+        "立刻收到 200",
+        "自动 404",
+        "请求一直挂着直到超时",
+        "进程退出"
+      ],
+      "answer": 2,
       "explanation": "没有 end 就不会结束响应，连接挂起——这正是 Express async 路由忘记响应会『挂住请求』的底层机制（呼应 node-async-errors 第五节、node-http 第一节）。"
     },
     {
@@ -29,11 +34,11 @@
       "prompt": "req.url 的内容是？",
       "options": [
         "完整 URL 含 https://host",
-        "只有相对路径 + query（如 /users/42?x=1），无协议无主机",
         "只有 pathname",
-        "空字符串"
+        "空字符串",
+        "只有相对路径 + query（如 /users/42?x=1），无协议无主机"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "req.url 是请求行里的相对形式，要 new URL 解析必须补 base（呼应 node-http 第二节、node-path-url 第 7 题）。"
     },
     {
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "fetch 是 WHATWG 标准全局 API，最简洁；需要底层控制/特殊场景再用 http(s).request（呼应 node-http 第六节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Node 18+ 的 http.Server 默认 keepAliveTimeout 与 headersTimeout 的组合行为是：",
+      "options": [
+        "永久保持",
+        "keepAlive 空闲 5s 后服务端主动关；headersTimeout 60s 内没收到完整请求头即 408——两者共同防空闲占用与慢头攻击，且都可在 server 上覆写",
+        "默认 0 不保持",
+        "仅 HTTP/1.0 生效"
+      ],
+      "answer": 1,
+      "explanation": "5s 刻意小于常见 LB idle（如 ALB 60s）避免「竞态断连」502（本关 keep-alive 题的运维面）；requestTimeout 另管「整请求收完」，三者配套调。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "用 writeHead 设置状态码后再 setHeader，结果是：",
+      "options": [
+        "正常追加",
+        "setHeader 无效/报错——头已「发潮」；writeHead 只是把状态与头批量写入并标记，之后 res.flushHeaders 或首次 write 真正上线",
+        "自动合并",
+        "仅 debug 模式允许"
+      ],
+      "answer": 1,
+      "explanation": "headersSent 是单向门；「先发 100-continue/自定义信息响应再发正式头」需要 writeEarlyHints/flushHeaders 时序设计（本关 writeHead 家族题的边界）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "收到 100-continue 期望的请求时，裸 http 服务器的正确姿势是：",
+      "options": [
+        "忽略",
+        "监听 checkContinue 事件，决定是否接受：接受则 res.writeContinue()（或直接首次 write 自动发），拒绝则直接回 4xx 不读 body",
+        "回 101",
+        "关闭 socket"
+      ],
+      "answer": 1,
+      "explanation": "大上传前的「先问再传」协议位；Node 默认在收到 body 或首次 write 时自动补发 100——显式处理才能在大 body 前做鉴权拒收省带宽（本关 body 大小题的前置防线）。"
     }
   ]
 }

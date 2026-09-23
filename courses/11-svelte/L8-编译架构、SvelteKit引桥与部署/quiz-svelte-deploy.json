@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "没有框架级 HTML 所有权之争（Kit 才关心整页），mount 到哪、资源从哪加载就是全部集成面——这也是 L10 Web Components 路线的前置语境。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 纯 Svelte 项目（不选 Kit）生产构建用什么产出 dist？",
+      "options": [
+        "svelte 命令行直接出 dist",
+        "通常以 Vite 打包（vite-plugin-svelte）执行 vite build 产出 dist——Svelte 只编译组件，打包/产物归 Vite（对应既有\"纯 Svelte 执行什么构建\"题）",
+        "webpack 强制",
+        "不需要构建"
+      ],
+      "answer": 1,
+      "explanation": "纯 Svelte 应用 = Vite + vite-plugin-svelte（10-vite 与 11-svelte 在此汇合，呼应 deploy 终题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 应用部署在子路径 /console/ 下，刷新子路由 404 且资源路径错，通常要改什么？",
+      "options": [
+        "只改 nginx",
+        "构建 base（Vite base / Kit paths.base）对齐子路径 + 服务端 history 回退到该子路径的 index.html——两处都要配（对应既有\"子路径部署\"题）",
+        "重命名路由",
+        "改用 hash 路由唯一解"
+      ],
+      "answer": 1,
+      "explanation": "资源前缀（base）与路由回退是两件事都要处理（呼应 vite-deploy 的 base/history 双题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 纯 Svelte SSR 应用相比静态 SPA，部署上必然多出什么？",
+      "options": [
+        "什么都不多",
+        "常驻 Node（或 serverless）运行时来跑服务端渲染进程（不能用纯静态托管），以及相应的进程/健康检查/伸缩（对应既有\"部署形态差异\"题）",
+        "只要 CDN",
+        "只要 Docker"
+      ],
+      "answer": 1,
+      "explanation": "SSR = 需要能执行 JS 的服务端，部署从文件柜变应用（与 vite-deploy 同结论）。"
     }
   ]
 }

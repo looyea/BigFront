@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "CSS Modules 文件命名规则是什么？",
       "options": [
-        "Component.css",
         "Component.module.css",
+        "Component.css",
         "Component.scoped.css",
         "*.css 自动全部 module 化"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "只有 *.module.css（或 .scss/.less）才被当作 CSS Modules → 类名自动 hash → 作用域隔离。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "css.preprocessorOptions.scss.additionalData 的作用是？",
       "options": [
         "添加全局 CSS 变量",
-        "在每个 SCSS 文件顶部自动注入代码（如 @use 导入变量）",
         "编译后追加 CSS",
+        "在每个 SCSS 文件顶部自动注入代码（如 @use 导入变量）",
         "设置 sass 编译器选项"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "additionalData 在每个 .scss 编译前 prepend 字符串 → 免去每个文件手动写 @use \"@/vars\"。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "生产构建时 CSS 默认怎么处理？",
       "options": [
         "内联到 JS 里",
-        "提取成独立 .css 文件 + minify",
         "不处理原样输出",
-        "转成 Tailwind"
+        "转成 Tailwind",
+        "提取成独立 .css 文件 + minify"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "build 时 Rollup 提取所有 CSS → 独立文件 + Lightning CSS minify + contenthash → <link> 引用。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "Tailwind 本质是 PostCSS 插件 → 写在 postcss.config.js 里 → Vite 内置 PostCSS pipeline 处理。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " Tailwind CSS v4 在 Vite 项目里的推荐接入方式是？",
+      "options": [
+        "postcss.config.js 里挂 tailwindcss 插件",
+        "官方 @tailwindcss/vite 插件——v4 架构下走原生 CSS 层叠与 @theme 配置，不再需要 postcss 配置文件与 tailwind.config.js（v3 才走 PostCSS 插件路线）",
+        "CLI 单独 watch",
+        "webpack  loader"
+      ],
+      "answer": 1,
+      "explanation": "两代接入方式的差异是 v4 迁移的第一道认知坎：引擎重写为 Rust（Oxide）后 PostCSS 依赖被剥离。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " CSS 原生 @layer 的作用是？",
+      "options": [
+        "代码折叠注释",
+        "层叠层级声明——后声明的层优先于先声明的层，用于显式管理 reset/库/组件/工具的覆盖秩序，是 !important 文化病的结构化解药",
+        "模块作用域",
+        "媒体查询嵌套"
+      ],
+      "answer": 1,
+      "explanation": "作用域解决了\"选不中\"，@layer 解决\"选得中但比不过\"——两代 CSS 组织问题的正交解法。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 组件库里导入一个全局样式入口（import ./global.css）后 dev 生效、build 后出现样式覆盖错序，常见根因是？",
+      "options": [
+        "浏览器兼容",
+        "CSS 在不同 chunk 的注入/拆分顺序与模块 import 顺序不严格同构（懒加载 chunk 的 CSS 晚插入即后来居上）——库的全局样式与入口样式边界要显式排列或分离产物",
+        "Vite bug",
+        "缓存污染"
+      ],
+      "answer": 1,
+      "explanation": "\"后插入的 CSS 赢\"是层叠默认行为——样式冲突在拆分后爆发，是 code splitting 的 CSS 侧暗面。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " preprocessorOptions 配 postcss: false 的语义是？",
+      "options": [
+        "禁用所有 CSS 处理",
+        "跳过 PostCSS 转换（该预处理器输出的 CSS 不再走根 postcss 配置），用于避免重复处理或加速——内置的 CSS 转换（minify/嵌套降级）不受此开关影响",
+        "禁用 CSS Modules",
+        "只禁用 autoprefixer"
+      ],
+      "answer": 1,
+      "explanation": "Vite 的 CSS 处理是分层的（预处理器→PostCSS→内置 transform），该开关精确摘除中间一层。"
     }
   ]
 }

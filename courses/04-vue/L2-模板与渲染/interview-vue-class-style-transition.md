@@ -1,6 +1,6 @@
 # vue-class-style-transition 面试题精选
 
-> 共 12 题，覆盖 class/style 绑定 / Transition 机制 / TransitionGroup 与 FLIP / 工程实践 四类。
+> 共 15 题，覆盖 class/style 绑定 / Transition 机制 / TransitionGroup 与 FLIP / 工程实践 四类。
 
 ---
 
@@ -89,3 +89,25 @@ FLIP = First-Last-Invert-Play：记录移动前位置(First)，DOM 更新后量�
 在 `<Transition>` 的 `@enter`/`@leave` 钩子里调用库创建动画，并在库的完成回调里调用 Vue 给的 `done()`，Vue 才会认为结束并清理。复杂时序、缓动、SVG/多属性联动是 CSS 难以表达的，故走 JS 钩子（呼应 vue-class-style-transition 第四节）。
 
 **来源**：Vue.js — "JavaScript Hooks & Animation Libraries"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 父组件给子组件根元素传 class，子组件自己也有 class，还有子组件内部再合并的动态 class——三者的合并规则与隔离边界？
+
+Fallthrough 的 class/style 是 **合并 不 覆盖**（同 一 元素 上 父 传 + 子 自身 class 拼接，去重 交给 浏览器）；但 合并 只 发生 在「子 组件 **单 根 且 根 是 元素**」时——多根/fragment 根 会 警告 并 丢 属性（要 手动 `:class="$attrs.class"` 指定 落点，本关 多根 题 的 机制 面）。隔离 边界：scoped style 下 父 的 类 作用 到 子 根 元素 是 **允许 的**（子 根 同时 带 父 作用域 哈希），但 父 想 精准 打击 子 **内部** 元素 只能 靠 ① 子 暴露 的 props/类名 契约 ② :deep() 选择器——:deep 是 打破 封装 的 借 刀 口，业务 样式 里 出现 它 说明 组件 API 设计 缺 了「样式 挂钩 点」这一 层（命名 类 契约 优于 :deep）。
+
+**来源**：Vue 文档《Attribute Inheritance》class/style 合并规则；scoped 样式与 :deep 使用边界官方说明。
+
+### 14. 过渡时长判定：Vue 怎么知道 CSS transition/animation 结束了？主动删除元素会出什么问题？
+
+getTransitionInfo 解析 **computed style**：transition 取 最长 delay+duration，animation 取 duration+iteration，多 个 属性 并 存 时 取 更 长 者；然后 监听 transitionend/animationend 且 校验 `event.target === el` 且 propertyName 匹配（防 子 元素/无关 属性 冒泡 提前 结束）。监听 的 代价：事件 丢 发（标签 页 挂起、display 突变）→ 元素 永远 留 在 DOM（「关 不掉 的 弹窗」真 根因 之一），所以 提供 `:duration="{ enter: 300, leave: 200 }"` 显式 兜底 与 when 属性。主动 删（remove 节点/v-if 直 接 翻）绕过 了 过渡 状态机：leave 钩子 不 跑、nextTick 里 的 清理 逻辑 悬空——「动画 库 配 Vue」正解 是 让 Vue 管 增删 时机（onBeforeLeave/onLeave 里 交给 GSAP，done() 回调 交还 控制 权，本关 JS 钩子 题 的 完整 闭环）；nextOuter 场景 用 `<Transition>` 包 路由 视图 时 别 在守卫 里 手动 操作 DOM。
+
+**来源**：Vue 源码 runtimeTransition/nextFrame 与 getTransitionInfo 注释；官方过渡文档《JavaScript 钩子》done 回调协议。
+
+### 15. 动画的性能账本：哪些属性可以安全高频动画化？列表 FLIP 为什么必须配 transform 而不是 top/margin？
+
+合成 友好 名单：transform/opacity/filter（不进 layout/paint，直接 走 合成器，主线程 卡 也 不 掉 帧）；几何 属性（width/height/top/left/margin）每 帧 触发 layout→重排 传染 全 页——FLIP 的 精妙 正 在 此：First-Last-Invert-Play 把「位置 变化」换算 成 起点 的 `transform: translate/scale` 再 播 回 零，用 合成 层 动画 模拟 布局 动画。工程 红线：① will-change 只 在 动画 前 挂、结束 摘（常驻=合成层 爆炸 吃 显存）；② 大量 元素 同时 动画（TransitionGroup 长 列表）要 限制 并发（窗口 外 的 项 跳过，本包 性能 关 虚拟 列表 的 动画 分支）；③ prefers-reduced-motion 媒体 查询 给 无障碍 降级（动画 是 前庭 障碍 用户 的 生理 不适 源）；④ Vue 的 FLIP 实现 依赖 精确 getBoundingClientRect（Invert 阶段 强制 同步 布局），列表 越大 单 帧 测量 越 贵——这是「FLIP 不是 免费」的 账。
+
+**来源**：MDN 合成层/prefers-reduced-motion；Flip the Grid（Paul Lewis）FLIP 技术文章与 Vue TransitionGroup move-class 实现。

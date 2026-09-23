@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "页面内容在布局文件里通过哪个元素注入？",
-      "options": ["<NuxtPage />", "<slot />", "<router-view />", "<Outlet />"],
+      "options": [
+        "<NuxtPage />",
+        "<slot />",
+        "<router-view />",
+        "<Outlet />"
+      ],
       "answer": 1,
       "explanation": "布局是普通组件，页面作为默认插槽内容注入 <slot/>；<NuxtPage/> 是页面嵌套子路由用的（呼应 nuxt-layouts 第 1 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "根据登录状态在运行时切换 admin/user 布局，正确写法是？",
-      "options": ["definePageMeta({ layout: computed(...) })", "nuxt.config 里按 cookie 配默认布局", "页面内 <NuxtLayout :name=\"cond ? 'admin' : 'user'\">（并防双套）", "刷新页面后 meta 会重新求值"],
+      "options": [
+        "definePageMeta({ layout: computed(...) })",
+        "nuxt.config 里按 cookie 配默认布局",
+        "页面内 <NuxtLayout :name=\"cond ? 'admin' : 'user'\">（并防双套）",
+        "刷新页面后 meta 会重新求值"
+      ],
       "answer": 2,
       "explanation": "definePageMeta 是编译期宏不接受运行时值；动态布局用 NuxtLayout 组件包裹表达（呼应 nuxt-layouts 第 2 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "从 /admin/1 导航到 /admin/2，admin 布局会发生什么？",
-      "options": ["保持存活不重新挂载——布局内一次性数据不会随参数刷新", "整个重建一次", "先卸载再挂载并触发过渡", "取决于 layout:key 配置，默认重建"],
+      "options": [
+        "保持存活不重新挂载——布局内一次性数据不会随参数刷新",
+        "整个重建一次",
+        "先卸载再挂载并触发过渡",
+        "取决于 layout:key 配置，默认重建"
+      ],
       "answer": 0,
       "explanation": "同名布局跨页切换实例存活是设计使然，响应式共享状态应放 store 而非布局局部数据（呼应 nuxt-layouts 第 3 节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "app/layouts/console/billing.vue 的布局名是？",
-      "options": ["billing", "console/billing", "console-billing", "layouts 不支持子目录"],
+      "options": [
+        "billing",
+        "console/billing",
+        "console-billing",
+        "layouts 不支持子目录"
+      ],
       "answer": 2,
       "explanation": "子目录段拼进名字（连字符连接），<NuxtLayout name=\"console-billing\"> 引用（呼应 nuxt-layouts 第 4 节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "让某一个页面完全不套任何布局，做法是？",
-      "options": ["app.vue 里对它特判", "删掉 default.vue", "definePageMeta({ layout: false })", "给它配 blank 布局即可（这就是脱壳）"],
+      "options": [
+        "app.vue 里对它特判",
+        "删掉 default.vue",
+        "definePageMeta({ layout: false })",
+        "给它配 blank 布局即可（这就是脱壳）"
+      ],
       "answer": 2,
       "explanation": "layout:false 单页脱壳；blank 只是空皮肤，仍是布局实例（呼应 nuxt-layouts 第 1 节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "全站共享的菜单树数据，推荐的初始化位置是？",
-      "options": ["default.vue 布局里 useFetch", "每个页面各自取一份", "app.vue 顶层 await 后 provide 字符串", "Nuxt 插件里拉取 + Pinia/useState 存放，布局与页面消费 store"],
+      "options": [
+        "default.vue 布局里 useFetch",
+        "每个页面各自取一份",
+        "app.vue 顶层 await 后 provide 字符串",
+        "Nuxt 插件里拉取 + Pinia/useState 存放，布局与页面消费 store"
+      ],
       "answer": 3,
       "explanation": "插件负责应用级初始化、store 负责跨组件共享，布局只是消费方——职责三件套（呼应 nuxt-layouts 第 5 节、nuxt-state）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "需要\"两层布局\"（外层控制台壳+内层计费壳），Nuxt 的官方姿势是？",
-      "options": ["内层布局文件里再包 <NuxtLayout name=\"外层\">", "Nuxt 不支持，只能改组件", "definePageMeta 写数组 layout: ['console','billing']", "用 route rules 分层"],
+      "options": [
+        "内层布局文件里再包 <NuxtLayout name=\"外层\">",
+        "Nuxt 不支持，只能改组件",
+        "definePageMeta 写数组 layout: ['console','billing']",
+        "用 route rules 分层"
+      ],
       "answer": 0,
       "explanation": "布局是组件，组件可以互相包裹——与 Next 自动段嵌套不同，这里要手写一层（呼应 nuxt-layouts 第 4 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 同名布局在 /a 与 /b 两页间切换时，布局组件的默认行为是？",
+      "options": [
+        "销毁重建，跑完整挂载流程",
+        "不重建（布局以名字为 key，同名复用实例）——菜单高亮等内部状态得以存活，但也因此\"想靠重新挂载刷新布局数据\"要自己做",
+        "每次都会重建",
+        "取决于页面是否 keepalive"
+      ],
+      "answer": 1,
+      "explanation": "布局切换的账以\"名字\"为界：同名不重建、异名整体重建（连页面一起）——两个方向各有经典 bug。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 登录页要求完全无壳独立渲染，最规范的写法是？",
+      "options": [
+        "写个空白布局文件",
+        "definePageMeta({ layout: false })——单页摘掉布局；全站默认壳仍走 app.vue/默认布局，别为个例污染全局",
+        "v-if 在布局里排除登录页",
+        "routeRules 配 ssr:false"
+      ],
+      "answer": 1,
+      "explanation": "页面级声明优于全局条件分支：布局里的\"排除某页\"v-if 会随例外增多变成意大利面。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 需要在 admin 布局内再套一层\"计费中心子壳\"，官方支持的做法是？",
+      "options": [
+        "layouts/admin/billing.vue 自动嵌套",
+        "把内层壳做成普通组件包住 <NuxtPage/>，在 admin 布局里经具名插槽或子路由渲染——官方 layouts 只有一层",
+        "layout: [admin, billing] 数组声明",
+        "用两个 app.vue"
+      ],
+      "answer": 1,
+      "explanation": "Nuxt 的 layouts 是扁平单层的，\"嵌套壳\"的正解是父页面+<NuxtPage/> 出口——布局管\"角色壳\"、父页面管\"功能区壳\"。"
     }
   ]
 }

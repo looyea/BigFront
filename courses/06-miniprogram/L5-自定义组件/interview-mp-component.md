@@ -1,6 +1,6 @@
 # mp-component 面试题精选
 
-> 共 12 题，覆盖 A 组件基础 / B properties 机制 / C 样式与查询 / D 跨框架对照与工程。
+> 共 15 题，覆盖 A 组件基础 / B properties 机制 / C 样式与查询 / D 跨框架对照与工程。
 
 ## 一、组件基础（A 类）
 
@@ -57,3 +57,25 @@ styleIsolation 定"内外影响方向"（isolated/apply-shared/shared/page 四�
 ### 12. 组件库（如自研 UI kit）在小程序生态里分发，工程上要考虑什么？
 npm 构建支持（工具"构建 npm"生成 miniprogram_npm）、组件 paths 与分包配合（组件也可进分包，随分包页走）、版本升级的多页面 usingComponents 维护（全局登记 vs 页面登记）、按需引入体积（mp-subpackage、mp-framework 的组件库方案，呼应 node-publish 的发布工程）。
 **来源**：vant-weapp 官方使用文档；《小程序 npm 组件开发》指南
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  properties 与 data 有什么区别？各自的更新方式、以及"组件内想加工父传来的值"该怎么做？
+
+data 是组件私有状态，只能用 this.setData 改并触发本组件渲染；properties 是从父接收的"外部输入"，父通过标签属性驱动、子原则上不应直接改（改父传来的属性会打断单向数据流、父下次传值又覆盖）。加工父值（如分转元、格式化）三种正解：① 用 properties 的 observer，在值变化时算出派生结果写进组件自己的 data（priceYuan），模板显示派生字段，别改原 prop；② 用 wxs 在渲染层就地格式化，省一次 setData；③ properties 的 value + observer 组合做校验/兜底。切忌子里 `this.properties.x = ...` 或 setData 改 prop 当己用。这与 React"别 mutate props、派生用 useMemo/state"同构。
+
+微信官方文档《自定义组件》；掘金《properties/data/observers 三件套设计笔记》
+
+### 14.  options.styleIsolation、addGlobalClass、externalClasses 分别在管什么？组件样式隔离怎么破？
+
+styleIsolation 控组件样式与页面/父样式的互相影响边界：isolated（默认，组件样式不外泄、外部（除 class 传递）也不侵入）、apply-shared（页面影响组件）、shared（互相）；addGlobalClass:true 允许 app.wxss 等全局类作用到组件内（牺牲隔离换公共样式复用，如全局原子类）；externalClasses 是"把某个内部节点 class 作为可配置插槽暴露给父"——父传一个自己在页面里定义的类名进来套到指定节点，既保持隔离又留了定制口（比放开 styleIsolation 更克制）。破隔离优先级：优先 externalClasses（点状定制）> addGlobalClass（复用全局工具类）> 最后才 shared（面状、易污染）。这与 Vue scoped + ::v-deep、CSS Modules 的"默认隔离 + 显式穿透"是同一治理哲学。
+
+SegmentFault《组件外部样式类与样式穿透的正确姿势》；知乎《小程序组件与 Vue 组件 API 设计对照》
+
+### 15.  页面 vs 组件是什么关系？把"商品卡片"用原生小程序/Vue/React 各写一遍，接口设计上哪些是共通的？
+
+页面本质是一个特殊的、注册在 pages 路由里的"根组件"（有自己的生命周期与 WebView），Component() 造的才是可复用组件——Page 与 Component 共享数据/setData/查询等能力，差别在 Component 多了 properties/slots/observers/behaviors/externalClasses、生命周期是 created/attached/ready/detached。共通的部分（跨三家不变）：① 明确"向下数据"契约（props：入参、类型、默认值、只读）；② 明确"向上事件"契约（emit 什么事件、带什么载荷）；③ 可选"内容插槽/children"扩展点；④ 内部自管的派生与状态；⑤ 样式隔离策略。差异只在语法：小程序 properties+triggerEvent+slot，Vue props+emits+slot，React props+回调+children。能把同一卡片在三栈里对齐讲清，就是"组件思维"而非"框架思维"的证明。
+
+CSDN《组件 slot 与多内容插入实战》；InfoQ《从业务组件库看小程序组件抽象边界》

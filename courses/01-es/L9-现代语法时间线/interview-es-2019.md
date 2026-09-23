@@ -85,3 +85,21 @@ console.log(arr);
   ```
   **追问 1**：只保留 value 为偶数的键？→ 在 map 前加 `.filter(([, v]) => v % 2 === 0)`。**追问 2**：这套「entries → 变换 → fromEntries」为什么优于 for 循环？→ 可组合、无中间可变对象、契合函数式风格。
 - 来源：MDN Object.fromEntries/entries；GreatFrontEnd 手写题；TC39(ES2019)。
+
+---
+
+**13）Array#sort 稳定性在 ES2019 被强制，之前的世界什么样？V8 做了什么？**
+- 参考要点：旧规范只要求「排序正确」不承诺相等元素相对顺序——各引擎对 >10 长度数组用不稳定快排，「按分数排完名字乱序」的 bug 无法复现修复。ES2019 起必须稳定：V8 把 Array#sort 从 QuickSort 整体换成 **TimSort**（归并+二分插入，O(n log n) 且稳定，小数组插入排序），代价是额外内存。前端意义：多级排序 = 先排次要键再排主键即可（稳定保证前键次序）。
+- 来源：v8.dev《Array.prototype.sort() has a new home: TimSort》；ECMA-262 ES2019 SortCompare 稳定条款。
+
+---
+
+**14）Object.fromEntries 解决什么问题？和 Map 的键值转换管线怎么写？**
+- 参考要点：entries 迭代器/Map 回填对象：`Object.fromEntries(map)`、过滤键值对 `Object.fromEntries(Object.entries(o).filter(([,v]) => v))`。对象「不适合做字典」的历史问题（键只能字符串、无顺序保证语义、原型链污染）让 Map 成为首选，fromEntries/entries 是两种结构的转换闸门。注意遍历序：Object 系 API 整数键永远排在最前按数值序，字符串键按插入序——Map 则严格插入序，混用时这是经典错位。
+- 来源：MDN《Object.fromEntries》；ECMA-262 OrdinaryOwnPropertyKeys 键序规定。
+
+---
+
+**15）可选 catch 绑定只是省变量名吗？well-formed JSON 解决了什么真实事故？**
+- 参考要点：catch {}：不消费异常时省掉 unused 参数，也避免 `catch (e)` 意外遮蔽外层同名变量；引擎侧少创建一个绑定对象。well-formed JSON.stringify 的事故原型：字符串按 UTF-16 code unit 截断（分页/分片上传切断 emoji 代理对）产生孤立 surrogate，stringify 后 JSON 里带 `�` 裸代理——下游 JSON.parse 在严格环境直接炸；修复后 stringify 输出替换符 U+FFFD，保证「stringify→parse」往返无损。配套：`isWellFormed/toWellFormed`（ES2024）做显式清洗。
+- 来源：tc39/proposal-json-superset 动机章节；MDN JSON.stringify「well-formed」说明。

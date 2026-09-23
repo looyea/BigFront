@@ -1,4 +1,4 @@
-# nuxt-state 面试题（12 题）
+# nuxt-state 面试题（15 题）
 
 ## A. 基础认知
 
@@ -67,3 +67,25 @@
 **答**：优点：每请求新建实例把"隔离"变成框架责任；useState 提供零配置的轻量共享，Pinia 官方模块自动水合，心智负担显著低于 React 阵营（后者要为水合、RSC 边界、缓存层分别选型）。代价：payload 全量导出 state，瘦身需要自觉；模型建立在"有一个 Node 长驻进程"之上，纯静态导出（ssr:false + prerender）或 Edge 场景下部分能力退化为客户端；跨请求共享缓存反而要做（要用 storage）。选型上：Vue 团队追求一致体验与交付速度，Nuxt 默认更安全；需要 RSC 细粒度服务端渲染、多租户 Edge 部署时 Next 的空间更大（呼应 nuxt-architect）。
 
 **来源**：《Vue 与 React 服务端形态对比》、《全栈框架的状态设计横评》
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Nuxt 的状态序列化（payload）有哪些隐藏成本？大对象/不可序列化值进状态怎么治理？
+
+成本清单：① 体积——payload 内联 HTML，每个可序列化状态都吃首字节与解析时间（大列表缓存进状态=首屏翻倍），要按 key 审计体积（payload 在 devtools/查看源码可见）；② 序列化边界——useState 只收"可 JSON 化"值，Map/Set/class 实例/File/函数进去水合后变形（文档明说），需要 Map 就存数组重建或放客户端专属 ref；③ 水合时机——payload 恢复发生在客户端创建实例时，"服务端写了个时间戳、客户端恢复后和 Date.now() 比对"这类逻辑天然带 mismatch；④ 不该序列化的混进来=泄露通道（服务端内部状态带用户维度，进 payload 给了浏览器）。治理：区分三层容器——进 payload 的（首屏必需、可序列化、无敏感）、客户端专属 ref/onMounted 态（浏览器 API 派生）、服务端专属（event context/useState 的服务端分支）；状态设计评审问"这个值需要跨到浏览器吗"，答不上来就不进 payload。工具链：payload 大小进 Lighthouse CI 预算。
+
+**来源**：Nuxt 官方 useState 限制说明；掘金《一个 Map 进 payload 引发的白屏》
+
+### 14.  Pinia store 的取数逻辑放 action、组件 setup 里 useFetch、还是 Nitro 层聚合？给一套决策框架。
+
+决策三问：① 这份数据几个页面/组件共享且要跨路由存活？是→store action（配 Nuxt 的 useAsyncData 在 action 内取数并 await，SSR 可调用）；否→组件 setup 的 useFetch 足够，store 会胖成垃圾场。② 首屏需要吗？需要→取数必须"服务端可执行"（store action 里 useAsyncData、或页面级 useFetch），客户端 fetch in onMounted 直接淘汰；不需要→lazy/客户端触发，store 只存"用户动作后的乐观态"。③ 多个上游要拼装裁剪吗？要→Nitro 层聚合（一个 /api/x 编排完，客户端拿到的就是视图形状）——把编排放 store 等于把 BFF 逻辑搬进浏览器，SSR 与 CSR 各编排一遍双份债。边界规矩：store 不直接 $fetch 外部 URL（密钥与 CORS 立刻缠上，走自家 server/api）；action 命名带来源（fetchX vs setX）；SSR 入口只有一个（插件或页面 await 填充）避免"两处初始化"竞态。
+
+**来源**：Pinia/Nuxt 官方文档各自立场；InfoQ《取数分层：三种归属的五年演化》
+
+### 15.  "用户登出/切换账号后页面闪现上个账号的数据"，从状态模型层面根治要动哪几处？
+
+先认知：这不只是体验 bug，是客户端状态没随会话清场的安全级缺陷（共享电脑场景=数据泄露）。残留点逐处清：① Pinia——登出 action 里 store.$reset()（state 回到初始化的前提：初始值别从服务端来）或 destroy 后重建 pinia 实例（激进但彻底）；② payload/数据层——clearNuxtData() 把 useFetch 缓存全清，否则下个用户水合命中旧 key；③ useState——没有选择性清除 API 的痛点，约定"状态 key 带用户维度后缀"或登出 location.reload() 一把梭（小站可接受要明说）；④ cookie/useCookie 逐项删（域/路径要和写入时一致否则删不掉，nuxt-cookie-control 类模块帮管清单）；⑤ 内存外——Service Worker 缓存、IndexedDB、keepalive 页面实例（route keepalive 的缓存要按会话键）。根治架构：会话身份进"数据 keys 前缀"（uid-scoped query key/存储路径），切换即天然隔离；登出流程写成单个 composable 清单化执行+e2e 用例锁（A 登录→登出→B 登录→全站断言无 A 数据），这条用例是防回归的唯一屏障。
+
+**来源**：SegmentFault《登出清场不清干净的五处残留》；知乎《SPA 状态残留与 XSS 后的会话劫持》

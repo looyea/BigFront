@@ -8,19 +8,24 @@
       "prompt": "Data Router 的 loader 什么时候执行？",
       "options": [
         "组件挂载后的 useEffect 里",
-        "在匹配该路由、渲染组件之前用于取数",
         "只在表单提交时",
+        "在匹配该路由、渲染组件之前用于取数",
         "每次任意 setState 时"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "loader 在进入路由前取数，组件拿到即就绪（呼应 react-router-data 第二、三节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "组件里如何拿到本路由 loader 返回的数据？",
-      "options": ["useLoaderData()", "useParams()", "useLocation()", "props.data"],
-      "answer": 0,
+      "options": [
+        "useParams()",
+        "useLocation()",
+        "props.data",
+        "useLoaderData()"
+      ],
+      "answer": 3,
       "explanation": "useLoaderData 同步返回 loader 结果（呼应 react-router-data 第三节）。"
     },
     {
@@ -28,12 +33,12 @@
       "type": "single",
       "prompt": "action 主要处理什么？",
       "options": [
-        "读取 URL 参数",
         "该路由上的写操作（POST/PUT），配 <Form method=post> 触发",
+        "读取 URL 参数",
         "缓存 GET 响应",
         "定义错误界面"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "action 处理数据变更（呼应 react-router-data 第四节）。"
     },
     {
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "路由级错误边界（呼应 react-router-data 第二节、react-render-control）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 在 Data Router 的 loader 里要把未登录用户「中止本次导航并跳登录」，正确写法是？",
+      "options": [
+        "return <Navigate/>",
+        "throw redirect(\"/login\")（或 return redirect）——loader 里抛 redirect 会中断当前数据加载并把导航重定向；组件/渲染产物不能从 loader 返回",
+        "调用 navigate(\"/login\")",
+        "window.location 跳转"
+      ],
+      "answer": 1,
+      "explanation": "loader 运行在渲染之前、不在组件上下文中，拿不到 useNavigate、也不能返回 JSX。重定向用从 react-router-dom 导入的 `redirect()`（throw 或 return 皆可）。这是 Data Router「路由级鉴权前移到数据层」的核心手法，取代 Vue 时代的 beforeEach。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " loader 返回的数据，组件默认怎么拿？跨路由/别的组件能直接读吗？",
+      "options": [
+        "任何组件用 useLoaderData 都能读到全部 loader 数据",
+        "useLoaderData 只返回「当前组件所匹配路由」自己 loader 的结果；要读祖先路由数据用 useLoaderData 的 {infer}/ 或 hook 参数定位，兄弟间不共享——共享要走 store 或再取一次",
+        "靠 props 自动注入",
+        "存在 window 上"
+      ],
+      "answer": 1,
+      "explanation": "loader 数据与「该 loader 所属的路由分支」绑定，不是全局缓存。嵌套路由里子组件用 `useRouteLoaderData(routeId)` 可读祖先 loader 数据，但两条平级路由的 loader 彼此不透明。这跟 Query 的「按 key 全局去重缓存」是两套模型——也正是「loader 之外还要不要 Query」的分界（见 data-fetching 关）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Data Router 的「defer + <Await>」主要解决什么问题？",
+      "options": [
+        "缓存列表",
+        "让一个 loader 里的慢字段不阻塞整页——快数据先渲染、慢字段以 Promise 延迟交付，组件用 <Await> 局部画骨架/错误，实现路由级流式渐进",
+        "自动重试失败请求",
+        "替代 action"
+      ],
+      "answer": 1,
+      "explanation": "defer 把「必须等最慢请求」的瀑布变成「先出首屏、慢区局部 loading」：<Suspense> + <Await resolve={slowPromise}> 兜住未决 Promise。它与 React 的 Suspense 流式 SSR 一脉相承，适合详情页里「正文快、评论/推荐慢」的常见形态。注意 defer 只处理渲染编排，缓存/去重仍不是它的职责。"
     }
   ]
 }

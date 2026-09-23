@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "intro 动画只属于'新挂载'路径；SSR/水合首屏的节点被视为已存在，按设计跳过进场动画以避免闪烁——这是特性不是 bug。需要首屏补播时，用 action 形态手动播（见 svelte-actions 第二节的 use:fly 手法）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte 5 中与旧 onDestroy 等价的现代写法是？",
+      "options": [
+        "onDestroy()",
+        "$effect 返回的清理函数（effect 重跑前/组件销毁时调用）取代了 onDestroy/beforeDestroy 等生命周期钩子",
+        "onUnmounted()",
+        "use:destroy"
+      ],
+      "answer": 1,
+      "explanation": "runes 时代用 $effect 的 cleanup 承担销毁逻辑（对应既有\"为何移除 onDestroy\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " count++ 之后需要\"等 DOM 更新完成再读元素尺寸\"，最该用？",
+      "options": [
+        "setTimeout",
+        "await tick() —— 等到本轮所有状态变更反映到 DOM 后再继续，是\"读 DOM 前确保已更新\"的标准工具（对应既有\"DOM 更新后读尺寸\"题）",
+        "flushSync 一定",
+        "requestAnimationFrame"
+      ],
+      "answer": 1,
+      "explanation": "tick() 是 Svelte 的\"DOM 已同步\"屏障（flushSync 是同步强制更新的另一选择，但读尺寸场景 tick 更通用）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 服务端渲染（SSR）期间，下列哪项不会执行？",
+      "options": [
+        "组件 <script> 顶层的普通计算",
+        "onMount 与 $effect（它们绑定 DOM 与客户端），SSR 只跑非 mount 依赖的顶层代码（对应既有\"SSR 期间哪项会执行\"题）",
+        "纯函数调用",
+        "常量初始化"
+      ],
+      "answer": 1,
+      "explanation": "onMount/$effect 是客户端专属（SSR 无 DOM），这是\"浏览器 API 要放 onMount/effect\"的根因（呼应 lifecycle SSR 题）。"
     }
   ]
 }

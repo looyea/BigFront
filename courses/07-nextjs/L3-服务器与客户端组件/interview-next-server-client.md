@@ -1,4 +1,4 @@
-# next-server-client 面试题（12 题）
+# next-server-client 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎、InfoQ 等站点 React Server Components 高频面经，中文重述。
 
@@ -65,3 +65,19 @@ Payload 与 HTML 均可按路由/参数键缓存，这就是 Router Cache 与服
 **12. 设计题：给一个电商详情页画 RSC/客户端边界与 Suspense 边界草图。**
 **来源**：掘金《详情页组件分层实战》
 参考骨架：页面（Server，并发取商品/评价计数）→ 主图/标题/价格（Server，进 Payload）→ 规格选择器+加购（Client 岛，重交互）→ 评价列表（Server + Suspense，慢查询流式补）→ 推荐位（Server + 独立 Suspense/错误边界）→ 实时库存（Client 小片轮询或流式动态槽）。评分点：边界下推、慢源隔离、交互局部化三原则全部体现（呼应 mp-openapi 的页面自治同理）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  RSC 的"不下发代码"在 Next 工程里真正改变的是哪两件事？会带来什么新风险？**
+**来源**：InfoQ《RSC：React 的第二次架构分裂》；Next.js 官方文档 Composing Components / Server-side data fetching 安全说明
+① 依赖预算从"全站公地"变"分区记账"：SPA 时代所有 import 都进客户端 bundle，npm 体积是公共悲剧；RSC 下服务端组件的依赖只影响服务端产物，首屏 JS 只算客户端岛的账——于是 markdown 渲染、日期处理、图表服务端出图可以理直气壮留在服务端，客户端岛只带交互必需依赖。② 密钥与特权能力成为组件的合法依赖：直连数据库、读文件、持内部密钥不再需要隔一层 API。新风险镜像而生：一个客户端组件"顺手 import"了含密钥模块就会把它打包下发——"哪些代码允许进客户端图"成为新的安全评审面；防线是 server-only 包 + 目录约定 + ESLint boundaries；同时团队要警惕"全推服务端"的另一个坑——服务端每请求取数直连 DB，缓存与连接池压力从浏览器 CDN 组合转移到了自己服务器上。
+
+**14.  use client 标在叶子 vs 标在壳上 vs 边界下沉——三种策略的取舍？何时选壳？**
+**来源**：知乎《如何理解 use client 边界设计》；Next.js 官方模板 app-router 与 Vercel 博客 Server Components 模式讨论
+叶子式（Modal/Tabs 各自标）：边界碎、每个岛独立打包，适合复用型交互控件；壳式（整块容器标）：岛内 children 全变客户端代码，省事但 bundle 与取数能力双输——只在"整块都是重交互"（编辑器/画布）时用。边界下沉（官方推荐默认）：客户端壳保持薄，静态内容以 children/props 从服务端"过海关"注入——壳负责交互结构、RSC 负责内容与数据，如评论区壳是 client、评论条目正文是 RSC children。决策信号不是静态占比，而是"谁触发重渲染"：交互若高频刷新整棵列表，把列表标 client + 本地状态反而优于"薄壳 + refresh 惊动服务端"。代价：children 过海关要求 props 可序列化、回调不能直接传服务端函数（要走 Action），团队要建立"海关意识"——这是边界设计题的真正考点。
+
+**15.  Server Component 里直接渲染 Date.now()/随机数为什么会"出事"？各类修复分别牺牲什么？**
+**来源**：React 官方 Hydration Mismatch 告警说明；掘金《流式渲染时代的水合不匹配》
+严格说 RSC 在服务端渲染的文本不走浏览器水合、本身不报错；出事的是"同一表达式跨 server/client 两端求值"：静态 shell 预渲染时算一次、客户端组件（岛）水合时再算一次——两端不一致即 hydration mismatch（React 19 会告警并尝试恢复，老版本整树重渲）。修复与牺牲：① 只在 RSC 侧渲染 + 传字符串进岛——岛不能自己重算，牺牲了岛的自足性；② 客户端挂载后 useState/useEffect 赋值两段式渲染——首帧占位闪现，若占位高度不定还会 CLS；③ next/dynamic ssr:false——该岛彻底放弃 SSR/预渲染，丢首屏内容与 SEO；④ 更工程化的：时区/locale 显式钉死 + Intl 统一格式化，把"环境差异"从随机源变成配置。原则：请求期真相归服务端、运行期真相（鼠标位置/动画帧）归客户端，两端共享的只有序列化结果——这句话能答出来基本就懂 RSC 了。

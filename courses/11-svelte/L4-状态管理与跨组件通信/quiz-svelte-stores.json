@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "Svelte 5 提供 toStore/fromStore(呼应 svelte-stores 第三节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte store 的契约（可订阅对象）最小要实现哪个方法？",
+      "options": [
+        "get()",
+        "subscribe(run) —— 返回取消订阅函数，subscribe 回调会立即用当前值调用一次；这是 store 的唯一硬契约（writable 额外有 set/update）",
+        "set() 即可",
+        "onChange()"
+      ],
+      "answer": 1,
+      "explanation": "store 本质就是\"实现 subscribe 的普通对象\"（对应既有\"store 的本质\"题的精确化）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 在组件外的拦截器里想一次性读取 store 当前值（不订阅），用？",
+      "options": [
+        "$store",
+        "get(store)（从 svelte/store 导入）——内部订阅一次立即取值后取消，专供非组件代码",
+        "store.value",
+        "peek(store)"
+      ],
+      "answer": 1,
+      "explanation": "get() 是给组件外/非响应式上下文的\"一次性取值\"工具（对应既有\"组件外一次性拿值\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 想做\"可写的派生\"（写华氏度自动换算回摄氏），用？",
+      "options": [
+        "普通 derived",
+        "writable derived（derived 的第二参传 { set } 写回调）——既能从上游派生读、又能在被赋值时定义写回逻辑",
+        "双向 bind",
+        "两个 store"
+      ],
+      "answer": 1,
+      "explanation": "derived 带 set 选项即\"可写派生\"（对应既有\"可写的派生\"华氏摄氏题的机制名）。"
     }
   ]
 }

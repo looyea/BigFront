@@ -1,6 +1,6 @@
 # react-jsx 面试题精选
 
-> 共 12 题，覆盖 A JSX 本质 / B 语法差异 / C 插值与渲染 / D 编译与安全类。
+> 共 15 题，覆盖 A JSX 本质 / B 语法差异 / C 插值与渲染 / D 编译与安全类。
 
 ## 一、JSX 本质（A 类）
 
@@ -57,3 +57,25 @@ JSX 里放数组会自动展开逐项渲染，`map` 返回的元素数组天然�
 ### 12. JSX 里事件为什么传函数引用而不是 `onClick="doThing()"`？
 JSX 不是字符串 HTML，`onClick` 的值是 JS 表达式。`onClick={doThing}` 传函数引用待触发调用；写成 `onClick={doThing()}` 会在**渲染时立即执行**并把返回值当 handler——这是经典 bug。需要传参用箭头包一层 `onClick={() => doThing(id)}`（呼应 react-jsx 第二节、react-useeffect 闭包）。
 **来源**：React Handling Events、JSX 事件绑定常见错误
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. JSX 编译后 children 是怎么传的？自动运行时（jsx）与经典 createElement 在 children、key/ref 处理上的差异？
+
+经典 `React.createElement(type, config, ...children)`：第三参起都是 children，单个 child 存成对象、多个存成数组，全部挂到 `props.children`。自动运行时（React 17+ 的 `react/jsx-runtime`）改调 `jsx(type, config, key)`：children 收进 config 作为 `props.children`，key 提升为第三个独立参数。关键差异：① 自动运行时里 key 不再混在 config 中被 props 展开带出（React 19 起 `key` 不再是可透传的 prop，从 props 里剥离，必须显式传给元素）；② `jsx` 默认不冻结 props（经典开发模式会 Object.freeze 提醒不可改）；③ 自动运行时不需要 `import React`，只在用到 Hook/API 时才导入，且对生产做了更友好的 tree-shaking。讲清楚这条，就能解释「为什么升级 React 19 后 `{...props}` 里带 key 的旧写法会告警」。
+
+**来源**：React 官方博客「Introducing the New JSX Transform」；react/jsx-runtime 源码与 FB 关于 key-as-prop 的 changelog。
+
+### 14. JSX 的自动转义能挡住所有 XSS 吗？列出它不生效的边界。
+
+JSX 默认对「作为 children 文本插入」的值转义，但防线在几处会失效：① `dangerouslySetInnerHTML` 显式绕过转义，富文本必须先用 DOMPurify 之类净化；② 属性里的 URL——`<a href={userInput}>` 若输入是 `javascript:alert(1)` 或 `data:` 协议不会被 JSX 拦，需白名单校验协议；③ 拼接进 `style` 的对象值、SVG 的某些属性、`srcDoc`；④ 把不可信内容喂进 `eval`/`new Function`/重定向 `window.location` 本就与 JSX 无关。结论：JSX 的转义只覆盖「文本节点」这一条路径，URL 协议、HTML 注入、跳转是三条独立防线，代码审查要单列。
+
+**来源**：React 官方「JSX 防止注入」文档与 dangerouslySetInnerHTML 说明；OWASP XSS prevention cheat sheet（URL 协议白名单）。
+
+### 15. 为什么 JSX 事件是「传函数引用」而非字符串或立即调用？绑定 this、闭包与合成事件对象怎么理解？
+
+`onClick={fn}` 传的是引用，React 在派发时调用它——若写 `onClick={fn()}` 会在渲染期立即执行并把返回值（多为 undefined）当处理器，等价于「每次渲染都跑一遍」。函数组件没有类组件的 this 绑定问题（闭包捕获即可），也不必 `.bind`；反而要注意「每次渲染生成新箭头函数」会让 memo 子组件 props 变化。合成事件（SyntheticEvent）是跨浏览器包装，React 17 起事件委托到 root 而非 document；合成对象会被复用/置空的老行为在 17 后取消，因此 `e.persist()` 已废弃。异步里读 `e.target` 可能已被卸载置空——要读值应在事件同步阶段取出再传给异步逻辑。
+
+**来源**：React Handling Events 与 SyntheticEvent 文档（React 17 root 委托变更）；「为什么不能给 onClick 传调用结果」社区 FAQ。

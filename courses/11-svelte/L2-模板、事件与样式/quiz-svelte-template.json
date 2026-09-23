@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "bind:this 拿引用不触发渲染(呼应 svelte-template 第六节、react-refs)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 模板表达式 { } 里能写 if/for 语句吗？为什么？",
+      "options": [
+        "能，和 JSX 一样",
+        "不能——{ } 里只能是表达式（求出一个值），控制流要用 Svelte 专有的块（{#if}/{#each}）或三元，因为模板不是 JS 环境而是被编译器解析的标记",
+        "能写任意语句",
+        "只能写字面量"
+      ],
+      "answer": 1,
+      "explanation": "表达式 vs 语句的界是 Svelte 模板与 JSX 的核心差异（对应 template 关\"能写语句吗\"既有题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 想在 each 循环体内基于当前项预计算一个中间值复用，应使用？",
+      "options": [
+        "在 script 里为每项预算一个 map",
+        "{@const value = expr} —— 在块作用域内声明一个只用于本块的派生值，避免为了模板局部计算污染组件状态",
+        "let 变量直接声明",
+        "子组件 props"
+      ],
+      "answer": 1,
+      "explanation": "{@const} 给模板局部派生值（对应既有 {@const} 用途题；作用域限于所在块）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 需要在某值变化时强制重建其下方的 DOM 子树（重置内部状态），Svelte 提供什么块？",
+      "options": [
+        "{#if} 包裹",
+        "{#key expr} ... {/key} —— expr 变化就销毁并重建块内 DOM（常用于\"换 id 就重置表单/动画重播\"）",
+        "{#await} ",
+        "bind:this"
+      ],
+      "answer": 1,
+      "explanation": "{#key} 是\"依赖某值重建子树\"的声明式工具（与 effects-advanced 的 $memo/状态保留题相对：一个重建一个保留）。"
     }
   ]
 }

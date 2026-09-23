@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "即时校验+无障碍关联(呼应 svelte-forms 第五节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 一组 checkbox 收集\"多选结果到数组\"，用哪种绑定？",
+      "options": [
+        "bind:value 单值",
+        "bind:group={selected} + 各 input 给 value——同 group 的多个 checkbox 会把选中项 value 聚成数组（对应既有\"一组 checkbox 数组\"题）",
+        "bind:checked 数组",
+        "bind:files"
+      ],
+      "answer": 1,
+      "explanation": "checkbox 多选靠 bind:group 聚合（单选 checkbox 用 bind:checked 表布尔，两者别混）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 让自定义组件支持父组件 bind:value 双向绑定，子组件要做的是？",
+      "options": [
+        "什么都不用",
+        "用 $bindable() 声明该 prop，父才能 bind:value 到它（对应既有\"自定义组件支持 bind:value\"题）",
+        "实现 subscribe",
+        "设成 slot"
+      ],
+      "answer": 1,
+      "explanation": "$bindable 是子组件\"允许被父双向绑定\"的显式声明（对应 props 关 $bindable 机制题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 字段很多的表单想\"非受控\"提交（不为每个字段维护 state），惯用做法是？",
+      "options": [
+        "每字段一个 $state",
+        "FormData + <form onsubmit> 里 new FormData(form) 一次性读取所有字段（非受控），或用 bind:value 到少数需响应字段即可（对应既有\"非受控提交\"题）",
+        "必须上表单库",
+        "禁 JS"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 鼓励\"默认非受控、需要时才逐字段 bind\"，省去 RHF 那类库（对应既有\"为何没有 RHF/VeeValidate\"题）。"
     }
   ]
 }

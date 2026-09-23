@@ -1,6 +1,6 @@
 # ts-strict 面试题精选
 
-> 共 12 题，覆盖 **strictNullChecks / noImplicitAny 与 unknown / this 与函数变型 / 属性初始化 / strict 之外的开关 / 开启策略** 六类。
+> 共 15 题，覆盖 **strictNullChecks / noImplicitAny 与 unknown / this 与函数变型 / 属性初始化 / strict 之外的开关 / 开启策略** 六类。
 
 ---
 
@@ -114,3 +114,25 @@ catch (e) {
 或用 `if (e instanceof Error) ...` 分支。这正是 `unknown` 的设计意图——逼你在**使用未知值前**建立类型证据，而不是用断言跳过（呼应 ts-any-unknown 的"unknown + 守卫 > any"）。`as Error` 应留给"你能从上下文 100% 保证只可能抛 Error"的罕见情况并注释。
 
 **来源**：TS 4.4 — "useUnknownInCatchVariables"; Effective TS — Item 8
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. strict: true 全家桶清单里，哪些开关是「独立困难户」？给一个渐进开启顺序。
+
+严格包含：noImplicitAny / strictNullChecks / strictFunctionTypes / strictBindCallApply / strictPropertyInitialization / noImplicitThis / alwaysStrict / useUnknownInCatchVariables / exactOptionalPropertyTypes（不在包内！）。难度梯度：noImplicitAny 与 useUnknownInCatch 改造面小先上；strictNullChecks 是**原子级重构**（要么全开要么不开，半途=双重成本）通常第二波；exactOptionalPropertyTypes/noUncheckedIndexedAccess/noPropertyAccessFromIndexSignature 三个包外选项最后逐个评估。老仓路线：ts-strict-plugin/按目录排除白名单收缩（ratchet），目标「strict 全开 + 例外清单归零」。
+
+**来源**：TS Handbook《strict 家族逐条》；ts-strict-plugin（dev-savings）README 渐进策略。
+
+### 14. 开了 strictNullChecks 后满屏 ! 和 ?. 是解法吗？空安全的正确建模是什么？
+
+不是——`!` 批量补齐等于把问题塞回地毯下（TS 团队原话「turn off strictNullChecks or use non-null assertions 都是下策」）。建模三招：① **可空即状态**：判别联合（`{status:"empty"} | {status:"loaded", data}`）让「有没有」变成 switch 必答题；② 边界收敛：`noUncheckedIndexedAccess` 后 map.get / 数组下标在**入口一次**判空取窄，内部函数签名直接收非空参；③ React 侧 loading/empty 组件分支而非 `user!.name`。指标：`!` 与 `as` 的总数进 lint（@typescript-eslint/no-non-null-assertion warn）+ 每 sprint 递减——把断言当债务计量。
+
+**来源**：TS 团队 Anders 在 strictNullChecks 设计讨论中关于 ! 的定位；ESLint no-non-null-assertion 规则文档。
+
+### 15. 开了 strict 就等于类型安全吗？列四条已知的 unsoundness。
+
+① 函数参数**双变**（方法声明语法不查逆变）；② 数组/对象协变：`Dog[]→Animal[]` 可赋 + push 污染；③ `as`/`!`/any 透传：strict 只治「隐式」不禁「显式」——一条 as any 局部塌方；④ 对象更新别名：`const {x}=obj; obj.x=5` 后窄化信息过期（TS 不做值追踪）；⑤ 枚举/数字比较等运行时语义类型不管。话术：strict 是**可赋性纪律**的最大化，soundness 从来不是 TS 目标（Anders：为可用性接受有限不健全）；工程上用 lint（no-unsafe-* 系列）+ 边界 schema 校验补运行时，用类型测试补推断回归——三层齐了才叫安全。
+
+**来源**：TS FAQ《TypeScript unsoundness 设计权衡》；Effective TypeScript Item 关于 unsound 边缘案例。

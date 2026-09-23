@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "在 <script setup> 中读写一个 ref，正确方式是？",
-      "options": ["直接用变量名", "必须用 .value", "用 .val()", "用 $value"],
-      "answer": 1,
+      "options": [
+        "直接用变量名",
+        "用 .val()",
+        "必须用 .value",
+        "用 $value"
+      ],
+      "answer": 2,
       "explanation": "脚本里 ref 需 .value 读写；模板中会自动解包不写 .value（呼应 vue-reactivity 第二节）。"
     },
     {
@@ -16,18 +21,23 @@
       "prompt": "const { count } = reactive({count:0}) 之后改 count 不触发更新，为什么？",
       "options": [
         "reactive 不支持 count",
-        "解构拿到的是普通值快照，脱离了 Proxy，丢失响应性；应用 toRefs",
         "count 必须是 ref",
-        "需要 .value"
+        "需要 .value",
+        "解构拿到的是普通值快照，脱离了 Proxy，丢失响应性；应用 toRefs"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "解构 reactive 会失去代理引用；toRefs 才能保持响应（呼应 vue-reactivity 第三节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "computed 相比在模板里写 {{ total() }} 调用函数的核心优势是？",
-      "options": ["写法更短", "有缓存，依赖不变时不重复计算", "能异步", "自动 deep"],
+      "options": [
+        "写法更短",
+        "有缓存，依赖不变时不重复计算",
+        "能异步",
+        "自动 deep"
+      ],
       "answer": 1,
       "explanation": "computed 惰性+缓存，仅依赖变化后再读取才重算；方法每次渲染都执行（呼应 vue-reactivity 第四节）。"
     },
@@ -74,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "\"能用它表达的派生数据就不要放进 watch\"，这里的\"它\"指？",
-      "options": ["ref", "computed", "reactive", "toRef"],
+      "options": [
+        "ref",
+        "computed",
+        "reactive",
+        "toRef"
+      ],
       "answer": 1,
       "explanation": "派生\"值\"用 computed（自动追踪依赖+缓存）；watch 用于\"副作用\"（呼应 vue-reactivity 第四节、vue-watch）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "模板里写 `{{ someRef }}`（未加 .value）却能显示值，正确解释是：",
+      "options": [
+        "模板会自动调用 .value 的语法糖——<script setup> 绑定的 ref 在模板求值前被编译器解包（unwrap），普通对象不会被解包",
+        "ref 本来就没有 .value",
+        "运行时抛错后兜底",
+        "仅 Vue 2 兼容模式"
+      ],
+      "answer": 0,
+      "explanation": "解包只发生在「顶层绑定」：嵌套在 reactive 对象里的 ref 读写仍要 .value（除非显式 shallowRef 等特例）——「什么时候要 .value」的完整判据是作用位置不是数据类型。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "isRef/isProxy/isReactive 这组判断函数的正确使用姿势是：",
+      "options": [
+        "业务代码里到处分支判断",
+        "它们是调试/通用库工具；业务代码出现 isReactive 分支多半是设计问题（应统一在响应式边界处理数据）",
+        "只能用在模板",
+        "生产会抛错"
+      ],
+      "answer": 1,
+      "explanation": "Vue 官方定位：泛型容器/调试场景用；「拿到先判是不是响应式再决定怎么用」= 把框架泄漏进业务。库代码里 unwrap 用 toRaw、判代理用 isProxy 足够收敛。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "把一个 reactive 对象作为 props 传给子组件并在子组件里修改其属性，结果是：",
+      "options": [
+        "子组件报 props 只读错",
+        "改的是同一份响应式对象（代理透传引用），父组件跟着变——单向下发的是「引用」不是「拷贝」，一改就违反单向数据流约定",
+        "自动深拷贝隔离",
+        "改动被静默丢弃"
+      ],
+      "answer": 1,
+      "explanation": "Vue 的「props 只读」是约定+浅警告，reactive 引用穿透后技术上完全可改——所以列表项编辑要么 emit 事件要么在 store 层改，「对象传进去随便改」是重构噩梦的开始（呼应 state-patterns 关 SSOT 题）。"
     }
   ]
 }

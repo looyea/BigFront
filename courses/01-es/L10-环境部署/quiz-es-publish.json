@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "package.json 中 exports 和 main 的关系是？",
       "options": [
-        "完全等价，只是新写法",
         "exports 优先级高于 main；配了 exports 后 Node 忽略 main",
+        "完全等价，只是新写法",
         "main 优先级高于 exports",
         "必须同时配才生效"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Node 12+ 看到 exports 字段后完全忽略 main/module/browser。main 只给不支持 exports 的老工具兜底。"
     },
     {
@@ -22,10 +22,10 @@
       "options": [
         "修复 bug",
         "新增向后兼容的功能",
-        "破坏性变更（删除或修改已有 API）",
-        "更新依赖版本"
+        "更新依赖版本",
+        "破坏性变更（删除或修改已有 API）"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "MAJOR = 不兼容变更（删 API / 改签名 / 改行为）。MINOR = 新增功能向后兼容。PATCH = bug fix。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "prepublishOnly 脚本的触发时机是？",
       "options": [
         "每次 npm install 时",
-        "npm publish 之前自动执行",
         "git pre-commit 时",
+        "npm publish 之前自动执行",
         "npm version 时"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "npm lifecycle：npm publish → prepublishOnly → publish → postpublish。通常在此跑构建确保 dist/ 是最新的。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "Provenance = 用 GitHub Actions 的 OIDC token 签名 → npm 记录\"这个包是从这个 repo 的这个 commit 构建的\"→ 用户可验证来源。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`prepare` 脚本与 `prepublishOnly` 的差别：",
+      "options": [
+        "完全相同",
+        "prepare 在本地 npm link/安装 git 依赖时也跑；prepublishOnly 只在 publish 前跑",
+        "prepare 更快",
+        "后者已废弃"
+      ],
+      "answer": 1,
+      "explanation": "构建产物逻辑放 prepublishOnly（只在发布跑）；本地开发钩子（husky install）放 prepare。写反 = 用户 git 装依赖也触发你的构建。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "pnpm 省磁盘的核心机制是：",
+      "options": [
+        "压缩 tarball",
+        "内容寻址硬链接：全局 store 一份，项目 node_modules 全是链接",
+        "不装依赖",
+        "缓存 git 仓库"
+      ],
+      "answer": 1,
+      "explanation": "同一版本包 100 个项目只落盘一次；且非扁平 node_modules 让幽灵依赖（未声明就 import）从「能用」变成报错。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "exports 里 `types` 条件的位置要求是：",
+      "options": [
+        "任意位置",
+        "必须放在对象最前——否则 TS 可能命中 default 拿不到类型",
+        "必须最后",
+        "不需要写"
+      ],
+      "answer": 1,
+      "explanation": "条件按书写顺序匹配、先到先得；TS 的 `moduleResolution: bundler/node16` 依赖 types 先于 import/default。publint 会直接报这个错。"
     }
   ]
 }

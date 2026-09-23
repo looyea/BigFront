@@ -1,6 +1,6 @@
 # ts-frameworks 面试题精选
 
-> 共 12 题，覆盖 **React 类型 / Vue3 编译器类型 / NestJS 装饰器与 DI / 端到端类型 / 框架类型坑** 五类。
+> 共 15 题，覆盖 **React 类型 / Vue3 编译器类型 / NestJS 装饰器与 DI / 端到端类型 / 框架类型坑** 五类。
 
 ---
 
@@ -105,3 +105,25 @@ React：`useRef<HTMLInputElement>(null)` 得到 `RefObject<HTMLInputElement>`（
 先**定位根因**而非消音：① 判断是"我的类型标错/泛型没透传"（多数情况，补对 props/ref/事件类型即可，呼应 ts-frameworks 第六节）；② 还是"编译期魔法的选项没到位"（`experimentalDecorators`、`jsx`、`vue-tsc`、`types` 配置，呼应 ts-project）；③ 还是"库类型本身有 bug/缺失"（走模块增强或补 `.d.ts`，第 11 题、ts-declarations）。确属无解的临时豁免用 **`@ts-expect-error` + 原因注释**（会在使用消失时反向报错，天然可回收，呼应 ts-strict 第 9 题、ts-migration 第 11 题），并纳入债务棘轮统计。**绝不首选 `as any`/`@ts-ignore`**——它们把框架辛苦带来的类型收益当场清零。
 
 **来源**：Total TypeScript — "Escape hatches considered harmful"; Effective TS — Item 8/44
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. React 组件 props 的类型建模从 FC 到判别联合、多态组件，演进逻辑是什么？
+
+FC 时代（隐式 children/返回 ReactElement）被弃因：不泛型友好、children 魔法、返回值过宽。建模升级链：① plain function + 显式 PropsWithChildren 按需；② **互斥变体**=判别联合（`{href:string}|{onClick:fn}` 包住 variant）而非一堆可选；③ 多态 `as`：`<C extends ElementType, P={}> props: ComponentPropsWithRef<C> & P & {as:C}`——GenericComponentType 模式表达「渲染什么就吃什么 props」；④ 反思：多态组件泛型推断脆弱、文档差——Radix 系已收敛为 **Slot 组合**（render prop 换组合 prop）换简单性。答题框架：能讲清「as 多态的实现 + 为什么该少用」即满分。
+
+**来源**：@types/react 19 迁移指南（FC 弃用）；Radix UI《The Policy of Composable Components》。
+
+### 14. 端到端类型安全：tRPC / schema-first（openapi/GraphQL）/ 全手写，三条路线怎么选？
+
+tRPC：零 codegen 类型同源，代价=单仓强耦合（TS 后端）、运行时校验另配（superstruct/zod）、跨团队复用弱；schema-first：openapi/graphql 契约中立（前后端不同语言可协作），但 codegen 流水线+契约漂移要 CI 管（oasdiff/bundle 检查）；手写：小项目快，规模化后双倍维护+同步事故。决策轴：团队边界（同栈否）、契约是否对外、网关/文档需求、类型粒度（REST DTO 简单、GraphQL 选择集强）。混合策略：内部服务 tRPC、对外 API openapi 生成 SDK——别为纯度洁癖放弃组织现实。
+
+**来源**：tRPC 文档《Why tRPC / Alternatives》；openapi-typescript 与 orval 对比实践。
+
+### 15. 框架类型卡住时的自救手册（至少三招），以及什么时候不该自救？
+
+招式：① **module augmentation**（declare module 给 Request/Express/Vue ComponentCustomProperties 扩型——框架留的门）；② satisfies/显式泛型注（推断不出就喂上下文而非事后 as）；③ 类型级测试（expectType）先确认「是 bug 还是 feature」再动手；④ 组件/props 的**提取收窄**（把复杂内联拆成中间 const + as const 帮推断）；不该自救：运行时语义与类型打架（框架 bug 报 issue 等修）、为过 lint 写 `as unknown as`——那是给事故埋雷。纪律：每处类型 workaround 带 `// why:` 注释，季度清理。
+
+**来源**：Vue《Augmenting component types》/ Express 类型扩文档；expect-type README。

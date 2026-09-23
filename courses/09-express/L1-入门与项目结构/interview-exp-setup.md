@@ -1,6 +1,6 @@
 # exp-setup 面试题精选
 
-> 共 12 题，覆盖 **项目架构 / 中间件原理 / 安全 / CORS / Body 解析 / 配置管理** 六类。
+> 共 15 题，覆盖 **项目架构 / 中间件原理 / 安全 / CORS / Body 解析 / 配置管理** 六类。
 
 ---
 
@@ -102,3 +102,25 @@ body-parser 抛一个 `entity.too.large` 错误（status 413）→ 如果没有 
 Nginx / ALB / Cloudflare 等反代 → Express 看到的 `req.ip` 永远是 127.0.0.1（代理的 IP）。`trust proxy` 让 Express 信任 `X-Forwarded-For` 头 → `req.ip` 返回真实客户端 IP；`req.secure` 从 `X-Forwarded-Proto` 判断。设 `true` 信任所有代理，设数字信任 N 跳。
 
 **来源**：Express API — "app.set('trust proxy')"; MDN — "X-Forwarded-For"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  让你为团队维护一个 Express 项目脚手架（starter），它会包含什么？怎么防止它三年后烂掉？
+
+包含清单按"每个项目都会重写一遍"为准入线：① 进程骨架——app/server 分离、优雅关闭（SIGTERM→停收→限时收尾）、启动期 env schema 校验（zod 一把过，缺即 crash）；② 观测底座——pino + requestId 贯穿（AsyncLocalStorage）、/healthz+/readyz、错误上报接线（Sentry handler 顺序正确）；③ 安全默认——helmet、CORS 白名单配置化、rate-limit 骨架、x-powered-by 清理；④ 结构示例——一条完整纵切（route→validate→controller→service→repository + 三层测试各一条），比十页文档有用；⑤ 工程门禁——lint/prettier/commit 规范/CI（typecheck+test+coverage 底线）。防腐三招：脚手架进版本库+CHANGELOG 纪律（它也是产品，有人负责）、每月拿"新项目"真跑一次它（不用就腐烂）、提供 codemod/升级脚本而不是让人重拉模板对比手动搬。关键克制：模板只做"没有它会每个项目各写一遍"的东西，业务倾向性强的东西（ORM 二选一、目录哲学）留成两个示例分支——塞得越全，弃用越快。
+
+**来源**：Nuxt/Nest 脚手架机制对照；InfoQ《内部模板库的维护经济学》
+
+### 14.  CommonJS 与 ESM 在 Express 项目里混用会产生哪些具体坑？模块系统该怎么定？
+
+具体坑：① __dirname/__filename 在 ESM 不存在（要 import.meta.url + fileURLToPath），模板引擎 views 路径、静态目录拼接全中招——最高频事故；② 同步 require 没了，CJS 包混进来时 default 导入的互操作魔法（some CJS 要 import x from 拿 module.exports、named export 靠构建工具静态分析常失灵）；③ 循环依赖行为不同：CJS 拿到半成品 exports、ESM 在链接期报错，老代码"能跑"的环一迁就炸；④ 顶层 await 只有 ESM 有（配置预读场景是红利）；⑤ 部分中间件按 CJS 写的 this 单例假设在 ESM 加载器下多一份实例（少见但排查要命）。决策框架：新项目直接 "type":"module" 全 ESM（Node 原生支持稳、生态 CJS 终会退潮），迁移项目按"入口先行+混用只允许 ESM→CJS 单向 import"推进，配 lint 规则锁方向；别上 ts-node 双系统缝合的野路子。收口句：模块系统是地基级决定——它的代价不在切换当天，在之后每次 import 方向对不对都要人记着的三年里。
+
+**来源**：Node 官方 ESM 文档（Interoperability）；掘金《我们的 Express 项目迁移 ESM 的清单》
+
+### 15.  app.js 顶上那串 app.use(...) 是全项目最重要的架构声明——你怎么治理这列中间件栈？
+
+治理三件：① 清单即文档——栈按固定分段写死顺序并注释语义：协议修正层（trust proxy/compression）→ 观测层（requestId/morgan/pino-http）→ 安全层（helmet/cors/rate-limit）→ 解析层（json/urlencoded 带 limit）→ 鉴权层（session/auth）→ 业务路由 → 404 → 错误处理。顺序规则可背："先记账后干活、先安全后解析、谁短路谁靠后"，每层新中间件必须 PR 说明插在哪段为什么。② 隐式依赖显式化——两个中间件暗通 res.locals/req 字段（A 写 B 读）是最脆的耦合：契约字段收进命名空间（res.locals.ctx）+ TS 类型声明，README 列"字段生产者→消费者"表。③ 腐化信号与手术——出现"这个中间件要对某些路由跳过"的路径 if 满天飞时，说明该从 app.use 下放到 router.use/路由级挂载了；"必须在 X 之后否则静默失灵"的坑要用集成测试锁（打一个请求断言 X 确实跑了）。加分句：中间件栈没人画得清，等于这个服务没人真正拥有——架构图可以先从 app.use 列表生成。
+
+**来源**：Express 官方 Using middleware；InfoQ《一个把中间件清单当 API 管理的团队》

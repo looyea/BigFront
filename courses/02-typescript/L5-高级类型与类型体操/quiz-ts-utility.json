@@ -8,11 +8,11 @@
       "prompt": "Partial<User> 用映射类型的正确写法是？",
       "options": [
         "{ [K in keyof User]: User[K] }",
-        "{ [K in keyof User]?: User[K] }",
         "{ [K in keyof User]-?: User[K] }",
+        "{ [K in keyof User]?: User[K] }",
         "{ readonly [K in keyof User]: User[K] }"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "?: 给每个键加可选修饰符即 Partial；-? 是 Required，readonly 是 Readonly。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "关于 Pick 与 Omit 的键参数，正确的说法是？",
       "options": [
         "两者 K 都被约束为 keyof T",
-        "Pick 的 K extends keyof T（写错报错）；Omit 的 K 不受限，可写不存在的键并静默忽略",
         "Omit 的 K 更严格",
-        "两者都不能删键"
+        "两者都不能删键",
+        "Pick 的 K extends keyof T（写错报错）；Omit 的 K 不受限，可写不存在的键并静默忽略"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Omit = Pick<T, Exclude<keyof T, K>>，其 K 只约束到 keyof any，故可写非法键名被忽略，是常见坑。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "Exclude<'a'|'b'|'c', 'b'> 的结果是？",
-      "options": ["'a'|'c'", "'b'", "'a'|'b'|'c'", "never"],
+      "options": [
+        "'a'|'c'",
+        "'b'",
+        "'a'|'b'|'c'",
+        "never"
+      ],
       "answer": 0,
       "explanation": "Exclude 靠分布式条件类型把命中 'b' 的成员换成 never 消失，剩 'a'|'c'。"
     },
@@ -53,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "ReturnType<typeof fn> / Parameters<typeof fn> / Awaited<T> 共同依赖的关键字是？",
-      "options": ["as", "infer", "satisfies", "keyof"],
+      "options": [
+        "as",
+        "infer",
+        "satisfies",
+        "keyof"
+      ],
       "answer": 1,
       "explanation": "它们都用 infer 从函数/Promise 结构里提取返回/参数/内部类型。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "-readonly 是移除只读修饰符，配合映射类型即得 Mutable（Readonly 的反操作）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Required<T> 对嵌套对象属性的作用范围是：",
+      "options": [
+        "递归全部去 ?",
+        "只作用于最顶层属性——内层可选需要 DeepRequired",
+        "自动到第二层",
+        "取决于 strict"
+      ],
+      "answer": 1,
+      "explanation": "内置工具类型全部浅层；Required 的 mapped 只动 `{[P in keyof T]-?}`，值里的对象原样——深浅是工具类型的第一张检查清单。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "对一个字符串索引签名类型做 Omit，会发生：",
+      "options": [
+        "正常剔除",
+        "索引签名丢失（keyof 塌缩成 string 后被 Exclude 波及）",
+        "报错",
+        "自动转 Partial"
+      ],
+      "answer": 1,
+      "explanation": "Omit<Pick<Exclude<keyof T,K>>>：含索引签名时 keyof 变 string|number，剔除单字面量等于砍掉整个键空间——Distributive Omit（对联合逐成员 Omit）是社区补刀方案。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "InstanceType<typeof C> 与 ReturnType<typeof fn> 的区别是：",
+      "options": [
+        "完全相同",
+        "前者取 new 签名的实例类型，后者取函数返回类型——class 用前者",
+        "后者可用于 class",
+        "都不能用于泛型"
+      ],
+      "answer": 1,
+      "explanation": "class 的值形态带「构造签名+静态面」，ReturnType 看的是调用签名会报错；DI/工厂表里用 `T extends new (...a:any)=>infer I` 手动抽实例。"
     }
   ]
 }

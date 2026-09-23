@@ -1,6 +1,6 @@
 # kit-routing-basics 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ---
 
@@ -75,3 +75,25 @@
 **来源**：错误层级前瞻题（L4 正片预习）
 
 落点：错误由**最深已解析、最浅出错层**的 +error.svelte 承接——load/渲染发生在哪层出错，就向上找该层及祖先最近的 +error；/a/b/c 出错但 /a 有 +error 而 b/c 没有，则 /a 的壳保留、其下内容替换为错误块（布局不塌，用户还能导航）。500 类未预期错误（throw 的 TypeError 等）先过 **handleError**（hooks.server.ts）——那里做日志/上报并决定给用户的 message（防 stack 泄漏），产出规范化 error 再进 +error.svelte；预期错误用 `error(404, {...})` 直抛，**不经 handleError**（文档明示：你自己保证 body 安全）。两家全图的完整推演与表单 action 报错路径，L4 正片展开——本课先立规则意识。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  layout 与 page 的 load 是并行还是串行？await parent() 会改变调度吗？ 
+
+ 默认同层并行、父先于子交付数据但执行可交叠：子 load 的 input.parent() 返回 promise，await 它才会等父完成；不 await 则并行跑，官方建议只在真需要父数据时再 await 以免瀑布。 
+
+**来源**： https://svelte.dev/docs/kit/load 
+
+### 14.  为什么 +page.js 不能导出 POST 之类的 HTTP 方法？端点与页面的边界意义？ 
+
+ 页面路由的语义是渲染文档，写操作统一走 form action 或 +server.js 端点，这让 CSRF、内容协商、渐进增强有清晰落点；混用会破坏 URL 与职责正交的文件族设计。 
+
+**来源**： https://svelte.dev/docs/kit/routing 
+
+### 15.  从多页传统站点迁到 Kit，怎么保留『每 URL 一个完整 HTML』的爬虫友好性同时获得 SPA 体验？ 
+
+ 默认 SSR 全开即保留整页语义，站内导航再由客户端路由接管；关键营销页可配 prerender 出静态 HTML，配合数据内联避免二次请求，Lighthouse 与搜索爬虫都拿得到完整 DOM。 
+
+**来源**： https://svelte.dev/docs/kit/page-options#ssr ； https://web.dev/vitals/ 

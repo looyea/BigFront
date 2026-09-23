@@ -58,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "properties 里写 bgColor，WXML 中传值应写？",
-      "options": ["bgColor=\"...\"", "bgcolor=\"...\"", "bg-color=\"...\"", "BG_COLOR=\"...\""],
+      "options": [
+        "bgColor=\"...\"",
+        "bgcolor=\"...\"",
+        "bg-color=\"...\"",
+        "BG_COLOR=\"...\""
+      ],
       "answer": 2,
       "explanation": "小驼峰↔连字符自动互转，同 Vue prop 规则（呼应 mp-component 第三节末）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "组件查询自动限域，防跨组件误伤（呼应 mp-component 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " properties 声明 `type: Number`，父页面却传了字符串 \"199\"，组件内收到的是？",
+      "options": [
+        "仍是字符串 \"199\"",
+        "小程序会尝试按声明类型做转换（能转则转成 number 199），若无法转换会告警并按规则处理——但依赖隐式转换不稳，稳妥应在父侧就传对类型",
+        "直接编译报错",
+        "properties 不做类型校验"
+      ],
+      "answer": 1,
+      "explanation": "properties 的 type 兼具\"运行时校验/转换提示\"作用，但转换能力有限、边界情形会给 0/null 并告警。工程实践别赌隐式转换：接口/父组件保证类型，或组件内 observer 里显式 Number() 归一并容错。这与 React 的 propTypes 只警告不转换不同。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " properties 里驼峰命名 bgColor，在 WXML 标签上传值应写成？",
+      "options": [
+        "bgColor=\"...\"",
+        "bg-color=\"...\"（模板里属性用连字符小写，映射到 properties 的驼峰字段）",
+        "data-bg-color",
+        "BGCOLOR"
+      ],
+      "answer": 1,
+      "explanation": "WXML 属性遵循 HTML 风格的 kebab-case，框架自动把 bg-color 对应到 properties 的 bgColor。写驼峰到模板往往收不到值（且无强报错），是\"组件不生效\"的高频低级坑，与 Vue 模板里 prop 用 kebab 完全一致。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 组件内 this.createSelectorQuery() 查询节点，其作用域是？",
+      "options": [
+        "整份文档所有节点",
+        "默认限定在该组件自身内（.in(this) 语义内建），查不到组件外部/兄弟节点——要跨组件查需从页面或父组件用 selectComponent 定位到子组件实例再 .in 进去",
+        "只查页面根",
+        "全局单例"
+      ],
+      "answer": 1,
+      "explanation": "组件的查询天然带作用域隔离（Shadow DOM 思路），this.createSelectorQuery() 只覆盖本组件节点。这保证多实例复用同一组件时选择器互不串扰。要触达子组件内部，得 selectComponent 拿实例再 in，别指望页面级选择器穿透。"
     }
   ]
 }

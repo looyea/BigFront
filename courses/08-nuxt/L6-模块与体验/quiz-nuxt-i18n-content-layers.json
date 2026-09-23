@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "@nuxtjs/i18n 的 strategy: 'prefix_except_default' 产生的 URL 形态是？",
       "options": [
-        "所有语言都带前缀：/zh/about 与 /en/about",
         "默认语言不带前缀：/about（zh）与 /en/about",
+        "所有语言都带前缀：/zh/about 与 /en/about",
         "全部不带前缀，靠 cookie 区分",
         "每语言一个子域名"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "_except_default=默认语言享受无前缀短 URL，其余带前缀（呼应 nuxt-i18n-content-layers 第一节）。"
     },
     {
@@ -32,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "\"切换语言停在当前页\"在 Nuxt 里用哪个 API？",
-      "options": ["localePath('about')", "switchLocalePath('en')", "useLocale().go('en')", "router.push('/en')"],
+      "options": [
+        "localePath('about')",
+        "switchLocalePath('en')",
+        "useLocale().go('en')",
+        "router.push('/en')"
+      ],
       "answer": 1,
       "explanation": "switchLocalePath 基于当前路由换语言段；localePath 是指定目标路由（呼应 nuxt-i18n-content-layers 第一节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "模块注入能力、层承载内容；层内部还能用模块（呼应 nuxt-i18n-content-layers 第三节、nuxt-modules）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " @nuxtjs/i18n 的翻译文件懒加载（lazy）主要解决的是？",
+      "options": [
+        "SEO",
+        "首屏包体——语言包按需加载进 payload/bundle，日语用户不为英文词典买单；代价是切换语言瞬间可能闪空文案，要配加载态",
+        "图片优化",
+        "路由性能"
+      ],
+      "answer": 1,
+      "explanation": "与代码分包同一哲学：\"按用户会说的语言分包\"；lazy 让体积问题降级为加载态设计问题。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 运营在 Git 仓库改 Markdown 发文章，CI 里最该先跑的门禁是？",
+      "options": [
+        "全量构建一次看效果",
+        "content 的类型/schema 校验（@nuxt/content 的 collections 定义）——字段缺漏、日期格式错、引用不存在的作者页在 PR 阶段拦，上线后才知道",
+        "拼写检查",
+        "图片压缩"
+      ],
+      "answer": 1,
+      "explanation": "内容当代码管的红利=校验前移；collection schema 是内容的\"数据库约束\"，没有它 Git 内容库会腐化成垃圾场。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Nuxt Layers 的 extends 优先级记法是？",
+      "options": [
+        "数组第一个覆盖后面的",
+        "数组后者覆盖前者（越靠后越具体），被 extends 的项目自身再覆盖层——\"由远及近，近者胜\"",
+        "按字母序",
+        "随机"
+      ],
+      "answer": 1,
+      "explanation": "和 CSS 层叠同一直觉：越靠近消费者的越优先；层数超过两层要回头审视是不是该抽模块。"
     }
   ]
 }

@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "测试一个服务端组件（RSC）最本质的方法是？",
-      "options": ["把它当 async 函数 await 得到 UI 树再 render 断言", "用 hook 包裹后模拟生命周期", "必须在真浏览器里跑", "把它改标成 'use client' 再测"],
+      "options": [
+        "把它当 async 函数 await 得到 UI 树再 render 断言",
+        "用 hook 包裹后模拟生命周期",
+        "必须在真浏览器里跑",
+        "把它改标成 'use client' 再测"
+      ],
       "answer": 0,
       "explanation": "RSC 就是返回 React 树的异步函数，await 参数（Next15 params 是 Promise）后直接交给 Testing Library 渲染即可（呼应 next-testing 第 2 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "Next 官方为 Jest 提供的开箱配置是？",
-      "options": ["next/config()", "next/experimental/testmode", "next/jest（接管 SWC 转译并自动 mock image/link）", "babel-preset-next"],
+      "options": [
+        "next/config()",
+        "next/experimental/testmode",
+        "next/jest（接管 SWC 转译并自动 mock image/link）",
+        "babel-preset-next"
+      ],
       "answer": 2,
       "explanation": "next/jest 一行创建配置，自动处理 JSX/TS 转译、路径别名与 next 内置组件 mock，免去手写 babel（呼应 next-testing 第 1 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "测试一个内部调用 redirect('/x') 的 Server Action 的重定向分支，断言方式是？",
-      "options": ["expect(result).toBe('/x')", "函数不会返回，redirect 靠 throw 信号中断——断言 Promise rejects 且信息含 NEXT_REDIRECT", "断言 window.location", "用 toHaveBeenCalledWith 捕获"],
+      "options": [
+        "expect(result).toBe('/x')",
+        "函数不会返回，redirect 靠 throw 信号中断——断言 Promise rejects 且信息含 NEXT_REDIRECT",
+        "断言 window.location",
+        "用 toHaveBeenCalledWith 捕获"
+      ],
       "answer": 1,
       "explanation": "redirect 本质抛特殊信号（含 NEXT_REDIRECT 标记），去掉网络层直接调用 Action 时用 rejects 匹配（呼应 next-testing 第 3 节、next-error-loading 第 3 节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "Route Handler 的单测应该构造什么作为入参？",
-      "options": ["Express 风格的 req/res 对", "Koa context", "JSDOM window", "标准 Request 对象，调用导出的 GET/POST 后断言 Response"],
+      "options": [
+        "Express 风格的 req/res 对",
+        "Koa context",
+        "JSDOM window",
+        "标准 Request 对象，调用导出的 GET/POST 后断言 Response"
+      ],
       "answer": 3,
       "explanation": "Route Handler 是 Web Standards 的 Request→Response 纯变换，new Request(url) 进、res.status/json() 出，天然好测（呼应 next-testing 第 3 节、next-route-handlers 第 1 节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "E2E 测试的范围策略，最合理的是？",
-      "options": ["所有组件的所有分支都用 E2E 覆盖", "只测渲染速度", "覆盖登录/下单等黄金路径，错误分支下沉到组件与函数测试", "用 E2E 替代单元测试"],
+      "options": [
+        "所有组件的所有分支都用 E2E 覆盖",
+        "只测渲染速度",
+        "覆盖登录/下单等黄金路径，错误分支下沉到组件与函数测试",
+        "用 E2E 替代单元测试"
+      ],
       "answer": 1,
       "explanation": "E2E 慢且脆，只值得保黄金路径；海量错误分支在更便宜的层验证，才是健康的测试金字塔（呼应 next-testing 第 4 节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "关于 middleware 的测试，正确的态度是？",
-      "options": ["它运行在 Edge 运行时、环境与普通 node 测试不同，需要单独验证通道（可测函数导出或 E2E 带 cookie 打真请求）", "middleware 无逻辑不必测", "和客户端组件用同一套 RTL 测试", "只能在 Vercel 上测"],
+      "options": [
+        "它运行在 Edge 运行时、环境与普通 node 测试不同，需要单独验证通道（可测函数导出或 E2E 带 cookie 打真请求）",
+        "middleware 无逻辑不必测",
+        "和客户端组件用同一套 RTL 测试",
+        "只能在 Vercel 上测"
+      ],
       "answer": 0,
       "explanation": "middleware 不在 nodejs 运行时执行，直接 import 常常环境报错；鉴权与 matcher 逻辑要么重构可测、要么走真 HTTP 验证（呼应 next-testing 第 5 节）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "单测里 mock 了全局 fetch 后，发现\"同一组件树两次调用只发了一次请求\"，最可能的原因是？",
-      "options": ["Playwright 拦截了请求", "测试框架自动重试", "mock 函数有调用缓存", "Next 对 fetch 做了请求记忆化，同渲染周期同 URL 去重，断言调用次数时要把它算进去"],
+      "options": [
+        "Playwright 拦截了请求",
+        "测试框架自动重试",
+        "mock 函数有调用缓存",
+        "Next 对 fetch 做了请求记忆化，同渲染周期同 URL 去重，断言调用次数时要把它算进去"
+      ],
       "answer": 3,
       "explanation": "请求记忆化是运行时行为，测试同样生效——第二次不发请求是特性，次数断言需按此设计（呼应 next-testing 第 5 节、next-fetch-cache 第 2 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 测试 Route Handler 的正确姿势是？",
+      "options": [
+        "起 dev server 再发 HTTP 请求",
+        "把它当纯异步函数：直接 import GET/POST，构造标准 Request 调用，断言 Response 状态码与 JSON——Web 标准接口本身就是可测接口",
+        "用快照测 URL 字符串",
+        "只能 E2E 覆盖"
+      ],
+      "answer": 1,
+      "explanation": "handler(request: Request) 签名让单测零 mock 框架依赖；涉及 cookie/鉴权时构造带凭据的 Request 或用 mock 的 headers API——不需要真起服务。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 单测服务端组件时，\"直接调用函数拿返回值\"为什么往往不够？",
+      "options": [
+        "因为 async 不能被测试",
+        "RSC 的返回值是元素树描述，断言它只证明\"没崩\"；要看渲染出的 HTML（含数据是否正确进入 DOM）应使用 react-server-dom 的渲染或 @testing-library/react-server 一类工具，按 HTML 断言",
+        "不能测",
+        "用 cypress 测"
+      ],
+      "answer": 1,
+      "explanation": "测组件的核心是\"行为与输出\"，RSC 输出=渲染产物；同时注意 mock next/headers、cacheLife、useSearchParams 等请求域 API 是 RSC 单测的常态成本。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " middleware 的可测性与测试态度，官方/社区的共识是？",
+      "options": [
+        "完全无法测，放弃",
+        "可测但性价比要算：把它当\"接收 NextRequest 返回 NextResponse/undefined\"的纯函数单测重定向与放行分支（jest-experimental-test-condition 思路/直接调用），E2E 只覆盖登录跳转等少数关键链路",
+        "只能集成测试",
+        "测了也没意义，鉴权有 Action 兜底"
+      ],
+      "answer": 1,
+      "explanation": "middleware 逻辑=matcher+分支，纯函数化后可测；它的风险不是\"跑不起来\"而是\"该拦没拦\"——单测断言分支、E2E 断言真实 cookie 场景，两层配合。"
     }
   ]
 }

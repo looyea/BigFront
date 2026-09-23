@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "middleware.ts 的运行环境默认是？",
-      "options": ["Node.js 完整运行时", "Edge 轻量运行时（无 fs 等 Node API）", "浏览器主线程", "Worker Threads 池"],
-      "answer": 1,
+      "options": [
+        "Node.js 完整运行时",
+        "浏览器主线程",
+        "Worker Threads 池",
+        "Edge 轻量运行时（无 fs 等 Node API）"
+      ],
+      "answer": 3,
       "explanation": "毫秒级 CPU 预算+Web API only，决定了它只能轻判断（呼应 next-middleware-auth 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "下列哪项是 middleware 能做的事？",
-      "options": ["直接返回查库后的个性化页面 HTML", "rewrite 内部改道 / redirect / 读写请求响应头", "终结数据库事务", "渲染 React 组件"],
+      "options": [
+        "直接返回查库后的个性化页面 HTML",
+        "rewrite 内部改道 / redirect / 读写请求响应头",
+        "终结数据库事务",
+        "渲染 React 组件"
+      ],
       "answer": 1,
       "explanation": "只能改道不能接管业务——重活属于渲染层与数据层（呼应 next-middleware-auth 第一节要点2）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "三层鉴权纵深中，middleware 这一层的合理职责是？",
-      "options": ["行级数据权限", "粗筛：有无效会话、是否该 redirect 去登录", "密码哈希校验", "审计日志落库"],
+      "options": [
+        "行级数据权限",
+        "粗筛：有无效会话、是否该 redirect 去登录",
+        "密码哈希校验",
+        "审计日志落库"
+      ],
       "answer": 1,
       "explanation": "无库环境做不了精细权限；资源归属校验在第 3 层数据层（呼应 next-middleware-auth 第二节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "Auth.js 的 session 策略在 edge middleware 里能秒验的原因是？",
-      "options": ["每次都会查库", "JWT 自带签名与过期，验签无需 I/O", "靠 CDN 缓存", "token 内容明文可信"],
+      "options": [
+        "每次都会查库",
+        "JWT 自带签名与过期，验签无需 I/O",
+        "靠 CDN 缓存",
+        "token 内容明文可信"
+      ],
       "answer": 1,
       "explanation": "无状态验签是边缘可行的前提；database session 则要适配器（呼应 next-middleware-auth 第三节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "matcher 用负向断言排除 _next/static 等路径的直接影响是？",
-      "options": ["防止静态资源请求也执行中间件逻辑", "开启 HTTP/3", "禁用预取", "提高水合速度"],
+      "options": [
+        "防止静态资源请求也执行中间件逻辑",
+        "开启 HTTP/3",
+        "禁用预取",
+        "提高水合速度"
+      ],
       "answer": 0,
       "explanation": "每个匹配请求都进函数：宽 matcher=为 favicon 也跑一遍鉴权逻辑（呼应 next-middleware-auth 第一节要点3）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "登录成功后的会话 cookie，防 XSS 偷 token 的关键参数是？",
-      "options": ["path=/", "maxAge", "httpOnly", "domain"],
+      "options": [
+        "path=/",
+        "maxAge",
+        "httpOnly",
+        "domain"
+      ],
       "answer": 2,
       "explanation": "httpOnly 让 document.cookie 读不到它；sameSite 防 CSRF 面、secure 防窃听（呼应 next-middleware-auth 第五节）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "同事说：'middleware 已挡 /admin，Action 里不用重复查权限。' 你的判断？",
-      "options": ["对，重复校验浪费", "错：Action 可被直接 POST 调用，数据层校验是最终防线", "取决于 Action 文件位置", "加个注释即可免除校验"],
+      "options": [
+        "对，重复校验浪费",
+        "错：Action 可被直接 POST 调用，数据层校验是最终防线",
+        "取决于 Action 文件位置",
+        "加个注释即可免除校验"
+      ],
       "answer": 1,
       "explanation": "UI 路径防线挡不住端点直打，纵深缺一不可（呼应 next-middleware-auth 第二节误区、next-server-actions 安全课）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " middleware 用 Edge 运行时，对鉴权实现最直接的限制是？",
+      "options": [
+        "不能读 cookie",
+        "不能用 Node 生态：jsonwebtoken/bcrypt 类依赖 Node API 的库不可用——会话校验要改 JWKS + Web Crypto（Edge 运行时 jose）或把验证挪到服务端组件/Action；middleware 只做\"有无会话、粗粒度跳哪\"的轻量判断",
+        "不能 redirect",
+        "执行顺序在页面之后"
+      ],
+      "answer": 1,
+      "explanation": "middleware 的定位是\"请求路的门卫\"：快、轻、粗粒度。把\"这个人是谁、能不能做\"的重校验下推到 RSC/Action 层，才是三层纵深的正确分工。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 三层鉴权纵深（middleware / RSC+Action / 数据层）中，middleware 的合理职责边界是？",
+      "options": [
+        "唯一鉴权点，其余层不用查",
+        "体验层守门：未登录跳 /login、按路径前缀做粗粒度 RBAC 预检、避免把未授权页面的 shell 与数据渲染出去；但授权真相必须在 RSC/Action 再查（可绕过 middleware 直达 Action），数据层再兜一行（按 owner 过滤）",
+        "负责签发 session",
+        "校验数据库约束"
+      ],
+      "answer": 1,
+      "explanation": "middleware 挡的是\"不该被渲染的东西\"，不是\"不该发生的事\"——后者归 Action 与数据层。问\"绕过 middleware 会怎样\"能答上来就懂纵深了。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " refresh token 轮换场景下，middleware 里做刷新最常见的坑是？",
+      "options": [
+        "刷新太频繁",
+        "并发请求同时触发刷新互相踢下线 + Edge 环境做刷新受限：应在 RSC/Action 层或独立 /api/auth 端点刷新，middleware 只检测过期并引导；多标签页还要协调刷新单飞（否则轮换链互相失效）",
+        "middleware 拿不到 cookie",
+        "浏览器拒绝写 Set-Cookie"
+      ],
+      "answer": 1,
+      "explanation": "轮换使\"旧 token 再用即失效\"，并发刷新必炸；middleware 的正确姿势是\"发现问题、指路\"，不是\"亲自动手修\"。"
     }
   ]
 }

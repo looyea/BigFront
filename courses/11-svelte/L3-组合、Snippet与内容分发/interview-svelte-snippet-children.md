@@ -1,6 +1,6 @@
 # svelte-snippet-children 面试题精选
 
-> 共 12 题，覆盖 A snippet 本质 / B 内容分发 / C 作用域与边界 / D 对照与迁移。
+> 共 15 题，覆盖 A snippet 本质 / B 内容分发 / C 作用域与边界 / D 对照与迁移。
 
 ## 一、snippet 本质（A 类）
 
@@ -57,3 +57,25 @@ snippet 体按**声明处的词法作用域**执行：父定义的 snippet 读�
 ### 12. 和 Vue 3.3+ 的 `<slot>`/`v-slot` 体系相比，两者的设计差异？
 Vue 仍保留"插槽是组件内部概念"（`<slot>` 标签 + `v-slot` 指令 + `$slots` 对象）；Svelte 5 把内容分发**彻底 props 化**——没有专门的插槽系统，snippet 就是普通 prop，带参就是普通形参。前者对模板党友好，后者概念更少、正交性更强（呼应 vue 组件 slot、svelte-snippet-children 第六节）。
 **来源**：Vue/Svelte 官方文档设计对照
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  snippet 里读到的是谁的响应式状态？更新由谁触发？跨组件边界时依赖如何解析？
+
+核心事实：snippet 是一个"闭包"——它捕获的是定义它那一侧（父组件）的作用域，{@render} 时读的是父的 state、依赖也登记在父的 effect 图上（即使它渲染在子的 DOM 位置里）。更新触发：① snippet 内引用的父 state 变化 → 该 snippet 的输出重渲染（由父侧响应式驱动，与子的渲染无关）；② 子通过 {@render row(item)} 传入的实参（item）变化 → 因为 render 表达式在子的作用域里被重新求值，snippet 收到新参数重渲染。跨边界依赖解析规则："自由变量按词法作用域解析到定义侧，参数按调用侧传入"——这与 React 的 render prop/children 闭包语义完全一致（children 捕获父作用域），Svelte 只是把它做成一等模板语法。坑：以为"snippet 渲染在子里所以读子的 state"——不，读父的；要读子的得靠子把数据当参数传进去。加分句：把 snippet 讲成"带词法闭包的一等模板函数"就通了——它的一切行为（捕获定义侧、参数来自调用侧、可条件声明、可在 each 里造多个实例）都是"函数 + 闭包"的自然推论，不是特殊魔法（对应既有"snippet 能条件声明/在 each 里吗"题）。
+
+**来源**：Svelte snippet 作用域文档；closure 与响应式；既有"snippet 读谁的状态"题深化
+
+### 14.  一个组件同时接收 children 和多个具名 snippet，接口如何设计才不打架？何时该用 children 何时该用具名？
+
+并存机制：children 本身就是一个名为 children 的 Snippet prop——组件里 {@render children?.()} 渲染默认内容；具名 snippet（如 header/footer）是另外的 props。设计原则：① 单一"默认插入点"用 children（如 Card 的内容区、Button 的文本）——最符合直觉、调用方直接写在标签间；② 多个"平行/可选插入点"用具名 snippet（header/footer/actions）——调用方用 {#snippet header()}...{/if} 声明。判据：内容属于"组件的主体"用 children、属于"外围槽位"用具名。可组合性：children 可选（不传则 {@render children?.()} 短路不报错，用可选调用），具名 snippet 缺失要有合理默认或不渲染（对应既有"判断父有没有传 header"题）。与框架对照：React children + render props 混用、Vue 默认插槽 + 具名/动态插槽——Svelte 用"children 就是一个叫 children 的 snippet"把两者统一成同一机制（没有特殊插槽语法，都是 prop），这是它接口一致性的漂亮处。加分句：接口设计的成熟标志是"给默认、可选、可覆盖"——children 默认可选、具名槽位有兜底、都能被覆盖，把一个"能渲染但不强求"的契约写清楚（对应 snippet 关"三通道"既有题的落地）。
+
+**来源**：组件 API 设计；children 与 snippet 并存模式；headless 组件接口设计
+
+### 15.  snippet 相比 Vue 的 slot 语法和 React 的 render prop，在能力与限制上边界在哪？
+
+能力对齐：① 默认内容——Vue <slot> / React children / Svelte children snippet 三家都有；② 具名——Vue slot name + v-slot:、Svelte 具名 snippet、React 用多个 render prop；③ 作用域/带数据——Vue 插槽 props、Svelte snippet 参数、React render prop 传参，三家都能"子给数据、父定渲染"。Svelte 的差异化：snippet 是"值"（可存变量、可条件生成、可在 each 里批量造、可作为普通 prop 传递/组合/转发），比 Vue 的模板指令 slot 更贴近 JS（不用 v-slot 特殊语法），比 React render prop 更贴近模板（{#snippet} 写起来像 HTML 不是箭头函数）。限制：snippet 必须在能编译 .svelte 的地方声明（不能在纯 .js 里用模板语法造，此时退回普通函数/组件）；条件声明/动态 snippet 要理解其"编译成闭包"本质（无 Vue 的 slot 名字符串动态机制那么灵活，反而更显式安全）。转发链：把收到的 snippet 原样传给更深层组件（slot forwarding）——Svelte 用 {@render inner(...args)} 转发，比 Vue 的具名动态插槽转发更直观。加分句：一句话说透——Svelte 把"插槽"从"模板 DSL 特性"降级成"就是个函数值 prop"，代价是少了点语法糖、收益是心智模型统一（插槽、children、片段渲染全是同一套"传递可调用模板"机制），这是"少即是多"的 API 设计取舍。
+
+**来源**：Vue slot / v-slot 文档；React children 与 render prop；snippet 迁移指南

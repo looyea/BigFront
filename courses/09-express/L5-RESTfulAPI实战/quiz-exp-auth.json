@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "JWT 的 payload 段是加密的吗？",
       "options": [
-        "是，别人看不到内容",
         "不是，只是 Base64Url 编码，任何人可解码查看",
+        "是，别人看不到内容",
         "是对称加密",
         "取决于算法"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "JWT 只签名不加密。payload 可被 Base64 解码明文看到，绝不能放密码/敏感信息。签名只保证未被篡改。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "为什么推荐 Access Token 短命 + Refresh Token 长命？",
       "options": [
         "节省流量",
-        "Access 频繁用暴露面大需短（被盗窗口小），Refresh 只在续期时用可长，兼顾安全与免频繁登录",
         "Access 更大",
-        "Refresh 会过期"
+        "Refresh 会过期",
+        "Access 频繁用暴露面大需短（被盗窗口小），Refresh 只在续期时用可长，兼顾安全与免频繁登录"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "双 token 平衡安全与体验：短时 Access 泄露风险窗口小，长时 Refresh 让用户不用反复登录，且可轮换/吊销。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "httpOnly Cookie 主要防御哪类攻击？",
-      "options": ["CSRF", "XSS 窃取 token（JS 读不到 cookie）", "SQL 注入", "点击劫持"],
+      "options": [
+        "CSRF",
+        "XSS 窃取 token（JS 读不到 cookie）",
+        "SQL 注入",
+        "点击劫持"
+      ],
       "answer": 1,
       "explanation": "httpOnly 让文档 JS 无法读 cookie，XSS 脚本偷不走 session/token。但防不住 CSRF（需 SameSite/CSRF token）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "授权码模式下 secret 留服务端、token 不经浏览器 URL 暴露；public client 加 PKCE 防授权码截获。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 多设备登录管理（\"下线此设备\"）在 JWT 体系下的现实解法是？",
+      "options": [
+        "JWT 无状态做不到",
+        "服务端为每个会话（refresh token 会话）存最小记录（设备指纹/时间/jti），下线=删除记录+吊销该会话的 refresh 链，access 短 TTL 自然过期——\"半无状态\"是行业常态",
+        "改 JWT 为加密",
+        "客户端自律退出"
+      ],
+      "answer": 1,
+      "explanation": "纯无状态放弃的是\"吊销与设备管理\"这两个真实需求；短命 access + 有状态 refresh 是两者的工程折中。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 权限判断从 if (role === admin) 演进出问题后，第一件要补的工程设施是？",
+      "options": [
+        "更多角色",
+        "把\"能力\"收敛为集中定义的权限点（can:editPost 枚举+角色→权限映射表单一事实源），代码只问能力不问角色——散落的角色判断是权限腐化的形态本身",
+        "权限写进注释",
+        "前端按钮隐藏"
+      ],
+      "answer": 1,
+      "explanation": "role 是\"人的分类\"、permission 是\"事的定义\"；业务长到第 5 种角色时，只有权限点体系能防住 if 森林。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 第三方 OAuth 登录后\"该账号已存在\"的处理核心是？",
+      "options": [
+        "拒绝注册",
+        "身份（identity：provider+sub 唯一）与账号（user）分表建模——已存在则登录、不存在则新建并可选引导合并，绑定冲突走验证流程（邮箱所有权确认）",
+        "以昵称为唯一键",
+        "让运营手工处理"
+      ],
+      "answer": 1,
+      "explanation": "一个 user 挂多个 identity 是多对一关系的必然；把第三方 id 直接当用户主键的系统在加第二家登录方式那天重构。"
     }
   ]
 }

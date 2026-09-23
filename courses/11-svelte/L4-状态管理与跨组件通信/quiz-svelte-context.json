@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "context 注册模式(呼应 svelte-context 第三节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " setContext 与 getContext 的调用时机约束是？",
+      "options": [
+        "任意时刻",
+        "setContext 需在组件初始化期（顶层）调用、getContext 需在同一个组件同步初始化期调用（不能在 async 之后），且 getContext 只能拿到\"祖先\"注入的值",
+        "只能全局一次",
+        "必须在 onMount"
+      ],
+      "answer": 1,
+      "explanation": "context 是\"模板树作用域 + 初始化期\"的机制，异步后调用 getContext 拿不到（对应既有\"调用时机\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 让 context 的值变化时所有消费它的后代都更新，正确做法是？",
+      "options": [
+        "每次 setContext 新对象",
+        "把 $state / store 放进 context——传的是\"响应式容器\"本身，后代读到的是同一个 signal/store，容器内部变即响应（Svelte 5）",
+        "只能靠整页刷新",
+        "用 props 层层传"
+      ],
+      "answer": 1,
+      "explanation": "context 传的是值/对象/响应式引用；要\"变了到处更新\"就传 $state 对象字段或 store（对应既有\"如何响应式\"\"字段跨组件响应\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 独立用 mount() 挂载出去的组件，为什么常拿不到预期的 context？",
+      "options": [
+        "mount 禁用了 context",
+        "context 沿\"组件模板树\"向上找祖先——mount 出去的新根没有原来的模板祖先，自然 getContext 不到（除非在新树里重新 setContext 或用模块级状态/store）",
+        "getContext 有 bug",
+        "要用 props 传"
+      ],
+      "answer": 1,
+      "explanation": "context 作用域 = 组件层级，独立挂载等于新根（对应既有\"独立 mount 拿不到 context\"题）。"
     }
   ]
 }

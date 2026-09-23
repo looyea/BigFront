@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "在联合类型 string | number 的变量上，能直接访问哪个成员？",
-      "options": ["length", "toFixed", "只有 string 和 number 都有的成员（如 toString）", "任意成员都行"],
-      "answer": 2,
+      "options": [
+        "只有 string 和 number 都有的成员（如 toString）",
+        "length",
+        "toFixed",
+        "任意成员都行"
+      ],
+      "answer": 0,
       "explanation": "联合类型只保证'共有成员'可直接用；访问某一支特有成员前必须先收窄。"
     },
     {
@@ -16,11 +21,11 @@
       "prompt": "交叉类型 A & B 与联合类型 A | B 的关系是？",
       "options": [
         "完全一样",
-        "联合取'或'(值属于其一)，交叉取'且'(值同时具备两者所有成员)",
         "交叉是联合的语法糖",
+        "联合取'或'(值属于其一)，交叉取'且'(值同时具备两者所有成员)",
         "联合成员更多、交叉成员更少"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "A|B 值可以是 A 或 B；A&B 值要同时满足 A 和 B（拥有全部成员）。方向相反。"
     },
     {
@@ -53,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "{a: string} & {a: number} 的属性 a 类型是？",
-      "options": ["string", "number", "string | number", "never（string & number 无值满足）"],
+      "options": [
+        "string",
+        "number",
+        "string | number",
+        "never（string & number 无值满足）"
+      ],
       "answer": 3,
       "explanation": "交叉对同名属性再取交集，string & number 没有任何值满足，即 never——常见隐式陷阱。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "字面量联合纯类型零运行时，是替代 enum、限定取值、做判别标签的常用手段。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`type Flag = true | false` 的最终类型是：",
+      "options": [
+        "`true | false` 两个成员",
+        "塌缩成 boolean",
+        "never",
+        "`0 | 1`"
+      ],
+      "answer": 1,
+      "explanation": "布尔在类型层就是 true|false 的全并：写成联合自动塌缩；反过来标注 `x: true` 才是窄。用布尔联合建模状态会丢掉穷举分支的可辨识度，状态机请用字面量字符串联合。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`type X = \"a\" | string` 的显示结果是：",
+      "options": [
+        "`\"a\" | string`",
+        "string（字面量被基类型吸收）",
+        "\"a\"",
+        "never"
+      ],
+      "answer": 1,
+      "explanation": "联合按「集合求并」：字面量 ⊂ string，被吸收。生成字面量联合的泛型（`K extends string`）若外部传宽 string 同样塌——想要「任意字符串但推荐这几个」用 `type Opt = Known | (string & {})` 保留提示。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`email?: string` 的变量直接 `x.email.length`，strict 下结果：",
+      "options": [
+        "合法",
+        "报错——可能是 undefined，需判空或 ?. 收窄",
+        "自动返回 0",
+        "仅 IDE 提示不报错"
+      ],
+      "answer": 1,
+      "explanation": "strictNullChecks 是这套模型的地基：可选=可能缺席，访问成员被拦——配合 `?.`/`??` 形成「缺席安全」的表达链。"
     }
   ]
 }

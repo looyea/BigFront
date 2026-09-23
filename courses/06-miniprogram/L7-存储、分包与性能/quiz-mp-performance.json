@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "体验评分对 setData 的常见告警阈值是？",
-      "options": ["单次 >10KB", "单次 >80KB", "每秒 >10 次", "字段 >50 个"],
+      "options": [
+        "单次 >10KB",
+        "单次 >80KB",
+        "每秒 >10 次",
+        "字段 >50 个"
+      ],
       "answer": 1,
       "explanation": "80KB 红线来自官方评分规则（呼应 mp-performance 第一节、mp-setdata）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "detached/onUnload 清理纪律（呼应 mp-performance 第三节 5、mp-component-lifecycle）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 小程序官方把\"启动耗时\"拆成三段，正确的划分是？",
+      "options": [
+        "下载、安装、运行",
+        "小程序初始化（下载代码包 + 逻辑层注入运行）→ 首页渲染（首屏 setData 与视图层绘制）→ 页面就绪到可交互（数据到位、可点击），对应\"下载/注入 → 首屏 → 可交互\"",
+        "编译、打包、上传",
+        "DNS、TCP、TLS"
+      ],
+      "answer": 1,
+      "explanation": "三段各有优化抓手：下载段靠主包瘦身+分包+CDN/预下载；注入段靠减少 app.js/onLaunch 同步重活；首屏段靠骨架、首屏并发取数、setData 数据量与节点数。定位慢在哪段才能对症下药，别笼统说\"优化性能\"。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 关于 Skyline 自研渲染引擎相对 WebView 的优势与代价，正确的是？",
+      "options": [
+        "纯赚无代价",
+        "优势：更接近原生的渲染性能、更强的列表/动画能力（worklet、流畅滚动）、脱离 WebView 兼容包袱；代价：不是全量 Web CSS 子集、部分原生组件/API/样式不支持、需适配与灰度、老 WebView 仍是默认兜底",
+        "Skyline 就是换个皮肤",
+        "所有小程序自动切 Skyline"
+      ],
+      "answer": 1,
+      "explanation": "Skyline 用自绘换性能与一致性，但\"能力子集不同\"意味着迁移要验证。它适合对流畅度/列表/动效要求高、且能接受适配成本的场景，不是无脑开启的开关。答\"性能第一课\"时可举它说明\"渲染层选型也是性能变量\"。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 内存持续上涨、怀疑泄漏，第一优先排查方向是？",
+      "options": [
+        "先重启手机",
+        "找\"只增不减的长生命周期持有\"：detached/onUnload 未清理的 setInterval/setTimeout、未 off 的事件总线监听、IntersectionObserver/动画未 disconnect、缓存的已销毁组件实例、把大对象塞进常驻逻辑层单例/globalData",
+        "看包体积",
+        "删图片"
+      ],
+      "answer": 1,
+      "explanation": "小程序内存泄漏几乎都是\"起停不配对\"：注册了不注销、持有销毁实例、data/全局堆大对象。排查用内存快照对比多次进出页后的堆增长，逐个核对定时器、监听器、observer 的清理。逻辑层是常驻单例进程，这点尤其致命。"
     }
   ]
 }

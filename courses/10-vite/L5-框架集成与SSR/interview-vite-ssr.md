@@ -1,6 +1,6 @@
 # vite-ssr 面试题精选
 
-> 共 12 题，覆盖 **SSR 原理 / Vite SSR API / 双产物 / Environment API / hydration / 流式** 六类。
+> 共 15 题，覆盖 **SSR 原理 / Vite SSR API / 双产物 / Environment API / hydration / 流式** 六类。
 
 ---
 
@@ -101,3 +101,25 @@ hydration = 客户端 JS 加载后，框架遍历服务端已渲染的 DOM，绑
 需要。Nuxt（基于 Vite）/框架帮你封装了双产物构建、路由级取数、hydration、流式、缓存、server 服务——日常开发直接用它们即可。但理解 Vite 原生 SSR（`createServer`+`ssrLoadModule`+`transformIndexHtml`+Environment API）能：① 看懂框架在做什么、排查 SSR 报错/水合不匹配/构建产物异常；② 定制（自研 meta 框架、边缘部署、非常规环境）；③ 判断 SSR vs SSG vs islands 的选型；④ 升级 Vite 大版本时不被 Environment API 变化打个措手不及。框架是杠杆，底层是底气。
 
 **来源**：Nuxt — "how Nuxt uses Vite"; Vite — "SSR guide (framework authors)"; Laravel/Analog — "Vite SSR"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  SSR 项目里框架包、路由包、业务共享包对"打包 vs externalize"的诉求分别是什么？noExternal 怎么正确使用？
+
+三类三包三种处理：① 框架/路由包（vue、react-router）——通常 external 给 Node 即可，但同页多实例风险（dev 预打包一份、Node 又加载一份）出现时要保证单一解析源（dedupe 配置管客户端侧，server 侧靠 external 一致性）；② CJS-only 包——external 后 Node ESM 的 CJS 具名导出可能报错（cjs-module-lexer 判定失败），要么包本身兼容要么 noExternal 让 Vite 预打包处理成 ESM；③ 业务 workspace 共享包（ESM 源码直出）——必须 noExternal，否则 Node 按 package exports 找不到可用入口，且改了源码 Node 模块缓存不刷新（dev 期热更失效的经典成因）。noExternal 的代价：命中包被拉进 SSR 构建参与转换（变慢）、其 node_modules 依赖链也要逐个判断（函数形态按包名精确控制是成熟用法）。判断流程：报错先看"是格式问题（noExternal 治）还是双实例问题（external 统一+dedupe 治）"，两类症状都是 undefined/不是同一实例，方向相反。加分句：这题的底层是"同一份代码在浏览器图与 Node 图里的两种生命周期"——把 external 讲成"解析权交给谁"，答案立即清晰。
+
+**来源**：Vite 官方 SSR 文档（ssr.noExternal）；Vite#12342 讨论（双实例）；Node ESM 互操作指南
+
+### 14.  SSR 首屏的"数据注水"完整链路：服务端取的数据如何安全到达客户端并被复用？
+
+链路四段：① 取数——路由级 loader/asyncData 在服务端并行取数（与渲染解耦，先数据后 render）；② 序列化——JSON.stringify 只覆盖纯数据：Date/Map/Set/undefined/BigInt 要编解码协议（devalue 类库）；XSS 红线：注入 <script> 前必须转义 <、>、U+2028/2029（</script> 逃逸与旧引擎语法崩），这是"注水被 XSS"的真实事故面；③ 注入与认领——window.__INITIAL_DATA__ + 渲染期标记版本号，客户端 hydrate 时优先读注水数据、命中则跳过请求（缓存层按"数据 key"设计而不是组件自觉）；④ 失效策略——交互后数据脏了怎么办（局部 refetch 使该 key 的注水作废），水合期间用户已操作表单的冲突（延迟交互启用/事件重放）。跨请求泄漏检查：数据必须挂在请求实例而非模块单例（呼应 deploy/quiz 既有的状态泄漏题）。加分句：能主动讲"注水体积也是 TTFB 成本——首屏数据裁剪与字段白名单是链路第一段该做的事"，说明你做过真 SSR。
+
+**来源**：Vite SSR 指南（状态序列化）；OWAX XSS 注入与 JSON 转义实践；Nuxt payload 机制对照
+
+### 15.  Streaming SSR 为什么需要 Suspense 类原语？它对服务器响应、错误处理、爬虫兼容各提出什么新要求？
+
+动机：字符串 SSR 要等最慢数据源就绪才吐首个字节，TTFB=max(所有取数)；streaming 把"等待"变成"骨架先走、数据块续传"——shell 立即可交互，慢组件 resolve 后以 <template> + 内联脚本注入原位（late-rendered）并自动水合补齐。四个新要求：① 服务器侧必须管道化（Node 的 res 背压处理、不可提前 flush 头、代理层禁用压缩缓冲——nginx 的 gzip on 会吃掉 streaming 收益，要 chunked 友好配置）；② 错误粒度变化——shell 已发出后深层组件出错不能整体 500（错误边界按流内块渲染占位+客户端重试），状态码语义与监控口径要重定义（"首字节 200 但局部错误"如何上报）；③ 爬虫与无 JS 环境——老爬虫可能拿不到异步块（对 SEO 敏感路由保留字符串模式或 UA 分流）；④ 加载顺序与水合竞态——块到达顺序与 DOM 就绪的协调由 Suspense 协议处理，业务侧禁忌是在流式边界外依赖"数据已全部就绪"的假设。性能真相：streaming 不减少总工作量，改善的是 LCP/TTFB 分布——首屏关键内容应在 shell 段，慢内容降级到流尾才有意义（排序是新的架构问题）。加分句：一句话定位——"Suspense 把渲染从一次函数调用变成一段有状态协议"，说得出协议两字就懂它为什么牵一发动全身。
+
+**来源**：React 官方 Streaming 文档（renderToPipeableStream）；Vue 3.5 实验性异步组件/SSR streaming 讨论；web.dev Streaming SSR

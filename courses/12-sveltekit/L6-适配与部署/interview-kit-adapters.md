@@ -1,6 +1,6 @@
 # kit-adapters 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) SvelteKit 里 adapter 扮演什么角色？为什么需要它而不是直接产出可部署物？
 **来源**：部署体系开场题的转述。
@@ -63,3 +63,25 @@ adapter-static + `fallback`（App 内无服务器、所有路由回落入口壳�
 adapter-node 是**你自己跑的 Node 服务**，预压缩 `.br/.gz` 直接由 server/反代按需 serve、省运行时 CPU，故默认开。adapter-static 产物丢给**第三方静态托管/CDN**，人家多半自带压缩或不支持你上传的 `.br/.gz` 映射，默认关避免产一堆可能用不上的文件。默认值反映的是"谁消费这份产物"。
 
 🚀 **下一组**：L6 课后作业——adapter 选型与落地形态的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  adapter-static + fallback 做成 SPA 时，404 语义怎么处理才算正确？ 
+
+ fallback 页是任意未命中路由的兜底 HTML，HTTP 状态天然是 200，需在客户端路由里自行渲染 404 视图并理解爬虫会收到 200 软 404；SEO 站应放弃 SPA 模式或配服务端状态码映射。 
+
+**来源**： https://github.com/sveltejs/kit/tree/main/packages/adapter-static 
+
+### 14.  从 adapter-auto 切到 adapter-node，构建与运行入口会发生哪些可见变化？ 
+
+ 产物从平台适配壳变为固定的 build/（env.mjs、handler.js、client、server）；启动命令 node build，端口/前缀由 env 注入；需自管进程、日志、TLS 与反代，这是便利到可控的交换。 
+
+**来源**： https://svelte.dev/docs/kit/adapter-node 
+
+### 15.  文档站（全静态）+ 内部后台（登录态动态）同仓库，adapter 与路由怎么切？ 
+
+ 单 Kit 项目混合两种渲染形态：(docs) 组全部 prerender=true 静态输出，(admin) 组 ssr 动态；adapter 取部署目标能力上界（有服务器用 node，纯托管则 docs 预渲染+admin 平台函数），避免双仓库同步地狱。 
+
+**来源**： https://svelte.dev/docs/kit/page-options 

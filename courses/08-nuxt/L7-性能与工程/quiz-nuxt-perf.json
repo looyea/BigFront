@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "Core Web Vitals 目前三指标是？",
-      "options": ["TTFB、DNS、SSL", "首屏时间、白屏时间、可交互时间", "LCP、INP、CLS", "FCP、FID、TBT"],
-      "answer": 2,
+      "options": [
+        "LCP、INP、CLS",
+        "TTFB、DNS、SSL",
+        "首屏时间、白屏时间、可交互时间",
+        "FCP、FID、TBT"
+      ],
+      "answer": 0,
       "explanation": "LCP(加载≤2.5s)、INP(交互≤200ms，已取代 FID)、CLS(视觉稳定≤0.1)（呼应 nuxt-perf 第 1 节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "为什么开发机上 Lighthouse 跑高分仍不代表线上快？",
-      "options": ["Lighthouse 分数没有意义", "应该看 CrUX 的真实用户 75 分位现场数据：机型、网络、地域差异巨大", "因为 Lighthouse 不支持 SSR", "只要多加几次测试取平均即可"],
+      "options": [
+        "Lighthouse 分数没有意义",
+        "应该看 CrUX 的真实用户 75 分位现场数据：机型、网络、地域差异巨大",
+        "因为 Lighthouse 不支持 SSR",
+        "只要多加几次测试取平均即可"
+      ],
       "answer": 1,
       "explanation": "实验室数据是理想环境，真实现场才有代表性；用 75 分位做基线（呼应 nuxt-perf 第 1、5 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "SSR 应用中数据被塞进 payload，主要性能代价是？",
-      "options": ["水合会执行两次", "会拖慢数据库", "会被 CDN 拒绝缓存", "增大 HTML 体积，抬高 TTFB 与 LCP"],
+      "options": [
+        "水合会执行两次",
+        "会拖慢数据库",
+        "会被 CDN 拒绝缓存",
+        "增大 HTML 体积，抬高 TTFB 与 LCP"
+      ],
       "answer": 3,
       "explanation": "__NUXT__ 内联在 HTML 里，payload 越大首字节与渲染越慢（呼应 nuxt-perf 第 3 节、nuxt-hydration 第 2 节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "/blog/[id] 详情量大、允许小时级新鲜度，最合适的 route rule 是？",
-      "options": ["prerender: true", "ssr: false", "isr: 86400（或 swr）", "no-store"],
+      "options": [
+        "prerender: true",
+        "ssr: false",
+        "isr: 86400（或 swr）",
+        "no-store"
+      ],
       "answer": 2,
       "explanation": "isr/swr 让首次动态、之后命中缓存并可后台再生，兼顾新鲜度与成本（呼应 nuxt-perf 第 2 节、nuxt-render-modes）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "页面 LCP 元素是一张主图，下列哪个做法会拖慢 LCP？",
-      "options": ["给主图 fetchpriority=\"high\"", "用 <NuxtImg> 输出合适尺寸", "对首屏之外的图片用 loading=\"lazy\"", "把主图放进 <ClientOnly> 等水合后再请求"],
+      "options": [
+        "给主图 fetchpriority=\"high\"",
+        "用 <NuxtImg> 输出合适尺寸",
+        "对首屏之外的图片用 loading=\"lazy\"",
+        "把主图放进 <ClientOnly> 等水合后再请求"
+      ],
       "answer": 3,
       "explanation": "ClientOnly 让主图错过 SSR HTML、推迟到水合后才加载，直接拖后 LCP（呼应 nuxt-perf 第 4 节、nuxt-hydration 的 LCP 禁令）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "\"性能预算\"工程化落地的推荐方式是？",
-      "options": ["上线后再看监控救火", "每次改完请 QA 手工感觉一下", "在 CI 用 resource budget / Lighthouse CI 卡住体积与分数，超标即失败", "把所有资源内联进 HTML"],
+      "options": [
+        "上线后再看监控救火",
+        "每次改完请 QA 手工感觉一下",
+        "在 CI 用 resource budget / Lighthouse CI 卡住体积与分数，超标即失败",
+        "把所有资源内联进 HTML"
+      ],
       "answer": 1,
       "explanation": "把预算做成回归卡口，退化在合入前被拦，而不是靠人肉或事后（呼应 nuxt-perf 第 5 节）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "关于 features.inlineStyles 的性能取舍，正确的是？",
-      "options": ["内联减少 HTML 体积、增大 CSS 文件", "它只影响 dev 不影响 build", "内联总会导致 FOUC", "内联省一次请求/改善首屏但增大 HTML、降低 CDN 命中，需按实测决定"],
+      "options": [
+        "内联减少 HTML 体积、增大 CSS 文件",
+        "它只影响 dev 不影响 build",
+        "内联总会导致 FOUC",
+        "内联省一次请求/改善首屏但增大 HTML、降低 CDN 命中，需按实测决定"
+      ],
       "answer": 3,
       "explanation": "这是内联与外链的经典权衡，内容站偏内联、重交互后台可能关掉（呼应 nuxt-perf 第 3 节、nuxt-styling 第 5 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Nuxt DevTools 的 inspector 里发现某页 payload 异常大，第一处理方向是？",
+      "options": [
+        "压缩 HTML",
+        "定位大 key：多半是整列表/大对象进了 useFetch 结果并被序列化——接口侧裁剪字段+客户端侧只留必要，比任何传输压缩都有效",
+        "关 SSR",
+        "加 CDN"
+      ],
+      "answer": 1,
+      "explanation": "payload 是\"数据进首字节\"的结构问题，治理顺序永远是：删数据>裁字段>压缩传输。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " SSR 页面 TTFB 拆解中最常低估的一段是？",
+      "options": [
+        "Node 启动",
+        "等待上游：SSR 渲染同步等 useFetch 的接口链，数据库/外部 API 的 P99 直接进 HTML 首字节——\"框架快\"不等于\"页面快\"",
+        "静态资源下载",
+        "DNS"
+      ],
+      "answer": 1,
+      "explanation": "SSR 的性能问题八成是数据问题：把\"页面慢\"先翻译成\"哪个 await 慢\"再谈渲染优化。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 防性能回归进 CI 的合理形态是？",
+      "options": [
+        "每次 PR 跑全量 Lighthouse",
+        "预算化断言：bundle 体积按路由预算、payload 大小阈值、关键页 Lighthouse 跑基线对比（超阈值 fail 并给 diff），全量跑留夜间",
+        "只测单测",
+        "靠线上观察"
+      ],
+      "answer": 1,
+      "explanation": "CI 里的性能门禁要\"可失败且可归因\"——全量慢测没人等，抽样预算制才活得久。"
     }
   ]
 }

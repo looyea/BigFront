@@ -1,6 +1,6 @@
 # 细粒度响应式内核 · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) Solid 的 signal 到底由什么构成？依赖是怎么被自动收集的？
 
@@ -61,3 +61,25 @@ memo 复用了 computed/effect 的自动追踪，但额外缓存并把结果暴�
 
 untrack 用于"我要在这次执行里读某信号、但不把它记为依赖"（就地屏蔽）；on 用于"这个 observer 的依赖就固定是我列出的这几个"，还能 `defer` 跳过首次。前者局部包裹、后者整体接管依赖集。
 **来源**：官方 untrack / on 两个 API 的职责差异转述为对比题。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  没有调度器与优先级队列，Solid 靠什么保证更新顺序正确？ 
+
+ 依赖图本身即拓扑序：写从 signal 出发沿边传播，memo 拉取式求值保证读到上游终值；同层冲突由 batch/即时一致语义裁决；无 React 式任务优先级，所以也没有渲染被高优插队的现象。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createsignal 
+
+### 14.  keyed 列表更新时 Solid 如何移动 DOM 而不重建行？ 
+
+ For 按引用键维护 item→节点映射，重排只调 insertBefore；行内 signal 随行存活天然保状态，无需 React 的状态搬移补丁；Index 才按位对齐，语义差异即实现差异。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/loops 
+
+### 15.  从实现角度解释为什么解构 props 会失去响应式。 
+
+ props 是编译器生成的 getter 对象，每次属性访问才读对应信号/表达式；解构把当下值拷成普通局部变量，之后父组件更新无处触达；整页不更新的经典成因，修复点是用具函数或 props.x 惰性访问。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/components 

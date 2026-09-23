@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "文章分享卡片在微信/飞书里没有图也没有描述，最可能的原因是？",
-      "options": ["图片格式不对", "微信限制图片域名白名单", "分享爬虫不执行 JS，OG 标签必须由服务端渲染输出，而代码在客户端分支才设置", "没有安装 @nuxtjs/robots"],
+      "options": [
+        "图片格式不对",
+        "微信限制图片域名白名单",
+        "分享爬虫不执行 JS，OG 标签必须由服务端渲染输出，而代码在客户端分支才设置",
+        "没有安装 @nuxtjs/robots"
+      ],
       "answer": 2,
       "explanation": "社交爬虫只读第一份 HTML；useHead 在 ssr:false 或客户端时机执行都拿不到（呼应 nuxt-seo-meta 第 1 节表格）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "useHead 与 useSeoMeta 的分工是？",
-      "options": ["前者管任意标签（script/JSON-LD/canonical/htmlAttrs），后者管 40+ 预设 SEO/OG 字段并有类型提示", "前者只能在 app.vue 用，后者只能在页面用", "后者是前者的别名，无差别", "前者管 SSR，后者管 CSR"],
+      "options": [
+        "前者管任意标签（script/JSON-LD/canonical/htmlAttrs），后者管 40+ 预设 SEO/OG 字段并有类型提示",
+        "前者只能在 app.vue 用，后者只能在页面用",
+        "后者是前者的别名，无差别",
+        "前者管 SSR，后者管 CSR"
+      ],
       "answer": 0,
       "explanation": "useSeoMeta 免记 property 拼写，useHead 承载其余标签；两者都走 unhead 同一套去重与 diff（呼应 nuxt-seo-meta 第 2 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "ogImage 写成 \"/og.png\" 会出现什么现象？",
-      "options": ["框架自动补全为绝对地址", "构建报错", "只有百度能读到", "多数平台解析失败导致无图，必须写 https://域名/og.png"],
+      "options": [
+        "框架自动补全为绝对地址",
+        "构建报错",
+        "只有百度能读到",
+        "多数平台解析失败导致无图，必须写 https://域名/og.png"
+      ],
       "answer": 3,
       "explanation": "OG 值是给外部爬虫用的绝对资源地址，标准里就是 absolute URL（呼应 nuxt-seo-meta 第 4、6 节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "页面 head 里出现两份 description，常见成因是？",
-      "options": ["HTML 规范允许多份，无害", "浏览器会自动合并", "混用 useSeoMeta 与手写的 useHead meta 数组（或用不同 key），绕过了 unhead 的按字段去重", "CDN 注入的"],
+      "options": [
+        "HTML 规范允许多份，无害",
+        "浏览器会自动合并",
+        "混用 useSeoMeta 与手写的 useHead meta 数组（或用不同 key），绕过了 unhead 的按字段去重",
+        "CDN 注入的"
+      ],
       "answer": 2,
       "explanation": "unhead 按标签键名 diff，两套写法混用会造成不同 key 各留一份；统一到 useSeoMeta（呼应 nuxt-seo-meta 第 6 节第 2 条）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "canonical 的站点根地址在测试/预发/生产各不相同，最干净的给法是？",
-      "options": ["写死在 nuxt.config 里，切分支时手工改", "runtimeConfig.public.siteUrl（配合 site.url 与 NUXT_PUBLIC_SITE_URL），运行期注入", "存进 cookie，由前端读取", "每次请求从 Host 头拼，不需要配置"],
+      "options": [
+        "写死在 nuxt.config 里，切分支时手工改",
+        "runtimeConfig.public.siteUrl（配合 site.url 与 NUXT_PUBLIC_SITE_URL），运行期注入",
+        "存进 cookie，由前端读取",
+        "每次请求从 Host 头拼，不需要配置"
+      ],
       "answer": 1,
       "explanation": "它是\"部署时才知道的值\"，属运行期配置；同一份产物多环境靠环境变量覆盖（呼应 nuxt-seo-meta 第 3 节、nuxt-runtime-config 第 3 节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "routeRules 里 prerender: true 的页面，其 useHead 元信息会怎样？",
-      "options": ["被剥离，需要客户端二次注入", "无法使用 useHead，会抛错", "只在 dev 生效，生产失效", "构建期渲染时被写入静态 HTML，SEO 效果最好"],
+      "options": [
+        "被剥离，需要客户端二次注入",
+        "无法使用 useHead，会抛错",
+        "只在 dev 生效，生产失效",
+        "构建期渲染时被写入静态 HTML，SEO 效果最好"
+      ],
       "answer": 3,
       "explanation": "预渲染产物就是完整 HTML（含 head），这正是落地页首选 prerender 的原因（呼应 nuxt-seo-meta 第 5 节、nuxt-render-modes）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "站内搜索结果页（?q=xxx&sort=x）合理的 SEO 策略是？",
-      "options": ["prerender 所有可能关键词组合", "ssr:true 且 noindex，同时 robots.txt Disallow /search", "ssr:false 让 Google 渲染后再索引", "不设元信息，让爬虫自行判断"],
+      "options": [
+        "prerender 所有可能关键词组合",
+        "ssr:true 且 noindex，同时 robots.txt Disallow /search",
+        "ssr:false 让 Google 渲染后再索引",
+        "不设元信息，让爬虫自行判断"
+      ],
       "answer": 1,
       "explanation": "无限参数页会耗尽抓取配额并产生重复内容；索引层挡掉 + 抓取层挡掉是标准做法（呼应 nuxt-seo-meta 第 3 节与第 5 节表格）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 文章封面图要出现在微信/飞书分享卡片里，服务端必须做到的是？",
+      "options": [
+        "图放 public/ 就行",
+        "爬虫抓 HTML 时就要拿到绝对 URL 的 og:image——SSR/预渲染直出 meta 且图片 URL 可公网访问（不能依赖登录后或 JS 后注入），有的爬虫不执行 JS 也不解析相对路径",
+        "用 base64 内联图",
+        "加 noindex"
+      ],
+      "answer": 1,
+      "explanation": "分享卡片=无 JS 摘要环境的典型：og 标签与服务端可取的图，两个都直出才算完成。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " routeRules 里给整站加 { headers: { \"X-Robots-Tag\": \"noindex\" } } 的用意与风险是？",
+      "options": [
+        "提升收录速度",
+        "给测试/预发整站挂 noindex 防误收录是正用；风险是规则随配置漂移到生产=全站从搜索消失，需环境断言（prod 构建校验这条头不存在）",
+        "压缩响应头",
+        "防 XSS"
+      ],
+      "answer": 1,
+      "explanation": "\"noindex 漏到生产\"是 SEO 界的核事故：防它靠 CI 断言而非靠人记得——环境差异配置要有自动化裁判。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " JSON-LD 与 og 标签的关系是？",
+      "options": [
+        "二选一新胜者淘汰旧",
+        "职责不同可共存：JSON-LD 给搜索引擎结构化理解（富结果资格），og 给社交平台分享卡片——一个面向收录与展示增强、一个面向站外呈现",
+        "JSON-LD 必须放 body",
+        "og 已废弃"
+      ],
+      "answer": 1,
+      "explanation": "两套消费方两笔投入：文章页 Schema 挣富摘要、og 挣点击率——都省不得也互不替代。"
     }
   ]
 }

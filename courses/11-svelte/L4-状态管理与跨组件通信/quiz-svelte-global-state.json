@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "load/devalue 是正路,12-sveltekit 专讲(呼应 svelte-global-state 第四、五节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 组件 import 一个 .svelte.js 模块里的 $state 对象后，直接改它的字段能响应，根本原因是？",
+      "options": [
+        "深拷贝同步",
+        "模块是单例——所有 import 拿到的是同一个被 $state 代理的对象，字段读写走的是同一批 signal，改一处处处见（对应既有\"为何字段能任意响应\"题）",
+        "事件总线",
+        "脏检查轮询"
+      ],
+      "answer": 1,
+      "explanation": "ESM 模块单例 + $state 深代理 = 跨组件字段级共享响应（这正是全局态的实现基础）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 需要\"全局读写 + localStorage 持久化 + 跨标签页同步\"，最省事的官方向方案是？",
+      "options": [
+        "手写 store",
+        "用带持久化的方案（如 $state + 订阅写 localStorage + storage 事件或 BroadcastChannel 同步，或直接选一个 rune-aware persist 库）——把持久化与跨页同步做成状态层的副作用（对应既有\"最省事方案\"与跨标签页题）",
+        "只能用 IndexedDB",
+        "放弃持久化"
+      ],
+      "answer": 1,
+      "explanation": "跨标签页靠 storage 事件/BroadcastChannel，持久化是状态模块里的一层 effect（呼应既有跨标签页同步题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 全局态模块用工厂函数 createX() 而非直接导出裸 $state，主要收益是？",
+      "options": [
+        "写得长",
+        "可控作用域与可测性——工厂每次返回独立实例（便于测试隔离/多实例），且能封装内部 state 只暴露方法，避免外部乱改字段（对应既有\"工厂函数而非直接导出\"题）",
+        "性能更快",
+        "唯一能做响应式"
+      ],
+      "answer": 1,
+      "explanation": "导出裸单例=全局可变 + 测试互污；工厂=可控生命周期与封装（呼应 reactive-runes 共享边界题）。"
     }
   ]
 }

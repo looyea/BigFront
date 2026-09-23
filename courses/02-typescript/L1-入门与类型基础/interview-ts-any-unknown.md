@@ -1,6 +1,6 @@
 # ts-any-unknown 面试题精选
 
-> 共 12 题，覆盖 **any / unknown / never / void / 断言与 satisfies / 类型格** 六类。
+> 共 15 题，覆盖 **any / unknown / never / void / 断言与 satisfies / 类型格** 六类。
 
 ---
 
@@ -97,3 +97,25 @@ JS 里 `throw` 可以抛任意值（字符串、对象都可能），所以 `e` 
 ① tsconfig 开 `strict`（含 `noImplicitAny`）；② ESLint 开 `@typescript-eslint/no-explicit-any`（error）+ `no-unsafe-*` 系列，CI 阻断；③ 所有**外部边界**（HTTP body、env、localStorage、`JSON.parse`、第三方无类型库）先 `unknown`，经 zod/valibot `parse` 得运行时校验 + 静态类型；④ 确需临时 `any` 时用 `// eslint-disable-next-line` + `// TODO` 标注原因并排期清理；⑤ 用 `satisfies`/守卫替代 `as`。这样把"信任"集中建立在边界校验点，内部全程类型安全流转。
 
 **来源**：typescript-eslint — "recommended rules"; colinhacks — "Zod"; Effect/valibot docs; team TS style guides
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. JSON.parse 返回 any 为什么被广泛称为设计败笔？现在有什么缓解方案？
+
+any 会**无声穿透**：`const d = JSON.parse(t); d.user.name.length` 一路合法直到运行时炸——外部数据恰恰是最不该信任的。社区推动改 unknown 多年被拒（破坏兼容），现实方案：① 包一层 `parseJson<T>(t): unknown` 自己收口；② zod/valibot `schema.parse(JSON.parse(t))` 让运行时校验补位；③ TS 5.x 起 `--target es2020+` 无改动，但 lib 里 JSON.parse 仍是 any——把它列为 lint 禁止项、统一走封装函数是最可落地的团队纪律。
+
+**来源**：microsoft/TypeScript issue #13218（JSON.parse should have an unknown return type）；zod README「Type inference」工作流。
+
+### 14. catch (e) 的异常处理在 TS 里怎么做才算类型正确？
+
+TS 4.4 起 `useUnknownInCatchVariables`（strict 包含）把 e 定为 unknown——旧代码 `e.message` 全红是好事：抛错可以是非 Error（`throw "x"` 合法）。正确姿势：`if (e instanceof Error) ...` 收窄后用 message/stack；自定义错误用 `instanceof MyError` 链或 `is` 守卫；要附带数据统一 `e instanceof Error && e.cause`（ES2022）读取。全局侧：process uncaughtException 里的 err 同样按 unknown 进、Error 出，边界处一次收窄终身受益。
+
+**来源**：TS 4.4 release notes《Control Flow Analysis on catch Variables》；MDN throw「可以抛任意值」。
+
+### 15. 把 () => number 传给期望 () => void 的回调是合法的，为什么？这算类型漏洞吗？
+
+「返回值被忽略」的 void 特殊规则：目标返回 void 时源函数返回什么都兼容（否则 forEach 里所有有返回值回调全要写 `=> { fn(x) }` 包一层， ergonomics 灾难）。它确实是不健全点（你没法从类型知道回调真返回值），但收益>>代价。配套坑：**参数双变性**——方法声明（`m(x: Sub): void` 与 `m(x: Super): void`）默认互容（bivariant），函数属性在 strictFunctionTypes 下才走逆变；这是历史妥协（DOM 事件处理器大量基类→子类借用），理解它就理解了「为什么 (e: Event)=>void 能塞给 MouseEvent 监听，反过来不行」。
+
+**来源**：TS Handbook《Type Compatibility: void 返回规则 / 双变方法》；Anders 关于 bivariance 的 issue 长篇解释（#20069）。

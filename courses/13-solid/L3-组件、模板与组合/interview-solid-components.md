@@ -1,6 +1,6 @@
 # solid-components 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 编译器把 `<MyComp a={x()} />` 编译成什么？组件到底执行几次？
 **来源**：createComponent 机制题的转述。
@@ -63,3 +63,25 @@ children 在**父作用域**作为 prop 传入时就已求值，子组件只是�
 大多不必要。React 用 memo/useCallback 是为对抗"父重渲→子重渲/props 引用变导致子重渲"。Solid 组件不重渲、props 是 getter、子只在读到 signal 变化时更新，没有"引用相等防止重渲"这回事。迁移时删掉这批稳定化包装，改成正确的惰性读 + signal/memo 即可（react-to-solid-migration 展开）。
 
 🚀 实操请去做 L3 作业：复现解构冻结、mergeProps/splitProps、render prop 回填、传裸 signal 四道题。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Solid 组件函数只执行一次，那组件实例承载的状态与更新到底在哪？ 
+
+ 函数返回真实 DOM/文档片段；组件级状态即函数作用域里的 signal，UI 更新由 JSX 内被编译器包裹的细粒度订阅完成——组件是构造器而非渲染函数，回答要能破『组件=渲染』的直觉。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/components 
+
+### 14.  在 Solid 里实现 HOC（日志/权限包装组件）要注意什么？ 
+
+ 包装器必须转发惰性 props（Proxy 或 mergeProps 而非展开复制），children 原样传递且理解求值作用域；否则父更新不再流进内层——保住 getter 链路是 Solid 组合模式的第一纪律。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/components 
+
+### 15.  受控输入（value 外部来、onInput 回报父级）在 Solid 里怎么不破坏单向流？ 
+
+ 用 prop 读取 value（getter）同步写回 DOM 需 effect 或 value 绑定指令，用户输入经回调上报由父改 signal；bind:value 双向糖同样只作用于响应式值，核心仍是单一数据源在父。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#-bind 

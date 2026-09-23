@@ -1,6 +1,6 @@
 # solid-error-boundary 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) ErrorBoundary 到底捕获哪些错误？给官方划的能力边界。
 **来源**：捕获范围题的转述。
@@ -63,3 +63,25 @@ fetcher 里抛的错让 resource 进 `errored`（`resource.error`），只有当
 ErrorBoundary 覆盖不到"事件处理器、游离异步、未处理 Promise 拒绝"。生产要补：① `window.addEventListener('error')` 与 `unhandledrejection` 全局兜网 + 上报；② fetcher/副作用里对可预期失败主动 `try/catch` 转成 `resource.error`/返回错误态；③ SolidStart 服务端错误处理（L8）。三者与 ErrorBoundary 合起来才是完整错误防线。
 
 🚀 实操请去做 L5 作业：复现事件错不被捕、reset 重试、多级降级、边界包 Suspense、行粒度边界五道题。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  资源失败后要做指数退避自动重试，和 ErrorBoundary 怎么配合？ 
+
+ 重试在取数层（fetcher 内循环 refetch 或包装 fetch 的退避逻辑）而非边界层；边界只做最终兜底呈现；须给放弃条件与手动重试按钮，且重试期间保持 refreshing 态可见，防止用户以为卡死。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#errorboundary ； https://www.solidjs.com/docs/latest/api#createresource 
+
+### 14.  fallback 渲染本身又抛错，Solid 的行为与你的防御手段？ 
+
+ 二次错误沿 owner 树向上传给外层边界（onErrored 可观测）；防御是 fallback 保持极简（纯文本+按钮）、其数据依赖清零，并配 src 级最终兜底页；复杂 fallback 是隐性白屏源。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#errorboundary 
+
+### 15.  上报系统怎么区分渲染期错误、异步任务错误与资源失败三类？ 
+
+ 渲染期与资源失败都汇到边界（看 error 是否含 rejection 原值区分），事件处理器/裸 Promise 不经边界需 window error/unhandledrejection 网；三类打 tag 聚合，路由信息与组件栈（onCaught 里可取）辅助定位。 
+
+**来源**： https://docs.solidjs.com/ 

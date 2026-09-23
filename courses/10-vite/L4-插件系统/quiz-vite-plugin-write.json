@@ -8,11 +8,11 @@
       "prompt": "实现一个虚拟模块，最少需要哪两个钩子配合？",
       "options": [
         "transform + renderChunk",
-        "resolveId（认领说明符）+ load（生成源码）",
         "config + transform",
+        "resolveId（认领说明符）+ load（生成源码）",
         "buildStart + closeBundle"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "resolveId 把 'virtual:x' 解析成自定义 id，load 对该 id 返回生成的源码，业务即可 import。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "虚拟模块解析后的 id 加 \\0 前缀主要是为了？",
       "options": [
         "跑得更快",
-        "标记这不是真实文件路径、让其它插件默认跳过，避免被当文件读取或争抢",
         "加密源码",
-        "兼容 IE"
+        "兼容 IE",
+        "标记这不是真实文件路径、让其它插件默认跳过，避免被当文件读取或争抢"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "\\0（null 字节）是 Rollup 生态惯例，表示虚拟/非文件 id，防止文件系统类插件误处理。"
     },
     {
@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "只想在开发服务器生效、生产构建完全不挂载，应该用？",
-      "options": ["enforce: 'pre'", "apply: 'serve'", "configureServer 里 try/catch", "mode === 'test'"],
+      "options": [
+        "enforce: 'pre'",
+        "apply: 'serve'",
+        "configureServer 里 try/catch",
+        "mode === 'test'"
+      ],
       "answer": 1,
       "explanation": "apply:'serve' 让插件只在 dev 挂载；配合 configureServer 注册中间件，生产零成本、不把调试端点带上线。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "generateBundle 能拿到最终产物集合，遍历 chunk.code 断言，用 this.error 让构建失败。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " transform 里要额外读取一个本地文件参与生成内容，让依赖变化能触发该模块重新转换的正确做法是？",
+      "options": [
+        "用 fs 读了就行",
+        "this.load(id) 或 this.resolve 后读取——走 Rollup 模块图登记依赖，被读文件变化才会使当前模块缓存失效并重新 transform；裸 fs.readFile 是隐形依赖，热更与缓存都不感知",
+        "在 buildStart 里读一次缓存起来",
+        "watch 里另起进程"
+      ],
+      "answer": 1,
+      "explanation": "插件里一切\"读了会影响输出\"的内容都应通过上下文 API 登记，这是 HMR 正确性的前提。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 插件钩子 top-level 的 enforce: pre 的含义是？",
+      "options": [
+        "在框架/核心插件之前对该钩子执行——需要拿到\"未编译原始源码\"（如做代码注入、静态分析）的插件必须 pre，否则看到的是已被 vue/react 插件改写过的代码",
+        "强制构建并行",
+        "优先分配缓存",
+        "跳过钩子校验"
+      ],
+      "answer": 0,
+      "explanation": "pre/normal/post 三段编排是插件顺序的全局坐标；要改源码的插件几乎都要显式声明 pre。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 插件里想报一个带源文件与行号、能显示在浏览器错误浮层里的错误，应该？",
+      "options": [
+        "console.error 后继续",
+        "调用 this.error({ id, loc, message })——Rollup 上下文错误能携带位置信息并被 Vite 格式化上屏，普通 throw 只有文字没有定位",
+        "返回一个 error 字符串",
+        "process.exit(1)"
+      ],
+      "answer": 1,
+      "explanation": "this.error 还会中断当前模块处理，避免错误被吞后产出坏代码；位置信息来自 id+loc 的规范结构。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # mp-directory 面试题精选
 
-> 共 12 题，覆盖 A 目录与文件 / B app.json 配置 / C 页面级配置 / D 工具配置·架构对照类。
+> 共 15 题，覆盖 A 目录与文件 / B app.json 配置 / C 页面级配置 / D 工具配置·架构对照类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：`sitemap.json` 声明**哪些页面允许被微信"搜一搜"索引做搜索直达**（`rules` 配 `action: allow/disallow` + `page`/`params`），只管收录、不影响功能。默认/主动 `disallow` 的原因：① 多数页面是登录态/个性化/临时数据，不宜被公开检索；② 隐私合规（避免用户页被索引）；③ 防止无意义或半成品页面被搜到影响体验。需要 SEO 式流量时再精细放开（呼应 react-nextjs SEO、mp-publish）。
 
 **来源**：微信小程序 — sitemap 配置、搜一搜接入
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  app.json、app.wxss、app.js 三者职责分别是什么？和 Vue 工程的哪些文件类比？
+
+app.js=应用入口：注册 App() 构造器、定义 onLaunch/onShow、挂 globalData、处理全局逻辑——类比 main.js + 根实例生命周期。app.json=全局配置清单：pages 路由表、window 外观、tabBar、分包、权限——类比路由表 + manifest（但它是运行时被小程序容器读取生效的配置，不是构建期）。app.wxss=全局样式——类比全局样式入口，且注意「app.wxss 别塞大批公共样式」（会进主包、影响首屏），公共组件样式就近放组件里。工程组织差异：小程序是「配置驱动 + 约定四件套」，Vue 是「构建驱动 + 组件 import」，迁移时最不适应的往往是「路由与外观写 json 而非代码、依赖靠 json 声明而非 import」。
+
+微信官方文档《小程序代码构成》；掘金《小程序目录结构与工程化实践》
+
+### 14.  想把小程序组织得像中大型前端工程，你会做哪些工程化安排？
+
+① 目录按 feature/领域切页与组件，utils 分层（request 封装、storage 封装、格式化 wxs/util）；② 网络层统一封装 wx.request（拦截器、token 注入、错误码归一、loading 管控、请求去重），别让页面裸调；③ 常量/配置集中（appConfig 放域名、scene 表）；④ 全局状态克制——用 globalData 只放真全局，跨页通信用事件/参数/storage，避免「远程全局变量」；⑤ 分包预下载 + 主包瘦身（公共组件抽组件库、图片上 CDN）；⑥ 类型/规范——引入 TS 或 miniprogram-api-typings、ESLint、commit 规范；⑦ 多环境用构建脚本切换（配置/域名/appid），别手改 json；⑧ CI 预览/上传用 miniprogram-ci。核心与前端一致：分层、封装、约定优于配置、按变化聚合。
+
+SegmentFault《小程序 app.json 与页面注册机制详解》；CSDN《小程序项目结构踩坑录》
+
+### 15.  小程序「配置驱动」与 Vite「构建驱动」在工程组织上最大的不同会带来哪些坑？
+
+最大不同：小程序很多行为由运行时读取的 json 决定（路由、tabBar、window、usingComponents、分包），而非由打包器在构建期解析 import 图生成。带来三类坑：① 「改了 json 不生效/需重新编译」——json 参与编译产物与页面栈，某些改动工具不会热更新，需重编；② 依赖是「声明式」的（json 里写路径），拼错路径、忘注册组件、全局 vs 局部 usingComponents 冲突都在运行时/预览才暴露，静态检查弱，需要 lint/预览回归兜底；③ 构建期能力（压缩、ES6 转 ES5、按需注入）由开发者工具/上传时的编译选项控制，而不是 vite 插件链，迁移团队会不适应「没有自定义 bundler 插件、靠 IDE 编译开关」。反过来好处是：零配置就有代码分包、预下载、体积分析，上手成本低。
+
+**来源**：微信小程序 app.json 全局配置、usingComponents、编译设置与分包文档。

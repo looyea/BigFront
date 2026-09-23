@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "被称为整个小程序\"总装配清单\"（路由/外观/tabBar/分包）的是哪个文件？",
-      "options": ["app.js", "app.wxss", "app.json", "project.config.json"],
-      "answer": 2,
+      "options": [
+        "app.js",
+        "app.wxss",
+        "project.config.json",
+        "app.json"
+      ],
+      "answer": 3,
       "explanation": "app.json 是全局配置（呼应 mp-directory 第三节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "app.json 的 pages 数组第一项的含义是？",
-      "options": ["冷启动首页", "404 页", "默认样式页", "分包入口"],
+      "options": [
+        "冷启动首页",
+        "404 页",
+        "默认样式页",
+        "分包入口"
+      ],
       "answer": 0,
       "explanation": "第一项即启动页（呼应 mp-directory 第三节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "页面级 index.json 里写的 navigationBarTitleText 与 app.json window 同名项冲突时？",
-      "options": ["报错", "页面级覆盖全局", "全局覆盖页面级", "取字典序"],
+      "options": [
+        "报错",
+        "页面级覆盖全局",
+        "全局覆盖页面级",
+        "取字典序"
+      ],
       "answer": 1,
       "explanation": "局部覆盖全局（呼应 mp-directory 第四节）。"
     },
@@ -56,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "sitemap.json 影响的是？",
-      "options": ["页面是否被微信搜索索引(搜索直达)", "分包大小", "登录流程", " setData 性能"],
+      "options": [
+        "页面是否被微信搜索索引(搜索直达)",
+        "分包大小",
+        "登录流程",
+        " setData 性能"
+      ],
       "answer": 0,
       "explanation": "只影响搜索收录（呼应 mp-directory 第五节）。"
     },
@@ -72,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "全局唯一 App 入口（呼应 mp-directory 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 一个页面的「四件套」中，哪一个是真正必需、其余在满足条件时可省略？",
+      "options": [
+        "四个都必需",
+        "wxml 与 js 必需；json 可省（无组件/窗口配置时用全局默认），wxss 可省（不需要该页专属样式时可依赖 app.wxss）",
+        "只要 js",
+        "只要 json"
+      ],
+      "answer": 1,
+      "explanation": "pages 注册的是「路径前缀」，框架去找同名四件套。缺 json 走 app.json 的全局 window 默认；缺 wxss 就没有页面级样式。理解这点才懂「导航栏标题写在页面 json 会覆盖 app.json window 同名项」（本关 Q3）——页面 json 优先级更高。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " usingComponents 写在 app.json（全局）与写在页面/组件 json（局部）的关键差别是？",
+      "options": [
+        "完全一样",
+        "全局注册对所有页可用但会被打进主包且难以 tree-shake（未用到的页也带上）；局部注册只在该页/组件生效、利于分包与按需，是更推荐的默认",
+        "局部无法注册自定义组件",
+        "全局注册性能更好"
+      ],
+      "answer": 1,
+      "explanation": "全局注册便利但增大主包、削弱按需加载（与分包关冲突）；局部注册把依赖显式绑在使用处，编译可按页裁剪。中大型项目应尽量局部、慎用全局（这与前端「别在入口 side-effect 全局注册一堆组件」同理）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " project.config.json 与 project.private.config.json 该如何对待版本库？",
+      "options": [
+        "都提交",
+        "project.config.json（appid、编译配置、目录规则等团队共享设置）提交；project.private.config.json（个人本地偏好/调试设置）不提交，避免相互覆盖",
+        "都不提交",
+        "只提交 private"
+      ],
+      "answer": 1,
+      "explanation": "拆分的目的就是「团队约定进 config、个人偏好进 private」，否则每人本地改编译选项会互相打架。类比前端 `.eslintrc`（共享） vs `.eslintcache`/本地 override（忽略）。private 应进 .gitignore。"
     }
   ]
 }

@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "Nuxt 模块（Module）与 Next.js \"插件\"的最大差别是？",
-      "options": ["Nuxt 模块必须付费，Next 插件免费", "模块只能改 CSS，不能改路由", "两者本质相同，都是打包插件的别名", "模块是构建期执行的程序，可通过 hooks 改自动导入、组件表、路由、Vite/Nitro 配置并注入运行时文件"],
+      "options": [
+        "Nuxt 模块必须付费，Next 插件免费",
+        "模块只能改 CSS，不能改路由",
+        "两者本质相同，都是打包插件的别名",
+        "模块是构建期执行的程序，可通过 hooks 改自动导入、组件表、路由、Vite/Nitro 配置并注入运行时文件"
+      ],
       "answer": 3,
       "explanation": "Next 没有等价扩展机制，能力靠 next.config 字段与约定；Nuxt 模块拿到的是整个 nuxt 内部状态（呼应 nuxt-modules 第 1、6 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "开发本地模块时，index.ts 里 import 了一个 Vue 组件用于运行期插件，结果构建报错。正确做法是？",
-      "options": ["把 import 改成 require", "把组件放到 dynamic import", "运行期代码放进 runtime/ 目录，由 addPlugin/addImports 指向 runtime 下的文件", "在 nuxt.config 里额外声明 components"],
+      "options": [
+        "把 import 改成 require",
+        "把组件放到 dynamic import",
+        "运行期代码放进 runtime/ 目录，由 addPlugin/addImports 指向 runtime 下的文件",
+        "在 nuxt.config 里额外声明 components"
+      ],
       "answer": 2,
       "explanation": "index.ts 是构建期代码，不能直接引用运行期模块；modules/<name>/runtime/** 才是运行期侧（呼应 nuxt-modules 第 3 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "修改了模块的配置字段后 dev 环境毫无反应，最可能的原因是？",
-      "options": ["模块在构建期执行，需重启 dev 让 .nuxt 重新生成", "浏览器缓存了 JS", "必须清空 node_modules", "配置字段大小写必须全大写"],
+      "options": [
+        "模块在构建期执行，需重启 dev 让 .nuxt 重新生成",
+        "浏览器缓存了 JS",
+        "必须清空 node_modules",
+        "配置字段大小写必须全大写"
+      ],
       "answer": 0,
       "explanation": "模块不参与运行期热更新，配置变更发生在 hooks 流水线阶段（呼应 nuxt-modules 第 2 节、nuxt-directory 的 .nuxt 生成物）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "需求是\"自定义一种文件的加载方式（如 .mdx 特殊 loader）\"，最合适的选择是？",
-      "options": ["Nuxt 模块", "Nuxt Layer", "Vite 插件", "server middleware"],
+      "options": [
+        "Nuxt 模块",
+        "Nuxt Layer",
+        "Vite 插件",
+        "server middleware"
+      ],
       "answer": 2,
       "explanation": "只涉及\"文件怎么编译\"归 Vite 插件；涉及 Nuxt 约定/目录/运行期注入才用模块（呼应 nuxt-modules 第 6 节分界表、vite-plugin-api）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "自动导入莫名失效，最可靠的排查手段是？",
-      "options": ["在 .nuxt/imports.d.ts、components.d.ts 里搜该符号，以生成物为准", "全局搜 node_modules", "重启电脑", "改用相对路径 import 并永久保留"],
+      "options": [
+        "在 .nuxt/imports.d.ts、components.d.ts 里搜该符号，以生成物为准",
+        "全局搜 node_modules",
+        "重启电脑",
+        "改用相对路径 import 并永久保留"
+      ],
       "answer": 0,
       "explanation": "自动导入是编译期逐符号注入的，生成物即事实；猜配置不如看 .nuxt（呼应 nuxt-modules 第 7 节、nuxt-auto-imports）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "CI 里跑 typecheck 前必须执行 nuxt prepare，原因是？",
-      "options": ["它会下载缺失的 npm 包", "类型与虚拟模块（#imports 等）由 .nuxt 生成，不生成则 TS 找不到声明", "它会启动服务做冒烟测试", "它用于生成生产构建产物"],
+      "options": [
+        "它会下载缺失的 npm 包",
+        "类型与虚拟模块（#imports 等）由 .nuxt 生成，不生成则 TS 找不到声明",
+        "它会启动服务做冒烟测试",
+        "它用于生成生产构建产物"
+      ],
       "answer": 1,
       "explanation": "prepare 只做\"生成 .nuxt 类型与模板\"这一步，dev/build 隐含它，CI 脚本要显式加（呼应 nuxt-modules 第 7 节、nuxt-auto-imports 的 #imports）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "模块作者说\"我的模块会自动提供一个 /api/tenant 端点\"，他最可能用了？",
-      "options": ["addTemplate", "addComponentsDir", "nuxt.hook('pages:extend')", "nitro:config 钩子或 addServerHandler"],
+      "options": [
+        "addTemplate",
+        "addComponentsDir",
+        "nuxt.hook('pages:extend')",
+        "nitro:config 钩子或 addServerHandler"
+      ],
       "answer": 3,
       "explanation": "服务端能力属于 Nitro 侧，模块通过 nitro:config 注入 handler/middleware（呼应 nuxt-modules 第 3、4 节、nuxt-server-routes）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 排查\"某模块到底改了配置什么\"，构建期的直接手段是？",
+      "options": [
+        "在组件里 console.log",
+        "nuxt build --dotenv .env 后查 .nuxt 产物与 nuxt-prepare 输出的最终 config（或 devtools 的 config 面板）——模块通过 hooks 改的是同一份 nuxt 配置对象，快照对比即可归因",
+        "猜执行顺序",
+        "重装模块"
+      ],
+      "answer": 1,
+      "explanation": "模块没有黑魔法：一切扩展最终落到 config 对象与虚拟模块，diff 配置快照是最高信噪比的排查。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 模块的 meta 字段（name/configKey/compatibility）的作用是？",
+      "options": [
+        "纯文档注释",
+        "声明唯一名与配置键（nuxt.config 里按 configKey 集成、类型联动）、compatibility 声明 Nuxt/Node 版本范围（不满足时警告而非神秘失效）——是模块对用户的最小契约",
+        "决定加载顺序",
+        "只在发布时校验"
+      ],
+      "answer": 1,
+      "explanation": "Nuxt 模块的\"约定接口\"：契约写进 meta，失效从全站谜题降级为一条明确警告——版本兼容检查是它的最大实用价值。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 模块内部要注入一段\"只有生产构建才该存在\"的插件，正确做法是？",
+      "options": [
+        "if (process.env.NODE_ENV) 运行时判断",
+        "在 setup 里按 isDev/环境用 addPlugin/import 做构建期分支——setup 只在构建跑一次，产物级取舍要在这时决定而不是运行期",
+        "写在 app.vue",
+        "让使用者手动删"
+      ],
+      "answer": 1,
+      "explanation": "模块代码分\"构建期身份\"（setup/hooks，跑一次定产物）与\"运行期身份\"（注入的插件，每请求/每会话跑）——分支放错层就会有环境串味。"
     }
   ]
 }

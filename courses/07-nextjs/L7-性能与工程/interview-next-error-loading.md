@@ -1,4 +1,4 @@
-# next-error-loading 面试题（12 题）
+# next-error-loading 面试题（15 题）
 
 > 主题：错误边界文件约定、声明式中断、日志监控与加载兜底。
 
@@ -81,3 +81,25 @@
 **答**：分两种链路：① 表单 + useActionState 的渐进增强路径，Action 失败时原生 form 提交本就会重新请求，服务端返回错误状态渲染新页面，用户看到表单错误文案——前提是 Action 返回了结构化的 input/error 状态而不是抛裸异常；② JS 增强路径，useActionState 的 error 值更新、表单保留 pending 结束态。设计要点：Action 永远返回"下一步 UI 所需的数据"，把失败当分支而非异常（呼应 next-forms-mutations 防御四层模板），并保证幂等——用户断网重试不该扣两次钱。
 
 **来源**：知乎《Server Actions 的失败路径设计》；CSDN《从 useActionState 看表单容错》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  给一个中型 Next 站设计完整的错误观测体系：error.tsx、Sentry、日志三件各管什么？服务端组件报错怎么拿到可诊断信息？
+
+**答**：分层：① error.tsx=用户面（恢复路径 reset、业务文案、局部重试），不是观测面——它吞掉错误不等于错误消失，边界里必须同时调上报；② Sentry=聚合面：客户端 init 常规，服务端经 instrumentation.js（register）接 onRequestError 抓 SSR/RSC 渲染错误，注意 error.digest 机制——服务端堆栈不回传浏览器，浏览器只拿到 digest 关联 id，Sentry 侧要用同 digest 把两端事件串起来（官方集成已处理）；③ 结构化日志=链路面：请求维度打 route/部署 BUILD_ID/请求 id，与 Sentry 事件互挂链接。边界外的漏网：事件回调与异步任务（after/队列消费者）要 try/catch+手动 captureException；全局监听（window.onerror/unhandledrejection）兜未进边界的客户端错误。验收演练：故意抛一个渲染错误、一个 Action 错误、一个后台任务错误，三处都要在 Sentry 出现且带路由上下文。
+
+**来源**：Next.js 官方 Error Handling / Sentry 集成指南；InfoQ《前端错误监控的分层》。
+
+### D5.  loading/error/not-found 三个特殊文件的设计哲学是什么？和小程序页面生命周期/错误处理怎么对照？
+
+**答**：哲学：把"页面=一次异步过程"显式建模——pending（loading.tsx=路由段的加载态，且天然形成 Suspense 边界）、rejected（error.tsx=子树错误边界+reset 恢复）、空结果（not-found.tsx=404 语义的段级声明），文件约定让状态机成为目录结构的一部分，而不是每个页面手接 useEffect+try/catch 的重复代码。对照小程序：loading=setData 前自管或骨架屏组件（无框架级段约定，onLoad 里自绘）；错误=App.onLaunch/onError 全局钩子 + 页面内自 catch（缺"子树边界"概念，页级粒度）；404=小程序无真 404（路由表匹配不到直接失败），Next 把 HTTP 语义完整保留给 SEO。共同哲学演进方向都是"约定优于配置"，但 Next 的边界粒度（嵌套 layout 各层）远细于小程序的页级。加分句：能指出 loading.tsx 同时是"UI 约定"与"渲染管线切片（Suspense 边界）"双重身份，说明真懂流式模型。
+
+**来源**：Next.js 官方 Conventions 文档；知乎《文件即边界的 UI 状态机》。
+
+### D6.  一个 PPR 页面：静态壳预渲染、动态段流式补齐——动态段抛错时用户会看到什么？这套行为的设计理由是什么？
+
+**答**：行为：静态壳已经 flush 出去、浏览器已渲染，错误只能限制在 Suspense 边界内——用户看到边界 fallback 被 error.tsx（该边界的错误 UI）替换，页面其余部分（导航/页脚/静态内容）保持可用；点 reset 或再次导航会重新执行动态段。若错误发生在 shell 生成阶段（预渲染/构建期），则整页失败走常规错误路径（构建期报错阻断发布）。设计理由：① 流式语义决定"覆水难收"——HTTP 已发出的字节不能撤回，边界是唯一可行的隔离单元；② 优雅降级优于全页崩溃——内容型站用户要的是"剩下的还能看"；③ 错误粒度与缓存粒度对齐：动态段是独立再生单元，它的失败不该连坐静态壳的 CDN 命中。连锁考点：边界内取数要区分"资源不存在（notFound→404 语义）"与"服务抖动（可重试→给重试按钮）"；监控上 PPR 页的"壳正常+边界错误"在 Lighthouse 里可能完全看不出来，必须靠 RUM 的边界级采样。
+
+**来源**：Vercel 博客《PPR 与错误边界》；Next.js 官方 Partial Prerendering 错误处理说明。

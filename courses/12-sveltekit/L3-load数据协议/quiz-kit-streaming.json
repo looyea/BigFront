@@ -3,6 +3,7 @@
   "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
+      "id": "q1",
       "type": "single",
       "prompt": "不开流式优化时，一页的多个 load（layout+page）执行模型是？",
       "options": [
@@ -15,6 +16,7 @@
       "explanation": "官方 Parallel loading 节：所有 load 并发跑避免瀑布，但结果全部就绪前不出页——最慢的 load 决定首屏，这正是流式要改写的等式。"
     },
     {
+      "id": "q2",
       "type": "single",
       "prompt": "要让慢评论接口不拖正文首屏，+page.server.js 的正确编排是？",
       "options": [
@@ -27,6 +29,7 @@
       "explanation": "server load 返回对象里的未解析 Promise 会被流式下发；官方示例心法是 await 放最后——先让慢查询起飞再 await 快数据，两个查询并行。C 是可行的老办法但不是流式编排。"
     },
     {
+      "id": "q3",
       "type": "single",
       "prompt": "同样的 Promise 写法放进 +page.js（universal load）的返回值，SSR 页面下会发生什么？",
       "options": [
@@ -39,6 +42,7 @@
       "explanation": "官方警告：页面若服务端渲染，universal load 返回的 Promise 不会流式，会在浏览器重跑 load 时重建。要流式请把 Promise 放进 server load。"
     },
     {
+      "id": "q4",
       "type": "single",
       "prompt": "部署到 AWS Lambda 后，流式页面的实际表现是？",
       "options": [
@@ -51,6 +55,7 @@
       "explanation": "官方点名 Lambda/Firebase 等不支撑流式的平台会缓冲整个响应；用反代（NGINX）时也要关缓冲，否则同样的事再次发生。"
     },
     {
+      "id": "q5",
       "type": "single",
       "prompt": "在流式 Promise 的 resolve 链里，下列哪个操作是官方明确『做不到』的？",
       "options": [
@@ -63,6 +68,7 @@
       "explanation": "响应已开始流式后 headers 与状态码覆水难收：setHeaders 与 throw redirect 在流出的 Promise 里无效。鉴权/重定向决策必须发生在开始出页之前。"
     },
     {
+      "id": "q6",
       "type": "single",
       "prompt": "流式 Promise 的失败兜底义务是？",
       "options": [
@@ -75,6 +81,7 @@
       "explanation": "渲染开始前就 reject 且无人处理的 Promise 会让服务端崩在 unhandled rejection。官方规则：load 里用 event.fetch 发起的由 Kit 兜底；其余（直调 DB 驱动等）补 .catch(() => {}) 标记已处理。"
     },
     {
+      "id": "q7",
       "type": "single",
       "prompt": "从 SvelteKit 1.x 升级来的项目发现『return 顶层 Promise 后页面依旧全量才出』，最可能的原因是？",
       "options": [
@@ -85,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "官方版本说明：1.x 顶层 Promise 会被自动 await。升 2.x 后语义改变，老代码若仍按 1.x 心智 await 一切，流式自然没发生——排查顺序先查自己写法再怪环境。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 流式渲染下浏览器 TTFB 的意义变化是？ ",
+      "options": [
+        " TTFB 变差因为要维持长连接 ",
+        " 首字节更早：框架先推已有内容，慢块稍后补进文档流 ",
+        " TTFB 与流式无关 ",
+        " 只有 LCP 受影响 "
+      ],
+      "answer": 1,
+      "explanation": " 不流式时整页等最慢 load；流式后 head 与快内容先出，浏览器立即开始解析渲染，慢片段以占位替换方式追加。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 模板侧配合流式 Promise 的官方写法是？ ",
+      "options": [
+        " {#await promise} 手写骨架与 {:then} ",
+        " <Suspense> 标签 ",
+        " React.lazy ",
+        " {#if resolved} 轮询 "
+      ],
+      "answer": 0,
+      "explanation": " Svelte 用 {#await}/{:then}/{:catch} 块给 pending 态骨架；SSR 流式替换占位，客户端导航则正常切换，两者共用一块模板。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 慢 Promise 同时可能 reject，官方对流式块的要求是？ ",
+      "options": [
+        " 无需处理，框架兜底 ",
+        " 必须提供 {:catch} 或 .catch，否则变成意外错误走全局边界 ",
+        " 只能返回 undefined ",
+        " 必须包 ErrorBoundary 组件 "
+      ],
+      "answer": 1,
+      "explanation": " 渲染进模板的 rejected promise 会触发错误路径，缺 catch 时只能落到最近的 +error 边界，体验与定位都差。 "
     }
   ]
 }

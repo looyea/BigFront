@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "自定义元素的 slot 走浏览器原生分配：无论 <slot> 是否被渲染，slotted 节点都已存在；且 let: 数据回传无通道。这条'Svelte slot 惰性 vs WC slot 急'是坑表最反直觉的一条。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 组件顶部写 <svelte:options customElement=.../> 的作用是让组件？",
+      "options": [
+        "性能优化",
+        "被编译为 Custom Element（自定义元素），可用 <my-widget> 原生标签挂载、跨框架/无框架嵌入（对应既有\"customElement 作用\"题）",
+        "变 SSR",
+        "变 store"
+      ],
+      "answer": 1,
+      "explanation": "customElement 编译选项让 Svelte 组件产出 Web Component（对应既有\"编译成 Custom Element\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 宿主页面写 <my-widget count=\"5\">，组件内拿到的 count 通常是什么类型、要注意什么？",
+      "options": [
+        "数字 5",
+        "HTML attribute 是字符串（\"5\"）——要在组件里显式转换/声明 number 反射，不能假设拿到数字（对应既有\"attribute→prop 类型\"题）",
+        "undefined",
+        "布尔"
+      ],
+      "answer": 1,
+      "explanation": "attribute（字符串）与 property（任意类型）的转换是自定义元素第一坑（对应既有 attribute↔prop 双向题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 把 <slot/> 包在组件的 {#if false} 里，宿主放进去的 light DOM 内容会怎样？",
+      "options": [
+        "照常显示",
+        "不渲染（被条件排除），但内容仍在 light DOM 里——是否渲染取决于 slot 出现与否，Shadow DOM 的 slot 是\"投影\"不是\"移动\"（对应既有 slot 条件包裹题）",
+        "报错",
+        "复制到 head"
+      ],
+      "answer": 1,
+      "explanation": "slot 是投影口，不出现则不投影（Shadow DOM 语义，对应既有从 Svelte4 抄 slot 迁移题）。"
     }
   ]
 }

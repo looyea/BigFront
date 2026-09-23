@@ -1,6 +1,6 @@
 # kit-typescript 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) SvelteKit 的 "generated types" 解决什么问题？产物在哪？
 **来源**：端到端类型开场题的转述。
@@ -63,3 +63,25 @@
 不进库、不手改：它是每次构建/prepare 重新生成的产物（outDir）。要增删 `include`/改 `compilerOptions`，走 `svelte.config.js` 的 `kit.typescript.config`（如设 `generatedTsconfig` 相关项）扩展生成结果，而不是直接编辑 `.svelte-kit/tsconfig.json`。`types/**/$types.d.ts` 同理，改路由结构再重新生成即可。
 
 🚀 **下一组**：kit-testing 面试题——三层测试金字塔、mock `$app/*`、e2e 覆盖水合的高频考法。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  app.d.ts 的 App 命名空间能声明哪些接口？各自的典型用法？ 
+
+ App.Locals（handle 挂载的请求级类型）、App.Error（error() 的自定义形状）、App.Platform（平台上下文）、App.Cache（适配器缓存）；声明后全站 load/端点/错误页类型自动贯通。 
+
+**来源**： https://svelte.dev/docs/kit/types#app.d.ts 
+
+### 14.  import 『./$types』 路径诡异、IDE 偶尔飘红，团队如何稳定这套体验？ 
+
+ 根因是 $types 虚拟于 .svelte-kit 生成：把 svelte-kit sync 挂进 prepare 与编辑器保存钩子、CI 校验生成物与 lock 同步；tsconfig 继承 .svelte-kit/tsconfig.json 而非手抄配置。 
+
+**来源**： https://svelte.dev/docs/kit/types 
+
+### 15.  手写 RequestHandler 泛型 vs 让 $types 推断，什么时候你允许前者？ 
+
+ 动态注册路由、跨包复用处理器等脱离单文件上下文的场景才手写泛型；日常端点/页面一律用生成的 RequestHandler 类型，手写即脱离真值源，review 要求注释豁免理由。 
+
+**来源**： https://svelte.dev/docs/kit/types#server

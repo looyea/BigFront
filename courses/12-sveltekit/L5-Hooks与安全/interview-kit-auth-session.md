@@ -1,6 +1,6 @@
 # kit-auth-session 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) SvelteKit 服务端 event.cookies 的安全默认值？为什么这样设计？
 **来源**：鉴权基础必考题的转述。
@@ -63,3 +63,25 @@ handle 里维护白名单前缀（`/login`、`/`、静态资源、`/api/auth/*`�
 `+layout.server.js` 一处 load：从 locals 取裁剪 user、组合服务端读到的 theme/featureFlags 返回，全站子树免费可见。敏感字段（passwordHash、内部 id 映射）留在服务端不进返回值。避免每页重复查：把跨页稳定的数据放 layout；页面独有数据放 page load。注意 layout 的缓存粘性——时效性强的准入判断仍放 page/端点，别指望 layout 每次导航都重算。
 
 🚀 **下一组**：L5 课后作业——会话链路与鉴权落点的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  画出 Kit 标准登录态链路，并说明每环的失效风险与对策。 
+
+ 登录 action 写签名会话→handle 校验并挂 locals→layout load 下发登录态 UI→受保护端点逐路由授权；风险：会话固定（登录后换新 id）、过期（滑动续期）、注销残留（登出清服务端记录），逐环设防。 
+
+**来源**： https://svelte.dev/docs/kit/errors#401-403 
+
+### 14.  全站登录墙 + 少数公开页的 handle 设计怎么写？ 
+
+ 公开清单按路由前缀/特征（/login、/_、静态资源、健康检查）放行，其余未认证统一 redirect 到 /login?next=；next 参数必须白名单校验同源路径，防开放重定向。 
+
+**来源**： https://svelte.dev/docs/kit/hooks#Server-hooks-handle 
+
+### 15.  refresh token 轮换在 Kit 服务端怎么落最干净？ 
+
+ handle 认证时若检测到接近过期，用 httpOnly 双 cookie（access+refresh）在响应前重签发并覆写；轮换要处理并发（同一 refresh 换出多 access 时的幂等或重用检测），服务端存会话族记录。 
+
+**来源**： https://svelte.dev/docs/kit/load#Sharing-data 

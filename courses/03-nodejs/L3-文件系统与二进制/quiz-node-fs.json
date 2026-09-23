@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "为什么不建议在 HTTP 服务的请求处理路径里使用 fs.readFileSync？",
       "options": [
-        "它比异步版慢一点点",
         "它会阻塞事件循环，读完前所有其它请求/定时器都停摆",
+        "它比异步版慢一点点",
         "它不能读大文件",
         "它会泄漏内存"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "同步 fs 在整个读操作期间占死事件循环 poll 阶段，服务吞吐直接归零（呼应 node-event-loop、node-fs 第一节）。同步版只适合启动/脚本一次性场景。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "读取一张 PNG 图片，正确的做法是？",
       "options": [
         "readFile(path, 'utf8') 再转回来",
-        "readFile(path) 不传 encoding，得到 Buffer",
         "readFileSync(path, 'ascii')",
+        "readFile(path) 不传 encoding，得到 Buffer",
         "用 appendFile 读"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "二进制文件不能按 utf8 文本解码（会乱码/损坏），不传 encoding 得到原始 Buffer（呼应 node-buffer、node-fs 第二节）。"
     },
     {
@@ -34,18 +34,23 @@
       "prompt": "writeFile 与 appendFile 的关键区别是？",
       "options": [
         "前者只能写文本，后者只能写 Buffer",
-        "writeFile 覆盖（清空重写），appendFile 追加到末尾",
         "没有区别",
-        "appendFile 会阻塞事件循环"
+        "appendFile 会阻塞事件循环",
+        "writeFile 覆盖（清空重写），appendFile 追加到末尾"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "writeFile 打开即清空原内容重写；appendFile 在文件末尾追加，适合日志（呼应 node-fs 第三节）。"
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": "mkdir('a/b/c') 当 a、b 都不存在时会报错，加哪个选项可一次建多级目录？",
-      "options": ["{ force: true }", "{ recursive: true }", "{ shallow: false }", "{ encoding: 'utf8' }"],
+      "options": [
+        "{ force: true }",
+        "{ recursive: true }",
+        "{ shallow: false }",
+        "{ encoding: 'utf8' }"
+      ],
       "answer": 1,
       "explanation": "recursive:true 会顺带创建缺失的中间目录且不因已存在而报错（呼应 node-fs 第四节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "Promise 版错误若无人接管会升级成未处理 rejection，Node 15+ 默认崩溃退出（呼应 node-async-errors 第三四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "fs.open(path, \"wx\") 标志的含义是：",
+      "options": [
+        "覆盖写",
+        "排他创建：文件已存在直接报 EEXIST——「不存在才写」的原子检查，锁文件/去重写入的标准姿势",
+        "只读",
+        "同步模式"
+      ],
+      "answer": 1,
+      "explanation": "x=O_EXCL 由 OS 保证「检查+创建」原子（先 access 再 write 有竞态窗口）；配 a+ 则是「不存在才建、存在则追加」。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "o.close() 与 fsPromises open 后忘 close 的后果，除了 fd 泄漏还包括：",
+      "options": [
+        "没有别的",
+        "POSIX 下 fd 是进程级资源、泄漏到 EMFILE；且 Windows 上未 close 的文件被锁无法删除/重命名，watcher 还会持续持有事件句柄",
+        "会自动 gc 回收",
+        "仅性能略降"
+      ],
+      "answer": 1,
+      "explanation": "Windows 文件锁是「打开即独占」语义（可配 share flags），Node 在 Win 上「读着删不掉」的报障九成是没 close——跨平台都要 finally close。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "需要「读大文件的一小段」（如第 1MB 处取 4KB）最合适的 API 是：",
+      "options": [
+        "readFile 后 slice",
+        "open 拿 fd + read(buffer, off, len, position)：直接 pread 指定偏移，不把整文件吃进内存",
+        "createReadStream 全部遍历",
+        "stream.skip(n)"
+      ],
+      "answer": 1,
+      "explanation": "position 参数不挪文件指针、可并发多段读（索引/zip 中央目录解析靠它）；readFile 整读再 slice 是内存双浪费（本关 10GB 行数题的近邻）。"
     }
   ]
 }

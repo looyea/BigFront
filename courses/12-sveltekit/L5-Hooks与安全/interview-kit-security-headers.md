@@ -1,6 +1,6 @@
 # kit-security-headers 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) SvelteKit 内置的 CSRF 防护具体挡什么、怎么挡？
 **来源**：CSRF 机制必考题的转述。
@@ -63,3 +63,25 @@ Kit **默认开启 origin 检查、零配置**，与 httpOnly+lax cookie 协同�
 CSP mode 用 `auto`：动态 App 页吃 nonce、预渲染营销页吃 hash；营销页要 frame-ancestors/报表就别靠 meta，在静态托管层配**响应头**。CSRF 保持默认开启，若接第三方支付表单回调，把对方精确 origin 加进 `trustedOrigins` 而非全局关。上线前 reportOnly 灰度看误伤。两类页共用同一 handle 安全头织入，按 `event.url.pathname` 前缀差异化。
 
 🚀 **下一组**：L5 课后作业——安全头、CSRF/CSP 与鉴权落点的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  为什么预渲染页下发 CSP 要用 meta 标签而 header 方案不可行？带来什么限制？ 
+
+ 预渲染产物是静态文件，无法按请求改响应头，Kit 把 CSP 写进 <meta http-equiv>；限制：meta 不支持 frame-ancestors/report-uri 等指令，且 report-only 策略无法覆盖预渲染页。 
+
+**来源**： https://svelte.dev/docs/kit/configuration#csp 
+
+### 14.  开放重定向的防御清单：next 参数还有哪些绕过姿势？ 
+
+ 协议相对 //evil.com、反斜杠混清、编码差异、@ 伪造（https://good@evil）都需拦；正解是 new URL(next, origin) 后比对 host 相等且仅放行同源相对路径。 
+
+**来源**： https://owasp.org/www-project-web-security-testing-guide/ ； https://svelte.dev/docs/kit/errors 
+
+### 15.  除 CSP/CSRF，生产响应还应补哪些安全头？在 Kit 哪里统一加？ 
+
+ X-Content-Type-Options、Referrer-Policy、Permissions-Policy、严格场景的 COOP/COEP/COOP、HSTS；统一在 handle 拿到 resolve 的 Response 后 setHeader 再返回，CSP 基线交给 kit.csp 配置。 
+
+**来源**： https://svelte.dev/docs/kit/hooks#Server-hooks-handle ； https://developer.mozilla.org/docs/Glossary/CSRF 

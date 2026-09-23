@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Tree Shaking 不生效的原因是 package.json 缺少哪个字段？",
       "options": [
-        "\"type\": \"module\"",
         "\"sideEffects\": false（或精确列表）",
+        "\"type\": \"module\"",
         "\"main\" 入口",
         "\"peerDependencies\""
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "没有 sideEffects: false 时，打包器保守地认为每个模块都有顶层副作用，不敢删除未引用代码。加上后 Rollup/Webpack 才能安全摇掉。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "contenthash 的作用是什么？",
       "options": [
         "用于 CDN 鉴权",
-        "文件内容不变 → 文件名不变 → 浏览器命中强缓存；内容变 → 文件名变 → 缓存失效",
         "防止 XSS 攻击",
+        "文件内容不变 → 文件名不变 → 浏览器命中强缓存；内容变 → 文件名变 → 缓存失效",
         "标识构建者"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "contenthash 是\"永久缓存 + 即时更新\"策略的核心——JS/CSS 用 max-age=31536000, immutable，只有文件名变化才拉新资源。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "Vite dev 和 build 分别用什么做 JS 转换/打包？",
       "options": [
         "都用 Webpack",
-        "dev 用 esbuild 预构建 + 原生 ESM；build 用 Rollup 打包",
         "dev 用 Rollup；build 用 esbuild",
-        "都用 Rollup"
+        "都用 Rollup",
+        "dev 用 esbuild 预构建 + 原生 ESM；build 用 Rollup 打包"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Vite 双模型：dev 时 esbuild 预打包依赖 + 原生 ESM 不 bundle（启动极快）；build 时 Rollup 全量打包+Tree Shake+代码分割（产物更优）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "Brotli 用更大的字典窗口（16MB vs 32KB）+ 前端专用上下文模型 → JS/CSS/JSON 文本压缩率明显优于 Gzip。现代 CDN 默认 Brotli。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "rollup/vite 的 `manualChunks` 用于：",
+      "options": [
+        "合并 CSS",
+        "把 vendor 等大依赖拆成独立长效缓存 chunk",
+        "压缩代码",
+        "拆 Worker"
+      ],
+      "answer": 1,
+      "explanation": "拆分策略：业务码频繁变、框架/依赖低频变——分开后用户更新时只需重下业务 chunk，vendor 长缓存命中。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Vite dev 阶段 `optimizeDeps`（esbuild 预构建）解决的两个问题是：",
+      "options": [
+        "压缩与加密",
+        "CJS 依赖转 ESM + 合并碎模块减少上千个并行请求",
+        "热更新与回滚",
+        "Tree Shaking 与摇树"
+      ],
+      "answer": 1,
+      "explanation": "浏览器 ESM 不能直接吃 CJS；且 lodash 这类包 import 碎成几千个模块请求——预构建一次转译+打包并缓存到 node_modules/.vite。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "对图片（webp/avif）再开 gzip 的效果通常是：",
+      "options": [
+        "体积再降 30%",
+        "几乎无收益甚至膨胀——已含熵编码的格式别再压",
+        "必须开",
+        "会变慢 10 倍"
+      ],
+      "answer": 1,
+      "explanation": "gzip 收益来自文本冗余；jpg/webp/wasm 已内压缩，网关应对它们跳过或最低级别（nginx gzip_types 不含 image）。"
     }
   ]
 }

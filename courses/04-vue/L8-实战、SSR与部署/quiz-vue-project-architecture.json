@@ -8,11 +8,11 @@
       "prompt": "中大型项目里，按 features（领域）组织目录相比 layers（按类型）的主要优势是？",
       "options": [
         "打包体积一定更小",
-        "一个功能自包含，改动集中、认知负担低、易整体删除",
         "不需要 router 了",
+        "一个功能自包含，改动集中、认知负担低、易整体删除",
         "自动获得类型检查"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "feature 自包含降低耦合与认知负担（呼应 vue-project-architecture 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "feature 目录里的 index.ts（barrel）主要解决什么？",
       "options": [
-        "只导出对外 API，内部文件可自由重构而不影响外部",
         "加速构建",
         "替代 pinia",
-        "自动注册全局组件"
+        "自动注册全局组件",
+        "只导出对外 API，内部文件可自由重构而不影响外部"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "barrel 划定公共出口边界（呼应 vue-project-architecture 第一节、ts-modules）。"
     },
     {
@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "组件树内未捕获的渲染/生命周期错误，全局统一兜底用？",
-      "options": ["window.onerror", "app.config.errorHandler", "try/catch 包 main", "process.on('uncaughtException')"],
+      "options": [
+        "window.onerror",
+        "app.config.errorHandler",
+        "try/catch 包 main",
+        "process.on('uncaughtException')"
+      ],
       "answer": 1,
       "explanation": "errorHandler 是 Vue 应用的组件错误统一入口（呼应 vue-project-architecture 第四节、node-async-errors）。"
     },
@@ -66,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "\"复用逻辑\"与\"共享状态\"在架构上分别落到哪里？",
-      "options": ["store / composable", "composable / store", "都放全局 store", "都放 provide"],
+      "options": [
+        "store / composable",
+        "composable / store",
+        "都放全局 store",
+        "都放 provide"
+      ],
       "answer": 1,
       "explanation": "composable 复用局部逻辑、store 集中共享状态（呼应 vue-project-architecture 第三节、vue-state-patterns 第五节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "SSR 每请求新实例防水合污染（呼应 vue-project-architecture 第七节、vue-pinia-advanced、vue-ssr-nuxt）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "「feature 内部自治 + 跨 feature 只走 public API」的约束，工具化落地首选：",
+      "options": [
+        "口头约定",
+        "ESLint 规则（import boundaries/no-restricted-imports 类）按目录模式限制跨 feature 深层 import，配合 CI 阶段依赖图检查（madge 查环）——架构约束只有进 linter 才算存在",
+        "文档写清即可",
+        "靠 code review"
+      ],
+      "answer": 1,
+      "explanation": "barrel 在 这 套 体系 里 的 双 重 身 份：对外 面 孔（`features/cart` 只 导 出 可 消 费 项）+ 环 节 点（ESLint 规 则 的 匹 配 对 象）；代 价：barrel 破 坏 tree-shaking 与 影 响 HMR 粒 度（本关 barrel 题 的 工 具 视 角 修 复 面）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "错误处理分层里，「接口层统一拦截器 + 组件层边界 + window 级兜底」三层各最不该干什么：",
+      "options": [
+        "各自独立工作",
+        "接口层不决定业务话术（只分类：网络/401/5xx，抛给策略层）、组件边界不做静默吞错（onErrorCaptured 记 载 并 呈现 可 重试 UI，return false 只 拦 这 一 层 的 继 续 冒 泡）、window 兜底不面向用户（只 上报，「出 错 页」体验 归 前 两 层）",
+        "只 留 全局 层",
+        "每层各自弹 toast"
+      ],
+      "answer": 1,
+      "explanation": "三 层 的 路 由 表：可 恢 复（401→刷 新/重 登，本包 守 卫 关 单 飞 题）/ 可 重 试（列 表 拉 败 → 组件 级 重试 按钮）/ 纯 异 常（上 报 + 降 级 页）——「一 个 catch 全 toast」是 反 模式，错误 分 类 先 于 错误 展 示（本关 错 误 分 层 题 的 策 略 表）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "「环境配置不该进全局 store」的理由是：",
+      "options": [
+        "store 存不下",
+        "配置在应用生命周期内是不可变常量（进 store 徒增「谁 都 能 改」的 表面 + devtools 噪音 + SSR 每 请求 重复 初 始化 的 陷 阱），用 import.meta.env 派生 的 类 型 化 config 模块（解析校 验 一 次，zod 校 env）即可",
+        "配置必须进 URL",
+        "只能 localStorage"
+      ],
+      "answer": 1,
+      "explanation": "边界：真 正 「运 行 时 可 变 的 配 置」（后 端 下 发 的 feature flag/AB 组）另 开 一 个 只 读 store（更 新 走 整 包 替换）——本 关 题 干 说 的 是 **构建 期/启 动 期 环 境 配置** 不 该 进 ；两 者 分 离 后 「配 置 有 几 种 生 命 周 期」的 问 题 答 案 就 是 架 构 答 案（本关 配置 归 属 题 的 完 整 分 类）。"
     }
   ]
 }

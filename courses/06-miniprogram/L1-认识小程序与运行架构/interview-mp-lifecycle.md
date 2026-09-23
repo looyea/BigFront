@@ -1,6 +1,6 @@
 # mp-lifecycle 面试题精选
 
-> 共 12 题，覆盖 A 应用生命周期 / B 页面生命周期 / C 时序与栈 / D Vue/React 对照类。
+> 共 15 题，覆盖 A 应用生命周期 / B 页面生命周期 / C 时序与栈 / D Vue/React 对照类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：一次性初始化/取参/首屏数据 → `onLoad`（仅一次）；依赖渲染后布局的 → `onReady`；"每次可见都要刷新/暂停恢复"的 → `onShow`/`onHide`；定时器/事件监听的**创建**放 onLoad 或 onShow、**清理**必须放 `onUnload`（页面销毁），避免离开后仍在跑造成泄漏和错 setData。全局级（如登录、系统信息）放 `App.onLaunch`。答出"次数语义 + 卸载清理"最稳妥（呼应 mp-lifecycle 全课、react-effect-patterns）。
 
 **来源**：微信小程序 — 生命周期最佳实践、内存泄漏防范
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  描述一次「冷启动到首页可交互」的完整生命周期顺序，并指出首屏取数该放哪。
+
+顺序：App.onLaunch（全局初始化、可读场景值/启动参数）→ App.onShow → Page.onLoad(query，拿页面参数) → Page.onShow → Page.onReady（首次渲染完成）。首屏数据：放在 onLoad 尽早发起请求（不必等 onReady，因为取数不依赖真实节点），setData 后触发渲染；若「要等取到的数据渲染完再做某事」，用 setData 的回调或 onReady。onShow 适合「每次进入都要刷新/校准」的数据（回到前台、别的页改了要同步）。冷启动优化点：onLaunch 里别做重同步阻塞、把首屏接口在 onLoad 立刻并发发出、配合骨架。分清「一次性(onLoad/onLaunch/onReady) vs 每次显示(onShow)」是答这题的骨架。
+
+**来源**：小程序 App/Page 生命周期文档与冷启动时序；性能优化首屏取数实践。
+
+### 14.  定时器和「一次性首屏请求」分别放哪个钩子、清理放哪？为什么？
+
+一次性首屏请求放 onLoad（只该跑一次，页面实例存续期间不重复）；每次回到前台/显示要校准的放 onShow。定时器：若只在「页面可见时」跑（轮询、倒计时动画），onShow 起、onHide 停、onUnload 清——因为小程序对已入栈隐藏页的 JS 不一定冻结，不停就会后台空转、甚至 setData 到隐藏页报错/耗电；纯一次性延时（如 1s 后自动收起 toast）也务必在 onUnload clearTimeout，防止页面销毁后回调仍持有已卸载实例（内存泄漏 + 潜在 this 已销毁）。核心：起停配对、作用域跟随可见性、销毁必清理，和 React useEffect 的 cleanup 心智同构。
+
+微信官方文档《小程序生命周期》；掘金《App 与 Page 生命周期执行顺序图解》
+
+### 15.  小程序 Page 生命周期与 Vue 的 created/mounted、React 函数组件的 useEffect 挂载/卸载怎么对照？
+
+对应关系（近似，别硬套）：onLoad≈created/挂载 effect（初始化、拿参数，但视图未渲染）；onReady≈mounted/挂载 effect 里 DOM 就绪那次（可查节点）；onShow≈Vue activated(KeepAlive)/再次可见，React 没有直接等价（可用 useFocusEffect——React Navigation——类比）；onHide≈deactivated；onUnload≈unmounted/卸载 cleanup。本质差异：① 小程序有「显隐(onShow/onHide)」这一维是因为页面栈常驻、页面不销毁也切换显隐，Vue/React SPA 默认路由离开即卸载、要显式 KeepAlive 才有 activated；② 小程序显式给 onLoad/onReady 两个点，把「数据就绪」与「视图就绪」分得很清，而 Vue/React 靠 mounted/effect 时机隐式表达；③ 清理：小程序手写在 onUnload，React 用 effect 返回函数、Vue3 用 onUnmounted。
+
+SegmentFault《onLaunch 里请求接口为什么会竞态》；CSDN《小程序启动流程与冷启动优化》

@@ -8,11 +8,11 @@
       "prompt": "判断一个状态该放组件内还是 store，最实用的准则是？",
       "options": [
         "全部放 store 统一管理",
-        "看作用域：只有单组件用就留在组件，跨组件共享才升级 store",
         "看数据量大小",
+        "看作用域：只有单组件用就留在组件，跨组件共享才升级 store",
         "看是不是数组"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "作用域多大状态放多小，能就地就别全局化（呼应 vue-state-patterns 第一、五节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "props-down / events-up 描述的是什么？",
       "options": [
-        "数据向下传、变更向上抛的单向数据流",
         "双向自动同步",
         "插槽用法",
-        "生命周期顺序"
+        "生命周期顺序",
+        "数据向下传、变更向上抛的单向数据流"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "父传 props、子 emit 变更，写收敛一处（呼应 vue-state-patterns 第二节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "组件 v-model 的\"双向\"本质是？",
       "options": [
-        "真正的双向数据流",
         "props 向下(值) + emit 向上(update:xxx)的语法糖",
+        "真正的双向数据流",
         "直接改父变量",
         "靠 watch 同步"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "v-model 仍是单向流的糖（呼应 vue-state-patterns 第三节、vue-component-basics 第五节）。"
     },
     {
@@ -58,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "两个组件需要共享一份状态、但都不越出共同父的范围，优先？",
-      "options": ["提到全局 store", "状态提升到共同父、props+events 传递", "各存一份手动同步", "用全局变量"],
+      "options": [
+        "提到全局 store",
+        "状态提升到共同父、props+events 传递",
+        "各存一份手动同步",
+        "用全局变量"
+      ],
       "answer": 1,
       "explanation": "范围不大就提升到共同父，别急着全局化（呼应 vue-state-patterns 第五节）。"
     },
@@ -66,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "\"复用逻辑\"和\"共享状态\"分别主要对应哪两种工具？",
-      "options": ["store / composable", "composable / store", "props / emit", "watch / computed"],
+      "options": [
+        "store / composable",
+        "composable / store",
+        "props / emit",
+        "watch / computed"
+      ],
       "answer": 1,
       "explanation": "composable 复用具局部逻辑、store 集中共享状态，别混（呼应 vue-state-patterns 第五节、vue-composables）。"
     },
@@ -74,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "把列表筛选/分页状态同时反映到 URL，好处是？",
-      "options": ["页面更快", "可分享/刷新保持/后退可用——URL 也是一种状态来源", "省内存", "不用 store 了"],
+      "options": [
+        "页面更快",
+        "可分享/刷新保持/后退可用——URL 也是一种状态来源",
+        "省内存",
+        "不用 store 了"
+      ],
       "answer": 1,
       "explanation": "URL 承载可分享的状态，用 router.replace 同步（呼应 vue-state-patterns 第四节、vue-router-nested-dynamic 第五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "「派生状态」的完整判据是：凡是能由其他状态算出的值就不该独立存储。下列违反该原则的是：",
+      "options": [
+        "computed 缓存列表长度",
+        "独立存一个 fullName ref，再写 watch 把 first/last 拼进去同步——多一个写入时机与失同步窗口；fullName 应为 computed（本关「复制再同步」反模式的最小示例）",
+        "URL 反映筛选条件",
+        "store getter 求和"
+      ],
+      "answer": 1,
+      "explanation": "边界 补充：有 **状态 爆炸/输入 延迟 保留**（搜索 框 的 输入 值 vs 已 应用 查询）两类 场景 允许 「看起来 派生」的 独立 状态——区别 是 它 有 自己 的 生命 周期 语义，而 fullName 例 子 完全 没 有。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "服务端数据（列表/详情）在客户端的归属，现代共识是：",
+      "options": [
+        "直接塞组件 ref 最省事",
+        "服务端数据是「缓存」不是「状态」：交给数据层（Vue Query/自研缓存）管生命周期（stale/invalidation），Pinia 只放真正的应用状态——手写取数进 store 等于重造半个查询库",
+        "全部进 URL",
+        "只放 localStorage"
+      ],
+      "answer": 1,
+      "explanation": "判 据 问 句：「这 份 数据 谁 是 权威？」——服务 端 权威 的 数据 要 的 是 缓存 失效 策略（stale-while-revalidate），不 是 set 语义 的 状态 管理（本关 服 务 端 数据 题 的 架 构 终 局，也 是 Pinia 官方 「不 用 store 收 一切」口径）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "「一次重构发现某状态有 5 个写入点散在 4 个组件」——这句话诊断出的问题是：",
+      "options": [
+        "性能问题",
+        "状态缺少属主（ownership 失守）：任何多处可写的状态都会退化成「远程全局变量」，重构方向是给状态定属主（单一模块持有 + 显式 API 变更），而不是加更多同步逻辑",
+        "类型问题",
+        "组件拆分粒度问题"
+      ],
+      "answer": 1,
+      "explanation": "SSOT 的 操 作 定 义 是 **过 滤 写入 点 的 数 量** 而 不 是 读 的 数 量：读 可 以 无 限 放 开（派 生/多 处 渲 染），写 必 须 一 屏 数 完；工 具 化：action 收 口 后 用 grep 一 眼 看 全，或 ESLint 禁 业 务 文 件 裸 改 store 属 性（本关 写 入 点 题 的 执 行 手 段）。"
     }
   ]
 }

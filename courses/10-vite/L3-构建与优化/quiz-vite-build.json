@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Vite 生产构建的默认入口是什么？",
       "options": [
-        "src/main.js",
         "项目根目录的 index.html",
+        "src/main.js",
         "vite.config.js",
         "package.json 的 main 字段"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Vite 以 HTML 为构建起点（HTML-first），从 index.html 里的 <script type=module> 递归解析依赖图。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "build.sourcemap: 'hidden' 的效果是？",
       "options": [
         "完全不生成 map 文件",
-        "生成 .map 文件但 JS 末尾不写 sourceMappingURL 注释",
         "把 map 内联进 JS",
+        "生成 .map 文件但 JS 末尾不写 sourceMappingURL 注释",
         "加密 map 文件"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "hidden = 生成 map 但不引用 → 上传到 Sentry 供错误还原，同时不随公开 JS 暴露给用户。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "Vite 默认的 JS 压缩器是什么，为什么选它？",
       "options": [
         "Terser，因为压缩率最高",
-        "esbuild，因为用 Go 编写比 Terser 快 20-40 倍",
         "UglifyJS，因为最老牌",
-        "SWC，因为兼容 Babel"
+        "SWC，因为兼容 Babel",
+        "esbuild，因为用 Go 编写比 Terser 快 20-40 倍"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "esbuild（Go）极快。只有需要 Terser 特有的细粒度控制（drop_console 精细规则/法律注释保留）时才切 terser。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "默认 true 时每个懒加载 chunk 的 CSS 单独输出按需注入；false 合并成一个 → 首屏 CSS 变大。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " build.reportCompressedSize: false 的意义是？",
+      "options": [
+        "产物不压缩",
+        "跳过构建结束时的 gzip 体积计算（大项目可省可观的 build 时间），压缩本身由 minify 流程照常完成——纯报表开关",
+        "禁用 sourcemap",
+        "关闭 hash"
+      ],
+      "answer": 1,
+      "explanation": "它只影响终端里那个\"gzip: xx kB\"报表；CI 追求构建时长时常关，本地看体积时再开。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 产物默认文件名里的 [hash] 基于什么计算？",
+      "options": [
+        "文件修改时间",
+        "内容哈希（content hash）——同内容必同名，这是\"immutable 强缓存 + 发版即换名\"整套策略成立的根基",
+        "构建随机数",
+        "git commit 号"
+      ],
+      "answer": 1,
+      "explanation": "内容寻址让\"文件名即版本\"；换成时间戳或自增号，缓存失效体系当场失效。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " outDir 在项目 root 之外时，构建前清空目录的默认行为是？",
+      "options": [
+        "总是清空",
+        "默认不自动清空（防误删 outDir 指向重要目录），需 build.emptyOutDir: true 显式确认——CI 里 outDir 在 root 外还要记得处理陈旧产物残留",
+        "报错拒绝构建",
+        "只删 JS 文件"
+      ],
+      "answer": 1,
+      "explanation": "安全默认与 CI 需求的冲突点：monorepo 里 dist 常被认为\"在 root 外\"，缓存层残留旧 hash 文件的事故来源。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 产物 HTML 里 Vite 自动注入的 <link rel=modulepreload> 可以带 polyfill，针对的是？",
+      "options": [
+        "IE 降级",
+        "不支持 modulepreload 的浏览器（Safari 旧版等）——modulePreload.polyfill 注入一段把未知 rel 降级为预取逻辑的小脚本，让现代优化在老浏览器至少不碍事",
+        "Firefox 私有语法",
+        "Node SSR"
+      ],
+      "answer": 1,
+      "explanation": "渐进增强的标本：新 hint 在不支持的引擎里被忽略是安全的，polyfill 是可选的加强而非必需。"
     }
   ]
 }

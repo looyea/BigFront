@@ -1,48 +1,136 @@
 {
-  "lesson": "solid-performance",
-  "title": "性能 · 自测",
+  "title": "solid-performance 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "为什么 Solid 应用里基本不需要 React.memo / useMemo 这类『防重渲染』优化？",
-      "options": ["因为 Solid 会自动 memo 所有组件", "因为组件根本不会重渲染——更新细粒度直达具体 DOM 属性", "因为 Solid 没有组件", "因为有虚拟 DOM 兜底"],
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么 Solid 应用里基本不需要 React.memo / useMemo 这类『防重渲染』优化？",
+      "options": [
+        "因为 Solid 会自动 memo 所有组件",
+        "因为组件根本不会重渲染——更新细粒度直达具体 DOM 属性",
+        "因为 Solid 没有组件",
+        "因为有虚拟 DOM 兜底"
+      ],
       "answer": 1,
-      "explain": "组件只运行一次，之后靠信号订阅精确更新 DOM，不存在『整棵子树重渲染』，故那套优化无对象。"
+      "explanation": "组件只运行一次，之后靠信号订阅精确更新 DOM，不存在『整棵子树重渲染』，故那套优化无对象。"
     },
     {
-      "q": "以下哪种写法会『把细粒度弄粗』、损害性能？",
-      "options": ["始终 props.x / foo() 惰性读取", "用 For 做 keyed 列表", "用 memo 收敛昂贵计算", "在 JSX 之前 const v = count() 提前求值 / 解构 props"],
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下哪种写法会『把细粒度弄粗』、损害性能？",
+      "options": [
+        "始终 props.x / foo() 惰性读取",
+        "用 For 做 keyed 列表",
+        "用 memo 收敛昂贵计算",
+        "在 JSX 之前 const v = count() 提前求值 / 解构 props"
+      ],
       "answer": 3,
-      "explain": "提前求值/解构读到的是值快照、把本应绑到最小渲染 effect 的读取提成组件级粗更新，还可能不再响应。"
+      "explanation": "提前求值/解构读到的是值快照、把本应绑到最小渲染 effect 的读取提成组件级粗更新，还可能不再响应。"
     },
     {
-      "q": "官方点名 memo 什么时候反而『不划算』？",
-      "options": ["计算很昂贵时", "被多个地方读取时", "只是直接返回一个属性、没有任何过滤/排序/计算时", "依赖是 signal 时"],
+      "id": "q3",
+      "type": "single",
+      "prompt": "官方点名 memo 什么时候反而『不划算』？",
+      "options": [
+        "计算很昂贵时",
+        "被多个地方读取时",
+        "只是直接返回一个属性、没有任何过滤/排序/计算时",
+        "依赖是 signal 时"
+      ],
       "answer": 2,
-      "explain": "纯返回属性的 memo 无实际计算、却多创建一个订阅者，不如直接用那个属性。memo 是给真计算用的。"
+      "explanation": "纯返回属性的 memo 无实际计算、却多创建一个订阅者，不如直接用那个属性。memo 是给真计算用的。"
     },
     {
-      "q": "在 effect 里读了某信号、但不希望它的变化触发本 effect，应该？",
-      "options": ["用 untrack 包裹这次读取，或用 on(deps, fn) 显式指定依赖", "把它解构出来", "放进 batch", "改用 createMemo"],
+      "id": "q4",
+      "type": "single",
+      "prompt": "在 effect 里读了某信号、但不希望它的变化触发本 effect，应该？",
+      "options": [
+        "用 untrack 包裹这次读取，或用 on(deps, fn) 显式指定依赖",
+        "把它解构出来",
+        "放进 batch",
+        "改用 createMemo"
+      ],
       "answer": 0,
-      "explain": "untrack 关闭追踪、on 手动声明依赖（还能 defer 跳过首次），避免『顺手读了个信号被它拖着狂跑』。"
+      "explanation": "untrack 关闭追踪、on 手动声明依赖（还能 defer 跳过首次），避免『顺手读了个信号被它拖着狂跑』。"
     },
     {
-      "q": "batch 的作用是？",
-      "options": ["把异步请求合并发送", "让组件批量重渲染", "把多次写合并成一次更新，减少下游触发次数", "批量创建 signal"],
+      "id": "q5",
+      "type": "single",
+      "prompt": "batch 的作用是？",
+      "options": [
+        "把异步请求合并发送",
+        "让组件批量重渲染",
+        "把多次写合并成一次更新，减少下游触发次数",
+        "批量创建 signal"
+      ],
       "answer": 2,
-      "explain": "batch 里连写多个信号，下游只更新一次；store 一次改多属性/produce 天然批处理。"
+      "explanation": "batch 里连写多个信号，下游只更新一次；store 一次改多属性/produce 天然批处理。"
     },
     {
-      "q": "要按需加载一个重组件、减小首包，用哪组能力？",
-      "options": ["createStore + produce", "lazy(() => import(...)) 配 Suspense", "onCleanup + createRoot", "For + Index"],
+      "id": "q6",
+      "type": "single",
+      "prompt": "要按需加载一个重组件、减小首包，用哪组能力？",
+      "options": [
+        "createStore + produce",
+        "lazy(() => import(...)) 配 Suspense",
+        "onCleanup + createRoot",
+        "For + Index"
+      ],
       "answer": 1,
-      "explain": "lazy 只在真正渲染时才 import()、配 Suspense 占位，是压首包/TTI 的主力；createResource 则做数据非阻塞。"
+      "explanation": "lazy 只在真正渲染时才 import()、配 Suspense 占位，是压首包/TTI 的主力；createResource 则做数据非阻塞。"
     },
     {
-      "q": "setInterval 在组件卸载后仍在跑，正确的处理是？",
-      "options": ["卸载会自动清定时器，无需处理", "把它放进 batch", "在 createMemo 里创建", "用 onCleanup(() => clearInterval(timer)) 释放"],
+      "id": "q7",
+      "type": "single",
+      "prompt": "setInterval 在组件卸载后仍在跑，正确的处理是？",
+      "options": [
+        "卸载会自动清定时器，无需处理",
+        "把它放进 batch",
+        "在 createMemo 里创建",
+        "用 onCleanup(() => clearInterval(timer)) 释放"
+      ],
       "answer": 3,
-      "explain": "游离/组件内的定时器、订阅要在 onCleanup 里释放，否则组件卸载后仍后台运行=内存泄漏。"
+      "explanation": "游离/组件内的定时器、订阅要在 onCleanup 里释放，否则组件卸载后仍后台运行=内存泄漏。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Index 相对 For 的性能收益与代价分别是？ ",
+      "options": [
+        " 更快且无代价 ",
+        " 按位复用节点省去 key 映射，代价是行内状态与异步内容随换位错位 ",
+        " 仅对字符串列表可用 ",
+        " 只能用于静态列表 "
+      ],
+      "answer": 1,
+      "explanation": " 行无状态、纯展示、高频整表替换才值得 Index；有输入框/展开态的行一律 For。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 在 Solid 里把一段 JSX 拆成子组件，对更新性能的影响是？ ",
+      "options": [
+        " 显著变快 ",
+        " 基本无益：组件函数只跑一次，更新粒度本在节点级；拆分的价值在代码组织与懒加载 ",
+        " 一定变慢 ",
+        " 必须 memo 包裹才生效 "
+      ],
+      "answer": 1,
+      "explanation": " React 式为挡重渲染的组件拆分在 Solid 没有对应物，盲目拆只会增加调用开销与心智负担。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 千行表格每行都有独立编辑态，正确的实现组合是？ ",
+      "options": [
+        " 整表一个 store 加受控输入 ",
+        " For + 行组件：每行 signal 自治，行内编辑只更新该行文本节点，选中集合用 Set 信号 ",
+        " 全部状态提升到页面级 ",
+        " 用 contenteditable 一把梭 "
+      ],
+      "answer": 1,
+      "explanation": " 细粒度框架的正解是让状态贴着节点走；页面级只留派生（全选态、统计），避免每次键入惊动全表。 "
     }
   ]
 }

@@ -14,7 +14,7 @@
       "id": "q2",
       "type": "single",
       "prompt": "`Symbol.for('x') === Symbol.for('x')` 结果？",
-      "options": ["true", "false", "抛错"],
+      "options": ["true", "false", "抛错", "同 realm 为 true、跨 realm 为 false"],
       "answer": 0,
       "explanation": "Symbol.for 查/写**全局注册表**——同 key 拿同一个 Symbol。跨 realm / 跨模块共享符号必用。"
     },
@@ -77,6 +77,45 @@
       ],
       "answer": 2,
       "explanation": "**Symbol 上没有 Object 包装**——试图给它挂属性会抛 TypeError（不像 number/string 会临时装箱）。这也是为什么 Symbol 不能 `new Symbol()`。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`Symbol.keyFor(Symbol('tag'))` 输出什么？",
+      "options": [
+        "'tag'",
+        "Symbol('tag')",
+        "空字符串 ''",
+        "undefined——它不是 `Symbol.for` 造的，不在全局注册表里"
+      ],
+      "answer": 3,
+      "explanation": "`Symbol.keyFor` 只在**全局注册表**里查 key；`Symbol()` 直接造的不入表 → undefined。反过来 `Symbol.keyFor(Symbol.for('tag'))` 才是 `'tag'`。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "下列 API 哪个**能**看到对象的 Symbol 键？",
+      "options": [
+        "`Object.getOwnPropertySymbols` 与 `Reflect.ownKeys`",
+        "`Object.keys`",
+        "`for-in`",
+        "`JSON.stringify`"
+      ],
+      "answer": 0,
+      "explanation": "Symbol 键是「半私有」：`Object.keys` / `for-in` / `JSON.stringify` 全部跳过；只有 `getOwnPropertySymbols`、`Reflect.ownKeys`（以及 `getOwnPropertyDescriptors`）能拿到。另注意 `Object.assign` **会**拷贝可枚举的 Symbol 键。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "类里写 `static [Symbol.hasInstance](x) { ... }` 的作用是：",
+      "options": [
+        "规定实例必须拥有的属性",
+        "控制 map/filter 返回哪个构造器",
+        "自定义 `x instanceof 该类` 的匹配规则",
+        "禁止对该类使用 new"
+      ],
+      "answer": 2,
+      "explanation": "`instanceof` 先查**右侧类**的 `Symbol.hasInstance` 静态方法，返回布尔决定结果——可用来做鸭子判断、跨 realm 识别（如把 thenable 判成 `instanceof Promise`）。"
     }
   ]
 }

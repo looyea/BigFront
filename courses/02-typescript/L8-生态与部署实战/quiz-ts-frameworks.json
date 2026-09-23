@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "React 里表达“primary 变体有 onClick、ghost 变体必有 href 且互斥”的 props，最贴切的类型是？",
       "options": [
-        "全部字段都写成可选 ?",
         "用可辨识联合（按 variant 分的两个对象类型）",
+        "全部字段都写成可选 ?",
         "用 any 兜底",
         "用两个独立 interface 各导出一份"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "可辨识联合（discriminated union）能以 variant 为标签精确表达每个变体独有的字段，消费处靠 variant 自动收窄，杜绝非法组合（呼应 ts-union、ts-narrowing）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "现在不推荐用 React.FC 给函数组件标类型，主要原因是？",
       "options": [
         "React.FC 会让组件变慢",
-        "它隐式注入 children、难以写泛型组件，且没带来实际收益",
         "React.FC 已被删除无法 import",
+        "它隐式注入 children、难以写泛型组件，且没带来实际收益",
         "它只能用于类组件"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "React.FC 会把 children 隐式加进 props（不总是想要）、给泛型组件传类型很别扭；直接给函数参数标 props 类型更清晰（呼应 ts-functions）。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "Vue3 里 defineProps<Props>() 为什么必须把类型作为“泛型实参”传入？",
       "options": [
         "因为运行时要用泛型擦除后的值",
-        "因为它是编译期宏，编译器需静态读取类型来生成运行时 props 声明",
         "因为 Vue 不支持对象形式的 props",
-        "为了性能优化"
+        "为了性能优化",
+        "因为它是编译期宏，编译器需静态读取类型来生成运行时 props 声明"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "defineProps 是编译期宏，SFC 编译器在编译时读取泛型实参里的类型信息，生成对应的运行时 props 选项——所以类型必须是可静态分析的（呼应 ts-generic）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "expectTypeOf（vitest/expect）或 tsd 能断言参数/返回类型是否符合预期，用 @ts-expect-error 断言“本该报错”，把公共类型纳入测试（呼应 ts-strict 第 9 题）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "@types/react v19 起组件 props 里的 children：",
+      "options": [
+        "仍由 FC 自动注入",
+        "不再自动包含——必须显式 `children?: ReactNode`（或 PropsWithChildren）",
+        "用 props.slots",
+        "只能 string"
+      ],
+      "answer": 1,
+      "explanation": "React 19 类型移除隐式 children：「插槽显式化」减少无意义透传、也告别 FC 的历史包袱——函数组件直接 `(props: Props)=>JSX` 即标准写法。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Vue3 defineProps<Props>() 的「类型只能在本文件/可静态解析」限制根源是：",
+      "options": [
+        "运行时反射需要 class",
+        "编译器要**在编译期读类型 AST** 生成 runtime options（类型标注被擦除，无运行时类型可查）",
+        "Vue 不支持泛型导入",
+        "vue-tsc 的锅"
+      ],
+      "answer": 1,
+      "explanation": "类型→编译器的「单向通道」：type-only import 5.x 起可跨文件解析，但 enum/interface 值语义拿不到——这正是 props 运行时校验默认生成 `type: null` 的取舍。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "tRPC 前端调用处「没有 codegen」类型从哪来：",
+      "options": [
+        "后端 JSON schema",
+        "前端 import 后端 AppRouter 的 TS 类型，靠泛型推导链贯穿过程",
+        "运行时嗅探",
+        "手写 d.ts"
+      ],
+      "answer": 1,
+      "explanation": "单仓+同一 tsc program 是前提：router 的 inferRouterOutputs 把 procedure 输出映射成客户端代理类型——「类型即契约」的极限案例，跨语言团队用不了。"
     }
   ]
 }

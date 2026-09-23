@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "process.env.FEATURE 值为字符串 \"false\" 时，if (process.env.FEATURE) 的结果是？",
-      "options": ["false（正确关闭）", "true（非空字符串都 truthy）", "抛错", "undefined"],
-      "answer": 1,
+      "options": [
+        "true（非空字符串都 truthy）",
+        "false（正确关闭）",
+        "抛错",
+        "undefined"
+      ],
+      "answer": 0,
       "explanation": "env 全是字符串，\"false\" 非空即 truthy；要显式 === 'true' 判断（呼应 node-config 第二节）。"
     },
     {
@@ -16,11 +21,11 @@
       "prompt": "关于 dotenv 与 .env 的正确做法是？",
       "options": [
         "把 .env 提交进 Git 方便团队共享",
-        "本地用 .env 并 gitignore，生产由平台注入真实环境变量",
         "把密钥写进 .env 再打进 Docker 镜像",
-        "只能用 dotenv，Node 无法加载 env 文件"
+        "只能用 dotenv，Node 无法加载 env 文件",
+        "本地用 .env 并 gitignore，生产由平台注入真实环境变量"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": ".env 含机密须忽略；生产用平台 secret 注入；Node 20.6+ 还能 --env-file 内置加载（呼应 node-config 第三节）。"
     },
     {
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "按 env 精细开合调试输出，生产不留噪声（呼应 node-config 第七节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Node 20.6+ 的 --env-file=.env.production 与 dotenv 包的关系是：",
+      "options": [
+        "完全替代且行为全同",
+        "运行时内置加载 .env（免依赖），但不做 dotenv 的「不覆盖已有 env」默认策略细节与多文件插值等扩展——重策略仍看 dotenv/dotenv-cli",
+        "只能加载一个文件",
+        "仅生产可用"
+      ],
+      "answer": 1,
+      "explanation": "内置 env-file 解决「小项目装 dotenv 杀鸡牛刀」；差异点（覆盖语义、注释/引号解析、shell 展开）要文档化——混用两种加载器时同一 .env 两次解析结果可能不同（本关 dotenv 题的版本演进）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "配置热更新在生产里的合理边界是：",
+      "options": [
+        "所有配置都可热更",
+        "只热更「无状态开关类」（日志级别、特性 flag、限流阈值）；连接串/池大小/端口类走重启（滚动发布已廉价）——热更协议要幂等+版本戳",
+        "禁止任何变更",
+        "仅开发环境允许"
+      ],
+      "answer": 1,
+      "explanation": "热更引入「运行中语义漂移」调试黑洞：老日志级别+新连接池=现场不可复现。开关类变更带审计（谁/何时/旧新值进日志），结构类变更=发布事件（本包 deploy 关滚动重启的复用价值）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "pino 与 winston 在「日志写 stdout 交给平台采集」模式下的共同设计是：",
+      "options": [
+        "都直写文件轮转",
+        "都默认输出单行 JSON 到 stdout，由容器/平台（fluentbit/CloudWatch）负责采集存储——库不做轮转与多 sink，把 IO 与解析留给基础设施",
+        "都内置 trace 系统",
+        "仅支持彩色输出"
+      ],
+      "answer": 1,
+      "explanation": "12-Factor 日志=事件流写 stdout 不管理文件；轮转/保留/索引是平台职责——自己 fs.createWriteStream 写日志的 Node 服务在容器里两头不讨好（本关结构化日志题的现代实现）。"
     }
   ]
 }

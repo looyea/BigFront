@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-typescript",
-  "title": "端到端类型 · 自测",
+  "title": "kit-typescript 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "手写 RequestHandler<{ foo: string; ... }> 泛型的两个主要缺点是？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "手写 RequestHandler<{ foo: string; ... }> 泛型的两个主要缺点是？",
       "options": [
         "运行变慢、包体积变大",
         "无法在 JS 项目使用、需要额外插件",
@@ -11,10 +13,12 @@
         "会污染全局 App 命名空间"
       ],
       "answer": 2,
-      "explain": "官方原话：手写 Params 泛型 cumbersome（繁琐）且 less portable——把 [foo] 改名 [qux] 类型就不再反映现实，故改用 generated types。"
+      "explanation": "官方原话：手写 Params 泛型 cumbersome（繁琐）且 less portable——把 [foo] 改名 [qux] 类型就不再反映现实，故改用 generated types。"
     },
     {
-      "q": "import('./$types') 能命中 .svelte-kit/types/.../$types.d.ts，依赖生成 tsconfig 里的哪一项？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "import('./$types') 能命中 .svelte-kit/types/.../$types.d.ts，依赖生成 tsconfig 里的哪一项？",
       "options": [
         "isolatedModules",
         "rootDirs（把 src 与 .svelte-kit/types 视作同一虚拟目录）",
@@ -22,10 +26,12 @@
         "verbatimModuleSyntax"
       ],
       "answer": 1,
-      "explain": "rootDirs: ['..', './types'] 让 TS 把路由目录与生成的 types 目录视为同级兄弟，$types 才能被相对 import。前提是 tsconfig extends 了 .svelte-kit/tsconfig.json。"
+      "explanation": "rootDirs: ['..', './types'] 让 TS 把路由目录与生成的 types 目录视为同级兄弟，$types 才能被相对 import。前提是 tsconfig extends 了 .svelte-kit/tsconfig.json。"
     },
     {
-      "q": "关于 PageProps（2.16+），正确的是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 PageProps（2.16+），正确的是？",
       "options": [
         "它就是 PageData 的别名",
         "只在 Svelte 4 模式下可用",
@@ -33,10 +39,12 @@
         "它定义组件整体 props：data: PageData，且有 actions 时含 form: ActionData"
       ],
       "answer": 3,
-      "explain": "2.16 起 PageProps={data:PageData, form:ActionData(有 actions 时)}；LayoutProps={data:LayoutData, children:Snippet}。它是组件 props 形状，比单纯 load 返回的 PageData 多带 form/children。"
+      "explanation": "2.16 起 PageProps={data:PageData, form:ActionData(有 actions 时)}；LayoutProps={data:LayoutData, children:Snippet}。它是组件 props 形状，比单纯 load 返回的 PageData 多带 form/children。"
     },
     {
-      "q": "event.locals.user 想要全站带类型，应在哪里声明？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "event.locals.user 想要全站带类型，应在哪里声明？",
       "options": [
         "每个 +page.svelte 里各自断言",
         "在 vite.config 的 define 里注入",
@@ -44,10 +52,12 @@
         "$lib/server/types.d.ts 里 export"
       ],
       "answer": 2,
-      "explain": "App 命名空间（src/app.d.ts）声明跨站共享形状，App.Locals 定义 event.locals；填了它 handle/load/+server 里 event.locals.user 才有类型。"
+      "explanation": "App 命名空间（src/app.d.ts）声明跨站共享形状，App.Locals 定义 event.locals；填了它 handle/load/+server 里 event.locals.user 才有类型。"
     },
     {
-      "q": "生成的 RouteParams 里，[...rest] 与 [[optional]] 分别是什么类型？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "生成的 RouteParams 里，[...rest] 与 [[optional]] 分别是什么类型？",
       "options": [
         "都是 string",
         "string[] 与 string",
@@ -55,10 +65,12 @@
         "string（rest 是单个拼接串）与 string | undefined（可选段）"
       ],
       "answer": 3,
-      "explain": "rest 参数是一个含斜杠的字符串不是数组；可选段可能缺省故为 string | undefined。别假设可选段一定有值。"
+      "explanation": "rest 参数是一个含斜杠的字符串不是数组；可选段可能缺省故为 string | undefined。别假设可选段一定有值。"
     },
     {
-      "q": "给路由段挂了 matcher（如 [id=numeric]）后，params.id 的类型会？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "给路由段挂了 matcher（如 [id=numeric]）后，params.id 的类型会？",
       "options": [
         "仍是 string，要数字得自己 Number()",
         "自动变成 number",
@@ -66,10 +78,12 @@
         "编译报错"
       ],
       "answer": 0,
-      "explain": "matcher 只影响运行时匹配、不影响类型收窄，动态段类型永远是 string；数字需手动转换。"
+      "explanation": "matcher 只影响运行时匹配、不影响类型收窄，动态段类型永远是 string；数字需手动转换。"
     },
     {
-      "q": "关于 .svelte-kit 目录与其中的 tsconfig，正确的是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 .svelte-kit 目录与其中的 tsconfig，正确的是？",
       "options": [
         "应手工编辑 .svelte-kit/tsconfig.json 来加 paths",
         ".svelte-kit 是提交的源码目录，需要进版本库",
@@ -77,7 +91,46 @@
         "删掉 .svelte-kit 就永久丢失类型"
       ],
       "answer": 2,
-      "explain": ".svelte-kit 是每次构建/prepare 重新生成的产物目录，不入库、不手改；扩展生成的 tsconfig 走 svelte.config.js 的 kit.typescript.config。"
+      "explanation": ".svelte-kit 是每次构建/prepare 重新生成的产物目录，不入库、不手改；扩展生成的 tsconfig 走 svelte.config.js 的 kit.typescript.config。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " svelte-kit sync 生成的类型住在哪、要不要提交进版本库？ ",
+      "options": [
+        " src/types，必须提交 ",
+        " .svelte-kit/types 等生成物，不进版本库，由 prepare/build 再生 ",
+        " node_modules/@types，随包锁提交 ",
+        " 不落盘只在内存 "
+      ],
+      "answer": 1,
+      "explanation": " .svelte-kit 整体是构建缓存目录；CI 装依赖后 prepare 脚本会重新生成，手改等于没改。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 给 +page.svelte 标注 data/props 类型，2.16+ 的官方推荐是？ ",
+      "options": [
+        " 手写 interface 全量字段 ",
+        " PageProps 泛型（由路由文件自动生成形状） ",
+        " any ",
+        " RequestHandler "
+      ],
+      "answer": 1,
+      "explanation": " PageProps 跟着 load 返回值自动演化，手写 interface 会与数据层脱钩，是官方点名要迁移的旧模式。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " matcher 挂载后（[id=numeric]），生成的 RouteParams 里 id 的类型是？ ",
+      "options": [
+        " 恒为 string ",
+        " number（matcher 文件声明的返回类型参与代码生成） ",
+        " unknown ",
+        " union "
+      ],
+      "answer": 1,
+      "explanation": " 官方按 matcher 的匹配语义收窄参数类型，numeric matcher 的约定让 params.id 在 TS 层即为 number。 "
     }
   ]
 }

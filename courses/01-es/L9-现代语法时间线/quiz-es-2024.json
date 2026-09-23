@@ -6,23 +6,38 @@
       "id": "q1",
       "type": "single",
       "prompt": "`Object.groupBy([1,2,3], x => x > 1 ? 'big' : 'small')` 的返回值原型是：",
-      "options": ["Object.prototype", "null（Object.create(null)）", "Array.prototype", "Map.prototype"],
-      "answer": 1,
+      "options": [
+        "Object.prototype",
+        "Array.prototype",
+        "null（Object.create(null)）",
+        "Map.prototype"
+      ],
+      "answer": 2,
       "explanation": "groupBy 返回 **原型为 null** 的对象——避免继承 toString/hasOwnProperty 等干扰分组键。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "`Promise.withResolvers()` 返回什么？",
-      "options": ["只返回 promise", "{ promise, resolve, reject }", "一个 class 实例", "undefined"],
-      "answer": 1,
+      "options": [
+        "只返回 promise",
+        "一个 class 实例",
+        "undefined",
+        "{ promise, resolve, reject }"
+      ],
+      "answer": 3,
       "explanation": "把 resolve/reject 暴露到构造器外面——以前必须用 hack 在 new Promise 里偷拿。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "`ArrayBuffer.transfer()` 之后原 buffer 的状态是：",
-      "options": ["正常使用", "detached（byteLength=0，读写返回空）", "抛错", "自动 GC"],
+      "options": [
+        "正常使用",
+        "detached（byteLength=0，读写返回空）",
+        "抛错",
+        "自动 GC"
+      ],
       "answer": 1,
       "explanation": "transfer 转移**所有权**——原 buffer 变 detached，不能再使用。类似 postMessage 里 transfer 的行为。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "`'\\uD800a'.isWellFormed()` 返回：",
-      "options": ["true", "false", "抛 SyntaxError", "undefined"],
+      "options": [
+        "true",
+        "false",
+        "抛 SyntaxError",
+        "undefined"
+      ],
       "answer": 1,
       "explanation": "\\uD800 是**高代理**但后面没跟低代理（跟了 'a'=0x61）——截断/不完整的代理对使 isWellFormed = false。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "`Atomics.waitAsync` 相比 `Atomics.wait` 的优势是：",
-      "options": ["更快", "返回 Promise——**主线程不阻塞**可用", "不需要 SharedArrayBuffer", "只用于 Node"],
+      "options": [
+        "更快",
+        "返回 Promise——**主线程不阻塞**可用",
+        "不需要 SharedArrayBuffer",
+        "只用于 Node"
+      ],
       "answer": 1,
       "explanation": "旧 Atomics.wait 阻塞当前线程——主线程用直接卡死页面。waitAsync 异步等待，UI 不冻结。"
     },
@@ -59,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "`'\\uD800a'.toWellFormed()` 的结果是：",
-      "options": ["原样返回", "用 \\uFFFD（替换字符）替代不合法代理", "抛错", "截断"],
+      "options": [
+        "原样返回",
+        "用 \\uFFFD（替换字符）替代不合法代理",
+        "抛错",
+        "截断"
+      ],
       "answer": 1,
       "explanation": "toWellFormed 把**不完整的代理对**替换为 U+FFFD；后续 'a' 保留。确保输出是**可安全序列化/传输**的字符串。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`Array.fromAsync(asyncIter)` 的返回值是：",
+      "options": [
+        "数组",
+        "Promise<数组>",
+        "迭代器",
+        "undefined"
+      ],
+      "answer": 1,
+      "explanation": "异步迭代器的 next 本来就是 Promise，收集结果只能是 Promise——`await Array.fromAsync(...)`；它是 for-await 手工收集的标准糖。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`structuredClone(buf, { transfer: [buf] })` 之后原线程里的 buf：",
+      "options": [
+        "照常可用",
+        "被 detach（byteLength 变 0）",
+        "自动 gc",
+        "抛错"
+      ],
+      "answer": 1,
+      "explanation": "ES2024 给 structuredClone 加了 transfer 列表：ArrayBuffer 所有权零拷贝转移，原处 detach——跨 Worker 传大数据的标准省拷贝姿势。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`Promise.withResolvers()` 返回：",
+      "options": [
+        "{ promise, resolve, reject }",
+        "只有 promise",
+        "一个已 settle 的 promise",
+        "Executor 函数"
+      ],
+      "answer": 0,
+      "explanation": "把 executor 里「捕获 resolve/reject」的仪式删掉：声明在外部、settle 交给事件回调/队列——Deferred 模式的规范化回归。"
     }
   ]
 }

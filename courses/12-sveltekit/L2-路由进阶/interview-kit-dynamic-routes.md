@@ -1,6 +1,6 @@
 # kit-dynamic-routes 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 说出 SvelteKit 路由参数家族的完整语法，以及 [...rest] 最容易被忽略的行为。
 **来源**：SvelteKit 进阶面试高频题的转述。
@@ -63,3 +63,25 @@
 动机：TS 工具链对前导 `.` 目录支持差，`[x+2e]well-known` 两全。必须转义的三类：文件系统禁忌字符（Linux 的 `/`；Windows 的 `\ / : * ? " < > |`）、URL 特殊字符 `#` `%`、Kit 保留语法字符 `[ ] ( )`。查码方法一行 JS：`':'.charCodeAt(0).toString(16)` → `3a` → `[x+3a]`。
 
 🚀 **下一组**：kit-route-matchers 面试题——matcher 契约、双端执行与排序兜底的深水区。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  路由匹配为什么选择按文件树的静态/动态/可选/rest 固定排序，而不是注册顺序？ 
+
+ 可预测性优先：任何人看目录就能推断匹配结果，不用追注册链；Next 的 App Router 同理按段类型排序，Express 才用顺序匹配，两种模型对比是高频追问点。 
+
+**来源**： https://svelte.dev/docs/kit/advanced-routing#Matching 
+
+### 14.  [[lang]] 可选段与 (group)+matcher 收紧语言码，两种 i18n 路由方案各自代价？ 
+
+ 可选段省一套重定向但会让任意首段都命中路由、404 判定滞后靠 matcher 补；分组+必选段边界清晰，代价是默认语言要写 redirect 或 reroute，权衡点在 404 语义与路由表复杂度。 
+
+**来源**： https://svelte.dev/docs/kit/advanced-routing#Advanced-matching 
+
+### 15.  把散落的动态路由重构成带 (group) 布局层，data 继承与 load 层级会踩什么坑？ 
+
+ 分组会引入新 layout 层，原本页面级 load 的数据被上提后 key 遮蔽关系改变；layout 重置（+page@）可跳出继承，但要重审 $page.data 在组件里的读取路径，建议配 E2E 兜底。 
+
+**来源**： https://svelte.dev/docs/kit/load#Layouts-and-parallelism 

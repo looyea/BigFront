@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "以下两条路由注册顺序会导致什么问题？\napp.get('/users/:id', getUser)\napp.get('/users/new', getNewForm)",
       "options": [
-        "无问题，Express 会智能匹配最精确的",
         "/users/new 永远匹配不到，因为先被 /users/:id 截获（id='new'）",
+        "无问题，Express 会智能匹配最精确的",
         "Express 报错",
         "两个都会执行"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Express 自上而下匹配，第一个命中就处理。/users/new 先被 /users/:id 捕获 → 把 'new' 当 id。修复：精确路径放前面。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "Router({ mergeParams: true }) 解决什么问题？",
       "options": [
         "合并多个 Router 实例",
-        "让子 Router 能访问父级路由参数（如 /api/users/:userId/orders 中的 userId）",
         "合并 query 和 params",
+        "让子 Router 能访问父级路由参数（如 /api/users/:userId/orders 中的 userId）",
         "启用缓存"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "默认 Router 不继承父级 params。mergeParams: true 后 req.params 包含父路由的 :userId + 子路由的 :orderId。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "router.param('userId', fn) 的触发时机是？",
       "options": [
         "每次 app.use 时",
-        "任何匹配路径中含 :userId 参数时，在路由 handler 之前执行",
         "只在 POST 请求时",
-        "只有手动调用时"
+        "只有手动调用时",
+        "任何匹配路径中含 :userId 参数时，在路由 handler 之前执行"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "param 中间件相当于参数级 beforeEach：路径含 :userId → 先执行 param 回调加载数据/校验 → 再进路由 handler。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "Express 5 原生检测返回值是否有 .then → 有就 catch → next(err)。不再需要第三方包。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " app.use('/api') 挂载的中间件会被哪个路径命中？",
+      "options": [
+        "只有 /api 精确路径",
+        "/api、/api/ 及 /api 开头的任意路径（含 /apifox——use 的前缀匹配不要求词边界），要边界感就用 router 内完整路径或具名参数收口",
+        "只有 /api/xxx 两段式",
+        "全部请求都命中"
+      ],
+      "answer": 1,
+      "explanation": "use 是\"前缀字符串匹配\"不是\"路径段匹配\"——/apifox 被 /api 的鉴权中间件误伤是经典 bug，记住没有词边界这回事。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " router.route('/posts').get(...).post(...) 链式写法的价值是？",
+      "options": [
+        "性能更好（少一次匹配）",
+        "同一路径的多方法声明聚合在一处，路径只写一遍防拼写漂移，且链上可挂路径级中间件——组织性问题不是性能问题",
+        "支持自动校验",
+        "能定义命名路由"
+      ],
+      "answer": 1,
+      "explanation": " Express 没有路由名/反向构造，链式与常量化就是防\"路径字符串三处各拼一遍\"腐化的全部武器。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 在子 Router 里调用 next('router') 的效果是？",
+      "options": [
+        "跳过当前中间件继续下一个",
+        "跳出整个当前层 Router 的剩余中间件与路由，回到上层继续——做\"这个 router 到此为止\"的层级短路（如鉴权失败已响应后的止损）",
+        "进入错误处理中间件",
+        "重新匹配路由表"
+      ],
+      "answer": 1,
+      "explanation": "next(err) 跳错误链、next('route') 跳当前路由、next('router') 跳当前 router——三个逃逸层级要分得清。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 查询串（?x=1）参与路由匹配吗？req.url 与挂载路径的关系是？",
+      "options": [
+        "查询串参与 path 匹配",
+        "不参与——匹配只看 pathname；req.url 含查询串但含的是\"剥掉挂载前缀后\"的剩余部分，req.originalUrl 才是全量",
+        "参与但可关闭",
+        "只有 POST 参与"
+      ],
+      "answer": 1,
+      "explanation": "\"匹配不吃 query、req.url 会被剥前缀\"两个语义叠加，正是 mountpath/originalUrl 排坑题的底层原理。"
     }
   ]
 }

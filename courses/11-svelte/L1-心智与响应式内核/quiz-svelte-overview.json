@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "同属构建期把高层写法降级为高效代码（呼应 svelte-overview 第一节、vue-sfc-compiler-macros、10-vite）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 一个标准 .svelte 文件可以由哪几部分构成？",
+      "options": [
+        "只能有 script 和模板",
+        "顶层是标记（HTML 模板）+ 可选的 <script>（模块级或实例级，可加 context=module）+ 可选的 <style>（默认作用域隔离）+ 注释——三段式单文件组件",
+        "必须是 class 组件",
+        "只能一个函数返回 JSX"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 用\"贴近原生 HTML/CSS/JS\"的三段单文件形态，编译器负责拆分管道（与 Vue SFC 同大类但语义不同）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Svelte 的响应式\"编译时\"特性主要发生在哪个阶段？",
+      "options": [
+        "运行时浏览器里",
+        "构建/编译阶段——把 runes、模板、样式编译成命令式的 DOM 操作与信号图代码，运行期只做最小更新",
+        "请求服务端时",
+        "git 提交时"
+      ],
+      "answer": 1,
+      "explanation": "编译期承担尽可能多的工作（依赖收集、CSS 抽取、静态提升）是 Svelte 小运行时的根因（与 compiler-architecture 关呼应）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Svelte 5 的 runes（$state 等）可以合法出现在哪些文件里？",
+      "options": [
+        "只能 .svelte",
+        ".svelte 与 .svelte.js / .svelte.ts（后者用于跨组件共享的响应式逻辑，runes 在普通 .js/.ts 里不可直接用）",
+        "任意 .js",
+        "只能在模板大括号里"
+      ],
+      "answer": 1,
+      "explanation": ".svelte.js/.svelte.ts 是把响应式逻辑抽离成模块的官方载体，普通模块没有编译管线处理 runes。"
     }
   ]
 }

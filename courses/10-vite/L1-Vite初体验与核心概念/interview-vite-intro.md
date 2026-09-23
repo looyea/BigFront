@@ -1,6 +1,6 @@
 # vite-intro 面试题精选
 
-> 共 12 题，覆盖 **架构原理 / 工具链对比 / esbuild 预打包 / 生态定位 / 性能** 五类。
+> 共 15 题，覆盖 **架构原理 / 工具链对比 / esbuild 预打包 / 生态定位 / 性能** 五类。
 
 ---
 
@@ -108,3 +108,25 @@ Webpack HMR：重新构建**包含变更模块的 chunk**（一个 chunk 可能�
 dev 仍然快（no-bundle）。坑：① **首屏请求瀑布**——HTTP/2 下 3000 个并发 import 仍可能导致浏览器排队；② **预打包发现动态 import** → 需手动 include；③ **build 时** Rollup 本身可能慢（10000 模块 build 2-5min）→ 关注 Rolldown 迁移进度。
 
 **来源**：Vite GitHub Discussions — "Large project optimization"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Vite 的 dev 安全攻击面（历史 CVE）主要在哪？你的项目怎么加固？
+
+攻击面盘点：① /@fs 与查询参数绕过系列（用 ?raw?? 之类畸形查询、双重编码绕过路径校验实现任意文件读——多个 CVE 的同一主题变奏），根因是"dev server 天生要 serve 源码"；② host 头与 allowedHosts（早期无校验被用于缓存投毒/CSRF 跳板，新版默认拦陌生 Host）；③ HMR WebSocket（恶意页面诱导连你的 ws 端口可触发热更新注入代码）；④ CI/内网里跑 vite --host 0.0.0.0 暴露调试实例（扫描器已把 5173 列为常规目标）。加固清单：dev server 永远只在 localhost/内网段，端口暴露必须过 SSH 隧道或零信任；server.fs.strict 保持默认 true 且 allow 列表收窄到 workspace 根；升级纪律把 Vite 的安全公告当 P0 依赖更新（dev 工具也是供应链）；预览用 vite preview 或静态服务器而不是"临时把 dev 暴露出去"。加分句：这道题的深层考点是"开发者工具的信任模型"——dev 期的便利（serve 源码、热更新、任意模块执行）每一项都是生产不可接受的权限，边界意识比背 CVE 编号重要。
+
+**来源**：Vite 官方安全公告（CVE-2023-34570 任意文件读、CVE-2025-31112 等）；GHSA 公告库；InfoQ《dev server 不该是你的公网入口》
+
+### 14.  esbuild 与 Rollup 双引擎模型给 Vite 带来过哪些"dev 正常 build 出鬼"的具体问题？Rolldown 如何收场？
+
+双模型的裂缝逐条数：① 语义差异——esbuild 不做真正的作用域提升与跨模块优化，循环依赖处理顺序与 Rollup 不同，dev 能跑的代码 build 后行为漂移（经典：TDZ 报错只在 build 出现）；② 插件两套钩子——同一家框架插件要写 serve/build 双分支（apply 判断满天飞），transform 时机与可改范围不一致；③ 预构建产物与 Rollup 产物格式/命名对不上（CJS 依赖的 interop 差异、CSS 注入方式不同）；④ Tree-shaking 只在 build 发生，dev 里死代码照样执行（副作用型模块 dev 正常）；⑤ sourcemap 拼接质量差异导致断点行为不一致。Rolldown 收场路线：Rust 内核实现 Rollup 兼容插件钩子（一套插件两处跑）、dev 预构建与 build 共用它（保留 esbuild 做转译/压缩的角色——职责收缩为"单文件级"），以 rolldown-vite 作为可切换的过渡发行版让生态按项目迁移，最终 Vite 大版本默认切换。工程迁移注意：依赖 prebundle 行为变化要重验、少数依赖 Rollup 特定钩子的插件是最大存量阻力。加分句：统一引擎省下的不只是 bug 面，还有"插件作者心智的一半"——这句能体现你在跟踪生态整合而不是背新闻。
+
+**来源**：Vite 官方 Rolldown 整合路线图；vite#10939（统一打包器讨论）；rolldown-vite 文档
+
+### 15.  用 Vite 做 dev 时浏览器 Network 面板出现几十条瀑布请求，是 bug 吗？要不要管？
+
+机制正名：dev 不打包→入口 import 图逐条揭示（浏览器发现一条 import 才发下一条），串行深度=依赖图最长链，这是"原生 ESM 按需加载"模型的固有形态而非故障。何时要管：① 深链（A→B→C…上千层）在 HTTP/1.1 或高延迟链路（远程开发机、VPN）下放大明显——HTTP/2/3 多路复用能压住并发但压不住"揭示深度"，解法是 vite-plugin 层的 warmup 预转换（server.warmup 把热点模块链提前 transform）、以及 modulepreload 在 HTML 的预发现；② 依赖图扁平化本身是架构健康度信号——入口同步 import 扇出过大说明首屏依赖没收敛。不该做的：为消灭瀑布把 dev 切到打包模式（esbuild dev 中间件类方案），牺牲 HMR 粒度换面板美观是本末倒置。诊断姿势：按 initiator 链看深度来自业务代码还是某依赖的 barrel 文件（index 全量 re-export 是瀑布放大器，也是预构建体积炸弹——与 deps-perf 关呼应）。收口句：dev 的 Network 面板是"依赖图的 X 光片"——Vite 用户应该学会读它而不是关掉它。
+
+**来源**：Vite 官方 Why Bundling for Production；web.dev HTTP/2 连接复用实践；MDN 优先级提示

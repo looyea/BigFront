@@ -1,6 +1,6 @@
 # vue-composables 面试题精选
 
-> 共 12 题，覆盖 概念与约定 / 返回值与响应式 / 组合与参数 / 作用域清理 / 与 mixin/库 五类。
+> 共 15 题，覆盖 概念与约定 / 返回值与响应式 / 组合与参数 / 作用域清理 / 与 mixin/库 五类。
 
 ---
 
@@ -93,3 +93,25 @@ store 适合**跨页面/跨兄弟的全局业务状态**。局部的、只服务
 参数支持 ref/值（`toValue`）、返回命名 ref、自动随作用域清理、SSR/环境安全、按文件拆分可 tree-shake、选项对象可扩展。团队沉淀自己的 `composables/` 时应遵循同样契约（呼应 vue-composables 第六节、vue-project-architecture、10-vite tree-shaking）。
 
 **来源**：VueUse 文档 — "Functions best practices / SSR"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 设计一个 useFetch 级组合式函数的完整检查清单：参数、返回、竞态、缓存、SSR 各定什么政策？
+
+参数：URL/option 全 收 `MaybeRefOrGetter`（内 部 toValue 归 一，响 应 式 源 变 了 自动 重 新 请 求——这 条 是 VueUse 红利 题 的 落地）；返回：`{ data, error, status, isFetching, execute, refresh, abort }` **全 ref + 动作 函数**，绝 不 返 reactive 整 体。竞 态：请 求 序 号/AbortController 双 保险，旧 请 求 回 来 丢 弃（本包 watch 竞 态 题 的 组 合 式 封 装 位）；重 试 政 策：指数 退避 + 上限，`execute` 与 「源 变 化 自动 执 行」要 可 分开 关（手动 模式 给 搜索 按 钮 场 景）。缓 存：key 策略（url+参 规范 化）、SWR 式 stale 标记、同 key 并 发 去 重（inflight Map）——缓 存 一 开 就 要 同时 给 `refresh` 强 刷 入 口，否 则 调 试 地 狱。SSR：await 版 本 配 Suspense/useAsyncData 语义（服 务 端 执 行 一 次 + 结果 序 列 化 注 水，客 户 端 hydrate 后 不 重 复 请 求），isLocal 判 断 决 定 「谁 负 责 首 次 发 起」；这 一 段 就 是 Nuxt useAsyncData 存 在 的 理由——自 研 useFetch 先 问 要 不 要 同 构，不 要 才 省 事。
+
+**来源**：VueUse useFetch 源码结构与文档；Nuxt useAsyncData 设计说明（payload 注水）。
+
+### 14. 「组合式函数变全局状态」的临界点在哪？升级为 store 的判断清单，以及升错方向的两种代价。
+
+升 级 信 号（任 满 二 条）：① 两 个 **无 祖先 关系** 的 组件 树 段 要 同 一 份 状 态（单例 化 的 第 一 步 就 是 状 态 出 了 组 件 树）；② 需 要 在 **组件 外** 读 写（路 由 守 卫/axios 拦截 器/事 件 总 线）；③ 需 要 devtools 时 间 旅 行/持久 化/SSR 注 水 这 些 基 础 设 施；④ 变更 规 则 复 杂（多 处 写 要 约 束 成 单 点）。升 级 手 法：`useXxxStore` 单 例 化（作 用 域 外 部 module 级 ref 或 Pinia），**组合 函数 保 留 作 为 store 的 门面**（组 件 面 前 API 不 变）。升 错 代价 A（该 store 不 store）：module 级 裸 ref 单例 逃 逸 SSR 请求 隔离（两 用 户 串 数 据，本包 SSR 关 状 态 污 染 题 的 组 合 式 版）且 无 devtools 可 观 测；代价 B（该 组 合 函数 却 全局 store）：store 里 塞 满 「只 有 一 个 组件 用」的 派 生/副作用，全局 命名 空间 垃 圾 + 任 何 人 都 能 dispatch 它（封 装 边 界 消 失，测 试 要 起 store 才 能 测 局 部 逻辑）。最 终 判 据：状 态 的 **可见 范围** 和 **变更 入 口 数** 决 定 层，不 是 代 码 好 不 好 看。
+
+**来源**：Vue 文档组合式函数与状态管理边界；Pinia 文档「何时用 store」取舍说明。
+
+### 15. 组合式函数文件的「军规级」约定审查：命名、导出形状、副作用、可取消性四关各查什么？
+
+命 名：use 前 缀 + 名 词 说 事（useEventListener 不 是 getListener）；**不 要 叫 xxxComposable/useXxxHook**（React 混 叫 传 染）。导 出 形 状：函数 单 导 出（default 在 组 合 式 生态 是 反 模式，tree-shaking 与 重 命 名 都 受 害）；返 回 对 象 而 非 元 组（React 习 惯 的 `[a, b]` 在 Vue 社 区 被 弃——命 名 解 构 是 ref 到达 模板 的 保 险 丝）。副 作 用：内部 只 允 许 「响应 式 订阅 + 生命 周期 注册」这 类 **作用 域 内** 副 作 用；全 局 监 听/定时 器 必须 挂 作 用 域 清理（onScopeDispose 一 定 存 在——查 「起 了 不 停」的 第 一 眼）；不 允 许 请 求 副 作 用 裸 飞（发 请 求 必 配 abort 通 道）。可 取 消/可 控制：暴露 的 动 作 动词（pause/resume/reset/execute）要 与 返 回 的 状态 名 形 成 闭环（有 isPending 就 该 有 cancel）；参数 支 持 `MaybeRefOrGetter` 或 明 确 不 支 持 并 写 进 类 型（boolean 参数 过 多 = 该 拆 options 对 象）。附 加 硬 件：一 个 `.test.ts` 用 裸 `effectScope` 就 能 测（无 需 mount 组件）是 组 合 式 函数 的 健 康 检 查——测 不 动 = 已 耦 定 组件 生命 周期，降 格 为 「组件 内 私有 逻辑」就 不 要 冠 use。
+
+**来源**：Vue 组合式函数风格指南（命名/返回约定）；VueUse 源码结构作为事实标准。

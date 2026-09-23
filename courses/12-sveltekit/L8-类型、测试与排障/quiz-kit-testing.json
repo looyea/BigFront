@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-testing",
-  "title": "测试矩阵 · 自测",
+  "title": "kit-testing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "load / action / handle 在单测里'好测'的根本原因是？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "load / action / handle 在单测里'好测'的根本原因是？",
       "options": [
         "它们运行在浏览器里，天然可测",
         "它们是吃一个类 event 对象、吐一个返回值的导出函数，不依赖组件实例/DOM，可直接传桩调用",
@@ -11,10 +13,12 @@
         "它们内部没有分支逻辑"
       ],
       "answer": 1,
-      "explain": "load(event)→数据、action(event)→返回/fail、handle({event,resolve})→Response，都是纯函数形态，单测里 import 进来手工构造 event 桩即可调用。"
+      "explanation": "load(event)→数据、action(event)→返回/fail、handle({event,resolve})→Response，都是纯函数形态，单测里 import 进来手工构造 event 桩即可调用。"
     },
     {
-      "q": "用 Vitest 做组件测试，jsdom 与 resolve.conditions:['browser'] 各解决什么？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "用 Vitest 做组件测试，jsdom 与 resolve.conditions:['browser'] 各解决什么？",
       "options": [
         "jsdom 提供 document/DOM API 垫片；conditions:['browser'] 让 Vitest 在 Node 里走包的 browser 入口",
         "两者都是用来跑 Playwright 的",
@@ -22,10 +26,12 @@
         "它们只影响生产构建，与测试无关"
       ],
       "answer": 0,
-      "explain": "组件测试要模拟 DOM 需装 jsdom；并配 resolve.conditions:['browser'] 让 Vitest 即使在 Node 也解析包的 browser 入口条件。"
+      "explanation": "组件测试要模拟 DOM 需装 jsdom；并配 resolve.conditions:['browser'] 让 Vitest 即使在 Node 也解析包的 browser 入口条件。"
     },
     {
-      "q": "在测试文件里想用 runes（$state/$derived），必须满足什么？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "在测试文件里想用 runes（$state/$derived），必须满足什么？",
       "options": [
         "文件顶部 import 'svelte/runes'",
         "启用 experimentalRunes 标志",
@@ -33,10 +39,12 @@
         "runes 无法在测试里使用"
       ],
       "answer": 2,
-      "explain": "官方：Vitest 像处理源码一样处理测试文件，只要文件名含 .svelte 就能在测试里用 runes。"
+      "explanation": "官方：Vitest 像处理源码一样处理测试文件，只要文件名含 .svelte 就能在测试里用 runes。"
     },
     {
-      "q": "裸 Vitest 里 import '$app/environment' / '$app/server' 为什么会挂、怎么处理？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "裸 Vitest 里 import '$app/environment' / '$app/server' 为什么会挂、怎么处理？",
       "options": [
         "它们是 Kit 运行期注入的虚拟模块，纯 Node 环境解析不到/依赖真实上下文；用 vi.mock 顶掉（能经参数传桩的优先传桩）",
         "需要重启计算机",
@@ -44,10 +52,12 @@
         "它们永远无法被 mock，只能放弃单测"
       ],
       "answer": 0,
-      "explain": "$app/* 是 Kit 运行时模块，裸 Vitest 解析不到，用 vi.mock 提供假实现；但能被测函数通过 event 参数拿到的优先传桩，更符合纯函数红利。"
+      "explanation": "$app/* 是 Kit 运行时模块，裸 Vitest 解析不到，用 vi.mock 提供假实现；但能被测函数通过 event 参数拿到的优先传桩，更符合纯函数红利。"
     },
     {
-      "q": "关于 $env/static 与 $env/dynamic 在测试里的可喂假值性，正确的是？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 $env/static 与 $env/dynamic 在测试里的可喂假值性，正确的是？",
       "options": [
         "两者都能在测试里改 process.env 立即生效",
         "$env/static 构建期已被静态替换成字面量、测试改不动；$env/dynamic 运行期读、可临时改 process.env 或 mock",
@@ -55,10 +65,12 @@
         "两者都无法在测试里覆盖"
       ],
       "answer": 1,
-      "explain": "static 在构建期静态替换（可 DCE），值锁定为构建时；dynamic 运行期读取，便于测试喂假值。"
+      "explanation": "static 在构建期静态替换（可 DCE），值锁定为构建时；dynamic 运行期读取，便于测试喂假值。"
     },
     {
-      "q": "Playwright 的 webServer 配 'npm run build && npm run preview' 而非 dev，目的是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "Playwright 的 webServer 配 'npm run build && npm run preview' 而非 dev，目的是？",
       "options": [
         "dev 太占内存",
         "preview 才支持断点调试",
@@ -66,10 +78,12 @@
         "build 会顺带跑单测"
       ],
       "answer": 2,
-      "explain": "e2e 要覆盖 SSR→HTML→水合→交互的完整链路，必须在 build+preview 的生产渲染路径上跑，dev 会掩盖水合/产物相关问题。"
+      "explanation": "e2e 要覆盖 SSR→HTML→水合→交互的完整链路，必须在 build+preview 的生产渲染路径上跑，dev 会掩盖水合/产物相关问题。"
     },
     {
-      "q": "下列哪类问题只有 e2e（Playwright）能测到、单测/组件测测不到？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "下列哪类问题只有 e2e（Playwright）能测到、单测/组件测测不到？",
       "options": [
         "一个纯格式化函数的边界输入",
         "一个工具类的加减乘除",
@@ -77,7 +91,46 @@
         "SSR HTML 与水合后不一致（hydration mismatch）/ 客户端导航后状态错乱"
       ],
       "answer": 3,
-      "explain": "跨端问题（水合不一致、导航状态、action 后重渲染）只有从用户视角跑完整链路的 e2e 才能发现；纯逻辑/props 映射属单测/组件测。"
+      "explanation": "跨端问题（水合不一致、导航状态、action 后重渲染）只有从用户视角跑完整链路的 e2e 才能发现；纯逻辑/props 映射属单测/组件测。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 为什么 Kit 的 load/action/handle 天然适合纯单测？ ",
+      "options": [
+        " 它们自带 mock 框架 ",
+        " 都是输入事件对象、输出纯值的函数，可手工构造最小 event 断言返回 ",
+        " 必须在浏览器跑 ",
+        " 只能 e2e "
+      ],
+      "answer": 1,
+      "explanation": " 无 DOM 无副作用的函数契约是 Kit 可测性设计的核心，官方 @sveltejs/vite-plugin-svelte 文档明确推荐此路径。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 测试里 import $app/environment 报解析失败，正解是？ ",
+      "options": [
+        " 删掉导入 ",
+        " Vitest 配 alias/mock 该模块（或跑在 Kit 的 vitest 插件环境里由框架解析） ",
+        " 换 Jest ",
+        " 关闭 SSR "
+      ],
+      "answer": 1,
+      "explanation": " $app/* 是 Kit 虚拟模块，裸 Vitest 不认识；官方测试指南提供插件与 mock 两种口径，项目级选一致即可。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 流式页面（Promise 槽位）在 e2e 里怎么断言才稳？ ",
+      "options": [
+        " 固定 sleep 后断言 ",
+        " 等骨架选择器消失/目标内容可见再断言，避免竞态 ",
+        " 只断言状态码 ",
+        " 禁用流式再测 "
+      ],
+      "answer": 1,
+      "explanation": " Playwright 的 auto-wait 按可见性推进；流式替换是异步的，断言要锚在最终态而非时间。 "
     }
   ]
 }

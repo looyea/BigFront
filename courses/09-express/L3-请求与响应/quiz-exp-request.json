@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "app.set('trust proxy', 1) 后 req.ip 从哪里取值？",
       "options": [
-        "socket.remoteAddress",
         "X-Forwarded-For 头的第一段",
+        "socket.remoteAddress",
         "req.hostname",
         "Host 头"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "trust proxy 让 Express 信任代理传来的 X-Forwarded-For → req.ip 取 XFF 最左边（真实客户端 IP）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "req.fresh 为 true 意味着什么？",
       "options": [
         "请求是新的",
-        "客户端缓存有效（If-None-Match/Modified 匹配），可返回 304",
         "响应没有缓存",
+        "客户端缓存有效（If-None-Match/Modified 匹配），可返回 304",
         "ETag 不存在"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "req.fresh 对比条件头（If-None-Match vs ETag / If-Modified-Since vs Last-Modified）→ 匹配 = 客户端有最新副本 = 304。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "req.url 和 req.originalUrl 的区别何时体现？",
       "options": [
         "完全相同",
-        "在挂载的 Router 内：url 截去 mount 前缀，originalUrl 保留完整",
         "originalUrl 包含 query，url 不包含",
-        "只有 POST 时不同"
+        "只有 POST 时不同",
+        "在挂载的 Router 内：url 截去 mount 前缀，originalUrl 保留完整"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Router 挂在 /api 下，请求 /api/users → req.url = '/users'，req.originalUrl = '/api/users'。"
     },
     {
@@ -58,9 +58,79 @@
       "id": "q5",
       "type": "single",
       "prompt": "客户端上传中途关闭浏览器，Express 哪个事件触发？",
-      "options": ["req.on('end')", "req.on('aborted')", "res.on('finish')", "server.on('close')"],
+      "options": [
+        "req.on('end')",
+        "req.on('aborted')",
+        "res.on('finish')",
+        "server.on('close')"
+      ],
       "answer": 1,
       "explanation": "aborted = 请求未完整接收就断开（上传取消）。end = 正常读完 body。finish = 响应发完。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": " express.json({ strict: true })（默认）的限制是什么？",
+      "options": [
+        "只接受数组 body",
+        "只接受顶层是对象的 JSON——数组/字符串等裸 JSON 被拒返回 400；接口约定顶层必须是对象，需要收数组时显式设 strict: false",
+        "禁止未知字段",
+        "强制校验 Content-Length"
+      ],
+      "answer": 1,
+      "explanation": "strict 是\"格式宽容度\"开关不是安全开关；数组顶层常见于批量导入接口，届时按接口局部关闭。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " ?tag=a&tag=b&tag=c 用默认 qs 解析后 req.query.tag 是？",
+      "options": [
+        "字符串 a",
+        "数组 [a, b, c]——重复键聚合为数组，受 arrayLimit（默认 20）约束，超限会被截断或转对象，接收方必须按\"可能来数组\"写校验",
+        "后者覆盖前者",
+        "解析报错"
+      ],
+      "answer": 1,
+      "explanation": "同一参数可能是 string 也可能是 array——类型不稳定是 query 校验必用 union 或直接 z.array 的原因。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " req.hostname 的取值来源和陷阱是？",
+      "options": [
+        "永远可靠",
+        "恒等于 server.address().hostname",
+        "由 app.set('host') 配置决定",
+        "来自 Host 头（trust proxy 开启后取 X-Forwarded-Host 链）——Host 是客户端可控头，直接用它拼跳转 URL/缓存键会被 host header 攻击污染，多租户要白名单校验"
+      ],
+      "answer": 3,
+      "explanation": "\"来自请求头而不是连接层\"是所有 Host 派生数据的原罪；租户解析、绝对 URL 生成都要过白名单。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 想拿到\"未被挂载路径改写前\"的完整请求路径（含查询串），应读？",
+      "options": [
+        "req.path",
+        "req.originalUrl——app.use 挂载会把 req.url 剥前缀，日志、签名校验、重定向构造这类需要全量路径的场景必须用 originalUrl",
+        "req.pathname",
+        "req.baseUrl"
+      ],
+      "answer": 1,
+      "explanation": "三件套分工：originalUrl 全量、url 剥前缀、baseUrl 被剥部分；签名类中间件用错字段=偶发验签失败。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " ?a[b]=1&__proto__[x]=2 这类 query 在 Express 5 下的实际效果是？",
+      "options": [
+        "正常挂到对象上",
+        "qs 解析进的是 null 原型对象且 req.query 只读——__proto__ 键变成普通属性不再污染全局原型链，这是 v5 默认改 qs 的核心动机",
+        "直接 500",
+        "自动剔除非法键名"
+      ],
+      "answer": 1,
+      "explanation": "原型污染攻击面从\"库版本与配置\"下沉为\"语言层默认安全\"，但下游 JSON 序列化仍会带出普通 __proto__ 键，校验层别放行。"
     }
   ]
 }

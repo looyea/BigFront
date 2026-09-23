@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "wx.getStorageSync('not-exist') 返回？",
-      "options": ["空字符串 ''", "undefined", "null", "抛异常"],
+      "options": [
+        "空字符串 ''",
+        "undefined",
+        "null",
+        "抛异常"
+      ],
       "answer": 0,
       "explanation": "未命中返回 ''，if (!raw) 判空即可、别等 undefined（呼应 mp-storage 第一节）。"
     },
@@ -27,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "存入 new Date()，取出来是？",
-      "options": ["Date 实例", "时间戳数字", "Object", "字符串——序列化导致类型丢失"],
+      "options": [
+        "Date 实例",
+        "时间戳数字",
+        "Object",
+        "字符串——序列化导致类型丢失"
+      ],
       "answer": 3,
       "explanation": "JSON 化后 Date 变字符串，同构问题 web 也有（呼应 mp-storage 第一节、json 类型话题）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "官方无 TTL 能力，自己造信封（呼应 mp-storage 第三节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 把 new Date() 存进 Storage、再取出来，得到的是？",
+      "options": [
+        "仍是 Date 实例，方法齐全",
+        "被 JSON 序列化成字符串（丢失 Date 原型与方法），要用需自己 new Date(str) 还原——Storage 本质是按可序列化结构存取，不放函数/原型/实例方法",
+        "报错拒绝存",
+        "自动转成时间戳数字"
+      ],
+      "answer": 1,
+      "explanation": "Storage 只可靠存\"可 JSON 化的纯数据\"（字符串、数字、布尔、普通对象/数组）。Date/Map/Set/类实例/函数存进去都会退化或丢失。所以草稿/字典/配置用纯对象最稳，复杂类型自己写序列化/反序列化。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 用户反馈\"清了缓存后会员登录态/身份丢了\"，设计上错在哪？",
+      "options": [
+        "用户操作问题",
+        "把\"权威身份/登录态\"只存在本地 Storage，清缓存即丢且不可信——身份应由服务端持有、端上只存可重建的 token，清缓存后凭最小凭证（或重新 wx.login）能恢复，而非依赖本地副本当唯一真相",
+        "Storage 太小",
+        "应存内存"
+      ],
+      "answer": 1,
+      "explanation": "本地是\"缓存/便利层\"不是\"真相源\"。正确：登录态用 token（丢了能重登）、用户身份/权益以后端为准每次校验。清缓存丢身份=把可变的本地当唯一凭据，既不安全也不健壮。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 官方更推荐异步 setStorage 而非同步 getStorageSync 的主要理由是？",
+      "options": [
+        "异步更快是玄学",
+        "同步 API 会阻塞逻辑线程 JS 执行——冷启动/首屏路径上大量同步读会拖慢启动；异步让出线程不卡。仅在\"启动就必须拿到、且量小\"时谨慎用同步",
+        "同步会丢数据",
+        "异步不阻塞是真慢"
+      ],
+      "answer": 1,
+      "explanation": "同步读写在逻辑线程是\"卡住等 I/O\"，冷启动关键路径上尤其伤。策略：首屏必需的小配置可用同步（快、简单），大批量/非关键路径用异步或提前预读缓存到内存。别在循环里同步读。"
     }
   ]
 }

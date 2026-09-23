@@ -1,6 +1,6 @@
 # solid-overview 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 用一句话概括 Solid 的更新模型，并说明它和 React 的根本分野。
 **来源**：Solid vs React 渲染模型高频开场题的转述。
@@ -61,3 +61,25 @@ Solid 的 `<For>` 本就是 **keyed**：它为每个 item 记录其对应的 DOM
 **来源**：迁移评审清单题的转述。
 
 ① 把 signal 当 state 用：`const v = count()` 到处取快照、或解构 props → 丢失响应；② 用 `&&`/`.map` 做条件/列表（应 `<Show>`/`<For>`）、用 effect 做派生（应 memo）；③ 照搬 `useEffect` 依赖数组心智与"每次渲染后跑"预期，忽略 Solid 的同步按读追踪与异步追不到（`setTimeout`/await 里读）。建议配 ESLint 规则与一页"React→Solid 对照表"降低回退（呼应 react-to-solid-migration）。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  从 js-framework-benchmark 看，Solid 的设计在哪些指标上占优、付出了什么代价？ 
+
+ 创建/替换/排序等命令式密集的指标靠前，内存占用低；代价是心智模型全新、生态规模小于 React，且收益对 CRUD 密集场景最显著——答题要带场景权重而非无脑吹性能。 
+
+**来源**： https://krausest.github.io/js-framework-benchmark/current.html 
+
+### 14.  Solid 的 signal 与 TC39 Signals 提案是什么关系？ 
+
+ 提案部分吸收了 Solid 响应式设计的经验，两者语义相近但 Solid 未等待标准：自有实现带 owner/清理体系，迁移到提案标准意味着失去其生命周期绑定——这是它不被标准绑架的独立性体现。 
+
+**来源**： https://github.com/tc39/proposal-signals ； https://www.solidjs.com/docs 
+
+### 15.  向团队宣讲引入 Solid，你的风险评估框架？ 
+
+ 四维：团队学习曲线（hooks 心智全部重写）、招聘与生态（库数量与文档）、场景匹配（高频更新 CRUD 类收益大、静态展示类收益小）、退出成本（无厂商锁定的纯 JS 程度）；结论带试点边界而非一刀切。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/getting-started 

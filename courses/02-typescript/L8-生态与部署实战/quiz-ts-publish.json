@@ -8,11 +8,11 @@
       "prompt": "发布一个 TS 库到 npm，实际应该发布的内容是？",
       "options": [
         "只发 .ts 源码，让用户自己编译",
-        "编译后的 JS + 对应的 .d.ts 类型声明",
         "只发 .d.ts，运行时靠用户猜",
-        "把整个 src + node_modules 打包发上去"
+        "把整个 src + node_modules 打包发上去",
+        "编译后的 JS + 对应的 .d.ts 类型声明"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "TS 类型编译期擦除，消费方运行的是 JS、类型信息来自随包发布的 .d.ts。合格产物是 JS(各格式) + 配套 .d.ts（呼应 ts-intro、ts-declarations）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "files 是发布白名单（如 [\"dist\",\"README.md\"]），控制 npm 包里到底放哪些文件，避免把源码目录/测试/杂物一起发出去（npm pack --dry-run 可核对）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "包 exports 只映射了 \".\"，消费者 import \"pkg/utils\" 会：",
+      "options": [
+        "正常解析",
+        "ERR_PACKAGE_PATH_NOT_EXPORTED——exports 一旦声明即封死未列路径（TS 侧 types 也必须按 exports 条件解析）",
+        "回落到 src 目录",
+        "仅 ESM 报错"
+      ],
+      "answer": 1,
+      "explanation": "exports 是**封闭白名单**（不是装饰）：想要子路径/插件入口要显式 `\"./features/*\"` 通配映射——类型入口也要在同条件里给 types。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "移除一个已被大量使用的导出接口字段，SemVer 正确档位：",
+      "options": [
+        "patch（类型不算 API）",
+        "major——导出类型/接口是公共 API 的一部分，收窄即破坏消费者编译",
+        "minor + 警告",
+        "看心情"
+      ],
+      "answer": 1,
+      "explanation": "「types are API」社区共识（ts-api-validator 按此建模）：字段删除让下游 tsc 红——至少 deprecate 一个 major 周期（@deprecated JSDoc 进 IDE 划线）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "declarationMap: true 给消费者的实际收益：",
+      "options": [
+        "减小产物",
+        "IDE「跳定义」从 .d.ts 穿透回你的 TS 源码（sourcemap for types），调试库内部体验质变",
+        "自动导出类型",
+        "加速编译"
+      ],
+      "answer": 1,
+      "explanation": ".d.ts.map 记录类型→源位置；配合发布保留源结构，消费者 hover/Ctrl+Click 不再面对冰冷签名——库 DX 的高级配置。"
     }
   ]
 }

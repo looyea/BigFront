@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "流相比 readFile 处理大文件的核心优势是？",
       "options": [
-        "读取速度一定更快",
         "以恒定内存分块处理，内存峰值不随文件大小增长",
+        "读取速度一定更快",
         "不需要 error 事件",
         "自动关闭进程"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "流一块块搬运、处理完即释放，内存里只驻留约一个 chunk；readFile 会把整个文件读进内存（呼应 node-streams 第一节、node-fs 第七节）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "Transform 流与 Duplex 流的关系是？",
       "options": [
         "完全无关",
-        "Transform 是一种特殊 Duplex：输出是对输入的变换",
         "Duplex 是 Transform 的子类",
-        "两者只能单向"
+        "两者只能单向",
+        "Transform 是一种特殊 Duplex：输出是对输入的变换"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Duplex 两端独立；Transform 是『写进去的会加工后从读出端出来』的特殊 Duplex（如 zlib、加密流）（呼应 node-streams 第一、四节）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "data 与 readable 是两种消费模型，混用会导致数据被某一边消耗掉、行为怪异（呼应 node-streams 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "异步迭代器消费 Readable（for await）时，循环体内 throw 会发生什么：",
+      "options": [
+        "静默继续",
+        "迭代器销毁流（destroy）并冒泡错误到外层 catch——流进入 destroyed 状态，需清理时包 finally 处理半途中断资源",
+        "进程退出",
+        "只停循环不关流"
+      ],
+      "answer": 1,
+      "explanation": "for-await 的 return/throw 触发流 return()→destroy：这是「break 自动省内存」的原理；错误处理终于不用像裸 data 事件那样手工挂 error（本关消费方式题的现代答案）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Duplex 流读写高水位线的关系是：",
+      "options": [
+        "共用一个",
+        "读写各有一套缓冲与 highWaterMark、背压互不相干（readable 侧满与 writable 侧满独立判断）——这就是为什么 socket 半关闭（end）后仍可单向读",
+        "只算读侧",
+        "只算写侧"
+      ],
+      "answer": 1,
+      "explanation": "Duplex=两个独立半双工拼体；Transform 则在其上强制「写进多少迟早读出多少」的关联。半关闭（end 写侧保留读侧）能成立正依赖读写状态独立——本关 Transform/Duplex 关系题的深一层。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "想把 fs.createReadStream 接入 Web 的 Response（fetch 上传/流式响应），标准做法是：",
+      "options": [
+        "直接塞（类型不兼容）",
+        "Readable.toWeb(stream) 转 ReadableStream（双向均有 toWeb/fromWeb），或消费侧用 iterator 包 ReadableStream",
+        "只能落盘中转",
+        "升级 Node 24 才支持"
+      ],
+      "answer": 1,
+      "explanation": "Node 17+ 提供互转；两个体系对象/错误/背压语义大体对齐但事件名不同（error vs reason）。跨体系边界永远显式转换，别手写事件桥（本关 Node流 vs Web Streams 题的 API 落地）。"
     }
   ]
 }

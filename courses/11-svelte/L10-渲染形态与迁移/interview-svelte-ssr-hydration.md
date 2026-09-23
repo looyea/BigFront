@@ -1,6 +1,6 @@
 # svelte-ssr-hydration 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ---
 
@@ -75,3 +75,25 @@ Svelte：模块顶层 import 即执行是病灶——浏览器依赖推到 `onMo
 **来源**：元问题——学习路径辩护题（L8 引桥题 11 的收官版）
 
 三段式：①排障能力分层——Kit 报 hydration mismatch 时，懂锚点/序列化/环境边界三层机制的人定位到表达式，不懂的人在搜索引擎碰运气；②架构决策有据——"上不上 Kit"的本质是"编排层的成本与自由度权衡"，手搓过的人才报得出这个价（样板清单：head 安置、数据协议、CSS 提取、路由映射）；③边界资产——render() 可嵌入任意后端（本关 D 类场景题），Kit 覆盖的是"新建全栈应用"这个主路径，两者不是竞争是包含。收尾金句：框架会替你编排，但事故永远发生在你看不见的编排层——手搓 SSR 的意义就是把看不见的层变成说得出的模型。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  从零讲清 Svelte 5 SSR 完整管线：服务端 render 到客户端 hydrate 认领 DOM，每一步产物与接缝。
+
+管线：① 服务端——对每个请求，用 render(App,{props}) 得到 RenderOutput：body（SSR 产出的 HTML，含 hydration 标记如 <!--svelte-->锚点/data-svelte-h）、head（组件 <svelte:head> 收集）、是否流式（可迭代分块，对应 streaming）；② 组装——把 body 塞进页面模板、head 注入 <head>、SSR 数据序列化进 <script>（转义，quiz 已考），发完整 HTML；③ 客户端——加载 JS，用 hydrate(App,{target,props, 同份数据}) 而非 mount：hydrate 遍历现有 DOM、靠标记认领节点（不重建），建立信号/effect/事件绑定，让"静态 HTML"变"活组件"；④ 一致性——两端渲染结果须匹配否则 mismatch（既有"水合不匹配"题）。关键接缝：服务端 props 与客户端初始 props 必须同值（数据要注水再认领，对应既有数据传递复用题）、hydration 标记是认领的合同。加分句：把 hydrate 讲成"不重新渲染、而是『认领 + 接线』"——它信任服务端 HTML 是对的，只补上交互所需的 signal/effect/监听；理解这层"信任"，就懂为什么两端数据/时间/随机不一致会炸（服务端 HTML 与客户端『若自己渲染会得到什么』对不上，mismatch 本质是这份信任被违背）（呼应既有"hydrate 不重新渲染怎么认领"题）。
+
+**来源**：Svelte 5 SSR/hydrate 文档；RenderOutput 结构；hydration 认领机制；既有"SSR 完整管线"深化
+
+### 14.  上线后首页"每次都会闪一下"、dev 却复现不出，最可能的两类原因是什么？怎么定位？
+
+dev 无 SSR（纯 CSR，无认领过程），所以 dev 不复现的闪烁基本出在"SSR/水合特有环节"。两类主因：① 样式闪烁（FOUC）——SSR 首屏 HTML 的组件 CSS 还没就位（提取/内联配置问题）或 <link> 异步加载，先裸样式后带样式（对应 styling FOUC 题）；② 水合内容抖动——服务端渲染的内容与水合后客户端首帧不一致导致重绘：常见于"依赖客户端才有的值"（localStorage、window.innerWidth、随机、Date.now、Math.random 的初始 state）服务端拿到默认值、客户端拿到真值，水合一接线就把显示改了一下（对应既有"水合不匹配"题）；或某块本应 CSR-only 却 SSR 渲染了。定位：DevTools 慢放/Performance 看"闪"发生在 CSS 应用时还是 JS hydrate 时；查初始 $state 是否读了浏览器专属值；看首屏 HTML 与稳定后 DOM 是否结构不同。加分句：这题的元认知是"凡是 dev(CSR) 不出、prod(SSR) 才有的现象，先怀疑两端渲染条件不对称的地方"——把"SSR 与 CSR 的差异面"（样式注入时机、浏览器 API 可用性、数据是否注入、随机/时间源）列成检查表逐个比，比盯着动画/性能瞎猜快得多（呼应 lifecycle/transitions 的"SSR/水合不跑 effect"导致首屏差异题）。
+
+**来源**：FOUC 与 hydration 闪烁；SSR 与 dev 差异；水合期状态覆盖；既有"上线闪一下 dev 不复现"深化
+
+### 15.  水合不匹配、运行时渲染错误、boundary 捕获的错误，三类"看起来都是红/白屏"怎么区分？各自处理手段？
+
+区分：① hydration mismatch——SSR HTML 与客户端应渲染结果不一致，表现为"内容闪/错位/属性对不上 + 控制台 hydration mismatch 警告"，两端都成功产出只是不吻合（数据/时间/浏览器 API 依赖，既有题）；处理：把客户端专属逻辑挪到 onMount/effect（SSR 不算）、保证注水数据两端一致、必要时该块关 SSR 走 CSR。② 运行时渲染错误——组件渲染/effect 抛异常（undefined 访问、类型错），客户端一定报错、可能白屏；处理：修 bug + boundary 兜降级 UI。③ boundary 捕获的错误——是"渲染期抛错"被 <svelte:boundary> 接住、渲染 failed snippet 的那类（是②被框架优雅拦截后的表现，既有"谱系"题）。三者关系：②是病因、③是对②的框架级处理、①是另一类"没抛异常但两端不一致"的独立问题。定位靠"控制台有无异常/有无 hydration 警告/页面是白屏还是局部 failed UI"三点先分流。加分句：把这三类钉成一张决策树——"有 exception? → 运行时错误(修)/被 boundary 拦(已降级)；无 exception 但内容不对且 prod-only? → hydration mismatch"——能先分流再动手，是 SSR 调试成熟度的标志（呼应 error-boundary 关"三层错误设施分工"题与既有 ssr 排查题）。
+
+**来源**：hydration mismatch vs 运行时错误 vs 边界错误；控制台特征；既有"三者区分"深化

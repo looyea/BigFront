@@ -1,6 +1,6 @@
 # ts-object-types 面试题精选
 
-> 共 12 题，覆盖 **属性修饰 / 索引签名 / 字面量类型 / 结构化类型 / 过剩属性检查 / 深只读** 六类。
+> 共 15 题，覆盖 **属性修饰 / 索引签名 / 字面量类型 / 结构化类型 / 过剩属性检查 / 深只读** 六类。
 
 ---
 
@@ -114,3 +114,25 @@ type DeepReadonly<T> =
 共性：让"非法状态不可表示"，把校验放在边界、把精确性留在类型。
 
 **来源**：colinhacks — "Zod inference"; Total TypeScript — "modeling state"; "make illegal states unrepresentable"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 过剩属性检查为什么只对「新鲜字面量」生效？这个设计的边界价值在哪？
+
+结构类型下「多属性」本合法（子类型规则），但字面量直赋表达了一个**强意图**：「我就是想造这个类型」——此时拼错的 `email: ""` 写成 `emial` 必须当场抓住，否则静默丢字段（React props 传错名是重灾区）。新鲜性通过赋值/展开即消失是刻意的：变量已「定型」，后续复用不该反复拦。副作用：barrel 配置、API client 返回对象天然免疫——所以关键入口（props、config、请求体构造）要**保持字面量直赋**才吃到保护，中间转一层 any 全丢。
+
+**来源**：TS Handbook《Excess Object Properties when type checking》专门章节（设计权衡说明）。
+
+### 14. 可选属性、undefined 与 exactOptionalPropertyTypes 的三方恩怨讲一下。
+
+默认模型下 `email?: string` = `string | undefined`——键不存在和键=undefined 不分，`delete o.email` 后读回 undefined 同值。开启 exactOptionalPropertyTypes 后：`email?: string` 只许「不存在」，写 `email: undefined` 报错——想两种都行要显式 `| undefined`。价值：区分「未填」与「显式清空」的 PATCH 请求语义、React props 默认值逻辑不再被 undefined 穿透。代价：spread/条件展开（`...(x? {k:undefined}:{})`）大量报错，迁移需按属性手术；这也是它不在 strict 包里的原因。
+
+**来源**：TS 4.4《exactOptionalPropertyTypes》提案与 release notes；Anders 关于 optional/undefined 语义的 issue 讨论。
+
+### 15. 索引签名和 keyof / 映射类型怎么互操作？数组为什么也能 [k: number]？
+
+`keyof T` 返回「键的联合」：有索引签名时并入 string/number（模板推导时注意 `'foo' | number` 这类合并）；映射类型 `{[K in keyof T]: X}` 遍历全部键（含索引签名会塌成 string/number，可能不是你想要的专属遍历）。数组/元组自带 number 索引签名 + `length` 具名属性，所以 `ArrayLike { [k:number]: T; length: number }` 能同时匹配数组和字符串；写「只遍历具名键」的工具用 `Exclude<keyof T, string|number>` 或 keyof 字面量列表。
+
+**来源**：TS Handbook《Mapped Types / 索引签名》；lib.d.ts ArrayLike 定义。

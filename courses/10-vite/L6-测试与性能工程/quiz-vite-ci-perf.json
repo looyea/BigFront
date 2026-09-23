@@ -8,18 +8,23 @@
       "prompt": "CI 里 actions/setup-node 的 cache: pnpm 缓存的是？",
       "options": [
         "构建产物 dist",
-        "pnpm 全局 store（包内容寻址存储），命中即跳过下载",
         "Docker 镜像层",
-        "node_modules/.vite"
+        "node_modules/.vite",
+        "pnpm 全局 store（包内容寻址存储），命中即跳过下载"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "层 1 缓存的是 store；node_modules 本身每次按锁文件链接（呼应 vite-ci-perf 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "Turbo 任务缓存 key 的构成不包括？",
-      "options": ["输入文件哈希", "依赖任务哈希", "团队成员名单", "影响产物的环境变量"],
+      "options": [
+        "输入文件哈希",
+        "依赖任务哈希",
+        "团队成员名单",
+        "影响产物的环境变量"
+      ],
       "answer": 2,
       "explanation": "key=输入+上游任务+env 白名单+平台；与人无关，这正是 remote cache 能共享的原因（呼应 vite-ci-perf 第二节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "三项'良好'线必背；FID 已被 INP 取代是常考陷阱（呼应 vite-ci-perf 第五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " CI 里缓存 Vite 的 node_modules/.vite 预构建产物，key 必须包含什么才不会缓存错用？",
+      "options": [
+        "只含分支名",
+        "lockfile hash + 影响预构建的配置（vite.config、include/exclude 列表）+ Node/Vite 版本——任一变化都必须 miss，宁可重建不可错用（半新缓存比无缓存更难排查）",
+        "只要 commit sha",
+        "不设 key 用默认"
+      ],
+      "answer": 1,
+      "explanation": "缓存正确性第一：错用预构建产物的症状是随机 reload 与行为漂移，排查成本远超省下的几秒。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Turbo 增量构建在 monorepo 里失效（全部重建）的最常见配置原因是？",
+      "options": [
+        "缓存盘太小",
+        "任务 inputs/outputs 声明过宽或漏声明（隐式把全仓当输入、或依赖产物未登记导致 key 抖动），以及全局依赖 env 变量未声明进 globalEnv——声明式缓存的 miss 九成是\"合同\"写歪",
+        "Node 版本太新",
+        "pnpm 不是 npm"
+      ],
+      "answer": 1,
+      "explanation": "缓存 key 由声明的输入集合决定（hash 范围即合同），\"感觉相关的都塞进去\"是失效主因（呼应既有 hashFiles 题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " RUM 数据出现\"版本混淆\"（新旧版本指标搅在一起），上报协议里最该补的是？",
+      "options": [
+        "提高采样率",
+        "每条上报带构建版本指纹（release/version 字段，来自构建注入的 __BUILD_VERSION__ 或 sourcemap 发布号），服务端按版本聚合——阈值告警与发布对比都以版本为第一维度",
+        "只报新版本",
+        "按 IP 区分"
+      ],
+      "answer": 1,
+      "explanation": "发布期的混版数据不加分组就是噪音；版本维度还是\"发版后指标突变\"能归因的前提（呼应 sourcemap 发布号）。"
     }
   ]
 }

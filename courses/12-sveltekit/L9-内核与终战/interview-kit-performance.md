@@ -1,6 +1,6 @@
 # kit-performance 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) SvelteKit 开箱默认替你做了哪些性能优化？至少说六项。
 **来源**：Kit 开箱优化清单题的转述。
@@ -61,3 +61,25 @@ preview 跑本地 Node、能体现流式；某些 serverless/edge 平台会**缓
 **来源**：性能预算设计题的转述。
 
 ① **口径**：一律 `build && preview` 上测，Lighthouse（LCP/INP/CLS）+ WebPageTest 字段数据，后端埋 `Server-Timing`/OpenTelemetry；② **预算**：首屏 JS 压缩后上限（如 ≤ XX KB/gzip）、关键图体积、字体子集后体积、三方脚本数=0 或全进 Worker；③ **守门**：CI 里 visualizer 比对体积、破坏开箱九优化（裸 fetch、SPA 化、乱静态 import）即告警；④ **传输**：强制 HTTP/2+、前后端同机房或边缘、图片 CDN。每条都可被度量、可回归。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  上线 LCP 很差：给出你在 Kit 技术栈上的完整排查树。 
+
+ 分渲染层（prerender/SSR 首包大小、数据内联体量）、资源层（字体阻塞、hero 图未 preload/未优先编码）、传输层（CDN 命中、HTML 缓存）、代码层（关键 JS 分割过度/不足）；CrUX+RUM 定分布再逐层削。 
+
+**来源**： https://web.dev/articles/lcp ； https://svelte.dev/docs/kit 
+
+### 14.  build 产物体积暴涨的归因方法学？ 
+
+ 体积归因要用产物级工具（visualizer/build stats 差分两版 chunk 归属），逐个升级依赖二分定位只作辅助；CI 设包体积预算门禁防无声劣化，同时区分客户端与服务端 bundle 各自设限。 
+
+**来源**： https://github.com/btd/rollup-plugin-visualizer ； https://svelte.dev/docs/kit/faq 
+
+### 15.  预加载开太猛被投诉耗流量，你的分级方案？ 
+
+ 按路由价值分级：高频入口 hover+viewport，长尾改 click/off；尊重 saveData 与慢网探测；后端对预取请求（purpose 头）降级只回摘要数据；每月复盘预取浪费率调参。 
+
+**来源**： https://svelte.dev/docs/kit/advanced-routing#Preloading 

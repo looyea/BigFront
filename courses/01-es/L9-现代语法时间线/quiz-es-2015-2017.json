@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "以下表达式结果：\n\n```js\n-2 ** 2\n```",
-      "options": ["-4", "4", "NaN", "SyntaxError（一元负号与 ** 需加括号）"],
+      "options": [
+        "-4",
+        "4",
+        "NaN",
+        "SyntaxError（一元负号与 ** 需加括号）"
+      ],
       "answer": 3,
       "explanation": "规范禁止一元负号直接与 `**` 混用以免歧义：`-2 ** 2` 报 SyntaxError。要写 `(-2) ** 2`（=4）或 `-(2 ** 2)`（=-4）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "`[NaN].includes(NaN)` 与 `[NaN].indexOf(NaN)` 分别是：",
-      "options": ["true / -1", "-1 / true", "true / true", "false / -1"],
+      "options": [
+        "true / -1",
+        "-1 / true",
+        "true / true",
+        "false / -1"
+      ],
       "answer": 0,
       "explanation": "`includes` 用 SameValueZero 算法，能把 NaN 判为相等 → true；`indexOf` 用 `===`，`NaN !== NaN` → -1。这是 ES2016 加 includes 的关键理由。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "`class A { foo(){} }` 里，`Object.keys(A.prototype)` 得到：",
-      "options": ["['foo']（可枚举，同手写原型方法）", "取决于是否加 static", "[]（class 方法不可枚举）", "抛 TypeError"],
+      "options": [
+        "['foo']（可枚举，同手写原型方法）",
+        "取决于是否加 static",
+        "[]（class 方法不可枚举）",
+        "抛 TypeError"
+      ],
       "answer": 2,
       "explanation": "class 定义的方法 `enumerable: false`，`Object.keys` 只列可枚举键 → 空数组。这是 class 与手写原型三大差异之一。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "`async/await` 正式进入 ECMAScript 标准是在：",
-      "options": ["ES2015", "ES2017", "ES2018", "ES2020"],
+      "options": [
+        "ES2015",
+        "ES2017",
+        "ES2018",
+        "ES2020"
+      ],
       "answer": 1,
       "explanation": "Promise 是 ES2015，但 async/await 是 ES2017 才标准化；ES2018 再补上 for-await-of 与 Promise.finally。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "`2 ** -1` 的值是：",
-      "options": ["-2", "0", "2", "0.5"],
+      "options": [
+        "-2",
+        "0",
+        "2",
+        "0.5"
+      ],
       "answer": 3,
       "explanation": "负指数取倒数：`2 ** -1 = 1 / 2 = 0.5`。等价于旧的 `Math.pow(2, -1)`。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "`Object.entries(obj)` 遍历的键范围是：",
-      "options": ["只取自有可枚举键", "含原型链上的可枚举键", "含不可枚举属性", "只返回 Symbol 键"],
+      "options": [
+        "只取自有可枚举键",
+        "含原型链上的可枚举键",
+        "含不可枚举属性",
+        "只返回 Symbol 键"
+      ],
       "answer": 0,
       "explanation": "entries/values/keys 都只看**自有 + 可枚举**；会遍历原型链的是 `for...in`——这正是二者最常踩的差别。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "`new.target` 的典型用途是：",
-      "options": ["强制子类必须调用 super", "把方法变成静态方法", "判断构造函数是否被 new 直接调用（实现抽象基类）", "为函数开启严格模式"],
+      "options": [
+        "强制子类必须调用 super",
+        "把方法变成静态方法",
+        "判断构造函数是否被 new 直接调用（实现抽象基类）",
+        "为函数开启严格模式"
+      ],
       "answer": 2,
       "explanation": "`if (new.target === Base) throw` 可禁止直接实例化基类；在派生类里 new.target 指向实际被 new 的那个类。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`function f(x = 1, y = x) { return [x, y] } f(2)` 的结果是：",
+      "options": [
+        "[1, 1]",
+        "[2, 2]",
+        "[2, 1]",
+        "ReferenceError"
+      ],
+      "answer": 1,
+      "explanation": "默认值按**位置作用域**求值，后面的默认参数可以引用前面（已传入的）参数——y 拿到的 x 是实参 2。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`const { a = 1 } = obj` 何时 a 得到 1？",
+      "options": [
+        "obj.a 为 null 或 undefined 时",
+        "仅 obj.a 为 undefined（含键不存在）时",
+        "obj.a 为假值时",
+        "永远"
+      ],
+      "answer": 1,
+      "explanation": "解构默认值只在 **undefined** 时触发——`{a: null}` 解构出 null。这与 `||` 兜底不同，`??` 的语义才对得上。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "rest 参数 `function f(...a, b) {}` 的结果是：",
+      "options": [
+        "a 收全部参数",
+        "b 为 undefined",
+        "SyntaxError——rest 必须是最后一个参数",
+        "自动把 b 当末位"
+      ],
+      "answer": 2,
+      "explanation": "rest/spread 的语法约束：形参里 rest 只能出现在最后；调用处想分离末位用 `arr.slice(0,-1)` 或解构 `[...head, tail]`（后者拿不到，需 pop）。"
     }
   ]
 }

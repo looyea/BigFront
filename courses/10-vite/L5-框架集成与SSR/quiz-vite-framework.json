@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "为什么 Vue/React/Svelte 在 Vite 里都需要各自的官方插件？",
       "options": [
-        "加速安装",
         "Vite 核心不认识 .vue/.jsx/.svelte 等 DSL，需插件在 transform 编译成标准 ESM 并接入 HMR 语义",
+        "加速安装",
         "为了写起来好看",
         "因为 npm 强制"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "框架专属语法必须编译成浏览器能跑的 JS，且要框架级 HMR 边界，靠官方插件完成。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "Vue 的 defineProps / defineEmits 这些 <script setup> 宏是什么性质的？",
       "options": [
         "运行时函数",
-        "编译期宏——被 @vue/compiler-sfc 在编译时转换掉，不是运行时调用",
         "浏览器原生 API",
+        "编译期宏——被 @vue/compiler-sfc 在编译时转换掉，不是运行时调用",
         "Babel 插件"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "编译器宏在构建期被展开成组件选项/运行时代码，本身不是运行时函数。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "关于 esbuild 处理 TypeScript，正确的说法是？",
       "options": [
         "它会做完整类型检查",
-        "它只做语法转换与删类型，不做类型检查，类型需另用 tsc/vue-tsc 校验",
         "它不支持 JSX",
-        "它比 Babel 慢"
+        "它比 Babel 慢",
+        "它只做语法转换与删类型，不做类型检查，类型需另用 tsc/vue-tsc 校验"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "esbuild 极快但'擦除'类型不校验，构建通过≠类型正确，CI 要单独跑 --noEmit。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "插件靠 id 后缀过滤，作用范围不重叠即可共存；Astro 多框架岛就是典型。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Vite 项目里 .ts 文件没被任何框架插件认领时，谁负责把 TS 变成 JS？",
+      "options": [
+        "tsc 全量编译",
+        "Vite 核心内置的 esbuild transform——按 .ts/.tsx 扩展名对未被插件接管的文件做语法剥离（不查类型），这就是不装任何框架插件 TS 也能跑的原因",
+        "浏览器原生解析",
+        "Babel"
+      ],
+      "answer": 1,
+      "explanation": "esbuild 只做\"擦除类型语法\"，类型检查靠独立 tsc --noEmit——两件事两把刀是 Vite 的固定分工。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " browserslist 里目标浏览器较旧时，Vite 产物常需额外装 @babel/plugin-transform-* 或使用哪个官方插件能力？",
+      "options": [
+        "esbuild 的 target 可以覆盖所有语法与运行时 polyfill",
+        "core-js 配合构建 target 只解决语法降级，运行时 API（如 Array.prototype.at）polyfill 需自行引入（core-js）——把\"语法降级\"与\"API 补齐\"混为一谈是兼容事故常见根因",
+        "Vite 自动注入所有 polyfill",
+        "改用 Webpack"
+      ],
+      "answer": 1,
+      "explanation": "esbuild/target 与 Babel/preset-env 都只管语法；API polyfill 永远是自己（或 browserslist 工具链）的显式决策。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Solid 项目与 Vite 的配合方式是？",
+      "options": [
+        "需要额外装 babel-preset-solid 手动配置",
+        "官方 vite-preset-solid（vite-plugin-babel-macros 时代已过）以 Vite 插件形态在 transform 阶段做编译器编译 JSX 为 DOM 操作代码，用法与 vue() 平级——编译时框架都是\"一个 Vite 插件\"生态位",
+        "Solid 只能配 Webpack",
+        "无需任何编译"
+      ],
+      "answer": 1,
+      "explanation": "Solid/Svelte/Vue 编译器都以 Vite 插件交付，差异只在\"编译产物形态\"（响应式调用 vs DOM 直写）。"
     }
   ]
 }

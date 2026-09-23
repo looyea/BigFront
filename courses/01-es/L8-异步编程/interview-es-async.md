@@ -120,3 +120,21 @@ foo(); console.log('D');
   ```
   这就是 async/await 的本质——**用 Promise 驱动 Generator**。
 - 来源：Babel regenerator-transform 源码；MDN Generator。
+
+---
+
+**13）AsyncLocalStorage 是什么？为什么它比全局变量更适合放请求上下文？**
+- 参考要点：Node 的 AsyncLocalStorage 给**每条异步执行链**维护一份上下文：`als.run(req, () => handle())` 之后，无论 handle 里 await/setTimeout/事件回调多少层，`als.getStore()` 都拿回同一个 req 上下文。全局变量在多请求并发时互相踩踏；ALS 沿 async_hooks 的执行上下文传播，天然按「因果链」隔离——日志 traceId、用户会话、租户信息都靠它。限制：跨 `Worker`/`process` 不传播；在 run 之前创建的异步资源不隶属该上下文。
+- 来源：Node.js 官方文档《AsyncLocalStorage》；nodejs/diagnostics channel 实践帖。
+
+---
+
+**14）Babel 的 async 函数最终被编译成什么？regenerator 在其中干什么？**
+- 参考要点：两步：① async/await 脱糖成 **generator + runner**：`_asyncToGenerator(function*(){ ... yield p ... })`；② generator 再由 regenerator 编译成**状态机**（switch-case 的暂停点表），配合 regenerator-runtime（约 5KB）驱动。runner 做的事就是人肉版 co：拿 iterator，对每个 yield 出的 promise 挂 then 调 next，把值注回、错抛回，最后 resolve 外层 promise。原生实现（V8）不用状态机——生成器是字节码级 suspendable function，await 直接复用微任务调度，所以降级产物又慢又大。
+- 来源：Babel 插件 @babel/plugin-transform-regenerator README；v8.dev《async code from the ground up》。
+
+---
+
+**15）`for...of` + await 为什么慢？有界并发有哪几种标准写法？**
+- 参考要点：for-of+await 是**串行**：每个请求等上一个完成才发出——N 个 RTT 全加起来。三种替代按场景选：① 全并发 `await Promise.all(items.map(f))`——最快但瞬时连接数/内存失控；② 有界并发：并发池（p-limit/mapLimit：维护 in-flight 计数，完成一个补一个）；③ 流式背压：Node `stream` + `for await`（控制窗口内数量）。经验：外部 API 用 2-10 的 limit 防限流，本地 IO 可放大。Promise.all 部分失败考虑 allSettled。
+- 来源：sindresorhus/p-limit；Node.js 文档《stream/consumers + for await》；javascript.info《Crawler, 并行控制》。

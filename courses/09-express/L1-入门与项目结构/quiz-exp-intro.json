@@ -8,11 +8,11 @@
       "prompt": "Express 5 相比 4 最重要的改进是什么？",
       "options": [
         "支持 TypeScript",
-        "async handler 中 Promise reject 自动传递给 error handler",
         "内置 ORM",
-        "支持 WebSocket"
+        "支持 WebSocket",
+        "async handler 中 Promise reject 自动传递给 error handler"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Express 5 检测 handler 返回值是 thenable → 自动 .catch(next)。不再需要 express-async-errors 或手动 try/catch。"
     },
     {
@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "Express 5 最低要求的 Node.js 版本是？",
-      "options": ["14", "16", "18", "20"],
+      "options": [
+        "14",
+        "16",
+        "18",
+        "20"
+      ],
       "answer": 2,
       "explanation": "Express 5 要求 Node.js >= 18，不再支持 16 及以下。"
     },
@@ -74,6 +79,58 @@
       ],
       "answer": 0,
       "explanation": "Node 18.11+ 的 --watch 标志监听源文件变化 → 自动重启 → 类似 nodemon 但零依赖。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " Express 5 对路由里不具名通配符（如 app.get('/files/*')）的处理是？",
+      "options": [
+        "照常支持只是不推荐",
+        "不再支持匿名 *，必须写成具名形式（/files/*filepath），通配值进 req.params 具名键——匹配语义从\"隐式位置\"变成\"显式命名\"",
+        "自动改名为 params[0]",
+        "报错要求改用正则字符串"
+      ],
+      "answer": 1,
+      "explanation": "path-to-regexp v8 的破坏性变更核心就是\"一切都要具名\"：匿名 *、内嵌正则串都出局，换来匹配行为可预测。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Express 5 中 req.query 对象与 Express 4 的关键差别是？",
+      "options": [
+        "多了个 querystring 备用解析器",
+        "由 qs 解析且原型为 null、写入被 getter 拦截（改 req.query 静默失败或报警）——防的是原型链污染型攻击面（?a[__proto__]=x）",
+        "自动转成 Map",
+        "只支持一层不嵌套"
+      ],
+      "answer": 1,
+      "explanation": "req.query 是外部输入直达服务端对象的第一个触点，\"无原型+只读\"把 qs 老版的污染漏洞从根上堵死。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 路由处理器直接 return 一个 Promise 时 Express 5 的行为是？",
+      "options": [
+        "像 Express 4 一样忽略返回值",
+        "会等待并在 reject 时自动转给错误中间件链（无需手写 catch(next)），但响应内容仍要自己 res 发送——它管错误不管输出",
+        "必须包 asyncHandler 才行",
+        "视为同步错误直接 500"
+      ],
+      "answer": 1,
+      "explanation": "自动捕获只解决\"异常上抛\"这一半；\"返回值自动 JSON 化\"是 Next/Fastify 的语义，Express 没做，别混。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 关于 Express 5 的 res.render，正确的说法是？",
+      "options": [
+        "只能回调形式",
+        "新增 Promise 形态可 await（回调形态保留兼容），与模板引擎解耦的 render 接口不变——app.set(view engine) 约定仍沿用",
+        "不再支持 EJS",
+        "必须传 cache 选项"
+      ],
+      "answer": 1,
+      "explanation": "版本升级里\"API 双形态并存+约定不变\"是成熟库的克制；面试考点是你能否说出哪些老写法在 v5 仍然合法。"
     }
   ]
 }

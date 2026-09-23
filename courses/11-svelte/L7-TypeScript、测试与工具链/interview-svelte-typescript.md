@@ -1,6 +1,6 @@
 # svelte-typescript 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区高频主题的转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区高频主题的转述。
 
 ---
 
@@ -75,3 +75,25 @@ Vue 的宏是"模板编译器专属 DSL"：调用会被编译期移除、受限�
 **来源**：Svelte RFC + 迁移博客双向绑定类型讨论
 
 类型上 `$bindable` 包出的 prop 仍是 `T | undefined`（可选），差异在**语义标记**：编译器据此允许父用 `bind:x`，父端绑定表达式的类型要与子端声明一致——语言服务双向检查（父绑 `string` 变量而子声明 `number` 会红）。坑点：`$bindable()` 无默认值时子内类型带 `undefined`，strict 下模板里要判空；对照 Vue defineModel 把双向一等公民化，Svelte 走"普通 prop + 编译器开关"路线，类型系统更薄、约定更重。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  .svelte 文件里的 TS 是怎么被检查的？为什么单跑 tsc --noEmit 不够、必须有 svelte-check？
+
+检查链路：svelte-check / 语言服务先把 .svelte 拆成虚拟 TS（script 内容）+ 虚拟 DOM 映射（模板表达式转成带类型的 TS 片段，模板里对组件 props/事件/插槽的使用转成对相应类型的访问），再喂给 TS 编译器诊断，并把错误映射回 .svelte 的行列。为什么 tsc 不够：① tsc 无法解析 .svelte 扩展名（不是它认得的模块）；② 模板部分（<div on:click>、<Comp prop={x}/>）根本不在 TS 里，只有 Svelte 的映射器能把"组件属性使用是否合法/事件类型是否对"变成可检查的 TS——这是 tsc 的盲区（对应既有 svelte-check 与 tsc --noEmit 关系题）。工程配置：tsconfig 仍要正确（paths/strict），svelte-check 复用之；.svelte.d.ts / $lib 类型别名同步配。加分句：理解".svelte 是被『编译成 TS 再查』而不是『原生 TS』"，就明白为什么有些复杂泛型组件模板里的推断会失准（映射的边界），也明白为什么编辑器红线和 CI 结果偶有不一致（语言服务与 CLI 版本要对齐）——这是 Svelte+TS 排障的底层认知。
+
+**来源**：svelte-check 文档；Svelte Language Server 架构；既有".svelte 不是 TS 怎么查"深化
+
+### 14.  用 TypeScript 时组件 props 类型怎么给？interface 与 type、以及 $bindable/$props 的类型注意点。
+
+标准写法：定义 interface Props { a: string; b?: number }，组件里 let { a, b = 0 }: Props = $props()（可加 svelte:options preserveLocale 等）。为什么倾向 interface：可声明合并（组件库扩展）、对 props 形状更语义化、错误信息友好（既有"推荐 interface"题）。$bindable 类型：let { value = $bindable(0) }: { value?: number } = $props() —— 双向 prop 在类型上就是普通可选属性，$bindable 是运行时/编译器标记 + 默认值。children/snippet 类型：children?: Snippet、带参插槽 Snippet<[(row: T)]>（对应 props 关 Snippet 类型题）。泛型组件：List<T> 泛型 props 在 .svelte 里用 <script generics="T"> 或对应版本语法支持（对应既有泛型列表题）。加分句：TS+Svelte 的最大痛点不是"能不能标类型"而是"模板里的类型推断质量取决于 svelte-check 版本与写法"——把 props 定义成显式 interface 而非就地内联，除了可读更让"类型错误报在 props 定义处而非模板深处"，定位成本骤降（呼应 typescript 关 DataTable 泛型封装题的工程动机）。
+
+**来源**：Svelte TS props 模式；Snippet/组件类型；既有"props 类型怎么给""interface 推荐"深化
+
+### 15.  封装一个类型安全的透传组件（rest props 转发），TS 下怎么处理 rest 类型与事件类型？
+
+难点：$$restProps 在 TS 下类型宽（不知具体形状）。做法：① 用 svelte/elements 提供的 HTMLAttributes<HTMLButtonElement> 之类工具类型标注"我要透传给 button 的属性集合"，props 类型 = 自己的显式 props & 该元素属性，父传错属性有类型提示（对应既有 rest props 类型处理题）。② 事件类型：onclick 等原生事件 prop 用 JSX 风格类型或 HTMLAttributes 里的事件签名标注，自定义回调用 (e: MouseEvent)=>void 显式签（避免模板里 e 隐式 any，对应既有"事件处理器报错"题）。③ 泛型组件透传 item 类型（DataTable<T> 的 columns/row 类型联动，对应 typescript 关 DataTable 封装题）。加分句：类型安全透传的关键是"别把 rest 当 any 黑洞"——用官方 HTMLAttributes 工具类型把"透传给哪种元素"编码进类型，既让调用方获得该元素原生属性补全/校验、又让自己不必手写几十个属性；这一步做了，封装组件就从"运行时能跑"升到"编辑期就防呆"（呼应 spread-rest 关"属性完整性/可访问性透传"的类型层落地）。
+
+**来源**：Svelte rest props TS 类型；HTMLAttributes 类型工具；既有"rest 透传类型"深化

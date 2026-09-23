@@ -1,6 +1,6 @@
 # node-events 面试题精选
 
-> 共 12 题，覆盖 **EventEmitter 基础语义 / `'error'` 事件雷区 / 监听器管理与泄漏 / 设计与应用 / 与其它异步原语对比** 五类。
+> 共 15 题，覆盖 **EventEmitter 基础语义 / `'error'` 事件雷区 / 监听器管理与泄漏 / 设计与应用 / 与其它异步原语对比** 五类。
 
 ---
 
@@ -124,3 +124,25 @@ await once(server, "listening");   // 等端口就绪
 设计：`class TaskQueue extends EventEmitter`，在关键节点发语义清晰的事件——`'enqueue'(task)`、`'start'(task)`、`'done'(result)`、失败发 `'error'(err, task)`。避坑清单：**① 一定记得 `'error'` 无人监听会崩**，文档里明确要求使用方 `on('error')`，内部也可用 `errorMonitor` 兜底埋点；**② 提供 `off` 对应接口或让用户用 `once`**，防止使用方反复订阅造成泄漏；**③ 监听器里 `this`** 用箭头/bind 固定；**④ 事件保持"通知"职责**，别在监听器里塞会抛错且未处理的重逻辑（那是订阅方的责任，呼应 node-async-errors 分层错误处理）；**⑤ 若关心"某任务何时完成"的返回值**，对单次任务额外暴露一个 `run(task): Promise`（内部用 `events.once` 包），兼顾"广播"与"取结果"两种需求（呼应第 9、10 题）。
 
 **来源**：Node.js — "EventEmitter design guidance"; 社区 — "designing event-based APIs in Node"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. emit 的同步语义带来哪些「优雅」与「事故」？各举两个。
+
+优雅：① 顺序确定性（监听器注册序即执行序，无调度魔法）；② 零开销（无排队无微任务），高频数据面（socket data）吞吐友好。事故：① 一个慢监听器拖垮全部下游（emit 里同步排序/O(N²) 正则在第 3 号监听器，第 4 号饿死）；② 中途 throw 让后续监听器全不执行且可能被外层 catch 误吞（「emit 一半异常」——监听器内部各自 try+error 事件兜底是库纪律）；③ 栈深叠加：emit→handler→emit→handler 递归无微任务解栈，爆栈栈里全是 emit 帧。设计口径：要异步解耦请显式 queueMicrotask/setImmediate 派发（并告知消费方失去同步保证），别指望「事件=异步」（本关第一题考点）。
+
+**来源**：Node EventEmitter 文档「listeners are called synchronously in the order registered」；ljharb 关于 emit 重入的 issue 讨论。
+
+### 14. EventEmitter 与 Web EventTarget 的差异清单？什么场景选后者？
+
+差异：① EventTarget 同步触发但按 capture/bubble 阶段（为 DOM 树设计）、listener 里 throw 不会中断其他 listener（异常上报 window.onerror）——emit 是「一个炸全炸」；② once/removeEventListener 按 (type,fn,capture) 三元组精确摘除，off 需要引用；③ 无 MaxListeners 告警、无 error 特殊语义（也就无「未处理 error 崩进程」保护）；④ detail 只带一个值、不能拦 stopImmediatePropagation 之外的 Node 习惯；⑤ AbortSignal 原生集成（addEventListener 的 {signal}）是杀手级——清理=abort() 一键。选型：与浏览器 API 对齐（fetch/WS/polyfill 库跨端）、需要 signal 生命周期管理时优先 EventTarget（Node 15+ 全局可用）；纯 Node 库/需要 error 崩进程兜底/listenerCount 诊断仍用 EE。
+
+**来源**：Node 官方 EventTarget/Event 文档；WHATWG DOM Standard「firing an event」算法（listener 异常不传播）。
+
+### 15. "Possible EventEmitter memory leak detected" 线上响了，排查 SOP 给一个。
+
+① 定位 emitter 身份：告警带 emitter 构造器名与计数阈值——先确认是 socket、子进程还是自研单例总线（最常见：模块级 `const bus = new EventEmitter()` 每次请求都 .on，监听器只增不减）；② 抓现场：告警首响时打印 listenerCount 与 `emitter.listeners("evt")` 的函数名/闭包源（fn.name 或 WeakMap 登记注册栈）；③ 审生命周期：on 与 off 是否配对在「同一对象引用」上（匿名函数 off 不掉——本关移不掉题的实战面）；④ 判修复模式：请求级监听→改 once/AbortSignal/显式 finally off；全局监听确属必要→对该实例 setMaxListeners 提额并注明理由，**不要关告警**；⑤ 回归：压测看计数曲线（leak 场景线性增长），/proc 堆快照对比监听器数组长度。制度：EE 实例配 count 指标上报，阈值告警当 bug 工单处理而非噪音。
+
+**来源**：Node 官方《EventEmitter: memory leak warning》条目与 setMaxListeners FAQ；Debugging nodejs memory leak warnings 实战贴。

@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "SSR 编译目标把 head 元素收集为独立字符串（render() 返回 { head, body }），服务端模板负责安置——纯 Svelte 就有这机制，Kit 只是替你接好线（呼应 L10 SSR 关）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " <svelte:window>/<svelte:document>/<svelte:body> 的用途是？",
+      "options": [
+        "布局组件",
+        "把事件监听与绑定挂到 window/document/body 这些组件外的全局节点上（组件销毁自动解绑，避免手动 addEventListener 泄漏）（对应既有全局元素用途题）",
+        "渲染 head",
+        "条件块"
+      ],
+      "answer": 1,
+      "explanation": "专元素让\"全局节点的事件/绑定\"纳入组件生命周期管理（对应既有 window keydown/scrollY 题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " <svelte:element this={tag}> 解决什么问题？",
+      "options": [
+        "性能优化",
+        "渲染\"标签名由变量决定\"的动态元素（this=h1/p/div），并可带这个标签合法或非法的属性（对应既有 svelte:element this 题）",
+        "动态组件",
+        "注入 head"
+      ],
+      "answer": 1,
+      "explanation": "<svelte:element> 动态元素、<svelte:component>/{@render} 动态组件，两类动态别混（对应既有动态组件切换题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " <svelte:head> 里声明的 <title>/<meta>/<link> 会怎样？",
+      "options": [
+        "渲染进组件 DOM",
+        "被提升到文档 <head> 并去重（同名标签以最新为准），SSR 时通过 render 输出的 head 字段单独收集（对应既有 head 声明题）",
+        "被忽略",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "head 专元素负责文档头注入（SSR/水合时 head 是独立管道，呼应 compiler generate server 题）。"
     }
   ]
 }

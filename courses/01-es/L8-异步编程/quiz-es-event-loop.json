@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "以下代码打印顺序？\n\n```js\nconsole.log('1');\nsetTimeout(() => console.log('2'), 0);\nPromise.resolve().then(() => console.log('3'));\nconsole.log('4');\n```",
-      "options": ["1 2 3 4", "1 4 3 2", "1 4 2 3", "4 1 3 2"],
-      "answer": 1,
+      "options": [
+        "1 2 3 4",
+        "1 4 2 3",
+        "4 1 3 2",
+        "1 4 3 2"
+      ],
+      "answer": 3,
       "explanation": "同步 1、4；栈空清微任务 3；下一轮宏任务 2。"
     },
     {
@@ -27,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "以下属于**微任务**的是：",
-      "options": ["setTimeout", "setInterval", "Promise.then", "postMessage"],
+      "options": [
+        "setTimeout",
+        "setInterval",
+        "Promise.then",
+        "postMessage"
+      ],
       "answer": 2,
       "explanation": "微任务：Promise.then/catch/finally、queueMicrotask、MutationObserver、process.nextTick（Node）。setTimeout/setInterval/postMessage 都是宏任务。"
     },
@@ -74,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "以下代码打印顺序？\n\n```js\nasync function foo() { console.log('a'); await null; console.log('b'); }\nfoo();\nconsole.log('c');\n```",
-      "options": ["a b c", "a c b", "c a b", "b a c"],
+      "options": [
+        "a b c",
+        "a c b",
+        "c a b",
+        "b a c"
+      ],
       "answer": 1,
       "explanation": "foo 同步跑到 await 前打 a；await 让出（把 b 排进微任务）；外层打 c；栈空清微任务打 b。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "下列属于**宏任务**的是：",
+      "options": [
+        "`Promise.then` 回调",
+        "`queueMicrotask` 回调",
+        "`MessageChannel.onmessage` 回调",
+        "`MutationObserver` 回调"
+      ],
+      "answer": 2,
+      "explanation": "经典宏任务：script 整体、timer（setTimeout/interval）、postMessage、MessageChannel、I/O、UI 事件；promise/queueMicrotask/MutationObserver 都是微任务。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "页面切到后台不可见时，`requestAnimationFrame` 的行为是：",
+      "options": [
+        "照常逐帧触发",
+        "基本停止回调（不再产生帧）",
+        "改抛异常",
+        "自动降级成微任务"
+      ],
+      "answer": 1,
+      "explanation": "没有合成帧就没有 rAF——后台页 rAF 停摆（动画逻辑全冻结，省电流量的设计）；setTimeout 仍执行但被节流（嵌套 timer clamp 到 ≥1s，Chrome 更狠）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Node（v11+）里微任务的清空时机是：",
+      "options": [
+        "进程退出前统一清空",
+        "每个宏任务回调执行完后清空（nextTick 队列还先于它）",
+        "只在 timers 阶段结束后一次",
+        "从不清空"
+      ],
+      "answer": 1,
+      "explanation": "v11 起对齐浏览器：每执行完**一个**宏任务回调，先 drain `process.nextTick` 队列、再 drain 微任务队列，然后才进下一个任务/阶段。老版本只在阶段间 drain，阶段内递归 promise 会饿死其他阶段。"
     }
   ]
 }

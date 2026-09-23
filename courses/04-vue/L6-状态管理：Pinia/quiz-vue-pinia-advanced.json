@@ -7,20 +7,25 @@
       "type": "single",
       "prompt": "用 $patch 一次性改多个字段，相比逐条赋值的好处是？",
       "options": [
-        "更快且 devtools 只记一条、更新只触发一次",
         "可以绕过响应式",
         "能自动持久化",
+        "更快且 devtools 只记一条、更新只触发一次",
         "没有区别"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "$patch 批量、单一记录、少几次触发（呼应 vue-pinia-advanced 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "想\"每次 state 变化都写 localStorage\"，应使用？",
-      "options": ["$onAction", "$subscribe", "watchEffect", "$reset"],
-      "answer": 1,
+      "options": [
+        "$onAction",
+        "watchEffect",
+        "$reset",
+        "$subscribe"
+      ],
+      "answer": 3,
       "explanation": "$subscribe 订阅 state 变更做持久化（呼应 vue-pinia-advanced 第二节）。"
     },
     {
@@ -87,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "插件横切增强所有 store（持久化/日志等）（呼应 vue-pinia-advanced 第五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "$subscribe 回调里拿到 { events, storeId, type: 'patchObject' }，mutation 式（直接赋值）改 state 时 events 字段是什么结构？",
+      "options": [
+        "与 $patch 完全一致",
+        "直接赋值同样产出 patch 事件（子路径 events：{ type, path, value } 数组）；区别在粒度：$patch 一次调用一条记录、循环逐条赋值会产生多条——批量场景用 $patch 才配得上「一个逻辑变更一个事件」",
+        "不触发 subscribe",
+        "只给新值快照"
+      ],
+      "answer": 1,
+      "explanation": "订阅 事 件 形状 与 devtools 同源：`path` 让 你 知 道 **哪 个 字段** 被 改（持 久 化 因 此 可 以 只 持 久 化 特 定 路 径，本关 持 久 化 题 的 精 致 版）；这 一 点 的 完 整 代 价 是 深 层 属 性 改 动 也 会 拆 子 路 径 事 件——订 阅 者 别 假 设 「一 次 赋 值=一 条」。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "$onAction 的 after/onError 参数机制提供的独特能力是：",
+      "options": [
+        "拦截修改参数",
+        "在 action 完成（含异步 resolve 后）/抛错时定点执行（after 收返回值），不改写执行本身——埋点「action 成功耗时」、失败上报、给特定 action 完成后触发副作用都靠它，这是「AOP 环绕」在 Pinia 的最小实现",
+        "自动重试 action",
+        "把 action 变 computed"
+      ],
+      "answer": 1,
+      "explanation": "onAction 回 调 收 `{ name, args, store, after, onError }`：after/onError 注 册 的 钩 子 处 理 异步 语 义（action 是 async 时 after 等 的 是 resolve 而 不 是 返 回 promise——「耗 时 埋 点 统计 的 是 什 么」的 关 键 辨 析），本 关 $onAction 题 的 深 水 区。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "插件里 `store.myProp = 42` 直 接 挂 属 性，相 比 `Object.assign(store, { prop })` / defineStore 第 三 参 的 差 别是：",
+      "options": [
+        "完全等价",
+        "直挂属性可能绕开响应式与 devtools 展示（插件约定用对象赋值让 Pinia 统一 reactive 化；函数挂在 store 上则会被绑定 store 作 this——写成普通函数不用箭头才能 this 调其他 action）",
+        "箭头函数才能挂",
+        "插件不能加属性"
+      ],
+      "answer": 1,
+      "explanation": "插 件 API 的 两 个 细节 正 是 官方 文档 「插件 的 属 性/函数」段 的 强 调：`store.someFn` 里 的 this 行 为 决定 这 个 插件 功 能 能 不 能 操 作 同 store 其他 部 分（本 关 插 件 能 力 题 的 工 程 末 梢）；devtools 时 间 旅 行 要 求 注 入 属 性 是 可 序 列 化/可 重 放 的，随 手 挂 class 实 例 会 黑 屏。"
     }
   ]
 }

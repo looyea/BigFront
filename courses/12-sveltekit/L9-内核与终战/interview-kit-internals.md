@@ -1,6 +1,6 @@
 # kit-internals 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 说清 `vite build` 在 SvelteKit 里的两个阶段，各自产出什么？
 **来源**：Kit 构建流程高频题的转述。
@@ -61,3 +61,25 @@ Kit 显式分"数据（load）"与"渲染（组件）"两层：软导航拉的�
 **来源**：综合架构表达题的转述。
 
 分四层讲最稳：① **构建层**（Vite 两阶段 + adapter + manifest/building 守卫）；② **服务层**（Server.respond、RequestEvent、handle/resolve 洋葱、reroute/transport）；③ **数据层**（server/universal load、序列化进 HTML、depends/invalidate 失效）；④ **客户端层**（水合、软导航=拉数据+局部重渲、preload 与 navaing state）。每层各挂 1 个已知坑（致命抛错 / 吞控制流 / 数据泄露 / 水合失配），既显深度又连得起。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  一次页面请求从 respond 到 HTML 输出的完整流水线，讲给面试官。 
+
+ HTTP 适配→handle 洋葱→reroute/路由匹配→并行执行各层 load（fetch 带缓存与凭证）→SSR 渲染流式输出（数据内联+槽位占位）→慢 Promise resolve 后续写。 
+
+**来源**： https://svelte.dev/docs/kit/faq#what-actually-is-a-server 
+
+### 14.  为什么 dev 的性能数据不能对生产下结论？至少三条机制差异。 
+
+ dev 走 Vite 按需转换未压缩、无代码分割优化、SSR 模块热更常驻、bundle 体积与 tree-shaking 缺席、HMR runtime 额外开销；至少要在 preview 或 CI 构建产物上测。 
+
+**来源**： https://svelte.dev/docs/kit/faq#why-is-my-build-slower-than-my-dev-server 
+
+### 15.  改了 universal load 后客户端导航偶发旧行为，从模块图与版本机制解释并给方案。 
+
+ 客户端持有旧 chunk 的模块图，version 变更未被轮询捕获则继续用旧 load；方案：缩短 pollInterval/关键路由导航后强制 check、静态产物缓存头区分 HTML 与 chunk、发布走原子 manifest 切换。 
+
+**来源**： https://svelte.dev/docs/kit/configuration#version 

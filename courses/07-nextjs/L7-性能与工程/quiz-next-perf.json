@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "2024 年取代 FID 成为 Core Web Vitals 成员、衡量交互反馈速度的指标是？",
-      "options": ["LCP", "CLS", "TTFB", "INP"],
+      "options": [
+        "LCP",
+        "CLS",
+        "TTFB",
+        "INP"
+      ],
       "answer": 3,
       "explanation": "INP（Interaction to Next Paint）衡量点到反馈的延迟，及格线 200ms，已取代 FID（呼应 next-perf 第 1 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "next/dynamic 的 ssr: false 用在不合适的组件上，最容易伤害哪个指标？",
-      "options": ["LCP——首屏最大内容变成纯 CSR，要白屏等 JS 到达", "CLS——布局抖动", "INP——主线程阻塞", "不会伤害任何指标"],
+      "options": [
+        "LCP——首屏最大内容变成纯 CSR，要白屏等 JS 到达",
+        "CLS——布局抖动",
+        "INP——主线程阻塞",
+        "不会伤害任何指标"
+      ],
       "answer": 0,
       "explanation": "ssr:false 意味着服务端不输出该内容，首屏关键内容改由客户端渲染，HTML 里没有了就得多等一轮 JS，直接拖慢 LCP（呼应 next-perf 第 2 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "想看\"哪个依赖吃掉了 300KB 首屏 JS\"，最合适的工具是？",
-      "options": ["浏览器 DevTools 的 Network 面板数请求", "next build 的 --debug 参数", "@next/bundle-analyzer 打包 Treemap", "web-vitals 上报"],
+      "options": [
+        "浏览器 DevTools 的 Network 面板数请求",
+        "next build 的 --debug 参数",
+        "@next/bundle-analyzer 打包 Treemap",
+        "web-vitals 上报"
+      ],
       "answer": 2,
       "explanation": "bundle-analyzer 以 Treemap 展示每个模块在 chunk 中的占比，是包体归因的标准工具；Network 面板只能看到合并后的 chunk（呼应 next-perf 第 2 节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "页面服务端组件里 await A 后又一轮 await B，导致 TTFB 翻倍的问题，首选解法是？",
-      "options": ["给页面加 loading.tsx", "Promise.all 并行取数，非关键数据放 Suspense 流式输出", "把组件标成 'use client' 在浏览器取数", "调大 Router Cache"],
+      "options": [
+        "给页面加 loading.tsx",
+        "Promise.all 并行取数，非关键数据放 Suspense 流式输出",
+        "把组件标成 'use client' 在浏览器取数",
+        "调大 Router Cache"
+      ],
       "answer": 1,
       "explanation": "取数瀑布的正解是并行化 + 把非关键数据推进 Suspense 边界，让首屏只等最小关键集（呼应 next-perf 第 3 节、next-context-streaming 第 4 节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "站点有 200 个次要页面链接全部默认预取，造成列表页带宽风暴，应如何处理？",
-      "options": ["删除所有 Link 改用 a 标签", "关闭 Router Cache", "把链接全部放进 next/dynamic", "对非首屏链接设 prefetch={false}（或悬停再预取）"],
+      "options": [
+        "删除所有 Link 改用 a 标签",
+        "关闭 Router Cache",
+        "把链接全部放进 next/dynamic",
+        "对非首屏链接设 prefetch={false}（或悬停再预取）"
+      ],
       "answer": 3,
       "explanation": "Link 默认视口预取 RSC Payload，海量链接时用 prefetch={false} 精确关闭即可，不需要牺牲整个客户端导航体系（呼应 next-perf 第 3 节、next-link-router 第 1 节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "关于 /_next/static/* 的缓存头，正确的做法是？",
-      "options": ["保留 Next 默认的长缓存 + immutable，因为文件名含内容哈希", "改成 no-cache 保证用户永远拿到最新", "手动加 max-age=86400 并去掉 immutable", "由 Nginx 全部替换为 max-age=0"],
+      "options": [
+        "保留 Next 默认的长缓存 + immutable，因为文件名含内容哈希",
+        "改成 no-cache 保证用户永远拿到最新",
+        "手动加 max-age=86400 并去掉 immutable",
+        "由 Nginx 全部替换为 max-age=0"
+      ],
       "answer": 0,
       "explanation": "静态 chunk 文件名自带构建哈希，内容变则名变，immutable 长缓存是零风险最优解，改掉反而每次访问都回源（呼应 next-perf 第 4 节）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "ISR 页面在 CDN 命中\"已过期\"缓存时，stale-while-revalidate 策略会？",
-      "options": ["让用户等重新生成完成", "返回 503 让用户重试", "先秒回旧内容，后台并行再生成新版本", "直接回源 SSR，不使用旧缓存"],
+      "options": [
+        "让用户等重新生成完成",
+        "返回 503 让用户重试",
+        "先秒回旧内容，后台并行再生成新版本",
+        "直接回源 SSR，不使用旧缓存"
+      ],
       "answer": 2,
       "explanation": "SWR 的精髓是\"旧的先顶着，新的后台做\"，用户永远不等再生成，代价只是短暂看到旧内容（呼应 next-perf 第 4 节、next-revalidate 第 4 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 量化 Next 站真实性能应看哪组指标？",
+      "options": [
+        "只看 Lighthouse 跑分",
+        "CrUX/RUM 的 Core Web Vitals：LCP、INP、CLS 按模板与设备分位数看——Lab 分数不映射真实用户分布",
+        "服务器 QPS",
+        "首屏截图对比"
+      ],
+      "answer": 1,
+      "explanation": "RUM 是真相、Lab 是诊断台；web-vitals 库上报 + 按路由聚合，才能发现\"某个 Suspense 边界把 LCP 拖慢\"这类结构性问题。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 慢首屏页里\"一个客户端岛打包了 200KB 依赖\"——对应首屏 JS 的主修法是？",
+      "options": [
+        "把它拆成更多 npm 包",
+        "把该岛的纯展示部分交还 RSC、交互拆更细的岛 + next/dynamic 懒载、依赖替换或按需引入；以\"客户端岛可达 import 图\"为优化单元",
+        "全部改成 SSR",
+        "开 gzip 即可"
+      ],
+      "answer": 1,
+      "explanation": "RSC 时代的包体治理单位不是\"页面\"而是\"岛的 import 图\"——bundle analyzer 对着 client chunk 看，谁进包一目了然；优化方向永远是\"让更少代码有资格进客户端\"。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " RSC 页面里多个独立 await 造成瀑布流，正确的治理是？",
+      "options": [
+        "合成一个大 fetch",
+        "在边界处提前 kick off promise（不 await），组件树各自 await——或把可静态化的 await 移出动态段；同层并行能把 RTT 从串行之和变最慢一个",
+        "全部移进 useEffect",
+        "提高 revalidate"
+      ],
+      "answer": 1,
+      "explanation": "这是 await 版'串行瀑布'的 RSC 形态：async 组件不会自动并行，要人手动'先发起、后消费'（use() 与提前 promise 皆可）；加分句：流式渲染让壳先出，掩盖不了取数编排的账。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # react-composition 面试题精选
 
-> 共 12 题，覆盖 A 组合哲学 / B 插槽与 children / C render prop 与提升 / D HOC 与选型类。
+> 共 15 题，覆盖 A 组合哲学 / B 插槽与 children / C render prop 与提升 / D HOC 与选型类。
 
 ## 一、组合哲学（A 类）
 
@@ -57,3 +57,25 @@ HOC 的名字/props 来源不显式（`Wrapped` 里 props 哪来的？）、要�
 ### 12. 对比 Vue：slot/scope-slot/mixin 在 React 里的对应物分别是什么？
 默认插槽↔`children`；具名插槽↔传节点 prop；作用域插槽↔render prop（children 为函数）；mixin↔**自定义 Hook**（且 Hook 来源显式、无命名冲突，正是为取代 mixin 类问题而生）（呼应 vue-composables、react-custom-hooks）。
 **来源**：Vue slots/mixin vs React children/render props/hooks 对照
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 「组件作为 prop」（`<List Item={Row}/>`）与「节点作为 prop / children」两种组合 API 的差异与选型？
+
+children/节点传的是「已经决定好的实例」——父组件负责渲染那一刻的内容，子只负责摆放（对应具名插槽，简单直观）。组件作为 prop 传的是「构造器/类型」——子组件掌握何时、用什么 props 去实例化它（`<Item data={x}/>`），把渲染时机与数据注入权留给子（对应作用域插槽但更结构化）。选型：需要子组件决定「传什么数据、渲染几个」→ 传组件；只是父排布好静态内容 → 传节点。传组件的坑：别在 render 里内联定义该组件（新引用→类型变化→重挂），要提到外部或用 useMemo 稳定。这与本关「配置对象+内部 switch 不如传节点」互补：传组件介于两者之间，比配置对象灵活、比裸节点可控。
+
+**来源**：React 组合文档（component as prop / "slots via composition"）；社区对 render prop vs component-as-prop 的权衡。
+
+### 14. HOC 时代的高阶组件要处理 props 注入、displayName、静态方法 hoist、ref 转发——这些税从何而来？Hooks 消掉了哪些、留了哪些？
+
+税来自「HOC 生成了一个新组件层」：① 名字——新组件默认匿名，DevTools 里全是 `Connect(Comp)`，要手工设 displayName；② 静态属性——`Comp.xxx`（如 propTypes、自定义静态方法）不会自动出现在包装件上，要用 hoist-non-react-statics 拷贝；③ ref——包装层截断了 ref，需 forwarding；④ props 名冲突——注入的 prop 与原组件同名会被覆盖或遮蔽，要命名空间。Hooks 用「函数里直接调用」替代「包一层组件」，一次性消掉以上全部（没有新组件=没有命名/静态/ref 问题，返回值显式赋名=无隐式冲突）。HOC 仍留的价值：跨「class 组件」的复用、以及「渲染劫持/权限外壳」这类需要包裹渲染输出的场景（如 ErrorBoundary、懒加载 HOC）。
+
+**来源**：React 高阶组件文档（displayName/hoist/refs forwarding 约定）；「Why Hooks replace HOCs & mixins」官方动机。
+
+### 15.  从「开放 vs 封闭」看组件 API：配置对象驱动 与 组合（传节点/子组件）驱动 各自利弊？
+
+配置对象（`<Table columns={[{...}]} />`）是「封闭扩展点」：行为由内部 switch/映射解释配置，收敛、易序列化、易给默认，但表达力受限于你预先想到的字段，遇到「某列单元格要完全自定义渲染」就得开 escape hatch（render 字段）。组合（传节点/组件）是「开放」：调用方直接用 JSX 表达任意结构，无限灵活、无需为每种变化加字段，代价是难给默认、难序列化、校验弱。成熟设计常常两者分层：用配置描述「结构与数据」（列定义、行数），用组合覆盖「外观与特例」（cell render、slot）。判据：可枚举、可默认、需远程下发的用配置；需要任意 UI 组合、编译期类型可推的用组合。
+
+**来源**：组件 API 设计：configuration vs composition 的通行权衡；React「props 传节点」组合哲学。

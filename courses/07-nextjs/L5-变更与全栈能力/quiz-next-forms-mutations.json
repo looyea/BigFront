@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "useFormStatus 的 pending 反映的是？",
-      "options": ["本组件自己 fetch 的进行态", "最近的父级 form 正在执行 Action 的期间", "全站路由加载", "window.online 状态"],
-      "answer": 1,
+      "options": [
+        "本组件自己 fetch 的进行态",
+        "全站路由加载",
+        "window.online 状态",
+        "最近的父级 form 正在执行 Action 的期间"
+      ],
+      "answer": 3,
       "explanation": "它从渲染上下文读取父 form 的 Action 生命周期，无需 props 传递（呼应 next-forms-mutations 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "useOptimistic 的列表在 Action 抛错时会？",
-      "options": ["保留乐观项等用户自行删除", "自动回滚到真实数据", "整页刷新", "进入重试队列"],
+      "options": [
+        "保留乐观项等用户自行删除",
+        "自动回滚到真实数据",
+        "整页刷新",
+        "进入重试队列"
+      ],
       "answer": 1,
       "explanation": "乐观层的真相回滚由框架在 Action 失败时完成，业务只管 reducer（呼应 next-forms-mutations 第一节、面试11剧本）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "zod schema 在 Next 工程里的正确角色是？",
-      "options": ["仅客户端表单校验用", "仅 Action 内使用", "同份 schema 两侧共享：客户端体验+服务端安全兜底", "替代 TypeScript 类型"],
+      "options": [
+        "仅客户端表单校验用",
+        "仅 Action 内使用",
+        "同份 schema 两侧共享：客户端体验+服务端安全兜底",
+        "替代 TypeScript 类型"
+      ],
       "answer": 2,
       "explanation": "两侧同一份是红线，缺了服务端那半等于裸奔（呼应 next-forms-mutations 第二节、exp-validation）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "after() 回调的定位是？",
-      "options": ["响应发出后的旁路杂活（通知/日志），非关键路径", "替代数据库事务", "延迟到下一导航执行的前端代码", "Action 的 finally 语法糖"],
+      "options": [
+        "响应发出后的旁路杂活（通知/日志），非关键路径",
+        "替代数据库事务",
+        "延迟到下一导航执行的前端代码",
+        "Action 的 finally 语法糖"
+      ],
       "answer": 0,
       "explanation": "移出关键路径但仍在本次请求生命周期内；重活依旧要进队列（呼应 next-forms-mutations 第三节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "改一条商品价格后（该数据出现在 12 个页面），影响面最小的失效方式是？",
-      "options": ["revalidatePath('/', 'layout')", "revalidateTag('price-42')", "router.refresh()", "重启服务"],
+      "options": [
+        "revalidatePath('/', 'layout')",
+        "revalidateTag('price-42')",
+        "router.refresh()",
+        "重启服务"
+      ],
       "answer": 1,
       "explanation": "tag 按数据维度精确圈定 12 页，path 全刷是拆金字塔（呼应 next-forms-mutations 第四节树、L4 面试 5/10）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "顶层 'use server' 的 actions/ 目录约定解决的隐患是？",
-      "options": ["构建速度", "让公网端点清单在结构上一眼可辨，防工具函数被意外暴露", "运行内存", "循环依赖"],
+      "options": [
+        "构建速度",
+        "让公网端点清单在结构上一眼可辨，防工具函数被意外暴露",
+        "运行内存",
+        "循环依赖"
+      ],
       "answer": 1,
       "explanation": "位置即语义：目录规范=安全审计面（呼应 next-forms-mutations 第五节、next-groups-matchers）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "提交新评论要求'原地立即出现且不发第二次请求'，合理组合是？",
-      "options": ["useOptimistic 先行 + 成功后 payload 自然替换", "setInterval 轮询列表", "跳转详情页再返回", "localStorage 缓存"],
+      "options": [
+        "useOptimistic 先行 + 成功后 payload 自然替换",
+        "setInterval 轮询列表",
+        "跳转详情页再返回",
+        "localStorage 缓存"
+      ],
       "answer": 0,
       "explanation": "乐观层负责即时，服务端真值到达后自动收敛（呼应 next-forms-mutations 第一节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " useOptimistic 在 Action 抛错时的行为是？",
+      "options": [
+        "保留乐观条目等服务端最终一致",
+        "自动回滚到传入的 baseState——乐观副本只在 action 生命周期内存在，抛错即丢弃；但\"回滚后如何向用户解释失败\"仍要自己用 error 状态呈现",
+        "重试 action",
+        "抛出 unhandledrejection"
+      ],
+      "answer": 1,
+      "explanation": "useOptimistic 管理的是\"临时状态视图\"而非\"补偿逻辑\"；真正复杂场景（要保留失败条目供用户修改重提）就得自己维护草稿状态——工具只帮你做一半。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " after() 回调的定位与执行时机是？",
+      "options": [
+        "事务提交钩子，回滚则不执行",
+        "响应发送完毕之后在服务器执行的后台任务（失效/日志/通知），失败不影响已返回的响应；它不是事务原语，与数据库事务无关",
+        "客户端水合后回调",
+        "等价于 setTimeout(0)"
+      ],
+      "answer": 1,
+      "explanation": "after 解决\"revalidate 拖慢响应\"的问题——把非关键路径挪到响应后；它的语义边界（不保证送达、实例可能随后被冻结）决定了重要任务仍该进队列。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 一个多字段表单要在\"服务端为准 + 即时体验\"间取平衡，官方推荐的校验组合是？",
+      "options": [
+        "只做客户端校验，快",
+        "三层：客户端即时反馈（体验层）+ 服务端 zod 强校验（权威层，Action 入口）+ 数据库约束（最后防线）；schema 从服务端一处导出双端复用",
+        "全部交给数据库",
+        "用 onChange 远程防抖校验为准"
+      ],
+      "answer": 1,
+      "explanation": "客户端校验可被绕过所以永远不是权威；共享 zod schema 让\"同一个函数的两端\"成为可能，这正是 Action 时代\"前后端同仓同型\"的红利。"
     }
   ]
 }

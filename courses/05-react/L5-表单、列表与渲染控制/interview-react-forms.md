@@ -1,6 +1,6 @@
 # react-forms 面试题精选
 
-> 共 12 题，覆盖 A 受控/非受控本质 / B 状态与更新陷阱 / C 校验与提交 / D 与 Vue v-model·React19 对照四类。
+> 共 15 题，覆盖 A 受控/非受控本质 / B 状态与更新陷阱 / C 校验与提交 / D 与 Vue v-model·React19 对照四类。
 
 ---
 
@@ -92,3 +92,25 @@
 **答**：从受控的成本切入——大表单每个字段受控意味着每次按键整树重渲染 + 大量 state/校验样板。RHF 用**非受控 + ref 订阅**只在校验/提交时读值，按需渲染、性能好，并提供字段级错误、schema 校验集成。代价是要理解其注册（`register`/Controller）模型、受控第三方组件需 `Controller` 包裹。小表单或强实时联动，纯受控反而更直观。答出"按字段数量与联动需求选受控/非受控/库"体现工程判断。
 
 **来源**：React Hook Form 文档 — Why Hook Form、getStarted、React 官方文档 — Controlled vs Uncontrolled
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  大量字段的受控表单「每敲一个字整表单重渲染」的性能账怎么算？有哪些治法与非受控替代？
+
+受控把每个输入值存进 state，onChange→setState→整个表单组件重渲染；字段一多、每键触发，未 memo 的所有输入子组件都跟着 render，输入卡顿。治法三档：① 结构优化——把每个字段拆成各自持 state 的叶子组件（colocation），父只在提交时收值；② 虚拟化/粗粒度 memo；③ 换非受控/注册式——React Hook Form 用 ref 注册、DOM 里读值、只在校验失败时精准重渲染对应字段（把「输入」与「渲染」解耦），这正是它性能好的本质。取舍：受控简单、即时校验/联动强；非受控省渲染、适合大表单/文件/富文本。别默认「受控一定卡」，小表单无所谓，几十上百字段才要慎重。
+
+**来源**：React 受控组件文档；React Hook Form 官方「为什么用注册/uncontrolled 提升性能」说明。
+
+### 14.  React 19 用原生 `<form action={fn}>` + FormData + useActionState 做表单，相比全受控的取舍？
+
+原生非受控路线：不写 onChange、不给每个 input 加 value，提交时 `<form action={async (formData) => {...}}>` 由浏览器收集 FormData，配合 `useActionState` 管理 pending/error/返回 state、`useFormStatus` 让子按钮感知提交中。相比全受控：代码量少（不必每字段 state）、输入天然流畅（无重渲染开销）、渐进增强（无 JS 也能提交）。取舍：需要「输入即校验/即时联动/禁用提交按钮依赖具体值」时受控仍更顺手；纯提交型（联系表单、登录）用原生 action 更轻。useActionState 把「提交生命周期」内建，替代以前手写 setPending/try-catch/setError，是 React 表单心智的一次向 DOM 靠拢。
+
+**来源**：React 19 Actions / useActionState / useFormStatus / FormData 文档。
+
+### 15.  表单校验的时机（onChange/onBlur/onSubmit）与错误呈现怎么设计才既好用又无障碍友好？
+
+时机混合策略最稳：首次提交前用 onSubmit 统一拦（不干扰用户输入），一旦提交过/某字段 blur 过，则切到 onChange 实时反馈（React Hook Form 的 mode=touched/reValidateOn 就是这套）。呈现要可访问：错误信息给唯一 id、输入框加 `aria-invalid="true"` 且 `aria-describedby` 指向错误节点（读屏能念出）、别只用红色（色盲）；提交失败把焦点移到第一个错误字段；必填用 `required`/`aria-required` 而非仅文案。服务端校验错误要能映射回字段并复用同一呈现通道。这条把「表单」从能用提升到可用+可访问，是面试拉开区分度的地方。
+
+**来源**：W3C WAI-ARIA Authoring Practices 表单校验与 aria-describedby；React Hook Form 校验时机选项。

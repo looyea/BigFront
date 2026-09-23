@@ -1,6 +1,6 @@
 # kit-deploy-node 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) adapter-node 的产物结构是什么？`node build` 跑起来后这个 server 负责哪些事？
 **来源**：standalone server 职责题的转述。
@@ -63,3 +63,25 @@ build 阶段 `npm ci && npm run build`；runtime 阶段 `npm ci --omit dev` + `C
 健康检查：用 handler.js 自定义 server 加 `app.get('/healthcheck',...)`（不跑业务逻辑）供 K8s/LB 探活。日志：在 handle（L5）计时+打访问日志、`resolve` 后按需加响应头（不可变头先 clone）。错误：`handleError`（服务端那份）生成 errorId、送 Sentry、返回安全的 `{ message, errorId }`，并扩 App.Error 带 errorId，供用户报障时关联——三条都用 hooks/handler 收口，不改业务码。
 
 🚀 **下一组**：L6 课后作业——生产拓扑与环境变量纪律的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  自托管在 Nginx 后，为什么要设 ORIGIN 或 PROTOCOL_HEADER/XFF_DEPTH？不设会怎样？ 
+
+ Kit 用 ORIGIN 构造绝对 URL、校验 cookie 域与 CSRF origin；漏设会出现跳转丢协议、https 下 secure cookie 不写、CSRF origin 校验误杀。XFF_DEPTH 从右往左数可信代理，取真实客户端 IP。 
+
+**来源**： https://svelte.dev/docs/kit/adapter-node#Environment-variables 
+
+### 14.  给 adapter-node 设计多阶段 Dockerfile：缓存层与体积的关键决策？ 
+
+ 先 COPY package+lock 再装依赖（dev 全量构建、runtime 只留 prod 依赖或用 pnpm deploy）；构建产物 build/ 单独拷进 slim 运行时镜像；node_modules 不进最终镜像可减数百 MB。 
+
+**来源**： https://docs.docker.com/build/building/best-practices/ ； https://svelte.dev/docs/kit/adapter-node 
+
+### 15.  同代码上 Vercel 与自托管 adapter-node，成本模型差异你会怎么算给老板？ 
+
+ 平台按请求/时长计费且冷启动、流式支持受平台能力约束；自托管固定实例成本+运维人力（补丁、监控、扩缩容）；流量平稳且团队有运维能力时自托管划算，波峰型或合规简单站选平台，给出量化口径比结论更重要。 
+
+**来源**： https://svelte.dev/docs/kit/adapter-node 

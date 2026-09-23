@@ -3,6 +3,7 @@
   "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
+      "id": "q1",
       "type": "single",
       "prompt": "default action 与具名 action 在官方规则里的共存政策是？",
       "options": [
@@ -15,6 +16,7 @@
       "explanation": "官方明说不能并存：POST 到具名 action 后若不重定向，?/register 留在 URL，下一次 default POST 会被残留参数带进具名 action，语义含混索性禁止。"
     },
     {
+      "id": "q2",
       "type": "single",
       "prompt": "同一个 <form> 里要让『登录』『注册』两个按钮投到不同 action，官方姿势是？",
       "options": [
@@ -27,6 +29,7 @@
       "explanation": "formaction 属性让同一个表单数据 POST 到与父 form 不同的 action，是官方示例的标准做法。A 是 HTML 非法嵌套（form 不能互嵌），C 放弃了渐进增强。"
     },
     {
+      "id": "q3",
       "type": "single",
       "prompt": "action 成功返回（无 redirect）后，接下来发生什么？",
       "options": [
@@ -39,6 +42,7 @@
       "explanation": "官方 Loading data 节：action 跑完后页面重渲染（除非 redirect/意外错误），form prop 拿到返回值，且 load 会重跑——所以 action 改了库、页面数据自动是新的。303 那条 PRG 往返是 redirect 语义，不是成功返回的必经路。"
     },
     {
+      "id": "q4",
       "type": "single",
       "prompt": "登出 action 里 cookies.delete('sessionid') 之后，本次响应链还需要补什么才不留旧登录态？",
       "options": [
@@ -51,6 +55,7 @@
       "explanation": "handle 只在提交这次请求跑过、不为 action 后的 load 重跑——它塞进 locals 的旧 user 还在。官方 logout 示例两件套：cookies.delete 紧跟 locals 清空。"
     },
     {
+      "id": "q5",
       "type": "single",
       "prompt": "use:enhance 传了自定义回调后，默认六件套行为（含 invalidateAll）发生了？",
       "options": [
@@ -63,6 +68,7 @@
       "explanation": "官方规则：返回回调即覆盖提交后的默认逻辑；update()（接受 invalidateAll/reset 参数）或 applyAction(result) 把六件套请回来。"
     },
     {
+      "id": "q6",
       "type": "single",
       "prompt": "自己 fetch 提交 action 后解析响应，为什么 JSON.parse 不合格、必须 deserialize？",
       "options": [
@@ -75,6 +81,7 @@
       "explanation": "官方注明：form actions 与 load 一样支持返回 Date 或 BigInt，JSON.parse 会把这些还原成字符串/挂掉，须用 $app/forms 的 deserialize。"
     },
     {
+      "id": "q7",
       "type": "single",
       "prompt": "method=\"GET\" 的 <form> 在 SvelteKit 里的待遇是？",
       "options": [
@@ -85,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "官方 GET vs POST 节：搜索框这类无需 POST 的表单会被当作 <a> 同款用客户端路由处理（/search?q=...），还能配 data-sveltekit-reload 等属性。actions 只吃 POST，因为 GET 不该有副作用。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 提交成功后（无 redirect），$page.form 的值是？ ",
+      "options": [
+        " 仍是刚才提交的原始 FormData ",
+        " action 返回失败时含回显数据（含 input 等），成功后为 null 且表单被重置 ",
+        " 自动重定向到返回页 ",
+        " 只有错误消息 "
+      ],
+      "answer": 1,
+      "explanation": " 失败返回携带结构化数据回填 $page.form，成功默认走 invalidateAll 并重置表单，$page.form 清空。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " action 成功后默认触发什么数据行为？ ",
+      "options": [
+        " 什么都不做 ",
+        " 重跑当前页相关的所有 load（invalidateAll 语义）以反映写入结果 ",
+        " 只重跑根 layout ",
+        " 仅整页刷新才更新 "
+      ],
+      "answer": 1,
+      "explanation": " use:enhance/默认管线在 action 成功后自动让全部依赖失效重取，保证写后读一致；要精细控制用 invalidate 指定依赖。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " redirect(303, path) 在 action 里为何用 303 而不是 302/200？ ",
+      "options": [
+        " 303 更快 ",
+        " 303 强制把后续请求转为 GET 并落到新地址，实现 POST-Redirect-GET 防重复提交 ",
+        " 302 不允许带路径 ",
+        " 兼容 IE "
+      ],
+      "answer": 1,
+      "explanation": " PRG 模式让用户刷新不再重发 POST；303 语义明确要求切换为 GET，是表单写操作收尾的标准状态码。 "
     }
   ]
 }

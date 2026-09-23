@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "自定义指令钩子里，'el 已插入真实 DOM、适合 focus/初始化第三方库'的时机是？",
-      "options": ["created", "beforeMount", "mounted", "updated"],
-      "answer": 2,
+      "options": [
+        "created",
+        "beforeMount",
+        "updated",
+        "mounted"
+      ],
+      "answer": 3,
       "explanation": "mounted 时元素已在文档中；created 时 DOM 还没挂（呼应 vue-directives-teleport 第一节钩子表）。"
     },
     {
@@ -87,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "指令只能移除元素，数据与接口仍在——前端隐藏≠安全（呼应 vue-directives-teleport 第三节、09-express 鉴权）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "指令与组件同在一个元素上，且组件根元素就是这个被指令标记的节点，指令作用的对象是：",
+      "options": [
+        "setup 里的虚拟节点",
+        "组件实例渲染出的根 DOM 元素（指令挂在组件标签上时 el 解析为子组件根元素）——所以 v-focus 放 <MyInput> 上是作用于其内部真实 input 根节点，组件多层根时可能失效",
+        "不生效",
+        "指令会复制进子组件每个节点"
+      ],
+      "answer": 1,
+      "explanation": "这 是 「v-focus 在 自定义 组件 上 不 灵」的 真 根因：el 指向 **渲染 后 的 根**，多根/fragment 根 时 无 唯一 落点（本关 编译 产物 题 的 组件 侧 镜像）。稳妥 做法：指令 打 在 原生 元素 上 或 组件 内 自行 处理。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "指令里给 el 挂了 addEventListener，正确的清理时机是：",
+      "options": [
+        "updated",
+        "unmounted（3.x 指令 周期 之一；配 updated 里 先 摘 再 挂 处理 绑定的 函数 引用 变化，或 干脆 把 监听 收 进  WeakMap 按 el 索引）",
+        "全局 只 管 挂 不 管 摘，GC 会 收",
+        "app.unmount 才 清"
+      ],
+      "answer": 1,
+      "explanation": "指令 是 「绕过 Vue 生命 周期 的 手 动 活」：监听/Observer 都 要 在 unmounted 显式 拆（本关 unmounted 题 的 操作 细则）；el 被 Vue 删 DOM 不 等于 事件 目标 上 的 引用 消失——闭包 把 整个 指令 上下文 拖 住。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "<Teleport> 与 SSR 结合时，官方要求的必备配置是：",
+      "options": [
+        "禁用 SSR",
+        "目标容器必须预先存在于服务端渲染的 HTML 里（如 <div id=\"modal-target\">），否则 hydration 找不到落点；多目标/deferred 场景配 defer 选项（3.5+）处理目标晚于挂载出现",
+        "Teleport 自动创建目标",
+        "只能 to=\"body\""
+      ],
+      "answer": 1,
+      "explanation": "defer 解决 的 正是 「目标 元素 在 本 组件 之后 才 渲染」的 时序（Nuxt 里 挂 body 的 弹窗 常 翻 在 这）；同构 项目 还 要 注意 服务端 没有 body 概念——target 写 CSS 选择器 而 不 是 DOM 引用（本关 SSR 前提 题 的 补全）。"
     }
   ]
 }

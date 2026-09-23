@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "下列哪个场景最不适合选 Next.js？",
-      "options": ["需要 SEO 的内容社区站点", "带登录的管理后台兼官网", "公司官网 + 博客", "纯内部定时批处理任务服务（无前端）"],
+      "options": [
+        "需要 SEO 的内容社区站点",
+        "带登录的管理后台兼官网",
+        "公司官网 + 博客",
+        "纯内部定时批处理任务服务（无前端）"
+      ],
       "answer": 3,
       "explanation": "内容站点、官网+博客、带登录后台都是 Next 的甜点位；而无前端的纯批处理服务引入渲染框架和 RSC 缓存层纯属负资产，脚本/队列或轻量服务端框架即可（呼应 next-architect 第 3 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "区分\"地基\"与\"潮流\"：下列哪项属于 Next 不会轻易变的底层语义？",
-      "options": ["页面段 route config 的具体导出名", "\"响应与请求者无关才可进 Full Route Cache\"的缓存安全线", "generateMetadata 的参数签名", "Turbopack 的配置文件格式"],
+      "options": [
+        "页面段 route config 的具体导出名",
+        "\"响应与请求者无关才可进 Full Route Cache\"的缓存安全线",
+        "generateMetadata 的参数签名",
+        "Turbopack 的配置文件格式"
+      ],
       "answer": 1,
       "explanation": "缓存的正确性语义（防止用户 A 看到用户 B 的数据）是安全地基；API 形态、导出名、配置格式都是仍在演变的潮流（呼应 next-architect 第 2 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "PPR（Partial Prerendering）要解决的经典矛盾是？",
-      "options": ["开发速度与生产构建速度", "SEO 与图片体积", "静态的快（预渲染壳）与动态的准（实时数据）不可兼得", "客户端包体与服务端内存"],
+      "options": [
+        "开发速度与生产构建速度",
+        "SEO 与图片体积",
+        "静态的快（预渲染壳）与动态的准（实时数据）不可兼得",
+        "客户端包体与服务端内存"
+      ],
       "answer": 2,
       "explanation": "PPR 让路由的静态壳构建期定格、动态洞请求时流式补数据，动静分区从\"整页二选一\"细化到\"页面内混合\"（呼应 next-architect 第 2 节、next-revalidate 第 4 节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "重实时协作应用（白板/IM 主体）更适合的架构是？",
-      "options": ["Next 全栈：Action 承担所有实时消息", "Nuxt：中间件做长连接", "把实时功能做成独立微服务，前端仍用 RSC 渲染", "SPA + WebSocket/CRDT 本地状态引擎，框架壳只留落地页"],
+      "options": [
+        "Next 全栈：Action 承担所有实时消息",
+        "Nuxt：中间件做长连接",
+        "把实时功能做成独立微服务，前端仍用 RSC 渲染",
+        "SPA + WebSocket/CRDT 本地状态引擎，框架壳只留落地页"
+      ],
       "answer": 3,
       "explanation": "长连接 + 本地状态同步世界与 RSC 请求-响应模型相性差，实时主体交给 SPA 技术栈更顺（呼应 next-architect 第 3 节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "关于 Next 与 Nuxt 的对照，下列说法正确的是？",
-      "options": ["Nuxt 有独立的 Nitro 服务端引擎，产物可投递多种平台", "Nuxt 也有与 RSC 对等的服务端组件模型", "Next 的中间件运行在 Node 运行时", "两者都不支持增量静态再生成"],
+      "options": [
+        "Nuxt 有独立的 Nitro 服务端引擎，产物可投递多种平台",
+        "Nuxt 也有与 RSC 对等的服务端组件模型",
+        "Next 的中间件运行在 Node 运行时",
+        "两者都不支持增量静态再生成"
+      ],
       "answer": 0,
       "explanation": "Nitro 是 Nuxt 的差异化底座；Nuxt 暂无 RSC 对标；Next middleware 在 Edge 运行时；ISR 两家都有各自方案（呼应 next-architect 第 4 节对照表）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "团队要做一个纯 API 服务 + 若干 Webhook，正确选型态度是？",
-      "options": ["用 Next：反正 Route Handler 能写接口", "用 Next：为了统一技术栈可以牺牲一切", "选 Express/Fastify 等服务端框架：没有渲染需求就不引入渲染框架", "用 Nuxt：Vue 生态性能更好"],
+      "options": [
+        "用 Next：反正 Route Handler 能写接口",
+        "用 Next：为了统一技术栈可以牺牲一切",
+        "选 Express/Fastify 等服务端框架：没有渲染需求就不引入渲染框架",
+        "用 Nuxt：Vue 生态性能更好"
+      ],
       "answer": 2,
       "explanation": "全栈框架的\"全栈\"是附赠能力不是存在理由；纯 API 场景框架缓存/RSC 层全是负资产（呼应 next-architect 第 3 节、exp-deploy）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "架构师检验框架问题的\"三连问\"是？",
-      "options": ["star 数、下载量、发版频率", "学习曲线、文档质量、周边生态", "性能跑分、包体积、构建速度", "为什么选它、边界在哪、坏了怎么办"],
+      "options": [
+        "star 数、下载量、发版频率",
+        "学习曲线、文档质量、周边生态",
+        "性能跑分、包体积、构建速度",
+        "为什么选它、边界在哪、坏了怎么办"
+      ],
       "answer": 3,
       "explanation": "数据指标谁都能查，架构判断力体现在决策依据、适用边界与故障预案三个层面（呼应 next-architect 第 5 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 区分\"地基与潮流\"：下列哪项属于 Next 不会轻易变的底层约束？",
+      "options": [
+        "Turbopack 的具体实验开关名",
+        "URL/HTTP 语义与渲染位置选择（服务端/边缘/客户端的边界设计）——它们跨版本稳定，是\"换框架也要重学的常量\"；App/Pages 双轨、配置键名、缓存默认值都属会漂移的表层",
+        "具体的 revalidate 默认值",
+        "metadata 字段命名"
+      ],
+      "answer": 1,
+      "explanation": "架构面试里\"变与不变\"的标准答法：HTTP 契约（URL/状态码/缓存头）、组件运行位置、数据归属——版本公告只改表皮，这三层决定你代码的骨架。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 重实时协作应用（白板/IM 主体）的架构，更符合 Web 物理现实的是？",
+      "options": [
+        "Next 全家桶：Server Actions 做同步",
+        "独立实时服务（WebSocket/CRDT）+ 客户端状态为主的应用，Next 可选承担落地页/管理台——请求-响应模型与\"低延迟双向广播\"物理不匹配",
+        "轮询 ISR",
+        "revalidateTag 当推送用"
+      ],
+      "answer": 1,
+      "explanation": "框架选型的边界是\"协议与网络模型\"：Action 是 HTTP 短事务，做不了长连接扇出与冲突合并；把\"Next 能不能做\"错答成\"Next 该不该做\"是选型事故之源。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 架构师检验框架问题的\"三连问\"最合理的是？",
+      "options": [
+        "star 数/融资/大会演讲",
+        "我的主导矛盾是什么（SEO/首屏/交互密度/团队栈）？该框架为此接管了什么、代价是什么？三年后这些接管还有价值吗（地基 vs 潮流）？",
+        "谁用过/有没有坑/有没有文档",
+        "构建速度/包体积/热度"
+      ],
+      "answer": 1,
+      "explanation": "三连问把选型从\"技术流行度\"拉回\"矛盾-取舍-演化\"三段论；面试里能自报这套框架再套到具体项目上，就是架构候选人和 CRUD 候选人的分界线。"
     }
   ]
 }

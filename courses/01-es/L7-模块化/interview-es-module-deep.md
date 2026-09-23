@@ -96,3 +96,21 @@
   ```
   **追问**：浏览器**如何**在没有 Node 的情况下解析 `import { x } from 'vue'`？→ 通过 importmap 把 specifier 映射成 URL，其余走浏览器原生 URL 加载。
 - 来源：MDN `<script type="importmap">`；Vue 官方 playground；caniuse。
+
+---
+
+**13）`createRequire` 是给谁用的？与 Import Attributes 怎么选？**
+- 参考要点：`createRequire(import.meta.url)` 在 ESM 里造一个**同步** require——适用于过渡期依赖只有 CJS 且必须同步拿（老配置加载器、.node 二进制）、历史 JSON 读取（Node 17.5 前无稳定替代）。取舍：新代码优先 `import json with { type: 'json' }`（静态可分析、打包器友好）；createRequire 是**运行时旁路**，打包器看不到这笔依赖，滥用会让产物漏包。两者都解决不了「ESM 必须同步」的根本矛盾——能改异步就改异步。
+- 来源：Node.js 文档《module.createRequire》；TC39 import-attributes 提案 README。
+
+---
+
+**14）`exports` 条件（conditions）匹配规则是什么？把 `types` 放错位置会怎样？**
+- 参考要点：条件对象**自上而下第一个命中**，不在条件集里的跳过；Node 运行时默认带 `node`/`import`/`require`，打包器额外注入 `browser`/`module` 等（约定非标准）。`types` 必须置顶：TS 的 `node16/nodenext` 解析也读 exports，若 `import` 在前会先命中 JS 文件导致**类型丢失/报错**。兼容老工具链需同时留 `main`/`module` 字段（只读不到 exports 的老 Node/打包器用）。子路径模式：`"./utils/*": "./dist/utils/*.mjs"` 做包内别名。
+- 来源：Node.js ESM 文档《Conditional exports》；TypeScript 4.7《moduleResolution node16/bundler》发布说明。
+
+---
+
+**15）线上怀疑中了 dual-package hazard，怎么实锤？给出排查与修复路径。**
+- 参考要点：**症状**：`instanceof` 无故失败、单例事件双触发、`Symbol.for` 注册表能共享但模块级 Map/数组不共享。**实锤**：打印两边的 `import.meta.url` / `require.cache` 路径看是否一 `.mjs` 一 `.cjs`；打包器侧看 stats/bundle 里同包两份；`npm ls 包名` 查版本分裂。修复：① 升级依赖到统一入口版本；② 用 `exports` 让 import/require 都指向同一真身（内部 CJS 壳再 require 过去）；③ 消费者用 bundler `alias`/`resolve.dedupe` 强制单例；④ 长期：推动上游纯 ESM。
+- 来源：Node.js 官方 ESM 文档《Dual package hazard》节；webpack Issue 社区排查案例。

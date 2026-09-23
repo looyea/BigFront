@@ -1,6 +1,6 @@
 # svelte-special-elements 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ---
 
@@ -75,3 +75,25 @@ Teleport 是**DOM 搬运术**——不改变数据流与生命周期语义，Sve
 **来源**：特殊元素族全技能压缩考察题（白板轮形态）
 
 逐条对位：①`<svelte:window bind:scrollY>` + `$derived` 百分比；②`<svelte:window bind:focus={active}>`，`$effect` 里按 focus 启停 interval（清理函数归还）；③`<svelte:body onclick>` + 下拉内 `stopPropagation`（或 capture+contains，说清取舍）；④`<svelte:element this={`h${level}`}>` + spread 属性；⑤`{#each}` 里 `<field.component {...field.props} />` 点号动态组件。蓝图题评分看"事件目标选得准不准、绑定与派生的方向感、以及每条对应哪个 `<svelte:*>` 词"——全部命中即本课满分卷（各条深挖分别是 2/9/10 题与 L6/L1 的入口）。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  <svelte:window> 的绑定（innerWidth/scrollY）与手动 window.addEventListener 相比好在哪？滚动进度条怎么写最省？
+
+专元素优势：① 生命周期自动——组件在才监听、卸载自动解绑（手动要自己 removeEventListener，易漏致泄漏，呼应 lifecycle 定时器事故）；② 声明式绑定——bind:scrollY={y}、bind:innerWidth 直接把窗口状态映射成 $state，无需在 handler 里读赋值；③ 事件修饰符可用（onscroll|passive 提升滚动性能，呼应 vite/事件 passive 题）。滚动进度条：bind:scrollY + bind:innerHeight + document.documentElement.scrollHeight 派生比例（$derived(scrollY/(scrollHeight-innerHeight))）写 CSS 变量驱动 scaleX——避免每帧 JS 改 style（用 CSS transform + 变量，滚动监听设 passive，对应性能意识）。注意：scrollY 高频变化，$derived/CSS 变量更新代价要控（别在 effect 里做重活），或改用 IntersectionObserver/CSS scroll-driven animations（现代方案，滚动关联动画零 JS）。加分句：能主动提"滚动这类高频窗口绑定，理想是最终落到 CSS（scroll-driven animation / transform 变量）而非每帧跑 JS effect"——把"框架能力（专元素绑定）"与"性能边界（高频更新下沉 CSS）"两层都想到了，比只会 bind:scrollY 高一档（呼应 special-elements"滚动进度"设计题）。
+
+**来源**：svelte:window bindings；滚动性能（passive）；既有 svelte:window bind:scrollY 深化
+
+### 14.  Svelte 没有 <Teleport>/<portal> 内置组件，怎么实现"把弹层渲染到 body 下"？
+
+现状：Svelte 无声明式 Teleport（对应既有"为什么没有 svelte:teleport"题），实现"渲染到组件 DOM 之外"有几种：① action——用 svelte:body 或一个 action 把某段用 mount()/手动 appendChild 到 body（命令式）；② Svelte 5 运行时 mount(App,{target:document.body}) 挂独立子应用（但脱离主组件树，context 断，呼应 context 独立 mount 题）；③ <dialog> + showModal()（原生模态就是"逃出层叠上下文"的语义化方案，多数弹层场景首选，无需 portal）；④ 靠 CSS（position:fixed + 高 z-index + 正确的 stacking context）——很多时候"需要 portal"其实是被父级 overflow/transform/z-index 困住，用 fixed + 管理层叠上下文可不 portal。为何 Svelte 不内置：编译器系倾向"少运行时概念"，portal 引入"渲染位置与树位置分离"破坏其 DOM 贴近源码模型，交给原生 dialog/CSS/action 覆盖。加分句：先质疑"是否真需要 portal"——现代 Web 里 dialog[open]+showModal、:popover、CSS 层叠管理（contain/z-index）已覆盖大部分"逃出父容器"需求，portal 是 React/Vue 生态的习惯未必是 Svelte 的必要；能给出"优先原生语义方案、portal 是兜底"的排序最显功力（对应既有 body click-outside/teleport 系列题）。
+
+**来源**：Svelte portal 模式；mount/svelte:body；Vue Teleport/React createPortal 对照；既有"为什么没有 teleport"深化
+
+### 15.  动态渲染组件（{#if}/{@render}/<svelte:component 等价>/<svelte:element>）这几条路各自边界在哪？
+
+分四路：① 换元素标签名（h1/p/div，同一种组件行为）→ <svelte:element this={tag}>；② 换"哪个组件实例"→ Svelte 5 runes 下把组件当值：let Comp = 条件 ? A : B 然后 <Comp/>（编译器支持组件表达式），旧 <svelte:component this={Comp}> 是 Svelte 4 写法（迁移注意，对应既有 svelte:component 迁移题）；③ 渲染"一段模板片段/插槽"→ {@render snippet(args)}；④ 简单显隐 → {#if}（销毁重建）或 class/hidden（保留实例，呼应 {#if} vs display 题）。选择判据："换的是标签→element、是组件→组件表达式、是内容片段→render、是可见性→if/class"。坑：动态组件切换默认会销毁重建（状态丢），要"保状态换外观"用 class/CSS 而非 if/切换实例（呼应 key/重建题）。加分句：这四条路的分界本质是"你在动态改变什么"——DOM 标签、组件类型、内容模板、还是仅可见性；把需求先归到这一格，语法选择就机械化了，也避免用错工具（如用 {@render} 去做本该 <svelte:element> 的标签切换）——这正是 special-elements 整组题的总纲（对应"用一个组件同时实现滚动进入 + 动态标签 + ..."终题的拆解法）。
+
+**来源**：Svelte 5 动态组件与动态元素；snippet 渲染；<svelte:component> 在 runes 下的现状；既有动态组件切换深化

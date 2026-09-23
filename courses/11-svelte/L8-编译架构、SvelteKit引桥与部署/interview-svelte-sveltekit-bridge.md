@@ -1,6 +1,6 @@
 # svelte-sveltekit-bridge 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与 Kit 官方叙事的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与 Kit 官方叙事的高频主题转述。
 
 ---
 
@@ -82,3 +82,25 @@ W1-2：纯 Svelte 组件层培训（本包 L1–L5）+ 一个内部小工具试�
 **来源**：技术选型辩护综合题（价值观与工程判断双考）
 
 框架三层：组件语言层（本包，生态需求=小部件，缺口可用 runes 自补且体积小）；应用框架层（Kit 覆盖 80% 通用需求：路由/load/表单/adapter，缺的多是'Next 平台增值'而非必需品）；生态层（真正缺的是垂直 SaaS 集成——评估这些集成本来就该在 BFF/服务端做，不必进前端栈）。再用事实压秤：Vite/Rollup 同源基建的工程质量、小团队维护节奏与 LTS 化承诺、性能默认值（无 VDOM+小基数）。最后交回前提：**选型赢在匹配度**——弱网卡+全栈团队小+内网交付多则 Kit 加分，重 React 垂直生态则诚实留在 Next；把"凭什么"翻译成"我们的约束是什么"（呼应全课程的反宗教战争立场）。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  为什么说 Svelte 是 UI 框架、SvelteKit 是应用框架？两者边界与协作点具体是什么？
+
+边界：Svelte 管"组件如何编译成 UI + 响应式"（render/mount/信号），不提供路由/数据获取/服务端/构建默认；Kit 建在其上加"应用级"能力——文件系统路由（+page/+layout/+server）、数据加载（load + 服务端/客户端模块边界）、SSR/预渲染/adapter 部署、form actions、渐进增强、代码分割与预取、$app/* 运行时 store。协作点：Kit 里你写的仍是标准 .svelte 组件（runes/props 全适用，"用了 Kit 后 .svelte 写法不变"，对应既有题）；Kit 通过 vite-plugin-svelte + 自己的 Vite 插件把组件接进路由/SSR 管线。选不选：需要"多页面 + 服务端 + SEO + 部署"→Kit；纯组件库/嵌入小部件/极简单页→纯 Svelte 足够（对应 quiz 组件包题）。加分句：最准的类比是"Svelte : SvelteKit ≈ React : Next（或 Vue : Nuxt）"，但 Kit 更"约定即默认全功能"（自带路由/SSR/adapter 而非可选叠加）；讲清这个边界能避免"用 Kit 做一个组件"或"用纯 Svelte 硬搓一个全站应用"两种错配（呼应 sveltekit-bridge 整组选型题）。
+
+**来源**：Svelte vs SvelteKit 定位；Kit 能力清单；既有"Svelte 框架 Kit 应用框架"深化
+
+### 14.  讲清 +page.ts、+page.svelte、+page.server.ts、+layout.ts、+server.ts 各自职责与执行时机。
+
+执行时机与位置：① +page.svelte——页面组件（渲染，client+ssr）；② +page.ts（universal load）——通用 load，SSR 时服务端跑一次、客户端导航时在浏览器跑（同构，返回 data 给组件 $page.data/props）；③ +page.server.ts——服务端专属 load，只在 Node 跑（secret 在这，对应 quiz），客户端导航不重跑而是通过 endpoint 拿；④ +layout.ts/.server.ts——布局级 load，为一段路由树共享数据（嵌套布局、跨页常驻）；⑤ +server.ts——纯 API endpoint（返回 JSON/处理 HTTP 方法，非页面）。数据流：server load → universal load → 组件 props（每层可 depends/invalidation 控制重取）。加分句：判据"这段逻辑要不要浏览器也跑（同构数据用 +page.ts）/能不能进浏览器（secret/DB 用 +page.server.ts）/是页面还是接口（接口用 +server.ts）"——把文件后缀当"执行环境声明"来读，就不会把 secret 写进通用 load 泄露、也不会纠结某段取数放哪层（对应"三家用不同抽象做数据加载"对照题的 Kit 侧）。
+
+**来源**：SvelteKit 文件约定；load 执行模型（universal vs server）；既有"+page.ts 与 +page.server.ts 讲清"深化
+
+### 15.  Kit 的 adapter 谱系（static/node/平台适配器）说明了什么架构取舍？预渲染 vs SSR vs 按需在哪切？
+
+adapter 体现"同一套应用代码适配多种部署形态"：① adapter-static——构建时全预渲染成静态 HTML/资源（可托管到任意静态站/CDN，无运行时 Node），适合内容站/营销页；配 fallback 可做 SPA 模式；② adapter-node/auto——保留常驻 Node 服务端做运行时 SSR/endpoint，适合动态数据/私有化；③ 平台 adapter（vercel/cloudflare/netlify）——映射到 serverless edge/node 运行时。切分粒度在页级 prerender/ssr/csr 开关（对应 deploy 关"什么信号不该上 SSR"题）：能预渲染的静态内容 prerender=true、每请求动态 SSR、纯交互后台 csr/SPA 模式。取舍：静态=最快最省最稳但无运行时动态、SSR=动态但要有服务端算力、CSR=首屏慢但部署像静态。加分句：adapter 层的价值是"把部署决策从代码里解耦出来"——同一份 Kit 代码，改 adapter + 页级 prerender 开关就能从"全静态 CDN"切到"运行时 SSR"而不重写业务；能讲出"我按内容动静比例决定 adapter 与每页 prerender/ssr 档位"就体现了部署架构的成本意识（呼应 deploy 关三套系统选型终题）。
+
+**来源**：SvelteKit adapters 文档；prerender/ssr 页级开关；jamstack 取舍；既有 adapter 谱系题深化

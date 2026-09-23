@@ -1,6 +1,6 @@
 # solid-resource 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) createResource 和"在 createEffect 里 fetch 再 setSignal"有什么不同？为什么说它非阻塞？
 **来源**：异步原语定位题的转述。
@@ -63,3 +63,25 @@ createResource 需要被"读取/Suspense 消费"来驱动，返回值+loading/er
 `ssrLoadFrom:"server"`（默认）：水合时用服务端已取到的值、不重取；`"initial"`：客户端水合后重新取一次。`deferStream:true`：SSR 流式渲染时**允许该资源挂起、推迟这条 boundary 的 flush**（不提前把 fallback 冲出去），用于"宁可等数据也别先吐占位"的首屏。这组是 SolidStart 数据流（L7/L8）与 SvelteKit load 的对位概念。
 
 🚀 实操请去做 L5 作业：复现 source 假值短路、refetch vs mutate、五态 refreshing、轮询 onCleanup、错误双路径五道题。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  搜索页：关键词每次变化发请求，如何防旧结果覆盖新结果、并支持回车立即重查？ 
+
+ source 用信号承载关键词（变化自动重取），旧承诺不取消但用 refetching 与 generation 标记丢弃过期响应；更彻底是 fetcher 里接 AbortController 按次中断；回车强发走 refetch(true) 绕缓存。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createresource 
+
+### 14.  资源与 createAsync（Async 组件）怎么选型？ 
+
+ createResource 适合 key 驱动、手动重取与 SSR 数据流；createAsync 返回带 state/loading/error 的细粒度信号且可在事件里直接 await，适合点击触发的过程；数据随路由参数走选前者，随用户动作走选后者。 
+
+**来源**： https://github.com/solidjs/solid-helpers ； https://docs.solidjs.com/ 
+
+### 15.  无限滚动列表每页一个资源，聚合层怎么设计才不整列表闪烁？ 
+
+ 页信号数组 + 每页独立资源（或 createResources 动态键），已加载页结果永不重取，新页 append；闪烁源于把整列表当单资源重取；配 store 键稳定与 For（非 Index）保行复用。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createresource 

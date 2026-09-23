@@ -1,6 +1,6 @@
 # ts-conditional-infer 面试题精选
 
-> 共 12 题，覆盖 **条件类型基础 / infer 提取 / 分发机制 / 工具类型复刻 / 递归与高阶技巧** 五类。
+> 共 15 题，覆盖 **条件类型基础 / infer 提取 / 分发机制 / 工具类型复刻 / 递归与高阶技巧** 五类。
 
 ---
 
@@ -116,3 +116,25 @@ type PickByType<T, V> = {
 准则：① 每一层条件只做一件事，复杂逻辑拆成命名的中间 `type`（`type Core<T> = ...` 再喂下一步），报错时能逐层 hover 定位；② 需要"整体判断"用 `[T] extends [U]` 显式决定是否分发，别依赖默认；③ 优先用内置工具类型（`Pick`/`Omit`/`Exclude`…）组合而非手写等价物，减少出错面（呼应 ts-utility）；④ 用 `extends infer` 提取一次命名复用，避免同一模式反复 `infer`；⑤ 加注释说明"输入→输出"意图，深嵌套会触发 excessively deep 需及时降级为具体类型。可读性 > 类型炫技（贯穿 ts-advanced）。
 
 **来源**：Total TypeScript — "readable conditional types"; type-fest — source style guide
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. infer 能出现在哪些位置？它的「协变位置多次推断合并、逆变位置冲突」规则是什么？
+
+infer 必须出现在 extends 右侧的结构内（数组元素/函数参返/对象属性/模板字面量/索引访问），候选收集后在**结果位置**使用。同一 T 多候选：协变位置（返回、数组元素）取联合，逆变位置（函数参数）取交叉——`(x: infer T)=>void` 与 `(x: infer T)=>void` 交叉会让 `T` 变 `A & B`。多分支共享 infer 名（三元嵌套）非法：同一条件类型作用域内 infer 重名报错；跨辅助 type 别名复用要参数传递。取重载签名：infer 只命中**最后一条**声明（合并后形状），拿多签名要手写 case-by-case。
+
+**来源**：TS 3.7/4.7 release notes 对 infer 位置的扩展；Deep Dive《Infer in contravariant position intersection》。
+
+### 14. Awaited<T> 为什么要递归？TS 对「类型级递归」设了哪些闸？
+
+Promise 可嵌套（`Promise<Promise<number>>` 运行时自动 flatten，类型也要剥到底）且 thenable 可能带 thenable——`T extends PromiseLike<infer U> ? Awaited<U> : T` 自然递归。闸门：实例化深度（默认 100 报错 Excessively deep）、联合展开宽度 100k 熔断、递归类型「同一环节重复命中」检测（tail type 列表记忆化）。工程守则：递归工具类型带「短路出口」（先判 primitive/Function/Date），深嵌套对象上按需而非默认全递归；type-only 递归≠运行时递归但同样能炸编译。
+
+**来源**：TS lib 中 Awaited 的官方实现注释；TS 4.1「Recursive conditional types」release notes 限制章节。
+
+### 15. 分发律给条件类型带来什么、又埋了什么坑？NonNullable<never> 为什么是 never？
+
+裸类型参数在 `T extends U ? X : Y` 中被**逐成员分发**再并结果：`Exclude<"a"|"b","b">` = ("a" extends "b"?never:"a") | ("b" extends "b"?never:"b") = "a"——Exclude/Extract/NonNullable 的魔法全来自此。坑：① never=空联合，分发后=空联合=never，分支根本不执行（`NonNullable<never>` 是 never 而非 never 进 false 分支拿 never——巧合般结果对，但 `T extends any ? 1 : 2` 对 never 返回 never 会让人以为 false 分支坏了）；② 整体判断（数组 T 传入想拿 union 的联合而非逐成员）要 `[T] extends` 刹车；③ 泛型默认值下 T 可能已经是联合——写工具类型先想清楚要不要分发。
+
+**来源**：TS Handbook《Distributive conditional types》；type-challenges 社区 never 分发讨论。

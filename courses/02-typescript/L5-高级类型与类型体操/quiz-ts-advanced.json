@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "类型断言测试里 Equal<A,B> 相比 A extends B && B extends A 的优势是？",
       "options": [
-        "更快",
         "更严格——能区分 any、可选 undefined 等'互相可赋值但并不相同'的类型",
+        "更快",
         "写法更短",
         "没有区别"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Equal 用条件类型签名的内部一致性判断真正同一性，双向 extends 会把 any/可选等误判相等。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "写 DeepReadonly 时为什么要先用条件类型把 函数 / Date / 数组 分流出去？",
       "options": [
         "为了运行更快",
-        "否则映射类型会把它们当普通对象逐键展开，破坏其结构/签名",
         "因为不能递归",
+        "否则映射类型会把它们当普通对象逐键展开，破坏其结构/签名",
         "没必要，多此一举"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "对象映射会拆解函数/内置对象；分流后原样保留，只对普通对象递归加 readonly。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "Paths<{a:number;b:{c:string}}> 期望得到的联合是？",
-      "options": ["'a'|'b'", "'a'|'b'|'b.c'", "'a.b.c'", "{a:number;b:{c:string}}"],
+      "options": [
+        "'a'|'b'",
+        "'a'|'b'|'b.c'",
+        "'a.b.c'",
+        "{a:number;b:{c:string}}"
+      ],
       "answer": 1,
       "explanation": "递归把嵌套键用点号拼接：自身键 a、b 加上 b 下的 b.c，得 'a'|'b'|'b.c'。"
     },
@@ -79,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "以下哪项不是重递归类型的典型风险？",
-      "options": ["excessively deep 报错", "模板字面量对大联合笛卡尔积爆炸", "循环引用无限展开", "自动改变运行时数值精度"],
+      "options": [
+        "excessively deep 报错",
+        "模板字面量对大联合笛卡尔积爆炸",
+        "循环引用无限展开",
+        "自动改变运行时数值精度"
+      ],
       "answer": 3,
       "explanation": "类型层不影响运行时数值精度；其余三项都是递归/映射类型的真实坑（见第六节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "判断两个类型「完全相同」（而非互相可赋）的标准 Equal 写法是：",
+      "options": [
+        "`A extends B ? B extends A ? true : false : false`",
+        "`(<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false`",
+        "`A | B extends A ? true : false`",
+        "`keyof A extends keyof B`"
+      ],
+      "answer": 1,
+      "explanation": "双向可赋会放行「多一个属性的 interface」；这个黑科技利用「条件类型延迟求值的同一性判定」——两个函数类型可赋当且仅当 A/B **内部同一**，是唯一能测 readonly/可选差异的等号。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "品牌类型（string & { __brand: \"UserId\" }）的运行时表现是：",
+      "options": [
+        "多出 __brand 属性",
+        "零运行时痕迹——交叉在擦除后只剩 string",
+        "JSON 序列化保留 brand",
+        "必须 class 实现"
+      ],
+      "answer": 1,
+      "explanation": "brand 只在类型层区分名义（UserId 不能混 OrderId），运行时仍是裸 string：构造靠 `as UserId` 一次收口（parse 函数），这是「类型防呆不加开销」的样板。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "「Type instantiation is excessively deep and possibly infinite」最常见的诱因是：",
+      "options": [
+        "写循环 while",
+        "递归类型在无界输入（自引用对象/深联合）上展开超过实例化深度上限",
+        "泛型参数太多",
+        "target 太低"
+      ],
+      "answer": 1,
+      "explanation": "递归类型要有出口与规模假设：DeepPartial 对 JSON.stringify 输入、联合爆炸（cross product）都会触顶；对策是特判叶子 + `T extends Date|Function ? T : ...` 早退。"
     }
   ]
 }

@@ -27,7 +27,7 @@
       ],
       "answer": 3,
       "explanation": "runes 的类型靠推导：$state(0) 即 number，读写都是普通变量语法。没有 Writable 包装（那是 store 的世界），也不需要 Vue defineProps 式的类型传入。"
-      },
+    },
     {
       "id": "q3",
       "type": "single",
@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "纯 tsc 不解析 .svelte；eslint 类型规则要额外配 parser+project 且覆盖面不同。svelte-check/sv check 走 svelte2tsx 管线，是官方推荐的出错误清单方式，与 vue-tsc 之于 Vue 对位。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 在 .svelte 组件里启用 TypeScript 的正确方式是？",
+      "options": [
+        "改文件名为 .ts",
+        "在 <script lang=ts> 上加 lang=ts（或 lang=typescript）即可——Svelte 编译器与语言工具处理 .svelte 内的 TS（对应既有\"启用 TS 正确方式\"题）",
+        "需要单独配置文件声明",
+        "不支持"
+      ],
+      "answer": 1,
+      "explanation": "lang=ts 标注即可，类型检查由 svelte-check/语言服务负责（编译器本身擦类型转译）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " .svelte 文件里的类型检查实际是由谁完成的？",
+      "options": [
+        "tsc 直接读 .svelte",
+        "svelte-check / Svelte Language Server——先把 .svelte 里的 script/模板映射成 TS 再交给 TS 语言服务检查（tsc 本身不认识 .svelte）（对应既有\"类型检查怎么实现\"题）",
+        "浏览器",
+        "Vite 插件运行时查"
+      ],
+      "answer": 1,
+      "explanation": ".svelte 不是合法 TS 文件，需专用工具做映射检查（对应既有 svelte-check 与 tsc 关系题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " CI 里对 Svelte + TS 项目做\"类型 + 模板\"静态检查的命令行工具是？",
+      "options": [
+        "tsc --noEmit",
+        "svelte-check——能同时检查 .svelte 的 TS 与模板（组件 props、事件类型），覆盖 tsc 管不到的模板部分（对应既有\"CI 静态检查工具\"题）",
+        "eslint",
+        "prettier"
+      ],
+      "answer": 1,
+      "explanation": "svelte-check = tsc + 模板/SFC 专属检查，是 CI 门禁的正解（呼应 tooling 关同名题）。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # vue-watch 面试题精选
 
-> 共 12 题，覆盖 概念与选型 / 侦听源 / 选项 / 清理与竞态 / watchEffect 五类。
+> 共 15 题，覆盖 概念与选型 / 侦听源 / 选项 / 清理与竞态 / watchEffect 五类。
 
 ---
 
@@ -98,3 +98,25 @@
 组件更新被排进**微任务队列**批量 flush（合并同一 tick 内多次状态变化，只重渲染一次），`post` 回调在 flush 之后执行故能看到更新后 DOM。批处理避免了"每改一个值就同步重排重绘"的性能灾难（呼应 vue-reactivity-theory 调度、node-event-loop 微任务、nextTick）。
 
 **来源**：Vue.js — "Update Queue / nextTick / reactivity flush"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. watch 源、回调、旧值三者之间，deep 选项如何改变语义？给出 reactive 对象不写 deep 却拿到旧值相同的完整解释。
+
+源 是 reactive 对象（非 getter）时 Vue **自动 隐式 deep**（本关题干考过）：track 时递归遍历所有嵌套属性，回调 触发 后 newVal===oldVal——因为 代理 是 **同一 对象**，「旧值」只是 旧 引用，且 回调 时机 在 突变 **之后**，旧值 早 被 就地 改写。要 拿 真 旧值：侦 getter 返回 结构 拷贝 派生 值，或 侦 数组 源 `[() => ({...obj})]`；deep:true 的 代价=每次 触发 前 深度 遍历 依赖 收集（大 对象 性能 黑 洞，本关 deep 代价 题）。精确 语义：deep 对 原始值 getter 无效（已 按 值 比较）；对 ref 对象 值 才 需要。一句话 背 下：「旧值 相同=你在 侦 可变 引用；要 旧值 就 别 侦 可变 引用」。
+
+**来源**：Vue watch 文档「侦测 reactive 选项注意事项」与 deep 行为说明；Vue issue 关于同一对象新旧值的官方答复。
+
+### 14. watchEffect 的依赖自动收集为什么被批"过度依赖"？什么场景你坚持用 watch 显式源？
+
+watchEffect 首轮 执行 把 **函数体内所有 被读到 的 响应式** 全 登记 为 依赖——包括 只在 某个 if 分支 里 才 相关 的 变量、回调 后面 才 会 读 的 状态：任何 一个 变 都 重跑 整个 effect（幽灵 触发）。更 阴间 的 是「读 了 什么」会 随 业务 改动 漂移：effect 内部 新增 一行 `props.x` 读取 就 悄悄 多了 一个 触发源，回归 测试 还 测不 出来。坚持 显式 watch 的 场景：① 副作用 昂贵（发 请求/写 存储）——触发 面 必须 精确 可控；② 需要 旧值 做 diff；③ 代码 review 密集 的 团队——watch([a,b]) 是「依赖 声明」有 文档 价值。watchEffect 合理 用 地：监听 面 天然 等于 读取 面 的 小 函数（如 同步 两 个 本地 ref）、以及 测试/脚手架 代码。
+
+**来源**：Vue watchEffect 文档「danger of over-collection」警告段；社区对 watchEffect 可维护性的讨论（Vue RFC/issue）。
+
+### 15. 组件卸载后 watch 回调里 setTimeout 还活着并在改状态——这类泄漏的系统防治清单。
+
+根因：watch 停止 只 断「触发源」，回调 **已经 执行 到 一半** 的 异步 链（setTimeout/fetch .then/轮询 循环）无人 管。清单：① 回调 内 用 onCleanup 参数（watch）或 `onScopeDispose`（watchEffect/组合式）注册 清理——清 timer、abort controller.abort()（fetch/EventSource 原生 支持 signal）；② 轮询 用 `watch` 配 停止 句柄 或 直接 上 库（useIntervalFn 自带 作用域 清理，本包 VueUse 关）；③ 异步 改 状态 前 判 存活（闭包 一个 active 标志，scope dispose 置 false）——比 判 组件 实例 存在 更 便宜；④ 所有「手动 起」都要「作用域 自动 停」：用 effectScope 把 一组 watch 收进 一个 可 dispose 的 盒，路由离开 一键 收。验证：测试 里 unmount 后 推进 假 时钟/断言 请求 已 abort——「卸载 不 停」的 泄漏 在 内存 与 后 台 请求 费用 双 账 都 要 还。
+
+**来源**：Vue watch 回调 onCleanup 与 effectScope 文档；VueUse 事件监听自动清理设计说明。

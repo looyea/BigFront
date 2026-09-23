@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "复用维度不同(呼应 svelte-actions 第五节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte action 的函数契约是什么？",
+      "options": [
+        "(node)=>JSX",
+        "(node, params) => { update?(params), destroy?() } —— 挂载时以 DOM 节点为参调用，可返回含 update（params 变化时调）与 destroy（卸载时调）的对象",
+        "(node)=>void 不能返回",
+        "class 实现"
+      ],
+      "answer": 1,
+      "explanation": "action = node + 可选 update/destroy 生命周期对象（对应既有\"action 函数契约\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " use:x={param} 的 param 变化时会发生什么？",
+      "options": [
+        "重新挂载节点",
+        "若 action 返回了 update 方法则调用 update(newParam)（不重跑初始化）；没写 update 则 param 变化被忽略（对应既有\"param 变化时\"题）",
+        "整个组件重建",
+        "什么都不发生"
+      ],
+      "answer": 1,
+      "explanation": "action 靠 update 增量响应参数变化，不重新调用 action 本体（对应既有题与\"换回调\"坑题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " action 能在 SSR 渲染阶段执行吗？",
+      "options": [
+        "能",
+        "不能——action 是纯客户端 DOM 行为，SSR 无 DOM 故不执行（对应既有\"SSR 阶段 action 执行吗\"题）",
+        "部分能",
+        "由 prerender 决定"
+      ],
+      "answer": 1,
+      "explanation": "action 依赖真实 DOM 节点，服务端渲染期完全跳过（水合后才生效）。"
     }
   ]
 }

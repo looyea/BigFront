@@ -1,6 +1,6 @@
 # vite-splitting 面试题精选
 
-> 共 12 题，覆盖 **分割原理 / manualChunks / 预加载 / tree-shaking / 体积优化 / 缓存** 六类。
+> 共 15 题，覆盖 **分割原理 / manualChunks / 预加载 / tree-shaking / 体积优化 / 缓存** 六类。
 
 ---
 
@@ -100,3 +100,25 @@ Vite 对入口依赖自动注入 modulepreload，对动态 import 用 `__vitePre
 策略：① 首屏关键路由打进入口（不做异步，避免瀑布流），配合 SSR/预渲染保 LCP；② 详情/购物车/订单等二级页 route-level 懒加载 + hover 预取；③ manualChunks 提取 framework（react/vue 稳定、长期缓存）+ UI 库 + 图表独立；④ 超大库（如商品 360 查看）动态加载；⑤ vendor 用 contenthash 长缓存，业务 chunk 频繁更新但体积小；⑥ CDN + HTTP/2 + Brotli + SW 预缓存。
 
 **来源**：web.dev — "Content-Health / JavaScript"; Vite — "Build Optimization"; 大厂实践 — "前端性能优化 / 分包策略"（掘金/知乎）
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  为什么改一个工具函数会让十几个 chunk 的 hash 全变？内容哈希的稳定性问题与缓解手段。
+
+hash 传染的机理：chunk 的内容 hash 不只覆盖自身代码，还覆盖它的依赖标识（import 关系、模块 id、chunk 间引用名）——底层模块变化→其 chunk 名变→引用方 chunk 内容（import 语句里的文件名）变→连锁再 hash。三个放大器：① 模块图耦合（一个 barrel/公共 chunk 被广泛 import，改动即全震）；② 模块 id 含绝对路径/顺序敏感的内部编号（不同机器/不同 lockfile 顺序构建产物不稳定）；③ chunk 命名与分组算法对输入顺序敏感。缓解按收益排：拆分策略上让"高频改动模块"自成小 chunk（改它只震自己）、减少公共 chunk 的扇入（工具层再分层，稳定底座与易变上层分家）；构建配置上 deterministic 输出（模块 id 相对化、路径 normalize 与 CI 工作目录统一）；进阶盯 stableChunkNames 类官方提案（把 chunk 间引用改为稳定标识以切断传染链——Vite 7 实验可用）。度量：diff 两次构建的文件级 hash 变化集，"改一行文案震 30 个 chunk"就是需要动手术的信号。收口句：缓存失效成本=变化文件体积×用户重访概率，稳定 hash 的目标不是"少变"而是"该变的变、不该变的一个都不变"。
+
+**来源**：Rollup 官方 Deterministic build 讨论；Vite#16378（chunk hash 稳定性）；webpack 类似议题对照
+
+### 14.  发版后旧页面懒加载新 chunk 报 ChunkLoadError，完整解释这个竞态并给出你的治理包。
+
+竞态成因：用户 A 在 v1 页面停留（入口 HTML/已加载 chunk 是 v1），发版后 CDN 上 v1 的懒加载 chunk 被清理/覆盖，A 点进未加载路由→按 v1 manifest 请求已不存在的文件名→404/ChunkLoadError。治理组合拳：① 发布策略：版本目录隔离（v1 产物整目录保留 N 天，删除滞后于流量衰减）或原子发布（新版本整目录切换 + 旧目录不下线）；② 前端侧捕获：路由懒加载 import 包一层重试/兜底逻辑（dynamic import with retry），命中 ChunkLoadError 时提示"有新版本，请刷新"（而不是死循环重试 404）；③ 版本意识：入口注入构建版本号，页面长时间驻留时定时/路由切换时检测 manifest 版本变化，主动温和提示刷新（"应用已更新"横幅）；④ 监控侧：404 资源与 ChunkLoadError 上报按版本聚合，发版后陡增即触发回看。诚实边界：旧目录永久保留是成本（存储 vs 体验的显式决策，行业惯例 7-30 天）；"强更"对长驻页面（大屏/工控）可能是事故，要分环境。加分句：这个题的真身是"不可变产物与可变世界的时序问题"——讲得出部署侧与前端侧两手抓，比背一个 retry 代码高一档。
+
+**来源**：Vite GitHub 讨论（deploy 期间 chunk 404）；web.dev 发布与缓存策略；SegmentFault《SPA 发布瞬间的白屏幽灵》
+
+### 15.  拿到一次构建产物，如何用工具链回答"为什么这么大、变大是因为我这次的改动吗"？
+
+三问三工具：① "谁占了多少"——visualizer（treemap 按模块归组，gzip/brotli 维度切换），看 top10 文件与"意外成员"（dev-only 代码、moment locale、整包 lodash 是老三样）；② "体积从哪来的依赖链"——source-map-explorer/为什么打包它（vite-bundle-analyzer 的 import 链追溯），定位"是显式引的还是被 barrel 顺带拖进来的"（barrel 树摇失效的经典场景）；③ "是不是我的改动引起"——产物基线 diff（两次构建的 manifest/gz 体积表按 chunk 对比，接在 CI 的 PR 评论里，呼应 ci-perf 关），把"体积回归"当测试失败对待。方法论层：区分"合理大"（业务功能、图表/编辑器重依赖）与"不合理大"（重复实例：两版本同库、CJS/ESM 双份；未树摇：sideEffects 误标、导出当副作用；格式错配：把 Node-only 代码打进浏览器包）；每类不合理都有对应手术（dedupe/externals 替换/重实现）。展示口径：报"首次访问 JS 传输量（入口+首屏懒加载链）"而不是"dist 总大小"——后者随路由数只增不减，吓不出有用的决策。收口句：体积分析是"归因+门禁+回归可见"三件套，缺后两件时分析结果三个月后就会烂回去。
+
+**来源**：rollup-plugin-visualizer 文档；bundlephobia/source-map-explorer 方法论；Vite build.chunkSizeWarningLimit 讨论

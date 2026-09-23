@@ -1,6 +1,6 @@
 # svelte-spread-rest 面试题精选
 
-> 共 12 题，覆盖 A 内置 props / B 透传与合并 / C 响应式与类型 / D 跨框架对照。
+> 共 15 题，覆盖 A 内置 props / B 透传与合并 / C 响应式与类型 / D 跨框架对照。
 
 ## 一、内置 props 对象（A 类）
 
@@ -57,3 +57,25 @@ Vue **自动**把未声明属性（含监听器）落到子组件**根元素**�
 ### 12. 什么情况下应该**避免**无脑 `{...$$restProps}`？
 ① 组件根不止一个元素、透传落点不明时——应显式命名 prop；② rest 里混着只有内部才该处理的事件需要拦截包装时；③ 想收敛公共 API、给使用者清晰类型契约时（rest 是"匿名大口"）。接口越显式越好，rest 用于"真·透传装饰器"场景（呼应 svelte-spread-rest 第五节）。
 **来源**：组件库设计实践（API 显式化原则）
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  $props()、$$props、$$restProps 三者定位分别是什么？Svelte 5 迁移中它们的角色变化？
+
+三者定位：① $props()（rune，新）——在 .svelte 里读组件 props 的正规入口，返回 live 对象、可解构、解构即响应，取代 Svelte 4 的 export let；② $$props（保留的双美元符魔法）——包含所有当前 props 的对象（含已声明的），主要用于"需要整体快照/遍历所有属性"的少数场景；③ $$restProps——不含已声明 props 的剩余属性集，专为"透传给元素"设计。迁移角色变化：Svelte 4 时代用 export let 声明 + $$props/$$restProps 处理透传；Svelte 5 声明改 $props() 解构，但 $$restProps 仍是透传主力（rest 语义没变），而 $$slots（插槽判断）被"snippet 就是 prop"取代消失（对应既有 $$slots 去哪了题）。双美元符 vs rune 的心智：$$ 前缀是"编译器注入的特殊值"（非响应式 rune），$props() 是响应式原语——两者不是新旧对立而是职责不同（透传集合用 $$restProps、读具体 prop 用 $props）。加分句：能区分"rune（$ 前缀，参与响应式系统）与双美元符魔法值（$$ 前缀，编译器注入的辅助对象）"这两族——Svelte 5 没有把 $$restProps 也 rune 化，正是因为"剩余属性集合"不需要 signal 语义，这个保留说明官方对"响应式 vs 静态辅助"的边界划得很清（对应 spread-rest 关使用建议题）。
+
+**来源**：Svelte 5 runes props 文档；$$props/$$restProps 现状；迁移指南
+
+### 14.  spread 到元素与 spread 到组件行为有何不同？属性顺序与 class/事件的合并语义讲清楚。
+
+spread 到元素：剩余属性直接落到 DOM 元素（aria/data/role/type 等），未知属性透传无障碍。spread 到组件：把属性作为 props 传给子组件（子用 $props 接收），等价于逐个 <Child a={x}>——rest 转发到子时走子的 props 契约。顺序语义：{...obj} 与其前后的显式属性按"书写顺序后者覆盖前者"合并（<div {...$$restProps} class=own> 会覆盖父传的 class，反之 <div class=own {...$$restProps}> 让父 class 覆盖内部）。class 特例：Svelte 对 class 有特殊合并——父传的 class 与组件内部 class 自动共存（不像其他属性那样覆盖），因为 class 常需并存；style 也逐属性合并（自定义属性/各 CSS 属性不互相抹掉）。事件：onclick 在 rest 里会随 spread 绑上，你要拦截就显式声明（quiz 已考，这里补机制：显式 onclick 覆盖 spread 带的、或反之按顺序）。加分句：能讲清"class/style 是合并、其余是覆盖"这一非对称规则——这是 Svelte 对"最常用于并存的两个属性"做的体贴特例，也是封装组件时"父 class 加不上/被吞"困惑的答案（对应既有"class 自动合并吗""spread 顺序语义"两题）。
+
+**来源**：Svelte spread 文档；class 合并特殊处理；属性优先级
+
+### 15.  什么情况下应该避免无脑 {...$$restProps} 全量透传？
+
+该克制的场景：① 组件对某些属性有内部语义——全量 spread 会让父传的同名属性覆盖你的关键绑定（如你把 onClick 用于内部逻辑，又被 rest 里父的 onClick 覆盖，或反之意外吞了父意图）；② 多根元素/需要分发到不同内部元素——rest 只能 spread 到一个元素，把"可能包含 title/aria/占位"的属性一股脑给外层，可能挂错节点（应显式挑选转发给对应内部元素）；③ 会破坏内部结构的属性——如父传 children/某个你已用于 slot 的 snippet，再 spread 会重复渲染；④ 安全——不加甄别地把外部属性 spread 可能引入不期望的 inline handler/事件（对外部来源数据要白名单）。改进做法：显式挑选式转发（destructure 出你要的、rest 里剩下的再过滤）、对事件属性单独处理、复杂透传用"渲染 props/受控元素 API（headless）"把最终 DOM 交回调用方决定。加分句：全量透传是"省事的默认"，成熟的组件库对"哪些属性允许落到哪个节点"是白名单式的——把"闭着眼 spread"升级为"有选择地转发"，是能上生产的设计系统与玩具组件的分界（对应既有"什么时候应避免无脑 spread"题的展开）。
+
+**来源**：组件 API 设计；rest 透传反模式；可访问性与事件冲突

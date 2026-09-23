@@ -8,11 +8,11 @@
       "prompt": "一个请求里要同步算 3 秒的大 Fibonacci，直接放主线程会导致？",
       "options": [
         "只有这个请求慢，其它不受影响",
-        "整个事件循环被阻塞，这 3 秒内所有请求都停摆",
         "Node 自动开线程处理",
+        "整个事件循环被阻塞，这 3 秒内所有请求都停摆",
         "只是内存升高"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "JS 单线程，CPU 密集同步任务会卡住事件循环，所有并发请求都被拖慢——正解是挪进 worker_threads（呼应 node-workers 第一节、node-event-loop）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "worker_threads 与 cluster 的典型分工是？",
       "options": [
         "worker_threads 分摊 HTTP 多核、cluster 跑 CPU 密集",
-        "cluster 多进程分摊 HTTP I/O、worker_threads 同进程线程跑 CPU 密集且可共享内存",
         "两者完全等价",
-        "cluster 能共享内存、worker 不能"
+        "cluster 能共享内存、worker 不能",
+        "cluster 多进程分摊 HTTP I/O、worker_threads 同进程线程跑 CPU 密集且可共享内存"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "cluster=多进程分摊网络请求、worker=同进程线程跑重计算/共享内存（呼应 node-workers 第一节、node-cluster）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "resourceLimits 给单 worker 限堆、terminate 可强制终止，隔离失控任务（呼应 node-workers 第七节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "worker 线程里 process.env 与主线程的关系是：",
+      "options": [
+        "完全共享",
+        "默认继承副本；配 shareEnv 类机制不存在——改 env 不跨线程同步；worker 有独立 process 对象与 V8 isolate（内存/定时器/事件循环全独立）",
+        "只读共享",
+        "仅启动后可改一次"
+      ],
+      "answer": 1,
+      "explanation": "env 是「值复制进新 realm」；process.uptime/resourceLimits 等各自独立。需要「配置热更新」请 postMessage 显式广播（本关数据传递题的状态面）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "worker.terminate() 的语义是：",
+      "options": [
+        "优雅停止",
+        "强制中断（可打断同步死循环），Promise 化返回退出码；正在跑的共享锁/半写文件**不回滚**——清理钩子尽量靠终态事件而非 finally",
+        "等同 kill -9 进程",
+        "不能中断同步代码"
+      ],
+      "answer": 0,
+      "explanation": "terminate 是 worker 独有的「同步死循环也能掐」（主线程用 postMessage 求助无效时）；代价是可能撕裂 Atomics.wait 与共享内存中间态——SAB 数据要「版本+提交点」协议写。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "main 线程用 receiveMessageOnPort 的特点是：",
+      "options": [
+        "异步收",
+        "同步取出该 port 队列里已到达的消息（不触发事件循环/微任务）——配 worker 侧 busy loop 可做「低延迟拉取」模式，但要自己防忙等烧 CPU",
+        "仅测试可用",
+        "会阻塞 worker"
+      ],
+      "answer": 1,
+      "explanation": "它绕开事件机制直取 MessagePort 队列——性能敏感路径（游戏/音视频帧投递）减少 tick 开销；纪律：配合 Atomics.wait/定时让步，否则 100% CPU 空转（本关题「忙等」陷阱的官方注脚）。"
     }
   ]
 }

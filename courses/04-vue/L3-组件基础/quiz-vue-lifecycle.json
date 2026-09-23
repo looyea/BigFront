@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "第一次能安全访问组件渲染出的 DOM，是在哪个钩子？",
-      "options": ["setup", "onBeforeMount", "onMounted", "onBeforeUpdate"],
-      "answer": 2,
+      "options": [
+        "setup",
+        "onBeforeMount",
+        "onBeforeUpdate",
+        "onMounted"
+      ],
+      "answer": 3,
       "explanation": "onMounted 时 DOM 已生成；setup/beforeMount 都没有 DOM（呼应 vue-lifecycle 第一、二节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "SSR 场景下，下列哪个钩子不会在服务端执行？",
-      "options": ["setup", "onServerPrefetch", "onMounted", "computed 求值"],
+      "options": [
+        "setup",
+        "onServerPrefetch",
+        "onMounted",
+        "computed 求值"
+      ],
       "answer": 2,
       "explanation": "mounted 只在客户端水合后跑，故浏览器 API 初始化放这里（呼应 vue-lifecycle 第二节）。"
     },
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "用 <KeepAlive> 缓存组件后，切换标签时触发的一对钩子是？",
-      "options": ["mounted/unmounted", "onActivated/onDeactivated", "beforeCreate/created", "onUpdated/onBeforeUpdate"],
+      "options": [
+        "mounted/unmounted",
+        "onActivated/onDeactivated",
+        "beforeCreate/created",
+        "onUpdated/onBeforeUpdate"
+      ],
       "answer": 1,
       "explanation": "缓存组件切走不销毁，改触发 activated/deactivated（呼应 vue-lifecycle 第五节）。"
     },
@@ -69,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "想在组件卸载后仍阻止某子组件抛出的错误继续上冒，用哪个钩子？",
-      "options": ["onErrorCaptured(返回 false)", "onUnmounted", "onBeforeMount", "watch 的 onError"],
+      "options": [
+        "onErrorCaptured(返回 false)",
+        "onUnmounted",
+        "onBeforeMount",
+        "watch 的 onError"
+      ],
       "answer": 0,
       "explanation": "onErrorCaptured 捕获后代错误、返回 false 停止上抛（呼应 vue-lifecycle 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "onBeforeUnmount 阶段的「最后可用窗口」指的是：",
+      "options": [
+        "还能异步发请求",
+        "同步收尾的最后时刻：组件仍完整存在（可访问 DOM/数据快照），但此后实例不再更新——停轮询、清自定义事件监听放这里最稳，「释放引用」类放 onUnmounted 后也行",
+        "必须在这里销毁子组件",
+        "只能读不能写"
+      ],
+      "answer": 1,
+      "explanation": "beforeUnmount 时 子 组件 还 没 卸（卸载 是 父 before → 子 递归 → 父 unmounted），想 在 还 完整 时 拍 状态 快照/取消 订阅 就 靠 这 个 窗口；本关 清理 清单 题 的 时序 细化。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "KeepAlive 缓存的页面里，数据「每次进入都刷新」应写在 activated 而不是 mounted，原因是：",
+      "options": [
+        "activated 性能更好",
+        "首进 mounted→activated 都跑、再进只跑 activated——把「一次性初始化」和「每次进入刷新」分开放，混在 mounted 会导致二次进入不刷新",
+        "mounted 在 KeepAlive 下不执行",
+        "activated 可以 async"
+      ],
+      "answer": 1,
+      "explanation": "这 正 是 本关 activated 题 的 工程 落点：标 签 页/列表-详情 返回 场景，刷新 逻辑 归 activated，建 监听/初始化 归 mounted；判据 是「重新 进入 时 这段 代码 还 该 跑 吗」。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "父组件 state 变化导致子组件整体重渲染，子组件钩子的触发顺序是：",
+      "options": [
+        "mounted → unmounted（原地复用实例，只走更新周期：beforeUpdate → 更新 → updated，不重新挂载）",
+        "beforeUnmount → mounted",
+        "只有 updated",
+        "不触发任何钩子"
+      ],
+      "answer": 0,
+      "explanation": "判错 这 题 的 人 通常 把 「DOM 内容 变 了」当 成 「组件 换 了」——同 类型+同 key 的 vnode diff 复用 实例；配 :key 强 换 才 会 unmount→mount（本关 v-if 销毁 题 与 key 题 的 交叉 点）。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # ts-classes 面试题精选
 
-> 共 12 题，覆盖 **class 类型语义 / 可见性与私有 / 抽象类与接口 / 泛型类与构造签名 / 结构化 vs 名义 / 访问器与 this** 六类。
+> 共 15 题，覆盖 **class 类型语义 / 可见性与私有 / 抽象类与接口 / 泛型类与构造签名 / 结构化 vs 名义 / 访问器与 this** 六类。
 
 ---
 
@@ -106,3 +106,25 @@ class MyService extends Timestamped(Service) {}   // MyService 同时有 Service
 看场景而非站队。**适合 class**：NestJS/Angular 等以"类 + 装饰器 + DI"为骨架的框架（装饰器天然作用于类/成员，呼应 ts-decorators）；确有"继承 + 共享实现 + 名义身份"需求的领域模型（`Error` 子类、状态机、插件基类）；需要构造签名当令牌传类型的地方。**优先函数/组合**：纯数据变换、React/Vue 组件逻辑、无状态工具——函数组合通常比深继承更可测、更好 tree-shake、避 `this` 坑（呼应 ts-functions、ts-frameworks）。原则：TS class 是"类型化的运行时组织工具"，用它的理由是"需要运行时类语义（继承/DI/实例身份）"，而非"看起来 OOP"。滥用继承（脆弱的基类、深层次）反而是负债。
 
 **来源**：Effective TS — Item 39/43; Angular/NestJS docs — "why classes"; React — "Composition over Inheritance"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. TS 的 mixin（混入基类工厂）类型怎么写？表达不了什么？
+
+模式：`const Timestamped = <T extends new (...args: any[]) => {}>(Base: T) => class extends Base { ts = Date.now() }`——泛型约束「可构造且无必填参」；消费 `class A extends Timestamped(B) {}`。表达不了的：① mixin 内声明的抽象契约（要求宿主类必有某方法）要靠交叉 `{} & {mustHave}` 硬拗；② mixin 链的 this 多态（polymorphic this 在基类里点不到后混成员）；③ 构造参数透传。结论：TS mixin 是「够用但纸糊」，组合场景优先考虑函数式工厂/Hooks。
+
+**来源**：TS Handbook《Mixins》（含限制清单）；TypeScript Deep Dive mixin 类型进阶。
+
+### 14. class 的「实例类型 / 静态类型 / 构造签名」三副面孔分别是什么？abstract new 补了什么？
+
+① 实例侧：`C` 即 instance type（new 之后的形状）；② 静态侧：`typeof C`（构造签名 + 静态成员）；③ 手工构造签名：`new (...a)=>I` 只是「可构造」切片，丢了静态面。坑：泛型 class 的 typeof 带不动 T（要 `<T>(c: new (...a)=>Stack<T>)`）；**抽象类**不能 `new` → TS4.7 `abstract new (...a)=>I` 才容得下 abstract class（此前工厂函数被迫 `as any`）。d.ts 里 private 字段编译成 `#private;` 品牌保留名义性。
+
+**来源**：TS 4.7《Customized and narrower constructors》abstract new 提案；TS deep dive 三型面（instance/static/construct）。
+
+### 15. React hooks/Vue 组合式时代，TS 项目里 class 还剩什么正当用途？
+
+四个不退场：① DI/框架边界（Nest controller/service、装饰器生态、自定义元素 Web Components 原生 class 语境）；② 状态机/长生命周期资源驱动（连接池、播放器——不变量与私有状态是 class+private 的主场，闭包也能做但可测性差）；③ 需要 `instanceof` 家族判断的错误层次（typed errors）；④ 性能敏感的热点对象（隐藏类稳定 shape 对 V8 友好）。TS 侧提醒：class 名义化（private 参与兼容）会把结构兼容性打破——公共 API 返回 interface、实现用 class，是最稳的边界。
+
+**来源**：TS 文档 nominality 说明；NestJS/Web Components 规范中 class 角色。

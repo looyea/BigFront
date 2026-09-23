@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "关于 <script setup> 里的 defineProps 等\"编译器宏\"，正确的说法是？",
       "options": [
-        "它们是运行时从 vue 导入的普通函数",
         "它们是 @vue/compiler-sfc 在编译期识别并转译的宏，无需 import",
+        "它们是运行时从 vue 导入的普通函数",
         "它们只能在 <template> 里使用",
         "它们等价于 Vue 2 的混入"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "宏是编译期产物，被转成 props/emits/setup 选项，编译器自动注入无需 import（呼应 vue-sfc-compiler-macros 第一节）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "编译器宏必须写在哪里？为什么？",
       "options": [
         "任意位置，因为运行时才解析",
-        "必须顶层直接调用，因为编译期做的是静态分析",
         "必须写在 onMounted 里",
+        "必须顶层直接调用，因为编译期做的是静态分析",
         "必须写在 <style> 块里"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "静态分析要求宏在顶层直接调用，不能藏在条件/循环/回调里（呼应 vue-sfc-compiler-macros 第一、六节）。"
     },
     {
@@ -34,18 +34,23 @@
       "prompt": "用 TS 类型声明 props 时，如何提供默认值？",
       "options": [
         "defineProps<Props>({ default: ... }) 直接传",
-        "用 withDefaults(defineProps<Props>(), { ... }) 包一层",
         "在模板里写默认值",
-        "无法提供默认值"
+        "无法提供默认值",
+        "用 withDefaults(defineProps<Props>(), { ... }) 包一层"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "类型声明式 props 用 withDefaults 提供默认值（呼应 vue-sfc-compiler-macros 第二节、vue-component-basics props 默认）。"
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": "tags: string[] 这类引用类型的 props 默认值应怎么写？",
-      "options": ["tags: []", "tags: () => []", "tags: new Array()", "tags: null"],
+      "options": [
+        "tags: []",
+        "tags: () => []",
+        "tags: new Array()",
+        "tags: null"
+      ],
       "answer": 1,
       "explanation": "对象/数组默认值必须用工厂函数返回，避免多实例共享同一引用（呼应 vue-component-basics default 工厂、vue-sfc-compiler-macros 第二节）。"
     },
@@ -66,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "在 <style scoped> 中要修改子组件内部元素的样式，应使用？",
-      "options": [":global()", ":deep()", "!important", "v-bind()"],
+      "options": [
+        ":global()",
+        ":deep()",
+        "!important",
+        "v-bind()"
+      ],
       "answer": 1,
       "explanation": "scoped 默认不穿透子组件，:deep() 显式下沉选择器（呼应 vue-sfc-compiler-macros 第五节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "CSS v-bind 底层用 useCssVars 绑定 --xxxx 变量（呼应 vue-sfc-compiler-macros 第五节、vue-class-style-transition 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "<script setup> 组件里 import 了一个工具函数但模板和代码都没用，编译产物的处理是：",
+      "options": [
+        "保留进产物（运行时可能用到）",
+        "编译器按「是否被使用」裁剪导入（unused import 被摇掉），但带副作用的模块（import 无绑定）不受此保护——「引了没用的东西进包」要区分这两类",
+        "自动转全局注册",
+        "抛 lint 错中止构建"
+      ],
+      "answer": 1,
+      "explanation": "SFC 编译 的 两 层 摇 树：宏 处理 器 删 未 使用 绑定 + 打包 器 删 未 引用 模块；副作用 import（样式/polyfill）永 不 被 删 是 设计 而 非 bug——「为 什 么 我 删 了 import 还 在」的 两 种 答案（本关 编译 后 发生 什么 题 的 产物 侧）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "编译宏的「伪运行时」本质：defineProps 在编译产物里实际变成什么？",
+      "options": [
+        "一个真实函数调用",
+        "被编译为组件选项对象的 props 配置（运行时声明形状），宏调用本身消失——所以它不是 API（无导入、不能动态调用、不能 await），文档里与 ref/computed 的「可导入」有本质分野",
+        "一个 Proxy",
+        "仅类型声明无产物"
+      ],
+      "answer": 1,
+      "explanation": "推 论：宏 的 参数 必须 **编译 期 可 静态 求值**（类型 引 用 要 同 文件 或 显式 import 可 解析；条件 分 支 里 的 宏 无 法 确 定 形状 所 以 被 禁，本关 顶层 限制 题 的 机 理 版）；`await` 宏 结果（defineProps 返回 的 是 普通 代理 读 取 器）也 无 意 义。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "<style scoped> 下，父组件想给「插槽内容」里的元素设置样式，结果发现不生效，正确解释是：",
+      "options": [
+        "scoped 有 bug",
+        "插槽内容在父作用域编译、带父组件 scope id——父给插槽元素写样式应直接命中（用父类名），子组件想给插槽容器加样式则要 :slotted() 选择器——三者（scoped 父、:slotted 子、:deep 子打内）各管一角",
+        "必须 !important",
+        "只能 inline style"
+      ],
+      "answer": 1,
+      "explanation": "「插槽 谁 的 样式 说 了 算」的 一句 话 规则：**内容 归 父，容器 归 子**（:slotted 是 子 组 件 对 「插 我 这 里 的 东 西」的 唯一 合法 落 点）——本关 scoped 命中 规则 题 的 插槽 维度，vuejs 风格 指南 里 最 少 人 读 的 一 段。"
     }
   ]
 }

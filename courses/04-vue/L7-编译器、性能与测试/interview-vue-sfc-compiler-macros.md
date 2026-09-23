@@ -1,6 +1,6 @@
 # vue-sfc-compiler-macros 面试题精选
 
-> 共 12 题，覆盖 A 编译器宏本质 / B props 与类型 / C 事件与 v-model / D style 与 scoped 类。
+> 共 15 题，覆盖 A 编译器宏本质 / B props 与类型 / C 事件与 v-model / D style 与 scoped 类。
 
 ## 一、编译器宏本质（A 类）
 
@@ -57,3 +57,25 @@
 ### 12. `<style>` 里的 `v-bind(color)` 底层是什么？它和直接内联 style 有何取舍？
 底层是 `useCssVars` 把组件状态设成 CSS 自定义属性 `--hash-color`，样式里引用它。好处是响应式变量能进伪类/媒体查询等无法用内联 style 表达的地方；代价是要经 CSS 变量层，纯元素样式用 `:style` 直接绑定更直观（呼应 vue-class-style-transition 第二节绑定 CSS 变量）。
 **来源**：Vue.js 官方文档 — 在 CSS 中使用的组件变量、useCssVars
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. volar/Vue TS 插件如何做到「类型声明式 props 零运行时成本还有校验」？withDefaults 编译后长什么样？
+
+编译 期 两 条 腿：① 宏 处理 器 把 TS 类型 字 面量 **翻 译 成 运行时 声明**（`{ type: String, required: true }`，联 合 类型 → 数 组 type，导 入 类 型 要 能 被 静态 解析 否则 「import 类 型 无 法 推 导」警 告）——这 是 「类型 即 校验」的 全 部 真 相：运行时 仍 是 那 套 浅 校验，**不 是** 类 型 系统 在 生产 环 保 护 你（any 传 进 来 照 样 漏，本包 TS 联动 冷 知）。② withDefaults 编 译 为 `mergeDefaults(propsOption, defaults)`（或 3.x 后 内联 default 工厂）——函 数 默认 值 的 强制 要求 就 出 自 这 里（对 象 字 面量 会 被 所 有 实例 共 享，Vue 2 时代 就 有 的 浅 拷 贝 坑）。Volar 侧：同 一 份 类型 信息 双 路 消费（编译 产 运行时 声明、IDE 产 props 提示/模板 类型 检 查），所 以 「删 掉 类 型 声明 只 影 响 IDE 和 运行时 声明 详细 度，不 会 影 响 功能」——理解 这 条 就 理解 了 为 什 么 两 套 声明 风格 可 以 混 用 但 无 益 处。
+
+**来源**：Vue 编译器宏源码（resolveProps/mergeDefaults 生成）；Volar 类型支持文档与 import 类型解析限制。
+
+### 14. defineOptions、defineSlots、experimentalOptionsTypeDef 这些「补洞宏」的相继出现，说明 <script setup> 的设计哲学是什么？哪些 Options API 能力至今没有宏位？
+
+哲学：`<script setup>` 不 是 「抛 弃 Options」而是 **把 每 个 选项 逐 个 宏 化**，判 据 = 「是否 有 编译 期 增值」：props/emits/model 有（类 型→运行时 翻译）、options 元 信息 有（name/inheritance 直 接 回 填 export）、slots 有（类 型 校 验 子 女 插槽）；而 data/methods 在 SFC 语境 被 组 合式 完全 取 代 无 宏 位。至今 的 空 洞：混 入 的 选项 合并 策 略（无 宏，要 回 到 普通 `<script>` 双 块 或 直接 改 复 用 方 式）、`render` 函数 与 模板 共 存 的 边界、组件 级 编译 开 关（如 逐 组 件 关 hoist 目 前 无 公 开 入 口）。设 计 张力 的 观 察 点：宏 越 多 越 接 近 「模板 方言」（标 准 JS 工具 链 看不 懂 `<script setup>`，靠 编译 器 兜 底），Vue 团队 的 取 舍 是 「受 限 方言 换 样板 消 除」——与 本包 响应式 关 type:ref 宏 被 否 形 成 对照：同 类 魔法，一 个 保 留 了 显 式 调 用 形 态（defineXxx 一 眼 可 辨），一 个 改 变 变量 本身 的 语义（被 拒），**「魔 法 必 须 可 见」**是 贯 穿 的 红线。
+
+**来源**：Vue RFC 对 defineOptions/defineSlots 的动机讨论；defineType 等宏演进记录。
+
+### 15. SFC 的三个块在构建管线里各自经历了什么？从 vite 插件视角串一遍编译链路。
+
+入口：`@vitejs/plugin-vue` 把 .vue 变 身 虚 拟 模块（稳 定 id + query 分流：?vue&type=style&index=0&scoped=hash 让 样式 块 走 **CSS 管线**、?vue&type=template 供 HMR 单 独 重 编）。模 板 块：@vue/compiler-sfc parse → 编 译 渲 染 函 数（此 处 出 现 本关 全 部 主 角：宏 翻 译、patchFlag、hoist、slot 优 化）；`<script>` 块：宏 变 换 后 交 esbuild 剥 TS（纯 类 型 导 出 的 边 界 坑：导 入 类 型 忘 写 `type` 修 饰 符 在 isolatedModules 模 式 下 运 行 时 报 错——TS 关 与 本关 的 接 缝）。`<style>` 块：scoped 注 液（后 缀 类 + :deep/:slotted 选 择 器 改 写）→ CSS v-bind 抽 变 量 → 交 postcss 链。HMR 分 类 型：style 改 动 只 换 CSS（无 状 态 丢 失）、template 改 动 重 载 渲 染 函 数（保 状 态，`__hmr` 差 异 判 定）、script setup 改 动 全 量 重 载（状 态 丢 失 具 备 合 理 性）——「改 哪 块 刷 多 少」的 直 觉 背 后 就 是 这 条 虚 拟 模块 拆分 线。排查 用 法：dev 环 境 看 浏览器 Network 的 query 块 请 求 / Vite 中 间 件 日 志，编译 报错 定 位 到 块 级（本包 测试 关 「异 常 先 想 管线」的 构 建 版）。
+
+**来源**：@vitejs/plugin-vue 源码（虚拟模块与 query 分流）；Vue SFC 编译器 playground 输出对照。

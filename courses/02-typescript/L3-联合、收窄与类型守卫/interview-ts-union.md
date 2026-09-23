@@ -1,6 +1,6 @@
 # ts-union 面试题精选
 
-> 共 12 题，覆盖 **联合语义 / 交叉语义 / 字面量联合 / 可辨识联合 / 建模哲学 / 联合运算** 六类。
+> 共 15 题，覆盖 **联合语义 / 交叉语义 / 字面量联合 / 可辨识联合 / 建模哲学 / 联合运算** 六类。
 
 ---
 
@@ -122,3 +122,25 @@ type Result<T, E = Error> =
 当 `A|B|C` 各支几乎无共有成员时，未收窄前什么都干不了、体验差。改善：① 优先设计**可辨识联合**，用判别字段进 `switch` 即自动到单支；② 用**类型守卫/`in`**收窄（见 ts-guards/narrowing）；③ 避免把语义无关的类型塞进同一联合（拆分成不同参数或函数重载）；④ 若是"输入宽松、处理统一"的场景，可在边界 `String()/Number()` 归一或用函数重载表达"进 A 出 A"。核心：窄化越早、共有面越清晰越好用。
 
 **来源**：TypeScript — "narrowing unions / discriminants"; Effective TS — "modeling unions carefully"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 用可辨识联合给「一次 API 请求」建模，你会怎么设计类型？
+
+判别键 `status: "idle" | "loading" | "success" | "error"` 且**数据内聚进分支**：success 分支 `data` 必有、error 分支 `error` 必有，而不是 `{loading, data, error}` 三布尔共存（能表达「loading 且有旧 data 又带 error」的非法态）。UI 对 union 做穷举 switch，加新态编译期全线标红——「make illegal states unrepresentable」。再上一层：success 里细分 stale/fresh（SWR 缓存语义）；带泛型 `Request<T>` 让 data 类型跟接口走；配套 `assertNever` 兜穷举。这套模式同样适合表单（pristine/dirty/submitting/submitted+errors）。
+
+**来源**：Effective TypeScript Item 39《用可辨识联合取代布尔标志》；TypeCasts《Complex state machines with ADTs》。
+
+### 14. 联合类型在条件类型里会「分发」，这带来什么能力与坑？
+
+能力：`type ToNull<T> = T extends string ? "S" : T` 对 `"a"|"b"|1` 逐成员计算再并回去——Exclude/Extract/NonNullable 全家都吃这红利，穷举加工联合零样板。坑：① ** naked T 才分发**（`T extends` 左侧是裸类型参数）；写成 `[T] extends` 元组即关闭——需要「整体判断」时反而要用元组刹车（如 Equal 测试）。② 空联合 never 输入直接返回 never（连 false 分支都不进）——工具类型对空集要特判。③ 分发后每个分支独立推断，跨成员组合信息丢失。识别口诀：裸参数=映射，裹起来=整体。
+
+**来源**：TS Handbook《Conditional Types: 分发规则》；type-challenges 社区「naked type parameter」解释页。
+
+### 15. 判别字段可以是哪些形态？给一个没有显式 kind 字段的联合做收窄的手段。
+
+标准形态：字面量类型公共键（`type/status/kind` 约定俗成）、无参构造签名的布尔字面量（`ok: true`/`ok: false` 也能判别）。没有判别键时按可用信号选：`in` 收窄（属性有无）、`typeof`（原始类型混联）、可调用性 `typeof x === "function"`、instanceof（类体系）、tagged by 返回类型守卫。反模式警告：用「可选属性有无」当判别（`if (a.href)` 区分组件变体）——属性被人为删了就崩；新增成员时也不会穷举报错。**加 kind 是重构成本最低的设计补丁**：联合类型没判别字段=建模未完成。
+
+**来源**：TS Handbook《Discriminants / Narrowing with the in operator》；Total TypeScript《无判别键的收窄策略》。

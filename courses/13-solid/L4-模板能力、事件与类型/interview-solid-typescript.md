@@ -1,6 +1,6 @@
 # solid-typescript 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 为什么 Solid 的 tsconfig 要用 `"jsx":"preserve"` 而不是 `"react-jsx"`？
 **来源**：JSX 编译分工题的转述。
@@ -63,3 +63,25 @@ tsconfig 设一个覆盖多数文件的默认 `jsxImportSource`，再在少数�
 ① `jsx` 从 react-jsx 改 preserve + jsxImportSource；② props 是 getter Proxy，**别解构**、用到的地方惰性读，`Component<P>` 不能带泛型；③ `React.ChangeEvent<HTMLInputElement>` 换成 Solid 的 `JSX.EventHandler`/`JSX.InputEventHandler`，注意 Solid 委托下 `currentTarget` 恒为元素类型、异步别引用；④ 收窄从 `state && state.x` 改为可选链/`<Show>` 回调（accessor 不收窄）；⑤ ref 用 `!` 或 `| undefined`、条件元素改 signal-as-ref（react-to-solid-migration 汇总）。
 
 🚀 实操请去做 L4 作业：复现泛型组件尾逗号、accessor 收窄三解、on: 原生事件扩命名空间、ref `!` 运行时 undefined 四条线。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  use:action 自定义指令在类型层怎么声明参数与清理函数？ 
+
+ JSX 内置指令类型由 solid-js 声明（value 任意、回调同步返回 void 或清理函数）；扩展全局指令需 module augmentation 补 JSX 命名空间；参数即时值非信号，需要响应性就在指令内自订阅并遵守清理契约。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#use%3Aaction ； https://www.solidjs.com/docs/latest/typescript 
+
+### 14.  泛型组件与泛型事件处理器（如 Table<T> 的 onSelect 拿行类型）怎么在 JSX 里落地？ 
+
+ 组件函数写成泛型函数再套 Component 语义（或直接 (props: TableProps<T>) => JSX.Element），TS 5.2 起 JSX 调用点可推断类型参数；事件参数类型随泛型走，避免 any 逃逸；受限时退化为显式类型实参。 
+
+**来源**： https://www.solidjs.com/docs/latest/typescript 
+
+### 15.  从 React 仓库迁 Solid，tsconfig 与类型层最先要动的三处？ 
+
+ jsx 改 preserve 且 jsxImportSource 指向 solid-js（否则 transform 错框架）；移除 React 类型包与 JSX 命名空间、引入 solid-js 的 JSX 类型；事件与 ref 类型体系重写（Solid 用原生 DOM 事件类型，无 SyntheticEvent）。 
+
+**来源**： https://www.solidjs.com/docs/latest/typescript ； https://github.com/solidjs/solid-start 

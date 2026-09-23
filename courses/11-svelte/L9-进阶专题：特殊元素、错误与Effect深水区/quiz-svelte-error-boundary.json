@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "React 无内置声明式边界（class 生命周期模式或 react-error-boundary 包）；Vue 是组合式钩子（返回 false 才拦截——D 项把返回值说反了）；Svelte 5 独占'模板一等公民'形态。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " <svelte:boundary> 是什么版本引入、解决什么？",
+      "options": [
+        "Svelte 4，性能",
+        "Svelte 5 引入的声明式错误边界——包裹子树，捕获其渲染期抛出的错误并用 failed snippet 降级渲染（组件自己 try/catch 管不到子树渲染，对应既有\"为何必须框架提供\"题）",
+        "Svelte 3，路由",
+        "Kit 专属"
+      ],
+      "answer": 1,
+      "explanation": "boundary 是框架级的\"子树渲染错误隔离罩\"（对应既有 failed snippet 与错误捕获题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " boundary 内组件渲染抛错、且提供了 failed snippet 时，会发生什么？",
+      "options": [
+        "整页崩溃",
+        "渲染 failed snippet（拿到 error 与 reset 能力），其余子树不受影响；未提供则错误上抛/冒泡到外层或 onerror（对应既有\"抛错且有 failed 时\"题）",
+        "静默忽略",
+        "自动重试"
+      ],
+      "answer": 1,
+      "explanation": "failed snippet 是降级 UI，reset 让用户可重试（对应既有 failed snippet error/reset 题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 下列哪类错误通常不会被 <svelte:boundary> 的 failed snippet 捕获？",
+      "options": [
+        "子组件渲染期抛的错",
+        "事件处理器/异步回调/effect 里后发的错误（这些不在\"渲染\"调用栈内，要走 onerror 或各自 try/catch，对应既有\"哪个会被捕获\"题）",
+        "子孙组件 render 抛错",
+        "setup 期同步抛错"
+      ],
+      "answer": 1,
+      "explanation": "boundary 管\"渲染阶段\"错误；事件/异步/生命周期副作用错误属另一类捕获面（呼应既有错误谱系三层题）。"
     }
   ]
 }

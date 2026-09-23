@@ -1,4 +1,4 @@
-# next-boundaries 面试题（12 题）
+# next-boundaries 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点 RSC 边界与数据流高频面经，中文重述。
 
@@ -65,3 +65,19 @@ JSX 元素在服务端已被渲染为序列化描述——传的是"结果"；�
 **12. 你怎么向客户端-only 的团队两周内落地 RSC 边界规范？给培训+工具组合拳。**
 **来源**：SegmentFault《团队引入 RSC 的落地计划》
 Day1-2 心智课（本课四问决策流+反例演示：静默降级现场复现）；Day3 脚手架预置 server-only/client-only 出口约定与目录模板；Day4-5 结对改造一个真实页；此后 CI 体积卡口+ESLint 强制；沉淀《边界军规》wiki 且每次事故回写一条。关键：让错误在工具里死，而不是靠记性（呼应 ts-strict、exp-testing 的护栏哲学）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13. "把静态内容作为 children 传进客户端壳"为什么不算违反"客户端组件 props 必须可序列化"？讲清机制。**
+**来源**：React 官方 Server Components 文档 Passing the 'children' prop；Next.js 边界规则说明
+关键在于 children 不是"待渲染的函数/组件引用"，而是"已经在服务端渲染完成的 RSC payload（对已渲染子树的序列化描述）"。服务端父组件调用 <Tabs>{<Article/>}</Tabs> 时，Article 在服务器上执行完毕，传给 Tabs 这个客户端组件的 props 是可序列化的树描述符——浏览器端 Tabs 把它当 opaque node 渲染进布局，React 直接按描述挂载、客户端代码里完全不含 Article 的实现。违反序列化约束的是"传函数、传 Class 组件、传 Context"这类活引用。因此 composition 模式（壳客户端 + 内容服务端）既保住了壳的交互能力，又让内容留在服务端预算内；反模式是"props 传一个回调让客户端壳去调服务端函数"——方向反了，服务端函数不可回调，应改传 Server Action 引用（那也是可序列化的特殊引用）。
+
+**14.  边界画错的三种典型症状各是什么？分别怎么定位与修复？**
+**来源**：掘金《RSC 边界踩坑：水合不匹配、泄露与 bundle 膨胀》；SegmentFault《Next.js 报错 digest 排查》
+① 水合不匹配/文本闪烁：症状是 console mismatch 警告、时间/随机文案刷新前后跳变——定位看报错组件路径，修复按"真相归端"原则（服务端算好传值/挂载后赋值/ssr:false）；② 密钥或 Node 模块进客户端：症状是构建警告、浏览器能看到 env 字符串、或打包时 node:http 报错——定位用 bundle analyzer 看该模块被哪个 client chunk 引到，修复是 server-only 包 + 边界重构（把特权逻辑挪 Action/服务端组件）；③ bundle 膨胀首屏变慢：症状是一个小按钮把整页数据层拖进客户端——定位看客户端岛的可达 import 图，修复是薄壳下沉、重逻辑留在服务端组件。三类共同根因是"运行位置没有被显式设计"；预防手段是 lint 规则 + code review checklist（每个 client 岛问一句：它可达的 import 里有特权/重依赖吗）。
+
+**15.  Context/Redux 这类"全局响应式"资产迁到 App Router，哪些照旧、哪些必须换？给一套迁移策略。**
+**来源**：InfoQ《RSC 时代的状态管理》；知乎《Redux 在 Next.js App Router 里还剩什么价值》
+照旧的：客户端岛内部的局部 Context/Redux（主题、表单草稿、编辑器内部状态）——Context 在纯客户端子树里语义不变。必须换的：① "服务端数据全局缓存"——RSC 直接取数 + 缓存层已覆盖，useEffect 拉数据灌 store 的模式应删；跨端刷新用 router.refresh()/revalidate 而非 store.invalidate；② "URL 可表达的状态"（筛选/分页/Tab）迁 searchParams，免费获得分享与预渲染；③ "全局鉴权/主题初值"改服务端读 cookie 后 props 下发，Provider 只留客户端变更通道。策略：先分类（服务端数据→删、URL 态→搬、交互态→留岛内、跨岛共享→薄 Provider 岛或服务端下发），别搞"为了 RSC 而重写状态层"的一次性运动；store 残留可共存（它只是客户端库），迁移完成线是"新页面不许再加全局 store"。

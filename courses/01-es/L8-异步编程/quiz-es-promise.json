@@ -8,11 +8,11 @@
       "prompt": "Promise 的状态转换规则是：",
       "options": [
         "pending → fulfilled 后可再改 rejected",
-        "pending → fulfilled 或 rejected，一旦变化就锁死",
         "可以在 fulfilled / rejected 之间来回",
-        "只能保持 pending"
+        "只能保持 pending",
+        "pending → fulfilled 或 rejected，一旦变化就锁死"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "三条不变式：① 只能从 pending 变；② 只能变一次；③ 值/理由锁定。"
     },
     {
@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "`Promise.any([])` 结果是：",
-      "options": ["resolved 空数组", "rejected with AggregateError", "永远 pending", "同步抛错"],
+      "options": [
+        "resolved 空数组",
+        "rejected with AggregateError",
+        "永远 pending",
+        "同步抛错"
+      ],
       "answer": 1,
       "explanation": "any 要**任一 fulfilled**——空数组永远不会有 → 立即 rejected 一个 AggregateError（errors 为空）。对比：`all([])` 立即 fulfilled 空数组。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "race 谁先 settle 就用谁——reject 分支要在超时后**reject**而不是 resolve。现代 fetch 有更规范的 `AbortSignal.timeout(5000)`。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`p.then(null, f)` 与 `p.catch(f)` 的实质差别是：",
+      "options": [
+        "没有任何差别，纯别名",
+        "catch 是 then 的简写，链式里语义相同——但 catch 之后的 then 不受它影响，且可读性/链式位置才是工程差异点",
+        "catch 是同步执行",
+        "then(null, f) 已废弃"
+      ],
+      "answer": 1,
+      "explanation": "catch(f) ≡ then(undefined, f)，功能等价；工程上区别在**链的位置**：catch 常配「恢复值」接回主线，then(null,f) 容易遮住它前面注册的同层回调意图。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "下列哪个**不是** ES 标准的 Promise 组合器？",
+      "options": [
+        "`Promise.allSettled`",
+        "`Promise.any`",
+        "`Promise.allKeys`",
+        "`Promise.race`"
+      ],
+      "answer": 2,
+      "explanation": "标准只有四件套：race（ES6）、all（ES6）、allSettled（ES2020）、any（ES2021）。allKeys 是 bluebird 时代的历史 API。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`await { then(resolve) { resolve(\"x\") } }` 的结果是：",
+      "options": [
+        "永远挂起",
+        "TypeError",
+        "‘x’——带 then 方法的普通对象是 thenable，会被解包",
+        "{ then: fn } 原对象"
+      ],
+      "answer": 2,
+      "explanation": "await 与 Promise.resolve().then 都遵守 thenable 协议（只认 typeof x.then === ‘function’），这是 Promise 能与 jQuery Deferred/bluebird 互操作的根基。"
     }
   ]
 }

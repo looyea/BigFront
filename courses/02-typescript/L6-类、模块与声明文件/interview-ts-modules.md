@@ -1,6 +1,6 @@
 # ts-modules 面试题精选
 
-> 共 12 题，覆盖 **模块基础 / 导出导入策略 / import type 与擦除 / barrel 与循环 / module 配置 / CJS-ESM 互操作 / 命名空间与模块增强** 七类。
+> 共 15 题，覆盖 **模块基础 / 导出导入策略 / import type 与擦除 / barrel 与循环 / module 配置 / CJS-ESM 互操作 / 命名空间与模块增强** 七类。
 
 ---
 
@@ -111,3 +111,25 @@ declare global {
 因为一旦文件是模块，其顶层声明默认**不**进全局（第 1 题），TS 要求显式 `declare global { ... }` 才允许修改全局类型，避免无意污染。典型用途：给 `import.meta.env`、`process.env`、浏览器注入的全局对象补类型（呼应 Express `req.user` 用模块增强、03-nodejs 的 `process`）。忘记包 `declare global` 会报"Augmentations for the global scope can only be directly nested in external modules"。
 
 **来源**：TypeScript Handbook — "global augmentation / declare global"; @types/node 惯例
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. moduleResolution 的 node10 / node16 / bundler 三档各自按什么规则解析文件？怎么配？
+
+node10（"node"）：老 Node require 的宽容版——目录自动 index、扩展名猜 `.ts/.tsx/.d.ts`、不看 exports；node16/nodenext：严格模拟 Node ESM——扩展名必填（相对导入带 .js）、package exports 条件（types/import/require）、type 字段裁决；bundler（TS5.0+）：打包器心智——无扩展名 OK、看 exports 但不强制 .js 后缀。配置联动：`module` 与 resolution 配对（esnext+bundler / node16+nodenext）；Vite/webpack 应用选 bundler，纯 Node ESM 库选 nodenext——「运行时怎么找文件，编译器就怎么找」。
+
+**来源**：TS 5.0《moduleResolution bundler》release notes；Node 官方 ESM resolver 文档。
+
+### 14. barrel 文件（index.ts 聚合导出）爽在哪、坑在哪？大仓怎么治理？
+
+爽：消费方短路径、内部重构自由、公共 API 门面。坑：① **tree-shaking 反噬**——聚合文件让「引一个函数」拉整个模块图评估副作用，rollup/webpack 难删（需 sideEffects 标注）；② **循环依赖放大器**（A→barrel→B→A，运行时 TDZ 崩）；③ 冷启动/编译面扩大、HMR 爆炸半径大。治理：应用内部禁 barrel 互引（直接路径导入），跨包只留一层 barrel + sideEffects 精确 glob；Next 的 barrel optimization / 库用 exports 子路径替代。
+
+**来源**：webpack《Tree Shaking 中 sideEffects 与 barrel》文档；Next.js 13.2 Barrel optimizer 公告。
+
+### 15. namespace 在 2025 年的正当与不正当用途各列一下。
+
+不正当：应用代码手工分包组织（`namespace Utils {}`）——ESM 的 import/export 是正解，且 namespace 产物有运行时对象、破坏 erasableSyntaxOnly/isolatedModules 兼容、Bundler 无法摇树。正当：① .d.ts 里表达「全局 UMD 库形状」（`declare namespace jQuery` 函数+命名空间合体）；② 老 JS 库类型声明的函数挂载建模；③ 类型命名空间的只读聚合（`namespace Api.Types {}` 纯 type 用法，TS 不会 emit）；④ module augmentation 内部结构（declare module 块里）。原则：**运行时分包用 ESM，类型组织可用 namespace 声明**，二义场景交给文件路径。
+
+**来源**：TS Handbook《Namespaces and Modules》迁移指引；TS 5.0《erasableSyntaxOnly》动机篇。

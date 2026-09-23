@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "Error-First 约定里，回调的第一个参数是：",
-      "options": ["业务数据", "错误对象（成功时为 null）", "回调本身", "上下文"],
+      "options": [
+        "业务数据",
+        "错误对象（成功时为 null）",
+        "回调本身",
+        "上下文"
+      ],
       "answer": 1,
       "explanation": "Node 风格：`cb(err, data)`——成功时 err 为 null；失败时只传 err。这样错误永远在最前，用户不可能忘记检查。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "fetch 返回 **Promise**——不是回调（虽然 Promise 内部靠回调实现）。map / addEventListener / MutationObserver 依然是回调 API。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "「Don’t Release Zalgo」规则要求的是：",
+      "options": [
+        "回调必须同步执行",
+        "同一个 API 的回调要么总是异步触发，要么总是同步，禁止混合",
+        "回调里不能再发回调",
+        "每个函数最多一个回调"
+      ],
+      "answer": 1,
+      "explanation": "同步/异步混合会让「一半代码在栈里跑、一半不在」，异常栈与状态时序全乱。要么永远异步（nextTick/setTimeout 归一），要么提供 sync/async 两个 API。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "回调被意外调用两次（先 cb(err) 又 cb(null)）会怎样？",
+      "options": [
+        "引擎自动去重",
+        "后一次覆盖前一次",
+        "抛 TypeError",
+        "未定义行为——副作用执行两遍，需自己用 once/守卫防护"
+      ],
+      "answer": 3,
+      "explanation": "回调没有 once 语义，双调用意味着业务副作用（扣款、关流）做两遍。标准防御：`const done = once(cb)` 包装，或 Promise（settle 幂等）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "EventEmitter 的监听器里同步抛错，结果是：",
+      "options": [
+        "emitter 的 emit 调用点整个崩溃（异常沿栈上抛）",
+        "错误被静默吞掉",
+        "转成 unhandledrejection",
+        "只跳过该监听器"
+      ],
+      "answer": 0,
+      "explanation": "监听器就是同步函数——emit 内部 for 循环直接调用，抛错一路冒泡到 emit 的调用方；这就是「异步边界外的错误必须事件化处理」的由来。"
     }
   ]
 }

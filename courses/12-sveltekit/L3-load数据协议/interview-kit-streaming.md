@@ -1,6 +1,6 @@
 # kit-streaming 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) SvelteKit 流式的完整链路：从 server load 返回 Promise 到模板出内容，中间发生了什么？
 **来源**：流式渲染机制高频开场题的转述。
@@ -63,3 +63,25 @@ server load 先同步 await 点赞态之外必须前置的鉴权/重定向判断
 ①Promise 悬而不决：慢查询锁等待/上游超时没配，永远不 resolve——给 load 里的异步加超时竞速（Promise.race）让它 reject 进 {:catch}；②代理层把 chunked 响应缓冲到齐才转发，网络面板看似"停了"实为整块未到，直连源端口对比；③错误走了非流路径：reject 后没人 catch，Kit 无法把错误补进已开流的响应——查服务端日志的 unhandled rejection。顺序建议：先 curl 分块节奏定性（平台层 or 数据层），再下钻。
 
 🚀 **下一组**：L3 课后作业——load 协议、server 边界与流式编排的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  把 DB 查询直接返回的流式 Promise 挂 .catch 之外，为什么还常挂 .finally 与计时？ 
+
+ 慢查询要暴露到监控：在 resolve/reject 链里 untrack 计时上报；catch 兜 UX，finally 收敛指标，三者都不得在链里再 throw，否则流式槽位悬挂成骨架永不落地。 
+
+**来源**： https://svelte.dev/docs/kit/streaming 
+
+### 14.  Kit 流式与 React 18 的 Suspense 流式在机制上的核心差异？ 
+
+ Kit 流式的载体就是数据层的 Promise，无需组件树插桩，框架把占位注释写进 HTML 后原地替换；React 靠渲染期挂起重放组件，需要边界组件参与，两者的调试心智与产物结构完全不同。 
+
+**来源**： https://svelte.dev/docs/kit/streaming ； https://react.dev/reference/react/Suspense 
+
+### 15.  上线后流式页面在部分用户端变成全量就绪才出现，你的排查路径？ 
+
+ 依次查：平台是否缓冲响应（Lambda/部分网关默认缓冲）、反代 gzip 中间件未按 flush 分块（Express compression 需 threshold 或显式 flushHeaders）、CDN 关闭了流式透传；本地用 curl -N 直连源站即可定位是传输链哪一跳吞了分块。 
+
+**来源**： https://svelte.dev/docs/kit/adapter-node#Streaming 

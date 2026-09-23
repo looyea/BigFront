@@ -1,6 +1,6 @@
 # mp-network 面试题精选
 
-> 共 12 题，覆盖 A 域名与安全 / B API 语义 / C 封装与工程 / D 与 Web 请求层对照。
+> 共 15 题，覆盖 A 域名与安全 / B API 语义 / C 封装与工程 / D 与 Web 请求层对照。
 
 ## 一、域名与安全（A 类）
 
@@ -57,3 +57,25 @@ wx.request 是地基（回调式、无拦截器）；uni.request≈wx 原名透�
 ### 12. 小程序能直接连公司内网数据库或第三方 HTTP API（无 https）吗？
 不能——https+白名单双卡。第三方只有 https 域名的可登记直连；http 的必须自建网关反代（Nginx/云函数转发）；直连数据库更无从谈起（无 TCP，除非自建 socket 网关且有合规风险）。这催生了"小程序后端必上线上一个公网 https 网关"的架构常识（呼应 exp-deploy、node-net-dns 协议层次）。
 **来源**：微信小程序官方文档《网络通信能力限制》；架构实践通识
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  你的 request 封装应该有哪几层拦截器？各自的职责边界怎么划？
+
+请求层：① 基础适配层——把 wx.request promise 化、统一 baseURL 与环境切换、把 statusCode 归一（4xx/5xx 转错误），屏蔽"success 不等于成功"这个坑；② 认证拦截器——注入 token、遇 401 触发无感刷新（挂起队列、refresh 成功后重放原请求、refresh 也失败则清登录态并引导重登）；③ 通用头/参数拦截器——traceId、时间戳、签名、公共 query；④ 反馈拦截器——按 options 决定是否 showLoading（引用计数）、错误码→文案统一 toast；⑤ 缓存/去重拦截器——GET 短缓存、相同在飞请求合并。响应层：解包 data、业务码判定（code≠0 走 reject）、埋点上报。边界原则：横切的（鉴权、日志、loading、重试）进拦截器，业务的（某接口的数据转换）留在 api 函数里，别让拦截器长满 if(url===...)。
+
+微信官方文档《网络 API 与 request 域名白名单》；掘金《小程序 request 封装：拦截器、重试与取消》
+
+### 14.  token 过期"无感刷新"在小程序里怎么做？并发多个请求同时 401 如何只刷一次？
+
+标准是"刷新锁 + 等待队列"：拦截器捕获 401（且非刷新接口本身）→ 若当前没在刷新，置 refreshing 标志、发起刷新请求；期间其他 401 请求不各自刷，而是把"重试动作"push 进 pending 队列；刷新成功→用新 token 重放队列里所有请求、清空 refreshing；刷新失败→清空登录态、把队列全部 reject 并跳登录。要点：① code 只能一次性换 session，刷新用自签的 refresh_token 走 wx.login 拿新 code 或直接调自有刷新端点；② 刷新接口自身要排除在 401 拦截外（否则死循环）；③ 小程序单逻辑线程、无真并发锁，用"Promise 单例/布尔标志 + 数组队列"实现串行化即可。核心与前端 SPA 的 axios 拦截器无感刷新一模一样，只是刷新时机要兼顾小程序的启动/前台(onShow)可能已隔了很久。
+
+SegmentFault《后台运行中断请求与超时排查》；知乎《弱网下的分页加载与断点续传方案》
+
+### 15.  页面卸载时要不要管"在飞请求"？回调里 setData 一个已卸载页会怎样？
+
+要管，否则两坑：① 内存/引用泄漏——回调闭包持着已销毁页的 this 与 data；② 对已 unload 的页 setData 是无效甚至报错的（视图层节点已回收），还可能把数据"复活"到错误实例。做法：请求发起时记录页/组件存活标志，detached/onUnload 置 false，回调里先判存活再 setData；或用 requestTask.abort() 主动取消可取消的 wx.request；用封装层时把"随组件销毁自动取消"做成能力（传作用域/AbortController 风格 token）。竞态与"返回上一页后旧请求污染新状态"也靠这套解决。React 的 useEffect cleanup 里 abort、Vue 的 onUnmounted 取消，是同一职责——小程序只是要你在 onUnload/detached 手写这步，框架不会自动帮你取消。
+
+CSDN《HTTPS 证书与 TLS 版本导致请求失败的排查记录》；InfoQ《网络层可观测性：打点与慢请求治理》

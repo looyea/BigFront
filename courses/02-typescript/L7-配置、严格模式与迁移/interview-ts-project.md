@@ -1,6 +1,6 @@
 # ts-project 面试题精选
 
-> 共 12 题，覆盖 **tsconfig 结构 / target 与 lib / 严格性开关 / extends 分层 / paths 与解析 / 项目引用与性能 / 工程实践** 七类。
+> 共 15 题，覆盖 **tsconfig 结构 / target 与 lib / 严格性开关 / extends 分层 / paths 与解析 / 项目引用与性能 / 工程实践** 七类。
 
 ---
 
@@ -104,3 +104,25 @@
 论点：`strict` 关掉省的是"改代码的十分钟"，赔的是"线上排查空值/隐式 any 引发的数小时事故"——TS 的核心价值恰恰在严格模式（非严格 TS ≈ 带类型的 JS）。务实迁移路径（呼应 ts-migration、ts-strict）：① 从 `@tsconfig/strictest` 或全 `strict` 起手新代码，**新文件零历史包袱**；② 老代码用分目录 tsconfig 暂时放宽，逐目录收紧；③ 开关**一项一项**开（先 `noImplicitAny` 再 `strictNullChecks`……），每项配一个 codemod/`// @ts-expect-error` 计数下降看板；④ 兜不住处写 `unknown`+类型守卫而非 `any`（呼应 ts-any-unknown、ts-guards）；⑤ 把 `tsc --noEmit` 纳入 CI 防回退（呼应 Express L7）。渐进但方向坚定，比"一步到位再全线崩溃后回滚"更可执行。
 
 **来源**：@tsconfig/strictest; Effective TS — Item 44; 社区 — "adopting strict incrementally"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 一个前端仓库该有几份 tsconfig？给一份职责表。
+
+主流分层：`tsconfig.base.json`（compilerOptions 公共、路径/严格度唯一真源）→ 按**消费环境**拆分：app（浏览器 lib+jsx）、node（服务端 target 与 lib 不同）、test（vitest types，允许更宽松）、tsconfig.node.json（vite.config 单独，composite 引 dependencies）。职责：include 精确圈文件域（别让测试配置把 src 全吃进 program 重查）、types 白名单防 @types 雪崩。加分：vite 脚手架正是这份拓扑；库再加 tsconfig.build.json（declaration+emit、exclude 测试），CI 用 build 配置、本地用全配置。
+
+**来源**：TS Handbook《tsconfig references 与 base 模式》；create-vite 模板 tsconfig 分层源码。
+
+### 14. target、lib、@types 三层各管什么？一个「Node 脚本用了 at()」的完整案例。
+
+target：语法降级目标 + 默认 lib 基线（es5 时代连 Map 都没有）；lib：**声明**可用的 API 池（不影响产物，只影响类型存在）；@types：环境全局（node/dom/process）。案例：`arr.at(-1)` 在 Node 16+ 运行时可用，但 target:es2018 的默认 lib 不含 ES2022 声明 → 类型报错；解法是 `lib:["es2022", "dom"]` 或升 target；反例：lib 写了 dom、跑在 Node → 类型过运行时崩（setTimeout 句柄类型都不一样）。口径：**lib 写你运行环境的超集交集，@types 精确圈环境**，target 由产物消费端决定。
+
+**来源**：TS Handbook《compilerOptions 各条原文》；TS 文档 target→default lib 对照表。
+
+### 15. CI 里类型检查怎么搭最快最稳？（--build、noEmit、矩阵）
+
+三层：① PR 门禁：`tsc -p tsconfig.json --noEmit`（纯检查零 emit，配 incremental+缓存 tsbuildinfo 进 cache）；② monorepo 用 `tsc -b`（references 拓扑序 + 只重编变更下游）或 nx/turbo 任务图 + remote cache；③ 类型产物验证（库仓）：attw/publint 跑 pack 后的包而不是源码。细节：noEmitOnError 让「构建成功但类型红」不可见——CI 禁用 emit 混检；`typescript` 版本钉死 lockfile；TS Server 内存（maxNodeModuleJsDepth、plugin 数量）影响 CI 冷启动——大型库可试 tsgo（5.7+ 预览）提速 10x。
+
+**来源**：TS《Project Reference 的 tsc -b 增量》文档；TypeScript 5.7 博客（tsgo/go 端口预告）。

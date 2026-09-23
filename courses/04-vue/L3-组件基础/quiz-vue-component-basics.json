@@ -8,19 +8,24 @@
       "prompt": "子组件想\"修改\"父传来的 prop，正确做法是？",
       "options": [
         "直接 props.count++",
-        "基于它用 computed 派生，或拷贝一份本地 ref 再改",
         "用 watch 改回去",
+        "基于它用 computed 派生，或拷贝一份本地 ref 再改",
         "在模板里赋值"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "props 单向数据流不可直接改；派生用 computed、本地副本用 ref（呼应 vue-component-basics 第二节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "prop 的默认值是数组/对象时，default 必须怎么写？",
-      "options": ["直接写 []", "写成工厂函数 default: () => []", "写成 null", "不能给默认值"],
-      "answer": 1,
+      "options": [
+        "直接写 []",
+        "写成 null",
+        "不能给默认值",
+        "写成工厂函数 default: () => []"
+      ],
+      "answer": 3,
       "explanation": "引用类型用工厂函数，避免多个实例共享同一对象（呼应 vue-component-basics 第二节）。"
     },
     {
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "要让父组件自定义某列表项的渲染、同时拿到子提供的 item，应使用？",
-      "options": ["props", "作用域插槽(v-slot 接收子传数据)", "emit", "$attrs"],
+      "options": [
+        "props",
+        "作用域插槽(v-slot 接收子传数据)",
+        "emit",
+        "$attrs"
+      ],
       "answer": 1,
       "explanation": "作用域插槽把子的数据回传给父的模板渲染（呼应 vue-component-basics 第四节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "<script setup> 顶层 import 的组件自动注册（呼应 vue-component-basics 第一节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "子组件根元素外还并排放了一个注释节点和 v-if 的两个分支元素，父传的 class 会：",
+      "options": [
+        "照常合并到第一个元素",
+        "多根（含注释/分支导致的「开发时单根编译后多根」）时 fallthrough 无法判定落点——Vue 警告并丢弃，需子组件内手动绑 $attrs",
+        "随机落到一个根",
+        "复制到所有根"
+      ],
+      "answer": 1,
+      "explanation": "注释 在 开发 模式 会 被 算 进 根（dev/prod 行为 差异 的 经典 翻车：本关 多根 题 的 阴间 变体）；解法=模板 里 显式 控制 落点 或 `inheritAttrs: false` + 手动 分配。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "defineProps 声明了 Boolean 类型的 disabled，父组件写 <MyBtn disabled />（不赋值），子组件收到的是：",
+      "options": [
+        "'' 空字符串",
+        "true——Boolean casting：出现即 true（Vue 特意保留的 HTML 直觉），且未传时是 false 而非 undefined，要区分「没传/传 false」就别用 Boolean 类型",
+        "undefined",
+        "编译报错"
+      ],
+      "answer": 1,
+      "explanation": "casting 还有 阴暗 面：`disabled=\"false\"`（字符串）也 转 true（非 空 字符串），要 显式 `:disabled=\"false\"`；「三态 布尔」（未 设置/开/关）在 props 上 应 用 显式 值 或 枚举，别 靠 Boolean 默认——本关 prop 校验 题 的 高频 补丁。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "模板 ref 用在 v-for 的组件上后，又手动给 ref 传了个函数，最终收集行为是：",
+      "options": [
+        "函数 ref 收单项、数组不再生成——3.2.25+ 的显式规则：字符串/对象 ref 在 v-for 中自动收集为数组，函数 ref 不再自动聚合（要自己 push），混用时以函数为准",
+        "两者都收集",
+        "报错",
+        "Vue 自动去重合并成数组"
+      ],
+      "answer": 0,
+      "explanation": "这 是 3.x 中途 改 过 的 行为（早期 函数 ref 也 收 数组），迁移 老 代码 时 的 静默 差异；要 拿 全 列表 DOM：函数 ref 自己 维护 数组 或 用 useTemplateRef + v-for（本关 v-for 多 项 题 的 版本 注脚）。"
     }
   ]
 }

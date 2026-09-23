@@ -1,6 +1,6 @@
 # vite-deploy 面试题精选
 
-> 共 12 题，覆盖 **静态托管 / base / 缓存与 fallback / Docker / Monorepo / Library Mode / SSG** 七类。
+> 共 15 题，覆盖 **静态托管 / base / 缓存与 fallback / Docker / Monorepo / Library Mode / SSG** 七类。
 
 ---
 
@@ -99,3 +99,25 @@ history 模式用 `history.pushState` 改地址栏，但 `/about` 并非真实�
 流水线：`npm ci` → lint + 类型检查（`tsc --noEmit`，esbuild 不查类型，呼应 vite-framework）→ 单测/构建 → 产物检查（体积阈值、敏感信息扫描、无秘密进包）→ `vite preview` + E2E/冒烟 → 构建镜像（多阶段）→ 推 Registry（不可变 tag）→ 部署（滚动/金丝雀）→ 缓存头/base/SPA fallback 校验 → 监控告警。Monorepo 用 turbo 受影响范围只构建改动包。发版后 CDN 刷新/预热。把"先测量/先验证"落到门禁里，防回退。
 
 **来源**：Vite CI — "GitHub Actions / build"; Turborepo — "affected / remote caching"; Google SRE — "CI/CD / release engineering"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  vite preview 能当生产服务器用吗？它的实现是什么、边界在哪？
+
+实现：preview 复用 dev server 的中间件栈（connect + sirv 静态服务），但跳过转换层直接 serve dist——所以它"像 dev 一样能配 history fallback、代理、headers"。官方立场明确：不是生产服务器（性能无并发优化、无 TLS/HTTP2 终结、错误处理面向开发者）。真实边界：内网预览/CI 冒烟验证（产物可加载性、路由回退是否配置正确）完全够用；公网生产必须换专业静态服务器（nginx/Caddy/CDN origin），原因不是"会崩"而是"缺能力"：缓存头精细控制、限流、TLS 配置、访问日志与监控、原子发布联动都无处安放。常见误用的事故样本：preview 的 CORS 默认宽松、暴露 .map 文件（配合 map 上传策略是泄露面）、无 gzip 层导致"预览很快线上慢"的对比失真。正确姿势写成检查表：preview 只验证"产物+路由+资源解析"三件事；性能与安全基线在真实服务器层复测。加分句：preview 的定位是"用 dev 的体验验证 build 的产物"——它是发布流程的质量闸而非发布目标本身。
+
+**来源**：Vite 官方 preview 文档；sirv 项目；Vite#8463（preview 非生产用途讨论）
+
+### 14.  给一个 Vite SPA 写生产级部署链：nginx 配置模板与 Docker 多阶段构建你会包含什么？
+
+nginx 要素清单：history 回退（try_files $uri /index.html，静态资源路径前缀优先命中真文件）；缓存分层（hash 资源 expires 1y + immutable，index.html no-cache——配错一侧就白屏或缓存炸弹）；压缩（gzip on 起步；brotli 需模块或前置层，压缩层级与 min length 权衡小文件开销）；安全头（CSP、X-Frame-Options、nosniff，配合 SRI 的 crossorigin）；错误页与健康检查端点。Docker 多阶段：builder 层（node:alpine、corepack 启用 pnpm、先 COPY lockfile → install → 再 COPY 源码——利用层缓存把依赖安装与代码变更分离）→ 产物只进 runtime 层（nginx:alpine + COPY --from 的 dist，镜像从几百 MB 到 20 MB 量级）；构建参数（VITE_API_URL 这类编译期常量不能靠容器 env——要显式 ARG 传入并文档化"它是构建产物的一部分"，运行时可变的要改服务端注入配置）。CI 联动：镜像 tag 绑 git sha + 版本 manifest；发布用蓝绿或 CDN 原子切换（呼应 splitting 关的 ChunkLoadError）。加分句：这题拿分靠"顺序与理由"——每行配置都能挂一句"不配会发生什么事故"，比背指令集值钱。
+
+**来源**：nginx 官方 best practices（缓存与压缩）；Docker 官方 Node 多阶段指南；web.dev 缓存策略
+
+### 15.  CI 环境里构建 Vite 项目，和本地相比有哪些必须显式处理的差异？
+
+差异逐条：① 缓存冷——lockfile 与 store、node_modules、Vite 的 node_modules/.vite 与 cacheDir 分层缓存（key 含 lock hash + 构建相关文件 hashFiles 范围，呼应 ci-perf 关）；恢复缓存后要验证依赖版本一致性（缓存投毒与半新状态比无缓存更糟，hash 不匹配宁可重建）；② 内存与并发——CI 容器内存常低于开发机，大项目 build 的 OOM（exit 137）要 Node heap 上限与机器限额对齐、rollup 并行度调低或按模块拆分构建；pnpm 的 --frozen-lockfile 必开（CI 禁改 lock）；③ 环境变量与密钥——Vite 的 VITE_ 前缀是"会进产物"的语义红线，CI 里用非前缀 env 传给部署配置、构建前跑产物扫描守卫（密钥上产物是 CI 最贵的事故，呼应 plugin-write 的守卫题）；④ 网络与时区——registry 镜像源固定、sourcemap 上传在构建步骤内完成（产物销毁后就找不到 map）；⑤ 可复现性——同 commit 两次构建 hash 应一致（路径/环境差异破坏内容哈希稳定性，排查见 splitting 关的 hash 传染题）。收口句：本地跑得快是"环境有状态"的假象，CI 的纪律是把一切状态显式化——锁文件、缓存 key、env 清单三项齐备才算迁移完成。
+
+**来源**：Vite 官方 CI 建议；pnpm store 缓存文档（actions/cache）；Node --max-old-space-size 与容器内存限额实践

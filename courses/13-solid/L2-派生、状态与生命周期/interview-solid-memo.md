@@ -1,6 +1,6 @@
 # solid-memo 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) createMemo 和 createEffect 都能按依赖重跑，本质区别是什么？
 **来源**：派生 vs 副作用原语辨析题的转述。
@@ -63,3 +63,25 @@ memo 的依赖 = 本次执行**同步读到**的 signal。on=false 那次走了�
 React 派生随组件重渲而重算，靠 `useMemo` 手动缓存又受依赖数组约束、易失配；Solid 派生是一个常驻响应式节点，**只在真依赖变时重算、且不受任何组件重渲影响**（因为不重渲）。差别在"重算触发条件由谁定、粒度多细"：Solid 把粒度下推到每个派生值的实际依赖上（呼应 solid-overview 编译派心智）。
 
 🚀 实操请去做 L2 作业：把 scrollY→showTop、万级列表分层派生、早返回依赖陷阱各复现一遍。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  对比 Vue computed、Svelte $derived、Solid memo 的失效传播机制差异。 
+
+ Vue 懒求值+脏标记推送版本；Svelte 编译器静态推导依赖图、赋值即更新图；Solid 运行期动态订阅+拉取式即时一致读。三者在构建期/运行期、推/拉两端各取折中。 
+
+**来源**： https://vuejs.org/guide/essentials/computed.html ； https://svelte.dev/docs/svelte/$derived 
+
+### 14.  深层派生链（A→m1→m2→m3）里怎么定位哪一环拖慢了更新？ 
+
+ 给各 memo 包 untrack 计时器或 dev 版 observer 计数，抓一次输入变更的求值次数矩阵；链路过深常暴露本可合并的派生，或该下沉为 store 路径的结构错配。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#creatememo 
+
+### 15.  不用 memo、在 JSX 里内联同一表达式多处使用，差异到底在哪？ 
+
+ 内联会为每个使用点各建一份隐式订阅与求值：重复计算放大、一致性仍保证；单点/极廉价用内联，多点复用或昂贵派生用 memo，判据是成本与复用而非教条。 
+
+**来源**： https://www.sveltejs.cn/tutorial 

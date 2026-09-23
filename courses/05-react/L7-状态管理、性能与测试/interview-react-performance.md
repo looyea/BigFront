@@ -1,6 +1,6 @@
 # react-performance 面试题精选
 
-> 共 12 题，覆盖 A 方法论与渲染模型 / B 记忆化与重渲染 / C 大列表与加载 / D React Compiler·Vue 对照四类。
+> 共 15 题，覆盖 A 方法论与渲染模型 / B 记忆化与重渲染 / C 大列表与加载 / D React Compiler·Vue 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：用可复现指标：Profiler 的 **Actual Duration**（每次提交渲染耗时）与 **Commit Count**（渲染次数）前后对比；大列表看 FPS / Long Task（Performance 面板）；加载看 **首包体积**（Vite build 输出 / bundle 分析）、LCP/TBT（Lighthouse）。设基线→改一处→再测，避免"凭感觉变快"。若指标无明显改善就不值得增加 memo 的复杂度——工程上"能测量才优化"（呼应 react-performance 第一节、10-vite-deploy）。
 
 **来源**：React DevTools Profiler 文档、web.dev — Measure performance、Lighthouse
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  用 Profiler / Performance 面板给 React 应用做性能定位的方法论：commit、火焰图与「三种卡顿」如何区分？
+
+先看 DevTools Profiler 的每次 commit：flamegraph 纵列宽度=该组件本次渲染耗时，bar chart 看每个 commit 总时长与「为何提交」（高亮 props/state 变化来源）。再结合浏览器 Performance 面板时间轴，把卡顿归到三类：① JS/渲染长任务（栈里是 render/patch/reconcile）——React 层治理：减 render 次数、memo、拆组件、Compiler；② 强制同步布局（recalculate style / layout 抖动，常因 layout effect 读几何后改 DOM）——挪到 rAF/减少读写交错；③ 掉帧但 JS 空闲（合成/绘制重，大面积重排或大图片解码）——CSS/contain/图片优化。定位链：录→分型→最小复现（沙箱二分 props/数据规模）→修→同脚本复测。别凭感觉上 memo，先证实瓶颈在哪一层。
+
+**来源**：React DevTools Profiler 文档；Chrome Performance 三类瓶颈（JS/布局/合成）分析方法。
+
+### 14.  「一个输入框每敲一个字整页就卡」，除虚拟化外你有哪些手段？各自对 IME/可访问性有何副作用？
+
+先定位：是「输入触发了大范围重渲染」还是「每次渲染做了重活」。手段：① 把输入 state 下沉到只含该输入的叶子组件，别放会带动全页的顶层 state；② useDeferredValue 让「跟随输入的昂贵列表/图表」用延后值渲染，保住输入响应；③ 昂贵派生放 useMemo 或搬到 Web Worker；④ 非受控（ref 读值，仅提交时取）彻底解耦输入与渲染——但要注意受控消失会影响即时校验/格式化；⑤ 防抖用于「触发请求」而非「更新输入显示」（显示必须即时）。副作用红线：绝不为性能「延迟输入框自身显示值」（破坏 IME 组合输入、读屏、打字反馈）；deferred 的是「下游重计算」，不是「用户已敲的字」。可访问性上，异步结果的读屏播报用 aria-live 适度节流。
+
+**来源**：React useDeferredValue/受控与非受控权衡；「别 debounce 输入框显示」社区性能经验与 IME 注意事项。
+
+### 15.  如何把「性能不回退」工程化：包体积、交互预算、Profiler 门禁与 React Compiler 的守护。
+
+四道闸：① 构建体积——size-limit/bundlesize 对关键 chunk 设预算，CI 超阈值红，路由级代码分割 + 依赖替换（日期/图标/lodash 按需）纳入 review；② 交互指标预算——Core Web Vitals（INP 取代已废的 FID 关注交互延迟）线上 RUM 采样，设 SLO 报警，别只看 Lighthouse 实验室分；③ 渲染回归门禁——用 Profiler 的 onRender 回调在测试里断言「某交互触发的 commit 数/时长」不超基线（类似快照，但断言性能），或用 why-did-you-render 抓异常重渲染；④ React Compiler 落地后要「验证产物」：它自动记忆化，但依赖 purity，若有人写出不纯组件优化会静默失效——用 eslint-plugin-react-compiler + 编译报告 + 上面的渲染门禁兜底。把优化从「一次性救火」变「可持续护栏」才是资深信号。
+
+**来源**：size-limit/bundle budget CI 实践；INP 与 RUM；React Compiler 与 purity lint 守护。

@@ -89,3 +89,21 @@ console.log(Iterator.from(nat()).filter(n=>n%2===0).take(3).toArray());
   ```
   优点：**内存友好 + 可短路**（大/无限流不再全量物化）。**追问**：数据源是异步流时，用 `[Symbol.asyncIterator]()` + `for await` 消费或异步助手版本。
 - 来源：TC39 Iterator Helpers 提案；MDN；Node.js stream。
+
+---
+
+**13）Iterator Helpers 的定位：它想统一什么生态？和 lodash/Rx 什么关系？**
+- 参考要点：目标是一个跨数据源的**流式管道协议**：Array/Set/Map/String 的 values()/生成器/Node stream 适配后都能 `Iterator.from(x).map().filter().take()`，惰性 + 不建中间数组（对比 arr.map().filter() 每步分配新数组）。lodash/Rx 的 map/filter 语义高度重合——lodash 后续版本直接让 wrapper chain 复用原生；Rx 的 Operator 是异步+时间维度，iterator 只管同步拉取流（异步版在 proposal-async-iterator-helpers）。评估：可读性提升，但 toArray 又拉回数组，收益在内存而非速度。
+- 来源：tc39/proposal-iterator-helpers 动机章节；lodash 4.x release notes 对原生迭代的跟进。
+
+---
+
+**14）Math.sumPrecise 怎么做到「更准」？浮点求和的彻底解法是什么？**
+- 参考要点：它承诺**正确舍入**的求和：实现走 Neumaier 补偿求和（累加每次加法的误差项）或任意精度（BigInt/分数中间态）路线，代价是比 `+=` 循环慢——别替换热点。根因：IEEE754 每次加法各自舍入，[0.1]*10 累出 0.9999...。彻底方案：金额用整数分、科学计算 decimal.js/DPD（decimal128 proposal 还在 Stage-1）、或 Kahan/两数和（twoSum）手写补偿。面试展示层次：现象 → 舍入根因 → sumPrecise 定位 → 工程选型。
+- 来源：MDN《Math.sumPrecise》；tc39/proposal-math-sum + John D. Cook《floating point summation》。
+
+---
+
+**15）RegExp.escape 防的是什么？防住之后还剩哪些注入面？**
+- 参考要点：防**正则注入**：用户输入拼进 new RegExp 时 `(a|b` 语法崩溃、`.` 通配、量词改语义，最狠的是灾难性回溯 `(a+)+$` 型 ReDoS——escape 把输入按字面量处理（v 旗标严格模式下更稳）。剩余攻击面：拼接模式本身的后缀量词设计、ReDoS 仍可能由模式+长度引爆（用长度上限/audit 正则）、i18n 场景 `u`/`v` 旗标选择。最佳实践仍是：能用 includes/startsWith/URLPattern 就别造动态正则。
+- 来源：MDN《RegExp.escape》；OWASP Regex Injection / ReDoS 条目；whatwg urlpattern 文档。

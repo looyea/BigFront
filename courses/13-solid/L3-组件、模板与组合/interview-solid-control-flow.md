@@ -1,6 +1,6 @@
 # solid-control-flow 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 为什么 Solid 不能像 React 那样用 `.map` 和 `&&` 渲染会变的数据？
 **来源**：一次性 JSX 求值题的转述。
@@ -63,3 +63,25 @@
 条件：`{cond ? <A/> : <B/>}`（若 cond 会变）改成 `<Show when={cond()} fallback={<B/>}><A/></Show>` 或 `<Switch>`；列表：`list.map(...)` 改 `<For each={list()}>`，注意 Solid 不需要 `key`（以引用为身份）。若数据确为常量、永不变，`.map`/三元保留也无妨——区别只在"会不会变"。核心是把"会变"的分支/集合交给控制流组件建立订阅（呼应 react-to-solid-migration）。
 
 🚀 实操请去做 L3 作业：复现 .map 冻结、Index 位置串位、Show keyed/非 keyed、For 身份稳定四条线。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  For 以引用为 key，遇到后端返回的重复普通值列表你怎么设计？ 
+
+ 首选进入数据层就赋予稳定对象身份（映射成带 id 的对象 + 整行替换），其次 Index（若可接受按位复用），最次前端去重打补丁；结论：把身份问题消灭在 API 适配层。 
+
+**来源**： https://www.solidjs.com/docs/latest/components#for 
+
+### 14.  虚拟滚动与 Solid 细粒度如何配合？谁负责行的回收？ 
+
+ 虚拟化库维护可见区间 slice 并用 For/Index 渲染窗口，行内动态仍由 signal 订阅驱动；回收发生在窗口外 DOM 销毁、窗口内更新走路径订阅，两者叠加才既省节点又保粒度。 
+
+**来源**： https://github.com/solidjs-community/solid-virtual 
+
+### 15.  Solid 不内置 <TransitionGroup>/KeepAlive，重移动画你怎么补？ 
+
+ 用 FLIP 自管：记录移动前后 rect 差、Web Animations API 播放补间；或引入社区 solid-transition-group（它用克隆节点做进出场）——框架留白处考查的是对 DOM 生命周期的理解而非找现成 API。 
+
+**来源**： https://motion.dev/docs/vue 

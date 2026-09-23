@@ -1,6 +1,6 @@
 # solid-lifecycle 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) Solid 组件只执行一次，那 React 式的 mount/update/unmount 生命周期还剩什么？
 **来源**：细粒度下生命周期重定义题的转述。
@@ -63,3 +63,25 @@ createRenderEffect 在 DOM 更新阶段内跑（和其他 DOM 改动同批）；
 用 `createRoot(()=>{ ...创建 signal/store/effect... })` 在应用入口显式开一个根，并把返回的 dispose 长期持有（一般永不 dispose）。这样它不隶属任何组件 Owner、随 App 全程存活；直接裸放模块顶层会踩"outside createRoot/render never disposed"警告。需要关闭全站逻辑时再手动调用那个 dispose。
 
 🚀 实操请去做 L2 作业：复现定时器泄漏、SSR 顶层崩、孤儿计算警告、WebSocket 退订重订四条线。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Solid 的 owner 清理模型对比 React unmount 清理，消灭了哪类事故？ 
+
+ React 依赖开发者在 useEffect 返回函数里对齐订阅与退订（漏写即泄漏、依赖数组错即时序错）；Solid 把回收挂到所有权结构，订阅随 owner 自动断，漏清理这一事故类别被结构性消除。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#oncleanup 
+
+### 14.  三方组件（图表/编辑器）在 Solid 里怎么包：实例创建、更新通道、销毁各放哪？ 
+
+ ref/onMount 创建实例；props 变化经 on 或 createRenderEffect 调实例 setOption（untrack 读非依赖配置）；onCleanup 里 destroy。桥接层集中写进 $lib 并暴露类型化包装组件，禁止散落在页面里。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/stores 
+
+### 15.  onCleanup 回调执行时响应式上下文已断开，要读值该怎么办？ 
+
+ 清理里 signal/store 读取不再追踪且可能已回收：需上报的指标要在 effect 体内先快照为普通变量，或由 closeAllCleanups 传入的收尾参数处理；这是清理时序与追踪生命周期边界的经典题。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#oncleanup 

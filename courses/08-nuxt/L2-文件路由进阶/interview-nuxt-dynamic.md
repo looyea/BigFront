@@ -1,4 +1,4 @@
-# nuxt-dynamic 面试题（12 题）
+# nuxt-dynamic 面试题（15 题）
 
 ## A. 参数与匹配
 
@@ -73,3 +73,31 @@
 **答**：七项：① page.tsx 一族 → 纯 .vue 页面（layout.tsx 拆到 layouts/ 或父页面出口）；② generateStaticParams → routeRules.prerender 集中声明；③ 拦截/并行路由的功能用 query/独立页重设计；④ useRouter 语义映射（redirect → navigateTo、usePathname → useRoute().path）；⑤ next/link 预取假设换成 NuxtLink 的 key/预取控制；⑥ [slug] 参数从"默认重建"换到"默认复用"心智，逐个动态页补 key 或响应式取数；⑦ 中间件重写：Next 一个 matcher 全局中间件 → Nuxt 全局 + per-route middleware 组合（服务端拦截另放 nitro middleware，呼应 nuxt-middleware-auth）。路由层之外还有缓存/Action 差异，那部分更大，单独开清单。
 
 **来源**：SegmentFault《Next → Nuxt 迁移手册（路由篇）》；知乎《两个框架路由心智的七处不同》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D3.  动态段参数切换（/blog/1→/blog/2）时组件复用与数据重取的默认行为？几种正确姿势各适合什么场景？
+
+**答**：默认：同一路由记录参数变化复用组件实例（不重挂载）——老代码"onMounted 取数"就失效。useFetch 传"选项对象为响应式 URL/params"时自动随 ref 重取，watch: [id] 显式声明追踪源；三种进阶：① definePageMeta({ key: route => route.fullPath })——key 变即重创建组件，最彻底、适合整页形态差异大的详情，代价是丢局部状态；② 数据层不重挂载只重取（useFetch 的 refresh：refresh()/refreshNuxtData(key)）——保留 UI 状态、只刷数据，适合列表筛选/同页编辑；③ 手动 watch(route.params) 调 $fetch 自己管 loading——只在极端定制时用（多数是自找 memo 问题）。易错点：refreshNuxtData 影响所有共享该 key 的调用（列表详情同时刷）；payload 水合与"服务端首取"的 key 要一致否则水合后又来一发。收口：先问"切换参数时这个页面哪些状态该活下来"，答案决定 key 还是 refresh。
+
+**来源**：Nuxt 官方 useFetch watch/lazy 与文档"数据刷新"；SegmentFault《切了 id 页面还是旧数据》。
+
+### D4.  routeRules 的 prerender/crawl/sitemap/swr/isr 怎么拼出"哪些动态页预生成"的方案？与 Next 的 generateStaticParams 思路差在哪？
+
+**答**：Nuxt 的枚举是"声明式来源"：prerender: true 单路由强制预渲染；nitro.prerender.routes 给清单、crawlLinks 从首页顺着站内链接爬、urls 可由 sitemap 文件生成钩子提供——本质是"构建期跑一个爬虫/清单"，作者不用在页面文件里写枚举函数。对比 Next：generateStaticParams 是代码内联枚举（colocation：页面知道自己有哪些参数），Nuxt 是中心配置（routeRules/nitro：部署视角统一声明）。差异账：中心派——策略集中好审计、多租户/按环境不同清单灵活，代价是"URL 清单"与页面代码分离易失同步；内联派——新增枚举忘写进 config 都不会漏，代价是大站构建期枚举函数成性能焦点。混合实战：长列表 sitemap 喂爬虫、热点清单代码生成、其余走 swr 首访现渲+边缘缓存——routeRules 支持 /blog/**: {swr: 3600} 这种通配即"默认兜底"。
+
+**来源**：Nuxt 官方 route Rules/prerendering 与 nitro prerender.crawlLinks；Next 对比。
+
+### D5.  Islands 架构（.island.vue + <Island>）解决什么场景？与客户端水合、与 RSC 各自的边界在哪？
+
+**答**：场景：页面 90% 静态、少数"需要每请求现算的互动块"（搜索框、购物车角标、个性化推荐）——island 组件带交互但只在"用户触达时"才水合（idle/visible/交互触发），静态 HTML 可整页预渲染/CDN 缓存。边界对照：传统 SSR 水合=整页一次性 hydrate，islands=按交互单元分次；RSC=运行位置在编译期二选一（服务端组件不下发）、islands=运行位置都下发、水合时机可延迟——两者哲学不同但可叠加（Nuxt 的 ServerComponent 实验走的就是"服务端渲染+按需水合岛"）。工程限制：island 不能包全局响应式状态（水合边界处 store 不同步）、middleware/auth 在 SSR 期对 island 内部仍跑（数据权限别指望"没水合就看不到"——HTML 已在响应里，这是安全认知必考点）。选型：内容站混合页值得试；后台应用整页重交互，islands 没意义（ssr:false 更诚实）。实验特性要标注稳定性预期。
+
+**来源**：Nuxt 实验性 Islands 文档；ViteConf Islands 演讲。
+
+### D6.  列表页链接进动态详情页，NuxtLink 的预取与路由 chunk 加载怎么权衡？哪些情况该关？
+
+**答**：默认行为：NuxtLink 进入视口即预取目标路由的代码 chunk（vite 动态 import）并触发目标页 useFetch 的预取（payload 级，视版本开关）——对动态段意味着每个可见链接都可能换一次网络。权衡账：① 列表项少、详情转化高（文章/商品前 20 项）——保持默认，点击即秒开；② 长列表/无限滚动（成百上千个 [id] 链接）——视口预取会打爆接口与带宽，链接上 explicit 或关 prefetch（:prefetch="false"），只保 hover 预取或首屏手动 prefetch；③ 详情页取数贵（重 SQL/外部 API）——预取会白烧下游成本，关 payload 预取只留 chunk 预取（把贵取数改 lazy 或客户端触发）；④ 登录墙后的动态路由——预取会先行请求触发 401/重定向链，该关。实现细节：chunk 预取与数据预取是两层，排查时分开归因；routeRules 的 isr/swr 对详情页生效时，预取命中边缘缓存代价骤降，可不关——先度量（网络面板数一发预取请求的代价）再决策，别凭感觉全局关。
+
+**来源**：Nuxt 官方 NuxtLink prefetch 文档；掘金《长列表预取雪崩的一次排查》。

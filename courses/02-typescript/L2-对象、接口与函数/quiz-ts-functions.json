@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "const add: (a:number,b:number)=>number = (a,b)=>a+b; 里为什么实现不必再写 a、b 的类型？",
       "options": [
-        "因为省略是语法允许且类型为 any",
         "变量已被标注函数类型，参数类型由上下文推断得到",
+        "因为省略是语法允许且类型为 any",
         "因为箭头函数不能标注类型",
         "其实会报错"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "上下文推断：目标函数类型确定了参数形状，实现可省略重复标注。"
     },
     {
@@ -22,10 +22,10 @@
       "options": [
         "function f(a?: number, b = 1) {}",
         "function f(a: string, ...rest: number[]) {}",
-        "function f(a?: number, b: string) {}",
-        "function f(a: number, b?: string) {}"
+        "function f(a: number, b?: string) {}",
+        "function f(a?: number, b: string) {}"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "可选参数(?)后不能再跟必选参数；有默认值的参数可省所以放后面合法。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "为什么 each([1,2], n => n*2) 里回调返回 number 也满足 (n:number)=>void？",
       "options": [
         "因为 n*2 实际返回 undefined",
-        "期望 => void 表示'忽略返回值'，任何返回类型的函数都可充当该回调位",
         "因为 void 包含 number",
+        "期望 => void 表示'忽略返回值'，任何返回类型的函数都可充当该回调位",
         "其实不满足，会报错"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "TS 允许有返回值的函数赋给返回 void 的函数类型，返回值被丢弃（呼应 ts-any-unknown）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "strictFunctionTypes 收紧为参数逆变；'方法简写'语法历史上仍双向协变，是经典坑（见 ts-strict）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": ".tsx 文件里写泛型箭头函数为什么常见 `<T,>` 带尾逗号？",
+      "options": [
+        "语法糖随喜好",
+        "避免 `<T>` 被解析成 JSX 元素开始标签",
+        "TS 5 的新规范",
+        "为了 eslint 对齐"
+      ],
+      "answer": 1,
+      "explanation": "JSX 语法开启时 `<T>(x)=>x` 与 `<T>x</T>` 歧义；尾逗号 `<T,>` 或约束 `<T extends unknown>` 都能打破——纯语法层，JS 文件无此问题。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "strictFunctionTypes 开启后，把 `(e: Event) => void` 赋给形参类型 `(m: MouseEvent) => void`：",
+      "options": [
+        "报错（参数必须同型）",
+        "合法——参数逆变：能处理所有 Event 必能处理其子 MouseEvent",
+        "合法但只在运行时",
+        "取决于返回值类型"
+      ],
+      "answer": 1,
+      "explanation": "函数参数按**逆变**检查（只作用于函数属性写法）：宽入参可替窄入参；反向（窄处理函数塞给宽事件源）才是 bug——strictFunctionTypes 抓的就是它。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "函数重载里「实现签名」对外部调用者：",
+      "options": [
+        "可见且优先匹配",
+        "不可见——外部只见声明签名列表，按书写顺序先到先得",
+        "参与两次类型检查",
+        "会覆盖声明签名"
+      ],
+      "answer": 1,
+      "explanation": "实现签名是「内部大锅」必须兼容所有声明但被编译器藏起；忘写声明只留实现 = 只暴露大锅（误用无提示）——这是重载评审的第一检查项。"
     }
   ]
 }

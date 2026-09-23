@@ -1,6 +1,6 @@
 # kit-load-universal 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) universal load 与 server load 的分工判据？各自返回值的物理法则？
 **来源**：SvelteKit 数据层面试开场必考题的转述。
@@ -63,3 +63,25 @@ event.fetch：协议兼容原生 fetch，服务端执行时继承凭证/支持�
 ①确认"旧"发生在数据层还是组件层：load 重跑了但组件 state 遮蔽（组件不重建特性），{#key} 或 afterNavigate 重置可验；②parent() 是否真的在**函数体内**被 await（藏进 then 链晚于 return 就不建立父子联动）；③线上多实例 + 粘性会话问题：数据其实来自另一台机器的 prerender 缓存（prerender='auto' 的边缘命中）；④中间 CDN 缓存了整页 HTML。依赖追踪是纯客户端机制，跨实例/CDN 场景它无能为力——分清层，别错怪 load。
 
 🚀 **下一组**：kit-server-modules 面试题——序列化契约、fetch 透传与端点边界。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  load 返回值经 devalue 序列化内联进 HTML，这对返回类型与体积提出什么纪律？ 
+
+ 只允许可序列化结构，函数/类实例需 transport 编解码；大对象会直接膨胀首包 HTML，官方建议分页与裁剪，流式 Promise 则是让慢数据推迟到位而非塞进初始内联。 
+
+**来源**： https://svelte.dev/docs/kit/load#Serialised-data 
+
+### 14.  团队里如何划定 load 与组件内取数（如 createResource/onMount fetch）的边界？ 
+
+ 影响首屏与 SEO 的数据必须进 load（SSR 可得、可流式槽位）；交互后才需要的私有数据放组件取数；约定以『是否需要服务端知道』为唯一判据，避免同页两套口径互相覆盖。 
+
+**来源**： https://svelte.dev/docs/kit/load#Which-should-I-use 
+
+### 15.  universal load 与 server load 都能拿数据，你定代码规范时按什么决策树选？ 
+
+ 涉密、依赖 DB 的一律 .server；需要跨端复用（如按角色过滤展示、纯查询拼装）用 universal；要读 cookie/请求头且客户端导航也要重跑的数据用 server 配 depends 失效。判据核心是执行环境与泄密面，而非个人偏好。 
+
+**来源**： https://svelte.dev/docs/kit/load#Sharing-data 

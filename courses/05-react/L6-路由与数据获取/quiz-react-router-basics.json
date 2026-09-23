@@ -8,18 +8,23 @@
       "prompt": "BrowserRouter 同步 URL 与 UI 依赖什么？对部署有何要求？",
       "options": [
         "location.hash；无需服务端配置",
-        "HTML5 History API；服务端需把未知路径回退到 index.html",
         "iframe；需 CORS",
+        "HTML5 History API；服务端需把未知路径回退到 index.html",
         "WebSocket；需网关"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "history 模式需服务端回退（呼应 react-router-basics 第一节、vue-router-basics）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "React Router 里给某路由指定要渲染的组件用的是？",
-      "options": ["component: Home 配置项", "element={<Home/>}", "to=\"/home\"", "render=\"Home\""],
+      "options": [
+        "component: Home 配置项",
+        "element={<Home/>}",
+        "to=\"/home\"",
+        "render=\"Home\""
+      ],
       "answer": 1,
       "explanation": "Route 用 element 传一个 React 元素（呼应 react-router-basics 第一节）。"
     },
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "做导航项\"当前页高亮\"最方便的是哪个组件？",
-      "options": ["Link", "Outlet", "NavLink", "Routes"],
+      "options": [
+        "Link",
+        "Outlet",
+        "NavLink",
+        "Routes"
+      ],
       "answer": 3,
       "explanation": "NavLink 提供 isActive 用于激活态（呼应 react-router-basics 第二节）。"
     },
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "要读取 /user/:id 里的 id，用哪个 Hook？",
-      "options": ["useParams", "useNavigate", "useLocation", "useSearchParams"],
+      "options": [
+        "useParams",
+        "useNavigate",
+        "useLocation",
+        "useSearchParams"
+      ],
       "answer": 0,
       "explanation": "useParams 拿动态段（呼应 react-router-basics 第三节）。"
     },
@@ -56,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "嵌套路由里，子路由渲染在父组件的哪个位置？",
-      "options": ["<router-view>", "<Outlet />", "<slot>", "<Routes>"],
+      "options": [
+        "<router-view>",
+        "<Outlet />",
+        "<slot>",
+        "<Routes>"
+      ],
       "answer": 1,
       "explanation": "Outlet 是子路由插槽，等于 Vue router-view（呼应 react-router-basics 第四节）。"
     },
@@ -72,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "index 路由=父路径的默认子内容（呼应 react-router-basics 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " React Router v6 里读 /user/1 到 /user/2 之间变化的 query（如 ?tab=info），最贴合的 Hook 是？",
+      "options": [
+        "useParams",
+        "useSearchParams——它返回 [searchParams, setSearchParams]，语义对应 Vue 的 route.query 与写回 query 的导航，用于筛选/分页/标签这类可分享状态",
+        "useLocation().pathname",
+        "useNavigate 的第二个参数"
+      ],
+      "answer": 1,
+      "explanation": "分工要拎清：useParams 取「路径动态段」（:id），useSearchParams 取「? 后的查询串」。把视图状态（页码、tab、筛选）放 searchParams 是「URL 即可分享状态」的落地；频繁改 search 时考虑 replace 防 history 轰炸（对齐 Vue Router 同款经验）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " `<Navigate to=\"/login\"/>`（组件）与 `useNavigate()`（函数）的区别是？",
+      "options": [
+        "完全等价",
+        "Navigate 是「声明式」——一旦渲染就执行重定向，常用于「登出后/鉴权不通过就渲染它跳走」的 UI 分支；useNavigate 是命令式，在事件/effect 里主动跳",
+        "Navigate 只能跳 hash",
+        "useNavigate 不能带 state"
+      ],
+      "answer": 1,
+      "explanation": "命令式导航（点按钮、提交后）用 useNavigate；把导航表达成「渲染的产物」（如守卫组件判定未登录就直接 return <Navigate/>）用 Navigate。Data Router 出现后，路由级鉴权更推荐在 loader 里 throw/return redirect（见 router-data 关），把「跳」前移到数据加载阶段而非渲染后。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " v6 用 `<Route path=\"/x\" element={<Comp theme=\"dark\"/>}/>` 而非「组件名字符串」注册，主要好处是？",
+      "options": [
+        "运行更快",
+        "element 接收真实 React 元素，可直接传 props、包裹布局/权限、组合复用，无需 props-to-route 的胶水；代价是路由表变成 JSX、鉴权靠包裹组件或 loader",
+        "是为了兼容 v5",
+        "只能用函数组件"
+      ],
+      "answer": 1,
+      "explanation": "与 Vue Router 的「配置式 component」分野：React Router 把「渲染什么」交回 JSX 表达力——`element={<RequireAuth><Comp/></RequireAuth>}` 一行搞定守卫组合，`<Route element={<Layout/>}>` 用 <Outlet/> 承嵌套。思维从「注册一个组件名」转为「声明一棵元素树」。"
     }
   ]
 }

@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-i18n-routes",
-  "title": "多语言路由 · 自测",
+  "title": "kit-i18n-routes 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "要让 /about 与 /en/about 命中同一个页面，路由段应写成？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "要让 /about 与 /en/about 命中同一个页面，路由段应写成？",
       "options": [
         "[...lang]/about",
         "[[lang]]/about",
@@ -11,10 +13,12 @@
         "(lang)/about"
       ],
       "answer": 1,
-      "explain": "可选参数 [[lang]] 让 lang 可缺省，/about 与 /en/about 指向同一页面；[lang] 是必填、[...] 是 rest、(lang) 是布局组。"
+      "explanation": "可选参数 [[lang]] 让 lang 可缺省，/about 与 /en/about 指向同一页面；[lang] 是必填、[...] 是 rest、(lang) 是布局组。"
     },
     {
-      "q": "关于可选段 [[optional]] 的一条硬约束，正确的是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于可选段 [[optional]] 的一条硬约束，正确的是？",
       "options": [
         "可选段不能跟在 rest 段之后，因为参数贪婪匹配会让它永远取不到值",
         "可选段只能出现在路由最后一段",
@@ -22,10 +26,12 @@
         "可选段必须搭配 matcher 才允许出现"
       ],
       "answer": 0,
-      "explain": "官方规则：[...rest]/[[optional]] 非法，因为参数按贪婪匹配、尾部可选段永远用不上。"
+      "explanation": "官方规则：[...rest]/[[optional]] 非法，因为参数按贪婪匹配、尾部可选段永远用不上。"
     },
     {
-      "q": "把 [[lang]] 收紧成'只认合法语言码'的正确做法是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "把 [[lang]] 收紧成'只认合法语言码'的正确做法是？",
       "options": [
         "在 load 里 if 判断非法就 throw",
         "用 kit.paths 白名单限制",
@@ -33,10 +39,12 @@
         "写 src/params/lang.js 导出 match，并在路由里用 [[lang=lang]]"
       ],
       "answer": 3,
-      "explain": "param matcher：src/params 下一个模块即一个 matcher，导出 match(param) 返回布尔；路由写成 [名=matcher名]。"
+      "explanation": "param matcher：src/params 下一个模块即一个 matcher，导出 match(param) 返回布尔；路由写成 [名=matcher名]。"
     },
     {
-      "q": "matcher 的运行位置是？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "matcher 的运行位置是？",
       "options": [
         "仅在预渲染构建期",
         "服务端和浏览器都会跑",
@@ -44,10 +52,12 @@
         "仅浏览器端"
       ],
       "answer": 1,
-      "explain": "官方明确 matchers run both on the server and in the browser，客户端导航的非法前缀同样被拒。"
+      "explanation": "官方明确 matchers run both on the server and in the browser，客户端导航的非法前缀同样被拒。"
     },
     {
-      "q": "关于 reroute 静默重写与 handle+redirect 两条协商路线，正确的是？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于 reroute 静默重写与 handle+redirect 两条协商路线，正确的是？",
       "options": [
         "reroute 会改变地址栏 URL，redirect 不改",
         "两者都会在每次导航触发重定向环",
@@ -55,10 +65,12 @@
         "只有 redirect 能读到 cookie 做协商，reroute 不能"
       ],
       "answer": 2,
-      "explain": "reroute 在 URL 与路由匹配前运行、可返回新路径而地址栏不变；handle+redirect 会显式跳带前缀 URL、URL 唯一利于 SEO，但多一次往返。"
+      "explanation": "reroute 在 URL 与路由匹配前运行、可返回新路径而地址栏不变；handle+redirect 会显式跳带前缀 URL、URL 唯一利于 SEO，但多一次往返。"
     },
     {
-      "q": "把当前语言与翻译函数分发到组件树，本关推荐的正道是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "把当前语言与翻译函数分发到组件树，本关推荐的正道是？",
       "options": [
         "服务端模块顶层存 let currentLang，各页直接 import 读",
         "load 里 return 语言、根 layout 用 setContext 传 $t 函数，子组件 getContext",
@@ -66,10 +78,12 @@
         "用 $app/stores 订阅 page 手动同步到一个全局 store"
       ],
       "answer": 1,
-      "explain": "标准两步：+layout.server.js 从 params 决定语言并 return，+layout.svelte 用 setContext 把 t 函数往下发；服务端顶层共享变量会串用户，违反状态纪律。"
+      "explanation": "标准两步：+layout.server.js 从 params 决定语言并 return，+layout.svelte 用 setContext 把 t 函数往下发；服务端顶层共享变量会串用户，违反状态纪律。"
     },
     {
-      "q": "多语言 SEO 里 x-default 的 hreflang 通常指向？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "多语言 SEO 里 x-default 的 hreflang 通常指向？",
       "options": [
         "必须指向 404 页以排除收录",
         "首页固定的英文页",
@@ -77,7 +91,46 @@
         "语言选择页或默认语言"
       ],
       "answer": 3,
-      "explain": "x-default 是约定，指向语言选择器或默认语言；hreflang 值要与实际可达 URL 一一对应，canonical 收敛重复内容。"
+      "explanation": "x-default 是约定，指向语言选择器或默认语言；hreflang 值要与实际可达 URL 一一对应，canonical 收敛重复内容。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 让 /about 与 /en/about 命中同一页且默认语言不带前缀，路由文件层做法是？ ",
+      "options": [
+        " 复制两份页面 ",
+        " [[lang]] 可选段 + matcher 限定语言码，非语言值落到无匹配 ",
+        " 双 layout ",
+        " redirect 硬写 "
+      ],
+      "answer": 1,
+      "explanation": " 可选段吸收空值实现无前缀默认语言，matcher 防它吞掉真实 404。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 语言协商的推荐优先级顺序？ ",
+      "options": [
+        " cookie > Accept-Language 探测 > URL 前缀 ",
+        " URL 前缀为准（用户显式意图），cookie 记住选择用于无前缀入口，Accept-Language 只做首次兜底 ",
+        " 仅 Accept-Language ",
+        " 随机轮询 "
+      ],
+      "answer": 1,
+      "explanation": " 可分享、可 SEO 的 URL 必须自解释；协商只决定入口跳转，落地后一切以路径语言为准。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 翻译字典按语言分包的正确加载策略是？ ",
+      "options": [
+        " 全量打进主包 ",
+        " 当前语言的字典进 load（SSR 可得、水合复用），其余语言动态 import ",
+        " 存 localStorage ",
+        " 每次点击现拉 "
+      ],
+      "answer": 1,
+      "explanation": " load 保证首屏无闪烁，字典体积又需要按语言隔离；客户端切换语言时增量拉取并写入缓存。 "
     }
   ]
 }

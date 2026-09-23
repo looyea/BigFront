@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "条件类型 T extends U ? X : Y 与 extends 约束的最大区别是？",
       "options": [
-        "没有区别",
         "约束只是'限定 T 的下界'，条件类型能'根据 T 的形状计算/分叉出不同结果类型'",
+        "没有区别",
         "条件类型只能返回布尔",
         "约束能生成新类型"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "约束管'能访问什么'，条件类型管'根据输入产出什么'——后者让类型可计算。"
     },
     {
@@ -21,19 +21,24 @@
       "prompt": "infer 关键字用在哪里、起什么作用？",
       "options": [
         "任意位置声明变量",
-        "只能用在条件类型的 extends 子句里，声明一个'待推断'占位，让 TS 从匹配结构中反推类型",
         "替代 as",
+        "只能用在条件类型的 extends 子句里，声明一个'待推断'占位，让 TS 从匹配结构中反推类型",
         "只在 class 里用"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "infer 是模式匹配里的捕获变量，如 (...)=>infer R 提取返回类型。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "type Elem<T> = T extends (infer U)[] ? U : never; Elem<[1,2]> 结果是？",
-      "options": ["[1,2]", "1 | 2", "never", "number[]"],
-      "answer": 1,
+      "options": [
+        "[1,2]",
+        "never",
+        "number[]",
+        "1 | 2"
+      ],
+      "answer": 3,
       "explanation": "infer U 捕获元组/数组的元素类型联合，[1,2] → 1|2。"
     },
     {
@@ -66,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "NonNullable<string | null | undefined> 的结果是？",
-      "options": ["string | null", "string", "unknown", "null | undefined"],
+      "options": [
+        "string | null",
+        "string",
+        "unknown",
+        "null | undefined"
+      ],
       "answer": 1,
       "explanation": "分发后 null、undefined 分支被替换为 never 消失，只剩 string。"
     },
@@ -87,9 +97,40 @@
       "id": "q8",
       "type": "single",
       "prompt": "递归条件类型 Awaited<Promise<Promise<number>>> 得到？",
-      "options": ["Promise<number>", "number", "Promise<Promise<number>>", "unknown"],
+      "options": [
+        "Promise<number>",
+        "number",
+        "Promise<Promise<number>>",
+        "unknown"
+      ],
       "answer": 1,
       "explanation": "每命中一层 Promise 就 infer 出内层再递归，直到非 Promise 停止，得到 number。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`type X = [never] extends [never] ? 1 : 2` 与 `never extends never ? 1 : 2` 的结果：",
+      "options": [
+        "都是 1",
+        "前者 1；后者**也是 1 但当输入是裸 never 联合分发时结果不同**——元组写法是「关分发」的标准闸",
+        "都是 2",
+        "后者报错"
+      ],
+      "answer": 1,
+      "explanation": "裸 T=never 时分发条件类型对空联合直接返回 never（不跑分支）；[T] 裹住后 never 老老实实走 true 分支——Equal 测试与「整体判断」全靠这个闸。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`type IsArr<T> = T extends unknown[] ? true : false` 对 `readonly number[]`：",
+      "options": [
+        "true",
+        "false——可变数组不是只读数组的超类型（push 副作用）",
+        "编译期报错",
+        "看 target"
+      ],
+      "answer": 1,
+      "explanation": "readonly T[] 缺 push 等方法、T[] 多成员不兼容：`readonly → mutable` 不行、`mutable → readonly` 行。工具类型要兼容只读数组请写 `readonly unknown[]`。"
     }
   ]
 }

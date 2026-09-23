@@ -1,6 +1,6 @@
 # ts-basics 面试题精选
 
-> 共 12 题，覆盖 **基础类型 / 类型推断 / 注解策略 / 数组元组 / 枚举 / void-never / 别名** 七类。
+> 共 15 题，覆盖 **基础类型 / 类型推断 / 注解策略 / 数组元组 / 枚举 / void-never / 别名** 七类。
 
 ---
 
@@ -97,3 +97,25 @@ TS 从初始值、参数默认值、上下文类型逐步推断变量/表达式�
 用可辨识联合 + 字面量把状态机编码进类型：`type State = {status:'idle'} | {status:'loading', reqId:string} | {status:'error', msg:string}`。这样"loading 却没有 reqId""error 却没 msg"这类非法组合**根本写不出来**（编译不过），且 `switch(state.status)` 能自动收窄到对应变体、配合 `never` 兜底保证穷尽（呼应 ts-union/ts-guards）。把"运行时才发现的非法数据"提前到"类型层面无法构造"，是 TS 建模的高级价值。
 
 **来源**：TypeScript — "Discriminated Unions"; "Make illegal states unrepresentable"; Functional Light Software
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. enum 为什么被现代 TS 社区冷处理？TS 官方态度是什么？
+
+四宗罪：① 有运行时产物（IIFE 对象），破坏 ESM 摇树与 `erasableSyntaxOnly`（TS5.8 要求可纯类型剥离）；② 数字 enum 反向映射等怪癖、跨包内联导致值漂移（const enum 在 isolatedModules 下被禁且破坏增量编译）；③ 联合字面量 `'up'|'down'` + as const 对象能覆盖 95% 场景且零产物；④ 序列化/收窄体验差。官方态度：enum 不再加新特性（「no new features」原话），推荐 const object + 类型联合。遗留：真需要运行时枚举对象时用 `Object.freeze({...}) as const` 手写。
+
+**来源**：TS 5.0 release notes 对 const enum 跨文件限制；Anders/Daniel 在 TS repo 的 enum「no new features」表态 issue。
+
+### 14. 什么是类型加宽（widening）？它在哪些场景坑人、怎么精确控制？
+
+规则：let/可变绑定的字面量初值自动加宽成基类型（const 停在字面量）；`let x = "a"` → string。坑点：① 状态机 `let state = "idle"` 变 string 失去穷举检查；② 函数返回 `{ status: "ok" }` 推成 string；③ 数组元素合并成 `("a"|"b")[]` 还好，混合则 `union[]`。控制三板斧：`as const`（最深冻结）、显式窄标注 `const x: Status = "idle"`、`satisfies`（校验同时保留推断）。箭头函数返回不加宽，所以「返回字面量当键」常要 `as const`。
+
+**来源**：TS Handbook《Literal Types / widening》；TypeScript Deep-Refresh 博客《Literal types & widening 长文》。
+
+### 15. 元组类型在 API 设计里有什么高级玩法？
+
+① 多返回值协议：`[err, data] | [err]` Go 风格、React `useState` 的 `readonly [T, Dispatch<SetStateAction<T>>]`；② **可选/剩余元素**：`[string, number?]`、`[...T[], U]`（前导 rest TS4.0）给函数签名建模「至少一参」；③ 解构即窄化：`const [a, b] = pair` 类型精确；④ `Parameters<T>` 本质就是元组操作。边界：length/索引访问都精确，但 push 会让长度语义退化（可变元组上方法按数组 union 处理），要稳定就用 `as const`。
+
+**来源**：TS 4.0《Variadic Tuple Types》提案；MDN/TS Handbook 元组章节。

@@ -1,6 +1,6 @@
 # solid-signals 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) createSignal 返回什么？为什么 Solid 选择"getter 函数"而不是像 React 那样直接给值？
 **来源**：signal 原语基础题的转述。
@@ -67,3 +67,25 @@ signal 写是**同步更新依赖图**，但 DOM 的写被 Solid 在微任务/�
 **来源**：反模式识别题的转述。
 
 提两点：① 大对象每次整体浅拷贝 + 换引用，会让所有读了该 signal 的订阅者**全量失效**，丧失细粒度优势；改 `createStore` 做路径级更新，或把大对象拆成多个小 signal。② 若确实只关心"整体替换"，signal 也行，但要评估订阅面是否过宽、必要时用 `createMemo` 收窄被追踪的值（呼应 solid-fine-grained-internals 过度订阅）。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  signal 订阅者的内存归属：为什么不需要手动 unsubscribe 也不泄漏？ 
+
+ 订阅登记在创建它的 observer（memo/effect/组件 owner）上，owner 销毁时统一摘钩并释放对 signal 的引用链；泄漏常见于把 signal 存进模块级数组等体系外结构。 
+
+**来源**： https://www.solidjs.com/docs/latest/api 
+
+### 14.  为什么设计成 getter 调用（count()）而不是 Proxy 属性直读？ 
+
+ 显式调用让依赖收集发生在读取瞬间、可静态识别响应式来源，也保留原始类型语义（===、算术直接可用）；代价是每次多一层括号，Svelte 选了编译器推断的另一端。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createsignal 
+
+### 15.  同步多次 setter 会不会产生中间态闪烁？batch 改变了什么？ 
+
+ 更新按队列提交，同一批微任务内 memo/effect 以最终值收敛；batch 把多 signal 写入打包成一次通知，用于事务性改写（如导入整表）避免下游多次重算。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#batch 

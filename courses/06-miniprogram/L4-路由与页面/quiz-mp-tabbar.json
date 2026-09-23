@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "tabBar list 的数量限制是？",
-      "options": ["1 ~ 8 个", "2 ~ 5 个", "3 ~ 6 个", "无限制"],
+      "options": [
+        "1 ~ 8 个",
+        "2 ~ 5 个",
+        "3 ~ 6 个",
+        "无限制"
+      ],
       "answer": 1,
       "explanation": "2~5 个，且 pagePath 必须已注册进 pages（呼应 mp-tabbar 第一节）。"
     },
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "wx.setTabBarBadge 在什么配置下失效？",
-      "options": ["position 为 top", "tab 数为 2", "app.json 配了 custom: true 自定义 tabBar", "开了 darkmode"],
+      "options": [
+        "position 为 top",
+        "tab 数为 2",
+        "app.json 配了 custom: true 自定义 tabBar",
+        "开了 darkmode"
+      ],
       "answer": 2,
       "explanation": "原生角标 API 管不到自绘底栏，需自行同步（呼应 mp-tabbar 第三节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "原生托管变手动维护后的头号 bug（呼应 mp-tabbar 第四节代价1）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 关于 tabBar 各 tab 页的\"页面栈\"，正确的心智模型是？",
+      "options": [
+        "全站共用一条栈，切 tab 会退回同一位置",
+        "每个 tab 维护各自独立的页面栈：在首页 push 了详情，切去\"我的\"再切回首页，仍停在那条详情上（各 tab 互不干扰）",
+        "切 tab 总是清空所有栈",
+        "tab 页不能再 navigateTo 普通页"
+      ],
+      "answer": 1,
+      "explanation": "\"独立栈\"解释了为什么切回来还在原地——tab 页常驻、各自记住 navigated 的子页。也因此 tab 刷新要 onShow、以及 switchTab 只清\"非 tab 页\"的栈而保留目标 tab 自己的栈。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " wx.setTabBarBadge / hideTabBarRedDot 等 API 在什么配置下会失效？",
+      "options": [
+        "从不会失效",
+        "使用自定义 tabBar（custom:true + 自写组件）时原生接口不再直接作用于底部栏——因为底部栏已是你自己的组件，得通过 getTabBar() 拿实例、把状态 setData 进自定义组件里驱动",
+        "只在真机失效",
+        "list 超过 3 项失效"
+      ],
+      "answer": 1,
+      "explanation": "custom:true 把\"外观与状态\"的所有权交给你的组件，原生 setBadge 之类无从下手。正解：getTabBar().setData 或组件内自维护红点/高亮，页面 onTabItemTap/选中项由你同步。这也带来\"高亮不同步\"经典坑（切页了但组件 selected 没更新）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 为什么 tabBar 页面（及其所依赖）必须放在主包？",
+      "options": [
+        "只是建议，不是硬性",
+        "tabBar 是启动即需呈现的常驻导航，容器在首页渲染阶段就要能拿到这些页；若允许放分包，冷启动要先下载分包才能出 tab，破坏\"即用即走\"，故规定 tab 页在主包",
+        "为了审核",
+        "为了热更新"
+      ],
+      "answer": 1,
+      "explanation": "主包=首屏必须。tab 页承担启动可见的导航，故被约束进主包（这也是主包 2M 压力的来源之一）。把非 tab 的重内容用分包/独立页承载，tab 页只做壳并跳转分包，是常见的\"主包瘦身 + tab 常驻\"折中。"
     }
   ]
 }

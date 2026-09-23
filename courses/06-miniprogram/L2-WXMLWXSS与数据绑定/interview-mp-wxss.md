@@ -1,6 +1,6 @@
 # mp-wxss 面试题精选
 
-> 共 12 题，覆盖 A 单位与适配 / B 样式作用域与隔离 / C 工程组织 / D 深度原理。
+> 共 15 题，覆盖 A 单位与适配 / B 样式作用域与隔离 / C 工程组织 / D 深度原理。
 
 ## 一、单位与屏幕适配（A 类）
 
@@ -57,3 +57,25 @@ WXSS 编译后进渲染层 WebView。样式规则与节点是两回事：改 cla
 ### 12. style 行内绑定对象字符串的性能问题？
 `style="{{'width:'+w+'px'}}"` 每次 setData 都要序列化拼接；节点多时成本高。替代：预置类名切换 class（样式表命中缓存）、或用 CSS 变量 + 少量 setData（只改变量不改结构）。这对应 React 里"稳定 className、慎拼 inline style"的同一优化直觉（呼应 react-performance）。
 **来源**：微信开放社区性能优化问答精选；React 官方文档《DOM 组件 > style》对照
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  rpx 的换算公式是什么？它和 H5 的 vw/rem 方案是什么关系？
+
+官方以 750 为总宽基准：rpx→px = screenWidth/750 × rpx 值，即 1rpx = 屏宽/750 px（iPhone6/375 宽下 1rpx=0.5px）。它本质是「相对视口宽度的单位」，和 `1vw = 屏宽/100`（所以 1rpx ≈ (100/750)vw ≈ 0.1333vw）同源——都是用「屏宽比例」实现等比适配。与 rem 的区别：rem 相对 html font-size（要 JS 动态设根字号的 flexible 方案），rpx 是引擎内置、无需 JS。取舍：rpx 简单但「按宽等比」在大屏/横屏会失真（内容过大），需要时混用 px（不随屏放大的字号、边线、安全热区）。理解「rpx≈vw」这一层，就能把 H5 的适配经验平移到小程序、也知道两者同样的宽屏陷阱。
+
+**来源**：小程序 WXSS rpx 单位定义与换算；H5 vw/rem 适配方案对照。
+
+### 14.  app.wxss、页面 wxss、组件 style 的优先级与「样式到底在哪生效」？为什么改样式有时牵动 setData？
+
+层叠：app.wxss（全局）< 页面 wxss < 组件内 style（就近、受 styleIsolation 影响），同权重看选择器特异度与顺序，页面 wxss 对同元素覆盖 app.wxss。组件默认 isolated 会阻断页面/组件互选，需显式 apply-shared/shared 才穿透。WXSS 最终在「渲染线程」的 WebView 里生效——这是它与逻辑线程分离的。所谓「改一样式牵动 setData」：多数纯样式改动只重绘不涉逻辑；但当样式类要「随数据动态切换」（`:class="{{ active ? "a":"" }}"`），或你为了改样式而新增/改变了驱动 class 的 data，就会走 setData 跨线程；另外大量 `style="{{}}"` 行内拼接对象/字符串每次生成新值、或频繁切 class 会放大渲染层重排与 diff。故动态样式尽量「预定义 class 用少量布尔切」，别每帧拼字符串 style（本关行内绑定性能题）。
+
+微信官方文档《WXSS 样式》；掘金《rpx 的设计原理与适配陷阱》
+
+### 15.  暗色模式在小程序里怎么落地？有哪些与 Web 不同的点？
+
+三源合一：① 系统主题——监听 `wx.onThemeChange`/`getSystemInfo().theme`，在 App/Page 的 onShow 初始化当前主题，据此在根节点挂 `data-theme="dark"` 或切 class，配合 WXSS 变量（CSS variables 小程序支持）定义色板一键翻。② 导航栏/胶囊/tabBar——这些是 Native 绘制、不吃 WXSS，必须调 `wx.setNavigationBarColor`/tabBar `setTabBarStyle` 或 json 里配 `darkmode:true`+`light/dark` 两套色与 `themeLocation` 引用的 json。③ 图片/图标——暗色下要换资源或用 currentColor/SVG。与 Web 差异：不能纯靠 CSS `prefers-color-scheme` 一把梭，因为窗口/导航/胶囊是原生层，必须 JS 主动同步；页面背景色也可由 json backgroundColor 控制。落地上把「色值集中成 theme token」是防止改一处漏一处的关键。
+
+**来源**：小程序 darkmode 配置、themeLocation、setNavigationBarColor 与 onThemeChange 文档。

@@ -1,4 +1,4 @@
-# next-middleware-auth 面试题（12 题）
+# next-middleware-auth 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎、InfoQ 等站点 Next 鉴权与中间件高频面经，中文重述。
 
@@ -65,3 +65,19 @@ middleware 只门是否存在会话；页面层解 membership（unstable_cache �
 **12. Auth.js 库本身要退役/不维护了（社区曾发生），你的迁移成本评估？**
 **来源**：InfoQ《供应链依赖与 Auth.js 风波观察》
 拆三层评估：① provider 适配（OAuth 流程）——标准化高，可换 Lucia/自建 OAuth 直连；② session 载体（JWT+cookie）——本就自己代码，迁移轻；③ middleware/页面/Action 对 `auth()` 的调用面——统计单点封装（lib/auth.ts re-export）决定痛感。教训回写军规：**对框架级依赖保持"自有封装层"**（呼应 react-architecture 依赖隔离、mp-framework 选型论）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  会话 cookie 的 HttpOnly/SameSite/Secure/Path 四个属性，在 Next 登录态设计里各自防什么？**
+**来源**：OWASP 会话管理速查；InfoQ《Cookie 属性并不枯燥》
+HttpOnly：JS 读不到——防 XSS 直接偷 token（但防不了"带着 cookie 发请求"的 CSRF，两者互补不是二选一）；SameSite=Lax：跨站发起的顶层导航外不带 cookie——防 CSRF 主流形态（表单 POST/子资源），完全禁第三方上下文用 Strict，需要嵌入自身跳转回来再放宽；Secure：只在 HTTPS 发送——防明文链路截获与降级注入（Lax/Strict 不要求 Secure，但生产应全上；跨站携带才必须 Secure+SameSite=None）；Path=/：限制"哪些请求带 cookie"，防无关低信任子域读取，但防不住同域 XSS（那靠 HttpOnly+隔离）。Next 落地：middleware 与 Set-Cookie 保持一致策略；session cookie 别放 NEXT_PUBLIC 明文；配合 Origin 校验 + Action 幂等令牌补 CSRF 最后一步。加分句：说得出"Lax 为什么防不住同域 XSS 发起的请求、Secure 为什么单独不够"这组交叉关系。
+
+**14.  Auth.js 的 JWT 策略与数据库 Session 策略怎么选？edge middleware 校验怎么做才不拖垮首字节？**
+**来源**：Auth.js 官方 Sessions 文档；SegmentFault《JWT vs 会话表：登出那一秒的差别》
+本质差异是"吊销即时性 vs 就近验证"：JWT 策略自包含、middleware/边缘可本地验签（快、无 DB 往返），但登出/封号要等 TTL 或用短期 token+轮换缓解，"权限变更生效"有窗口；DB 策略每次查会话表（服务端）可即时吊销，但 Edge middleware 连不上/不该连 DB——通行做法：middleware 只验 JWT 信封（会话令牌本身是签名的、里面带 session id），RSC/Action 层拿 id 查会话表做真校验（缓存层容忍几秒），兼顾吊销即时与边缘速度。首字节保护：验签用 jose+Web Crypto 纯 CPU 操作、JWKS 缓存；绝不在 middleware 里查库或 fetch 外部鉴权服务（冷启动 + 延迟叠加会让每请求多一跳）；把"必须现算权限"的少数敏感操作放 Action 层带服务端缓存。加分句：能说出"登出后还能用多久"这个量化视角（JWT=TTL 窗口，DB=缓存 TTL）即高分。
+
+**15.  公开站 + 会员区 + 管理后台共存时，middleware matcher 与渲染策略你会怎么整体设计？**
+**来源**：Next.js 官方 middleware matcher 文档；知乎《一个应用三种信任域的鉴权分层》
+matcher 设计：/api 与资源路径先排除（负向断言挡 _next/static、favicon、图片），公开区不进鉴权分支（matcher 只圈 /account、/admin、/api/mutations 等受护前缀），避免"全站 middleware 每请求查会话"；三域三策略：公开=静态/ISR+壳级实验性动态（不查身份，个性化用客户端岛）；会员=强制动态 SSR 或 PPR+动态壳（layout 层查 session，缺则 redirect 带 callbackUrl）+ Action 层再校验（防直达）；后台=独立子域/路径前缀 + 更强会话（短 TTL+二次因素）+ 路由组 (admin) 单独 layout 单独鉴权壳 + 审计日志。防串味：三种信任域用不同 cookie name/path 隔离、后台会话不复用前台令牌；middleware 里后台前缀再加 IP 白名单/地理粗限只是纵深一层不是全部。渲染策略与鉴权在这里会交汇：会员页因 cookies() 天然动态，别指望缓存——要缓存的是数据片段（tag）而非整页。加分句："matcher 圈多大、鉴权就查多狠、缓存就剩多少"三句话串起三门课。

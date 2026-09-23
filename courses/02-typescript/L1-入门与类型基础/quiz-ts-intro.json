@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "'类型擦除'指的是什么？",
       "options": [
-        "编译后类型被加密",
         "TS 类型在编译成 JS 后被完全删除，产物里不含任何类型信息",
+        "编译后类型被加密",
         "运行时动态删除未使用变量",
         "把 any 转成具体类型"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "类型只存在于编译期，跑起来是普通 JS——运行时没有类型信息，泛型也被擦除。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "关于泛型 <T>，因为类型擦除，运行时能做什么？",
       "options": [
         "可以 if (T === string)",
-        "拿不到 T，无法在运行时判断类型参数",
         "可以用 T 创建实例",
+        "拿不到 T，无法在运行时判断类型参数",
         "T 会保留在 metadata 里默认可读"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Array<T> 运行时就是普通数组，T 消失——这与 Java/C# 泛型不同。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "`tsc --noEmit` 的作用是？",
       "options": [
         "只编译不检查类型",
-        "只做类型检查、报告错误，但不产出任何 JS 文件",
         "清空输出目录",
-        "禁用 sourcemap"
+        "禁用 sourcemap",
+        "只做类型检查、报告错误，但不产出任何 JS 文件"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "--noEmit 是'只抓 bug 不产出'模式，CI 门禁常用。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "超集关系；TS 不提升运行速度、不改运行时行为、可渐进迁移。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "默认情况下 `tsc` 遇到类型错误的行为是：",
+      "options": [
+        "拒绝产出任何 JS",
+        "报错但仍然 emit JS（除非开 noEmitOnError）",
+        "只报错第一行就退出",
+        "自动修复后编译"
+      ],
+      "answer": 1,
+      "explanation": "类型检查与转译是两条线：tsc 默认带错也产出；而 esbuild/swc 等转译器根本不做类型检查——所以 CI 必须单独跑 tsc --noEmit。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Node 22.6+ 的 `--experimental-strip-types` 能力是：",
+      "options": [
+        "把 TS 编译成 V8 字节码",
+        "直接运行 .ts：仅剥离类型标注，不做类型检查也不转换语法",
+        "自动生成 .d.ts",
+        "类型检查加速模式"
+      ],
+      "answer": 1,
+      "explanation": "原生 type stripping：不做转译（enum/namespace 等需改写的会拒绝），因此要求代码语法本身是可用 JS 子集——和「删掉类型就是合法 JS」的 erasable 纪律呼应。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "关于 TS 的类型信任模型，正确的是：",
+      "options": [
+        "运行时会自动校验接口返回是否符合声明",
+        "类型只在编译期成立，运行时边界数据默认被信任，需 zod 等运行时校验兜底",
+        "as 断言会在运行时做类型检查",
+        "strict 模式下类型错误会抛异常"
+      ],
+      "answer": 1,
+      "explanation": "类型擦除决定了 TS「声明即信任」：`const u = res.json() as User` 只是骗过编译器；真实边界防御是 runtime schema validation。"
     }
   ]
 }

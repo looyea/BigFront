@@ -1,6 +1,6 @@
 # node-child-process 面试题精选
 
-> 共 12 题，覆盖 API 取舍 / 安全 / 生命周期 / IPC / 多进程选型 五类。
+> 共 15 题，覆盖 API 取舍 / 安全 / 生命周期 / IPC / 多进程选型 五类。
 
 ---
 
@@ -129,3 +129,25 @@ exec(`convert ${userInput} out.png`);
 `fork` 出的每个进程**独立监听会各自 bind 端口→端口冲突**，你要自己做连接分发、做重启守护、做端口复用。**`cluster` 就是把这些封装好了**：master 持有一个监听 socket，通过 IPC **句柄 transfer**（见第 9 题）把连接公平分给各 worker，并提供 worker 挂了自动重启等能力。所以"多核跑同一 HTTP 服务"应直接用 `cluster`（或 pm2 的 cluster 模式），而非手写 `fork` 循环。
 
 **来源**：Node.js — "Cluster Module"、pm2 — "Cluster mode"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 给一张 spawn/exec/execFile/fork/execSync 的选型决策表，并说说各自主线程代价。
+
+维度：shell（exec 有→注入面；execFile/spawn 无）、输出获取（spawn 流式 vs exec* 缓冲 maxBuffer 截断报 ENOBUFS）、IPC（fork/spawn stdio ipc 独有）、Windows 参数转义（spawn 数组自动引用，手拼字符串是事故源）。主线程代价：同步系（execSync 等）阻塞事件循环全程（服务里禁，脚本可用）；异步系只付「派生 + fd 管道」成本，回调在 loop 里跑。选型：跑外部命令默认 execFile（无 shell、缓冲）/spawn（大输出、流式、需精细 stdio）；Node 子进程要通信才 fork（本质 spawn+ipc channel，独立 V8 内存全隔离）；别拿 execSync 在服务里「图省事」。附加题：posix_spawn vs fork+exec（Node 用 uv_spawn，Windows 无 fork 语义——「fork 出非 Node 程序」在 Win 报错）。
+
+**来源**：Node child_process 文档 API 对照表；libuv uv_spawn 平台实现说明（Windows CreateProcess）。
+
+### 14. fork 的 IPC channel 底层是什么？为什么消息里不能直接传函数/class 实例？
+
+底层：一对 socketpair（POSIX Unix socket / Win 命名 pipe）上的 JSON 序列化 + 特殊「句柄传递」协议——process.send 走 JSON（structuredClone 选项可开），所以函数/ Symbol/ 闭包/类实例（原型链丢失）全不可传。能传的：可序列化数据 + **net.Server/net.Socket 句柄**（send(msg, server) 把监听 fd 过继给子进程——cluster 端口共享正是靠这个，本关 cluster 题的底层答案）。想要共享内存不是塞消息：SharedArrayBuffer 可以 postMessage 语义传给 worker 而非 child（跨进程共享要 OS mmap/文件映射库）。设计口径：进程边界=序列化边界，API 按「消息合同」设计（type 字段判别联合），别指望引用穿透。
+
+**来源**：Node process.send/channel 文档与 handle 传递协议；cluster 源码（共享 server 句柄实现）。
+
+### 15. 父进程 fork 子进程后，父退出时「关不掉/退得慢/子变僵尸」三类问题各怎么治？
+
+关不掉：父没等 IPC drain 就 exit——send 后立刻 exit 消息丢失，规范是 send 回调/once("exit") 再退；子忽略信号——SIGTERM 默认终止但进程可捕获不退，父兜底 kill(SIGKILL) + 超时升级（先 TERM 后 KILL 的优雅阶梯，本关 deploy 关呼应）。退得慢：父事件循环被子的 stdio/socket 句柄 ref 住——不想要就 unref 或显式 kill。僵尸：子退出但父不 wait——Node spawn 内部会 reap，但 detached 子（脱离父进程组）变孤儿挂 init 不是僵尸；容器里 init=node 且 PID 1 才需自己 reap（本关 PID 1 题的 zombie 面：init 缺失僵尸堆积）。制度：启动即登记 children 数组，SIGTERM 时统一 TERM→限时→KILL→await exit 收尸，测试注入「子卡死」验证 30s 内全绿。
+
+**来源**：Node child 进程 exit/close 事件与 kill 语义文档；Linux 僵尸进程与 PID 1 reaping（npm/Docker base image 讨论）。

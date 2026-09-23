@@ -1,6 +1,6 @@
 # node-config 面试题精选
 
-> 共 12 题，覆盖 环境变量 / dotenv / 配置分层 / 密钥安全 / 日志 五类。
+> 共 15 题，覆盖 环境变量 / dotenv / 配置分层 / 密钥安全 / 日志 五类。
 
 ---
 
@@ -93,3 +93,25 @@
 `debug` 用**命名空间**（`app:db`、`app:http`）+ 环境变量 `DEBUG` 在**运行时按需开合**，生产默认静默、排障时 `DEBUG=app:*` 重跑即可，无需改代码重新部署；还自带时间戳、%s 格式化。比散落 `console.log`（易遗留、无法整体关闭）干净得多（呼应 node-config 第七节）。
 
 **来源**：debug(npm) — README、Node.js Best Practices — "Logging"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 设计一个「启动即校验、错误信息能救命」的配置层，给出代码结构与校验点。
+
+结构：config/ 单一模块：来源合并（默认 < 文件 < env < 旗标，显式优先级表）→ zod/envalid schema 校验 → 冻结导出（Object.freeze 防运行中改写）。校验点超越「存在」：① 类型转换+范围（PORT 数字 1-65535、日志级别枚举）；② **条件必填**（NODE_ENV=production 时 DATABASE_URL 必填、S3 凭证成组出现）；③ 语义合法（JWT secret 最小熵、URL 可 parse、cron 表达式能解）；④ 危险组合拦截（prod+cors:"*" 直接拒——比上线后扫出来便宜一万倍）。错误信息=救命文档：报「缺失/非法的具体键 + 当前来源 + 期望格式示例 + 文档链接」，禁止 dump 整个 env（密钥泄漏）。启动即炸 fail fast：配置错误在 deploy 期红、不在流量期红（本关「何时 fail fast」题的落点）。测试：config 模块是全项目单测性价比最高的一块——纯函数+边界表驱动。
+
+**来源**：12-Factor config 章；zod/envalid 模式与 OWASP secrets-in-config 反例集。
+
+### 14. 密钥管理：从 .env 到 KMS，给一条随团队规模演进的路线与红线。
+
+演进：单人=本地 .env（gitignore + .env.example 模板，本关 Git 规范题）→ 小团队=平台 Secret（K8s Secret/云 SSM，CI 注入不落盘）→ 规模化=动态短时凭证（STS/Workload Identity，进程根本不持有长期 key）+ KMS 信封加密（数据密钥轮换）+ 审计（谁取过哪把钥）。红线恒定：① 不进 git/镜像层（本关 Docker 反模式题——层缓存可还原、registry 可拉取=公开）；② 不打日志（脱敏在 logger 层做 redact 路径表，pino redact）；③ 不发前端（JWT 签密与验公钥分开，公开只能公开）；④ 权限最小（桶级/前缀级而非 root）；⑤ 可轮换（双活密钥期+版本化密文，「换 key=全量重启」的架构先重构）。取证友好：取用事件留痕（Vault lease/KMS CloudTrail），泄露响应=轮换时长，MTTR 目标写进 SLO。
+
+**来源**：Vault 动态凭证与信封加密文档；AWS Well-Architected 安全支柱（凭据管理）与 K8s Secrets 加密静态说明。
+
+### 15. 线上排障要求「一个请求全链路可串」：trace id 从哪来、怎么贯、日志怎么配？
+
+来源：入口生成（或采纳上游 W3C traceparent——有则续接无则新建，本关 correlation 题），**在 ALS.run 边界绑定**，出站 fetch/DB/kafka 注入 traceparent 头（传播协议标准化后与 APM/Tempo 无缝续链）。贯穿：AsyncLocalStorage 是 Node 的上下文载体（HTTP 中间件/队列 job 边界各 run 一次；worker 线程边界要手工 postMessage 带 id 再 run——ALS 不跨 worker！这是 worker/queue 架构的暗坑）。日志侧：pino mixin/transport 自动带 traceId 字段，级别动态可调（debug flag 热更，本关配置边界题的联动）；查询=traceId 精确过滤 + spanId 排序。指标：采样率决策——全采（内部流量小）vs head-based 概率采（错误强制采：tail sampling 需要 collector 侧缓冲）。工具：OpenTelemetry NodeSDK 一次埋 HTTP/DNS/DB 自动 span，日志用 trace.correlation 注入——自建方案只在预算极紧时考虑。验收：一个慢请求从入口日志出发 30 秒内定位到最深耗时 span，串不起来=白干。
+
+**来源**：W3C Trace Context 规范；OpenTelemetry JS 文档（自动插桩+日志 trace 关联）与 pino redact/mixin 说明。

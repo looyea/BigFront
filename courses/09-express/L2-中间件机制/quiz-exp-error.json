@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "HttpError 类里 expose 属性的作用是什么？",
       "options": [
-        "控制错误是否打印到控制台",
         "标记该错误信息是否可以暴露给客户端（5xx 不暴露内部细节）",
+        "控制错误是否打印到控制台",
         "控制 Sentry 是否上报",
         "标记是否为已知错误"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "expose=true (4xx) → 返回真实 message 给用户；expose=false (5xx) → 只返回 'Internal Server Error' 防止泄露堆栈。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "uncaughtException 之后进程应该怎么做？",
       "options": [
         "继续运行，catch 后忽略",
-        "记录日志后尽快重启进程（状态不可靠）",
         "调用 process.exit(0)",
-        "重新注册路由"
+        "重新注册路由",
+        "记录日志后尽快重启进程（状态不可靠）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "uncaughtException = 未知状态 → 内部数据可能损坏 → 正确做法：记 fatal log → close server → 让进程管理器(pm2/K8s)重启。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "通常自定义 handler 在前（负责 res.json 响应），Sentry handler 在后作为最后兜底上报（不再发响应）。或反过来：Sentry request handler 在前捕获 context。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " 错误中间件里写响应前，先判断 if (res.headersSent) return next(err)，这一行防的是？",
+      "options": [
+        "防止客户端重复提交",
+        "响应头已发出时再 res.status().json() 会抛 ERR_HTTP_HEADERS_SENT 二次错误——把无法补救的错误原路交还给默认处理器/上报层止损",
+        "防止错误被吞",
+        "兼容 Express 4"
+      ],
+      "answer": 1,
+      "explanation": "半截响应是 HTTP 的既成事实：headersSent 之后一切\"改写\"都失败，唯一正确动作是移交而不是重试表演。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " unhandledRejection 与 uncaughtException 的推荐处理差别是？",
+      "options": [
+        "完全相同都直接退出",
+        "unhandledRejection 通常先收尾在途请求择机优雅重启；uncaughtException 状态已不可信，只能尽力记日志后尽快退出（官方明确\"只该用于崩溃前收尾\"）",
+        "前者忽略后者退出",
+        "两者都忽略继续跑"
+      ],
+      "answer": 1,
+      "explanation": "区别在状态可信度：Promise 拒绝多半局部可控，同步异常可能已把内部数据改到一半——\"继续跑\"的赌注大小不同。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 错误处理中间件里调用 next()（不带参数）会发生什么？",
+      "options": [
+        "跳回业务中间件",
+        "不会被下一个错误中间件接收而是回到普通中间件链继续——Express 靠四参数区分错误链，\"转发错误\"必须 next(err)，写错即静默越级",
+        "自动重抛同一错误",
+        "终止请求"
+      ],
+      "answer": 1,
+      "explanation": "next() 在错误处理器的语义是\"我处理完了，回普通链\"，想交给下一个错误处理器必须 next(err)——签名即路由。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " SSE 响应推流中途服务端抛错，唯一可行的\"错误呈现\"是？",
+      "options": [
+        "res.status(500) 再 res.end()",
+        "状态码早已发出无法修改——在流内发一个自定义事件（event: error + data）或关闭连接让客户端按协议约定处理重连与告警",
+        "抛给全局 errorHandler 自动处理",
+        "忽略等心跳掩盖"
+      ],
+      "answer": 1,
+      "explanation": "流式响应的错误通道是业务协议不是 HTTP 状态——设计 SSE 时就得先设计它的错误帧，事后无计可施。"
     }
   ]
 }

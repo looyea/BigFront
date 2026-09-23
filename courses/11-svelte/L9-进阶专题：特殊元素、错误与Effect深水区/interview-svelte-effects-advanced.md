@@ -1,6 +1,6 @@
 # svelte-effects-advanced 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与 runes 文档深水区章节的转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与 runes 文档深水区章节的转述。
 
 ---
 
@@ -78,3 +78,25 @@ JSON 只表达普通值：Set/Map/函数/Error/日期（变字符串）全部降
 **来源**：架构分层综合题（深水区全家桶的实战验收卷）
 
 正文：CRDT 库实例活在组件外 → `$effect.root` 托管（或 runes 单例+手动 dispose）；协同光标：高频外部事件 → 普通 `$state` 承接（不驱动 DOM 的部分用 untrack 读）；本地草稿：debounce（清理函数版）+ snapshot → IndexedDB（可序列化状态设计）；撤销栈：纯函数模块 + 显式事件写入（**不是 effect**——撤销是命令流不是派生流）；导出 PDF：`await tick()` 等渲染完成再截图/打印，全程禁 flushSync（一次变更就要一次 flush，循环里是灾难）。评分：每格说对原语只是表，**分清"声明流 vs 命令流"这个里**（派生的用 $derived、事件的用 handler、同步外部世界才轮到 effect 家族）才是本课的全部心法（呼应 svelte-reactivity-internals 终题谱系）。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  为什么 $effect 默认在 DOM 更新后跑、$derived 却是惰性求值？这套时序带来的两个经典坑是什么？
+
+设计动机：$effect 常用于"依赖最新 DOM 的副作用"（读元素尺寸、操作第三方、聚焦），故排在渲染 effect 把 DOM 改好之后跑（保证你读到的是新 DOM）；$derived 是纯计算，惰性求值只在被读时算 + 缓存，不需要"跑"的时机（它是"被拉"不是"被调"）。两个经典坑：① effect 里"读了自己也写了同一个 signal"→ 自己触发自己 → 死循环/无限 effect（既有"读自己也写自己死循环"题），解法是拆开或用 untrack 读；② effect 首跑也会执行（不是只在变化时），把初始化副作用写进去要意识到"挂载即跑一次"，且 SSR 不跑（既有"$effect 不在 SSR 跑导致什么体验差异"题）。加分句：把三者时机讲成一个模型——state 写(同步) → derived 拉(惰性) → 渲染 effect(改 DOM) → 用户 effect(DOM 后)，这条"同步标脏、异步分层 flush"的流水线解释了 99% 的时序困惑；理解它才能预判"为什么 effect 里读 DOM 是新的、为什么 effect 会自激"（呼应既有 tick/flushSync/effect 时机辨析题）。
+
+**来源**：Svelte effect/derived 时机模型；DOM 更新与 effect 顺序；既有"effect 在 DOM 后跑"深化
+
+### 14.  untrack、$state.snapshot、$derived 三者都能"减少响应"，语义差别与各自适用场景？
+
+语义分层：① untrack(fn)——"在 fn 里读的 signal 不登记为当前 effect 的依赖"（读当下值但不订阅，之后它变不重跑；用于"我用一下这个值但不想因它变化重跑"，对应既有 untrack 举例题）；② $state.snapshot(obj)——"把 $state 深代理对象拍成一次性普通值快照"（脱离代理，用于传给第三方/postMessage/结构化克隆/JSON，避免把 Proxy 递出去，对应既有"postMessage 深对象""JSON.stringify 深代理"题）；③ $derived——不是减少响应而是"建立新的派生依赖并缓存"（读它仍响应其源，只是把多次读合成一次算）。适用：想让 effect 忽略某个读了的值→untrack；要把响应式数据交给不认 Proxy 的外部世界（worker/库/存储）→snapshot；要复用一份计算→derived。加分句：区分"控制订阅(untrack)""控制值形态(snapshot)""控制计算(derived)"三条正交轴——三者常被混当"逃逸响应式"，但 untrack 动的是依赖收集、snapshot 动的是数据代理形态、derived 动的是计算复用；能一句话说清"我要脱的是订阅、是代理、还是重复计算"，就再不会用错工具（呼应既有 untrack/snapshot/derived 三兄弟辨析题）。
+
+**来源**：Svelte untrack/snapshot 文档；响应式脱钩工具；既有"三者区别"深化
+
+### 15.  写一个 useAutoSave(draft, save) 的能力，$effect.root、定时器、清理、竞态你会怎么组织？
+
+组织：① 依赖跟踪——用一个会随 draft 变化的响应式源触发保存（若作为 action/组件内，$effect 读 draft 即自动订；若脱离组件用 $effect.root 手动管，返回 dispose 供调用方关，对应既有 root 生命周期题）。② 防抖——$effect + setTimeout 或独立防抖，"draft 停止变化 N 毫秒后才 save"，避免每键入都请求（呼应定时器/防抖测试题）。③ 清理——effect cleanup 里 clearTimeout + 组件/root 销毁时取消未决保存与进行中的请求（AbortController，防"离开页面还在写回"，对应 lifecycle 事故题）。④ 竞态——多次快速保存要保证"后发起的结果不覆盖更晚的成功保存"（保存队列/序号/仅接受最新 revision），或串行化写。⑤ 失败处理——保存失败重试 + 冲突提示（服务端 revision vs 本地）。加分句：这个题真正的考点是"把声明式响应式翻译成一套有生命周期的命令式 IO 流"——触发(响应)、节流(定时器)、取消(清理+Abort)、顺序(竞态)四件事各要独立处理，尤其它们在 $effect 重跑的语义下容易漏（每次重跑都要清上一轮的 timer/请求）；能主动点出"$effect 重跑即代表上一轮保存应作废，cleanup 就是这个作废钩子"就抓住了响应式与异步 IO 协作的命门（呼应既有 effect cleanup 与"组件卸载后 root 里 effect 还在跑"题）。
+
+**来源**：自动保存设计；effect root 与手动生命周期；防抖与请求竞态；既有 useAutoSave 设计题

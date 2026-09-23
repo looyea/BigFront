@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "import img from './logo.png' 和 public 目录下的 /logo.png 有什么核心区别？",
       "options": [
-        "完全一样",
         "import 走构建管线（hash + transform + code split）；public 原样复制不处理",
+        "完全一样",
         "public 会被 hash",
         "import 的文件不会被打包"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "import 后文件名带 contenthash → 永久缓存 + 可被 Tree Shake；public 原样拷贝 → 改名需手动 cache-bust。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "assetsInlineLimit: 4096 的效果是？",
       "options": [
         "所有图片都转 base64",
-        "小于 4KB 的 import 资源自动 base64 内联到 JS/CSS",
         "限制上传文件大小 4KB",
+        "小于 4KB 的 import 资源自动 base64 内联到 JS/CSS",
         "图片最大 4096px"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "小资源内联减少 HTTP 请求数；大于 4KB 才独立文件。设 0 = 全部不内联。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "import content from './data.csv?raw' 返回什么？",
       "options": [
         "CSV 文件 URL",
-        "CSV 文件的文本内容字符串",
         "解析后的数组",
-        "Buffer"
+        "Buffer",
+        "CSV 文件的文本内容字符串"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "?raw 后缀返回文件原始文本内容（字符串）——适合需自行解析的格式如 CSV/TOML/Markdown。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "Vite 默认只识别常见图片/字体/媒体后缀。自定义格式（.glb/.glsl/.hdr）需加入 assetsInclude → 才能 import 后走资源管线。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " public/ 与 src/assets 里同一张图的本质区别是？",
+      "options": [
+        "大小不同",
+        "public 原样复制进产物根路径（无 hash 无处理，引用绝对 /xx.png）；src/assets 参与构建图（hash 命名、小文件内联、被 CSS/JS 引用才能被分析）",
+        "public 更快",
+        "src 只能放图片"
+      ],
+      "answer": 1,
+      "explanation": "\"改完文件用户拿不到新版\"若图在 public——无 hash 即无缓存失效，这是 public 滥用的标准代价。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " new URL(./img.png, import.meta.url) 这种写法在 Vite 里的语义是？",
+      "options": [
+        "运行时动态解析",
+        "构建期被静态分析识别，./img.png 进资源管线（hash+重写 URL），得到带 hash 的绝对 URL——但路径必须是字面量，变量拼接会脱管",
+        "仅 Node 可用",
+        "等价 require"
+      ],
+      "answer": 1,
+      "explanation": "它是原生 ESM 世界里\"要 URL 字符串不要内容\"的合规通道（动态 import 之外的另一条静态分析可及路径）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " build.assetsInlineLimit 设为函数形态的用途是？",
+      "options": [
+        "按文件修改时间",
+        "逐资源自定义内联判定（返回 true 内联/阈值数字）——可按类型精细策略：SVG 倾向内联、字体保守，比全局一个阈值更可控",
+        "限制并发",
+        "禁用内联"
+      ],
+      "answer": 1,
+      "explanation": "内联的权衡是\"请求数 vs 缓存粒度+HTML 体积\"：函数形态让你按资产语义分别定价。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 把 SVG 当 Vue/React 组件 import（?component 风格）需要先做什么？",
+      "options": [
+        "无需准备",
+        "Vite 不认识 SVG→组件的转换，需插件（vite-plugin-svgr / vite-svg-loader 类）注册该查询语义——裸 Vite 只有 ?raw/?url",
+        "改后缀为 .jsx",
+        "放 public"
+      ],
+      "answer": 1,
+      "explanation": "?component 是插件生态约定的\"扩展查询词\"——原生清单里的显式列表外语法都要问插件（呼应自定义查询题）。"
     }
   ]
 }

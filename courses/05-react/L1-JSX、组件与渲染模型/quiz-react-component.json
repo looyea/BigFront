@@ -8,11 +8,11 @@
       "prompt": "React 里组件函数首字母必须大写，原因是？",
       "options": [
         "编码风格偏好",
-        "React 靠首字母大写区分这是组件还是原生小写标签",
         "为了性能",
+        "React 靠首字母大写区分这是组件还是原生小写标签",
         "为了让 props 生效"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "小写会被当成字符串标签如 <div>（呼应 react-component 第一节）。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "关于 props，正确的做法是？",
       "options": [
         "组件内直接 props.x = 新值",
-        "props 只读，需变更就调用父传入的 onXxx 回调",
         "用 setState 修改 props",
-        "把 props 存进全局对象共享"
+        "把 props 存进全局对象共享",
+        "props 只读，需变更就调用父传入的 onXxx 回调"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "props 不可变，子通过回调请求父改（呼应 react-component 第二节、vue-state-patterns）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "props.children 最接近 Vue 的哪个概念？",
-      "options": ["具名插槽", "默认插槽", "provide/inject", "计算属性"],
+      "options": [
+        "具名插槽",
+        "默认插槽",
+        "provide/inject",
+        "计算属性"
+      ],
       "answer": 1,
       "explanation": "标签之间内容=children，对应默认插槽（呼应 react-component 第三节、vue slot）。"
     },
@@ -66,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "下面哪种是把副作用写在组件渲染体的后果？",
-      "options": ["只在挂载跑一次", "每次渲染都重新执行、可能无限循环/撕裂渲染", "被 React 自动去重", "自动放进 useEffect"],
+      "options": [
+        "只在挂载跑一次",
+        "每次渲染都重新执行、可能无限循环/撕裂渲染",
+        "被 React 自动去重",
+        "自动放进 useEffect"
+      ],
       "answer": 1,
       "explanation": "渲染体每次重跑，副作用要放 useEffect（呼应 react-component 第五节、react-useeffect）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "区别在\"数据握在谁手里\"（呼应 react-component 第六节、react-forms）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "把组件当普通函数直接调用 `const html = Card({ title })` 而非渲染 `<Card title/>`，主要问题是？",
+      "options": [
+        "没有区别，只是写法啰嗦",
+        "绕过了 React 的元素/协调体系：其中的 Hooks 拿不到正确的渲染上下文（会报 hook 顺序错乱或 Invalid hook call），也不会被当作独立单元参与 diff 与 key 身份",
+        "性能反而更好",
+        "只是不能在 SSR 用"
+      ],
+      "answer": 1,
+      "explanation": "组件必须以「元素」形式（`<Card/>` 即 `jsx(Card,...)`）交给 React 渲染，React 才会在自己的渲染循环里调用它、绑定 Hook 调度栈与 Fiber。手工调用函数只是在 JS 层跑一遍，丢失了 Hook 归属与协调身份——这是 Invalid hook call 的常见成因之一。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "关于函数组件的 `defaultProps` 现状，正确的做法是？",
+      "options": [
+        "继续用 defaultProps，是官方推荐",
+        "React 已废弃函数组件上的 defaultProps（对历史遗留告警），推荐用参数默认值 `function C({ a = 1 }) {}`；defaultProps 目前主要保留在 class 组件",
+        "必须用 PropTypes 补默认值",
+        "defaultProps 会自动应用到 Hook"
+      ],
+      "answer": 1,
+      "explanation": "React 18.3/19 逐步移除函数组件 defaultProps 支持并发出警告，官方指引是「用 JS 默认参数」。defaultProps 与类型默认值本是两回事：TS 里 `interface Props { a?: number }` 只表可选，不代表运行时默认，仍需默认参数补上——这与本包 props 默认/校验题相呼应。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "同一个组件在列表里被渲染多次，关于它每次更新时的「执行」，正确的是？",
+      "options": [
+        "组件函数只在挂载时执行一次，之后靠 diff 复用",
+        "每次父级渲染或自身 state 变化，组件函数都会重新执行整个函数体，Hook 靠调用顺序而非变量名对齐上一次的状态槽位",
+        "只有 useEffect 会重跑，函数体不重跑",
+        "重新执行等于重新创建 DOM"
+      ],
+      "answer": 1,
+      "explanation": "「UI as a function of state」意味着每次都是对整棵组件重新求值，函数体里的 const/闭包/事件处理函数都是本帧新建的——这解释了为什么渲染期不能做副作用、为什么要 useMemo 稳定引用、为什么 Hook 顺序不能条件化（靠下标定位槽位）。与 Vue 的 setup 只跑一次是根本心智差。"
     }
   ]
 }

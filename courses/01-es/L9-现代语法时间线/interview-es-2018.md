@@ -105,3 +105,21 @@ console.log(b.x, b.y, Object.getOwnPropertyDescriptor(b, 'y'));
   ```
   **追问**：为什么不用 `Object.assign` 递归？—— assign 只浅合并一层，遇到嵌套对象直接覆盖。
 - 来源：Redux combineReducers 源码思想；MDN。
+
+---
+
+**13）对象 spread 与 Object.assign 的差别与共同点？**
+- 参考要点：共同：都浅拷贝、都**触发 getter/setter**、都只取可枚举自有属性（spread 字面量语义含 Symbol 键）。差别：assign 修改并返回 target（会污染源），spread 产出新对象；spread 是语法、无法多源合并顺序参数化，assign 可以链式多源。边界：`{__proto__: x}` 字面量是设原型而 `{...obj}` 展开时 __proto__ 当普通键复制——两者对 __proto__ 的处理不同是著名安全点。
+- 来源：MDN《Spread syntax vs Object.assign》；tc39/proposal-object-rest-spread FAQ。
+
+---
+
+**14）for await...of 消费的异步迭代器协议长什么样？手写一个？**
+- 参考要点：对象实现 `[Symbol.asyncIterator]() { return { next(): Promise<{value, done}>, return?() } }`；for-await 每轮 await next()，值再 await 解包 thenable，break/return 时调迭代器的 return（清理钩子）。Node 里 stream/fs.createReadStream/Readline 原生可迭代；手写示例：分页 API 迭代器——next() 里 fetch 下一页，到底 done:true。同步版则是 Symbol.iterator + 直接返回 {value,done}。
+- 来源：MDN《Async iteration protocol》；Node.js stream 文档 "asynchronous iteration"。
+
+---
+
+**15）尾调用优化（TCO）为什么在 ES2022 被正式关闭？替代方案是什么？**
+- 参考要点：Safari 从未实现（JSC 移除整个 JIT 路径成本太高），V8 只做半截；调试栈被裁掉引发排障争议；规范细节（返回形状判断）无法收敛——2019 起 TC39 转向，ES2022 删除条款。工程替代：手写 trampoline（返回 thunk 由循环驱动）、把递归改显式栈/迭代、生成器 CPS；真正深递归场景应挪到循环或分段递归。浏览器「部分引擎默默支持 TCO」造成的行为分裂也是反例教材。
+- 来源：tc39/proposal-tailcall-calling（Stage-4 Closed 公告）；v8.dev《Tail call optimization》博客。

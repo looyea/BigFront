@@ -1,6 +1,6 @@
 # es-publish 面试题精选
 
-> 共 12 题，覆盖 **package.json 字段 / 构建策略 / 版本管理 / 发布自动化 / npm 安全 / Monorepo** 六类。
+> 共 15 题，覆盖 **package.json 字段 / 构建策略 / 版本管理 / 发布自动化 / npm 安全 / Monorepo** 六类。
 
 ---
 
@@ -103,3 +103,25 @@ pnpm-workspace.yaml 声明 `packages/*` → 任意子包 package.json 里写 `"d
 Turborepo 读 `package.json` 的 `dependsTo`（workspace 依赖图）→ `turbo run build` 按拓扑排序：utils 先于 core 先于 app。或手动 `prebuild: "cd ../utils && npm run build"`。最佳实践：**用 Turborepo/Nx 自动推导**——避免循环依赖。
 
 **来源**：Turborepo Docs — "Task graph"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 双包陷阱（dual package hazard）是什么？exports 怎么解？
+
+一个包同时发 CJS+ESM：`require("x")` 与 `import "x"` 解析到两份不同文件 → **两份模块状态**（instanceof 失效、单例裂开、事件总线断）。旧方案 main+module 靠打包器自觉，运行时各取不同入口照裂。exports 条件映射让**同一入口按格式给对应实现**，且鼓励真 ESM 单一源；彻底解法：只发 ESM（modern 包）或 CJS 做薄代理 `module.exports = require("./dist/index.cjs")` 共享状态。Node 端 import 条件 + require 条件 + default 兜底的标准形状要能白板写出来。
+
+**来源**：Node.js 官方文档《Packages: dual package hazard》；sindresorhus《Pure ESM package》。
+
+### 14. semver 范围与 lockfile 的关系：为什么 CI 要 frozen-lockfile？
+
+`^1.2.3` 允许 1.x 任意新增——不锁的话今天构建 ≠ 昨天构建（patch 里出 bug 也能自动进来）；lockfile 把解析树钉死到精确版本+integrity 哈希。CI `--frozen-lockfile`：锁与 manifest 不一致直接失败（防本地随手 npm i 没提交 lock 的漂移）。语义补充：`~` 只放 patch、`>=` 慎用、workspace `*`；pnpm 的 `overrides/resolutions` 处理上游坏版本；依赖树去重（dedupe）与 peer 解析冲突是「装不上」两大主因。
+
+**来源**：semver 官方计算器文档；pnpm/npm CI 模式（frozen-lockfile）说明。
+
+### 15. 开源包发布的完整质量闸门有哪些？（从构建到供应链安全）
+
+内容闸门：`files`/exports 白名单防把源码测试发出去；`publint` 查 exports/types 规范、`attw`（Are The Types Wrong）查类型解析；size-limit 守住体积回退。版本与说明：changesets 管理多包 bump+CHANGELOG。信任链：provenance（npm attest 建立「哪个仓库哪次 CI 发布」的可验证链，防账号被盗投毒）、2FA+automation 细粒度 token、最小权限（包 scope 与组织一致）。供应链攻击面：typosquat（安装确认）、postinstall 脚本执行（--ignore-scripts + lockfile 审计）。发布前最后一眼：`npm pack --dry-run` 看真实清单。
+
+**来源**：npm docs《About provenance and attestations》；publint / attw / changesets 各自 README。

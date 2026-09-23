@@ -1,4 +1,4 @@
-# next-link-router 面试题（12 题）
+# next-link-router 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点 Next.js 导航与预取高频面经，中文重述。
 
@@ -65,3 +65,19 @@ push≈navigateTo（入栈可回退）、replace≈redirectTo（换栈顶）、�
 **12. 让盲人用户/键盘用户可用你的导航，Next 提供什么、你还要补什么？**
 **来源**：InfoQ《全栈框架的无障碍现状》；CSDN（Web 无障碍与 Next 实践相关）
 Next 给：真实 `<a>`（读屏可识别链接语义）、路由切换的文档级更新。要补：焦点管理（无刷新导航后焦点应回主区域顶部，官方 useFocusEffect 模式）、skip-link、当前导航项 `aria-current`、loading 播报 aria-live（结合 loading.tsx，呼应 react-architecture 的可访问性边界）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13. <Link> 的 prefetch 是"免费性能午餐"还是"隐性带宽税"？如何按路由权重精细化？**
+**来源**：掘金《Next.js 预取导致的带宽风暴排查记录》；Vercel 官方文档 <Link> prefetch 策略说明
+本质是用"预取正确目标的概率 × RSC Payload 体积"换"点击后到首屏的时间"。免费的一面：内容站导航图清晰、用户大概率点向下一层，预取让跳转几乎无感。成税的一面：长列表（搜索/商品/ feed）几百条链接都进视口→全预取→带宽与服务端渲染成本被"浏览但从不点"的项吃爆。精细化：① 列表项、外部链接、低概率路径显式 prefetch={false}；② 只对"下一页/面包屑/主导航"这类高确定链接保持预取；③ 大 payload 页配合"轻量首屏 RSC + 重数据懒取"降低单次预取成本；④ 结合 CDN 缓存被预取的静态段 RSC，命中即返、重复预取几乎零成本；⑤ 用 Network 面板/日志量化预取请求占比，设预算。判断信号：出现"预取请求数远超导航数、列表页带宽飙升"就是过度预取。一句话：prefetch 默认对"导航型链接"是午餐、对"内容型条目"是税——按链接性质分级，而不是全开全关。
+
+**14.  App Router 的 router.push/replace 与 History API、Vue Router、React Navigation 的心智映射与差异？**
+**来源**：SegmentFault《各家路由导航 API 横向对比》；知乎《从 History API 到文件路由：前端路由演化史》
+共同底座都是 History API（pushState/replaceState）+ 单页内不换整页。差异在"路由状态由谁拥有"：① 裸 History API 只给你 push/popstate，路由表与匹配自己实现；② Vue Router 有显式路由配置、嵌套路由、全局导航守卫（beforeEach）；③ React Router（SPA）用声明式 <Routes> + loader/action + useNavigate，守卫靠组件/hook；④ React Navigation（RN）用 navigator + 栈/ Tab、有 screen 事件与 useFocusEffect；⑤ App Router 没有"路由表"，路由=文件系统，导航用 useNavigate 的 router.push、守卫靠 middleware（请求层）+ layout/page 里读 session（组件层）+ loading/error 边界，focus/显隐类钩子只能靠 onShow 式手动（页面不卸载时监听 usePathname 变化）。迁移要点：把"全局 beforeEach 鉴权"改造成"middleware + 页内 session 检查"两层；把"嵌套 Outlet"对应到"layout 的 children"；把"路由参数"对应到 searchParams（URL 是公共 API）。
+
+**15.  "URL 状态优先"在 App Router 下为什么被反复强调？如何在 searchParams 上做类型安全与校验？**
+**来源**：InfoQ《URL 是最被低估的状态管理》；掘金《useSearchParams 的参数校验与防御式解析》
+理由：URL 是可分享、可刷新、可前进后退、可被爬虫与预取"看到"的唯一真相源；把筛选/分页/Tab/搜索词放 searchParams 而非组件 state，能免费获得"刷新不丢、能分享、服务端可预渲染对应结果"。落到 App Router：searchParams 是一等入参（且是 Promise），服务端组件可直接读并据此取数渲染，比"客户端 fetch 后再改 URL"少一次往返。代价/规范：① searchParams 全是 string/string[]，需自己解析成 Number/布尔/枚举——要一层"取参即校验/归一"（zod 或手写 parse）防 ?page=abc 或注入；② 只把"值得被分享/影响结果"的放 URL，临时 UI 态（弹窗开合）留在本地 state，别把 URL 当垃圾桶；③ 深链要防御性编程（任何页可能被直接打开、参数被篡改），服务端为准、URL 为提示；④ 频繁写 searchParams 用 shallow 路由/replacer 避免刷屏 history 与过多 re-render。这套等于"手动补了个 router 的参数 schema 校验层"。

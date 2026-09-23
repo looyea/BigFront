@@ -1,48 +1,136 @@
 {
-  "lesson": "solid-internals",
-  "title": "响应式内核（源码级） · 自测",
+  "title": "solid-internals 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "官方最小实现里，signal 的 getter 除了返回值还做了什么关键动作？",
-      "options": ["每次都重跑组件", "把\"当前正在执行的 observer\"加进自己的订阅者集合", "清空订阅者", "触发一次 batch"],
+      "id": "q1",
+      "type": "single",
+      "prompt": "官方最小实现里，signal 的 getter 除了返回值还做了什么关键动作？",
+      "options": [
+        "每次都重跑组件",
+        "把\"当前正在执行的 observer\"加进自己的订阅者集合",
+        "清空订阅者",
+        "触发一次 batch"
+      ],
       "answer": 1,
-      "explain": "读时登记 currentSubscriber 进 subscribers 集合，就是\"自动依赖收集\"的代码级真相。"
+      "explanation": "读时登记 currentSubscriber 进 subscribers 集合，就是\"自动依赖收集\"的代码级真相。"
     },
     {
-      "q": "setter 什么时候不会通知订阅者？",
-      "options": ["新值是对象时", "在事件回调里调用时", "没包在 batch 里时", "value === newValue（相等短路）时"],
+      "id": "q2",
+      "type": "single",
+      "prompt": "setter 什么时候不会通知订阅者？",
+      "options": [
+        "新值是对象时",
+        "在事件回调里调用时",
+        "没包在 batch 里时",
+        "value === newValue（相等短路）时"
+      ],
       "answer": 3,
-      "explain": "setter 先比较 `value === newValue`，相等直接 return 不通知——避免无谓更新的根。"
+      "explanation": "setter 先比较 `value === newValue`，相等直接 return 不通知——避免无谓更新的根。"
     },
     {
-      "q": "最小 createEffect 里 `const prev = currentSubscriber; ... currentSubscriber = prev` 是为解决什么？",
-      "options": ["提升性能", "支持嵌套 effect：跑完恢复上一层 observer", "防止内存泄漏", "实现异步追踪"],
+      "id": "q3",
+      "type": "single",
+      "prompt": "最小 createEffect 里 `const prev = currentSubscriber; ... currentSubscriber = prev` 是为解决什么？",
+      "options": [
+        "提升性能",
+        "支持嵌套 effect：跑完恢复上一层 observer",
+        "防止内存泄漏",
+        "实现异步追踪"
+      ],
       "answer": 1,
-      "explain": "保存/还原 currentSubscriber 让内层 effect 结束后外层登记仍正确，这正是\"嵌套 effect 互相隔离\"的实现。"
+      "explanation": "保存/还原 currentSubscriber 让内层 effect 结束后外层登记仍正确，这正是\"嵌套 effect 互相隔离\"的实现。"
     },
     {
-      "q": "createMemo 相对普通 effect 在机制上的独特之处是？",
-      "options": ["它把计算结果再包成一个可被下游订阅的 signal，并缓存", "它不会自动追踪依赖", "它每轮都强制重算", "它只在服务端运行"],
+      "id": "q4",
+      "type": "single",
+      "prompt": "createMemo 相对普通 effect 在机制上的独特之处是？",
+      "options": [
+        "它把计算结果再包成一个可被下游订阅的 signal，并缓存",
+        "它不会自动追踪依赖",
+        "它每轮都强制重算",
+        "它只在服务端运行"
+      ],
       "answer": 0,
-      "explain": "官方：memo 像 effect 但\"返回一个 signal 并靠缓存优化计算\"，因此可作为源向下游传播。"
+      "explanation": "官方：memo 像 effect 但\"返回一个 signal 并靠缓存优化计算\"，因此可作为源向下游传播。"
     },
     {
-      "q": "Owner 树的两大核心职责是？",
-      "options": ["决定 DOM 结构与 diff", "管理 CSS 作用域与事件委托", "存 props 缓存", "生命周期回收（onCleanup）与 Context 解析"],
+      "id": "q5",
+      "type": "single",
+      "prompt": "Owner 树的两大核心职责是？",
+      "options": [
+        "决定 DOM 结构与 diff",
+        "管理 CSS 作用域与事件委托",
+        "存 props 缓存",
+        "生命周期回收（onCleanup）与 Context 解析"
+      ],
       "answer": 3,
-      "explain": "computation 捕获 Owner：销毁沿 Owner 树逆序回收，useContext 也沿它向上找 Provider。"
+      "explanation": "computation 捕获 Owner：销毁沿 Owner 树逆序回收，useContext 也沿它向上找 Provider。"
     },
     {
-      "q": "一次更新提交里，Solid 保证的执行序是？",
-      "options": ["随机顺序", "按依赖拓扑序：上游 memo 先于下游 effect、更新父不重跑子", "总是先 effect 后 memo", "按 DOM 深度"],
+      "id": "q6",
+      "type": "single",
+      "prompt": "一次更新提交里，Solid 保证的执行序是？",
+      "options": [
+        "随机顺序",
+        "按依赖拓扑序：上游 memo 先于下游 effect、更新父不重跑子",
+        "总是先 effect 后 memo",
+        "按 DOM 深度"
+      ],
       "answer": 1,
-      "explain": "拓扑调度让所有派生在下一次可见更新前算完，且配合短路让每节点一轮至多跑一次。"
+      "explanation": "拓扑调度让所有派生在下一次可见更新前算完，且配合短路让每节点一轮至多跑一次。"
     },
     {
-      "q": "Solid 编译器把一个 JSX 动态表达式 {count()} 变成什么？",
-      "options": ["整棵子树的重渲染函数", "字符串模板", "一个 getter 调用外包一层 render effect，变化只更新该文本/属性节点", "一个 useState"],
+      "id": "q7",
+      "type": "single",
+      "prompt": "Solid 编译器把一个 JSX 动态表达式 {count()} 变成什么？",
+      "options": [
+        "整棵子树的重渲染函数",
+        "字符串模板",
+        "一个 getter 调用外包一层 render effect，变化只更新该文本/属性节点",
+        "一个 useState"
+      ],
       "answer": 2,
-      "explain": "这就是\"更新到属性级别、组件不重跑\"的物理实现：每个动态点各自成 render effect 订阅对应 signal。"
+      "explanation": "这就是\"更新到属性级别、组件不重跑\"的物理实现：每个动态点各自成 render effect 订阅对应 signal。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " signal 读取的内部动作最贴切的描述是？ ",
+      "options": [
+        " 每次都重算 ",
+        " 读：把当前 observer 去重登记进订阅集并返回值；写：比较新旧，变化才沿订阅传播 ",
+        " 轮询检查 ",
+        " 写时才登记 "
+      ],
+      "answer": 1,
+      "explanation": " 依赖收集发生在读、传播发生在写，两句构成 Solid 响应式的最小内核。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " memo 的惰性体现在哪？ ",
+      "options": [
+        " 从不重算 ",
+        " 上游变化只标脏，读取时才沿依赖递归重算，版本号防止同轮重复求值 ",
+        " 定时重算 ",
+        " 写上游即算所有下游 "
+      ],
+      "answer": 1,
+      "explanation": " push 标记+pull 计算：没人读的 memo 不花钱，读时保证即时一致，版本戳收敛菱形依赖。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 编译器处理动态属性 class={cls()} 的产物是？ ",
+      "options": [
+        " 每次全组件重跑 ",
+        " 建节点时设初始值并登记一个仅更新该属性的微 effect，信号变化只调 setAttribute ",
+        " innerHTML 重写 ",
+        " 转 CSS 变量 "
+      ],
+      "answer": 1,
+      "explanation": " 每个动态表达式一个叶子订阅，这就是更新粒度到属性级的编译学证据。 "
     }
   ]
 }

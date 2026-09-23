@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Node 判断一个 .js 文件按 ESM 还是 CJS 解析，主要依据是？",
       "options": [
-        "文件里有没有 import 语句",
         "扩展名(.mjs/.cjs) 与最近 package.json 的 type 字段",
+        "文件里有没有 import 语句",
         "文件名首字母",
         "是否用了 await"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "身份由扩展名和 package.json 的 type 决定：.mjs 恒 ESM、.cjs 恒 CJS；.js 看最近的 type:module/commonjs，默认 CJS。不是靠内容猜。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "在 `\"type\":\"module\"` 项目里 `import utils from './utils'` 报错，最可能原因是？",
       "options": [
         "utils 有语法错误",
-        "ESM 相对导入必须写完整扩展名 ./utils.js",
         "不能用默认导入",
+        "ESM 相对导入必须写完整扩展名 ./utils.js",
         "Node 不支持 ESM"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "ESM 不做扩展名猜测，相对 import 必须精确到 ./utils.js。CJS 的 require 才会自动尝试 .js/.json/.node。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "需要在运行时根据条件加载某个模块，ESM 下正确做法是？",
       "options": [
         "把 import 写进 if 块",
-        "用 await import(路径) 动态导入",
         "用 require(路径)",
-        "用 @import 装饰器"
+        "用 @import 装饰器",
+        "用 await import(路径) 动态导入"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "import/export 是顶层静态声明，不能进 if。动态 import() 返回 Promise、可在任意处调用，且 ESM 和 CJS 都支持，是条件/延迟加载的正解。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "ESM 里没有内置 require，可用 node:module 的 createRequire(import.meta.url) 得到一个同步 require 函数，专门兜住少数只有 CJS 的包。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "import.meta 在 Node ESM 中默认可用的字段有：",
+      "options": [
+        "只有 url",
+        "url、main（是否入口，v20.11+）、resolve()（相对导入解析工具）；浏览器则只有 url 等子集",
+        "等价 __dirname",
+        "仅实验旗标下可用"
+      ],
+      "answer": 1,
+      "explanation": "url 替代 import.meta.url→fileURLToPath 的老配方；main 让「是否直接运行」的 CJS 惯用法有了 ESM 对应物；resolve 是官方提供的「按本模块位置解析」函数，手写 dirname(fileURLToPath()) 可退役。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "ESM 的 import 声明能被静态分析（比 require 更强）带来的直接收益是：",
+      "options": [
+        "运行时更省内存",
+        "tree-shaking、循环依赖下绑定提升仍可用、IDE 跳转/重命名精确——「先建图后执行」的两阶段模型是根因",
+        "支持动态导入",
+        "可以不用 package.json"
+      ],
+      "answer": 1,
+      "explanation": "ESM 分 link（建声明图、解析绑定）与 evaluate（按依赖序执行）两阶段；require 是「执行到才解析」的动态查找， bundler/编译器拿不到静态结构——两套模块系统的诸多差异都源于此。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "给内置模块写 `import fs from \"fs\"` 能拿到 default 导出，机制是：",
+      "options": [
+        "内置模块本来就是 ESM",
+        "Node 给全部 CJS（含内置）合成了一个 default 导出（整个 module.exports），named 导出则由 cjs-module-lexer 静态嗅探，嗅不到的只有 default",
+        "编译器自动转",
+        "polyfill 注入"
+      ],
+      "answer": 1,
+      "explanation": "default=CJS 的 exports 对象、named 靠词法分析（条件导出/动态挂载的成员 often 嗅不到——\"named export not found\" 的根源）；两者不一致正是本包双包 hazards 的微观入口。"
     }
   ]
 }

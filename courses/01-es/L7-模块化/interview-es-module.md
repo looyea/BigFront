@@ -105,3 +105,21 @@
   ```
   **追问**：Node 内置 `import()` 有自身缓存，同一 specifier 只会加载一次——本函数主要是**给动态 specifier 做去重**（不同调用点用相同变量）。
 - 来源：MDN `import()`；Node.js 官方 ESM 缓存文档；StackOverflow 高票。
+
+---
+
+**13）为什么说「ESM 模块是单例」？这给单元测试的 mock 带来什么麻烦？**
+- 参考要点：模块体**首次被 import 时执行一次**，之后所有导入方共享同一份内存（类似 require 缓存但按绑定粒度）——所以 store/注册表天然单例。麻烦：测试里「重新 import 一个假模块」不会生效，缓存里仍是原实例；必须 `jest.mock` / `vi.mock`（编译期改写 import 引用）或工厂函数依赖注入。另：浏览器里 URL 多一个 `?v=2` 就是**新实例**（按 resolved URL 缓存），缓存击穿/多版本共存都踩过这个坑。
+- 来源：ECMA-262 模块记录（Module Map）；Vitest/Jest mocking 文档；HTML spec 模块缓存。
+
+---
+
+**14）`export default` 有哪些反直觉的坑？想把对象字面量设为 default 怎么写？**
+- 参考要点：① 一个模块**最多一个** default，重复即 SyntaxError；② `export default { x: 1 }` 中 `{` 被当**块语句**起始 → 语法错，要 `export default ({ x: 1 })` 或先赋变量；③ default 本质是**名为 'default' 的具名导出**：`import c from './m'` ≡ `import { default as c } from './m'`，也可 `export { c as default }`——这意味着导入方名字随便改，不影响导出方；④ default 后可接匿名函数/类（具名 export 不行）。工程主张：库尽量具名导出（重命名可见、tree-shake 友好、TS 重构安全）。
+- 来源：MDN `export`；2ality《ES6 modules: default exports considered harmful》辩论。
+
+---
+
+**15）import 声明会提升吗？多个相互依赖的模块整体执行顺序是什么？`export * as ns` 有何特别？**
+- 参考要点：import 声明**提升**——无论写在模块哪里，都在模块体之前生效。整体系按**依赖图后序遍历**：先递归链接/求值被依赖模块（循环处按 TDZ 规则跳过），最后才跑本模块体。`export * from` 只转发不建本地绑定；`export * as ns from './m.js'` 把整模块打包成**命名空间对象**，且 ns 是 live 的——属性在**访问时**才解引用，所以循环依赖场景用 `ns.b` 比直接解构 `b` 安全（把读取推迟到初始化完成后）。
+- 来源：ECMA-262 《Module Semantics》（Instantiate/Evaluate）；MDN `export * as ns`；Rollup 循环依赖告警文档。

@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "要断言\"某元素不应该存在\"，应使用哪个查询？",
-      "options": ["getByRole", "findByRole", "queryByRole（返回 null 不抛错）", "getAllByRole"],
+      "options": [
+        "getByRole",
+        "findByRole",
+        "queryByRole（返回 null 不抛错）",
+        "getAllByRole"
+      ],
       "answer": 2,
       "explanation": "query 找不到返回 null，配 toBeNull（呼应 react-testing 第二节）。"
     },
@@ -27,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "内容要等接口返回后才渲染出来，最合适的查询是？",
-      "options": ["getByText", "findByText（返回 Promise 自动等待）", "queryByText", "getByTestId"],
+      "options": [
+        "getByText",
+        "findByText（返回 Promise 自动等待）",
+        "queryByText",
+        "getByTestId"
+      ],
       "answer": 1,
       "explanation": "find 自动轮询等待出现（呼应 react-testing 第二、四节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "逼出无障碍、贴近用户（呼应 react-testing 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 测「点按钮触发异步请求后再更新的 UI」，用 findBy/waitFor 而非 setTimeout(500) 的核心原因是？",
+      "options": [
+        "findBy 更快",
+        "findBy/waitFor 是「轮询直到断言成立或超时」，把等待绑定到结果而非固定时钟——既不会因 CI 慢而误报（flaky），也不会因机器快而白等；固定 setTimeout 是与环境耦合的脆弱假设",
+        "setTimeout 会内存泄漏",
+        "waitFor 会自动 mock 请求"
+      ],
+      "answer": 1,
+      "explanation": "异步测试的本质是「等待不确定完成时间的结果」。Testing Library 的 findBy*/waitFor 配合 jest-dom 断言，超时前反复重跑回调，天然适配微任务/宏任务/网络完成时机。要更可控就用 MSW 拦截 + findBy，而不是猜时长。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 被测组件用了 useQuery/useContext/useRouter，测试里正确提供这些运行时是？",
+      "options": [
+        "直接 mock 掉这些 Hook",
+        "写一个自定义 render（render 的 wrapper 注入 QueryClientProvider+新 client、MemoryRouter、主题 Provider 等），测「组件+它真实依赖的上下文」",
+        "只在被测文件里 if(dev) 兜底",
+        "用快照代替"
+      ],
+      "answer": 1,
+      "explanation": "RTL 主张「像用户一样测、别测实现细节」，所以不 mock Hook 本身，而是补齐它运行的外壳。官方推荐的 custom render / 测试工具函数把常用 Provider 收敛一处，既贴近真实又避免每个测试重复样板；每例新建 QueryClient 防缓存串味。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 为什么查询优先级建议 role/label 优先于 getByTestId？",
+      "options": [
+        "testId 语法更慢",
+        "按可访问角色/可访问名查询，等于「顺手验证了无障碍语义」——用户和读屏能找到，测试才能找到；testId 绕开语义，可能组件 a11y 一塌糊涂测试却全绿",
+        "testId 会打包进生产变大",
+        "role 查询支持异步"
+      ],
+      "answer": 1,
+      "explanation": "这是「测行为不测细节」的延伸：查询键选得越贴近用户感知（可见文本、ARIA role/label），测试越能反映真实可用性，重构 DOM 结构也不易碎。testId 只作最后兜底（无稳定可见文本/role 时）。迁移自 Vue test-utils 的最大心智转变正在这：别再 querySelector class、别挂载后戳 vm 内部。"
     }
   ]
 }

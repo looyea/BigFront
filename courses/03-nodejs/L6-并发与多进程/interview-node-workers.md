@@ -1,6 +1,6 @@
 # node-workers 面试题精选
 
-> 共 12 题，覆盖 场景选型 / 通信 / 共享内存 / 线程池与性能 / 陷阱 五类。
+> 共 15 题，覆盖 场景选型 / 通信 / 共享内存 / 线程池与性能 / 陷阱 五类。
 
 ---
 
@@ -96,3 +96,25 @@
 worker 有独立 isolate，未捕获异常触发主线程侧的 worker `'error'` 事件、该 worker 退出，**默认不直接崩主线程**（与"共享地址空间的线程崩一个全崩"不同）。但你**必须监听 `'error'`/`'exit'`**，否则错误被静默、任务悬挂；线程池场景还要重试/替换该 worker（呼应 node-async-errors、node-workers 第二节）。
 
 **来源**：Node.js — "worker 'error' / 'exit' events"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. worker_threads 的启动与通信开销有多大？什么任务量级才值得 offload？
+
+量级参考（社区 benchmark 共识，随版本变动）：new Worker 启动≈30-60ms（新 V8 isolate+环境引导+脚本编译），内存每 worker 数十 MB 基线；postMessage 结构化克隆对大对象是**字节级拷贝**（百 MB Buffer 用 transferList 零拷贝转移所有权）。决策式：任务耗时 ≫ 启动+传输成本才 offload——「每请求算 5ms」的活儿塞 worker 是负收益（应转 batch/缓存）；「单次 2s 转码/百万行解析」显著正收益。摊启动成本 → 常驻 worker 池（本关频繁 new 题）；摊传输 → 消息里带 SharedArrayBuffer 索引/偏移而非数据体。测量：worker.performance 的 nodeBootstrap/threadStartup + 自打点对比主线程方案 P99。面试加分句：offload 的本质是**从「单线程排队」换「多核并行+拷贝税」**，税太重就回队列+限流。
+
+**来源**：Node worker_threads 文档 performance 条目；社区 worker 启动开销 benchmark（各版本 README 引用）。
+
+### 14. 用 SharedArrayBuffer + Atomics 实现一个「主线程派活、worker 抢活」的无锁任务槽。
+
+骨架：SAB 上 Int32Array 做控制块：idx0=任务序号（counter），数据区放任务参数（定长记录）。主线程：写数据区 → Atomics.add(counter,1) 发布序号；worker 循环：start=Atomics.add(counter,1)，读到新序号则从数据区取任务，做完 Atomics.add(done,1)。内存序：SAB 写对 Atomics 可见靠原子操作建立 happens-before——**数据区的普通写必须先于 counter 的 Atomics 增**（Atomics 的 release/acquire 语义由实现给出，Node 侧习惯用 Atomics.wait/notify 做「没活睡、有活醒」省 CPU。坑：① 数据区读写撕裂——定长记录+序号校验或双缓冲；② worker 崩了占着的任务槽要超时回收（心跳序号）；③ 浮点/非 32 位对齐访问受限。工程结论：90% 场景 postMessage 够用，SAB 只在「高频小任务/大数组并行归约」出马（本关 Atomics 必备题的完整闭环）。
+
+**来源**：TC39 SharedArrayBuffer+Atomics 规范动机（并行计算模式）；web workers SAB 协调教程与 MDN Atomics 文档。
+
+### 15. 一个图片处理服务用 worker 池，给出你的容量、隔离与故障恢复设计。
+
+容量：池大小=CPU 核数-1（主线程留给 I/O 与调度），队列有界（超出直接 429/入队外置 Redis——本关 queues 关的分工线：**跨实例弹性交给队列，进程内并行交给 worker**）；单任务：执行超时 worker.terminate+补员（同步死循环唯一解药），内存上限 resourceLimits{maxOldGenerationSizeMb}（超限该 worker exit 重建——比 OOM 拖垮全进程体面）。隔离：任务消息合同带 requestId/预算；图片字节 transferList 传 ArrayBuffer（零拷贝）或传文件路径让 worker 自读（免大对象克隆）。故障：worker 崩溃→在途任务标 failed 重试 1 次（幂等）；连续崩溃同类任务 = 隔离到「可疑任务区」防毒丸反复杀池。观测：每 worker 活跃任务数/寿命/重启计数——重启计数是最早的劣化信号。测试：注入死循环与超大图两枚毒弹，验证超时、重建、不拖垮主流程。
+
+**来源**：worker_threads resourceLimits 文档；通用工作池模式（workerd/poolifier 设计文档参照）。

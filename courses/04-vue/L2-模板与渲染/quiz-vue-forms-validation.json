@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "v-model 在原生 input 元素上的展开式是？",
       "options": [
-        ":value + @change 赋值",
         ":value + @input 赋值（读 target.value）",
+        ":value + @change 赋值",
         "单向 props 绑定",
         "直接双向操作 DOM"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "v-model=\"x\" = :value=\"x\" + @input=\"x = $event.target.value\"；lazy 修饰符才换成 change（呼应 vue-forms-validation 第一节）。"
     },
     {
@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "vee-validate 中接入 zod schema 的桥接函数是？",
-      "options": ["useSchema(zodSchema)", "validationSchema: 'zod'", "zodResolver 是 vee-validate 唯一入口", "toTypedSchema(zodSchema)"],
+      "options": [
+        "useSchema(zodSchema)",
+        "validationSchema: 'zod'",
+        "zodResolver 是 vee-validate 唯一入口",
+        "toTypedSchema(zodSchema)"
+      ],
       "answer": 3,
       "explanation": "useForm({ validationSchema: toTypedSchema(schema) })，类型还能推导到模板（呼应 vue-forms-validation 第四节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "提交锁 isSubmitting 是第一道，网络重试/双开标签仍需后端幂等（呼应 vue-forms-validation 第五节、09-express）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "v-model 配 `.number` 修饰符绑定空的 input，得到的值是：",
+      "options": [
+        "0",
+        "空字符串经 looseToNumber（parseFloat 失败保留原样）仍是 ''——所以提交前校验必须挡在 Number('')=0 之前，且 v-model.number 不是类型转换保证",
+        "自动转 null",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "parseFloat 失败 时 Vue **保留 原始 字符串**（官方 故意：不 制造 NaN 污染），这 让「input 里 没 填」在 数据 层 与「填 了 0」几乎 同 形（'' vs 0），校验 schema 必须 显式 区分——本关 trim/number 修饰符 题 的 暗坑。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "表单里「省 → 市 → 区」三级联动，切换省之后正确的处理是：",
+      "options": [
+        "保留市和区的值",
+        "级联清空下游字段并重置其校验状态（errors/touched），下拉选项异步加载期间禁用下游",
+        "只清空市不清区",
+        "交给用户自己改"
+      ],
+      "answer": 1,
+      "explanation": "数据 有效性 依赖 选项 集：市/区 的 合法值 由 省 决定，不清 会 提交 出「省=广东 区=徐汇」脏 数据；校验 状态 不同步 重置 会 残留 幽灵 错误（本关 异步 校验 题 的 联动 面）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "用 vee-validate 时，字段校验时机（when）的推荐配置思路是：",
+      "options": [
+        "每次按键立即校验最友好",
+        "首错前 blur 校验、已报错后 keyup 实时清除/更新（validateOnInput 只作用于已出错字段），兼顾打扰与反馈",
+        "只在提交时校验",
+        "每秒轮询"
+      ],
+      "answer": 1,
+      "explanation": "交互 规范 的 共识 三 条：不 在 用户 没 填 完 前 报 错（blur 首发）、报错 后 修改 要 即时 消 错（keyup）、提交 时 全 量 兜底——vee-validate 的 validateOnBlur/validateOnInput 组合 与 本关 touched 题 同源。"
     }
   ]
 }

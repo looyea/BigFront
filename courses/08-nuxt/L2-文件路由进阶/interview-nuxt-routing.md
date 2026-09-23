@@ -1,4 +1,4 @@
-# nuxt-routing 面试题（12 题）
+# nuxt-routing 面试题（15 题）
 
 > 主题：文件路由映射、NuxtLink 与预取、导航 API、页面元信息。
 
@@ -81,3 +81,25 @@
 **答**：喜欢 definePageMeta+validate 的组合：页面自包含"我需要什么布局、谁能进、什么参数合法"，不需要维护一张全局路由大表（对照 vue-router 时代 routes 文件 800 行的惨状，呼应 vue-router-basics）。吐槽：pages 混放即成路由、没有显式豁免名单——约定强但没有逃生舱（Next 的"非约定文件忽略"更细），只能靠团队规范补；另外路由命名生成规则（路径转 name 的连字符策略）在深层嵌套时可读性一般，调试 router 面板时要适应。诚实评价：都是小摩擦，不构成选型否决项——架构师报告风险要分级。
 
 **来源**：知乎《Nuxt 路由设计的三个好与两个坏》；掘金《用了两年 Nuxt 的路由吐槽清单》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  Nuxt 文件路由与 Next App Router 的文件路由，设计重心差在哪？各有什么代价？
+
+**答**：同：目录=URL、嵌套布局出口（<NuxtPage/> vs layout children）、动态段语法接近。重心差异：① Nuxt 是 vue-router 的约定皮——路由对象仍然存在（route、router 全 API 可用、definePageMeta 直接落到路由记录），Next 把 router 藏进框架内部（不能拿"路由实例"做任意事）；② 布局模型：Nuxt 的 layouts 是命名槽位（per-route 选一个 layout，可运行时切），Next 是嵌套 layout 目录（多层天然复合）——前者灵活少层级、后者结构强约束多；③ 高级路由：Next 给并行/拦截/路由组一整套目录 DSL，Nuxt 官方只有 middleware+嵌套页，modal 等玩法要自己拿 vue-router 或第三方模块攒；④ 数据与渲染：Nuxt 路由只负责"组件归属"，缓存/SSR 开关在 routeRules 集中声明（配置中心），Next 在段文件里自声明（colocation）。代价对照：Nuxt 的 layout/路由组没有"同 URL 多壳"的原生表达、middleware 承担过多；Next 的目录 DSL 学习曲线陡、重构挪目录即改 URL 语义。
+
+**来源**：Nuxt 官方 Pages routing；对比 Next.js App Router 文档。
+
+### D5.  definePageMeta 能声明什么？middleware/layout/validate 三件在"SSR 与客户端"分别何时跑、跑几次？
+
+**答**：可声明：meta、name/path/alias、layout+layouts（命名槽）、middleware（单个或数组）、validate（路由参数校验，返回 false 即 404）、scrollBehavior、key（组件复用策略）、自定义字段。执行时机：route middleware 在服务端渲染请求跑一次 + 每次该路由激活（含客户端导航）跑——全局插件只在应用生命周期跑一次、per-route middleware 每次进入该路由跑（两侧不对称是"服务端已查过、水合后又查一遍"重复请求的根因，要用 payload/useState 传递）；validate 是"参数进组件前"的同步校验器，非法 id 在 SSR 即出 404 状态码而非在页面里 throw；layout 在布局层读 route.meta 做导航渲染。坑点：definePageMeta 必须顶层同步（不能 await/条件），动态鉴权在 middleware 内做不在 meta 里做；navigateTo vs throw createError 语义差（软跳带状态、错误出真状态码）。
+
+**来源**：Nuxt 官方 definePageMeta / middleware 文档；SegmentFault《route middleware 到底在服务端跑没跑》。
+
+### D6.  多语言、多角色后台共存的大型站点，路由命名与规则你会定哪些"写进模板"的规矩？
+
+**答**：把 URL 当 API 管：① 域前缀即策略边界——/ 公开内容（SSR+缓存头）、/app/** 登录后 SPA（ssr:false+鉴权 middleware）、/admin/** 独立 layout+更强 middleware、/api/** 只走服务端路由——routeRules 按这四段声明，新人看一眼 rules 就懂全站结构；② 命名纪律：资源用复数名词（/orders/[id]）、动作进 query 或 POST（不做 /orders/delete）、locale 前缀统一策略（/zh/... 由 i18n 模块生成 hreflang）、禁止驼峰/下划线混写；③ 版本与日落：对外 URL 从 /v1/ 或 query 版本起步，重定向规则集中 routeRules.redirect（改路由必留 redirect 表，CI 里 URL 清单 diff 当 breaking change 门禁）；④ 参数进 validate 统一校验（数字 id 必转必范围检查，searchParams 是 string 的账在此还）；⑤ 布局/导航元信息进 definePageMeta（roles/feature flag 放 meta 自定义字段供 middleware 读，不散写 if）。规矩能活下来靠三件：脚手架模板带示例、评审 checklist 问"URL 变了 redirect 呢"、CI 有快照。
+
+**来源**：InfoQ《URL 是公共 API：路由治理》；知乎《一个 Nuxt 工程里的 URL 规范》。

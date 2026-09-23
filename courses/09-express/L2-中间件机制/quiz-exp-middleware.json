@@ -6,31 +6,51 @@
       "id": "q1",
       "type": "single",
       "prompt": "错误处理中间件必须有几个参数？",
-      "options": ["2", "3", "4", "5"],
-      "answer": 2,
+      "options": [
+        "4",
+        "2",
+        "3",
+        "5"
+      ],
+      "answer": 0,
       "explanation": "Express 通过参数个数判断是否为 error middleware：(err, req, res, next) 共 4 个，即使不用 next 也必须声明。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "Express 5 中 setTimeout 里 throw 的错误能被 async handler 的自动捕获机制处理吗？",
-      "options": ["能，所有错误都行", "不能——只有 handler 返回的 Promise 链上的错误才被捕获", "取决于 Node 版本", "只有 TypeError 能"],
-      "answer": 1,
+      "options": [
+        "能，所有错误都行",
+        "取决于 Node 版本",
+        "不能——只有 handler 返回的 Promise 链上的错误才被捕获",
+        "只有 TypeError 能"
+      ],
+      "answer": 2,
       "explanation": "Express 5 只 catch handler 返回的 Promise rejection。setTimeout 的回调脱离了 Promise 链→不被捕获。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "中间件工厂函数（返回中间件的函数）的好处是什么？",
-      "options": ["执行更快", "可配置参数 + 复用 + 避免闭包泄漏", "Express 强制要求", "支持 async"],
-      "answer": 1,
+      "options": [
+        "执行更快",
+        "Express 强制要求",
+        "支持 async",
+        "可配置参数 + 复用 + 避免闭包泄漏"
+      ],
+      "answer": 3,
       "explanation": "工厂模式 options(opts) → 内部捕获 opts → 返回 (req,res,next) => {}——同一逻辑配不同参数多处复用。"
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": "以下哪个中间件应在 express.json() 之前执行？",
-      "options": ["路由 handler", "helmet()", "morgan()", "error handler"],
+      "options": [
+        "路由 handler",
+        "helmet()",
+        "morgan()",
+        "error handler"
+      ],
       "answer": 1,
       "explanation": "helmet 设安全头 → 应在所有响应发送前执行。cors 也在 body parse 前（OPTIONS 预检不带 body）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "validate(schema) 中间件里用 req.body = value 覆盖的目的是？",
-      "options": ["清空 body", "用 schema 清洗后的安全值替代原始输入（去未知字段、类型转换）", "提升性能", "方便日志"],
+      "options": [
+        "清空 body",
+        "用 schema 清洗后的安全值替代原始输入（去未知字段、类型转换）",
+        "提升性能",
+        "方便日志"
+      ],
       "answer": 1,
       "explanation": "Joi/Zod validate 返回 value = 只含已定义字段 + 类型已转换的对象 → 覆盖后防止 unknown fields 注入。"
     },
@@ -54,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "next(err) 让 Express 沿 middleware stack 向下找第一个 (err,req,res,next) 签名的处理函数。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " 中间件里对 req.body 做字段改名（trim/规范化后覆盖回去），这种做法的评价是？",
+      "options": [
+        "标准做法，body 就该在中间件里清洗完",
+        "可做但要显式约定：解析层之后、业务层之前统一清洗一个版本，禁止\"某中间件偷偷改了 shape\"——隐式变形是全链路最难查的 bug",
+        "任何时候禁止改 req",
+        "只能在 controller 里清洗"
+      ],
+      "answer": 1,
+      "explanation": "中间件增强 req/res 是 Express 的开放设计，但\"改了下游依赖的东西\"必须进契约（清单+测试），否则自由变混沌。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 响应已经发送完毕后，中间件链上才 next(err) 抛出一个错误，Express 会？",
+      "options": [
+        "正常触发错误中间件重写响应",
+        "默认错误处理器发现 res.headersSent 为真，无法再改状态/响应体，错误通常只能靠日志/上报兜住——所以\"发完再错\"要自己确保有出口",
+        "进程直接崩溃",
+        "静默丢弃且无任何感知"
+      ],
+      "answer": 1,
+      "explanation": "HTTP 响应是一次性协议：headersSent 之后错误只能进观测通道（流式响应/SSE 的必考点），别指望 error handler 救场。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 中间件工厂（options）=> middleware 在依赖注入维度的好处是？",
+      "options": [
+        "执行更快",
+        "配置与依赖在装配期注入、闭包私有化（不挂全局），测试时可注入替身，同一实现可按不同参数多次实例化",
+        "能自动跳过未匹配请求",
+        "让中间件支持 async"
+      ],
+      "answer": 1,
+      "explanation": "工厂模式把\"配置时刻\"与\"请求时刻\"分离——这是 Express 世界里穷人版 DI，够用且优雅。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 两个都匹配 /api 的中间件 A（先注册）、B（后注册），请求到来时的执行顺序是？",
+      "options": [
+        "B 先（后注册优先级高）",
+        "A 先且只有 A 调 next() B 才执行——中间件是同步注册序的责任链，没有\"优先级\"魔法",
+        "并行执行",
+        "按字母序"
+      ],
+      "answer": 1,
+      "explanation": "Express 栈无优先级概念：顺序=注册顺序、放行=next 调用，\"谁先跑\"永远可以顺着 app.use 列表读出来。"
     }
   ]
 }

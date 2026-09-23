@@ -6,16 +6,26 @@
       "id": "q1",
       "type": "single",
       "prompt": "全站统一的登录鉴权检查，最适合放在哪里？",
-      "options": ["每个组件 onMounted", "全局 router.beforeEach", "afterEach", "App 的 watch"],
-      "answer": 1,
+      "options": [
+        "每个组件 onMounted",
+        "afterEach",
+        "全局 router.beforeEach",
+        "App 的 watch"
+      ],
+      "answer": 2,
       "explanation": "beforeEach 每次导航前统一拦截、配 meta 判断（呼应 vue-router-guard-lazy 第一、四节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "在返回风格的守卫里，想让某个导航\"取消\"（留在原页），应？",
-      "options": ["return true", "return false", "不 return", "return next()"],
-      "answer": 1,
+      "options": [
+        "return true",
+        "不 return",
+        "return next()",
+        "return false"
+      ],
+      "answer": 3,
       "explanation": "return false 取消；返回路由对象=重定向；undefined=放行（呼应 vue-router-guard-lazy 第二节）。"
     },
     {
@@ -35,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "关于 next 与返回值两种风格，正确做法是？",
-      "options": ["两者可以随意混用", "二选一，别在同一次导航里既 next 又 return", "只能用 next", "只能用 return"],
+      "options": [
+        "两者可以随意混用",
+        "二选一，别在同一次导航里既 next 又 return",
+        "只能用 next",
+        "只能用 return"
+      ],
       "answer": 1,
       "explanation": "混用会导致行为不可预期，选一种（呼应 vue-router-guard-lazy 第二节）。"
     },
@@ -56,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "「前端路由守卫挡住未登录页 = 后端安全」这个说法？",
-      "options": ["对，前端拦了就安全", "错，真正鉴权必须在后端每接口校验", "只要加 meta 就安全", "用了 beforeEach 就安全"],
+      "options": [
+        "对，前端拦了就安全",
+        "错，真正鉴权必须在后端每接口校验",
+        "只要加 meta 就安全",
+        "用了 beforeEach 就安全"
+      ],
       "answer": 1,
       "explanation": "前端守卫只是 UX，可被绕过，后端才是边界（呼应 vue-router-guard-lazy 第四节、exp-auth）。"
     },
@@ -72,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "动态 import 是代码分割点，缩小首屏（呼应 vue-router-guard-lazy 第五节、vue-async-suspense、10-vite）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "路由组件内守卫 beforeRouteUpdate（同组件 params 切换触发）的典型用途是：",
+      "options": [
+        "登录检查",
+        "标签页/详情组件在 /user/1→/user/2 复用时的重取数或「有未保存编辑先确认」拦截（this 可用、next/返回值的风格与组件守卫一致）—— beforeEach 全局层拿不到组件实例内状态，这类「离开当前这条数据前拦截」必须组件级",
+        "权限缓存",
+        "chunk 预取"
+      ],
+      "answer": 1,
+      "explanation": "三 个 组 件 守卫 的 分 工：Enter（实 例 未 建，next 回 调 进）、Update（params 变 而 实 例 不 换，本 关 取 数 题 的 官方 通 道）、Leave（离 开 前 问 「确 定 不 保 存？」，配 全局 的 beforeunload 双 重 防 丢，本关 组合 题 的 实 例 回 填 补 完）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "守卫里对 token 过期做「无感刷新」：并发 3 个请求同时触发刷新，正解是",
+      "options": [
+        "各自刷新各的",
+        "刷新单飞（refresh promise 全局共享，其余请求 await 同一个 promise 后重试）+ 失败态广播（清登录态跳 login）——与「请求层 token 刷新」同构，守卫层还要管导航暂停（await 刷新完成再 next）",
+        "加随机延迟错开",
+        "只允许一个导航存在"
+      ],
+      "answer": 1,
+      "explanation": "守 卫 async 天然 支 持 暂停 导 航 等 异步（本关 async 守卫 题）；双 刷  token 竞 态（refresh 并 发 两 次，第 二 次 带 旧 token 已 失 效 → 误 判 登 录 过 期 踢 回 登 录 页）是 无 感 刷 新 第 一 号 线上 事故，单 飞 是 唯 一 正 解。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "meta 声明 roles 而子路由没有 roles 时，父路由的 roles 对子路由生效吗？",
+      "options": [
+        "生效（meta 合并继承）",
+        "不自动继承——route.meta 是 **父子合并但子覆盖父**（matched 从 根 到 叶 merge），子 未 声 明 时 父 值 仍 在 合 并 结果 里；真正 的 陷阱 是 用 to.meta 判 断 时 拿 到 的 是 叶 子 合并 值，要 逐 级 校 验 得 遍 历 to.matched 各自 的 meta",
+        "永远 undefined",
+        "仅开发环境生效"
+      ],
+      "answer": 1,
+      "explanation": "「父 meta 子 继 承 吗」的 精 确 答 案：合 并 语义（3.x 的 meta 不 继 承 是 老 黄 历）+ 遍 历 matched 才 能 做 「任 一 层 拒绝 即 拒绝」的 严 格 控 制（本关 roles 题 的 机 制 版）；同 理 登录 检 查 建 议 「遍 历 matched 找 requiresAuth」而 不 是 只看 叶 子。"
     }
   ]
 }

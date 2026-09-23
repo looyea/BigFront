@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-auth-session",
-  "title": "会话与鉴权 · 自测",
+  "title": "kit-auth-session 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "关于 event.cookies 选项默认值，正确的是？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 event.cookies 选项默认值，正确的是？",
       "options": [
         "httpOnly 默认 false，需手动开启防 XSS",
         "httpOnly/secure 默认 true（localhost 下 secure 为 false）、sameSite 默认 lax、path 必须显式传",
@@ -11,10 +13,12 @@
         "path 有默认值 '/'，可以不写"
       ],
       "answer": 1,
-      "explain": "cookies.set 的 httpOnly、secure 默认 true（http://localhost 例外 secure=false），sameSite 默认 lax，且官方要求必须显式指定 path。"
+      "explanation": "cookies.set 的 httpOnly、secure 默认 true（http://localhost 例外 secure=false），sameSite 默认 lax，且官方要求必须显式指定 path。"
     },
     {
-      "q": "为什么逐路由授权优先写在 +page.server.js 而非只靠 +layout.server.js？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么逐路由授权优先写在 +page.server.js 而非只靠 +layout.server.js？",
       "options": [
         "layout load 拿不到 locals",
         "page load 比 layout load 执行更早",
@@ -22,10 +26,12 @@
         "同 layout 下子页切换时 params 不变，layout load 不重跑，鉴权结果会被缓存复用"
       ],
       "answer": 3,
-      "explain": "从 /admin/a 到 /admin/b，layout 的 params 没变则 layout load 跳过、旧结果被缓存；页面级 load 在进入该页时必跑，故逐页准入更可靠。"
+      "explanation": "从 /admin/a 到 /admin/b，layout 的 params 没变则 layout load 跳过、旧结果被缓存；页面级 load 在进入该页时必跑，故逐页准入更可靠。"
     },
     {
-      "q": "关于『隐藏管理员按钮』与『保护管理端点』，正确的分工是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于『隐藏管理员按钮』与『保护管理端点』，正确的分工是？",
       "options": [
         "隐藏按钮只是体验层，真正的门禁必须是服务端 load/action 里的授权校验",
         "只要前端隐藏了按钮，端点就安全了",
@@ -33,10 +39,12 @@
         "开放重定向校验能替代端点鉴权"
       ],
       "answer": 0,
-      "explain": "客户端 UI 的显隐挡不住直接 curl 打端点；权限判据只认服务端，端点内必须独立 error(403)。"
+      "explanation": "客户端 UI 的显隐挡不住直接 curl 打端点；权限判据只认服务端，端点内必须独立 error(403)。"
     },
     {
-      "q": "在同一次请求里 cookies.set 之后立刻 cookies.get 同名 cookie，结果是？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "在同一次请求里 cookies.set 之后立刻 cookies.get 同名 cookie，结果是？",
       "options": [
         "返回 undefined，因为要等下一次请求才生效",
         "抛错，set 与 get 不能同请求混用",
@@ -44,10 +52,12 @@
         "读到的是旧值，新值只写进响应头不影响本次读取"
       ],
       "answer": 2,
-      "explain": "cookies.set 既写 Set-Cookie 响应头、又让本次请求内 cookies.get 立即可读到新值——这是 action 登录链路能当次用到身份的基础。"
+      "explanation": "cookies.set 既写 Set-Cookie 响应头、又让本次请求内 cookies.get 立即可读到新值——这是 action 登录链路能当次用到身份的基础。"
     },
     {
-      "q": "getRequestEvent() 的使用红线是？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "getRequestEvent() 的使用红线是？",
       "options": [
         "只能在 +page.svelte 组件里调用",
         "只能读 cookies 不能读 locals",
@@ -55,10 +65,12 @@
         "在无 AsyncLocalStorage 的环境必须同步调用，跨 await 之后可能拿不到"
       ],
       "answer": 3,
-      "explain": "getRequestEvent 依赖上下文；在不支持 AsyncLocalStorage 的运行时（部分 edge 环境）必须同步取用，跨越 await 边界后可能已丢失当前 event。"
+      "explanation": "getRequestEvent 依赖上下文；在不支持 AsyncLocalStorage 的运行时（部分 edge 环境）必须同步取用，跨越 await 边界后可能已丢失当前 event。"
     },
     {
-      "q": "+layout.server.js 向全站下发登录态时，对 user 对象应如何处理？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "+layout.server.js 向全站下发登录态时，对 user 对象应如何处理？",
       "options": [
         "原样把数据库 user（含密码哈希）返回，方便前端使用",
         "只下发裁剪后的公开字段，敏感字段留在服务端",
@@ -66,10 +78,12 @@
         "不下发，前端每个页面各自查接口"
       ],
       "answer": 1,
-      "explain": "load 返回值会被序列化进 HTML 传到客户端，故必须裁剪（不能含 passwordHash 等）；下发公开字段既共享又安全。"
+      "explanation": "load 返回值会被序列化进 HTML 传到客户端，故必须裁剪（不能含 passwordHash 等）；下发公开字段既共享又安全。"
     },
     {
-      "q": "若 handle 曾把用户挂到 event.locals，登出 action 里除删 cookie、销毁会话外还应？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "若 handle 曾把用户挂到 event.locals，登出 action 里除删 cookie、销毁会话外还应？",
       "options": [
         "手动把 event.locals.user 置为 null",
         "重载整个页面",
@@ -77,7 +91,46 @@
         "无需其他，handle 会立即重跑"
       ],
       "answer": 0,
-      "explain": "action 成功后页面重渲染、load 会重跑，但 handle 不为后续 load 重跑，locals 仍是被删前的旧值——须手动清空，登出才干净。"
+      "explanation": "action 成功后页面重渲染、load 会重跑，但 handle 不为后续 load 重跑，locals 仍是被删前的旧值——须手动清空，登出才干净。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 会话 cookie 的 httpOnly 选项默认与推荐值是？ ",
+      "options": [
+        " 默认 true，保持即可 ",
+        " 默认 false，会话 cookie 必须显式设 true 防 JS 读取 ",
+        " 无法设置 ",
+        " 仅 secure 可选 "
+      ],
+      "answer": 1,
+      "explanation": " event.cookies.set 的 httpOnly 默认 false，登录态必须手动开 true，配合 secure、sameSite 构成基线。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 同一请求里 cookies.set 之后立刻 cookies.get 拿不到值，为什么？ ",
+      "options": [
+        " bug ",
+        " cookie 读写基于请求快照：新设值要响应发出后浏览器才回传，读取只看入站请求头 ",
+        " 需要 await ",
+        " 仅生产如此 "
+      ],
+      "answer": 1,
+      "explanation": " 官方明确此语义；要同请求内共享登录态请用 event.locals 中转，这是 locals 存在的理由之一。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " sameSite 的 lax 与 strict 对登录会话的实际差异体现在？ ",
+      "options": [
+        " 无差异 ",
+        " strict 连用户从外部链接点进来的顶层导航都不带 cookie，lax 允许顶层 GET，是体验与 CSRF 的折中默认 ",
+        " lax 更安全 ",
+        " strict 仅影响 POST "
+      ],
+      "answer": 1,
+      "explanation": " lax 挡 CSRF 跨站 POST 且保留正常跳转登录态；strict 会让站外直达链接掉登录，多数场景选 lax。 "
     }
   ]
 }

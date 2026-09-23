@@ -7,20 +7,25 @@
       "type": "single",
       "prompt": "any 和 unknown 的核心区别是？",
       "options": [
-        "两者完全等价",
         "any 绕过所有检查、可随意使用/赋值；unknown 用其成员或赋给具体类型前必须先收窄",
+        "两者完全等价",
         "unknown 比 any 更危险",
         "any 只能用于变量"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "unknown 是'类型安全的 any'：能装任何值，但取用必须收窄；any 直接放行一切。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "TS 4.4+（useUnknownInCatchVariables）下 catch (e) 的 e 默认类型是？",
-      "options": ["any", "unknown", "Error", "void"],
-      "answer": 1,
+      "options": [
+        "any",
+        "Error",
+        "void",
+        "unknown"
+      ],
+      "answer": 3,
       "explanation": "默认 unknown，需 if (e instanceof Error) 等收窄后才能安全取 message。"
     },
     {
@@ -87,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "外部数据不可信，先 unknown 再校验（守卫/zod）转成精确类型，是把'不可信变可信'的标准姿势。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`const a: any[]` 与 `const u: unknown[]`，能直接写 `a[0].foo / u[0].foo` 的是：",
+      "options": [
+        "两者都行",
+        "仅 any[]——unknown 成员访问一切操作都报错，必须先收窄",
+        "都不行",
+        "仅 unknown（any 被限制）"
+      ],
+      "answer": 1,
+      "explanation": "unknown 是「有类型但未知」：只许赋值/比较/存在性判断，属性访问与算术全禁；any 是「当它不存在」——这就是边界数据首选 unknown 的原因。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "unknown 与 any 的赋值方向正确的是：",
+      "options": [
+        "unknown 可赋给任意类型",
+        "任意类型都能赋给 unknown；unknown 要下行必须收窄或断言",
+        "两者对称",
+        "any 反而更安全"
+      ],
+      "answer": 1,
+      "explanation": "unknown=顶点（top）：人人都能进、它出不去；any=双向通道：进出自如但类型系统对你失明。把 API 返回标成 unknown 再逐步 parse，是边界建模的标准流。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`const cfg = { port: 3000 } satisfies Record<string, number>` 之后 `cfg.port` 的类型：",
+      "options": [
+        "number（被标注拉宽）",
+        "3000——satisfies 校验结构但保留最窄推断",
+        "unknown",
+        "string | number"
+      ],
+      "answer": 1,
+      "explanation": "satisfies = 「检查但不改写推断」：既拿到 Record 约束的拼写检查，又保住 3000 字面量与精确键——类型标注做不到的两头兼顾。"
     }
   ]
 }

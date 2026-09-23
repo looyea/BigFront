@@ -1,6 +1,6 @@
 # ts-functions 面试题精选
 
-> 共 12 题，覆盖 **函数类型 / 参数形态 / this / 重载 / 兼容性协变 / 参数设计** 六类。
+> 共 15 题，覆盖 **函数类型 / 参数形态 / this / 重载 / 兼容性协变 / 参数设计** 六类。
 
 ---
 
@@ -103,3 +103,25 @@ TS 把 `this` 视为函数的"第 0 个参数"，可写 `function f(this: Foo, a
 先问清"输入形态与输出是否有确定关联"：① 若"传 callback 即同步、不传返回 Promise"，用**重载**或更本质的**泛型 + 条件类型**（根据是否有 cb 参数把返回推成 `void` 或 `Promise<T>`）；② 可选项归入**对象参数**避免顺序问题；③ 边界值一律 `unknown` 起步再收窄、禁用 `any`；④ 用 `satisfies` 校验默认配置。总之优先"用类型表达真实契约"而非"多处重载 + as"，让非法调用在编译期就不可构造（贯穿 ts-generic / ts-conditional-infer）。
 
 **来源**：Total TypeScript — "conditional return types"; Effective TS — "API design with types"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 什么时候该用重载，什么时候该用联合参数或泛型？给出判断标准。
+
+重载的唯一正当理由：**参数与返回的联动关系**（`(a:string):stringB` / `(a:number):numberB` 这种映射），其余场景重载只是把 if-else 搬进类型。联合参数（`a: string|number` 内部 typeof 分支）覆盖「参数变、返回不变」；泛型+条件返回覆盖「返回跟着参数推」。社区倾向：能用 tuple+union 就不用重载（声明顺序心智负担、IDE 只显一条、实现签名逃逸检查）。TS4.0 剩余元组还消灭了一大类「参数个数重载」（`(...args: [T] | [T, U])`）。
+
+**来源**：TS Handbook《Function Overloads》；TypeSolutions《Overloads vs Union vs Generics》选型长文。
+
+### 14. 手写 once/memoize 这类高阶函数，怎么用类型把原函数签名「原样传下去」？
+
+模板：`function once<F extends (...a:any)=>any>(fn: F): (...a: Parameters<F>) => ReturnType<F>`；需要**保留重载/泛型签名**则 TS 给不了（条件类型会坍缩成单个签名），解法是 overload 手写几个常用形状或降级 any——真实库（lodash-es 的 memoize）只保返回类型。进阶：`this` 上下文保留用 `F extends (this: infer C, ...args: infer A) => infer R` 把 C 也搬回去；异步版把 R 套 Promise。结论：写装饰型工具函数 = 做一次 `infer` 签名抽取手术，别指望自动透传。
+
+**来源**：TS 4.7 模板修饰推断与《infer this parameter》文档；type-challenges 社区 once 题解。
+
+### 15. 函数类型的 this 参数是干嘛的？`this: void` 改变了什么？
+
+首参 `this: X` 是**假参数**：不占运行时位，声明「我作为方法调用时 this 必须是什么」。`this: void` = 「我根本不碰 this」——于是 `const handler = btn.onclick` 后 `handler()` 合法，且禁止把方法借给别的对象 call（`Array.prototype.push.call(obj)` 类野路子会在带 this: void 的回调上报错）。工程价值：① 声明回调「不关心 this」让 DOM/事件 API 使用者不被 noImplicitThis 误伤；② `this: HTMLElement` 把「只能在某类元素上用」编进类型。lib.dom 里大量 `this: GlobalEventHandlers` 就是在做借用防护。
+
+**来源**：TS 2.0《this-typed functions》release notes；TS Handbook《this parameters in callbacks》。

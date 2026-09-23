@@ -1,6 +1,6 @@
 # svelte-web-components 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ---
 
@@ -75,3 +75,25 @@ Form Association：`static formAssociated = true` + `this.attachInternals()` 拿
 **来源**：遗留系统集成实战题（on/属性/事件协议取舍）
 
 方案要点：①组件编译为 CE，省略 tag 由老系统侧统一 `customElements.define('report-card', ReportCard.element)` 控名（防与既有标签冲突）；②入参全部走显式解构 prop + `type: 'Object'` 的 attribute 通道（jQuery 拼 `setAttribute('config', JSON.stringify(...))` 可行）；③出态不用回调 prop（on 前缀陷阱 + property 时机限制），改 CustomEvent：`$host.dispatchEvent(new CustomEvent('ready', { detail: stats }))`，老代码 `addEventListener` 即听；④shadow 默认开隔离老系统样式炸弹，但全局主题色走 CSS 变量注入；⑤状态查询接口放 `extend` 类方法上（挂载前即可调，避开内部组件未建的时间窗）。收尾点题：把"跨界协议"当 API 设计做，而不是当翻译做。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Svelte 组件编译成 Custom Element 的机制是什么？为什么 customElement 组件常要求显式解构 props、且必须用 Shadow DOM 或明确样式策略？
+
+机制：<svelte:options customElement={{tagName,...}}/> 让编译器额外生成一个 extends HTMLElement 的类、注册到 customElements（attributeChangedCallback 映射 attributes→props、connectedCallback 里 mount、disconnectedCallback 里 unmount），本质是"给你的组件套一层 Web Component 适配器 + 用 Svelte 5 的 mount 运行时挂载内部组件"。为什么约束多：① 自定义元素的"attribute 反射"要求 props 能可靠映射到 DOM attribute（显式解构/声明要反射的 attribute，否则改 attribute 不同步进组件，对应既有"必须显式解构"题）；② attribute 只有字符串（quiz 已考类型坑）；③ 样式——Shadow DOM 天然隔离宿主页面 CSS 与组件 CSS（好处是隔离、坏处是外部主题/全局样式进不去，要 ::part 或 CSS 变量穿透），不用 Shadow（shadow:none）则样式策略要想清楚（对应既有"shadow none 关闭后哪两件事"题）。加分句：能讲清"Svelte 组件→CE 是『组件外面包一个标准 Web Component 壳、内部仍用 Svelte 运行时 mount』"这层嵌套关系，就理解了为什么它比原生组件多了 attribute 反射、样式穿透、生命周期映射这些摩擦——跨边界（框架世界↔DOM 标准世界）必然要在边界做翻译（呼应既有"三框架编译成 CE 对比"题）。
+
+**来源**：Svelte customElement options；Custom Elements / Shadow DOM 规范；既有"编译成 CE 机制""为何必须显式解构"深化
+
+### 14.  attribute→prop 与 prop→attribute 双向同步怎么实现？为什么默认只单向、双向要注意什么坑？
+
+默认：attribute→prop（宿主改 <my-widget count=5>，组件 count 变）靠 attributeChangedCallback；而 prop→attribute（组件内改了 count，想让宿主 <my-widget> 的 count 属性同步可见）需要显式开 reflect（对应既有"prop 更新想让 DOM attribute 反映"题——要配 reflect:true / 组件侧设 attribute 名）。双向的坑：无脑双向会形成"attribute 变→prop 变→reflect 回 attribute 变→又触发 prop..."的循环，必须做等值判断/去抖（只在值真不同时写、写时避免再触发自己）；另外 attribute 是字符串，number/boolean/object 双向要一致地 parse/serialize（count=5 与 count="5" 比较、true/存在性），否则反射抖动。boolean 属性惯例"存在即真"、object 不能走 attribute（只能走 property 设 element.myObj={...}）。加分句：核心是把"DOM attribute（字符串、可 HTML 声明）"和"JS property（富类型、运行时真值）"当成"两个存储 + 一条需要去回环的同步桥"——Web Component 的绝大多数"诡异行为"（类型不对、改了不生效、死循环）都源于忘了这条桥的存在；能讲出"prop 是真相源、attribute 是面向 HTML 的字符串镜像、reflect 是可选的镜像回写"就把 CE 的属性模型说透了。
+
+**来源**：CustomElement prop/attribute 反射；observedAttributes；循环同步防护；既有双向同步机制深化
+
+### 15.  自定义元素参与原生表单（form 提交、约束校验 validity）、以及跨框架供给，你会怎么设计？
+
+表单参与：用 form-associated custom elements（static formAssociated = true + ElementInternals）让 <my-input> 像原生控件一样参与 form 提交（value 进 FormData）、约束校验（setValidity/reportValidity 进 form.checkValidity）、disabled/required 反射——否则自定义元素对 <form> 是"透明"的（提交带不上、校验管不到，对应既有"参与原生表单"题）。跨框架供给：设计系统要同时给 React/Vue/原生/老 jQuery 系统用——CE 是"最大公约数"（任何能渲染 HTML 的地方都能用 <my-widget>，框架无关），代价是 props 走 attribute 的富类型限制（复杂配置用 property 或方法设）。设计：对外保留"attribute 配简单项 + property/方法配复杂项 + CustomEvent 对外发事件"三通道（跨框架事件用标准 CustomEvent 而非框架事件，对应既有 ondone={fn} 原生监听题）。加分句：CE 的真正价值是"运行时无关的可组合单元"——它牺牲了框架内的类型舒适（attribute 字符串）换取了"任何宿主环境都能嵌"的普适；判断"要不要发成 CE"的准绳是"消费者是否异构（多框架/遗留系统/无 JS 框架）"，纯自家同框架项目用 CE 是自找约束（呼应 sveltekit-bridge"嵌入老系统的组件包"选型题）。
+
+**来源**：Element Internals / form-associated custom elements；形式归属；设计系统跨框架供给；既有"参与原生表单""设计系统多框架供给"深化

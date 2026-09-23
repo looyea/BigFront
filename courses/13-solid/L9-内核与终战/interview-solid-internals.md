@@ -1,6 +1,6 @@
 # 响应式内核（源码级） · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 只用不到 30 行，怎么实现一个最小响应系统？
 
@@ -61,3 +61,25 @@ JSX 编译期把静态结构建成真实 DOM、每个动态表达式包成一个
 
 建两个 signal、一个依赖两者的 memo、一个读 memo 的 effect；先 `batch` 里连改两个源，观察 memo/effect 只各跑一次（合并提交）；再把某源 set 成相同值，观察 `===` 短路使 memo 不重算、effect 不触发；最后用早返回分支演示动态依赖集变化。三步覆盖批处理、短路、动态依赖。
 **来源**：把官方 batch/短路/动态依赖三点合成一个自检实验的设计题转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  不查源码，设计一个能证明动态依赖的实验？ 
+
+ 两信号+开关 memo：开关走 false 分支时读另一信号，改它断言 memo 不重跑（用执行计数）；再翻转开关重跑一次证明订阅动态重建——一个测试文件讲清依赖收集时机。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#creatememo 
+
+### 14.  Owner 树与渲染 DOM 树为什么不是一回事？各自主导什么？ 
+
+ owner 是词法/执行归属（effect、资源、context 解析沿 owner 链），DOM 树是渲染产物；createRoot 脱离组件造独立生命周期（命令式弹窗、全局服务），其 dispose 回收整棵子 owner；context 查找走 owner 而非 DOM 父子是高频事故点。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createroot 
+
+### 15.  虚拟 DOM diff 在什么场景仍优于 Solid 的编译模型？反过来 Solid 怕什么负载？ 
+
+ 运行时动态无法静态编译的通用组件库/第三方渲染函数密集场景，VD 的兜底比对有价值；Solid 怕的是每帧全量换数据源（整表重绘）这类细粒度优势归零的负载，以及首建巨量节点的构造成本。 
+
+**来源**： https://krausest.github.io/js-framework-benchmark/current.html ； https://svelte.dev/blog 

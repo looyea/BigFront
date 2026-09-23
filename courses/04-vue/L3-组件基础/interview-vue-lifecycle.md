@@ -1,6 +1,6 @@
 # vue-lifecycle 面试题精选
 
-> 共 12 题，覆盖 时序 / DOM 与副作用 / 更新与调试钩子 / KeepAlive 四类。
+> 共 15 题，覆盖 时序 / DOM 与副作用 / 更新与调试钩子 / KeepAlive 四类。
 
 ---
 
@@ -96,3 +96,25 @@
 用 `v-slot` 拿到当前路由组件，`KeepAlive` 包动态组件，`include` 绑定"需要缓存的标签页 name 列表"，`:key` 精细控制同一路由不同参数是否分别缓存（呼应 vue-lifecycle 第五节、vue-router L5）。
 
 **来源**：Vue Router — "View Data Transition / RouterView slot"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. setup 不是钩子但常被放在生命周期语境里讨论——它的执行时机、能做什么、为什么不能有「setup 里的 this」？
+
+时机=组件 实例 创建 时 **beforeCreate+created 的 合并 位 置**（props 已 解析、未 渲染、无 实例 暴露 给 外界）；能 做：声明 响应式/注册 watch（自动 随 作用域 dispose，本包 watch 泄漏 题 的 兜底 机制 就 挂 在 这）/provide；不 能：DOM（还 没 渲染，ref 全 null）、异步 阻塞（setup 返回 前 渲染 函数 不 存 在，async setup 要 配 Suspense，本包 async-suspense 关）。没有 this 的 理由：Composition API 故意 不 给 上下文——this 的 原型 链 绑定 让 压缩/类型/混入 冲突 三 大 难题 常驻（Options API 的 mixin 名 覆盖 事故 源头），setup 里 一 切 显式（钩子 靠 on 开头 函数 注册 到 **当前 实例** 的 闭包 变量 上，靠 调用 栈 的 实例 指针 关联，所以 异步 回调 里 调 onMounted 会 失 联，本关 时序 题 深 一 层）。
+
+**来源**：Vue 组合式 API 文档 setup 说明； Composition API FAQ「为什么没有 this」。
+
+### 14. 给一份「生命周期 × 副作用」的标准对账单：定时器、全局事件、WebSocket、第三方实例、abort 中的 fetch 各归哪个钩子管理？
+
+原则：注册 与 注销 **同 处 成 对**（一 个 副作用 的 起 与 停 隔 两 个 钩子 写 = 事故 预备役）。归 位：定时器（mounted 起 / beforeUnmount 停；KeepAlive 页面 加 activated 续、deactivated 停，本关 轮询 题）；window/document 全局 事件（mounted addEventListener / unmounted removeEventListener，具名 函数 才 摘 得 掉）；WebSocket（建 立 放 mounted 或 首次 使用（懒），close 放 unmounted——beforeUnmount 关 会 让 子 组件 的 收尾 消息 发 不 出）；第三方 图表/地图 实例（mounted new + unmounted dispose，配 容器 ref 的 尺寸 监听 拆 分 到 watch）；fetch（setup/watch 里 发 起 时 就 建 AbortController，onCleanup/unmount abort——**fetch 不 abort 就 是 「卸载 后 setState」警告 的 来源**）。验证 手段：Performance.memory 看 反复 进出 页面 后 实例 数/监听 数 是否 回 到 基线（本包 部署 关 长跑 测试 的 微观 版）。
+
+**来源**：Vue 组合式 API 文档副作用清理约定；MDN AbortController 用法；KeepAlive 激活钩子文档。
+
+### 15. 同一个组件被 KeepAlive(max=10) 缓存 10 个实例，内存持续上涨——从钩子角度排查哪些「没停」的东西？
+
+缓存 = **不 触 发 unmounted**，一切 「卸 载 才 清」的 逻辑 集体 失效：① 只 写 了 beforeUnmount 清理 的 定时器/全局 监听/轮询 全 部 后台 继续 跑（正解：副作用 注册 在 activated、注销 在 deactivated，或 用 `onScopeDispose`+作用域 统一 管）；② watch 默认 **仍 活 着**（watch 绑 的 是 组件 作用域 不 是 挂载 状态）——缓存 页 的 watch 继续 响应 store 变化 并 改 状态/发 请求，配 `paused` 判定 或 用 watchActive 类 组合式 封装；③ ResizeObserver/IntersectionObserver 要 在 deactivated disconnect（浏览器 不会 替 你 停）；④ 组件 内 部 挂 了 大 数组/编辑器 实例（monaco/富文本）——max 就是 为 这个 兜底 的，超 出 按 LRU 卸（卸 的 那 刻 才 走 完整 unmount 链）。排查 工具：Memory 快照 对比 + `getEventListeners(window)`（devtools）数 监听，Vue devtools 看 缓存 实例 数 与 max 是否 相符。
+
+**来源**：Vue KeepAlive 文档（max/LRU、activated/deactivated）；社区 KeepAlive 内存泄漏 排查 实录。

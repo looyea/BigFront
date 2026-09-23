@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Vite dev 启动快的核心原因是？",
       "options": [
-        "用了 Rust 编写",
         "不打包——利用浏览器原生 ESM 按需编译单个文件",
+        "用了 Rust 编写",
         "缓存了上次构建结果",
         "只编译入口文件"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Vite no-bundle 模型：启动 server 即就绪（<1s），浏览器 import 哪个模块就即时编译哪个。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "esbuild 预打包主要解决什么问题？",
       "options": [
         "生产代码压缩",
-        "CJS→ESM 转换 + 合并多文件依赖减少请求瀑布",
         "CSS 预处理",
-        "TypeScript 类型检查"
+        "TypeScript 类型检查",
+        "CJS→ESM 转换 + 合并多文件依赖减少请求瀑布"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "浏览器只认 ESM，node_modules 里大量 CJS 包需转换；lodash-es 600+ 文件打成 1 个避免 600 个 HTTP 请求。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "Vite build（生产构建）默认用什么引擎？",
-      "options": ["Webpack", "esbuild", "Rollup", "Parcel"],
+      "options": [
+        "Webpack",
+        "esbuild",
+        "Rollup",
+        "Parcel"
+      ],
       "answer": 2,
       "explanation": "Vite 用 Rollup 做生产构建（Tree Shake + Code Split + 产物优化）。esbuild 只用于 dev 预打包和语法转换。"
     },
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "Vite 的入口文件是什么？",
-      "options": ["main.js", "vite.config.js", "index.html", "src/app.ts"],
+      "options": [
+        "main.js",
+        "vite.config.js",
+        "index.html",
+        "src/app.ts"
+      ],
       "answer": 2,
       "explanation": "Vite 以 index.html 为入口——解析 HTML 里的 <script type=\"module\"> 开始构建模块图。"
     },
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "预打包结果缓存在哪个目录？",
-      "options": ["dist/", ".vite/deps/", "node_modules/.cache/", "src/.vite/"],
+      "options": [
+        "dist/",
+        ".vite/deps/",
+        "node_modules/.cache/",
+        "src/.vite/"
+      ],
       "answer": 1,
       "explanation": "缓存在 node_modules/.vite/deps/。命中缓存时 dev 启动秒级；--force 可强制清除重新打包。"
     },
@@ -64,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "preview 起一个本地静态服务器模拟生产环境——验证构建产物是否正确（路径/base/缓存行为）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " Vite dev 模式下浏览器加载模块的方式是？",
+      "options": [
+        "一个 bundle.js",
+        "每个模块一条 /src/xxx 风格的 URL 请求（原生 ESM 按需加载），依赖则指向预打包后的 node_modules/.vite 路径——小文件多请求换零打包启动",
+        "全部内联进 HTML",
+        "WebAssembly 加载"
+      ],
+      "answer": 1,
+      "explanation": "dev 的\"不打包\"是把 bundle 成本摊到浏览器的并行请求上，配合 HTTP/2 多路复用，模块数可控时反而更快。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Rolldown（Rust  bundler）对 Vite 生态的定位是？",
+      "options": [
+        "替代 Vite 的新工具",
+        "Vite 团队主导的统一底层打包器：目标是让 dev（预构建）与 build（生产）共用同一个 Rust 内核，终结 esbuild+Rollup 双模型的不一致，以 rolldown-vite 过渡包形式可提前试用",
+        "只做压缩器",
+        "浏览器端打包器"
+      ],
+      "answer": 1,
+      "explanation": "双模型痛点（dev/build 行为差异、插件两套语义）是 Vite 架构史的最大包袱，Rolldown 是官方给出的终局答案。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " dev 时浏览器地址里出现 /@fs/ 前缀意味着什么？",
+      "options": [
+        "文件系统错误",
+        "Vite 在 serve 项目 root 之外的绝对路径文件（monorepo 跨包、链接依赖常见），受 server.fs.allow 白名单管控——不在 allow 内会 403",
+        "缓存未命中",
+        "插件虚拟模块"
+      ],
+      "answer": 1,
+      "explanation": "@fs 是\"root 外文件也能当模块加载\"的通道，fs.strict 与 allow 列表是它的安保闸门（历史上穿越 CVE 都出在这里）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Vite dev 期间转换后的模块文件存放在哪里？",
+      "options": [
+        "写入 dist 目录",
+        "默认不落盘——dev server 用中间件在内存里即时转换并响应请求，改配置/依赖才失效缓存（构建时才写 dist）",
+        "写进浏览器 LocalStorage",
+        "存 git stash"
+      ],
+      "answer": 1,
+      "explanation": "\"内存 serve + 磁盘只在 build\"是 dev 快且不脏工作区的根本；node_modules/.vite 是唯一落盘的 dev 缓存。"
     }
   ]
 }

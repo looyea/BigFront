@@ -8,11 +8,11 @@
       "prompt": "以下代码 `publicUser` 里有什么？\n\n```js\nconst user = { id: 1, name: 'Ann', pwd: 'x' };\nconst { pwd, ...publicUser } = user;\n```",
       "options": [
         "{ id: 1, name: 'Ann', pwd: 'x' }",
-        "{ id: 1, name: 'Ann' }",
         "{ pwd: 'x' }",
-        "抛错"
+        "抛错",
+        "{ id: 1, name: 'Ann' }"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "rest 收集**剩余**可枚举自有键——pwd 被解构走，publicUser = { id, name }。这是**浅拷贝**。"
     },
     {
@@ -58,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "命名捕获组的值挂在哪个字段？\n\n```js\n/(?<y>\\d{4})/.exec('2026')\n```",
-      "options": ["`m[0]`", "`m.groups.y`", "`m.named.y`", "`m.captures.y`"],
+      "options": [
+        "`m[0]`",
+        "`m.groups.y`",
+        "`m.named.y`",
+        "`m.captures.y`"
+      ],
       "answer": 1,
       "explanation": "匹配结果的 `groups` 字段是所有命名捕获的容器；`m[1]` 依然能用（索引）。"
     },
@@ -79,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "以下**不能**被 Babel 降级的是：",
-      "options": ["对象 spread", "for-await-of", "lookbehind `(?<=x)`", "Promise.finally"],
+      "options": [
+        "对象 spread",
+        "for-await-of",
+        "lookbehind `(?<=x)`",
+        "Promise.finally"
+      ],
       "answer": 2,
       "explanation": "lookbehind 是**引擎级**正则语法——Babel 处理 JS AST 不改正则内部；Safari 16.4 前不支持。其它三项 babel 都能降级（Promise.finally 靠 core-js polyfill）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`p.then(v => v).finally(() => { throw new Error(\"boom\") })` 的结果：",
+      "options": [
+        "fulfilled 原值",
+        "rejected（boom 接管链条）",
+        "uncaught 异常被忽略",
+        "finally 不执行"
+      ],
+      "answer": 1,
+      "explanation": "finally 回调抛错会让派生 promise 变 rejected——它**透传**前后值但抛错同样进错误通道；这是做「统一失败上抛」的合法技巧。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`async function* gen() { yield 1 }` 调用后 `gen().next()` 返回：",
+      "options": [
+        "{ value: 1, done: false }",
+        "Promise<{value:1,done:false}>",
+        "抛错",
+        "{ value: Promise<1> }"
+      ],
+      "answer": 1,
+      "explanation": "async 生成器的 next() 一律返回 Promise（值再包一层 await 语义），配合 for-await 消费——这是「异步迭代器协议」的形态。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`\"一\".match(/\\p{Script=Han}/)`（没加 u 旗标）的行为：",
+      "options": [
+        "匹配中文",
+        "不匹配中文——\\p 被当作字面量字符 p",
+        "SyntaxError",
+        "返回 null 并告警"
+      ],
+      "answer": 1,
+      "explanation": "\\p{...} Unicode 属性类要求 u（或 v）旗标；无旗标时 \\p 退化为普通字母 p 的转义。忘了 u 是 Unicode 正则最隐蔽的坑。"
     }
   ]
 }

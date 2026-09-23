@@ -1,6 +1,6 @@
 # solid-context-composition 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) Solid 的 context 是怎么被后代找到的？沿什么树解析？
 **来源**：context 解析机制题的转述。
@@ -63,3 +63,25 @@ React Hook 有"只能在顶层调用/顺序不能变/依赖数组"等规则，�
 可删：给 Provider value 套 `useMemo` 防全体重渲、把消费者 `React.memo`、拆 `useContextSelector`/多个细粒度 context 来减少重渲波及——这些是为对抗 React"value 变→消费者重渲"模型。Solid 里换成"把 signal/store 放进 context + 消费者惰性按路径读"，广播重渲问题不存在，上述包装大多多余。保留的是"把响应式引用放进 value"这一条正解。
 
 🚀 实操请去做 L3 作业：复现 useContext 无 Provider 抛错、往 context 放快照 vs 放 signal、Local Context 收口、复用函数漏 onCleanup 四条线。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  为什么 Solid 里 context 共享大对象不像 React 那样引发全树重渲染？ 
+
+ React 痛点源于 Provider value 引用变化即广播所有消费者；Solid 的 context 只是构造期注入的引用，其后谁读谁订阅、变化只通知触达路径——前提是值里放 signal/store 而非裸对象。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createcontext 
+
+### 14.  给依赖 context 的组件写单测，你的标准夹具？ 
+
+ 渲染工具函数包一层 Provider（或 Local Context 模式的 createXxx+useXxx+Provider 三件套），测试注入内存版实现；断言只针对行为，避免 mock useContext 内部——夹具即接缝。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createcontext 
+
+### 15.  一个复杂表单：字段组件分散多层，既要共享表单 store 又要局部覆盖，怎么设计？ 
+
+ 表单 store 进 context 供全树路径读写；字段私有校验用 Local Context 在字段子树内再包一层 provider 覆盖同名 key；全局默认与子树覆写两层语义清晰，避免把每字段状态上提大 store。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createcontext 

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Taro 3 这类\"运行时\"跨端框架的核心机制是？",
       "options": [
-        "把 Vue 模板逐行转译成 WXML",
         "React 渲染器产出模拟 DOM 树，diff 后翻译成小程序 setData",
+        "把 Vue 模板逐行转译成 WXML",
         "用 Canvas 自绘所有组件",
         "运行时解释执行 WXML"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "runtime+reconciler→setData 桥接（呼应 mp-framework 第一节）。"
     },
     {
@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "在 Taro 里监听\"页面每次显示\"，等价写法是？",
-      "options": ["useEffect(() => {}, [])", "componentDidMount", "window.addEventListener('focus')", "useDidShow Hook"],
+      "options": [
+        "useEffect(() => {}, [])",
+        "componentDidMount",
+        "window.addEventListener('focus')",
+        "useDidShow Hook"
+      ],
       "answer": 3,
       "explanation": "页面生命周期 Hooks 化，对应原生 onShow（呼应 mp-framework 第二节、mp-lifecycle）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "混编逃生门是成熟跨端方案的标配（呼应 mp-framework 第四节末）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " \"90% 用跨端框架、10% 关键页回原生\"这套混合策略，依赖框架的什么能力？",
+      "options": [
+        "全自动翻译",
+        "原生化能力/混写：能直接嵌入原生自定义组件与页面（如 Taro 混用原生组件、uni 支持原生小程序页面与 mp-weixin 目录），让框架不封死逃生舱",
+        "必须全部转",
+        "只能选一个框架"
+      ],
+      "answer": 1,
+      "explanation": "纯跨端最怕\"框架做不到的交互/性能关键路径被卡死\"。好的跨端方案留了混写口——关键页用原生、其余跨端，兼顾开发效率与体验上限。评估跨端框架时\"能不能混用原生\"是硬指标，不能混用的框架会把你锁死在它的最低能力上。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " uni-app 的 #ifdef MP-WEIXIN ... #endif 属于什么机制、和运行时 if 判断环境有何本质差别？",
+      "options": [
+        "运行时判断",
+        "条件编译——构建期按目标平台裁剪代码，非当前平台的分支根本不进产物；运行时判断则是平台代码都打进包、跑起来再 if，体积与执行都更亏",
+        "热更新",
+        "懒加载"
+      ],
+      "answer": 1,
+      "explanation": "条件编译=编译期分端裁剪（类似 C 宏/Vite define 的构建期常量替换 + tree-shake），产物干净、体积省；运行时 env 判断简单但把三端逻辑都背着。平台专有 API/差异大的 UI 优先条件编译隔离，只有\"同一段逻辑微判\"才用运行时。跨端项目审计包体时要特别看\"没被条件编译裁掉的死代码\"。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 在 Taro（React 写法）里要\"每次页面显示都刷新\"，正确姿势是？",
+      "options": [
+        "useEffect 空依赖里写 onShow",
+        "用框架提供的页面生命周期 Hook（如 Taro.useDidShow / usePageScroll 等）对应小程序 onShow，而不是把 onShow 语义塞进挂载 useEffect——后者只在挂载跑一次，等价 onLoad 不是 onShow",
+        "用 componentDidMount",
+        "window.onfocus"
+      ],
+      "answer": 1,
+      "explanation": "这是 React→小程序最易踩的语义错位：useEffect([]) 只挂载执行一次≈onLoad，而\"每次返回该页要刷新\"是 onShow，小程序页面栈常驻不卸载，没有 React Navigation 那种 focus 事件自动触发。必须用框架桥接的 useDidShow。把\"页面是否被卸载\"这层差异想透，跨端与 SPA 的生命周期映射就通了。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # SolidStart 总览 · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) SolidStart 在 Solid 生态里是什么定位？相比纯 Solid 客户端应用多了什么？
 
@@ -61,3 +61,25 @@ Solid 的 `lazy(() => import())` 是应用开发者手动切分；Start 则把**
 
 先搭脚手架并把 app.tsx/entry 结构对齐；把 Router 手工路由表改成 routes 目录文件映射（动态段/布局对照官方约定）；给 root 补 Suspense；把手写 fetch+effect 的数据层换成 query/createAsync（服务端资源加 "use server"）；配置从 vinxi/自建 Vite 迁到 vite.config.ts 的 solidStart()；最后配 @solidjs/start/env 类型与部署插件。
 **来源**：文档 Migrating from v1 引导语与整体版式反推的迁移主题转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  对比 SvelteKit，SolidStart 在路由数据与错误处理上的心智差异清单？ 
+
+ Kit 用 +load/+error 文件系统约定与状态码协议，Start v2 用路由树代码声明 loader + ErrorBoundary 组件；数据缓存层 Start 依赖自研/社区 query，Kit 内置失效原语；迁移要重写的恰是这些约定面。 
+
+**来源**： https://github.com/solidjs/solid-start ； https://svelte.dev/docs/kit 
+
+### 14.  环境变量在 Start 里的暴露规则与安全边界？ 
+
+ 默认全进服务端，进客户端需显式前缀/公开标记（v2 走 env 模块约定）；VITE_ 式前缀是打包进产物的信号，密钥一旦进客户端分支即泄露；CI 里对产物 grep 是最后防线。 
+
+**来源**： https://github.com/solidjs/solid-start ； https://vitejs.dev/guide/env-and-mode 
+
+### 15.  一个既有纯 CSR 项目升级 Start v2，你的分阶段路线？ 
+
+ 先装脚手架保持 SPA 模式验证构建链，再把取数从组件 fetch 迁到路由 loader（顺带治 loading 竞态），然后开 SSR 处理浏览器依赖点（isServer/onMount 收口），最后逐路由加 prerender；每阶段可独立回滚。 
+
+**来源**： https://docs.solidjs.com/ 

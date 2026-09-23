@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "预构建产物默认存放在哪里？",
-      "options": ["dist/", "node_modules/.vite/deps", ".vite 在项目根目录", "cacheDir 只有一处无法定位"],
+      "options": [
+        "dist/",
+        "node_modules/.vite/deps",
+        ".vite 在项目根目录",
+        "cacheDir 只有一处无法定位"
+      ],
       "answer": 1,
       "explanation": "默认 cacheDir 下 node_modules/.vite/deps，排查时整目录删掉强制重建（呼应 vite-deps-perf 第一、三节）。"
     },
@@ -53,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "Vite 6 里让 dev 启动时就预 transform 一批热点文件的配置是？",
-      "options": ["server.warmup", "optimizeDeps.include", "build.preload", "server.fs.allow"],
+      "options": [
+        "server.warmup",
+        "optimizeDeps.include",
+        "build.preload",
+        "server.fs.allow"
+      ],
       "answer": 0,
       "explanation": "warmup 走环境 API 的文件预热，换首屏/首跳不卡（呼应 vite-deps-perf 第三节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "预构建成本≈O(体积)，对已优化 ESM 是纯浪费；跳过后浏览器按模块直接命中（呼应 vite-deps-perf 第三、四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 依赖扫描（scanner）阶段的产物 optimizeDeps.entries 配置的作用是？",
+      "options": [
+        "指定预构建的包名",
+        "限定\"从哪些 HTML/入口文件出发收集依赖\"——glob 配错会漏扫（启动后临时发现新依赖触发 reload）或过宽（扫进无关页面拖慢冷启动），monorepo 多应用要精确到本应用 index.html",
+        "列入口 chunk 名",
+        "指定 build 输出"
+      ],
+      "answer": 1,
+      "explanation": "预构建的依赖集合由扫描发现，entries 决定扫描射程——\"启动 5 秒后又 reload 一次\"多半是它漏了。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " dev 启动日志出现 [vite] optimized dependencies changed, reloading 反复发生，首选处理是？",
+      "options": [
+        "忽略（属正常）",
+        "定位\"扫描期没发现、运行期才 import\"的依赖（动态 import 路径、条件引入、entries 漏页），补进 optimizeDeps.include 一次性纳入预构建——让缓存 key 稳定，而不是每次现场补建",
+        "清缓存重启循环执行",
+        "关闭预构建"
+      ],
+      "answer": 1,
+      "explanation": "反复 reload = 预构建缓存永远未命中；include 显式声明动态依赖是把\"惊喜\"变\"合同\"的标准解（呼应既有口诀题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Vite 6 前后 SSR 依赖优化（ssr.optimizeDeps / 统一依赖优化器）解决的问题是？",
+      "options": [
+        "SSR 不需要优化",
+        "SSR 外部化包里的 ESM/CJS 互操作与转换问题原先靠运行时绕过，统一依赖优化器让 SSR 依赖也走预构建/发现机制（与客户端同模型），CJS-only 依赖在 Node ESM 下的报错与双实例问题显著减少",
+        "只为加速 HMR",
+        "替换 noExternal"
+      ],
+      "answer": 1,
+      "explanation": "dev SSR 的\"包格式灾难\"曾经只能 noExternal/降级解决；依赖优化统一是 Vite 6/7 治理双模型的组成部分。"
     }
   ]
 }

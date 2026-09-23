@@ -1,6 +1,6 @@
 # es-build 面试题精选
 
-> 共 12 题，覆盖 **构建流程 / Tree Shaking / 代码分割 / 缓存策略 / CSS 处理 / Source Map / CI/CD** 七类。
+> 共 15 题，覆盖 **构建流程 / Tree Shaking / 代码分割 / 缓存策略 / CSS 处理 / Source Map / CI/CD** 七类。
 
 ---
 
@@ -102,3 +102,25 @@ JS/CSS 文件名带 contenthash → 内容变时文件名变 → 可以 `max-age
 - **pnpm workspace** + Turborepo = 2024-2025 最主流组合。
 
 **来源**：Turborepo Docs — "Caching"; Nx Docs — "Affected"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. Vite 生产为什么用 Rollup 而不是 esbuild？Rolldown 又是什么？
+
+esbuild 快但当年 bundle 能力弱：代码分割粒度、split chunks 策略、成熟插件生态都不如 Rollup；且 Go 的 sourcemap 链路当时不达标。Vite 策略「dev 用 esbuild 做翻译，prod 用 Rollup 做打包」（Rollup 的 ESM 摇树/scope hoisting 产物质量最高）。痛点在大型项目 Rollup 变慢且要两份解析管线——**Rolldown**（Rust 重写、兼容 Rollup API）目标统一两条管线，Vite 7 起实验接入。加分点：能讲出 dev/prod 同引擎才能消除「开发正常构建炸」类差异。
+
+**来源**：Vite 官方《Why Not Bundles / Rolldown 公告》；rolldown.rs 文档动机篇。
+
+### 14. Tree Shaking 完整生效条件有哪些？列举摇不掉的场景。
+
+条件链：ESM 静态结构（CJS 基本放弃）→ 副作用判定：bundler 默认**执行顶层语句视为有副作用**，`sideEffects:false` 或 glob 列表告诉打包器「纯重导出文件可整文件扔」→ 已知纯函数标注 `/*#__PURE__*/` 才敢删调用。摇不掉：属性访问动态化（`obj["f"+"oo"]`）、导出对象被整体消费、CommonJS 互操作包装、`import "polyfill"` 副作用导入被 sideEffects 白名单保护失败误删（antd 样式曾踩）。验证手段：产物里搜函数名 + rollup-plugin visualizer 对照。
+
+**来源**：webpack 指南《Tree Shaking / sideEffects》；rollup docs《Tutorial: Tree-shaking》PURE 注释条款。
+
+### 15. 前端缓存体系：contenthash、HTTP 头、chunk 更新之间的关系讲一下。
+
+两层：协商缓存（ETag/Last-Modified）兜底，强缓存（`Cache-Control: max-age=31536000, immutable`）让 hash 文件名资源永不回源——contenthash 变了 URL 自然变，旧文件留版不冲突。**陷阱在入口**：index.html 必须 no-cache（否则新 chunk 名引不到）；动态 import 的 chunk 在页面存活期被替换 → 老页面拉不到旧文件名，需要 import 失败重试/版本协商策略（发布原子性：整站目录版本化）。module id 稳定性（deterministic/sized）决定改动会不会牵一发动全身地 bust 全部 hash。
+
+**来源**：web.dev《Faster site loads with immutable caching》；webpack output.chunkLoadingFailure 与 deterministic module ids 文档。

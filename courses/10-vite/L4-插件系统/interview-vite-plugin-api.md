@@ -1,6 +1,6 @@
 # vite-plugin-api 面试题精选
 
-> 共 12 题，覆盖 **插件模型 / 通用钩子 / Vite 独有钩子 / 顺序作用域 / dev-build 差异 / 虚拟模块** 六类。
+> 共 15 题，覆盖 **插件模型 / 通用钩子 / Vite 独有钩子 / 顺序作用域 / dev-build 差异 / 虚拟模块** 六类。
 
 ---
 
@@ -99,3 +99,25 @@ Vite 管线里源码被多层 transform 反复改写（TS/JSX/框架宏/你的�
 优先复用社区/官方插件（框架支持、legacy、PWA、图标、markdown、可视化分析等几乎都有）。注意：① 是否兼容你的 Vite 大版本与 Vite6 Environment API；② 是否 Rollup/Vite 通用还是绑死某模式；③ enforce 与现有插件链是否冲突；④ 维护活跃度与体积；⑤ 有无更轻替代（也许一个 `transform` 钩子就够，不必引重包）。真没有合适再自研，且写成可复用包而非一次性配置。
 
 **来源**：awesome-vite / Vite — "Plugins registry"; Rollup — "plugin list"; npm search vite-plugin
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Vite 插件与 Rollup 插件的兼容边界：哪些钩子/字段是 Vite 扩展，写通用插件时怎么两边都跑？
+
+继承面：Vite 直接使用 Rollup 插件管道（resolveId/load/transform/buildStart/generateBundle 等全套语义一致），"能用 Rollup 插件"是 Vite 生态冷启动的杠杆。Vite 扩展项逐个点名：config/configResolved（构建配置参与权，Rollup 无——配置在 Rollup 是外部参数）、configureServer/environments（dev server 控制反转，Rollup 没有 server 概念）、handleHotUpdate（HMR 域，纯 Vite）、apply/enforce（注册语义的糖）。边界坑：Vite 对部分 Rollup 钩子的调用时机有微调（transform 过滤的 include/exclude 语义、watch 事件聚合），以及 Rollup 高级钩子（renderChunk 的 modules 遍历等）在 Rolldown 兼容层有子集差异——"两边都能跑"的安全区是 resolveId/load/transform 三板斧+输出用 generateBundle。跨工具插件的工程形态（unplugin 模式）：工厂函数接受 { include, exclude } 配置、内部按 enforce 与 apply 适配 Vite 语义、对 webpack/Rollup/esbuild/Vite 各写薄适配器（钩子映射表）、测试矩阵跑全工具链。加分句：面试官问"插件本质"时的满分结构是"合同 + 时机 + 扩展"——合同是 Rollup 钩子形状，时机是 Vite 加的 config/server 两域，扩展是 environment/HMR 的 Vite 私有能力。
+
+**来源**：Vite 官方 Plugin API（Rollup 兼容性声明）；Rollup 钩子列表对照；unplugin 仓库设计
+
+### 14.  插件执行顺序为什么是 Vite 工程最容易踩的暗坑？给一张顺序心智图与调试方法。
+
+心智图（一个模块从磁盘到浏览器）：resolveId 链（alias/虚拟模块在前）→ load（原始源码入场）→ transform 链按"pre 用户插件 → Vite 内置（esbuild/框架插件/PostCSS 关联）→ post 用户插件 → build 期收尾类"→ 之后进模块图与 chunk 渲染钩子。踩坑模式：① "我要在 vue 编译前拿到原始模板"没放 pre → 看到的是编译产物；② 依赖"前一个插件的输出格式"但对方升版改了产出 → 顺序耦合脆断（解法：兼容两种输入而不是钉顺序）；③ enforce 不够细（pre 里还有相互顺序——数组序）导致团队内两个插件打架；④ serve/build 顺序差异（同一插件在两套管道的注入点不同，apply 判断漏写）。调试方法学：Vite 官方顺序文档做参照系 → 在 transform 里打印（name + 输入前 200 字符）观察"我到底看到什么"→ 对比期望的中间态定位是谁提前改写了；顺序问题的报告（issue）要带这张打印链，否则维护者也无法复现。防线设计：公共插件库对顺序做显式文档与集成测试（按"给定输入序列→期望输出序列"写用例），把隐式顺序变成契约。收口句：插件系统的"顺序即语义"与中间件的"顺序即安全"是同一条工程定律的两次出现——讲透一个，另一个面试官自动相信你会了。
+
+**来源**：Vite 插件顺序文档（alias→pre 用户→Vite 核心→post 用户→build/serve 插件）；Rollup plugin container 源码；掘金《我的 transform 怎么被前面的插件吃掉了》
+
+### 15.  虚拟模块的完整生命周期：从   前缀到 dev/build 行为一致性，插件作者要盯哪些坑？
+
+生命周期两钩子：resolveId（认领 id：返回带   前缀的内部 id，告诉其他插件"这是虚拟的别读盘"）、load（id→源码）。Vite 特有的坑与规范：①   不能出现在 URL——Vite 在 client 侧把   转 /@id/ 通道编码，含特殊字符的 id（Windows 路径、# 号）要 encodeURIComponent 处理（文档明说的手工活）；② dev 与 build 的 id 流转不同（build 里   一路到底，dev 要可被浏览器 import 的合法 URL——虚拟模块的"内容"变化在 dev 需手动触发 HMR 或标记 no-hmr）；③ transform 链路过虚拟模块时，后续插件可能按"真实文件"假设做路径判断（endsWith .js 类正则要兼容 /@id/ 前缀形态）；④ 缓存语义：虚拟模块的 load 每次 dev 请求都会执行吗（Vite 有模块图缓存，内容动态生成时要自己管失效）。设计守则：id 命名带插件前缀（my-plugin:virtual-entry 防多插件互抢）、可枚举清单（resolveId 认领的命名空间要能列出，"任何未知 id 都造模块"是生态污染）、提供开关允许宿主 exclude。收口句：虚拟模块是"插件给构建系统发明的文件"——发明得守规矩（可路由、可调试、可卸载），否则全生态都要为你的魔法让路，这是区分工具作者与工具玩家的地方。
+
+**来源**：Rollup 虚拟模块约定（  与 plugin-name: 命名）；Vite dev 对虚拟模块的额外处理讨论；unplugin-vue-components 源码参考

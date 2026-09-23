@@ -1,6 +1,6 @@
 # 测试 · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) @solidjs/testing-library 的 render 为什么收一个函数而不是元素？
 
@@ -61,3 +61,25 @@ waitFor 是**轮询**——不搭 Solid 响应式的车；testEffect 在受控 o
 
 wrapper **必须永远返回 props.children**——尤其内层有异步代码套 `<Show>` 时：hook 的值只在同步阶段取一次，children 一旦缺席就只拿到 undefined 且原因难猜。这是官方原文点名的行为。
 **来源**：README renderHook wrapper 警告段转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  服务端函数调用链（RPC 桩）在测试里 mock 什么层最合理？ 
+
+ mock 被导入的服务端模块本身（编译桩与其等价），不 mock 底层 fetch——保留参数序列化验证但绕开网络；集成层再用真实 server 函数跑端到端，两层职责分清。 
+
+**来源**： https://vitejs.dev/guide/ ； https://github.com/solidjs/testing-library 
+
+### 14.  什么时候值得起 Playwright 端到端，而不是组件测试？ 
+
+ 跨页导航+cookie/重定向链、水合正确性、无 JS 渐进增强路径这三类只有 e2e 能覆盖；金路径一两条+关键异常各一，其余下沉到组件与函数层，防慢测拖垮 CI。 
+
+**来源**： https://playwright.dev/docs/intro 
+
+### 15.  SSR 水合错误怎么在 CI 里捕获？ 
+
+ e2e 里监听 console/pageerror 断言零 hydration 警告；单测侧对同一组件分别跑 renderToString 与客户端渲染对比 HTML 快照，服务端分支（isServer）逻辑的测试矩阵要显式枚举。 
+
+**来源**： https://docs.solidjs.com/ 

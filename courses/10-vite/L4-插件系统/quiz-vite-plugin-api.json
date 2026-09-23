@@ -8,11 +8,11 @@
       "prompt": "Vite 插件与 Rollup 插件的关系是？",
       "options": [
         "完全无关的两套系统",
-        "Vite 插件是 Rollup 插件的超集：继承大部分 Rollup 钩子 + 若干 Vite 独有钩子",
         "Rollup 插件是 Vite 的子集",
-        "Vite 不支持任何 Rollup 插件"
+        "Vite 不支持任何 Rollup 插件",
+        "Vite 插件是 Rollup 插件的超集：继承大部分 Rollup 钩子 + 若干 Vite 独有钩子"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "构建走 Rollup，多数 Rollup 插件直接可用；Vite 另加 config/configureServer/transformIndexHtml/handleHotUpdate 等扩展钩子。"
     },
     {
@@ -32,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "下列哪个钩子在 dev（serve）模式下不会触发？",
-      "options": ["transform", "resolveId", "generateBundle", "load"],
+      "options": [
+        "transform",
+        "resolveId",
+        "generateBundle",
+        "load"
+      ],
       "answer": 2,
       "explanation": "dev 没有真正打包，产物级钩子（options/renderChunk/generateBundle/writeFile）不跑；resolveId/load/transform 会对每个请求模块跑。"
     },
@@ -53,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "虚拟模块（凭空造一个可 import 的模块）主要靠哪两个钩子配对实现？",
-      "options": ["transform + renderChunk", "resolveId + load", "config + load", "options + transform"],
+      "options": [
+        "transform + renderChunk",
+        "resolveId + load",
+        "config + load",
+        "options + transform"
+      ],
       "answer": 1,
       "explanation": "resolveId 把 'virtual:x' 认领成一个带 \\0 前缀的自定义 id，load 对该 id 返回生成的源码。"
     },
@@ -61,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "想往 index.html 注入一个 <script> 标签，最合适的钩子是？",
-      "options": ["transformIndexHtml", "configureServer", "handleHotUpdate", "renderChunk"],
+      "options": [
+        "transformIndexHtml",
+        "configureServer",
+        "handleHotUpdate",
+        "renderChunk"
+      ],
       "answer": 0,
       "explanation": "transformIndexHtml 专门改 HTML，可返回 tags 数组注入到 head/body，是埋点/meta/脚本注入正解。"
     },
@@ -82,9 +97,40 @@
       "id": "q8",
       "type": "single",
       "prompt": "在插件里想吐出一个额外产物文件（如生成 .txt/asset），用哪个 API？",
-      "options": ["fs.writeFileSync", "this.emitFile", "res.end", "server.close"],
+      "options": [
+        "fs.writeFileSync",
+        "this.emitFile",
+        "res.end",
+        "server.close"
+      ],
       "answer": 1,
       "explanation": "Rollup 插件上下文 this.emitFile({ type:'asset', fileName, source }) 纳入构建产物管理，别直接写文件绕过管线。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 多个插件都实现 config 钩子返回补丁时，合并顺序遵循什么？",
+      "options": [
+        "字典序",
+        "按 plugins 数组顺序依次执行并合并返回值（数组字段默认串联、对象字段深合并）——顺序敏感是插件生态的第一约束（enforce 提供 pre/post 插队）",
+        "随机",
+        "只取最后一个"
+      ],
+      "answer": 1,
+      "explanation": "config 阶段的\"先注册先生效\"与 transform 链同理：插件数组的书写顺序就是语义的一部分。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " transform 钩子返回对象时，必须包含的字段是？",
+      "options": [
+        "只 code",
+        "code 必带、map 强烈建议带（省略或给错会让 sourcemap 链从此断裂，且 Rollup 默认视\"无 map\"为有意放弃）",
+        "code+id",
+        "code+warnings"
+      ],
+      "answer": 1,
+      "explanation": "\"返回字符串\"是合法简写但等于放弃 map——自写插件的 transform 带 map 是职业素养线。"
     }
   ]
 }

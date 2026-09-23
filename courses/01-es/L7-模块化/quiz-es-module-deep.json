@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "ESM 加载的三阶段正确顺序是：",
       "options": [
-        "求值 → 链接 → 解析",
         "解析 → 链接 → 求值",
         "链接 → 解析 → 求值",
-        "求值 → 解析 → 链接"
+        "求值 → 解析 → 链接",
+        "求值 → 链接 → 解析"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Parsing 建 AST 与声明；Linking 沿依赖图递归加载并建立**绑定**；Evaluation 按 DFS 后序执行顶层代码。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "为什么 `import { x } from './m.js'` 会**提升**？",
       "options": [
         "V8 优化",
-        "解析阶段就建立**绑定**，与求值时机无关；顶层代码执行前所有 import 已完成链接",
         "Babel 转的",
+        "解析阶段就建立**绑定**，与求值时机无关；顶层代码执行前所有 import 已完成链接",
         "运行时自动重排"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Parsing / Linking 都在 Evaluation 之前——所以 `console.log(x)` 在 import 之前也不会拿不到，而是**已在链接**但未求值 → TDZ 中。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "`package.json` 的 `exports` 字段里，字段匹配顺序是：",
       "options": [
         "字典序",
-        "自上而下第一个命中",
         "自下而上",
-        "随机"
+        "随机",
+        "自上而下第一个命中"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "顺序**敏感**——`types` 放最上（TS 编译期），再具体环境（node / browser），再通用（import / require），最后 default。放错就命中不了。"
     },
     {
@@ -47,11 +47,11 @@
       "prompt": "什么是 dual-package hazard？",
       "options": [
         "包冲突",
-        "同一份代码**同时**被以 ESM 与 CJS 两条路径加载 → Node 视作**两个独立实例** → 单例状态分裂",
         "两个包同名",
+        "同一份代码**同时**被以 ESM 与 CJS 两条路径加载 → Node 视作**两个独立实例** → 单例状态分裂",
         "循环依赖"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "ESM 与 CJS 各有独立缓存；exports 就算指同一份源码，Node 也**分别包装**——`store` 变成两个 store。修法：只发 ESM 或 CJS 之一。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "ESM 里 `import { readFile } from 'node:fs'` 时，Node 是怎么**知道** readFile 这个具名导出的？",
       "options": [
-        "从 d.ts 文件读类型",
         "cjs-module-lexer 静态扫描 fs.js 源码里的 `exports.readFile = ...` 模式",
+        "从 d.ts 文件读类型",
         "由用户手动列 exports",
         "V8 内置了 fs 的 API 表"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "fs 是 CJS——Node 用 **cjs-module-lexer** 静态扫描识别 `exports.foo = ...` 之类的模式；匹配不到只暴露 default。`Object.assign(exports, obj)` 认不出。"
     },
     {
@@ -86,12 +86,51 @@
       "prompt": "顶层 `await` 的**主要风险**是：",
       "options": [
         "语法错误",
-        "**阻塞整条依赖链**——一个 TLA 卡住，所有 import 它的模块都跟着卡",
         "只能用于浏览器",
-        "只能 await Promise.all"
+        "只能 await Promise.all",
+        "**阻塞整条依赖链**——一个 TLA 卡住，所有 import 它的模块都跟着卡"
+      ],
+      "answer": 3,
+      "explanation": "TLA 让下游模块自动等它完成——好处是**用起来同步**，坏处是网络/慢 I/O 会**拖垮**整个入口。适合 polyfill / 特性探测，不适合业务数据。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "ESM 里加载 JSON 文件，当前的正确姿势是：",
+      "options": [
+        "`import c from './c.json' assert { type: 'json' }`（assert 是新标准）",
+        "`import c from './c.json' with { type: 'json' }`——Import Attributes（ES2025 落地），assert 写法已废弃",
+        "`import c from './c.json'` 直接写，所有环境都支持",
+        "只能用 `createRequire`"
       ],
       "answer": 1,
-      "explanation": "TLA 让下游模块自动等它完成——好处是**用起来同步**，坏处是网络/慢 I/O 会**拖垮**整个入口。适合 polyfill / 特性探测，不适合业务数据。"
+      "explanation": "`assert { type }` 是已废弃的旧提案语法；现行是 `with { type: 'json' }`（Node 20.10+/browsers）。createRequire 能解但只是过渡方案。裸 import JSON 在 Node ESM 不合法。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Import Maps（`<script type='importmap'>`）解决的痛点是：",
+      "options": [
+        "Node 的 require 缓存映射",
+        "打包器的 sourcemap 对应关系",
+        "把 ES5 脚本映射成 ESM",
+        "无打包器时，浏览器里裸导入（bare specifier）的解析——`import 'react'` 经 map 命中 CDN URL/前缀别名"
+      ],
+      "answer": 3,
+      "explanation": "浏览器原生 import 只认 URL/相对路径，`import React from 'react'` 这种裸名会报错——import map 提供「裸名→URL」与前缀（`@app/`）映射，是无构建（build-less）方向的官方解药。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "下列哪条**不是** tree-shakable 库的军规？",
+      "options": [
+        "用 `export * from './all'` 把全量导出打包给下游自己摇",
+        "具名导出优先，不搞 default 大礼包",
+        "顶层无副作用，并声明 `sideEffects` 标记/白名单",
+        "每个 API 独立文件，`exports` 字段配齐 import/require/types"
+      ],
+      "answer": 0,
+      "explanation": "`export *` 是六条军规里明确要避开的——导出面模糊，下游打包器难以确定哪些被用（尤其跨 CJS 边界）；要写**明确**的 `export { a, b } from './inner.js'`。其余三条都是军规。"
     }
   ]
 }

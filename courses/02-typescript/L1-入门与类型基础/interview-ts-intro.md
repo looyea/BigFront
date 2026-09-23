@@ -1,6 +1,6 @@
 # ts-intro 面试题精选
 
-> 共 12 题，覆盖 **TS 定位 / 类型擦除 / 编译与转译 / tsconfig / 运行方式 / 类型局限** 六类。
+> 共 15 题，覆盖 **TS 定位 / 类型擦除 / 编译与转译 / tsconfig / 运行方式 / 类型局限** 六类。
 
 ---
 
@@ -106,3 +106,25 @@ Vue3 源码本身用 TS 写，组合式 API 对类型推导友好（`defineProps
 TS 的条件类型/映射类型/递归类型足以在类型层面做计算（图灵完备），能表达极强约束、把错误消灭在编译期。代价：① 复杂类型可能编译极慢甚至栈溢出（类型实例化过深）；② 可读性崩坏、团队看不懂；③ 过度"类型体操"反而增加维护成本。务实原则：**够用就好、清晰优先**，把炫技留给真正的通用库，业务代码保持可维护（贯穿后续 ts-advanced）。
 
 **来源**：TypeScript — "Turing complete type system"; "Total TypeScript / Matt Pocock"; issue — "Type instantiation is excessively deep"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. TypeScript 是谁、为什么做出来的？设计哲学是什么？
+
+微软 2012 年发布，主导者 Anders Hejlsberg（Delphi/C#/C++ 编译器之父）：面向**超大规模 JS 工程**的静态类型——渐进（JS 合法即 TS 合法）、推断优先少标注、类型即结构（duck typing 形式化）、任何缺口可用 any 逃生。这解释了它所有「反直觉」：非 sound（对象更新别名）、结构化兼容、擦除运行时无痕。商业动机：Office/Web 大型前端代码库的维护成本 + 与 VS Code 的 IDE 协同是其杀手级传播。
+
+**来源**：Microsoft 2012《Introducing TypeScript》官方博客；Anders Hejlsberg 历次访谈（TeaTime with Anders / 系统设计访谈）。
+
+### 14. 历史上和 TS 竞争的方案有哪些？为什么 TS 赢了？
+
+CoffeeScript（语法先行，随 ES6 吞掉特性而亡）、Flow（FB 出品，类型标注写在注释里与 JSDoc 撞车、推广绑定 React）、TypeScript 取胜三件套：① **语言服务协议**（LSP 前身之一）让编辑器体验碾压；② **DefinitelyTyped**（@types 众包声明库）让存量 JS 生态一夜「有类型」；③ 微软自证（Angular 2 强制背书 + VS Code 全站用 TS）。结论：类型系统之争本质是生态与工具链之争。
+
+**来源**：DefinitelyTyped GitHub 仓库首页说明；2016 年 Flow 官方《The evolution of Flow at Meta》转向公告。
+
+### 15. TS 的「渐进类型」逃生口（any/as/ignore）被批评破坏类型安全，你怎么看？
+
+逃生口是**特性不是 bug**：没有 any 就没有 JS 存量迁移（Flow 的严格性恰是落地阻力）。治理靠分层纪律：边界层（API/env/DOM）集中断言并包成函数，业务层零 any；工具链兜底——noImplicitAny/explicit-module-boundary-types 编译期禁、ESLint no-explicit-any 审查期禁、`@ts-expect-error` 替代 ignore 防腐蚀。目标不是零逃生口，而是**逃生口可见、可数、可审计**。
+
+**来源**：TS Handbook《Type Escapes / Practical Functions》；Effective TypeScript Item 40ish「限制 any 的团队策略」讨论。

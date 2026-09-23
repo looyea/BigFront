@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "一对多全局广播是总线的主场（呼应 mp-communication 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " eventChannel 的连通范围是？",
+      "options": [
+        "全局任意两页都能收发",
+        "只连通\"本次 navigateTo 的打开者( opener )与被打开页\"这一对，随这一次跳转建立、页面销毁即失效——不是全局总线",
+        "连通所有历史页",
+        "只在 tabBar 页间有效"
+      ],
+      "answer": 1,
+      "explanation": "eventChannel 是\"父子单次跳转\"的私聊通道（getCurrentOpenerEventChannel / success 里拿 openerEventChannel），精准、随栈自动回收、不污染全局。跨任意页/多页共享才需要事件总线或 store；A→B→C 要回 A 时它不直接够（需逐层中转或改用别的）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 拿到 prev = getCurrentPages()[len-2] 后写 prev.data.x = 1，上一页视图没变，根因是？",
+      "options": [
+        "prev 拿错了",
+        "直接改 data 不触发渲染（小程序无响应式），必须调 prev.setData({x:1})；且跨页改别人 data 是强耦合的坏味道，优先用 eventChannel/事件",
+        "上一页已销毁",
+        "data 只读不能写值本身"
+      ],
+      "answer": 1,
+      "explanation": "两点：① 即便拿到实例，改 data 不等于 setData，视图层收不到更新；② 越过页面边界戳它的内部 data，把两页焊死、极难维护。回传数据应走 eventChannel 或全局事件让上一页\"自己更新自己\"。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 支付成功后首页、订单页、角标三处都要刷新，最贴切的通道是？",
+      "options": [
+        "eventChannel（但无单一 opener）",
+        "全局事件总线 / 订阅式 store：一次\"支付成功\"是\"一对多、跨多页、无固定父子\"的广播，正适合 emit 一个领域事件让各相关方各自订阅刷新",
+        "globalData 轮询",
+        "storage 监听"
+      ],
+      "answer": 1,
+      "explanation": "eventChannel 是点对点、且要有明确 opener；一次支付影响散落多页，是典型 pub-sub 场景——发 `order:paid` 事件，各页订阅处刷新，或用 store 改一处状态、订阅它的都更新。切记订阅要配对解绑（onUnload/off），否则重复触发与泄漏。"
     }
   ]
 }

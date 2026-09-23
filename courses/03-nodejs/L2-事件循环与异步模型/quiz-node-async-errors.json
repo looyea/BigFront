@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "为什么 try/catch 抓不到 setTimeout 回调里抛出的错误？",
       "options": [
-        "setTimeout 不允许抛错",
         "回调在下一轮事件循环的全新调用栈里执行，届时 try 栈早已弹出",
+        "setTimeout 不允许抛错",
         "错误被 V8 自动吞掉",
         "因为 setTimeout 是异步 API"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "try/catch 只能捕获同一调用栈内、同步发生的抛错。异步回调执行时原 try 栈已不存在，所以抓不到（呼应 node-event-loop）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "error-first 回调约定的“first argument”是什么？",
       "options": [
         "结果数据",
-        "错误对象，无错时为 null",
         "回调函数本身",
+        "错误对象，无错时为 null",
         "超时毫秒"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Node 传统 API 约定 callback(err, result)：第一个参数是错误、成功时为 null，调用方第一件事就是 if(err) 检查。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "并行多个异步任务、希望“不因一个失败就丢掉其它结果与错误”，应优先用？",
       "options": [
         "Promise.all",
-        "Promise.allSettled",
         "顺序 await",
-        "Promise.race"
+        "Promise.race",
+        "Promise.allSettled"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Promise.all 一个 reject 就整体 reject、其它错误易被吞；allSettled 等全部落定并返回每个的 status/理由，便于逐个处理（呼应 ES）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "ES2022 的 Error cause 允许包裹底层错误同时保留原因链，排查时能看到“表面的高层错误 + 真正的底层原因”（呼应 ES）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "V8 的 Error.captureStackTrace(obj, ctor) 与 err.stack 的关系是：",
+      "options": [
+        "手工设置无效",
+        "stack 默认是 getter，首次读取才按调用栈格式化；captureStackTrace 可自定义截取起点（隐藏工具函数帧），V8 还有 10 帧上限的默认截断",
+        "只能写一次不可改",
+        "仅浏览器可用"
+      ],
+      "answer": 1,
+      "explanation": "懒捕获+可定制起点=库作者抹掉自身帧（assert 库标准操作）；生产配置 --stack-trace-limit 与异步栈（AsyncLocalStorage 注入 traceId 关联日志）互补。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "一个 Promise 链里 .then 抛错后，后续 .catch 之前的 .finally 会：",
+      "options": [
+        "被跳过",
+        "照常执行（finally 透传拒绝原因），但若 finally 自身再抛会覆盖原错误——finally 里禁异步副作用吞错",
+        "只在末端执行",
+        "转成 warning"
+      ],
+      "answer": 1,
+      "explanation": "finally 语义=同步清理透传；「catch 里 return 吞掉后续 finally 异常」「finally 里 await 悬挂导致拒绝永不到达」是两大阴间分支（本关 then(a,b) vs then().catch() 题的姊妹知识）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "AggregateError 的定位是：",
+      "options": [
+        "废弃语法",
+        "把多个错误装进一个 Error（errors 数组），Promise.any 全失败即抛它；批量任务/并发校验的「不丢错」标准容器",
+        "仅 Node 有",
+        "只能包两个错误"
+      ],
+      "answer": 1,
+      "explanation": "ES2021 入场；配合 allSettled 手工聚合、Error.cause 双层嵌套（cause 是单数、errors 是复数）构成错误组合学三件套——本关 allSettled 题的类型侧补全。"
     }
   ]
 }

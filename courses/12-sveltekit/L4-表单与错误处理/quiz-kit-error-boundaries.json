@@ -3,6 +3,7 @@
   "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
+      "id": "q1",
       "type": "single",
       "prompt": "expected error 与 unexpected error 的分界判据是？",
       "options": [
@@ -15,6 +16,7 @@
       "explanation": "官方按『是否 error() 抛』分身份：expected 原样进 page.error 且不过 handleError；unexpected 默认套通用壳 {message: Internal Error} 且必经 handleError。状态码只是结果不是判据。"
     },
     {
+      "id": "q2",
       "type": "single",
       "prompt": "把 load 全体包进 try/catch 后，页面里的 redirect(303, ...) 失效了。为什么？",
       "options": [
@@ -27,6 +29,7 @@
       "explanation": "JSDoc 红线：别 catch 住 thrown redirect/error。正确姿势是 catch 里 if (isRedirect(e)) throw e（或 isHttpError 同理）再处理真异常。"
     },
     {
+      "id": "q3",
       "type": "single",
       "prompt": "+layout.server.js 的 load 抛了 error(500)，按官方落点规则谁来接？",
       "options": [
@@ -39,6 +42,7 @@
       "explanation": "官方规则：layout load 出错，最近边界在树中该布局的上方而非旁边。只有根 layout 出错才走 fallback 页（根布局里放不下自己的边界）。"
     },
     {
+      "id": "q4",
       "type": "single",
       "prompt": "根 +layout.js 的 load 抛错时，用户看到的是？",
       "options": [
@@ -51,6 +55,7 @@
       "explanation": "根布局本应包含 +error.svelte，自举死锁——官方明确此场景用 fallback page。src/error.html 是纯 HTML，只有 %sveltekit.status% 与 %sveltekit.error.message% 占位符会被替换。"
     },
     {
+      "id": "q5",
       "type": "single",
       "prompt": "+server.js 端点里抛错，+error.svelte 不参与，响应形态由什么决定？",
       "options": [
@@ -63,6 +68,7 @@
       "explanation": "官方 Responses 节：handle 或端点里的错误按 Accept 二选一（fallback 页 / JSON）。端点世界只有 Request→Response，layout/error 组件都不在场。"
     },
     {
+      "id": "q6",
       "type": "single",
       "prompt": "action 里校验失败，官方推荐的『软着陆』手段与理由匹配正确的是？",
       "options": [
@@ -75,6 +81,7 @@
       "explanation": "fail 是带状态的返回值不是抛掷：状态进 page.status、数据进 form。硬抛 error(400) 会渲染错误页，无 JS 时用户整页丢失表单内容——提交期错误优先软着陆地用 fail。"
     },
     {
+      "id": "q7",
       "type": "single",
       "prompt": "2.54 的 experimental.handleRenderingErrors 开启后，渲染期错误被接住时 +error.svelte 如何拿到错误对象？",
       "options": [
@@ -85,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "官方注记：此时用 svelte:boundary 包裹，错误先过 handleError 再以 prop 交给边界（let { error } = $props()）；page.error 不更新，因多边界可能并行接错。实验特性不受 semver 保护。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " error(404) 声明的预期错误与意外抛出的 TypeError，在呈现上的官方差异是？ ",
+      "options": [
+        " 完全相同 ",
+        " 预期错误可带自定义 message 进 $page.error，意外错误在服务端被隐藏为通用消息并走 handleError 上报 ",
+        " 意外错误不渲染 ",
+        " 预期错误只能白屏 "
+      ],
+      "answer": 1,
+      "explanation": " 区分动机是防信息泄漏：意外错误的堆栈只进日志，$page.error.message 用固定兜底文案。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 生产环境想看 500 页上自定义的错误文案，正确的落点是？ ",
+      "options": [
+        " 改 +layout.svelte ",
+        " src/error.html 兜底页 + 预期错误走 +error.svelte；unexpected 的 message 不可透出 ",
+        " console.error ",
+        " svelte.config.js 配 errorPage "
+      ],
+      "answer": 1,
+      "explanation": " error.html 是连 SSR 都崩时的最终防线；预期错误在路由层 +error.svelte 呈现，意外错误必须脱敏。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " load 全体包 try/catch 吞掉异常的后果是？ ",
+      "options": [
+        " 更健壮 ",
+        " redirect/error 等控制流异常一并被吞，跳转与状态码失效，属反模式 ",
+        " 只影响性能 ",
+        " 自动进 +error.svelte "
+      ],
+      "answer": 1,
+      "explanation": " Kit 用抛异常做控制流，裸 catch 会吃掉 redirect(303)/error(404)；要捕获需先识别 iserror/shape 或只包业务段。 "
     }
   ]
 }

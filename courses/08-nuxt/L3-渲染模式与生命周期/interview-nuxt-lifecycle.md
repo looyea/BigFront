@@ -1,4 +1,4 @@
-# nuxt-lifecycle 面试题（12 题）
+# nuxt-lifecycle 面试题（15 题）
 
 > 主题：钩子时机、请求链路、插件体系与调试方法论。
 
@@ -81,3 +81,25 @@
 **答**：策略是"钩子不裸用"：全站定义一个**应用事件层**（lib/app-events.ts 暴露 onNavigationStart/onDataDegraded 等自有词汇），Nuxt 钩子→自有事件 的映射只写在这一个文件的插件里；业务代码只订阅自有词汇。收益：框架钩子改名/时机调整只动一处、测试不依赖 Nuxt 运行时可直调发射器、团队语义（如"首屏就绪"）跨框架可移植（Next 迁移时同一文件换映射）。成本：极薄一层抽象几乎免费——这类"防腐层"（anti-corruption layer）是 DDD 借来的老手艺，用在高速演进的框架面最有效（呼应 next-architect C3 的实验位生存指南）。
 
 **来源**：掘金《给框架钩子加一层防腐》；InfoQ《业务语义与框架事件的隔离带》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  Nuxt 请求级生命周期的完整链路里，哪些环节能短路渲染？短路各自适合什么场景？
+
+**答**：链路：Nitro server middleware → route matcher/routeRules（redirect/rewrite 在这层就短路，不经过任何 JS 业务码）→ route middleware（全局先 per-route 后）→ 页面 setup/useFetch（服务端执行）→ 渲染 payload → 响应。短路的三种正确姿势：① redirect/rewrite 给"URL 结构级"跳转（旧域名、路径改版）——零执行成本、爬虫友好；② route middleware navigateTo 给"导航级"重定向（未登录去登录页）——能带原始路径 query；③ server middleware 里直接 return handler 响应体给"协议级"拦截（非法 UA、健康检查、黑白名单）——最快但拿不到路由上下文。滥用信号：在组件 setup 里才想起来 redirect（已经花了渲染成本）、在 server middleware 里做鉴权跳转却处理不了 SSR/客户端两种形态。收口：短路点选择=「需要多少上下文」与「愿意付多少成本」的交点。
+
+**来源**：Nuxt 官方生命周期文档；掘金《从 SSR 请求链路图说起》。
+
+### D5.  客户端生命周期钩子（hook:app:created、page:loading:start、page:transition:leave 等）你实际用在哪些需求上？怎么避免钩子间互相踩踏？
+
+**答**：实战三例：① 全局进度条——page:loading:start 起条、page:finish 收条，别用 route middleware 手工点亮（漏掉预取/重定向路径就不准）；② SPA 导航耗时埋点——page:transition:leave 起点、page:view 终点（离开动画结束+渲染完成），比笼统 routeChange 精准；③ 鉴权后"回来续播"——hook:app:mounted 里读 redirect query 做一次性恢复。防踩踏三规：钩子注册集中化（一个 plugins/telemetry.ts 统一挂，禁止散落各组件注册同名钩子——返回的 unregister 要存）；顺序敏感逻辑不靠钩子靠状态（比如"这一跳该不该记 PV"记 route meta 而不是比谁先跑）；全局钩子必须幂等（一次导航可能被触发两次，transition 被打断时 leave 有 finish 无）。判别句：能用 definePageMeta/数据层表达的不上钩子，钩子只干"观测与呈现时序"。
+
+**来源**：Nuxt 官方 hooks（nitro: 与 app 钩子列表）；SegmentFault《Nuxt 钩子驱动的进度条与埋点架构》。
+
+### D6.  SSR 每请求新建 Vue 实例带来哪些"模块级状态"事故？给团队定哪几条防串号纪律？
+
+**答**：事故模型：Node 进程复用，模块顶层的 const cache = new Map() / let currentUser 在"实例级隔离"之外——第一个请求写进去，第二个请求直接读走（A 用户看见 B 的数据），本地 dev 单标签永远复现不出。纪律五条：① 服务端要请求级状态放 event context（useState 自动按请求隔离、h3 的 setResponseHeader 等），要进程级缓存就明说它是跨用户资产（放 defineCachedFunction 且审"能不能给别人看见"）；② composable 里的共享状态用 useState()/Pinia（模块级单例 ref 是 SSR 反模式——Nuxt 文档点名）；③ 任何 server/utils 里的连接/客户端单例只放"无用户维度的能力"（DB 连接、HTTP agent），带身份的放参数不放闭包；④ code review 对 server/ 与两端共享目录扫顶层可变赋值（ESLint no-let 变体或简单 grep 门禁）；⑤ 回归手段：并发两请求带不同 cookie 打同一页比对 payload——这类 bug 要有一条自动化用例守，靠人测必漏。
+
+**来源**：Nuxt 官方 Best Practices（Avoid App-Level State）；InfoQ《一个 module 级 Map 引发的串号》。

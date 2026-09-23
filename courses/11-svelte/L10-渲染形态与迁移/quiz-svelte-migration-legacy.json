@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "升级（依赖版本）与迁移（语法世界观）各自都可能引入 bug；混在一个窗口做，事故归因就成了一锅粥。解耦是变更管理通用手法（数据库 schema 变更与应用代码变更分批发同款逻辑）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " runes 档位 compilerOptions.runes 默认 auto 的判定依据是？",
+      "options": [
+        "全局统一开",
+        "auto 按\"每个文件是否含 runes 语法\"逐文件判定——检测到 $state/$derived 等则该文件按 runes 模式编译，没有则走 legacy（迁移期新旧共存的基础，对应既有\"auto 判定粒度\"题）",
+        "按 package.json",
+        "按文件名"
+      ],
+      "answer": 1,
+      "explanation": "auto 的文件级粒度让同一仓库新旧语法共存（对应既有\"4→5 新旧同仓共存\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 迁移期要让某个文件临时保留 Svelte 4 语法（全局已钉死 runes），怎么逃生？",
+      "options": [
+        "无法",
+        "<svelte:options runes={false}/>（per-file 关闭 runes，让该文件继续 legacy 编译，配合 codemod 分文件推进，对应既有\"临时保留 4 语法\"题）",
+        "改后缀",
+        "加注释"
+      ],
+      "answer": 1,
+      "explanation": "runes={false}/true 提供文件级豁免，支撑\"逐文件迁移\"节奏（对应既有全局钉死与单文件豁免题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " legacy 的 $: double = a * 2（自动响应式声明）在 Svelte 5 被拆成了哪几个 runes 出口？",
+      "options": [
+        "仍保留 $:",
+        "$: 赋值表达式→$derived（纯计算派生）、$: 副作用语句→$effect（跑副作用）；原来一个 $: 承担的两种语义被拆成语义明确的两个 rune（对应既有\"$: 被拆成三个出口\"题）",
+        "拆成 store",
+        "不变"
+      ],
+      "answer": 1,
+      "explanation": "$: 语义过载是迁移动因，derived/effect 各司其职（对应既有完整拆分题）。"
     }
   ]
 }

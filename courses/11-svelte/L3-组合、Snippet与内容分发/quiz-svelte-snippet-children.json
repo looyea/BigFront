@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "snippet 就是普通 prop,直接判空(呼应 svelte-snippet-children 第三节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " {#snippet name(...)} 与 {@render name(...)} 的分工是？",
+      "options": [
+        "二者相同",
+        "snippet 定义一段可复用/可传递的模板片段（声明），render 在需要处调用它并传参（渲染）——声明本身不产出任何 DOM",
+        "render 定义 snippet 调用",
+        "都是条件渲染"
+      ],
+      "answer": 1,
+      "explanation": "声明与调用分离，snippet 声明了不调用就页面空白是新手必踩点（对应既有\"声明了却啥都没有\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 子组件想\"判断父有没有传某个具名 snippet\"，用什么？",
+      "options": [
+        "if(children)",
+        "把对应 prop（如 header）当普通参数判断是否为真值（let { header } = $props(); {#if header}{@render header()}{/if}）——snippet 就是 prop，判空即可",
+        "$$slots.header",
+        "getContext"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 5 里插槽即 prop，判断有无就是判断 prop（$$slots 是 Svelte 4 遗物，对应 spread-rest 关\"为何见不到 $$slots\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 要实现\"子组件把每一行的数据交给父决定怎么渲染\"（作用域插槽），Svelte 5 怎么传？",
+      "options": [
+        "无法实现",
+        "父传一个带参数的 snippet，子在 {#each} 里 {@render row(item, i)} 把数据当实参传回父模板",
+        "用 slot scope 字符串",
+        "用事件 detail"
+      ],
+      "answer": 1,
+      "explanation": "snippet 参数=Vue 作用域插槽插槽 props 的等价物（对应既有\"作用域插槽实现\"题）。"
     }
   ]
 }

@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "列表代价≈setData 字节数+diff 节点数（呼应 mp-render 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 一个列表项要渲染多个兄弟根节点，用 <block wx:for wx:key=\"id\"> 而非外层再套一个 <view> 的主要收益是？",
+      "options": [
+        "语法更短没有实质差别",
+        "block 是纯包装节点不渲染成真实元素，避免为循环凭空加一层 view——减少节点层级就等于减少渲染层 diff 与排版成本，且让 wx:key 精确绑到真正的列表项",
+        "block 能自动加 key",
+        "只有 block 才支持 wx:for"
+      ],
+      "answer": 1,
+      "explanation": "block 不产生实际 DOM，专门承载 wx:for/wx:if 这类\"作用于一片节点\"的指令。省掉包裹 view = 少一层结构与一次布局，同时把 key 落在逻辑列表项粒度上。与 Vue 的 template v-for、React 的 Fragment 是同一诉求。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 渲染层做 diff 时，\"有 wx:key\" 相对\"无 wx:key\"的本质差别是？",
+      "options": [
+        "有 key 只是打印警告不同，运行时一致",
+        "有稳定唯一 key 时，列表局部增删改能定位并复用对应节点、只改动变化项；无 key 时倾向按位置整体重建/更新，局部 setData 也可能牵动整列表重渲染",
+        "无 key 会编译失败",
+        "key 只在逻辑层有用"
+      ],
+      "answer": 1,
+      "explanation": "key 是给渲染层的\"身份指纹\"。有了它，\"把第 2 项 done 置 true\"只会打那一块；没它，框架只能保守地按序对齐甚至全量刷新。这正是官方强烈反对 index 作 key 的根因——index 不是稳定身份，插删会错位复用出脏视图。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 首屏里\"折叠区/很少展开的详情块\"用 wx:if 而非 hidden 包裹，核心理由是？",
+      "options": [
+        "wx:if 能让折叠更顺滑",
+        "wx:if 初始为假时根本不创建这些节点，减少首屏节点数量与初始渲染开销；hidden 只是 display:none，节点仍会创建并参与初次渲染",
+        "hidden 会报错",
+        "两者对首屏无差别"
+      ],
+      "answer": 1,
+      "explanation": "判据是\"首屏要不要它\"：初始不需要的大块用 wx:if 换取更小的首屏结构（节点少→初次 setData 渲染更快），代价是展开时有一次创建开销；频繁显隐的小块用 hidden 换取切换零重建。两个方向相反，按\"初始是否渲染\"与\"切换是否频繁\"分别决策。"
     }
   ]
 }

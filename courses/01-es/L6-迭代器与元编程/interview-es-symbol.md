@@ -95,3 +95,21 @@ console.log(typeof arr[Symbol.iterator]);
   [...new Seq(5)];           // [1,2,3,4,5]
   ```
 - 来源：javascript.info《Iterable objects》；MDN Symbol.iterator。
+
+---
+
+**13）`Symbol.hasInstance` 解决什么问题？给一个真实使用场景。**
+- 参考要点：`instanceof` 默认沿原型链找 `C.prototype`，**跨 realm 必失效**（iframe/Worker 里的 Array 不是同一个构造器）。在类上定义 `static [Symbol.hasInstance](x)` 可完全接管匹配逻辑：用 `Array.isArray`、`ArrayBuffer.isView` 等**结构性鸭子判断**替代原型链判断；也可让 `instanceof Promise` 接受 thenable。
+- 来源：MDN《Symbol.hasInstance》；javascript.info《Class feature checking》。
+
+---
+
+**14）`['x'].concat(obj)` 对普通对象、对 `[Symbol.isConcatSpreadable]: true` 的类数组对象分别什么行为？**
+- 参考要点：普通对象不摊平 → `['x', {…}]`；挂了 `isConcatSpreadable: true` 且有 `length`/索引键的对象被**摊平**进结果 → `['x','a','b']`。反向用途：Array 子类设 `false` 可让 concat 把自己当**单个元素**不拆。**规范细节**：判定先看该符号，没有才退回 IsArray。
+- 来源：MDN《Symbol.isConcatSpreadable》；ECMA-262 `Array.prototype.concat`。
+
+---
+
+**15）为什么说 Symbol 属性是 tree-shaking 的「盲区」？HMR 场景下为什么跨模块共享 Symbol 只能用 `Symbol.for`？**
+- 参考要点：① Rollup/Webpack 的依赖分析只认**字符串键与 ESM 静态 import**，Symbol 键属性无法被静态引用分析——既不会被摇掉也摇不掉别人；② Symbol 是**运行时值**，Babel 无法降级成字符串，老浏览器只能 core-js polyfill；③ 热重载会重新执行模块，`Symbol()` 每次产出**新值**，两个模块若各持一个 `Symbol()` 当协议键，HMR 后 `obj[MASK]` 读不到——只有 `Symbol.for` 走全局注册表才能跨模块/跨热重载稳定命中。
+- 来源：Rollup《Tree-shaking caveats》；webpack 文档《Tree shaking》；MDN `Symbol.for`。

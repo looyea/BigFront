@@ -8,11 +8,11 @@
       "prompt": "SSR 主要解决纯客户端渲染（SPA）的哪些问题？",
       "options": [
         "代码太长",
-        "首屏白屏、SEO 弱（爬虫拿到空 HTML）、慢网/低端机体验差",
         "包体积大",
+        "首屏白屏、SEO 弱（爬虫拿到空 HTML）、慢网/低端机体验差",
         "HMR 慢"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "SSR 在服务器输出真实 HTML，首屏可见、可被爬，再靠 hydration 变交互。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "hydration（水合）指的是什么？",
       "options": [
         "把 CSS 注入页面",
-        "浏览器加载 JS 后，框架接管服务端返回的已有 DOM，绑定事件/恢复状态",
         "把图片转 base64",
-        "服务端压缩 HTML"
+        "服务端压缩 HTML",
+        "浏览器加载 JS 后，框架接管服务端返回的已有 DOM，绑定事件/恢复状态"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "SSR 出静态 HTML，client JS 执行后'接管'这些 DOM 使其可交互，即 hydration。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "Vite SSR 开发模式里，在服务端加载并执行前端 SSR 入口模块用的是哪个 API？",
-      "options": ["import()", "vite.ssrLoadModule()", "require()", "loadEnv()"],
+      "options": [
+        "import()",
+        "vite.ssrLoadModule()",
+        "require()",
+        "loadEnv()"
+      ],
       "answer": 1,
       "explanation": "ssrLoadModule 在 Node 里即时编译并执行 SSR 入口拿到 render()，配合 transformIndexHtml/middlewareMode。"
     },
@@ -100,6 +105,32 @@
       ],
       "answer": 1,
       "explanation": "两端渲染必须一致；把仅客户端的渲染延后到挂载后，或用 ClientOnly/suppressHydrationWarning。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Vite SSR 构建默认把 node_modules 里的包 externalize（不打包）的原因是？",
+      "options": [
+        "减小产物体积",
+        "SSR 跑在 Node，保留 import/require 原样交给 Node 解析最直接：省构建时间、避 ESM/CJS 互操作坑、原生模块与动态 require 不破坏——代价是包格式不对（裸 CJS/非 ESM 产物）时要 noExternal 特判",
+        "Node 不支持 ESM",
+        "防止 XSS"
+      ],
+      "answer": 1,
+      "explanation": "externalize 是把\"模块解析\"外包给 Node；框架/路由类包还要防双实例，两条动机常一起考。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 一段只能浏览器跑的代码（访问 window）要在 SSR 项目里安全共存，最通用的隔离手段是？",
+      "options": [
+        "包在 if (typeof window !== undefined) 或组件内用 import.meta.env.SSR 条件 + onMount 后执行",
+        "放进 try/catch 即可",
+        "延迟 1 秒执行",
+        "写在 style 标签里"
+      ],
+      "answer": 0,
+      "explanation": "SSR 期根本不该执行浏览器代码；typeof 判断与生命周期隔离（挂载后副作用）是两道标准闸。"
     }
   ]
 }

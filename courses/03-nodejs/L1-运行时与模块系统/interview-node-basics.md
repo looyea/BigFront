@@ -1,6 +1,6 @@
 # node-basics 面试题精选
 
-> 共 12 题，覆盖 **运行时本质 / process 与全局 / argv-退出码 / 单线程与事件循环 / 路径与模块作用域 / 工程习惯** 六类。
+> 共 15 题，覆盖 **运行时本质 / process 与全局 / argv-退出码 / 单线程与事件循环 / 路径与模块作用域 / 工程习惯** 六类。
 
 ---
 
@@ -97,3 +97,25 @@ Node 是一个**JS 运行时**：V8 引擎负责执行 JS + libuv 负责异步 I
 不是同一层。Node 运行时**只认 JS**；TS 的类型在编译期被擦除（呼应 ts-intro、ts-tooling）。`--experimental-strip-types`（Node 22.6+）做的是**把 `.ts` 里的类型注解"剥掉"得到 JS 再执行**——它**不做类型检查**（类型全错也能跑，检查要单独 `tsc --noEmit`）。所以"Node 跑 TS"本质仍是"Node 跑（被擦掉类型的）JS"，只是省去了你手动编译那一步。这也再次说明：转译 ≠ 类型检查（呼应 ts-tooling 第一节、ts-migration）。
 
 **来源**：Node.js — "Type Stripping"; TS — "types are erased at compile time"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. process.exit() 和 process.exitCode 分别何时用？硬退会跳过哪些收尾动作？
+
+exit() 立即终止：不跑完待处理 I/O、不保证 stdout flush（管道场景丢日志）、finally/进程钩子后续代码全部作废；exitCode 只是「设定退出码」，让事件循环自然排空后退出——异步收尾（日志 flush、连接 drain）都还在。规范姿势：正常路径靠自然退出码 0；异常路径记 exitCode=1 + process.exitCode 可被信号覆盖（128+signum 惯例）。CLI 脚本里「return/throw 到顶层 + 顶层 catch 设码」优于到处 exit()；只有「必须秒杀」（如守护进程 fork 出的子命令）才 exit()，且前面先把 console 输出改同步或手动 flush。呼应本关 exit code 题：CI/脚本调用方判断成败唯一依据就是退出码，丢输出=事故。
+
+**来源**：Node 官方 docs《process.exit()》警告段（stdout 异步提示）；Node API 文档 exitCode 条目。
+
+### 14. globalThis、global、模块作用域三者关系？往 global 挂东西为什么被批评？
+
+global 是 Node 全局对象的别名（浏览器叫 window，标准化后统一 globalThis）；模块顶层的 var 并不进 global——Node 用模块包装函数（IIFE）把每个文件罩住，这正是「一个文件一个作用域」的实现。往 global 挂数据的代价：① 依赖隐形（读顺序=隐式耦合，测试要手工布景）；② 多上下文撕裂（worker_threads/vm/子模块各自 realm，global 不共享）；③ 命名冲突与 monkey patch 扩散面。正当用途极少：polyfill（fetch 补齐）、诊断探针；业务共享状态用显式参数/DI/模块单例。
+
+**来源**：Node 官方《Modules: CJS》「The module wrapper」章节；TC39 globalThis 提案（R= 统一入口动机）。
+
+### 15. node -e、REPL、脚本文件三种执行形态各适合什么？REPL 里能做什么高级操作？
+
+node -e：一次性求值/管道加工（配合 -p 打印表达式结果、--input-type=module 走 ESM），CI 冒烟与命令替换利器；REPL：交互式试验 + 独占能力——await 直用、.load 载文件、.clear 清上下文、上箭头历史、Tab 补全、被 require 的模块热试（改完文件 .delete 缓存重 require）；脚本文件：一切要版本管理/测试/复用的场合。REPL 调试常与 node --experimental-repl-await、inspect 断点续接组合。口径：「试错用 REPL，验证过的逻辑再落文件」，防止「REPL 里调通的就是对的」（无模块包装、异步行为一致的错觉）。
+
+**来源**：Node 官方 REPL 文档（repl module 与 dot-commands 清单）；node -e/--input-type 用法见 CLI 文档。

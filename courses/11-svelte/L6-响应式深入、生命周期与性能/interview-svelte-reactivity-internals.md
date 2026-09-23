@@ -1,6 +1,6 @@
 # svelte-reactivity-internals 面试题精选
 
-> 共 12 题。A 类=原理机制（考深度）；B 类=实战排坑（考经验）；C 类=横向对比（考视野）；D 类=场景设计（考架构）。来源为一线大厂面试与官方 FAQ/博客高频主题的转述。
+> 共 15 题。A 类=原理机制（考深度）；B 类=实战排坑（考经验）；C 类=横向对比（考视野）；D 类=场景设计（考架构）。来源为一线大厂面试与官方 FAQ/博客高频主题的转述。
 
 ---
 
@@ -75,3 +75,25 @@ React 的更新模型是**不可变数据+重渲染+diff**：状态变更触发�
 **来源**：Frontend Focus — 编译器派框架原理专栏
 
 靠**编译期确定的静态骨架 + 靶向指令**：模板结构编译成 create/updates/destroy 代码路径，每个动态槽位独立 effect 精确 set 到节点；分支（if/each）切换走的是各自的挂载/卸载函数，节点身份由 keyed 算法保证。正确性来源不是"两棵树对比"，而是"更新代码与模板一一对应"——这要求模板必须静态可分析（也是为什么指令名、绑定目标这类结构必须写成静态代码，只有值可以是表达式）。代价：编译期魔法需要学习成本，模板里藏着大量不可见的响应式接线。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  从 count 的一次 ++ 到屏幕更新，完整走一遍 Svelte 5 的信号更新流程，说清同步与异步的边界。
+
+链路：① 写——count++ 编译成 signal.set/写 version++，标记自己 dirty 并"向上标脏"传播到依赖它的 derived/effect（写阶段同步，只打标记不计算）；② 调度——把受影响的 effect 排进 flush 队列（微任务批量，避免连环写每次都跑，这是同步写/异步应用的边界）；③ flush——在合适时机（DOM 更新前跑渲染 effect、后跑用户 $effect）批量执行：derived 在被读时惰性重算（带缓存），effect 执行其函数（读最新值、写 DOM）；④ DOM patch——细粒度只改真正变化的 text/attr。同步异步边界：signal 写是同步的（下次读立即拿到新值），但"重跑 effect/更新 DOM"是异步批量的（微任务里 flush），可用 flushSync/tick 强制。加分句：把内核讲成"两阶段：同步标脏 + 异步求值应用"就抓住了所有响应式库的共同设计（Vue/Solid 同构）——理解这个才能解释"为什么连续 count++ 只更新一次 DOM""为什么 count++ 后立刻读 DOM 还是旧值"（对应既有"++后立刻读 textContent"题）。
+
+**来源**：Svelte 5 运行时源码（signature/derived/effect）；reactivity 内核 RFC；既有"完整更新流程"深化
+
+### 14.  用户报告"改了对象属性界面不更新"，给出你在 Svelte 5 下的完整排查路径。
+
+Svelte 5 深代理下"改属性不更新"比 Svelte 4 少见（4 里要重新赋值才触发），排查按可能性排：① 数据根本不是 $state——用了普通对象/const 未包 $state（只有 $state 声明的才被代理，既有"不响应归因"题）；② 被 $state.raw 或从响应式里"逃逸"成快照——$state.snapshot、untrack、一次性赋给普通变量后改的是快照；③ 改了但没被任何 effect/模板读——没有订阅者自然不更新（不是 bug 是惰性）；④ 结构变化超出代理——某些操作（换原型、Symbol 键）代理不到；⑤ 键在初始化时不存在——深代理对新增键一般能处理但极端情况需验证。诊断动作：$inspect 看值是否真的变了（变了但不更新=订阅/读取问题；没变=写没生效）、把该属性直接放模板最简处验证最小复现。加分句：这个题的高阶答法是"先分『值没变』还是『变了没传播』"——$inspect 一步二分，比盲目 $state 重赋值碰运气专业得多；再点出"5 比 4 更不容易出现此问题，出现多半是 raw/snapshot/未声明"就体现你真用透了（对应既有 class+runes 边界题）。
+
+**来源**：Svelte 5 响应性陷阱；$state 深代理失效场景；既有"改了不更新排查路径"深化
+
+### 15.  有人说"Svelte 5 的响应式就是内置版 Signals"，你认同吗？对比 Vue3/Solid 的信号实现说差异。
+
+大方向认同：Svelte 5 内核确实是 signal-based 细粒度响应式（读时订阅、写时标脏、惰性 derived、批量 flush），与 TC39 Signals 提案同族。但实现差异要点：① 对外接口——Svelte 用编译器把 signal 藏进 runes 语法（你看不到 getter 调用，let count = $state(0) 直接读写），Solid/Vue 暴露显式原语（createSignal 的 fn()、ref.value）；② 编译期介入深度——Svelte 编译器知道哪些是 signal 并生成对应读写代码（这是它能"裸变量"的原因），Vue 用 Proxy 运行时拦截、Solid 用函数调用；③ 更新模型——Svelte derived 惰性、effect 与 DOM 生命周期紧绑，Solid 的 memo 也惰性但 ownership/异步是独立一等公民（createResource），Vue 有 ref/computed/watch 三件套加 effectScope。加分句：真正准确的表述是"Svelte 5 = signal 内核 + 编译器织入的外壳"——它没有发明响应式（signal 是老技术），创新在"用编译器把 signal 的样板消成普通变量语法"，这也解释了为什么离开编译器（普通 .js）runes 就不能用（呼应 reactive-runes 的 .svelte.js 文件形态题）。
+
+**来源**：Svelte 5 signals 内核说明；TC39 Signals proposal；Vue reactivity 与 Solid 源码导读

@@ -8,11 +8,11 @@
       "prompt": "React 一次更新的两个阶段及顺序是？",
       "options": [
         "先 commit(改 DOM) 再 render(算 diff)",
-        "先 render(执行函数+diff 算变更) 再 commit(应用到真实 DOM)",
         "只有 render 一个阶段",
+        "先 render(执行函数+diff 算变更) 再 commit(应用到真实 DOM)",
         "mount 和 unmount"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "render 算变更、commit 改 DOM（呼应 react-render-model 第一节）。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "React 的 diff 为什么能做到 O(n)？",
       "options": [
         "它做了完整的树最小编辑距离计算",
-        "靠三条假设：同层比较、类型即身份、列表用 key 标识，做启发式而非最优",
         "它不比较只重建",
-        "因为虚拟 DOM 比真实 DOM 快"
+        "因为虚拟 DOM 比真实 DOM 快",
+        "靠三条假设：同层比较、类型即身份、列表用 key 标识，做启发式而非最优"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "用启发式假设换取线性复杂度（呼应 react-render-model 第三节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "把某组件的子节点换到另一层父节点下，React 会？",
-      "options": ["智能移动复用", "视为跨层，销毁旧子树并重建（连带重置其 state）", "忽略", "仅改 props"],
+      "options": [
+        "智能移动复用",
+        "视为跨层，销毁旧子树并重建（连带重置其 state）",
+        "忽略",
+        "仅改 props"
+      ],
       "answer": 1,
       "explanation": "React 不做跨层移动，只同层比较（呼应 react-render-model 第三节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "React 运行时全 diff，靠 key/memo 提示（呼应 react-render-model 第三节、vue-reactivity-theory 对照）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "diff 时同一位置的新旧节点「类型不同」（如 `<div>` 变 `<p>`，或组件函数引用变了），React 会？",
+      "options": [
+        "尽量原地复用并改标签名",
+        "卸载旧子树（连同其 state 与 DOM）再挂载全新子树——类型不同视为不同元素，不做属性级修补",
+        "只换 children",
+        "抛错中止渲染"
+      ],
+      "answer": 1,
+      "explanation": "两条协调假设之一：「不同类型的元素产生不同的树」。组件函数/类引用变化也被当作类型变化——所以把子组件定义在父组件函数体内（每次渲染都是新函数）会导致整棵子树反复卸载重挂，state 丢失、性能崩坏。这是「不要把组件定义在渲染里」经典坑的底层原因。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "关于 render 阶段与 commit 阶段的可中断性，正确的是？",
+      "options": [
+        "两阶段都可被高优更新打断",
+        "render（协调、算 diff）可被中断/放弃/重放，这是并发能力所在；commit（应用 DOM 变更、跑生命周期/effect）必须同步一次性完成，不能打断",
+        "commit 可中断，render 不可",
+        "都不可中断"
+      ],
+      "answer": 1,
+      "explanation": "可中断 render 的前提正是「纯」——重放无副作用才安全。commit 之所以同步，是因为要一次性把一堆 DOM 变更刷上去并触发 useLayoutEffect，中间若被插入用户看到「半更新」状态或读到不一致 DOM 就坏了。这也解释了为什么生命周期/effect 被拆成 render 期(纯) 与 commit 期(可副作用) 两拨。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "「组件函数重新执行」与「真实 DOM 被操作」之间的关系是？",
+      "options": [
+        "重执行必然操作真实 DOM",
+        "重执行只产出新虚拟 DOM 描述，经 diff 后仅对确实变化的部分生成 DOM 操作；无变化则 commit 阶段几乎不碰 DOM",
+        "不执行函数也会改 DOM",
+        "两者一一对应，无优化空间"
+      ],
+      "answer": 1,
+      "explanation": "虚拟 DOM 的真正价值不是「比直接操作 DOM 快」（原地精确改 DOM 永远更快），而是：用可预测的声明式模型 + 批量最小化 DOM 操作，把「跨浏览器/一致性/可编程的更新调度」这个复杂度收口。理解了这条，就不会问「virtual DOM 太慢了怎么办」，而会去减少「重执行」（少 render）与减少「单次 render 成本」（拆组件、memo、虚拟化）。"
     }
   ]
 }

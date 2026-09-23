@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "显式接口优先,$$props 克制使用(呼应 svelte-spread-rest 第五节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 封装组件时想把父传来的未知属性全部透传给根元素，用？",
+      "options": [
+        "逐字段声明",
+        "{...$$restProps} spread 到目标元素——把未在 props 显式消费的剩余属性一次性转发（对应既有透传题）",
+        "getContext 拿",
+        "on:mount 转发"
+      ],
+      "answer": 1,
+      "explanation": "$$restProps 是\"剩余属性集合\"，spread 转发是封装组件透传的标准组合（与 props 关透传题配套）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " $$props 与 $$restProps 的差别是？",
+      "options": [
+        "完全相同",
+        "$$props 含全部（含已声明），$$restProps 只含\"未被声明消费\"的剩余属性",
+        "restProps 是只读版 props",
+        "props 只在 dev"
+      ],
+      "answer": 1,
+      "explanation": "rest=减去已声明的差集（对应既有\"$$restProps 与 $$props 区别\"题的精确化）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 事件监听器（如 onclick）会不会被 {...$$restProps} 带到元素上？想自己拦截怎么办？",
+      "options": [
+        "永远不会",
+        "会——事件类 prop 也在 restProps 里，spread 时会绑定；要在组件内自己处理该事件，应显式声明消费它（从 rest 里排除）或显式覆盖",
+        "只能靠 context",
+        "需要用 dispatch"
+      ],
+      "answer": 1,
+      "explanation": "事件 prop 属剩余属性、会被 spread 带走，拦截需显式声明（对应既有\"事件监听与 restProps\"题）。"
     }
   ]
 }

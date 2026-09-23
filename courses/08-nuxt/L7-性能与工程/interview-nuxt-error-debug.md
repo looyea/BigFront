@@ -1,4 +1,4 @@
-# nuxt-error-debug 面试题（12 题）
+# nuxt-error-debug 面试题（15 题）
 
 ## A. 基础认知
 
@@ -67,3 +67,25 @@
 **答**：把它变成可回归的约束而非一次性代码。①契约统一：全项目禁止裸 `throw new Error` 于边界层，一律 createError（用 lint/自定义规则约束）；②测试固化：用 `@nuxt/test-utils`/Vitest 写断言——404/401/500 各返回正确 statusCode、生产响应体不含 stack、上游故障时页面仍 200（把本关第 7、8、9 题变成用例，呼应 nuxt-testing、node-testing）；③监控闭环：app:error/vue:error 上报 + 5xx 率告警，错误预算超阈值阻断发布；④安全回归：定期用未授权请求探测敏感端点，验证无信息泄露。**错误处理的成熟度，体现在它有多少条自动化用例守着，而不是文档写了多少。**
 
 **来源**：《可回归的错误处理体系》、《错误预算与发布门禁》
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  server/api 与页面之间的错误契约怎么设计？状态码、业务码、重试语义怎么约定不误伤？
+
+契约三件：① 形状统一——所有非 2xx 返回同一结构（如 Problem details 风格：type/title/status/detail+扩展 code），Nitro 侧 createError 集中封装成 apiError(code, status) 工具禁散写；② 状态码语义诚实：401（会话问题，客户端触发单飞刷新/跳登录）、403（权限问题，就地提示）、404（资源不存在，可安全渲染"已删除"页）、409/422（业务冲突，表单回显）、429（带 Retry-After，客户端退避）、5xx（系统性，触发降级不追责具体 message）——"全 200+code 判"与"全 500+message 猜"是两个反模式极端；③ 重试语义写进契约：幂等 GET 可自动退避重试、POST 靠幂等键（呼应 server-routes 幂等题）、429/503 尊重 Retry-After。消费侧分工：useFetch 拿 error.value 按 code 映射文案（语言包键），拦截器只管 401 单飞与 429 退避两类"协议级"错误。治理：错误码注册表（枚举+负责人+文案键+监控面板）进仓库，新增码走 PR 评审——没有注册表的业务码三个月后就是考古现场。
+
+**来源**：RFC 9457 Problem Details；SegmentFault《我们的接口错误码治理一年记》
+
+### 14.  错误页/错误响应本身引发二次事故的路径有哪些？怎么给"兜底"做兜底？
+
+二次事故路径清单：① error.vue 依赖了坏掉的东西——错误页取 useFetch 数据、依赖全局布局注入的 provide、需要登录态才渲染的资源，主故障时错误页跟着崩（Nuxt 要求 error.vue 自包含的根本原因）；② 缓存中毒——500/503 被 CDN/浏览器长缓存，故障恢复后用户仍吃错误页（给错误响应 no-store+503 带 Retry-After 是硬规矩，routeRules 审查含"错误路径的头"）；③ 重试风暴——客户端对 5xx 无退避猛重试、useFetch retry 默认值在多实例同时失败时放大流量，故障期把系统打死第二遍；④ 错误信息递归——上报 SDK 自己抛错触发错误处理再触发上报（上报通道要有熔断与去重）；⑤ 错误页泄密——stack/SQL/路径进 HTML（data 只给 request id，详情走内部通道）。兜底的兜底：错误页所需资源全部内联（零外部依赖的静态壳）、Nitro 层留"最后一道错误页"（Vue 崩了 nitro 也能出 HTML）、给错误页自己配 e2e（人为 throw 断言渲染成功）——"没测过的错误页等于没有错误页"。
+
+**来源**：InfoQ《错误页成事故现场：二次故障复盘集》；Nuxt error.vue 自包含要求
+
+### 15.  SSR 错误、水合期错误、客户端运行时错误三类如何快速区分与定位？各给一条真实排障动线。
+
+指纹区分：SSR 错误=页面直接是错误响应/状态码非 200，日志在服务端（浏览器控制台干净），复现靠 curl（不吃 JS）；水合期错误=首屏 HTML 正确、控制台报 hydration/undefined、症状常是"局部闪/点击没反应"，复现必须带 SSR 产物（dev 的纯客户端模式测不出）；客户端运行时=交互后才炸、堆栈带 chunk 名，第一动作是 sourcemap 还原。动线示例：① SSR——用户报 500，curl -i 拿状态与 request id→服务端日志按 id 捞栈→定位是 useFetch await 的上游超时（不是渲染 bug）→修复在数据层加超时降级；② 水合——警告指向节点差异→对照 SSR HTML 与客户端首渲→发现 v-if 依赖 localStorage→改 useCookie/payload（数据归属病）；③ 运行时——报错在懒加载 chunk→sourcemap 还原→某函数仅客户端存在（window 在 SSR 期 undefined）→运行位置守卫修正。体系支撑：三类错误进 Sentry 用不同 fingerprint 与归属标签（server/hydration/client），"hydration 错误数"单独看板——它的上涨是架构漂移（数据归属失控）的领先指标，别混在"JS 报错"里。
+
+**来源**：掘金《三类错误三份日志》；Nuxt 官方 useError/clearError

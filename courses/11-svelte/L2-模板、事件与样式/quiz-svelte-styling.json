@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "作用域前缀 + :global 组合(呼应 svelte-styling 第二节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte 的 <style> 作用域隔离在编译期是怎么做到的？",
+      "options": [
+        "运行时加前缀类",
+        "编译器给选择器附加唯一 scoping 类（如 svelte-hash）并给匹配元素打同名属性，未命中的规则还会被裁掉——纯编译期，无运行时开销",
+        "用 Shadow DOM",
+        "靠 CSS Modules 文件名"
+      ],
+      "answer": 1,
+      "explanation": "选择器改写 + 元素属性标记是编译期静态完成的（对应 styling 关\"为什么不需要运行时\"既有题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 组件里写了一条没有任何元素能匹配上的 CSS 规则，构建时会怎样？",
+      "options": [
+        "原样保留",
+        "被编译器当作未使用而裁剪掉（不产物化）——所以\"全局类想靠组件样式生效\"要放进 :global 或全局样式表，否则会被静默删除",
+        "报错中断构建",
+        "自动提到全局"
+      ],
+      "answer": 1,
+      "explanation": "未使用规则被裁是作用域样式的前提，也是\"给第三方组件挂全局类却消失\"的成因（与既有题配套）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 想让一个 JS 变量参与样式计算（如进度条宽度），最佳写法是？",
+      "options": [
+        "字符串拼 style 属性",
+        "用 CSS 自定义属性：style:--w={pct}（或 style=\"--w: {pct}\"），CSS 里用 var(--w) 消费——细粒度、不重排整个 style",
+        "写进 class 名",
+        "用 <style> 动态注入"
+      ],
+      "answer": 1,
+      "explanation": "CSS 变量桥接 JS→CSS 是官方推荐（对应既有\"把 JS 值传给 CSS\"题的写法细节）。"
     }
   ]
 }

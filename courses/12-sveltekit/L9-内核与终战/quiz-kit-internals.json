@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-internals",
-  "title": "解剖整车 · 自测",
+  "title": "kit-internals 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "vite build 的预渲染（prerender）发生在哪个阶段？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "vite build 的预渲染（prerender）发生在哪个阶段？",
       "options": [
         "第二个阶段：adapter 改装时",
         "第一个阶段：Vite 生产构建时",
@@ -11,10 +13,12 @@
         "dev server 启动时"
       ],
       "answer": 1,
-      "explain": "构建分两阶段，prerender 在第一阶段（Vite 生产构建）执行，静态路由在此渲成 .html 落盘。"
+      "explanation": "构建分两阶段，prerender 在第一阶段（Vite 生产构建）执行，静态路由在此渲成 .html 落盘。"
     },
     {
-      "q": "顶层写 `if (!building) initialiseDatabase()` 主要是为了？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "顶层写 `if (!building) initialiseDatabase()` 主要是为了？",
       "options": [
         "提升运行时性能",
         "让 dev 模式跳过数据库",
@@ -22,10 +26,12 @@
         "防止构建期（vite build 会加载并执行 load 文件）在 CI 上跑连库等副作用"
       ],
       "answer": 3,
-      "explain": "SvelteKit 构建期会执行你的 +page/+layout(.server).js 做分析，building 为真；用 if(!building) 守卫避免构建机跑不该跑的副作用。"
+      "explanation": "SvelteKit 构建期会执行你的 +page/+layout(.server).js 做分析，building 为真；用 if(!building) 守卫避免构建机跑不该跑的副作用。"
     },
     {
-      "q": "适配器服务端入口里，每个请求都调用一次的是 Server 的哪个方法？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "适配器服务端入口里，每个请求都调用一次的是 Server 的哪个方法？",
       "options": [
         "respond(request, options)",
         "init(options)",
@@ -33,10 +39,12 @@
         "generateManifest(opts)"
       ],
       "answer": 0,
-      "explain": "constructor 注入 manifest、init 进程启动时调一次、respond 每请求调一次返回 Response。"
+      "explanation": "constructor 注入 manifest、init 进程启动时调一次、respond 每请求调一次返回 Response。"
     },
     {
-      "q": "以下哪项通常不属于构建期生成的服务端 manifest 内容？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下哪项通常不属于构建期生成的服务端 manifest 内容？",
       "options": [
         "路由匹配表（含可选段/rest/matcher 排序）",
         "nodes：各路由段组件与其 load 的引用",
@@ -44,10 +52,12 @@
         "matchers：src/params 里的 match 函数绑定"
       ],
       "answer": 2,
-      "explain": "manifest 是路由表/节点/匹配器/版本资源的索引结构，不含组件源码原文。"
+      "explanation": "manifest 是路由表/节点/匹配器/版本资源的索引结构，不含组件源码原文。"
     },
     {
-      "q": "SSR 的 render() 真正的调用位点在哪？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "SSR 的 render() 真正的调用位点在哪？",
       "options": [
         "在 +layout.svelte 的 onMount",
         "在 server.respond() 这一次调用内部",
@@ -55,10 +65,12 @@
         "在浏览器的 modulepreload"
       ],
       "answer": 1,
-      "explain": "handle、load、SSR render 全部收敛在 server.respond() 这一次调用内部执行。"
+      "explanation": "handle、load、SSR render 全部收敛在 server.respond() 这一次调用内部执行。"
     },
     {
-      "q": "点击 <a> 触发的站内导航，Kit 默认做的是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "点击 <a> 触发的站内导航，Kit 默认做的是？",
       "options": [
         "重新请求整份 HTML 并刷新文档",
         "清空全部 load 缓存后整站重渲",
@@ -66,10 +78,12 @@
         "只拉目标路由 load 数据、按需加载缺失 chunk、只重渲变化的路由段"
       ],
       "answer": 3,
-      "explain": "客户端导航是拉数据+局部重渲：只取目标路由数据、lazy import 缺的 chunk、只重渲变化的路由段，不整页刷新。"
+      "explanation": "客户端导航是拉数据+局部重渲：只取目标路由数据、lazy import 缺的 chunk、只重渲变化的路由段，不整页刷新。"
     },
     {
-      "q": "关于 handle 里的 `resolve(event)`，正确的是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 handle 里的 `resolve(event)`，正确的是？",
       "options": [
         "它内部才进入'匹配路由→跑 load→SSR 渲染'的管线",
         "它必须被包在 try/catch 里且吞掉异常",
@@ -77,7 +91,46 @@
         "它只能处理 +server.js 端点、不处理页面"
       ],
       "answer": 0,
-      "explain": "resolve 是渲染管线的推进器；resolve 之外抛错致命、之内才是正常管线，且绝不能吞掉它抛的 redirect/error。"
+      "explanation": "resolve 是渲染管线的推进器；resolve 之外抛错致命、之内才是正常管线，且绝不能吞掉它抛的 redirect/error。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " SvelteKit 构建期为什么会执行一遍你的路由模块？ ",
+      "options": [
+        " 预取数据 ",
+        " 收集页面选项（prerender/ssr/csr）、entries 与端点清单，须求值才能获知 ",
+        " 压缩代码 ",
+        " 生成 sitemap "
+      ],
+      "answer": 1,
+      "explanation": " 选项是 export 的常量/函数，构建器通过静态求值路由文件登记它们，因此顶层副作用会在构建期跑。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 适配器拿到的 Server.respond 的输入输出形态是？ ",
+      "options": [
+        " (req, res) Node 流 ",
+        " 接收 { event, state }（含 fetch Request），返回 { status, headers, body } 中立响应 ",
+        " 仅字符串 ",
+        " (ctx) Koa 风格 "
+      ],
+      "answer": 1,
+      "explanation": " 平台中立性正来自这个接口：适配器只把宿主请求译成 fetch Request、把返回体写回宿主响应。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 客户端导航时取数据用的请求形态是？ ",
+      "options": [
+        " 目标页完整 HTML ",
+        " 同 URL 加 ?_data 查询，拿 devalue 化的数据与错误/重定向指令 ",
+        " WebSocket ",
+        " GraphQL "
+      ],
+      "answer": 1,
+      "explanation": " ?_data 让服务端跳过渲染只回序列化数据，浏览器据指令决定改路由还是续流。 "
     }
   ]
 }

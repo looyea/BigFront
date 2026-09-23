@@ -6,23 +6,38 @@
       "id": "q1",
       "type": "single",
       "prompt": "纯 SPA 骨架在production被爬虫抓取时，最典型的问题是？",
-      "options": ["爬虫会执行所有JS所以没问题", "默认只能拿到空的 div#root 壳，收录不到内容", "爬虫会自动重试直到JS加载完", "只要网站有robots.txt就能收录"],
-      "answer": 1,
+      "options": [
+        "默认只能拿到空的 div#root 壳，收录不到内容",
+        "爬虫会执行所有JS所以没问题",
+        "爬虫会自动重试直到JS加载完",
+        "只要网站有robots.txt就能收录"
+      ],
+      "answer": 0,
       "explanation": "SEO 失效是 SPA 三座大山之一：不执行 JS 的爬虫看到的就是空壳（呼应 next-overview 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "Next.js 与 Vite 的关系，下列说法最准确的是？",
-      "options": ["两者完全竞品，只能选一个", "Vite 管构建打包，Next 是包含渲染/路由/服务端能力的完整应用方案", "Next 内部就是用 Vite 打包的", "Vite 只能配 Vue，不能配 React"],
-      "answer": 1,
+      "options": [
+        "两者完全竞品，只能选一个",
+        "Next 内部就是用 Vite 打包的",
+        "Vite 只能配 Vue，不能配 React",
+        "Vite 管构建打包，Next 是包含渲染/路由/服务端能力的完整应用方案"
+      ],
+      "answer": 3,
       "explanation": "Vite 是构建工具，Next 是应用框架（尽管 Next 也吸收过类似理念、用自有 SWC/Turbopack），定位不同层（呼应 next-overview 第二节表、vite-intro）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "Next.js App Router 项目里，URL /blog/list 默认由哪个文件承载？",
-      "options": ["pages/blog/list.tsx", "app/blog/list/index.tsx", "app/blog/list/page.tsx", "routes/blog/list.route.tsx"],
+      "options": [
+        "pages/blog/list.tsx",
+        "app/blog/list/index.tsx",
+        "app/blog/list/page.tsx",
+        "routes/blog/list.route.tsx"
+      ],
       "answer": 2,
       "explanation": "App Router 规则：文件夹即路由 + page.tsx 作为界面文件；pages/ 是旧 Pages Router 时代（呼应 next-overview 第四节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "为什么 Next 项目里没有 index.html？",
-      "options": ["因为 HTML 被禁止使用", "HTML 由服务器生成（构建时或请求时），不需要手写静态壳", "index.html 在 public 目录会自动生成", "Next 用 WXML 替代了 HTML"],
+      "options": [
+        "因为 HTML 被禁止使用",
+        "HTML 由服务器生成（构建时或请求时），不需要手写静态壳",
+        "index.html 在 public 目录会自动生成",
+        "Next 用 WXML 替代了 HTML"
+      ],
       "answer": 1,
       "explanation": "SSR/SSG 都由框架产出完整 HTML 文档，壳子不再是手工维护物（呼应 next-overview 第三节；与 mp 的 WXML 是两回事）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "验证一个页面是不是服务端渲染出来的，最直观的办法是？",
-      "options": ["打开 DevTools Network 看有没有 XHR", "查看网页源代码（view-source）能否看到真实内容标签", "看页面有没有动画", "看 URL 里有没有 # 号"],
+      "options": [
+        "打开 DevTools Network 看有没有 XHR",
+        "查看网页源代码（view-source）能否看到真实内容标签",
+        "看页面有没有动画",
+        "看 URL 里有没有 # 号"
+      ],
       "answer": 1,
       "explanation": "view-source 是服务器原始响应，能看到内容即服务端已渲染；Network 有无 XHR 只是辅助线索（呼应 next-overview 第五节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "npm run start 做的事情是？",
-      "options": ["启动开发服务器并开启 HMR", "执行生产构建", "用已构建产物启动一个 Node HTTP 服务", "把站点部署到 Vercel"],
+      "options": [
+        "启动开发服务器并开启 HMR",
+        "执行生产构建",
+        "用已构建产物启动一个 Node HTTP 服务",
+        "把站点部署到 Vercel"
+      ],
       "answer": 2,
       "explanation": "start 跑的是 build 之后的产物，本质仍是一个 Node HTTP 服务器（node-http 的老朋友，呼应 next-overview 第三节）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "app/layout.tsx 的职责是？",
-      "options": ["定义全站 CSS 变量", "作为共用外壳包裹其下所有页面，通过 children 渲染内容", "配置路由表", "声明 metadata"],
+      "options": [
+        "定义全站 CSS 变量",
+        "作为共用外壳包裹其下所有页面，通过 children 渲染内容",
+        "配置路由表",
+        "声明 metadata"
+      ],
       "answer": 1,
       "explanation": "layout 是嵌套布局的外壳，children 占位内容页——类比 vue-router 嵌套 RouterView（呼应 next-overview 第四节、next-routing）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 关于 Next.js 的\"约定优于配置\"：项目根没有 index.html 却能出可静态托管的 HTML——最本质的机制是？",
+      "options": [
+        "Next 自动注入一个 index.html 到 public",
+        "Next 内置 HTML shell 模板（root layout + 框架外壳），SSG 页在构建期把 React 树渲染为完整 HTML 文件、SSR 页在每次请求时把渲染结果注入同一 shell 输出——所以\"没有 index.html\"是源码层的错觉，产物层每页都有 HTML",
+        "所有页面运行时都在客户端拼 HTML",
+        "HTML 由 Nginx 生成"
+      ],
+      "answer": 1,
+      "explanation": "这是把 Next 与\"手工 Vite+SSR\"分开的第一课：Next 把 shell 与渲染管线做成框架默认值，作者只写组件与配置，产物里天然存在每页 HTML 或首屏 HTML 响应。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 一个纯内网、无 SEO、登录后才谈首屏的小型工具（<20 页），从架构选型看用 Next 相比 Vite+React Router 最不合理之处是？",
+      "options": [
+        "Next 不能做鉴权",
+        "Next 的路由/渲染/缓存体系是为公网内容型/To C 优化，纯 SPA 项目引入这些只会带来构建复杂度、心智负担与不必要的水合，属\"过度框架化\"",
+        "Vite 不能装组件库",
+        "React Router 不能代码分割"
+      ],
+      "answer": 1,
+      "explanation": "框架选型的第一性问题是\"这个产品需要框架解决哪些痛点\"。内网工具无 SEO、无首屏白屏指标、无边缘部署需求，把 Next 拉进来只是给自己套上 RSC/缓存/审核等约束——这就是 next-architect 反复强调的\"潮流 vs 地基\"。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Next \"server-first\" 的默认值意味着：一个新建 page.tsx 组件里的顶层 await getDB() 会？",
+      "options": [
+        "浏览器执行、走 SWR",
+        "在服务端执行并把结果作为 RSC Payload 流到浏览器——不显式 'use client' 就是服务端组件，代码与密钥不下发到浏览器",
+        "报错",
+        "编译进 chunk 供客户端懒加载"
+      ],
+      "answer": 1,
+      "explanation": "\"server by default\"是 Next 与所有老式 SPA 框架的根本分水岭：默认在服务端跑、\"要交互才升级到客户端\"。理解这一句，才能理解 RSC 边界、props 序列化、'use client' 下沉策略等一整套设计。"
     }
   ]
 }

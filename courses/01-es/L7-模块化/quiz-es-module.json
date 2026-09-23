@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "ESM 与 CommonJS 的最大差别是：",
       "options": [
-        "写法不同",
         "ESM 静态分析 + live binding；CJS 运行时 require + 值拷贝",
+        "写法不同",
         "CJS 已淘汰",
         "只有 Node 支持 ESM"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "静态 + live binding 是 ESM 的两大特征——tree-shaking 与单例状态都源于此。"
     },
     {
@@ -42,11 +42,11 @@
       "prompt": "Node ESM 里 `import x from './utils'` 报错的原因：",
       "options": [
         "路径不对",
-        "ESM 必须写**扩展名**（`./utils.js`），CJS 那种省略是不允许的",
         "ESM 不能导入本地文件",
-        "需要 await"
+        "需要 await",
+        "ESM 必须写**扩展名**（`./utils.js`），CJS 那种省略是不允许的"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Node ESM 严格要求扩展名与相对路径的完整写法——`./utils.js` 而非 `./utils`；`./dir/index.js` 而非 `./dir/`。"
     },
     {
@@ -55,11 +55,11 @@
       "prompt": "`await import('mod')` 与 `import x from 'mod'` 的差别是（**多选一**里选**最完整**）：",
       "options": [
         "完全等价",
-        "动态 import 是**表达式**（可用变量、条件），返回 Promise；静态是**声明**，编译期分析",
         "动态 import 更慢",
+        "动态 import 是**表达式**（可用变量、条件），返回 Promise；静态是**声明**，编译期分析",
         "静态 import 不支持 top-level await"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "动态 import 支持**代码分割**与**条件加载**——打包器看到静态 import 就知道依赖图，看到 `import(specifier)` 只能给 specifier 打 tag 或整包切分。"
     },
     {
@@ -67,12 +67,12 @@
       "type": "single",
       "prompt": "`package.json` 里 `\"type\": \"module\"` 的作用是：",
       "options": [
-        "让整个包发布到 npm",
         "让本包内 `.js` 文件被 Node 视作 ESM 而不是 CJS",
+        "让整个包发布到 npm",
         "关闭 tree-shaking",
         "指定入口文件"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "默认 Node 把 `.js` 当 CJS；`type: module` 让本包 `.js` 走 ESM 解析（同时禁用 `require` / `__dirname`）。`.mjs` 永远是 ESM，`.cjs` 永远是 CJS，与 type 无关。"
     },
     {
@@ -81,12 +81,51 @@
       "prompt": "CJS 文件里能不能 `import` ESM 模块？",
       "options": [
         "不能，永远不行",
-        "不能静态 import，但**可以 `await import()`** 动态导入",
         "Node 会拒绝加载 ESM",
-        "只能靠 ts-node"
+        "只能靠 ts-node",
+        "不能静态 import，但**可以 `await import()`** 动态导入"
+      ],
+      "answer": 3,
+      "explanation": "CJS 是同步语义，无法处理 ESM 的顶层 await——所以只能 `await import('esm')`（Node 12.17+）。反方向 ESM 可以直接 import CJS。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`import { count } from './counter.js'` 后在导入方写 `count = 99` 会？",
+      "options": [
+        "正常赋值",
+        "TypeError——导入绑定对导入方**只读**",
+        "连带改掉了导出方的 count",
+        "只在严格模式下才报错"
       ],
       "answer": 1,
-      "explanation": "CJS 是同步语义，无法处理 ESM 的顶层 await——所以只能 `await import('esm')`（Node 12.17+）。反方向 ESM 可以直接 import CJS。"
+      "explanation": "live binding 是**单向只读**：导出方改，导入方看得到新值；导入方想改直接赋值 → TypeError（ESM 隐式严格）。要改得调导出方暴露的函数。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "包的 `package.json` 声明了 `exports` 字段后，效果是：",
+      "options": [
+        "只影响 ESM 入口的文件名",
+        "等价于 main 字段",
+        "只用于声明 types 子路径",
+        "**未列出的路径**（如 `pkg/src/internal.js`）消费者一律 import 不到——包封装起来"
+      ],
+      "answer": 3,
+      "explanation": "exports 是**发布协议**：一旦声明就屏蔽未列路径，防止消费者碰内部文件；里面可按 `import`/`require`/`types` 条件分发不同产物（双打包标配）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "ESM 对循环 import 的处理是：",
+      "options": [
+        "允许循环 import，但执行顺序决定你拿到的是已初始化绑定还是 TDZ 空绑定",
+        "编译期直接报错",
+        "自动把模块复制成两份实例",
+        "和 CJS 一样返回半成品 exports 对象"
+      ],
+      "answer": 0,
+      "explanation": "ESM 链接的是绑定不是快照，所以循环能「活」；但若模块体就读取对方尚未初始化的 `const`，会碰 TDZ ReferenceError。规避：只在函数里读、抽第三模块、用 `import * as ns` 延迟到运行时读。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # react-architecture 面试题精选
 
-> 共 12 题，覆盖 A 目录与分层 / B 逻辑与依赖 / C Server/Client 边界 / D 演进·Vue 对照四类。
+> 共 15 题，覆盖 A 目录与分层 / B 逻辑与依赖 / C Server/Client 边界 / D 演进·Vue 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：给蓝图 + 权衡：① 目录按 feature + shared + app，门面收敛依赖；② 组件分层（页面/容器/展示/UI）与单向依赖 services→hooks→组件；③ 状态分三类各归其位（局部/Context/外部 store/Query 服务端态，呼应 react-state-mgmt）；④ 数据用 Data Router loader + Query；⑤ 渲染控制分层兜底（ErrorBoundary/Suspense）；⑥ 性能按 feature 与虚拟化 + 代码分割；⑦ 测试按行为、CI；⑧ 演进式——先满足当前复杂度再加重。强调"每层为可替换/可测/可定位服务"，体现体系化而非堆名词。
 
 **来源**：Bulletproof React、Feature-Sliced Design、React 官方 — Thinking in React
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  如何把「依赖方向单向：pages → features → shared → libs」用工程手段强制执行，而不是靠自觉？
+
+光靠 code review 挡不住腐化，要工具化：① eslint-plugin-import 的 boundaries 或 dependency-cruiser 写规则——禁止 feature 之间互相直接 import（要走 shared 或事件/契约）、禁止 shared/libs 反向依赖 feature、禁止深层相对路径（`../../../`）用别名替代；CI 里 lint 即红。② tsconfig paths + 分层别名（@ui/* @features/* @lib/*）让「谁该依赖谁」在路径上自解释。③ 循环依赖用 madge --circular 或 eslint import/no-cycle 阻断。④ 目录级 ownership（CODEOWNERS + barrel 公共 API）把「跨模块只能走导出面」制度化。关键是把架构约束变成「机器可判定的规则」，而不是画在 README 里的图——否则三个月后必然被图省事的人打破。
+
+**来源**：dependency-cruiser / eslint-plugin-boundaries 文档；前端分层架构依赖方向治理实践。
+
+### 14.  RSC 时代组件分层从「容器/展示」如何演进为 server/client/shared？各层职责与边界？
+
+经典「容器（有状态、取数）/展示（纯 props）」在 RSC 下升级为三段：① Server Component（默认）：负责取数、编排、直连数据源、不进入客户端 bundle，能 await、能持密钥，代价是不能用 state/effect/事件；② Client Component（`\u0027use client\u0027` 边界）：负责交互与浏览器 API，是「岛」，从 server 侧经可序列化 props 接收数据；③ 「共享/通用」组件：既可在 server 也可在 client 渲染的纯 UI，注意一旦被 client 组件 import 就随之下沉。设计要诀：把交互点尽量推到叶子，父链保持 server；跨边界只传可序列化数据或「server 渲染好的 JSX 作为 children」（slot 模式，把 client 需求留给 children 本身）。这把老「Smart/Dumb」从「状态」维度扩展到了「运行位置」维度。
+
+**来源**：Next.js App Router 组件模式（Server/Client boundaries、composition via children）官方指引。
+
+### 15.  「架构随复杂度生长、而非一开始堆满」——请给一条从 0 到 100 个页面的演进路线。
+
+起步（<10 页）：一个 Vite+React 单体，按类型分目录即可，状态全用 useState/少量 Context，别引重库——过度架构会拖慢第一个迭代。成长（10~30）：出现复用与耦合痛点，按 feature 重切目录、立 shared、上路由级代码分割；服务端数据从手写 fetch 迁到 TanStack Query；全局客户端态才引 Zustand。规模化（30+）：加依赖边界 lint、公共 API/barrel、design system 抽 UI kit、错误/日志/埋点横切层、测试策略与 CI 预算门禁、必要时引入 RSC/Next 或微前端。每一步都由「痛」触发而非「看起来专业」预先堆砌。反面：第一天就上 Redux+Saga+Monorepo+Module Federation，交付速度会被仪式吃掉。面试答这题的加分点是「说出每步的触发信号和代价」，而非罗列技术栈。
+
+**来源**：渐进式前端架构 / yellow-flag-avoid premature abstraction 社区经验综述。

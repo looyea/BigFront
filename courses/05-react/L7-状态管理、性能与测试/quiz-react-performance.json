@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "拆分隔离重渲染范围（呼应 react-performance 第三节、react-render-model）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 虚拟化（react-window/virtuoso）解决上千行列表卡顿的原理是？",
+      "options": [
+        "把行渲染得更简单",
+        "只渲染「可视区 + 少量缓冲」的行、用撑高的占位模拟总滚动高度，DOM 节点数恒定，用「滚动时重算可见切片」换掉「一次性挂载全部节点」的渲染/内存成本",
+        "关闭 diff",
+        "给列表加 memo 即可"
+      ],
+      "answer": 1,
+      "explanation": "卡顿根因常是「同时存在/协调的节点数」而非单节点成本；虚拟化把 O(n) 节点压成 O(可见数)。代价：需处理动态行高（测量）、滚动定位、以及别在 render 里为不可见行算昂贵数据。memo 治「重渲染」，虚拟化治「节点总量」，两者互补。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 输入框每敲一键，把内联箭头函数作为 props 传给一个 React.memo 子组件，会？",
+      "options": [
+        "memo 生效、子组件不渲染",
+        "memo 失效——父每次 render 新建函数引用，浅比较判定 props 变化，子组件照样重渲染；应 useCallback 稳定或把高频 state 下沉到叶子",
+        "只是类型报错",
+        "自动节流"
+      ],
+      "answer": 1,
+      "explanation": "React.memo 靠「props 引用不变」跳渲染，而内联函数/对象每帧都是新引用，等于每次都击穿。稳定函数（useCallback）或让高频更新的 state 只存在于真正需要的最小组件里，才能让 memo 有意义——这也是本关「拆独立子组件 + 状态下沉」的实操落点。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 关于 `content-visibility: auto` 这类 CSS 渲染优化，正确的是？",
+      "options": [
+        "等价于虚拟列表",
+        "它能跳过屏幕外子树的布局/绘制以省渲染成本，但 DOM 仍全量存在、节点没被回收——是 CSS 层「锦上添花」，不能替代虚拟化对「节点总量」的削减",
+        "能减少 JS 执行",
+        "只作用于首屏"
+      ],
+      "answer": 1,
+      "explanation": "性能优化分三层要分清：节点总量（虚拟化/分页）、单次渲染重算（memo/Compiler/拆组件）、浏览器绘制/布局（content-visibility、contain、合成层）。前两层是 React/Vue 框架层的账，content-visibility 属第三层 CSS 账，各有边界、别拿它当万金油。"
     }
   ]
 }

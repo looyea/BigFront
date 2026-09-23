@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "从列表进入详情、需要能返回上一页，应该用？",
-      "options": ["redirectTo", "switchTab", "navigateTo", "reLaunch"],
+      "options": [
+        "redirectTo",
+        "switchTab",
+        "navigateTo",
+        "reLaunch"
+      ],
       "answer": 2,
       "explanation": "navigateTo 压栈保留当前页可 back（呼应 mp-route 第二节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "拦截器思想替代 beforeEach（呼应 mp-route 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 从首页切到某个 tabBar 页并清空普通页面栈，应使用？为什么 navigateTo 打不开 tabBar 页？",
+      "options": [
+        "navigateTo；tabBar 页只是普通页",
+        "switchTab；tabBar 页是被容器常驻管理的特殊页，规则要求只能用 switchTab 进入（它会关闭所有非 tabBar 页、切到目标 tab），navigateTo 对 tabBar 路径会失败",
+        "reLaunch 是唯一选择",
+        "redirectTo 可用"
+      ],
+      "answer": 1,
+      "explanation": "tabBar 页有独立的\"标签常驻\"语义（保留各自状态、底部栏在），故与普通 navigateTo 栈模型冲突，被限制为 switchTab。reLaunch 也能到 tabBar 页但会重置一切，用于\"彻底回首页/退出到某 tab\"。理解\"哪类页能被哪类 API 打开\"是路由第一课。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 页面栈到达上限（10 层）后再 navigateTo，行为是？",
+      "options": [
+        "静默关闭最早的一页继续入栈",
+        "navigateTo 失败（不打开新页、走 fail），框架不会自动弹出最底层页——需业务改用 redirectTo 替换当前页以控制深度",
+        "自动清栈重开",
+        "无上限"
+      ],
+      "answer": 1,
+      "explanation": "栈满时新页压不进去、回调 fail。设计动机是内存与返回路径可读性。工程对策：对\"只是查看、无需回退\"的下一跳用 redirectTo（替换当前页不加深），或对长链路主动用 reLaunch/返回。别指望框架帮你踢页。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 用 navigateTo 传 `?id=5&name=%E4%B8%AD` 到 B 页，B 的 onLoad(options) 里 options.name 通常是？",
+      "options": [
+        "始终是未解码的原始串，需自己 decodeURIComponent",
+        "框架会自动对 query 参数做一次解码，一般直接拿到解码后的值；但因版本/场景对编码处理曾有差异，稳妥做法是传参时 encodeURIComponent、取参时对可能被编码/未编码两种情况都容错",
+        "拿不到中文参数",
+        "必须用 globalData 传中文"
+      ],
+      "answer": 1,
+      "explanation": "url 参数是字符串（连数字也成 \"5\"），且编码行为在不同基础库不完全一致，所以\"发送端 encode + 接收端容错解码\"是最稳的。类型转换（String→Number）也得自己做，这正是\"小程序无路由参数类型安全\"的体现，需要一层参数校验/规范化。"
     }
   ]
 }

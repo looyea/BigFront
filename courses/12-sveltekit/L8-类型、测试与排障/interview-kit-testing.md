@@ -1,6 +1,6 @@
 # kit-testing 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 为什么说 SvelteKit 的 load/action/handle "天生好测"？
 **来源**：可测性红利开场题的转述。
@@ -63,3 +63,25 @@ e2e 在 build+preview 下暴露：SSR 渲 B（browser=false）、水合渲 A，H
 `handle`/`handleError`/`init`、db、鉴权本就是纯服务端代码，不在浏览器跑，也就无需 DOM 垫片；用 Vitest 的 Node 环境直接测最快、最贴近真实运行环境。`$lib/server` 的 server-only 属性只在 Kit 构建期强制，单测里它是普通模块，正常 import。要隔离外部依赖用 `vi.mock` 或依赖注入。
 
 🚀 **下一组**：kit-debug-playbook 面试题——500 白屏读法、水合失配、load 死循环与密钥泄露的高频考法。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  给登录+表单+流式列表页面规划三层测试，你的分配与理由？ 
+
+ 单测覆盖 load/action 纯函数（校验分支、错误回显），组件测覆盖回显与无障碍，e2e 只跑金路径与渐进增强（禁 JS 提交）各一条；金字塔比例防慢测试拖垮 CI。 
+
+**来源**： https://svelte.dev/docs/kit/testing
+
+### 14.  e2e 里 webServer 用 npm run dev 被质疑不稳定，你怎么定 CI 启动口径？ 
+
+ dev 是未优化路径且 HMR 干扰计时；CI 用 build+preview（生产等价物）或独立 test 环境常驻服务，webServer 配 reuseExistingServer 与 healthCheck 防端口竞争。 
+
+**来源**： https://playwright.dev/docs/api/class-webserver 
+
+### 15.  $lib/server 里依赖 DB 的 service 如何做可测接缝？ 
+
+ service 接收注入的 client/repository 而非模块级单例，单测传内存桩（如 better-sqlite3 :memory: 或 fake repo）；真实 DB 归集成层，容器化一次性实例跑迁移后即焚。 
+
+**来源**： https://svelte.dev/docs/kit/testing#Unit-testing 

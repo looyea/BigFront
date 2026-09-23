@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "exports 条件里，TypeScript 的 types 应放在什么位置才能被稳定解析到？",
-      "options": ["最后", "最前", "随便位置", "不能和 import/require 并存"],
-      "answer": 1,
+      "options": [
+        "最前",
+        "最后",
+        "随便位置",
+        "不能和 import/require 并存"
+      ],
+      "answer": 0,
       "explanation": "解析自上而下取第一个匹配，types 放最前否则 TS 可能匹配到 import/require 而丢类型（呼应 node-publish 第二节、ts-publish）。"
     },
     {
@@ -16,18 +21,23 @@
       "prompt": "什么是 dual package hazard？",
       "options": [
         "同时发两个包",
-        "同一包被以 ESM 和 CJS 各加载一份，导致单例/instanceof/内部状态出现两份实例",
         "版本号冲突",
-        "锁文件损坏"
+        "锁文件损坏",
+        "同一包被以 ESM 和 CJS 各加载一份，导致单例/instanceof/内部状态出现两份实例"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "双格式各加载一份→模块实例不唯一，含单例/注册表的包最易中招（呼应 node-publish 第三节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "一旦 package.json 定义了 exports 字段，未声明的子路径（如 my-lib/src/internal）会？",
-      "options": ["照常可导入", "被拒绝/报错，强制公共 API 边界", "自动指向 main", "被打包器忽略"],
+      "options": [
+        "照常可导入",
+        "被拒绝/报错，强制公共 API 边界",
+        "自动指向 main",
+        "被打包器忽略"
+      ],
       "answer": 1,
       "explanation": "exports 是白名单，未声明路径不可被外部访问，带来封装性（呼应 node-publish 第二节）。"
     },
@@ -35,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "想把发布内容限制为只含 dist 与 README，应该用？",
-      "options": [".gitignore", "files 白名单字段", "scripts", "engines"],
+      "options": [
+        ".gitignore",
+        "files 白名单字段",
+        "scripts",
+        "engines"
+      ],
       "answer": 1,
       "explanation": "files 白名单只发必要产物；配 npm pack --dry-run 预览（呼应 node-publish 第五节）。"
     },
@@ -69,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "在 type:module 的包里额外产出一份 CJS 产物，文件后缀应是？",
-      "options": [".js", ".mjs", ".cjs", ".json"],
+      "options": [
+        ".js",
+        ".mjs",
+        ".cjs",
+        ".json"
+      ],
       "answer": 2,
       "explanation": "type:module 下 .js 视为 ESM，CJS 产物必须用 .cjs 后缀（呼应 node-publish 第四节、node-esm-cjs）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "\"sideEffects\": [\"*.css\"] 在库发布中的含义是：",
+      "options": [
+        "声明所有代码都不安全",
+        "告诉打包器：CSS 等列出的文件「有运行时副作用不可摇树」，其余 JS 可安全 tree-shake；写成 false 是最激进声明（全部可摇），写 * 等于放弃摇树",
+        "仅 webpack 生效故可忽略",
+        "控制安装时脚本"
+      ],
+      "answer": 1,
+      "explanation": "sideEffects 是**给 bundler 的合同**：库作者确知「import 只为注册」的文件（polyfill、CSS）必须列出，否则被摇掉=运行时功能蒸发；副作用敏感模块混进「false」是线上玄学 bug 制造机。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "发布含 class 且用户会 instanceof 的库，双包形态最要注意的是：",
+      "options": [
+        "体积",
+        "同一 class 的 ESM/CJS 两份产物是不同类对象——实例跨形态 instanceof 失败；解法=单一真源（CJS 产物 re-export ESM 或反向聚合）或文档声明「instanceof 仅在同形态内有效」",
+        "必须 CJS",
+        "禁止 class 导出"
+      ],
+      "answer": 1,
+      "explanation": "dual package hazard 的用户可见形态之一（本包 modules 关双实例题的库侧）：attw 查条件表、集成测试分别用 require 与 import 跑 instanceof 断言是唯一防线。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "changesets 这类工具在发布流水线里的定位是：",
+      "options": [
+        "替代 semver",
+        "把「变更→版本号→changelog→发布」变成 PR 内声明式工件（changeset md 文件），CI 批量计算版本并触发发布——多包仓库的发布即代码",
+        "只能发单包",
+        "自动生成代码"
+      ],
+      "answer": 1,
+      "explanation": "「谁改的谁知道该升哪级」被前移到评审现场；version-packages PR + publish 的组合让多包 lockstep/independent 两种模式都可复现（本关 prepublishOnly 流程题的现代版）。"
     }
   ]
 }

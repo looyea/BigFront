@@ -89,3 +89,21 @@ console.log(B.x);
   ```
   **追问 1**：两个 await 有依赖吗？无依赖应改 `Promise.all` 并发。**追问 2**：要「任一失败也要拿其余结果」→ 用 ES2020 `Promise.allSettled`。
 - 来源：MDN async/Promise.all；GreatFrontEnd 手写题；TC39(ES2017)。
+
+---
+
+**13）class 声明为什么不像 function 那样提升？构造器为什么必须 new 调用？**
+- 参考要点：class 绑定走 let 同款的 TDZ 语义——提升但不可 early 访问，避免「hoisting 半初始化类」的坑；构造器带内部槽 [[IsClassConstructor]]，普通调用 `Cls()` 直接抛 TypeError，强制 new 保证 this/字段初始化路径唯一。子类构造器必须先 super()：super 负责创建带正确原型的 this，提前碰 this 也在 TDZ。
+- 来源：MDN《class》"Not hoisted"；ECMA-262 [[IsClassConstructor]] 内部槽定义。
+
+---
+
+**14）静态成员怎么继承？`Foo.__proto__ === Bar` 和 `Foo.prototype.__proto__ === Bar.prototype` 各自作用是什么？**
+- 参考要点：两条链：Foo extends Bar 时 **Foo.__proto__ = Bar**——静态方法/静态字段沿这条链查（`Foo.staticM()` 落到 Bar）；**Foo.prototype.__proto__ = Bar.prototype**——实例方法查找链。这就是「静态也能多态」的实现：this 在静态方法里是类本身，沿 __proto__ 找。super 在两种位置分别查两条链，机制完全对称。
+- 来源：MDN《Static members / Object.getPrototypeOf》；exploringjs.es6 《Inheritance for (static) methods》。
+
+---
+
+**15）TDZ 存在的意义是什么？为什么不设计成 let 提前等于 undefined？**
+- 参考要点：① 把「先用后声明」从静默 undefined 变成确定性 ReferenceError——var 时代的提升陷阱不能再犯；② 让 const 的「绑定+初始化原子性」可校验（临时死区=未初始化状态）；③ 类/let/const 共用同一套块级作用域模型，实现一致。代价：跨块引用必须运行序保证，循环里闭包捕获 let 计数器等写法因此才正确（每轮迭代新绑定）。
+- 来源：MDN《Temporal dead zone》；TC39 ES6 语义讨论（let 而非 var 的设计记录）。

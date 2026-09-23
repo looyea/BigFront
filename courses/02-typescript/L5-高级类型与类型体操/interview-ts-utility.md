@@ -1,6 +1,6 @@
 # ts-utility 面试题精选
 
-> 共 12 题，覆盖 **工具类型总览 / 属性修饰三件套 / 挑键与排除 / 函数与 Promise 抽取 / 组合与自定义** 五类。
+> 共 15 题，覆盖 **工具类型总览 / 属性修饰三件套 / 挑键与排除 / 函数与 Promise 抽取 / 组合与自定义** 五类。
 
 ---
 
@@ -129,3 +129,25 @@ type DeepPartial<T> = {
 顺序：① 优先内置（`Partial`/`Pick`/`Omit`/`Record`/`Awaited`…），语义标准、团队都熟、无额外依赖；② 内置覆盖不到（`PartialDeep`、`SniceCaseKeys`、`IsUnion`、精确 `Omit` 校验等）先查 **type-fest**——它久经考验、处理了无数边界，别重复造轮子；③ 只有当需求非常专有、或不想引入 type-fest 依赖时才手写，且要：加注释说明输入→输出、拆中间命名 type、控制在 2~3 层嵌套内、写单测级别断言（`type Assert = Expect<Equal<...>>`）验证正确性。可读性与可维护性永远优先于"炫技一行流"（贯穿 ts-advanced）。
 
 **来源**：type-fest README; Total TypeScript — "when to write custom types"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 白板实现：Partial、Required、Pick、Omit、Record、ReturnType 各自源码长什么样？谁依赖谁？
+
+依赖链：`Partial<T>={[P in keyof T]?:T[P]}`；Required 加 `-?` 并 readonly 无关；`Pick<T,K>={[P in K]:T[P]}`（K extends keyof T）；`Omit<T,K>=Pick<T,Exclude<keyof T,K>>`；`Record<K extends keyof any,T>={[P in K]:T}`（所以 Record 的键约束是「能当键的」= string|number|symbol）；`ReturnType<T>=T extends (...a:any)=>infer R?R:never`（infer 登场）。加分点：-? 与 ? 只能配 mapped 不能配可选链式；Omit 对索引签名的缺陷；Record 用 Exclude 做键约束（Record<K, never>）。能顺写这 6 行，映射类型/条件类型/约束三关全通。
+
+**来源**：TypeScript lib.es5.d.ts 官方定义（逐字可查）。
+
+### 14. DeepPartial / DeepReadonly 这类递归工具为什么要给 Date/Function/数组开特判通道？
+
+对象分支「一刀切递归」会：Date 被变成 `{getTime?: ...}` 残废、函数被当对象递归返回类型、数组丢方法（映射数组键会得到 {[x:number]:...} 但 length/iterator 语义漂移）。标准模板：`T extends Date|RegExp|Function ? T : T extends (infer U)[] ? DeepPartial<U>[] : T extends object ? {[K in keyof T]?:DeepPartial<T[K]>} : T`——顺序敏感（Function 要在 object 前判，因为函数也是 object 形状被 typeof 区分但 `T extends object` 对函数为真）。深工具类型是「类型级 Visitor 模式」：先判叶子再入递归，是写给人看的守门员。
+
+**来源**：type-fest 源码《PartialDeep》的 builtin/typed-array 排除链；TS-FAQ 递归类型守卫写法。
+
+### 15. 工具类型叠三层还能维护吗？你怎么在团队里立「类型体操」的度？
+
+度量：① hover 可读性（复杂推导必须 `type 具名 = ...` 落盘，报错信息带别名）；② 编译性能（大仓 type instantiation 计数，重递归 O(n²) 能感知）；③ 测试覆盖——类型也要测试（tsd/expect-type 的 expectAssignable 断言给工具类型上回归锁）。度：公共库/基建（请求层、ORM）值得上重类型；业务表单/组件「显式优于 clever」，两行 if 收窄胜过天书条件。实践：能用 lib 内置不手搓、能 type-fest 不自研，自研必配类型测试+注释「为什么需要」。
+
+**来源**：tsd / expect-type README；type-challenges 维护者 Matt 的「何时不要用复杂类型」讨论。

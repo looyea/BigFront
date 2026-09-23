@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "生产环境应用 schema 变更，正确的命令是？",
-      "options": ["npx prisma db push", "npx prisma migrate dev", "npx prisma migrate deploy", "npx prisma studio"],
+      "options": [
+        "npx prisma db push",
+        "npx prisma migrate dev",
+        "npx prisma migrate deploy",
+        "npx prisma studio"
+      ],
       "answer": 2,
       "explanation": "deploy 只按迁移目录重放已审核的 SQL；dev 会生成迁移（开发用），db push 无历史（呼应 exp-prisma 第三节）。"
     },
@@ -79,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "pm2 起 4 个实例、每个 PrismaClient connection_limit=10，数据库侧应预留的连接大约是？",
-      "options": ["10", "14", "与实例数无关只要 10", "40（实例数 × limit），必须小于 max_connections 并留运维余量"],
+      "options": [
+        "10",
+        "14",
+        "与实例数无关只要 10",
+        "40（实例数 × limit），必须小于 max_connections 并留运维余量"
+      ],
       "answer": 3,
       "explanation": "每进程独立连接池；算错账就是 too many connections 事故（呼应 exp-prisma 第六节、exp-perf）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 关于 upsert 的并发行为，正确的说法是？",
+      "options": [
+        "完全原子，并发安全",
+        "查+写两步在同一事务里但对\"另两个并发同时 insert\"仍可能抛 P2002 唯一冲突（读时都不存在、写时撞索引）——高并发入口仍需重试或改依赖唯一索引冲突的路径",
+        "自动加行锁",
+        "只在 SQLite 有问题"
+      ],
+      "answer": 1,
+      "explanation": "upsert 解决\"单进程读写编排\"，不解决\"分布式同时首建\"；唯一索引才是最终裁判，代码要准备好接住它的裁决。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 用 Prisma 实现乐观锁更新的正确姿势是？",
+      "options": [
+        "先查后改即可",
+        "行上加 version 字段，更新写成 updateMany({ where: { id, version }, data: { ..., version: { increment: 1 } } })，按受影响行数 0 判定冲突并重读——让数据库做并发裁决",
+        "加全局互斥锁",
+        "靠事务隔离级别"
+      ],
+      "answer": 1,
+      "explanation": "\"where 带版本 + 行数判冲突\"把检查与更新压进一条语句的原子性里，这是所有 ORM 乐观锁的共同骨架。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Prisma 想做\"所有查询默认排除软删行\"，框架提供的机制是？",
+      "options": [
+        "内置 softDelete 选项",
+        "没有内置——用 Client Extensions 的 query 扩展做查询重写（自动补 deletedAt null 条件）或封装仓库层统一注入，指望\"每个调用都记得写 where\"就是事故清单",
+        "中间件拦截 HTTP",
+        "触发器实现"
+      ],
+      "answer": 1,
+      "explanation": "Prisma 的\"策略类\"能力（软删/多租户/租户隔离）都要自己在扩展层造轮子——它给的是钩子不是成品，选型时要认清这条。"
     }
   ]
 }

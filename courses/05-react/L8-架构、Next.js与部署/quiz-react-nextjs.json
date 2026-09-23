@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "内容基本不变、要放 CDN 最快触达，应选哪种渲染？",
-      "options": ["SSR（每次请求渲染）", "只有 ISR", "SSG（构建时静态生成）", "纯 CSR"],
+      "options": [
+        "SSR（每次请求渲染）",
+        "只有 ISR",
+        "SSG（构建时静态生成）",
+        "纯 CSR"
+      ],
       "answer": 2,
       "explanation": "静态内容用 SSG 产物直接上 CDN（呼应 react-nextjs 第三节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "约定式的加载与错误边界（呼应 react-nextjs 第二节、react-render-control）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " SSR 相比纯 CSR 主要改善首屏空白/SEO/TTFB，但它新引入的问题不包括下列哪项？",
+      "options": [
+        "服务器成本与运维复杂度",
+        "水合（hydration）带来的二次渲染与 CPU 开销",
+        "数据预取/缓存策略变复杂",
+        "首屏 HTML 一定是客户端实时生成的、无法用 CDN 缓存"
+      ],
+      "answer": 3,
+      "explanation": "最后一项是误解：SSR 之外还有 SSG/ISR，静态产物完全可以上 CDN 边缘缓存。SSR 真正的代价是服务器渲染成本、水合开销、缓存与部署复杂度上升。「SSR 一定比 CSR 好」是伪命题（本关 Q2/I2 已述），要按页面内容变化频率在 CSR/SSR/SSG/ISR 间选。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 一个几乎不变、要最快全球触达的营销文档页，Next.js 最合适的渲染模式是？",
+      "options": [
+        "每请求 SSR",
+        "SSG（构建期用 generateStaticParams 产出静态 HTML）+ CDN，配合需要时 ISR revalidate 做增量再生",
+        "纯 CSR 客户端取数",
+        "边流式边渲染 RSC 每次拉库"
+      ],
+      "answer": 1,
+      "explanation": "内容稳定→预渲染成静态文件收益最大：零服务端渲染成本、可边缘缓存、TTFB 最低。要「偶尔更新又不想全量重建」→ ISR（revalidate / revalidatePath）做增量再生。这正是「按变化频率选渲染模式」的教科案例，把 SSG/ISR/SSR/CSR 排成一条新鲜度-成本光谱。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Server Component 把数据传给 Client Component 时，props 必须满足什么？",
+      "options": [
+        "必须是 React 元素",
+        "必须是可序列化的值（经 RSC payload 跨边界），不能传函数、class 实例、Context；需要行为就传「在 server 渲染好的 JSX 作为 children」或让 client 侧自取",
+        "必须加密",
+        "必须是字符串"
+      ],
+      "answer": 1,
+      "explanation": "server→client 要跨「渲染环境边界」，Next 会把 props 序列化进 RSC 流。函数/不可序列化对象会报错。经典解法：把交互留给 client 叶子；把「需要带行为的东西」作为已渲染好的 JSX（children/slot）由 server 传进去（children 保持 server 渲染，仅占位给 client）；纯数据在 server 取好再传下。"
     }
   ]
 }

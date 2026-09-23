@@ -1,6 +1,6 @@
 # svelte-compiler-architecture 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区深度文章高频主题的转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区深度文章高频主题的转述。
 
 ---
 
@@ -75,3 +75,25 @@ React：同份 JSX 由 react-dom/server、react-native 渲染器、自定义 rec
 **来源**：架构选型综合面经（高级/资深轮常见收官题）
 
 提纲五块：①成本模型换轴——把"VDOM 有没有"翻译成三条可测指标（JS 总量/主线程交互延迟/内存驻留），用弱网真机跑 PoC 而非引用博客；②生态税清单——项目需要的组件库/监控 SDK 在 Svelte 侧的自建成本（React 生态优势的真实来源）；③团队曲线——runes 心智迁移成本与 lint 执法（svelte-tooling）能否兜住；④混合策略——核心链路 Svelte 微前端嵌入或 Web Components 编译产物复用（L10），不赌全仓重写；⑤回退与度量——上线后 INP/内存指标基线归因到框架假设本身（呼应 vite-ci-perf 的 Field 数据观）。要点：**用工程证据替代宗教战争**。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Svelte 没有 VDOM，那"更新"到底靠什么完成？把编译产物结构讲清楚。
+
+靠"编译期生成的细粒度 DOM 更新代码 + 运行期信号图"：① 静态部分——编译成 $.template（一次克隆）；② 动态部分——编译成 effect，effect 体内 $.get(signal) 读值、写 DOM（$.set/text_attr）；③ 派生——$.derived 惰性；④ 依赖——effect 运行时读哪个 signal 就订哪个（无静态依赖数组）。当 signal 变，只有读它的 effect 重跑，直接改对应 DOM——没有"生成新树 → diff → patch"这三步，是"数据变 → 订阅它的闭包重跑 → 就地改节点"。产物里没有"下一次渲染的虚拟 DOM"可供比较，因为压根不做比较。加分句：讲清"VDOM 解决的是『不知道哪变了所以整棵重算再 diff』，Svelte 靠编译器+信号图在源头就知道『这个 signal 影响这几个 effect』所以不需要 diff"——把 VDOM 定位成"依赖追踪缺失时的补偿机制"，就理解了编译器系框架"用编译期信息换运行期开销"的核心命题（呼应既有"UI=f(state) 对照"题）。
+
+**来源**：Svelte 编译器输出结构；$.template/$.set/$.derived 运行时 helper；signals 运行时；既有"没 VDOM 靠什么更新"深化
+
+### 14.  generate: client / server / ssr 各产出什么？一份 .svelte 如何同时服务浏览器与 Node？
+
+三态：① client——产出操作真实 DOM 的代码（template 克隆、effect 写 DOM），用于 mount/浏览器；② server（render）——产出把组件序列化成 HTML 字符串 + head 信息的代码（无 DOM 操作，用 $.render_*），用于 Node 端 render()/SSR；③ 组件级 hydrate 编译旗标（data-svelte-h 等）让 client 能认领 server 产出的 DOM 而不重建（水合，呼应 ssr-hydration 关）。同一份源码分叉：编译器按 generate 走不同 codegen（模板→DOM 操作 vs 模板→字符串拼接），但响应式/表达式解析共享（这是"编译器系"的好处——一份 AST 两种后端）。加分句：这解释了"为什么 SSR 下 onMount/$effect/action 不跑"（server codegen 里根本没生成 DOM 相关代码，对应 lifecycle SSR 题），也解释"为什么 head（<svelte:head>）要在 SSR 单独收集"（render 输出里 head 是独立字段，呼应 special-elements head 题）——把"两套 codegen"当作理解 Svelte 行为的万能钥匙，SSR/水合/action 那些零散规则全串起来了。
+
+**来源**：Svelte compile options generate；SSR 编译；isCustomElement/hydratable 编译旗标；既有 generate 三态题深化
+
+### 15.  运行时体积论：Svelte 框架基数小，是不是应用一定就小？编译产物体积由什么决定？
+
+澄清："运行时小"只意味着"框架代码基数小"，不等于"你的产物小"。产物构成：① 框架运行时（小，几 KB 级）；② 每个组件编译出的代码——静态模板字符串、effect 函数、信号声明（组件越多、模板越复杂、动态绑定越多，这部分越大，可能超过框架本身）；③ 依赖（第三方库仍是主体，与框架无关）。所以：① 大量小组件 + 复杂模板可能让"编译出的组件代码"成为大头（class 提取/静态优化能压）；② 用 Svelte 但引了 moment/大型 UI 库，产物照样爆（框架帮不了你）；③ 好处在"没有 VDOM/协调运行时"这块固定开销小，利好多体现在小应用与交互轻的页（对应 overview"小应用 bundle 更小"题）。加分句：正确的性能预期是"Svelte 降低了框架固定成本、但把体积主导权交给了你的依赖选择与组件复杂度"——bundle 分析要看"框架运行时 vs 组件编译码 vs 第三方"三段占比，别拿"框架小"当"我的包一定小"的免检金牌（呼应 deploy 关"bundle 分析里什么最意外"题）。
+
+**来源**：Svelte bundle 分析；编译产物体积构成；既有"运行时小是否产物一定小"深化

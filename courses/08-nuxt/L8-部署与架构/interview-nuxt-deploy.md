@@ -1,4 +1,4 @@
-# nuxt-deploy 面试题（12 题）
+# nuxt-deploy 面试题（15 题）
 
 ## A. 基础认知
 
@@ -67,3 +67,25 @@
 **答**：成熟度很高：`.output` 自包含制品 + preset 多目标 + runtimeConfig 运行期配置，把"同构应用怎么上线"这件 historically 很痛的事做成了配置项，跨平台迁移成本和密钥管理风险都显著下降，对自托管尤其友好。仍要注意的坑：①preset 自动探测有时选错，CI/CD 里显式写 preset 更稳；②内存态默认实现（缓存、storage）在 serverless/多实例下静默退化，要主动换成共享存储；③Edge preset 的运行时限制不像文档一句话那么轻，Node 依赖会踩雷；④运行期注入要求部署平台真的把 `NUXT_*` 传进进程，本地 `.env` 习惯带进容器会失效；⑤SSR 是 CPU 密集，容量规划与冷启动在 serverless 下容易被低估。总体：它把复杂度从"部署脚本"移到了"少数几个正确配置"，前提是团队理解每个配置在哪个阶段生效（呼应 nuxt-architect）。
 
 **来源**：《Nitro 部署体系评析》、《同构框架上线的心智模型》
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  给 Nuxt SSR 应用写一份生产 Dockerfile 并解释每条决策；.output 的自包含性帮你省了哪些事？
+
+双阶段：build 阶段（完整 devDeps+源码+npm ci+nuxt build）→ 运行阶段（node:20-slim，只 COPY .output 进来，非 root 用户 USER app，CMD node .output/server/index.mjs）。逐条决策：① .output 自包含（server bundle 已打进依赖、public 资源独立目录）——不需要 node_modules、不需要源码、不需要 nuxt 命令，运行镜像天然小且攻击面小；② lockfile 层缓存（COPY package-lock 先于 COPY .）；③ NODE_ENV=production 由启动环境给而非 build 残留（产物跨环境复用，接上一题）；④ 健康检查用 /api/healthz（nitro 里注册轻量端点：进程活着+事件循环可达即 ok，不查 DB 防级联误杀），HEALTHCHECK 指令或 K8s probe；⑤ 资源限制下 V8 堆参数按容器内存设（--max-old-space-size 留余量防 OOMKill）；⑥ 日志 stdout JSON（12-factor，容器里不写文件）；⑦ 信号处理：nitro 内置 graceful shutdown（SIGTERM 后收完在途请求）——别在 entrypoint 用 sh -c 包一层吞了 PID1 信号。省掉的事：依赖裁剪、构建环境隔离、产物一致性校验（镜像 digest 即版本）——"部署难"的一半问题是产物不自包含造成的。
+
+**来源**：Nuxt 官方 deployment docker 文档；掘金《我们的 Node 镜像从 1.2G 瘦到 180M》
+
+### 14.  设计一条低风险发布流水线：构建、晋升、灰度、验证、回滚五个环节各给机制与判据。
+
+构建：一次产物多环境晋升（镜像/制品库存 .output 或容器镜像，promotion 只换 env 不换包），CI 产物带 git sha+构建元数据打进版本端点。灰度：入口层分流（按 cookie uid 哈希/按权重），新实例组先接 5%——Nuxt 侧注意"同用户粘旧版"（导航中途切版本会吃到新旧 payload 不兼容，会话粘性是硬要求）。验证三段判据：冒烟（部署后立即跑核心 e2e 打真实域名，登录/下单类必过）、金丝雀指标（错误率/P95 TTFB/LCP 对比基线，窗口 15-30 分钟，阈值提前写死不许临场解释）、业务漏斗（转化类指标滞后确认）。回滚：K8s 回上一 revision/流量切回旧组——前端特有一坑"资源版本错配"（HTML 已回旧但 CDN 里新版本 hash 资源还在不影响、反之新 HTML 引用已被 purge 的旧资源才致命），规矩是 CDN purge 永远滞后于流量回滚且只清超期版本。不可回滚项单列：DB migration（expand-contract：先加列后切读写再删）、外部 API 契约变更、已发客户端缓存——这些要求 PR 阶段就标注"回滚豁免"并给前向修复预案。整条流水线的人味设计：值班手册写"谁有权按回滚键、看到什么信号必须按"——机制没有授权链就只是文档。
+
+**来源**：Google SRE 发布工程实践；InfoQ《前端发布的可回滚设计》
+
+### 15.  Serverless/Edge 部署 Nuxt 的收益与代价清单？哪些场景明确不该去？
+
+收益：零运维扩缩（突发流量不预备容量）、全球就近 TTFB、按调用计费（低流量站近乎白嫖）、冷启动隔离在平台层（每请求独立实例天然防串号，呼应 SSR 实例复用题）。代价清单：① 冷启动——Node runtime 首请求多几百毫秒（SSR 页 TTFB 雪崩式抖动），Edge runtime 启动快但 CPU 时间窗小（重渲染/大 hydration 页超时）；② API 兼容性——无 fs/无长连接/定时器残废：server/tasks、文件上传落盘、WS/SSE、依赖原生模块的 DB 驱动全部受限或需改造；③ 本地缓存跨实例消失——defineCachedFunction 的内存层失效，一切缓存要外置（平台 KV/Redis/http cache）；④ 计费模型陷阱——高流量静态资源走平台出口比 CDN 贵、CPU 密集页按时长计费烧钱；⑤ 观测与调试降级（日志聚合、无 shell、复现难）。明确不该去：重计算 SSR 页（大数据拼装）、依赖长连接/文件系统的应用、需要复杂 DB 连接池的 BFF（连接风暴打爆数据库）、有状态后台任务。折中形态最实用：内容/营销页 prerender+Edge 缓存，应用动态部分留 node-server——Nitro 的多 preset 输出（同一项目不同部分不同目标）让"混部"可行，别全站一刀切。
+
+**来源**：Nitro 官方 preset 文档；掘金《迁 Edge 半年，我们把 SSR 迁了回来》

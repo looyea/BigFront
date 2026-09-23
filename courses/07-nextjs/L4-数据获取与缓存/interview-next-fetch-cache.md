@@ -1,4 +1,4 @@
-# next-fetch-cache 面试题（12 题）
+# next-fetch-cache 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎、InfoQ 等站点 Next.js 缓存体系高频面经，中文重述。
 
@@ -65,3 +65,19 @@ Path：让某条路由的整页缓存过期（重渲染代价大、影响该页�
 **12. 给新项目定《缓存军规》，写你认为最重要的三条并说明理由。**
 **来源**：知乎《团队 Next 缓存规范长什么样》
 参考骨架：① 禁止裸 fetch——每个取数必须显式 cache 策略常量（lint 规则强制），默认值漂移是事故源；② 进缓存的数据必须"与请求者无关"，用户态一律 no-store+服务端鉴权（安全线）；③ 所有写操作必须声明其失效半径（tag 清单写进 lib/api 的函数签名旁），失效半径不明=数据延迟不可知（呼应 next-forms-mutations、exp-validation 的军规文风）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  三层缓存（客户端 Router Cache / 全路由缓存 / CDN 与数据缓存）各自的失效链路？一次 revalidateTag 要全链路生效需考虑什么？**
+**来源**：Next.js 官方 Caching 与 memoization 生命周期图解；Vercel 博客《重新理解 Next 缓存》
+链路：revalidateTag → 数据缓存中携带该 tag 的条目作废、全路由缓存中渲染了这些数据的条目标记过期（下次请求触发再生，可 stale 供给）→ 但客户端 Router Cache 里预取过的旧 payload 在去重窗口内可能仍被展示（短 TTL 内不重取）→ CDN 层若缓存了 HTML/RSC 响应，取决于 stale-while-revalidate 与边缘失效是否同步（多 CDN 需要 purge 或依赖 SWR 收敛）。工程考虑：① 量化"最长旧数据可见时间"= max(边缘 stale 窗口, 客户端 dedupe 窗口) 并写进 SLO；② 失效幂等、可重试（写侧 after() 里触发、失败要告警）；③ 缓存 key 含部署代际/BUILD_ID，防新旧构建实例交叉供给半成品；④ 多实例自托管时内存数据缓存不共享——要么 Redis 层集中缓存、要么接受各实例独立窗口（这是 Vercel 托管与自托管的行为差异点）。
+
+**14.  fetch 的 directives（revalidate）与 tags 两种失效模型各适合什么数据？团队如何治理？**
+**来源**：Next.js 官方 fetch reuse 文档；InfoQ《事件驱动失效：revalidateTag 的工程化》
+Directives 是"时间驱动、消费点自治"：每个取数处声明最多旧多久——适合变化节律可预测的公共数据（文章列表 3600、汇率 60），优点是零协调，缺点是批量变更要等 TTL、同一数据在多页消费时新鲜度不一致、漏配即不过期。Tags 是"事件驱动、生产点广播"：取数处打标签、写侧 revalidateTag 精确失效——适合"一次发布影响面广"的数据（商品/价格/文档），配合 after() 把失效挪到响应后不阻塞用户；代价是要治理 tag 命名（散落字面量=没人敢改的诅咒），团队应集中定义 tag 常量并让数据层统一封装带 tag 的 fetch。混用策略：公共聚合用 tag + 长 TTL 兜底 revalidate、用户级数据不缓存（no-store）、跨实例场景把数据缓存外置 Redis。加分句：两套模型回答的是"按时间还是按事件"，选错方向才会出现"改一处要刷全站"或"全站等一小时"。
+
+**15.  一次线上"缓存串号"事故：A 用户的个性化接口结果被 B 用户秒命中——给排查路径与制度防线。**
+**来源**：InfoQ《Next.js 缓存事故复盘》；Vercel 官方安全公告：个性化响应缓存配置失误
+排查路径：① 取证：B 侧响应头 x-nextjs-cache / date 与内容生成时间对不上，坐实"缓存命中而非现渲染"；② 定位层：CDN 命中（看 x-cache）→ 全路由缓存 → 数据缓存，逐层排除；③ 审代码：找到"读了身份数据（cookies/headers/session 派生查询）但 fetch 仍带 revalidate 选项"的调用点——缓存键只有 URL+选项，身份进了查询条件却没进 cache key，等价于把个性化结果写进公共格子；④ 止血：该路径改 no-store，公共数据走静态、个性化走动态；若需保留缓存则手动把用户维度拼进 cache key 或用私有 SWR（CDN private + stale-while-revalidate 收紧）。制度防线：个性化接口默认 no-store 写进规范；CI lint"读了 cookies/headers 的段必须 dynamic 声明"；上线前用例"两个账号交替请求断言结果隔离"；发布后监控"同一 URL 响应与不同用户身份的交叉命中"。

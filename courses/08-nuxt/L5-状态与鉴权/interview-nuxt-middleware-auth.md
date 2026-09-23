@@ -1,4 +1,4 @@
-# nuxt-middleware-auth 面试题（12 题）
+# nuxt-middleware-auth 面试题（15 题）
 
 ## A. 基础认知
 
@@ -67,3 +67,25 @@
 **答**：在**页面级的服务端环节**做：`definePageMeta({ middleware: 'auth' })` 中的中间件在 SSR 首屏阶段也会执行，此时 `return navigateTo('/login', { redirectCode: 302 })`（外部跳转/SEO 场景）配合 `ssr: true` 会让服务端返回重定向而非 HTML；也可以在 server middleware 里对页面路径显式重定向。价值：①避免把受保护 HTML 与 payload 发给未授权方（缓存、爬虫、浏览器历史都是泄露面）；②搜索引擎不会收录登录墙内容；③少一次无意义的水合与请求。注意与"HTML 缓存安全线"配套：这类页面绝不能进 swr/prerender 缓存（呼应 nuxt-render-modes、nuxt-server-routes 的 getKey 设计）。
 
 **来源**：《SSR 阶段的 302 与鉴权前置》、《受保护页面与爬虫收录》
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  设计"登录后回到原页面"且防开放重定向的完整方案，Nuxt 里每一环写在哪？
+
+链路四环：① 拦截点——route middleware 判未登录，return navigateTo({ path: 『/login』, query: { redirect: to.fullPath } })，SSR 下它自然变 302（爬虫与分享链路也正确）；② 参数卫生——redirect 只接受"站内相对路径"：以单斜杠开头且 // 开头出局（防协议相对 //evil.com），解析后 pathname 白名单（排除 /login 自身防循环、/admin 按角色二次判），存 query 前 encode、读出后校验，两步都要；③ 登录成功——服务端回带"校验过的 redirect"或用 session 里存的原路径（防篡改更强），navigateTo 目标；④ 形态分叉——客户端发起的 API 401 不走页面跳转：拦截器记下原请求、弹层登录后重放（fetch 层与 route 层两套"回原处"别互相冒用）。验收用例：深链未登录进入→登录后落在深链；/login?redirect=//evil.com→落首页并告警日志（有人探测开放重定向要看得见）；带角标的循环检测。加分句：把"回原页面"做对顺带解决了登录态过期后的重登归位——同一套 redirect 卫生复用到两处。
+
+**来源**：OWASP Unvalidated Redirects；Nuxt 官方 route middleware 示例
+
+### 14.  后台系统"管理员菜单只对 admin 可见+可访问"，把可见性、导航、数据三层权限各自落在哪？
+
+三层各自的正确落点与反模式：① 可见性层（菜单/按钮显隐）——数据源是登录时服务端下发的权限集合（不是前端写死角色表），存 store/Pinia 进 payload 首屏就有；反模式=把权限逻辑埋组件 v-if 深处，审计无从下手，正解是 usePermission(code) 组合式统一出口；② 导航层（能不能进路由）——definePageMeta({ roles: 『admin』 }) 自定义 meta + 全局 route middleware 读 meta 判定，声明与页面同文件（colocation）、集中判定不散写；反模式=每个页面 setup 里手写 if(role)，必漏新页面；③ 数据层（拿到的是什么）——所有查询带 owner/tenant/role 维度 WHERE（server/services 层注入，handler 忘传即报错），admin 与普通用户走不同接口或不同投影（字段级权限服务端裁）。三层关系要明说：第①层可被忽略、第②层可被直连 URL 测出、第③层才是最后防线——渗透测试视角逐层攻一遍是上线前流程。权限变更的实时性：角色调整不重登怎么生效？权限进 session 快照的要有 TTL 重取， revoke 敏感的走"关键操作二次校验"而非依赖菜单。
+
+**来源**：Nuxt definePageMeta 自定义字段；InfoQ《前端权限三层模型的工程化》
+
+### 15.  route middleware 写成 async 后不小心"卡住"导致页面切着切着白屏 200ms+，中间件的性能与可观测纪律怎么定？
+
+成因归类：① middleware 里 await 了慢接口（鉴权查询无缓存、每导航一次串行打后端）；② 客户端导航也会跑 route middleware——SSR 时"顺手取一下"的逻辑到了端上变成导航阻塞；③ 全局中间件叠加过多（每个几十毫秒凑成肉眼可见）；④ navigateTo/redirect 链式弹跳（A→B 的 middleware 又跳 C）。纪律：middleware 里只放"决策必需的轻量判定"——权限快照在登录时取好存 store，导航时纯内存比对（>5ms 就算重）；确需服务端确认的走"乐观导航+失败回退"（先进后校验、403 再弹回）而非阻塞 await；每条 middleware 打点计时（page:loading:start/finish 差值拆分到中间件粒度，上报带路由名）——白屏类反馈直接看分位数归因；全局中间件数量设上限评审（超过阈值必须合并或改 per-route）。e2e 加一条"导航耗时预算"用例（关键路径 <Xms），性能退化进 CI 而不是用户投诉。收口句：middleware 是导航路径上的同步决策点，"往里塞 await 取数"等于把路由层降级成 BFF。
+
+**来源**：掘金《一个 await 挂住全站导航》；Nuxt 官方 middleware 注意事项

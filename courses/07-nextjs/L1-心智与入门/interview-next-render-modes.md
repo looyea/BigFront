@@ -1,4 +1,4 @@
-# next-render-modes 面试题（12 题）
+# next-render-modes 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎、InfoQ 等站点 Next.js 渲染模式高频面经，中文重述。
 
@@ -65,3 +65,19 @@ Nuxt 靠 Nitro 引擎统一输出目标、`routeRules` 集中声明每路由模�
 **12. 怎么向不做前端的同事解释"为什么我们的网站搜得到内容了"？**
 **来源**：知乎《如何通俗解释 SSR 对 SEO 的意义》
 以前爬虫拿到的是空壳 DIV，内容要靠 JS 执行后才出现，很多搜索引擎的渲染队列有延迟甚至不渲染；现在 HTML 抵达即含正文与 meta，收录速度与排名可验证地提升——业务语言：搜索入口的免费流量从"看运气"变成"确定性"（呼应 next-overview 第一节、next-metadata 的 structured data）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  "渲染模式是每页的选择、不是项目级"——App Router 下如何做每页粒度的模式设计？**
+**来源**：知乎《Next.js 渲染模式怎么选》；Next.js 官方文档 Route Segment Config
+设计原则：以页面为单位问三件事——"内容变化频率？""访问前是否需要用户身份？""首屏是否要求秒开且被 SEO 收录？"据此选：静态低频（营销/文档/博客）走 SSG + 需要时用 ISR；每请求需身份/权限（后台/详情）走 SSR 或 SSR + PPR；纯客户端交互（工具型画布）走 CSR（ssr:false）+ 保留预渲染壳；重 SEO 又高动态（新闻/电商详情）走 ISR + revalidate + on-demand。工程落地：① 用 export const revalidate/export const dynamic 在段级显式声明，别依赖隐式默认；② 用 Suspense + PPR 把"动态岛屿"局部化；③ 用 route.tsx 或 segment config 给特定段切 runtime（edge/node）；④ 用 generateStaticParams 枚举要 SSG 的动态段、其它走 fallback。反面：整站一刀切 SSR=浪费 CDN 红利、一刀切 SSG=动态页做不了。核心信号：把渲染模式当作"页面架构决策"、和数据结构一起在设计阶段定，而不是最后调优时才贴。
+
+**14.  output:export（纯静态导出）与常规 SSG 的边界与陷阱？**
+**来源**：Next.js 官方《next.config output: export》限制说明；掘金《静态导出上 GitHub Pages 踩坑实录》
+边界：静态导出=构建期产出纯 HTML/JS/CSS 静态文件、无服务端运行时。可行：文件路由、嵌套 layout、metadata、next/image 的本地优化（部分能力）、纯前端逻辑 + 静态数据。会失去：① ISR / revalidate（无服务器可触发再渲染）；② Route Handlers / API 路由（无后端进程）；③ middleware / headers/rewrites/redirects（无请求期钩子）；④ 动态 params 未预生成的路径（dynamicParams 语义失效）；⑤ 部分依赖运行时的 Image/Font 优化、Server Actions。陷阱：① 静态导出里的 <Link> 与 useSearchParams 仍需 JS，SEO 页无 JS 时可读但交互需水合；② 图片优化默认依赖服务端 → 需要 unoptimized:true 或走外部优化服务；③ metadata 的 sitemap/robots 需要单独生成文件；④ "客户端路由跳转 vs 硬刷新"在纯静态下 HTML 文件命名策略（trailingSlash）要和 CDN 对齐，否则 404。适用画像：文档站、营销落地、离线可跑的内部工具、纯 GitHub Pages 部署。要 SEO + 动态/鉴权就老老实实回到 SSR/ISR。
+
+**15.  Hydration 时代之后：Next 里"零客户端 JS 的静态页"与"重交互 SPA 页"各自的技术栈边界在哪？**
+**来源**：InfoQ《RSC 与 islands：前端正在重新拆分静态与交互》；Vercel 博客《Zero-Js Server Components》相关讨论
+零 JS 页：把整页写成 RSC、无 'use client'、只用 <Link>/<form action> 等浏览器原生能力——产物基本只有 HTML + 极少水合脚本，SEO 与首屏俱佳。边界：需要状态/事件/浏览器 API 的组件必须切客户端；表单可用 Server Action（form 原生提交即可，无 JS 也能用）。重交互页：编辑器/协作/画布/复杂动效——本质是"客户端应用"，用 Next 只为了统一部署 + 首屏预渲染壳。做法：把入口页做成 SSR/RSC 出壳 + 内部大区块标 'use client'、把交互态放客户端（不用 useSearchState 之外的服务端数据）。边界问题：① 别把 SPA 硬套进 RSC 全家桶（每步交互都惊动服务端只会更慢）；② 也别把纯内容页塞进客户端取数（白白丢预渲染红利）。判断标准：这段代码的"状态所有权"在哪——归服务端/URL 就用 RSC/Server Action，归浏览器就用 client 岛；两者混合的页就明确切边界、用 Suspense/loading 兜住异步。

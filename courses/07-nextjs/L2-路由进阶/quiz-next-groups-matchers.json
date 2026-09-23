@@ -6,23 +6,38 @@
       "id": "q1",
       "type": "single",
       "prompt": "访问 app/(marketing)/pricing/page.tsx 对应的 URL 是？",
-      "options": ["/(marketing)/pricing", "/marketing/pricing", "/pricing", "/(marketing)pricing"],
-      "answer": 2,
+      "options": [
+        "/(marketing)/pricing",
+        "/marketing/pricing",
+        "/(marketing)pricing",
+        "/pricing"
+      ],
+      "answer": 3,
       "explanation": "圆括号路由组对 URL 完全透明，只服务代码组织与布局作用域（呼应 next-groups-matchers 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "(a)/page.tsx 与 (b)/page.tsx 同时存在的结果是？",
-      "options": ["后建的覆盖前者", "构建报错：两个页面解析到同一路径", "随机命中一个", "自动生成 /a 与 /b 两个路由"],
-      "answer": 1,
+      "options": [
+        "后建的覆盖前者",
+        "随机命中一个",
+        "构建报错：两个页面解析到同一路径",
+        "自动生成 /a 与 /b 两个路由"
+      ],
+      "answer": 2,
       "explanation": "组透明意味着两者都解析为 /，冲突必须在构建期暴露（呼应 next-groups-matchers 第一节关键规则）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "_components 与 @analytics 的共同点与区别，说法正确的是？",
-      "options": ["都不进 URL；前者完全不参与路由，后者作为并行槽以 props 注入布局", "都进 URL，只是层级不同", "前者是私有组件、后者必须放 page.tsx 才行", "没有区别，只是新旧别名"],
+      "options": [
+        "都不进 URL；前者完全不参与路由，后者作为并行槽以 props 注入布局",
+        "都进 URL，只是层级不同",
+        "前者是私有组件、后者必须放 page.tsx 才行",
+        "没有区别，只是新旧别名"
+      ],
       "answer": 0,
       "explanation": "查无此人 vs 开洞插槽——一个退出路由系统，一个占渲染坑位（呼应 next-groups-matchers 第二节全表）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "把图片放在 public/ 里引用，最大的隐患是？",
-      "options": ["加载速度一定变慢", "文件名没有构建期校验，改名/删除后引用悄悄失效", "不能被 CDN 缓存", "会被打进 JS bundle 变大"],
+      "options": [
+        "加载速度一定变慢",
+        "文件名没有构建期校验，改名/删除后引用悄悄失效",
+        "不能被 CDN 缓存",
+        "会被打进 JS bundle 变大"
+      ],
       "answer": 1,
       "explanation": "public 原样伺服、零处理——Vite 同款警告：import 资源才有 hash 与检查（呼应 next-groups-matchers 第三节、vite L1）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "想用代码动态生成 robots.txt，应该创建？",
-      "options": ["public/robots.js", "app/robots.ts 导出默认函数", "robots.config.ts 于根目录", "middleware 里手写响应"],
+      "options": [
+        "public/robots.js",
+        "app/robots.ts 导出默认函数",
+        "robots.config.ts 于根目录",
+        "middleware 里手写响应"
+      ],
       "answer": 1,
       "explanation": "app 目录的 robots.ts/sitemap.ts 是元数据文件约定，返回对象框架序列化（呼应 next-groups-matchers 第三节、L6 next-metadata）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "basePath 部署到子路径 /team-app 时，需要注意什么？",
-      "options": ["什么都不用改，全链路自动", "站内跳转与资源引用需带前缀（用框架 withBasePath/Link 处理），与网关重写规则对齐", "必须改用 Docker", "public 目录会被禁用"],
+      "options": [
+        "什么都不用改，全链路自动",
+        "站内跳转与资源引用需带前缀（用框架 withBasePath/Link 处理），与网关重写规则对齐",
+        "必须改用 Docker",
+        "public 目录会被禁用"
+      ],
       "answer": 1,
       "explanation": "裸 fetch('/api/x') 或 <img src='/a.png'> 会丢掉前缀——企业内网高频坑（呼应 next-groups-matchers 第四节、exp-deploy 的反代前缀）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "中台项目切分 app 目录，本课推荐的首要依据是？",
-      "options": ["按产品经理的名字", "按路由组=布局/鉴权边界切分", "按文件数量平均", "按创建时间"],
+      "options": [
+        "按产品经理的名字",
+        "按路由组=布局/鉴权边界切分",
+        "按文件数量平均",
+        "按创建时间"
+      ],
       "answer": 1,
       "explanation": "同组共享壳与守卫，结构表达的是体验与权限边界（呼应 next-groups-matchers 第五节、exp-patterns 的功能域拆分）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 路由组 (shop) 与私有文件夹 _components 在 URL 映射上的共同点是？",
+      "options": [
+        "都会作为一段出现在 URL 里",
+        "都不映射 URL 段——组用于组织/共享 layout，私有前缀用于明确\"不参与路由\"的实现细节；且同层级下两个同名不同括号组映射同一 URL 会构建冲突",
+        "都能放 page.tsx 无限层",
+        "都自动继承根 layout 之外的 layout"
+      ],
+      "answer": 1,
+      "explanation": "两者都把\"文件系统结构\"与\"URL 结构\"解耦：(group) 允许不同壳/不同页面映射同一 URL 空间（冲突仅限同段多 page），_前缀 则声明该目录整体不是路由。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 想让 /docs 与 /docs/zh/... 都能命中同一个处理目录，应使用哪种 matcher？",
+      "options": [
+        "app/docs/[...slug]/ 普通 catch-all",
+        "app/docs/[[...slug]]/ 可选 catch-all——双层方括号允许 slug 为空，使 /docs 本身也能命中该段",
+        "rewrite 到 /docs/index",
+        "middleware 里 path-to-regexp 匹配"
+      ],
+      "answer": 1,
+      "explanation": "[[...slug]] 的\"可选\"指空数组也匹配，因此 /docs（无子段）与 /docs/zh/a/b 落进同一个 page/layout；常配合按 params.slug[0] 分派 locale 或渲染 TOC 页。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 把仅被布局引用的图片长期放在 public/ 里直接 URL 引用，最大的隐患是？",
+      "options": [
+        "加载更慢",
+        "public 文件绕过打包管线：不参与 hash、不被 import 分析，重命名/删除后引用处不会报错，发版后易 404 或 CDN 旧引用悬空；构建期资源应放进 src 树用 import 引用",
+        "不能被 next/image 优化",
+        "会进客户端 bundle"
+      ],
+      "answer": 1,
+      "explanation": "public/ 适合 favicon、robots 等\"路径必须稳定\"的资源；组件引用的图放 src 下由构建管线分配带 hash 的文件名，改图即改引用、由编译器兜底，避免\"删了文件、线上才炸\"。"
     }
   ]
 }

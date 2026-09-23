@@ -8,11 +8,11 @@
       "prompt": "App Router 项目里 next.config 的内置 i18n 配置处于什么状态？",
       "options": [
         "照常可用且是推荐方案",
-        "不支持——官方要求用 middleware + 路由段自建",
         "仅生产模式可用",
-        "需要开 experimental 标志"
+        "需要开 experimental 标志",
+        "不支持——官方要求用 middleware + 路由段自建"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Pages Router 遗产不会迁移到 App Router，社区方案 next-intl 成事实标准（呼应 next-i18n 第一节）。"
     },
     {
@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "静态标题文案在 RSC 里翻译，应使用哪组 API？",
-      "options": ["useTranslations（客户端 hook）", "getTranslations（next-intl/server）", "t 全局函数", "i18n.t 实例方法"],
+      "options": [
+        "useTranslations（客户端 hook）",
+        "getTranslations（next-intl/server）",
+        "t 全局函数",
+        "i18n.t 实例方法"
+      ],
       "answer": 1,
       "explanation": "服务端用 getTranslations，字典不进客户端 bundle；hooks 版留给客户端组件（呼应 next-i18n 第三节）。"
     },
@@ -79,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "\"{count} item | {count} items\" 这类复数能力的底层标准是什么？",
-      "options": ["ICU MessageFormat 独一份", "CLDR plural categories（Intl.PluralRules 同源）", "各库自己拍脑袋", "正则匹配 s 结尾"],
+      "options": [
+        "ICU MessageFormat 独一份",
+        "CLDR plural categories（Intl.PluralRules 同源）",
+        "各库自己拍脑袋",
+        "正则匹配 s 结尾"
+      ],
       "answer": 1,
       "explanation": "vue-i18n/next-intl/Intl.PluralRules 共享 CLDR 分类（zero/one/few/many…）（呼应 next-i18n 第三节、01-es Intl、vue-use-i18n）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 多语言内容站，Google 语境下 locale 识别的首选承载是？",
+      "options": [
+        "cookie 静默记忆",
+        "URL 前缀 /zh /en——可索引、可分享、hreflang 可声明；再配 cookie/Head 的 Accept-Language 只做\"首次落地建议\"，不自动跳转已登录外用户",
+        "query 参数 ?lang=",
+        "按 IP 地理自动切换并强制跳转"
+      ],
+      "answer": 1,
+      "explanation": "语言是\"内容身份\"的一部分就该进 URL；自动跳转 + 不显式前缀会让爬虫只见到一种语言、用户无法分享当前语言版，都是收录事故源。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " App Router 里 next-intl 的默认方案（[locale] 段）对路由文件的主要污染是？",
+      "options": [
+        "无法做路由组",
+        "每个页面路径都要多一层 [locale]，路由树被复制一遍；收敛法：路由组内再套 [locale]、或自建 per-request 实例化让非前缀路径也能工作（代价是 hreflang 与规范链接需自己补齐）",
+        "不支持 Server Components",
+        "必须全站 CSR"
+      ],
+      "answer": 1,
+      "explanation": "官方 i18n 配置在 Pages 时代是框架代管前缀，App Router 把选择权还给作者——next-intl 给出 [locale] 约定 + middleware 协商的组合，\"污染\"是换来的控制权，答题要说两边账。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Server Action 里返回校验错误信息，多语言正确的处理是？",
+      "options": [
+        "直接写死中文",
+        "Action 入参显式携带 locale（或从会话读），服务端用同一消息目录翻译后返回文案键或译文——客户端渲染层再兜底字典，避免\"服务端拼句、客户端没法改语序\"",
+        "返回错误码由前端猜",
+        "让数据库返回"
+      ],
+      "answer": 1,
+      "explanation": "跨边界后客户端翻译丢上下文（复数/插值/语序），服务端裸文案又难维护——折中是\"服务端定事件、消息键+locale 传递、两端共享同一目录\"。"
     }
   ]
 }

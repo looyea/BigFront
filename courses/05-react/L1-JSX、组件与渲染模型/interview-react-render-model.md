@@ -1,6 +1,6 @@
 # react-render-model 面试题精选
 
-> 共 12 题，覆盖 A 更新流程 / B diff 算法 / C 重渲染控制 / D 批处理与对照类。
+> 共 15 题，覆盖 A 更新流程 / B diff 算法 / C 重渲染控制 / D 批处理与对照类。
 
 ## 一、更新流程（A 类）
 
@@ -57,3 +57,25 @@ Vue 靠 Proxy 依赖收集 + 编译期 patchFlag，自动精确更新、组件�
 ### 12. 并发渲染(concurrent)给 render 阶段带来了什么能力？
 可**中断/恢复/丢弃**正在进行的一次渲染，让高优先级更新（用户输入）插队，低优先级（大列表）延后，配合 `useTransition`/`useDeferredValue`/Suspense 保持响应（呼应 react-advanced-hooks、Suspense）。commit 仍不可中断。
 **来源**：React 18 Concurrent Features、useTransition/useDeferredValue
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. React 的列表 diff 为什么能退化成 O(n) 单趟？它靠哪些假设、又用什么手段补回被牺牲的准确性？
+
+经典 tree diff 是 O(n^3)。React 用三条启发式降到 O(n)：① 不同类型元素=不同树，直接重建，不跨类型比；② 通过 key 让「同一元素在列表中挪了位置」仍能被识别为可复用；③ 只做同层比较、不做跨层移动（换父即重建）。牺牲的准确性靠 key 补回：单趟同层遍历里，React 用一个 Map 记录旧 key→节点，遇到新节点查表复用，并把「最小移动」问题近似为「遇到更靠后的旧索引就更新 lastIndex，否则记为需要移动」，最后按最长递增子序列(LIS)思路减少实际 DOM 搬移。这解释了为什么 key 用 index 在增删/重排时会误导复用、以及为什么 key 只需同层兄弟间唯一而非全局唯一。
+
+**来源**：React「Reconciliation」文档（三条策略）；源码 beginWork/beginChildFibers 与 placeChild 的 lastIndex/移动标记逻辑。
+
+### 14. Fiber 架构用哪些数据结构支撑可中断渲染？current、workInProgress、alternate 是什么关系？
+
+一次协调同时存在两棵 Fiber 树：current（屏幕上已渲染的）与 workInProgress（内存里正在构建的），二者通过 `alternate` 指针互为镜像、反复交替复用（双缓冲，避免每次更新重新分配 Fiber 节点）。每个 Fiber 记录 type/key/stateNode/props、child/sibling/return（用「链表式」child-sibling-return 代替递归栈，使遍历可暂停可恢复）、以及 effects 侧链（effectList 只收集需 commit 的变更节点）。调度层用 Lane 模型表示优先级，把 render 切成时间片，高优更新可打断低优的 WIP 并丢弃重算。commit 时顺着 effectList 同步打 DOM、跑布局/被动 effect。讲清 current/WIP/alternate，就讲清了「为什么 render 必须纯且可重放」。
+
+**来源**：The Road to React（MaxDM）与源码 react-reconciler 的 Fiber/alternate/effectList；React Fiber 架构解析博客。
+
+### 15. 并发渲染的优先级（Lane 模型）大致怎么工作？为什么 commit 一定要同步、不能也做成可中断？
+
+每个更新被分配一个 Lane（位掩码，越多越细的优先级通道，取代旧的 expirationTime）。调度器比较 sync / input / default / transition / idle 等 Lane，渲染时用时间片跑最高优先级那批，期间若来了更高优（如用户输入、setState sync）可中断当前 WIP、把过期工作丢弃、优先渲染新的——这就是 useTransition 把更新标为「可打断的 transition Lane」、让输入不卡的基础。commit 必须同步的理由：它是「对用户可见」的原子切换，若中断在应用了一半 DOM 的窗口里，用户会读到撕裂的界面、layout effect/第三方 DOM 操作会基于半成品状态工作、measure/写回会错乱。所以 React 把「昂贵但可投机重算」的部分（render/diff）做成可中断，把「必须原子」的部分（commit）保留同步——这是并发设计的关键取舍。
+
+**来源**：React Concurrent Features / Lanes 设计文档与源码 react-reconciler/ReactFiberLane；useTransition 优先级语义。

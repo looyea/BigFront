@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "确定性资产是'问题+四替代方案'；{#key} 语义恰好相反（key 变了强制重建）。版本敏感特性先查文档再落码是本课的技术事实纪律（README 守则）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 一次状态变更后，Svelte 5 的 flush 时序正确的是？",
+      "options": [
+        "随机",
+        "同步写标脏 → 微任务批量 flush：先跑渲染 effect 更新 DOM、DOM 更新后再跑用户 $effect（默认）；可用 flushSync 强制同步、tick 等 DOM 就绪（对应既有\"flush 时序\"题）",
+        "全部同步",
+        "全部 rAF"
+      ],
+      "answer": 1,
+      "explanation": "写同步、应用异步批量，且\"渲染 effect 先于用户 effect\"是固定序（对应既有\"为何 effect 在 DOM 更新后跑\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " $effect.root 的行为特征是？",
+      "options": [
+        "随组件销毁",
+        "创建一个脱离组件生命周期的 effect 根——其内 effect 不随外层组件卸载自动清理，需手动调返回的 dispose（用于跨组件/手动生命周期，对应既有\"root 特征\"题）",
+        "只在 SSR 跑",
+        "同步执行"
+      ],
+      "answer": 1,
+      "explanation": "root 解决\"effect 生命周期与组件不匹配\"（对应既有\"root 解决生命周期不匹配\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " flushSync 的合法/典型使用位置是？",
+      "options": [
+        "随便用",
+        "在事件处理等\"需要立即拿到更新后 DOM\"的时刻同步刷新（如聚焦/测量前）——不可在渲染 effect 内部乱用，滥用会破坏批量、拉低性能（对应既有\"flushSync 合法位置\"题）",
+        "只能在 onMount",
+        "仅 SSR"
+      ],
+      "answer": 1,
+      "explanation": "flushSync 是\"放弃批量换立即同步\"的手动闸，用在必须读刚写入 DOM 的少数点（对应既有 flushSync 修卡顿题的边界）。"
     }
   ]
 }

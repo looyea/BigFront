@@ -1,6 +1,6 @@
 # React → Solid 迁移 · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (C) 从 React 迁 Solid，最先要"卸载"的心智是什么？
 
@@ -61,3 +61,25 @@ Context API 基本同名，但 Solid `useContext` 无内置默认值兜底、没
 
 解放：`createSignal/createMemo` 不是 hook，不受"顺序/不能在循环条件里"约束，可放进普通函数复用逻辑。陷阱：响应式的约束换了位置——**在什么作用域里读 signal（是否在追踪上下文、是否解构）决定订阅**，规则从"调用顺序"变成了"读写时机与位置"。
 **来源**：Solid 非 hook 响应式对 React 心智的差异与常见误解澄清转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  React hooks 四条规则在 Solid 里哪些还有意义？为什么？ 
+
+ 调用顺序/条件限制消失（无槽位数组）；但『effect 里别 setState 派生』在两边同罪（Solid 里是循环信号）；『读即订阅』替代了依赖数组完备性规则，新的规则变成勿解构与追踪作用域意识。 
+
+**来源**： https://react.dev/reference/react/hooks ； https://www.solidjs.com/docs/latest/guides/signals 
+
+### 14.  迁移一个带竞态的 React 取数 effect，到 Solid 的完整改造清单？ 
+
+ 换成 createResource（source 挂参数信号）自动丢弃旧 pending 呈现、Suspense 接管 loading；清理逻辑从 return 函数改为 fetcher 内 AbortController+onCleanup；乐观回滚走 mutate；列一份『effect 取数→资源』的机械转换表降低批量迁移成本。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createresource 
+
+### 15.  整页突然不更新，给 React 背景同事一份五分钟排查清单。 
+
+ 按命中概率排：props/信号解构快照、异步回调里读信号（追踪丢失）、误把对象内部突变当 setter、条件分支早退跳过读取、show 里 falsy 子树；每条给一行诊断代码（读计数/包 on），比讲原理见效快。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/components 

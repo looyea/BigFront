@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-resource",
-  "title": "createResource 异步资源 · 自测",
+  "title": "solid-resource 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "createResource 被称为'非阻塞'是指什么？它替你省掉了 React 里的什么？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "createResource 被称为'非阻塞'是指什么？它替你省掉了 React 里的什么？",
       "options": [
         "取数时冻结界面、取完再解冻；省掉了 Suspense",
         "取数期间 UI 依旧响应、不卡住；省掉手写的 data/loading/error 三个 useState + 触发取的 useEffect",
@@ -11,10 +13,12 @@
         "它是同步返回数据；省掉 Promise"
       ],
       "answer": 1,
-      "explain": "官方：非阻塞保证取数期间应用仍响应；loading/error/latest/state 都内建在返回的 signal 上。"
+      "explanation": "官方：非阻塞保证取数期间应用仍响应；loading/error/latest/state 都内建在返回的 signal 上。"
     },
     {
-      "q": "createResource(userId, fetchUser) 里，userId() 为 null/false/undefined 时 fetcher 会？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "createResource(userId, fetchUser) 里，userId() 为 null/false/undefined 时 fetcher 会？",
       "options": [
         "照常跑、传 null 进去",
         "抛错",
@@ -22,10 +26,12 @@
         "不调用——source 为假值时短路，不取数"
       ],
       "answer": 3,
-      "explain": "source 求值为 undefined/null/false 时 fetcher 不跑；'ID 为空不发请求'靠这个短路，无需手写 if。"
+      "explanation": "source 求值为 undefined/null/false 时 fetcher 不跑；'ID 为空不发请求'靠这个短路，无需手写 if。"
     },
     {
-      "q": "五态里 pending 和 refreshing 的关键区别是什么？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "五态里 pending 和 refreshing 的关键区别是什么？",
       "options": [
         "pending 首次取、latest 为 undefined；refreshing 重取但保留上一次的值(latest=T)",
         "两者完全相同",
@@ -33,10 +39,12 @@
         "pending 表示出错"
       ],
       "answer": 0,
-      "explain": "refreshing 是'重取中但仍持有旧值'，正是 transition 不闪屏、保留旧界面的底层态。"
+      "explanation": "refreshing 是'重取中但仍持有旧值'，正是 transition 不闪屏、保留旧界面的底层态。"
     },
     {
-      "q": "mutate 与 refetch 分别会不会发网络请求？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "mutate 与 refetch 分别会不会发网络请求？",
       "options": [
         "都会",
         "都不会",
@@ -44,10 +52,12 @@
         "refetch 不发、mutate 发"
       ],
       "answer": 2,
-      "explain": "mutate 跳过 fetcher 直接改值；refetch 重新执行 fetcher(可传 info 进 info.refetching)。"
+      "explanation": "mutate 跳过 fetcher 直接改值；refetch 重新执行 fetcher(可传 info 进 info.refetching)。"
     },
     {
-      "q": "给 createResource 传 initialValue 带来哪两个好处？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "给 createResource 传 initialValue 带来哪两个好处？",
       "options": [
         "让它变成同步、去掉 Promise",
         "让 fetcher 不跑；类型变 any",
@@ -55,10 +65,12 @@
         "资源直接从 ready 态开始、首帧不闪空；类型去掉 | undefined"
       ],
       "answer": 3,
-      "explain": "initialValue 使初值即就绪(不 unresolved)、user() 首帧就有值，类型也不含 undefined。"
+      "explanation": "initialValue 使初值即就绪(不 unresolved)、user() 首帧就有值，类型也不含 undefined。"
     },
     {
-      "q": "写一个每秒 refetch 的轮询并保证组件销毁后停止，用到哪两个 API？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "写一个每秒 refetch 的轮询并保证组件销毁后停止，用到哪两个 API？",
       "options": [
         "refetch + onCleanup(清 setInterval)",
         "mutate + onMount",
@@ -66,10 +78,12 @@
         "lazy + untrack"
       ],
       "answer": 0,
-      "explain": "setInterval 里调 refetch()，用 onCleanup(()=>clearInterval) 随 Owner 回收，避免定时器泄漏。"
+      "explanation": "setInterval 里调 refetch()，用 onCleanup(()=>clearInterval) 随 Owner 回收，避免定时器泄漏。"
     },
     {
-      "q": "fetcher 里 throw/请求失败时，resource 进入哪个态、错误可从哪读？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "fetcher 里 throw/请求失败时，resource 进入哪个态、错误可从哪读？",
       "options": [
         "回到 unresolved；只能靠 console",
         "ready；错误被吞掉",
@@ -77,7 +91,46 @@
         "一直 pending；无法感知"
       ],
       "answer": 2,
-      "explain": "失败→errored，user.error 可读；官方 tip：预计出错就把 createResource 包进 ErrorBoundary。"
+      "explanation": "失败→errored，user.error 可读；官方 tip：预计出错就把 createResource 包进 ErrorBoundary。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " cacheResource 解决的典型问题是？ ",
+      "options": [
+        " 客户端组件缓存 ",
+        " SSR 服务端同一请求/同一 key 的重复取数去重（如多层嵌套各调一次用户信息） ",
+        " 图片缓存 ",
+        " 路由预加载 "
+      ],
+      "answer": 1,
+      "explanation": " cacheResource 在服务端执行域按 key 缓存 Promise 结果，避免一次渲染里同源数据被反复拉取，与客户端 resource 缓存机制相互独立。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 一个页面上多个资源（用户/列表/统计），为什么不各自 createResource 而常包进 createResources？ ",
+      "options": [
+        " 性能提升 10 倍 ",
+        " 得到按键组织的 store：惰性访问、键间互不触发、可整体传递与按 key 刷新 ",
+        " 否则无法 Suspense ",
+        " 类型才能通过 "
+      ],
+      "answer": 1,
+      "explanation": " createResources 返回 store 形态容器，访问哪个键才追踪/挂起哪个，天然适合仪表盘式多源页面。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 除 pending/refreshing 信号外，资源上哪个属性可直接读出一源的五态枚举？ ",
+      "options": [
+        " resource.status ",
+        " resource.state（pending/refreshing/ready/unresolved） ",
+        " resource.phase ",
+        " resource.mode "
+      ],
+      "answer": 1,
+      "explanation": " state 把布尔组合收敛为单一响应式枚举，做样式类名映射或日志上报时最省事。 "
     }
   ]
 }

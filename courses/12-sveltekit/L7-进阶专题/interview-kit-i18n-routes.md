@@ -1,6 +1,6 @@
 # kit-i18n-routes 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) [lang] 与 [[lang]] 在路由匹配上的本质区别？
 **来源**：i18n 路由基础题的转述。
@@ -69,3 +69,25 @@ routes/[[lang=lang]]/...，src/params/lang.js 限定 en/zh。默认英文无前�
 (group) 不影响 URL，但把 [[lang=lang]] 放错层级会改变匹配：如 [[lang]] 只包了 (site) 而 (marketing) 在其外，营销页就没语言段、语言切换/链接生成对不齐。或可选段没放最前、与别的动态段抢匹配。排查看最终路由树里 [[lang=lang]] 是否是目标页的真实祖先段、matcher 是否命中。
 
 🚀 **下一组**：kit-navigation-state 面试题——两代状态 API 迁移、订阅纪律、导航竞态与滚动恢复的高频考法。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  hreflang/canonical/x-default 在 Kit 里怎么自动生成才不漏页？ 
+
+ 在根 layout 由 params.lang + 路由 path 反推全语言对等 URL 集，输出 link 标签且双向自指（含本页 canonical）；预渲染期一次性生成，动态页在 server load 拼，配 e2e 抽查互指闭环。 
+
+**来源**： https://developers.google.com/search/docs/specialty/international/localized-versions ； https://svelte.dev/docs/kit/seo 
+
+### 14.  reroute 补语言前缀与 handle+redirect 显式跳转，两种实现各自的长期代价？ 
+
+ reroute 静默改写 URL 不变：同一内容双 URL 造成重复内容与 hreflang 混乱；redirect 产生 3xx 开销但 URL 唯一、可缓存、语义干净。国际站主流选 redirect+规范前缀，reroute 仅用于历史别名。 
+
+**来源**： https://svelte.dev/docs/kit/hooks#Server-hooks-handle 
+
+### 15.  多语言站的 RTL（如阿拉伯语）支持在 Kit 里怎么系统性落地？ 
+
+ 根 layout 按 lang 设 <html dir/lang>，CSS 用逻辑属性（margin-inline 等）替代物理方向，图片/图标按需镜像；预渲染期把 dir 写进 HTML 防首屏闪烁，设计系统组件要过 RTL 用例。 
+
+**来源**： https://developer.mozilla.org/docs/Learn/Applying_bidi ； https://svelte.dev/docs/kit 

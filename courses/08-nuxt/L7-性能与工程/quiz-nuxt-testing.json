@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "@nuxt/test-utils 的 Vitest environment 设成 'nuxt' 主要解决什么？",
-      "options": ["加速测试运行", "生成覆盖率报告", "让自动导入的 #imports、useRuntimeConfig、useState、useFetch 等在测试上下文里真正可用", "自动 mock 所有网络请求"],
-      "answer": 2,
+      "options": [
+        "让自动导入的 #imports、useRuntimeConfig、useState、useFetch 等在测试上下文里真正可用",
+        "加速测试运行",
+        "生成覆盖率报告",
+        "自动 mock 所有网络请求"
+      ],
+      "answer": 0,
       "explanation": "'nuxt' 环境装配了 Nuxt 上下文，能直接跑依赖 auto-import/注入的代码（呼应 nuxt-testing 第 2 节、nuxt-auto-imports）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "CI 里跑测试前必须先执行 nuxt prepare，原因是？",
-      "options": ["它会下载依赖", "类型与 .nuxt 虚拟模块未生成会导致 #imports 解析失败", "它会启动测试服务器", "它用于打包生产产物"],
+      "options": [
+        "它会下载依赖",
+        "类型与 .nuxt 虚拟模块未生成会导致 #imports 解析失败",
+        "它会启动测试服务器",
+        "它用于打包生产产物"
+      ],
       "answer": 1,
       "explanation": "prepare 生成 .nuxt 类型与模板，dev/build 隐含、CI 要显式（呼应 nuxt-testing 第 2 节、nuxt-modules 第 7 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "测一个 setup 里有顶层 await（异步 setup）的组件，推荐用？",
-      "options": ["普通 mount（@vue/test-utils）直接挂载", "shallowMount", "test.skip", "mountSuspended（会 await 掉异步 setup）"],
+      "options": [
+        "普通 mount（@vue/test-utils）直接挂载",
+        "shallowMount",
+        "test.skip",
+        "mountSuspended（会 await 掉异步 setup）"
+      ],
       "answer": 3,
       "explanation": "mountSuspended 处理异步 setup/Suspense，普通 mount 会停在 pending（呼应 nuxt-testing 第 3 节、vue-async-suspense）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "关于 mock 的使用边界，最合理的是？",
-      "options": ["所有测试都必须全量 mock 以隔离环境", "用 mock 替代 e2e 能覆盖真实契约且更快", "单元/组件层用 mock 挡住 IO，但 IO 的真实契约（状态码/错误/缓存）另起集成层用真 Nitro + $fetch 测", "只要 mock 了就不用测集成"],
+      "options": [
+        "所有测试都必须全量 mock 以隔离环境",
+        "用 mock 替代 e2e 能覆盖真实契约且更快",
+        "单元/组件层用 mock 挡住 IO，但 IO 的真实契约（状态码/错误/缓存）另起集成层用真 Nitro + $fetch 测",
+        "只要 mock 了就不用测集成"
+      ],
       "answer": 2,
       "explanation": "过度 mock 会让\"全绿但线上崩\"；集成层用真实服务端验契约（呼应 nuxt-testing 第 4、5 节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "要回归证明\"首屏 HTML 由服务端直出、不是靠水合补内容\"，最好的断言是？",
-      "options": ["在集成测试里 mock useFetch 返回值", "e2e 中读取 page.content()/view-source，断言含首屏文本", "只断言页面加载后 DOM 有文本", "在单测里断言组件已挂载"],
+      "options": [
+        "在集成测试里 mock useFetch 返回值",
+        "e2e 中读取 page.content()/view-source，断言含首屏文本",
+        "只断言页面加载后 DOM 有文本",
+        "在单测里断言组件已挂载"
+      ],
       "answer": 1,
       "explanation": "只有真浏览器真服务端的 e2e 看第一份 HTML 才能证明 SSR 直出，也顺带守 SEO（呼应 nuxt-testing 第 6 节、nuxt-seo-meta 第 10 题）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "为守住\"带用户身份的页面不得被缓存\"这一安全线，应加什么用例？",
-      "options": ["断言 /api/articles/1 返回 200", "把 /app/** 的响应 cache-control 直接设为 max-age 一年", "e2e 截图 /app 页面", "集成测试断言私有路由响应头含 private, no-store（公开页才允许缓存）"],
+      "options": [
+        "断言 /api/articles/1 返回 200",
+        "把 /app/** 的响应 cache-control 直接设为 max-age 一年",
+        "e2e 截图 /app 页面",
+        "集成测试断言私有路由响应头含 private, no-store（公开页才允许缓存）"
+      ],
       "answer": 3,
       "explanation": "把\"私有页禁缓存\"固化成响应头断言，防止误配 swr/prerender 造成越权缓存（呼应 nuxt-testing 第 7 节、nuxt-perf 第 9 题）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "关于测试金字塔在 Nuxt 全栈的应用，正确的是？",
-      "options": ["E2E 覆盖一切，单元可省", "只做单测即可，无需 E2E", "底层（逻辑/组件）多而快、顶层（关键流程/SSR）少而精、中间集成测接口契约", "只测 server route 不测前端"],
+      "options": [
+        "E2E 覆盖一切，单元可省",
+        "只做单测即可，无需 E2E",
+        "底层（逻辑/组件）多而快、顶层（关键流程/SSR）少而精、中间集成测接口契约",
+        "只测 server route 不测前端"
+      ],
       "answer": 2,
       "explanation": "分层各司其职：快层测逻辑、集成测契约、e2e 测关键路径与水合真相（呼应 nuxt-testing 第 1 节、vue-testing）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 视觉回归在 Nuxt SSR 项目里的正确打开方式是？",
+      "options": [
+        "每组件每状态都存截图",
+        "只对关键页/关键态做视觉基线（Playwright 截图对比），配稳定化三板斧：冻结时间/禁动画/固定随机种子——快照泛滥的维护成本会杀死这套机制",
+        "截图测试无必要",
+        "用 Jest snapshot 代替页面截图"
+      ],
+      "answer": 1,
+      "explanation": "视觉回归贵在准而不在多；\"Jest 快照测渲染结构\"与\"像素测呈现\"是两回事，别拿后者退化前者。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " server/api 契约测试要解决的独特问题是？",
+      "options": [
+        "接口速度",
+        "前后端同仓仍会漂移：handler 返回结构与页面/类型假设不一致——用 shared 的 zod schema 同时驱动 handler 输出校验与测试断言，契约即代码",
+        "只能靠 e2e 发现",
+        " TS 类型够了不需要测试"
+      ],
+      "answer": 1,
+      "explanation": "同仓的类型只在编译期对齐，运行时形状（可选字段、序列化变形）要靠 schema 在测试里真跑一遍。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 把 Lighthouse/a11y 进 CI 的可持续形态是？",
+      "options": [
+        "每次 PR 全量跑并卡死",
+        "预算断言+抽样：a11y 用 axe 跑关键页组件级（快、可定位），Lighthouse CI 对少量核心页跑阈值对比（劣化才 fail），全量夜间批",
+        "人工抽查即可",
+        "只在上线前跑"
+      ],
+      "answer": 1,
+      "explanation": "门禁的可持续性=运行时长×误报率：把\"必过\"缩小到真实退化信号，其余进报告与夜间任务。"
     }
   ]
 }

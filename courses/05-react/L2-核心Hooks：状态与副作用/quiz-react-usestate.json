@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "React 用什么判断要不要因这次 set 重渲染？",
-      "options": ["深比较", "JSON.stringify 比较", "Object.is(next, prev) 浅比较引用/值", "从不判断"],
+      "options": [
+        "深比较",
+        "JSON.stringify 比较",
+        "Object.is(next, prev) 浅比较引用/值",
+        "从不判断"
+      ],
       "answer": 2,
       "explanation": "同引用被认为没变，故要造新对象（呼应 react-usestate 第二节）。"
     },
@@ -27,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "连续两次 `setN(n+1)`（n 为本帧值）最终 n 增加了几？",
-      "options": ["1", "2", "0", "不确定，会报错"],
+      "options": [
+        "1",
+        "2",
+        "0",
+        "不确定，会报错"
+      ],
       "answer": 0,
       "explanation": "都基于同一旧 n；应改函数式 setN(p=>p+1) 才 +2（呼应 react-usestate 第三、五节）。"
     },
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "给数组 list 追加 item 的不可变写法是？",
-      "options": ["list.push(item)", "setList([...list, item])", "setList(list.push(item))", "list[list.length]=item"],
+      "options": [
+        "list.push(item)",
+        "setList([...list, item])",
+        "setList(list.push(item))",
+        "list[list.length]=item"
+      ],
       "answer": 1,
       "explanation": "展开造新数组，push 改原引用不触发（呼应 react-usestate 第二节）。"
     },
@@ -56,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "`setCount(5); console.log(count)` 打印的是？",
-      "options": ["5", "undefined", "本次渲染的旧快照值", "报错"],
+      "options": [
+        "5",
+        "undefined",
+        "本次渲染的旧快照值",
+        "报错"
+      ],
       "answer": 2,
       "explanation": "state 异步，本帧读到的是旧值（呼应 react-usestate 第五节、react-render-model）。"
     },
@@ -72,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "18 起所有上下文自动批处理（呼应 react-usestate 第六节、react-render-model 第六节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`useState(0)` 里传入的初始值 0，在后续父组件重新渲染（传新 props）时，组件内部这个 state 会？",
+      "options": [
+        "自动重置为新的初始值",
+        "保持当前值不变——useState 的实参只在挂载那一次作为初始值被使用，之后被忽略",
+        "变 undefined",
+        "触发 effect 重置"
+      ],
+      "answer": 1,
+      "explanation": "「初始值只生效一次」意味着：要在 props 变化时重置 state，正解不是把 props 塞进 useState，而是① 用 key 重置整个子树（父给 `<Child key={id}/>`），或② 渲染期按 prev-props 派生调整（官方 Recommended 写法：比较上一次 props，需要时直接 setState 后再渲染，而非用 effect 同步）。这与本包 useeffect「props 复制进 state 是坏味道」同源。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`useState(bigFn)` 与 `useState(() => bigFn())` 的区别是？想「把函数本身存为状态」该怎么办？",
+      "options": [
+        "完全等价",
+        "前者把 bigFn 当作惰性初始化器「执行一次」取返回值作初始 state；后者才是把 bigFn 的返回值作为初始值延后算。想把函数本身存进 state 必须 `useState(() => bigFn)`",
+        "都不能传函数",
+        "都会每次渲染重算"
+      ],
+      "answer": 1,
+      "explanation": "函数初值在 useState 里有特殊语义=惰性初始化（只在挂载调用一次，省掉每帧重算大对象的开销）。副作用：函数不能直接当 state 值，必须再包一层 `() => fn`。同理在 useReducer/事件里读到 state 是函数时要小心它到底是值还是初始化器——这是 useState 的一个冷门但高频面试点。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "更新一个对象 state 时，`setObj({ ...obj, a: 1 })` 什么时候会出错、应改为什么？",
+      "options": [
+        "从不出错",
+        "当同一批次里有多处基于「上一次结果」连续更新，或在异步闭包里读到旧 obj 快照时会丢更新——应改为函数式 `setObj(prev => ({ ...prev, a: 1 }))` 以最新已排队值为基础",
+        "只能整对象替换不能展开",
+        "应改用 useEffect"
+      ],
+      "answer": 1,
+      "explanation": "展开 `...obj` 读的是本帧渲染快照；函数式 `prev=>` 读的是 React 更新队列里「已应用前面所有更新后的最新值」。凡是「新值依赖旧值」都应走函数式，避免并发的多个 set 相互覆盖。这也解释了为什么自动批处理下连续 `setN(n+1)` 只加一次、而 `setN(p=>p+1)` 加多次。"
     }
   ]
 }

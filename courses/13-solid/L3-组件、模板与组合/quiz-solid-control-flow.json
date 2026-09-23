@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-control-flow",
-  "title": "控制流组件 · 自测",
+  "title": "solid-control-flow 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "为什么 `{items().map(t => <li>{t}</li>)}` 对会变的列表失效？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "为什么 `{items().map(t => <li>{t}</li>)}` 对会变的列表失效？",
       "options": [
         "map 不支持 JSX",
         "必须先 sort 再 map",
@@ -11,10 +13,12 @@
         "items() 不能直接调用"
       ],
       "answer": 2,
-      "explain": "JSX 表达式只求值一次；会变的数据要交给内部建 createMemo 的 <For>/<Index>。"
+      "explanation": "JSX 表达式只求值一次；会变的数据要交给内部建 createMemo 的 <For>/<Index>。"
     },
     {
-      "q": "<For each={...}>{(item, index) => ...}</For> 里两个参数的形态是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "<For each={...}>{(item, index) => ...}</For> 里两个参数的形态是？",
       "options": [
         "item 是值、index 是访问器(要 index())",
         "item 和 index 都是普通值",
@@ -22,10 +26,12 @@
         "只有一个参数 item"
       ],
       "answer": 0,
-      "explain": "For 的 item 是当前元素值、index 是 Accessor<number>，用要写 index()——与 Index 正好相反。"
+      "explanation": "For 的 item 是当前元素值、index 是 Accessor<number>，用要写 index()——与 Index 正好相反。"
     },
     {
-      "q": "<Index each={...}>{(item, index) => ...}</Index> 里两参数形态是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "<Index each={...}>{(item, index) => ...}</Index> 里两参数形态是？",
       "options": [
         "item 是值、index 是访问器",
         "两者都是访问器",
@@ -33,10 +39,12 @@
         "item 是访问器(要 item())、index 是静态数字"
       ],
       "answer": 3,
-      "explain": "Index 按位置绑定：item 是 Accessor<T> 需 item()，index 是固定 number。"
+      "explanation": "Index 按位置绑定：item 是 Accessor<T> 需 item()，index 是固定 number。"
     },
     {
-      "q": "一个会被重排、每行含输入框的列表，该用哪个、为什么？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "一个会被重排、每行含输入框的列表，该用哪个、为什么？",
       "options": [
         "<Index>，因为按位置渲染更快",
         "<For>，keyed 记忆 item→DOM，重排只移动节点不重建，输入框焦点/DOM 状态保住",
@@ -44,10 +52,12 @@
         "两者都不行，只能手写 DOM"
       ],
       "answer": 1,
-      "explain": "For 用 mapArray 按身份锁定 DOM，重排不重挂，最能保住每行局部 DOM 状态（如焦点、已输入内容）。"
+      "explanation": "For 用 mapArray 按身份锁定 DOM，重排不重挂，最能保住每行局部 DOM 状态（如焦点、已输入内容）。"
     },
     {
-      "q": "<Show when={user()}>{u => ...}</Show> 非 keyed 回调里 u 是什么、条件转假后再读会怎样？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "<Show when={user()}>{u => ...}</Show> 非 keyed 回调里 u 是什么、条件转假后再读会怎样？",
       "options": [
         "u 是收窄后的 accessor(要 u())；条件转假后再读它会抛错，节点不重建",
         "u 是值，随时可读",
@@ -55,10 +65,12 @@
         "回调形式在 Solid 不存在"
       ],
       "answer": 0,
-      "explain": "非 keyed 回调拿到收窄 accessor（v1.7+ 为 TS）；keyed 才把 u 当值、且值变即重建 children。"
+      "explanation": "非 keyed 回调拿到收窄 accessor（v1.7+ 为 TS）；keyed 才把 u 当值、且值变即重建 children。"
     },
     {
-      "q": "<Switch>/<Match> 什么时候显示 fallback？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "<Switch>/<Match> 什么时候显示 fallback？",
       "options": [
         "永远显示 fallback",
         "第一个 Match 就显示 fallback",
@@ -66,10 +78,12 @@
         "只有报错时显示"
       ],
       "answer": 2,
-      "explain": "Switch 渲染第一个 when 为真的 Match；都不真则 fallback——惰性、按分支建订阅的 if/else 链。"
+      "explanation": "Switch 渲染第一个 when 为真的 Match；都不真则 fallback——惰性、按分支建订阅的 if/else 链。"
     },
     {
-      "q": "什么情况下直接用 `.map` 渲染列表其实是安全的？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "什么情况下直接用 `.map` 渲染列表其实是安全的？",
       "options": [
         "列表永远不变（一次性静态数据）时",
         "任何时候都安全",
@@ -77,7 +91,46 @@
         "列表超过 100 项时"
       ],
       "answer": 0,
-      "explain": "问题只出在'会变'。若数据恒定不重渲染，.map 一次算完就是最终结果，无需 <For>。"
+      "explanation": "问题只出在'会变'。若数据恒定不重渲染，.map 一次算完就是最终结果，无需 <For>。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " <Index each={list}> 回调收到的参数是？ ",
+      "options": [
+        " 项的值快照 ",
+        " 该索引位置值的只读 accessor（signal），换序后仍代表该下标 ",
+        " 索引整数 ",
+        " 整个数组 "
+      ],
+      "answer": 1,
+      "explanation": " Index 按位置绑定：行内容是第 i 位的当前值，适合不重排定长列表；要按身份复用行就用 For。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " <For> 在什么情况下会新建/销毁行 DOM？ ",
+      "options": [
+        " 每次任意变化 ",
+        " 仅 key（项引用）增删时；重排只是移动已有节点 ",
+        " 从不 ",
+        " 每次路由切换 "
+      ],
+      "answer": 1,
+      "explanation": " For 以项引用为稳定身份：集合成员不变则零重建，这是重排丝滑且不丢输入状态的根源。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 列表项之间彼此顺序无关且无身份（如原始值集合），为保持位置语义该用？ ",
+      "options": [
+        " <For> ",
+        " <Index> ",
+        " <Show> ",
+        " map "
+      ],
+      "answer": 1,
+      "explanation": " 原始值无引用身份时 For 会把重复值当同一 key 出问题；Index 按位更新正是这类集合的正确映射。 "
     }
   ]
 }

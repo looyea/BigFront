@@ -8,18 +8,23 @@
       "prompt": "React 说的\"组合优于继承\"意味着复用主要靠？",
       "options": [
         "extends 一个基类组件",
-        "把组件当函数拼装：children/props/HOC/自定义 Hook",
         "mixins",
-        "全局事件总线"
+        "全局事件总线",
+        "把组件当函数拼装：children/props/HOC/自定义 Hook"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "组合而非 class 继承是 React 复用主流（呼应 react-composition 第一、五节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "用多个 prop 传不同子元素给组件的固定位置，对应 Vue 的？",
-      "options": ["默认插槽", "作用域插槽", "具名插槽", "动态组件"],
+      "options": [
+        "默认插槽",
+        "作用域插槽",
+        "具名插槽",
+        "动态组件"
+      ],
       "answer": 2,
       "explanation": "header/footer 类 prop = 具名插槽（呼应 react-composition 第二节）。"
     },
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "两个兄弟组件要共享一份状态，先想到？",
-      "options": ["各存一份再同步", "提升到共同父，传 value+onChange", "用全局变量", "用 ref"],
+      "options": [
+        "各存一份再同步",
+        "提升到共同父，传 value+onChange",
+        "用全局变量",
+        "用 ref"
+      ],
       "answer": 1,
       "explanation": "提升状态到共同父（呼应 react-composition 第三节、vue-state-patterns）。"
     },
@@ -61,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "现在复用一段\"有状态逻辑\"，社区首选是？",
-      "options": ["class 继承", "mixins", "自定义 Hook", "全局 store"],
+      "options": [
+        "class 继承",
+        "mixins",
+        "自定义 Hook",
+        "全局 store"
+      ],
       "answer": 2,
       "explanation": "自定义 Hook 来源显式、可组合、可测（呼应 react-composition 第五节）。"
     },
@@ -69,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "\"受控组件\"本质上是哪种组合模式的典型体现？",
-      "options": ["提升状态(值握在父)", "HOC", "render prop", "Context 广播"],
+      "options": [
+        "提升状态(值握在父)",
+        "HOC",
+        "render prop",
+        "Context 广播"
+      ],
       "answer": 0,
       "explanation": "父持有值、子 value+onChange，是 lifting 的样板（呼应 react-composition 第三节、react-forms）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " React 不像 Vue 内置 slot 语法，却能实现「具名/作用域插槽」，靠的是？",
+      "options": [
+        "只能靠 dangerously 注入",
+        "靠 JSX 本身能把「任意节点或函数」当 props 传：多个 prop 传多个位置≈具名插槽，传一个「接收数据并返回节点的函数」当 children/prop≈作用域插槽（render prop）",
+        "必须用 context",
+        "无法实现"
+      ],
+      "answer": 1,
+      "explanation": "React 的复用单位是「JS 值」——children 是 prop，函数也是 prop，组件（类）也是 prop。所以 slot 不是框架特性而是语言特性：`<Card header={<A/>} body={<B/>}/>`≈具名，`<List>{item => <Row data={item}/>}</List>`≈作用域插槽。代价是没有 Vue 那种编译期 slot 约束，全靠 API 设计约定。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 自定义 Hook 相比高阶组件（HOC）做逻辑复用，最本质的差别是？",
+      "options": [
+        "Hook 运行更快",
+        "Hook 不产生额外的组件包装层、以「调用」而非「包组件」的方式注入状态逻辑，输入输出显式、天然避免 props 名冲突与 ref 转发难题",
+        "HOC 已完全废弃",
+        "Hook 只能复用无状态逻辑"
+      ],
+      "answer": 1,
+      "explanation": "HOC 是 `(Comp) => Wrapped` 造出嵌套组件，带来 displayName 遮挡、props 约定冲突、ref 需手动透传、静态方法要 hoist 等税；Hook 直接在组件函数里调用、把值 return 给你，编译期可见、可组合多个、无层级爆炸。这正是官方「Hooks 取代 mixin 与 HOC」的核心论点。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 一个组件把 children 当作「渲染函数」调用（render prop），它的渲染前置是？",
+      "options": [
+        "直接渲染 children 即可",
+        "先算出要暴露的数据，再调用 `children(data)` 得到节点来渲染——所以 children 类型是 function 而非 node，需判类型",
+        "把 children 塞进 state",
+        "用 cloneElement 注入 props"
+      ],
+      "answer": 1,
+      "explanation": "作用域插槽的 React 版：`function Mouse({ children }) { return typeof children === \"function\" ? children(pos) : children }`。它把「怎么画」的决定权交给调用方、把「有什么数据」留给自己，是「控制反转」在组件 API 里的体现。cloneElement 也能注入但更隐晦脆弱，社区现更倾向 render prop 或自定义 Hook。"
     }
   ]
 }

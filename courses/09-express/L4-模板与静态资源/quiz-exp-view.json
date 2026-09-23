@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "EJS 中哪个标签输出内容存在 XSS 风险？",
       "options": [
-        "<%= %>",
         "<%- %>",
+        "<%= %>",
         "<% %>",
         "<%# %>"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "<%- %> 输出原始 HTML 不转义 → 若含用户输入会被当标签执行。转义输出用 <%= %>。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "res.render('a', data) 和 res.send(html) 的核心区别是？",
       "options": [
         "完全一样",
-        "render 用模板引擎把 data 编译成 HTML 再发送；send 直接发已有内容",
         "render 只能发 JSON",
+        "render 用模板引擎把 data 编译成 HTML 再发送；send 直接发已有内容",
         "send 会缓存模板"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "render 查 views 目录模板 → 引擎编译 + 注入数据 → 得到 HTML 字符串再响应。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "EJS 原生支持 layout（布局继承）吗？",
       "options": [
         "支持，用 extends 关键字",
-        "不支持，需 express-ejs-layouts 等插件",
         "支持但只支持一层",
-        "通过 include 等效且完全一样"
+        "通过 include 等效且完全一样",
+        "不支持，需 express-ejs-layouts 等插件"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "EJS 只有 include，无原生布局继承。真正 layout（block 填充）需 express-ejs-layouts 插件。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "res.locals 请求级隔离 → 中间件里设一次，下游所有 render 自动可用，且不跨用户串数据（app.locals 是全局共享不能放用户）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " EJS 的 include 指令 <%- include(...) %> 传参的默认规则是？",
+      "options": [
+        "自动继承全部变量",
+        "默认不继承父模板变量，要显式传对象或用 include 选项（传统 <% include %> 老语法才全量隐式传递）——依赖隐式传递是\"换个局部就空一半\"的维护灾难",
+        "只能 include 静态 HTML",
+        "参数必须走全局 app.locals"
+      ],
+      "answer": 1,
+      "explanation": "局部组件的数据契约要显式（传参清单），这与函数不读全局变量是同一条纪律。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " app.locals 和 res.locals 的作用域差别是？",
+      "options": [
+        "没有差别",
+        "app.locals 应用级（所有渲染可见，放站点名/工具函数），res.locals 请求级（放当前用户/权限标记），同名时 res.locals 在渲染中覆盖 app.locals",
+        "res.locals 更快",
+        "app.locals 只能启动时设置"
+      ],
+      "answer": 1,
+      "explanation": "\"全站常量上 app、请求上下文上 res\"是视图数据分层的两拍；res.locals 每请求新建所以中间件写它安全。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 模板里 {{ user.name }} 风格（未转义输出）在 XSS 语境下的正确姿势是？",
+      "options": [
+        "所有输出都不转义更快",
+        "默认全转义、仅对\"服务端生成且已清洗的 HTML 片段\"用显式的原始输出标记（EJS 的 <%- %> / Nunjucks autoescape 下 |safe）并配 sanitize 层——白名单反转义而不是全局关转义",
+        "用 CSS 兜底",
+        "只防 script 标签"
+      ],
+      "answer": 1,
+      "explanation": "\"默认安全+例外显式\"是所有转义体系的公理；富文本字段是唯一例外且必须过 DOMPurify 级清洗。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 邮件模板与页面模板分成两套工程（如专用模板+预览工具）的核心理由是？",
+      "options": [
+        "习惯问题",
+        "渲染环境约束不同：邮件客户端只认内联样式+ tables 布局且无 JS，与浏览器页差异大到必须独立语法与构建（转内联、图用 CDN 绝对地址），还要专属预览与真机测试",
+        "邮件不能用 EJS",
+        "为了 SEO"
+      ],
+      "answer": 1,
+      "explanation": "模板分界按\"目标渲染器的能力差异\"划，不按\"都是 HTML 看起来一样\"划。"
     }
   ]
 }

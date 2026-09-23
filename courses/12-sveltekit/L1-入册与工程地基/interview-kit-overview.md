@@ -1,6 +1,6 @@
 # kit-overview 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ---
 
@@ -81,3 +81,25 @@
 **来源**：学习路径元问题（本包开学礼，收官于 L9）
 
 作废的是**编排胶水**：路由映射表、head 安置、水合数据注入模板、render 调用样板——Kit 全部接管，再手写是负资产。升值的是**机制模型**：load 的两栖执行=你懂 SSR/CSR 双世界的分界线；$env/序列化=你懂"注入即公开"与转义纪律；prerender 冲突=你懂构建期与运行时的边界；水合不匹配=Kit 报 mismatch 时你定位得到表达式而不是碰运气。一句话：Kit 消灭的是劳动，不消灭理解——这正是"先学发动机再开整车"课程编排的全部理由（L9 internals 关做最终审计）。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Kit 的服务端内核为什么刻意做得很薄（只是一个 fetch 处理器）？这带来什么工程收益？ 
+
+ 薄内核意味着框架不绑定 Node API，任何能收发 fetch Request/Response 的平台都能跑；adapter 只需把这层薄壳翻译到目标平台（Node/边缘/静态），因此同一份代码可跨 Vercel、Cloudflare、自建服务器部署而不改业务。 
+
+**来源**： https://svelte.dev/docs/kit/faq ； https://svelte.dev/blog/what-the-actually-is-sveltekit 
+
+### 14.  Kit 和轻量方案 Single File Components / svelte-cli 的边界在哪？什么项目不该上 Kit？ 
+
+ 纯客户端小工具、无需 SEO 与数据预取的内部面板用 Vite+svelte 即可；Kit 的价值在路由级代码分割、SSR/预渲染、表单动作等服务端约定，项目没有这些诉求时引入只会增加构建与心智成本。 
+
+**来源**： https://svelte.dev/docs/kit/faq ； https://svelte.dev/blog/sveltekit-2 
+
+### 15.  为什么说 Kit 的默认安全（如服务端模块不进 bundle、CSRF origin 检查）是『框架级卖点』？ 
+
+ Kit 在构建期把 .server.js 与 $lib/server 隔离出客户端 bundle，内置 POST 同源校验，开发者不做任何配置即获得底线防护；这与手动搭 Express+Svelte 需要自己装 helmet、自己防泄漏相比，把安全从个人经验变成框架默认。 
+
+**来源**： https://svelte.dev/docs/kit/keywords#server ； https://svelte.dev/docs/kit/configuration#csrf 

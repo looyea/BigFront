@@ -1,6 +1,6 @@
 # 毕业项目（架构综合） · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (D) 设计一个"实时协作看板"的状态分层：服务端数据、客户端 UI 态、派生值各放哪？
 
@@ -61,3 +61,25 @@
 
 一切皆同一张细粒度计算图：signal 读时登记、写时短路，memo/effect/render effect 按拓扑序精确更新到属性；Owner 树管回收与 Context；控制流组件把响应式落到 DOM 复用；resource/Suspense/ErrorBoundary 处理异步与失败边界；Start 用文件路由、"use server" 编译抽离、query/action + single-flight、prerender/部署预设把这张图端到端跑成全栈应用。九关只是它的不同切面。
 **来源**：全课技术主线综合凝练（毕业陈述式）转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  完成度百分比（全板统计）的性能与正确性架构？ 
+
+ 计数存每列 store 路径+列级 memo，板级 memo 聚合：单卡移动只重算触达列与根链，全板 O(列数)；正确性靠派生不存储（单一真值源），并发编辑下以服务端返回为准 reconcile。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#creatememo 
+
+### 14.  万张卡片列表卡顿，完整归因与优化顺序？ 
+
+ 先量再改：Profiler/帧计时定位是首建、更新还是布局；首建重→windowing/分段挂载，更新重→查状态提升过度与 Index 错位，布局重→contain/合成层；每改一项回归一次，最后才动架构。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/loops 
+
+### 15.  给这个项目配测试矩阵：单元/组件/端到端/快照各测什么？ 
+
+ 单元：派生 memo 与回滚纯函数表驱动；组件：拖拽落点、乐观失败回显、错误边界隔离；e2e：金路径建卡-拖拽-刷新持久化+渐进增强无 JS；快照只锁骨架不锁样式。 
+
+**来源**： https://github.com/solidjs/testing-library ； https://playwright.dev/docs/intro 

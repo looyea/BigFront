@@ -1,6 +1,6 @@
 # vite-build 面试题精选
 
-> 共 12 题，覆盖 **构建模型 / Source Map / 压缩 / 缓存 / CSS / Rollup 穿透 / 性能** 七类。
+> 共 15 题，覆盖 **构建模型 / Source Map / 压缩 / 缓存 / CSS / Rollup 穿透 / 性能** 七类。
 
 ---
 
@@ -97,3 +97,25 @@ Lightning CSS（Rust）一站式做转换 + 压缩 + 浏览器降级（target �
 ① `vite build --debug` 看各插件/阶段耗时；② `sourcemap: false` 或 `'hidden'` 减少 map 生成；③ minify 用 esbuild 不用 terser；④ `reportCompressedSize: false` 省 gzip 计算；⑤ 减少 manualChunks 过度拆分导致的额外遍历；⑥ 依赖太大考虑 external / CDN；⑦ 用 rollup-plugin-visualizer 找体积/耗时大头；⑧ CI 缓存 node_modules/.vite。
 
 **来源**：Vite — "Build Optimization / performance"; rollup-plugin-visualizer; Vite — "Performance tuning" discussions
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Vite 7 把默认 build.target 换成 baseline-widely-available 意味着什么？升级时你会检查什么？
+
+变更实质：从"具体版本表"（es2020 类）转向 Baseline 口径——被广泛支持（默认开启且覆盖主流现代浏览器约 2.5 年支持窗）的特性才不降级，官方维护映射表随版本滚动。影响面检查：① 产物下限收紧——目标环境里"边缘但仍有量"的旧浏览器（老安卓 WebView、企业锁定版 Chrome）可能加载到不降级的语法直接 SyntaxError：升级前拉真实用户浏览器分布（GA/上报数据）对照 Baseline 覆盖表，这是唯一硬判据；② 体积/性能红利用足（更少 polyfill 与降级包裹、async 原生），可量化预期收益；③ 与 browserslist 的关系澄清——Vite 的 target 不吃 browserslist 配置文件（与 webpack 生态的关键差异），两套真值体系并存时要以 build.target 为唯一声明源并删除/文档化 browserslist 避免假安全感；④ 需要覆盖时显式设 target 而不是改回旧默认（自定义数组形式支持按引擎粒度）。加分句：能讲出"我们的兼容基线是数据定的不是习惯定的，且全仓只有 build.target 一处声明"，这题的格局就对了。
+
+**来源**：Vite 7 发布说明（基线目标变更）；web-platform-baseline 项目（Baseline 定义）；MDN 浏览器兼容性约定
+
+### 14.  构建产物的完整性与来源治理：SRI、manifest、crossorigin 在你的发布管线里怎么用？
+
+SRI（integrity 属性）：给 script/link 加内容哈希，篡改（CDN 被投毒/中间人）即拒载——Vite 产物的 hash 名 + sha384 值在构建期都可计算（manifest/插件生成），但注意三个现实约束：动态 import 的 chunk 无法逐个挂 SRI（不走 HTML 标签）、改一个文件要同步刷新引用它的 HTML 标签（发布系统复杂度）、同源脚本收益有限（主要防第三方 CDN 供应链）。manifest（build.manifest 的 .vite/manifest.json）：chunk 与资源的依赖/入口映射表——给服务端模板引擎消费（非 HTML 入口的项目用它拼正确的 preload/预载标签）、给发布系统做"本次变更影响面"计算、给监控做版本指纹。crossorigin：上 SRI 必须 anonymous 属性否则拿不到校验语义；错误监控"Script error 无堆栈"的经典解就是给所有 script 加 crossorigin + CDN 配 CORS 响应头（两件事同源）。组合建议：自家主域产物 crossorigin+错误监控必配；第三方依赖（CDN 的字体/SDK）SRI+版本锁定；全量 SRI 按"是否可被静默替换"评估。收口句：产物治理的主线是"可验证"——名字可验证（content hash）、来源可验证（SRI）、映射可验证（manifest），三者齐了发布事故的定位才会从考古变成查表。
+
+**来源**：MDN Subresource Integrity；W3C SRI spec；Vite build.manifest 文档
+
+### 15.  Rollup 4 升级给 Vite 构建侧带来了什么（hooks 语义、异步观察者、对插件生态的冲击）？
+
+Rollup 4 三主线：① 钩子全异步化（观察者异步、移除同步钩子）——构建并行度提升、插件里 await 成为常态，遗留同步钩子插件直接报错（升级冲击的主要来源）；② 树摇与 AST 增强（更准的副作用推断、/*#__PURE__ 处理改进）——产物体积常有 2-5% 白捡收益，但"以前被错误保留的代码"消失可能暴露依赖该 bug 的业务（副作用注册类代码显形）；③ API 与类型现代化（programmatic 接口对齐 Vite 6 的 Environment 使用）。插件生态冲击的工程处理：升级前跑一次 build 的插件清单审计（维护活跃度、peer 声明）、把"构建行为 diff"当 breaking 看待（产物文件清单对比、体积基线、抽样运行时验证），社区插件跟进期用 overrides/patch 争取时间而不是冻结 Vite。加分维度：Vite 借此把自身对 Rollup 的依赖面收窄（Rolldown 兼容层以 Rollup 4 的 standard hook 形状为合同——升级 Rollup 4 实际是在为换引擎铺路，插件合规度=未来迁移成本），能说出这层"版本升级的路标意义"是架构视角。
+
+**来源**：Rollup 4 发布说明（standard hooks、异步观察者）；Vite 与 Rollup 大版本跟进公告；知乎《我们升级 Vite 后第三方插件全红的那天》

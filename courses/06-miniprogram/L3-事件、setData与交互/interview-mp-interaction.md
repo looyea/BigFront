@@ -1,6 +1,6 @@
 # mp-interaction 面试题精选
 
-> 共 12 题，覆盖 A API 机制 / B 选型与设计 / C 封装工程化 / D 踩坑与合规。
+> 共 15 题，覆盖 A API 机制 / B 选型与设计 / C 封装工程化 / D 踩坑与合规。
 
 ## 一、API 机制（A 类）
 
@@ -57,3 +57,25 @@ showModal 文案含"分享后才能查看/解锁利益"即踩《运营规范》�
 ### 12. vConsole 里看到 "hideLoading cannot pair with showToast"，根因是什么？
 官方在部分版本对**未 show 先 hide**、或 loading/toast 通道互踩给出告警。根因仍是单通道+散落调用。治本：反馈模块统一封装（第 7 题方案），页面永远不裸调 wx.hideLoading（呼应 mp-interaction 第四节）。
 **来源**：微信开放社区 hideLoading 告警问答；开发者工具告警说明
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  原生交互 API（toast/modal/loading）渲染在哪一层？为什么它们几乎不占 setData 成本、又有何局限？
+
+它们由小程序容器（Native 层/宿主 UI）直接绘制，不进你的 WebView 视图层、更不走 setData 跨线程传数据——所以开销极小、风格与系统一致、层级天然浮于页面之上。局限：样式/动效几乎不可定制、同一时刻反馈通道是单例（会互相顶替）、复杂交互（多按钮、富内容、输入框）不支持。因此设计取舍是：轻提示/确认/加载这类"通用瞬时反馈"优先用原生（省心、性能好、平台一致），一旦需要品牌样式或复合交互就用自定义弹层组件（代价是它活在你的页面 WebView 里，会参与 setData 与渲染、要考虑层级 z-index 与滚动锁定）。键盘挡输入框、iOS 底部固定按钮上浮等则是原生 API 管不到、要靠 adjust-position/cursor-spacing 或页面自身布局处理。
+
+微信官方文档《交互组件与反馈接口》；掘金《下拉刷新/触底加载的节流设计》
+
+### 14.  两个并发请求都 showLoading，第一个先回来把 loading 关了、第二个还在跑——为什么？怎么治？
+
+因为 toast/loading 是全局单例通道，第二个 showLoading 只是把同一层"重新点亮"，第一个的 hideLoading 直接把这张唯一的浮层关掉，于是第二个请求"视觉上没了 loading"。治法是"引用计数"：封装的 feedback 里维护 loadingCount，showLoading 时 ++、到 0 才真正 hide；每个请求 complete 时 --。更根本的是把 loading 归属交给网络层统一拦截器（在 request 封装里按 options.loading 自动管计数），业务页不再手写 show/hide，从源头消除错配与悬挂。顺带解决 hideLoading 顶掉 showToast 的问题：不同通道类型也走同一计数/队列调度，避免相互抢占单例。
+
+SegmentFault《showToast 和自定义 toast 怎么选》；知乎《小程序动画 animation 与 wx.createAnimation 取舍》
+
+### 15.  让你设计一个全项目统一的"反馈模块"，接口怎么定、要兜住哪些坑？
+
+对外接口收敛成少数语义方法：toast.success(msg)/fail(msg)/loading.start()/loading.stop()（内部引用计数）/confirm(opts)->Promise/action(opts)->Promise，屏蔽原生 API 名字与默认项。要兜的坑：① 单例互斥——统一队列/计数，禁止业务直接调 wx.showToast；② hide 必达——loading 与网络层 complete/finally 绑定，异常/超时也要关；③ 文案归一——错误码→文案映射集中在一处，页面里不写死提示语（便于多语言与改口径）；④ 可静默——某些请求（后台刷新、轮询）不弹 loading；⑤ 频控——连续同类 toast 合并/节流，避免刷屏；⑥ 降级——原生不支持的复杂反馈走自定义组件但同样从本模块出。本质与前端"统一 UI 反馈 + 请求拦截器"完全同构，只是这里多了"跨端单例通道"这一物理约束。
+
+CSDN《小程序手势冲突与滚动区域嵌套实战》；InfoQ《交互反馈一致性在中台小程序的落地》

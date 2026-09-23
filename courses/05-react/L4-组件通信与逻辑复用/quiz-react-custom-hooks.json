@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "自定义 Hook 靠什么被 React/工具识别？",
-      "options": ["放在 hooks 目录", "以 use 开头的命名约定", "必须导出默认值", "必须有返回值"],
-      "answer": 1,
+      "options": [
+        "以 use 开头的命名约定",
+        "放在 hooks 目录",
+        "必须导出默认值",
+        "必须有返回值"
+      ],
+      "answer": 0,
       "explanation": "use 前缀让 rules-of-hooks 校验与人识别（呼应 react-custom-hooks 第一节）。"
     },
     {
@@ -16,18 +21,23 @@
       "prompt": "Rules of Hooks 的核心原因是？",
       "options": [
         "性能考虑",
-        "React 按调用顺序维护组件的 Hook 状态链表，乱序会错位",
         "语法限制",
-        "为了 tree-shaking"
+        "为了 tree-shaking",
+        "React 按调用顺序维护组件的 Hook 状态链表，乱序会错位"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "顺序即身份（呼应 react-custom-hooks 第二节、react-component 第四节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "在 if 里调用 useState 会怎样？",
-      "options": ["正常运行", "违反规则：某分支少调 Hook 时状态错位/报错", "自动忽略", "仅警告无影响"],
+      "options": [
+        "正常运行",
+        "违反规则：某分支少调 Hook 时状态错位/报错",
+        "自动忽略",
+        "仅警告无影响"
+      ],
       "answer": 1,
       "explanation": "条件调用打乱顺序，把条件写进 Hook 内部而非包住（呼应 react-custom-hooks 第二节）。"
     },
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "两个组件各调用一次 useCounter，它们的 count 关系是？",
-      "options": ["共享同一份", "各自独立一份状态", "报错", "第二个读到第一个的值"],
+      "options": [
+        "共享同一份",
+        "各自独立一份状态",
+        "报错",
+        "第二个读到第一个的值"
+      ],
       "answer": 1,
       "explanation": "每次在某组件调用=该组件一份，这是与 Vue 模块级单例的差异（呼应 react-custom-hooks 第五节）。"
     },
@@ -77,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "服务端首帧无浏览器 API（呼应 react-custom-hooks 第六节、vue-ssr-nuxt）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 两个不同组件各自调用同一个 `useCounter()`，它们的 count 是共享的吗？",
+      "options": [
+        "共享——Hook 是全局单例",
+        "不共享——自定义 Hook 只是「有状态逻辑的语法提取」，每个调用组件在自己的 Fiber 上拥有独立的状态槽位，各自 useState 各自维护",
+        "取决于是否 memo",
+        "只在 SSR 时共享"
+      ],
+      "answer": 1,
+      "explanation": "「use 前缀 + 命名约定」容易让人误以为 Hook 像 store 那样共享状态。实则 `useCounter` 里的 useState 归属于「调用它的那个组件实例」。要真正跨组件共享，得靠 Context、外部 store 或把状态提升到共同父——这正是下一题考的分界。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 自定义 Hook 每次 return 一个新对象字面量 `{ a, fn }`，消费方把整个返回对象放进 useEffect 依赖，会？",
+      "options": [
+        "没问题",
+        "effect 每次渲染都重跑（返回对象每帧新引用，Object.is 不等）——应返回元组/原始值、或对返回对象 useMemo、或只把真正用到的字段放进依赖",
+        "直接报错",
+        "React 会自动浅比较"
+      ],
+      "answer": 1,
+      "explanation": "这是自定义 Hook 最常见的隐性性能/死循环坑。返回值的引用稳定性是 Hook 契约的一部分：给对象就用 useMemo 包，给函数就 useCallback，或干脆返回元组让调用方解构（React 官方 Hook 多返回元组如 `[state, setState]` 正是为此）。与 memo 关「依赖新引用」同源。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 判断「一段逻辑该不该抽成自定义 Hook」的合理依据是？",
+      "options": [
+        "代码超过 10 行就抽",
+        "关键看是否含「state + effect/其它 Hook」且需跨组件复用这套有状态行为；纯输入输出转换应写成普通工具函数而非 use 前缀 Hook",
+        "凡复用的都做成 Hook",
+        "只有网络请求才值得"
+      ],
+      "answer": 1,
+      "explanation": "Hook 的价值在于「封装带生命周期/状态的逻辑」。若函数只是 `formatDate`、`sum` 这种纯计算，命名成 useXxx 反而误导（它会让人以为有订阅/重渲染语义，还被 lint 按 Hook 规则约束调用位置）。有状态才 Hook、无状态用普通函数，是社区一致的边界。"
     }
   ]
 }

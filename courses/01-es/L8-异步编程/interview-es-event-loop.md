@@ -111,3 +111,21 @@ console.log('script end');
   ```
   **追问**：如何加超时？把 `await tasks[i]()` 换成 `Promise.race([tasks[i](), sleep(T).then(() => { throw new TimeoutError() })])`。
 - 来源：`p-limit`、`p-timeout` 库源码；StackOverflow 高票。
+
+---
+
+**13）Node 11 把 nextTick/微任务的清空时机改了，改了什么？为什么老代码会踩坑？**
+- 参考要点：旧行为：微任务只在**每个阶段之间**批量清空——timers 回调里递归 promise 会把整个阶段锁死（同阶段其他 timer 与后续阶段全排队饿死），著名复现是「timer 里 await 循环，setImmediate 永远不来」。v11 改为**每个宏任务回调后**都 drain（nextTick 优先于 microtask 每轮各跑空），语义与浏览器一致。踩坑面：依赖旧「阶段间才清空」顺序的代码（批量微任务攒数据再进 IO 阶段）时序被打散；升级大版本要重跑依赖事件顺序的测试。
+- 来源：Node v11 变更日志（nodejs/node#20888 event loop 重构）；Nodejs.org《Event Loop and Timers》章节更新。
+
+---
+
+**14）浏览器一帧内发生了什么？rAF 在渲染流水线的哪个位置？**
+- 参考要点：一帧处理模型：输入事件回调 → **rAF 回调**（改样式的最后时机）→ Style 计算 → Layout（reflow）→ Paint（分层光栅化）→ Composite 提交。rAF 之后改几何样式会触发本帧 reflow；把重排类工作留到 rAF 前、只读写分离。超预算时浏览器在任务间插入 yield point（input/动画优先）。INP 时代守则：把大任务切成 `scheduler.yield()`/setTimeout 小段，输入才插得进来。
+- 来源：HTML Living Standard《processing model》；web.dev《Long tasks / Performance & the Critical Rendering Path》。
+
+---
+
+**15）setTimeout 嵌套过深会被 clamp 到 4ms，这是为什么？长任务切分还有哪些工具？**
+- 参考要点：HTML 规范：嵌套 ≥5 层的 timer 最小延时 clamp 到 4ms（防止脚本用 0ms 递归垄断循环、饿死渲染）——所以「setTimeout(fn,0) 跑 10 万次」实际 ≥400 秒。切分工具谱：setTimeout（会被 clamp、还要等 timer 对齐帧）、postMessage 通道（不受 4ms 限制的经典 hack）、`scheduler.yield()`（Chrome 129+ 一等公民，返回可等待对象、优先级友好）、Worker + SharedArrayBuffer（CPU 密集直接挪线程）。`yield 循环` 配合 generator 可以把「可中断任务」写成同步风格。
+- 来源：HTML spec《timers: 4ms clamp》；web.dev《scheduler.yield() is available in Chrome 129》。

@@ -1,6 +1,6 @@
 # vite-framework 面试题精选
 
-> 共 12 题，覆盖 **框架插件 / SFC 编译 / JSX 与 Refresh / esbuild-Babel-SWC / 编译时框架 / TS 集成** 六类。
+> 共 15 题，覆盖 **框架插件 / SFC 编译 / JSX 与 Refresh / esbuild-Babel-SWC / 编译时框架 / TS 集成** 六类。
 
 ---
 
@@ -100,3 +100,25 @@ Vite 里：默认 esbuild 打底，框架插件按需引入 Babel/SWC 做框架�
 ① 框架插件版本要与 Vite 主版本匹配（peerDependencies），旧插件在新 Vite 可能钩子不兼容；② Vite 6 **Environment API** 变化影响 SSR/自定义环境插件；③ Rollup 大版本升级带来 `manualChunks`/treeshaking 行为微调（呼应 L3）；④ esbuild/SWC target 变化影响降级产物（vite-target）；⑤ 依赖预打包 `optimizeDeps` 默认项变化导致 dev 偶发"outdated optimize dep" 504/白屏。升级后跑：dev/build/preview 三模式 + 类型检查 + 关键 HMR 手工验证。
 
 **来源**：Vite — "Migration guides"; @vitejs/plugin-vue / react releases; Vite 6 — "Environment API"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  @vitejs/plugin-react 为什么核心是 Babel 而不是 esbuild？它如何利用 Babel 做 Fast Refresh 边界处理？
+
+分工：语法剥离（TS/JSX 转译）esbuild 就够，但 dev 期插件要注入 React Refresh runtime（前段 import react-dom/client 的注入代码、后段注册判断、按模块导出形状决定"组件替换还是 remount"的边界包裹），这类"按 AST 结构注入"必须 AST 级工具，Babel 插件形态最成熟——SWC 路线（原 plugin-react-swc）是另一条以 Rust 换性能的实现，函数组件默认走 SWC、需要 babel 配置命中时回退 Babel 的混合架构。Fast Refresh 边界的细节：模块顶层只有组件导出时可直接热替换；导出了非组件值（常量/上下文）会退化为 reload 或保守失效；createContext、React.memo 包裹、HOC 结果的"组件身份"保持是边界算法难点——这解释"有时改了组件整页刷新"（呼应 quiz 既有题）。工程选项：React Compiler 接入后 babel 管道复用（插件配置 babel 钩子注入 compiler）；用 SWC 版换构建速度但要核对自定义 babel 插件（如 styled-components、jsx 装饰器类）在 SWC 有无对应。加分句：这题的陷阱是把它答成"转译器选型"——真实考点是 dev 期"编译器注入 + 运行时 registry"的协同协议，转译只是顺带。
+
+**来源**：@vitejs/plugin-react README（Babel 与 SWC 选项）；React Fast Refresh spec；Vite 官方 HMR 文档
+
+### 14.  同一文件被多个插件 transform，链是怎么排的？出现顺序冲突你怎么排查？
+
+排序规则：config 数组顺序为基线，全局按 enforce 分三段（pre → 普通（核心插件与用户普通插件按数组序交织）→ post），同段内数组序；transform 链上每个插件拿到的 code 是上一环输出。排查工具链：vite-plugin-inspect（Transform Result 面板逐环节看代码与 map 覆盖率）是第一选择；无 GUI 环境给可疑插件的 transform 加 DEBUG 输出 code 首行哈希，二分定位"哪一环把代码改坏/把 map 丢了"。典型冲突形态：① map 拼接断裂——中间某插件不返 map，其后所有 map 指错行（DevTools 断点漂移的真因）；② 语法超前消费——B 插件按原始 Vue 语法匹配，但 A 插件已改写（enforce 没对齐"谁先看源码"的合同）；③ import 注入与依赖分析时序——注入方必须 pre，否则核心分析已完成；④ 同钩子多插件对 return 值的形状假设不同（ast 共享是实验特性别依赖）。修复手段按成本升序：调数组顺序 → 加 enforce → 用 apply/filter 缩小彼此射程 → 找插件替代品。收口句：插件顺序不是 bug 是合同——写插件时文档化"我要看谁的输出/我改完给谁用"，比任何事后排查都便宜。
+
+**来源**：Rollup 官方插件顺序文档；Vite 插件 enforce 文档；vite-plugin-inspect 使用说明
+
+### 15.  一个 TS+React 项目，从编辑器红线到 CI 构建，tsc、esbuild、SWC/Babel 各管哪段？为什么说类型检查必须独立跑？
+
+管线切片：编辑器语言服务（tsserver，实时增量）管开发体验；tsc --noEmit 管类型正确性（CI 独立步骤，产不出代码所以叫"纯检查"）；esbuild 管 dev/build 的类型语法擦除（不看类型系统，只按语法规则删 : Type 与 interface——快且语义固定的原因）；Babel/SWC（框架插件里）管 JSX 运行时与框架特有转译。为什么必须独立：esbuild 的降级转译对"类型误用"完全无感（任何值当任何类型都跑得通），且跨文件类型推断它根本不做——类型是"编译期契约"，执行期不存在，只有 tsc 全量图能验。tsc 与 esbuild 的语义缝隙要防：const enum（esbuild 无法安全内联）、import type 的 elision 差异、装饰器实验语法版本——isolatedModules 标志的意义就是"把每个文件当独立转译单元写代码"，Vite 项目必开（开了 tsc 会拦截所有"跨文件类型优化语法"）。CI 顺序设计：tsc --noEmit 与构建并行跑（互不依赖），测试用 vitest（其类型检查默认也关，同哲学——测试跑绿靠运行时）。加分句：把"Vite 为什么不做类型检查"答成"为了快所以放弃"是初级答案；正确表述是"类型检查是跨文件全局问题，转译是单文件局部问题，两类问题分开收费才可能各自优化到极致"。
+
+**来源**：TS 官方 isolatedModules 文档；esbuild 官方 What esbuild does not do 章节；Vite 构建指南

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "把应用部署在域名子路径 /my-app/ 下，页面白屏、资源 404，最可能要先检查什么？",
       "options": [
-        "Node 版本",
         "vite.config 的 base 是否设为 '/my-app/'",
+        "Node 版本",
         "CSS 预处理器",
         "包管理器"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "默认 base:'/' 会让 index.html 引用 /assets/... 指向根而 404；子路径部署必须显式配 base。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "`vite preview` 的作用是？",
       "options": [
         "启动开发服务器",
-        "用真实构建产物在本地起服务，上线前自检 base/路由/缓存是否正常",
         "生成 sourcemap",
-        "跑单元测试"
+        "跑单元测试",
+        "用真实构建产物在本地起服务，上线前自检 base/路由/缓存是否正常"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "preview 服务 dist（构建产物），不是 dev server，用来验证真实产物行为。"
     },
     {
@@ -105,6 +105,32 @@
       ],
       "answer": 2,
       "explanation": "任何打进前端的字符串都可被查看；密钥绝不能进前端包，鉴权/密钥留服务端（呼应 Express L6）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Vite MPA（多 HTML 入口）生产的正确配置姿势是？",
+      "options": [
+        "多份 vite.config 分别构建",
+        "build.rollupOptions.input 列出各 HTML 入口（对象形态可命名 chunk）——一次构建共享依赖图，公共模块自动提取成共享 chunk，产物按入口名组织 HTML",
+        "一个入口 + 前端路由伪造",
+        "在 index.html 里 iframe"
+      ],
+      "answer": 1,
+      "explanation": "一次多入口构建的\"共享 chunk 自动提取\"是 MPA 优于多次单入口构建的核心（呼应 splitting 关的默认拆块）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 子路径部署 /my-app/ 且用绝对路径 history 路由时，public 目录里的文件引用要注意什么？",
+      "options": [
+        "public 文件自动重写路径，无需关心",
+        "public 是原样复制不做路径处理——模板/硬编码里引用 public 资源要自带 base 前缀（用 import.meta.env.BASE_URL 拼接），否则子路径部署 404",
+        "public 文件会被 hash 改名",
+        "public 只允许图片"
+      ],
+      "answer": 1,
+      "explanation": "Vite 只处理\"经过它转换的\"引用；public 绕过管道，base 语义要自己补上——白屏外最隐蔽的子路径坑。"
     }
   ]
 }

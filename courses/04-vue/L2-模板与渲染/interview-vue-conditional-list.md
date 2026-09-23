@@ -1,6 +1,6 @@
 # vue-conditional-list 面试题精选
 
-> 共 12 题，覆盖 v-if/v-show / v-for 与 key / diff 原理 / 指令组合 四类。
+> 共 15 题，覆盖 v-if/v-show / v-for 与 key / diff 原理 / 指令组合 四类。
 
 ---
 
@@ -12,7 +12,7 @@
 
 **来源**：Vue.js — "Conditional Rendering: v-if vs. v-show"
 
-### 2 `v-show` 有什么限制？
+### 2. `v-show` 有什么限制？
 
 不能配 `v-else`；不支持在带多根的 `<template>` 上使用；且因为它一直渲染，条件内容里若有**重的初始化副作用**（如挂载即取数）会在初始就发生——这类"别提前跑"的需求要用 `v-if`（呼应 vue-conditional-list 第一节、vue-lifecycle）。
 
@@ -89,3 +89,25 @@ Vue 3：**`v-if` 先于 `v-for`**，因此 `v-if` 里拿不到 `item`；Vue 2 �
 对象为 `(value, key, index)`。此外 `v-for` 可遍历**数组**、**整数**（`v-for="n in 5"` 得 1..5）、**可迭代对象/字符串**；`in` 可写作 `of`（呼应 vue-conditional-list 第四节）。
 
 **来源**：Vue.js — "Rendering List Items / Objects & Integer Range"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. Vue 3 diff 算法的双端指针+最长递增子序列完整走一遍：为什么 LIS 对"列表整体前移"场景仍是 O(n log n) 级重建，虚拟列表为什么能救？
+
+新 旧 vnode 数组 先 头尾 双 指针 收缩（命中 复用+挪 指针），解 不了 的 中间 段 建 key→index map 逐项 找 旧 位；旧 索引 序列 求 **最长 递增 子序列**（LIS）：不在 LIS 上 的 节点 才 移动 DOM——最 优 情况「尾部 追加」旧 序列 全 递增，零 移动。但「整体 前移/倒序」这类 全局 重排：LIS 长度 小、要 移动 的 节点 多，DOM move（remove+insert）是 布局 开销 大头——算法 已 最 优，问题 在 **n 本身 太 大**。虚拟 列表（vue-virtual-scroller/自研）把 参与 diff 的 n 降到 可视区 数量 级：diff 只 对 窗口 内 十几 个 节点 做，滚动 时 换 窗口+key 复用；配 定 高 计算（绝对 定位/transform 顶 位）保 滚动条 正确。组合 出 答案 的 话 术：「diff 优化 的 是 常数 项 与 移动 次数，虚拟 列表 砍 的 是 n——两者 正交 且 都要」。
+
+**来源**：Vue 源码 renderer.ts diff 算法与 LIS（getSequence 注释）；ivi/vue-virtual-scroll 与 react-virtualized 的 diff 对比分析（Evan You 博客引用）。
+
+### 14. v-if/v-else 切换时组件实例发生了什么？想保留内部状态该怎么做，何时反而应该销毁？
+
+v-if 翻 转：旧 分支 组件 **unmount**（beforeUnmount/unmounted、watch 停、DOM 卸）；翻 回=全新 实例（setup 重 执行、ref 初始值、弹窗 里 填 一半 的 表单 没了）。保留 状态 三 档：① v-show（最 便宜 但 永远 挂 着=常驻 内存+后台 定时器 都 还 活）；② KeepAlive（缓存 实例，配 include/exclude/max；弹窗/抽屉 场景 标准 答案，但要 处理 失活 钩子 deactivated 里 停 轮询）；③ 状态 上提（组件 销毁 但 数据 在 父/store，「表单 草稿 在 外部，弹窗 只是 视图」——架构 更 干净）。必须 销毁 的 场景：组件 内 有 全局 订阅/定时器 且 生命周期 逻辑 已 写好——destroy 反而 是 清理 器；「缓存 一切」导致 内存 缓慢 上涨 + deactivated 里 漏 停 的 轮询 继续 打 后端 是 反 模式。判据：状态 便宜 就 销毁（重建 即 新鲜），状态 昂贵/易 丢（长 表单、滚动 位置）才 缓存，且 缓存 要 设 淘汰（max/LRU）。
+
+**来源**：Vue 条件渲染与 KeepAlive 文档；本关 v-if/v-else 机制与缓存策略通行实践。
+
+### 15. 渲染 10 万条列表卡顿，按「先算法外、后数据结构」给一条完整优化路线。
+
+第一 刀 **数据结构**：响应式 层面 降级——shallowRef 存 数组（10 万 对象 不 做 深层 代理，本包 响应式 关）；数据 本身 裁剪（后端 分页/字段 精简，别 把 全量 对象 扔 进 列表 再 用 3 个 字段）。第二 刀 **渲染 数量**：虚拟 滚动 把 DOM 节点 数 降到 几十（窗口 化 后 diff 压力 同 步 消失）；万级 以下 但 仍 卡 → v-memo（`v-memo="[item.id===selected]"`）给 静态 行 跳 diff。第三 刀 **单 行 成本**：行 组件 拆 薄（无 响应式 开销）、class 绑定 对象 字面量 转 computed、图片 懒加载。第四 刀 **更新 模式**：增量 合并（key 稳定 的 原地 patch）替代 整 数组 替换；批量 写 配 nextTick 合并。测量 先行：Performance 面板 看 是 render 函数 慢、patch 慢 还 是 浏览器 layout 慢——paint 瓶颈 时 减 行 内 DOM 深度 比 任何 JS 优化 都 管 用。底线：能 不 渲染 10 万 就 不 渲染（分页/搜索 是 产品 层 答案）。
+
+**来源**：Vue 性能优化 官方 指南《大型 虚拟 列表》章节；vue-virtual-scroller 文档与 社区 大数据 列表 基准 测试。

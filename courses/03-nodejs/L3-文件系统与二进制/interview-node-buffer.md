@@ -1,6 +1,6 @@
 # node-buffer 面试题精选
 
-> 共 12 题，覆盖 **Buffer 本质 / 分配与安全 / 编码转换 / 字节与字符 / 字节序与协议 / 零拷贝与内存池 / 实战** 七类。
+> 共 15 题，覆盖 **Buffer 本质 / 分配与安全 / 编码转换 / 字节与字符 / 字节序与协议 / 零拷贝与内存池 / 实战** 七类。
 
 ---
 
@@ -105,3 +105,25 @@ TCP 会把多条小消息**粘在一起**、或把一条大消息**拆断**送�
 自底向上：**`ArrayBuffer`** = 一段裸二进制缓冲（不能直接读写元素）。**`Uint8Array`**（及各 TypedArray）= 在 ArrayBuffer 上按某种"视图/步长"解释字节的窗口；`DataView` = 同一 ArrayBuffer 上、可**手动指定端序**读写多种数值类型的通用视图。**`Buffer`** = Node 对 `Uint8Array` 的扩展子类（自带池化分配、编码转换、`readUInt32BE` 便捷方法）。一句话：`ArrayBuffer` 是内存，`Uint8Array`/`DataView`/`Buffer` 都是"解读它的视图"，`Buffer` 是 Node 里最顺手的那个（呼应 node-buffer 第一节、ES TypedArray）。
 
 **来源**：MDN — "ArrayBuffer / TypedArray / DataView"; Node.js — "Buffer extends Uint8Array"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. Buffer 的 8KB 内存池机制：为什么存在、什么时候反而坑？
+
+动机：每个小 Buffer 都 malloc 一块 ArrayBuffer 的开销巨大（分配+GC），libuv 式池——小请求（<4KB 即 HALF_SIZE）共享一个 8KB 池切 offset，分配=池内挪指针。坑：① buf.buffer 指向整池（本关题），把 .buffer 传给 worker/网络=多送别人数据；② 池切片让「小 Buffer 钉住 8KB」——百万个 10B Buffer 实际占 8GB 级内存，堆里 ArrayBuffer 看不出来（heapUsed 统计盲区，external 才见）；③ 判池：buf.parent instanceof ArrayBuffer && length!==byteLength？Node 提供 kNoZeroFill/allocUnsafe 走非池。对策：要独占内存 allocUnsafeSlow 或非池路径；传给 worker 用 subarray 拷贝或 structuredClone 时传视图而非 buffer（现代引擎支持传视图）。本关 pooling 题的「为什么默认开、何时关」层。
+
+**来源**：Node 官方《Buffer: pooling 与 allocUnsafeSlow》文档；libuv 内存池与 external memory 统计说明。
+
+### 14. TCP 上实现「多条消息」的分帧，给出设计与防御清单。
+
+两条基本路线（本关题干考过概念）：分隔符帧（换行/魔数——文本协议如 HTTP 头、Redis RESP 用）与长度前缀帧（4 字节 BE 头——二进制主流，本关 BE/LE 题呼应）。设计要点：① 读满才切：累积缓冲（Buffer.concat 慢，预分配环/数组+偏移），半包续读；② **头部防御**：前缀声明长度设上限（如 1MB），超限即断连——「先读 4 字节信 4GB」=内存 DoS；分隔符帧防无分隔垃圾（找分隔的 O(nm) 与无限增长缓冲，超时+上限）；③ 字符编码统一 UTF-8，JSON 帧配 byteLength 前缀（本关 byteLength 题）；④ 粘包只在「帧」层解决，别指望 socket 边界；⑤ 优雅：断开时残留半帧要么丢要么报错，别静默当完整帧。工程：成熟协议/帧库优先（length-prefixed-codec、bobuf），自研就上帧格式测试（半包/多帧同 chunk/超限）。
+
+**来源**：Redis RESP 协议规范；Node 官方 net 文档流式示例与《Designing Data-Intensive 网络分帧》章节。
+
+### 15. 把上传的图片转 base64 塞 JSON，体积与编码上你要提醒什么？还有别的传输选择吗？
+
+体积：base64 每 3 字节→4 字符，**膨胀约 33%**；4MB 图→5.3MB 文本，还要 UTF-8「每 ASCII 字符 1 字节」才成立（正确：base64 输出是 ASCII，但 Buffer.toString('base64') 后当 string 参与 JSON 的字节数=字符数）。编码：分块流式图不能整 Buffer.toString（本关多字节切断题在 base64 上同样——base64 分块要 3 字节对齐或换原生 base64 流转换器）；Data URL 记得 data:image/png;base64, 前缀与 MIME 嗅探风险。替代：① multipart/form-data 或裸二进制 body（Content-Type: image/png + fetch res.arrayBuffer()）体积零膨胀；② 二进制走 WebSocket Blob/ArrayBuffer 帧；③ 需要 JSON 内嵌再考虑 base64，或 msgpack/cbor 带二进制类型。结论：base64 是「表现层妥协」不是传输方案——能传字节就别转文本（本关图片进 JSON 题的成本账）。
+
+**来源**：RFC 4648 base64 定义（3:4 膨胀比）；MDN fetch 二进制 body/arrayBuffer 指南。

@@ -1,4 +1,4 @@
-# next-forms-mutations 面试题（12 题）
+# next-forms-mutations 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点表单与变更模式高频面经，中文重述。
 
@@ -65,3 +65,19 @@ DB 新值 → Data Cache 仍持旧 fetch 结果（TTL 未到）→ Full Route Ca
 **12. 评审一句台词："我们把所有业务逻辑都放进 Action 函数，后端只管数据库。"你批不批？**
 **来源**：InfoQ《BFF 胖化的滑坡》
 分项目体量批：产品早期——可接受（消灭一层胶水是收益）；多端共享/领域复杂后——这是"影子后端"：事务跨团队不可见、权限模型散落、无法独立扩缩与复用。健康线：Action 做**用例编排**（鉴权+组装+失效），领域规则沉到 lib/服务层（同文件可 import 的"进程内后端"），需要共享时同一层独立成服务——演进路径提前画好（呼应 next-fullstack-project、next-architect、exp-server 职责论）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  乐观更新的"回滚与解释失败"怎么做才不伤用户信任？给一套完整设计。**
+**来源**：React 官方 useOptimistic 文档；InfoQ《乐观 UI 的失败语义设计》
+完整设计：① 状态分层——baseState（服务端真相）/ optimistic overlay（本次会话的乐观副本）/ error 队列（哪条失败、原因），别把三者揉进一个数组；② 呈现——乐观条目打"发送中"态（灰度/时钟图标），失败时条目不静默消失：保留 + 标红 + 原因 + "重试/撤销"动作（把回滚变成用户可理解的显式操作），这是信任关键；③ 并发——同键编辑冲突用"最后写入 + 版本号"或干脆禁用并发编辑（对乐观条目再操作要携带乐观版本，服务端 CAS 拒绝则走失败流）；④ 补偿粒度——单条失败只回滚该条（useOptimistic 默认整批回滚是短板，需要按条目拆 action 或自己维护 diff）；⑤ 通知——失败 toast + 条目内联双通道，只有内联会在用户滚过后被错过。反模式："失败静默 + 页面刷新后内容没了"。能讲出"回滚要显式、失败要有解释、补偿要最小粒度"三点即可。
+
+**14.  searchParams、useFormStatus、useActionState、useOptimistic 四个"表单相关"hook 各自的适用边界？**
+**来源**：Next.js 与 React 官方 useFormStatus / useActionState 文档；知乎《Next 表单状态四件套怎么选》
+按状态归属切：① 值得分享/刷新不丢的结果态（筛选、分页、Tab、搜索词）→ searchParams（URL 是公共 API，服务端可读可预渲染）；② 提交过程的 pending（禁用按钮、骨架）→ useFormStatus（只能在 form 子孙的提交按钮上读，动作无关、粒度对）；③ 提交结果与表单数据（错误文案、成功后重置）→ useActionState（state 由 reducer 式 action 返回驱动，服务端错误进 state 天然渲染）；④ 提交生效前的本地视觉预测 → useOptimistic（只管 overlay 不管解释）。常见错配：用 useState 镜像 URL 态（刷新即丢）、把 pending 塞进 useActionState 的 state（多一次无谓渲染且按钮不在 form 内时拿不到）、用 searchParams 传敏感数据（进历史/日志）。加分句：这四件分别对应"结果/过程/结局/预言"四种时间态，问自己这个状态属于哪一刻即可选对。
+
+**15.  复杂多步表单（分步、草稿保存、字段级服务端校验）在 Action 时代怎么搭架构？**
+**来源**：掘金《Next.js 多步表单的草稿架构》；SegmentFault《字段级校验在 Server Action 下的实现》
+骨架：① 表单引擎用 react-hook-form/zod（客户端即时反馈），schema 从服务端 lib 导出保持单一权威；② 字段/分组级校验：一个 validateField(id, value) 的 Action 复用同段 schema 的 safeParse——注意这是"查询式调用"，官方语义上 Action 应做 mutation，字段校验可接受但要限流、且不能承载权威（最终仍整表提交时服务端全量校验）；③ 草稿：小表单 localStorage + 提交时合并；长流程草稿存服务端（草稿表 + 用户/匿名 token），onDraftChange 防抖调 upsert Action——把草稿当 mutation 而非查询；④ 步骤状态进 searchParams（可分享"进行到第几步"）但步骤数据的权威在服务端草稿行，防跳步篡改；⑤ 提交 = 对草稿行的状态机迁移（CAS + 幂等），成功后 revalidate 相关页。避坑：别把整个多步表单塞一个巨型 Action——校验、草稿、提交三层职责混在一起，失败补偿无从做起。

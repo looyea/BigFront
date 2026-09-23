@@ -1,6 +1,6 @@
 # react-advanced-hooks 面试题精选
 
-> 共 12 题，覆盖 A useReducer / B useId 与 a11y / C 外部 store / D 并发类。
+> 共 15 题，覆盖 A useReducer / B useId 与 a11y / C 外部 store / D 并发类。
 
 ## 一、useReducer（A 类）
 
@@ -57,3 +57,25 @@ render 阶段**可中断/恢复/丢弃**——一次昂贵渲染可让位于更�
 ### 12. useTransition 和 useDeferredValue 该怎么选？
 你能控制更新源头 → `useTransition`（把 setState 包进 startTransition，常用于自己写的筛选）。值来自外部/props、你不直接控制其 setState → `useDeferredValue`（把该值滞后一份给昂贵子树）。isPending 用前者，输入即时回显 + 列表滞后渲染用后者（呼应 react-advanced-hooks 第四节）。
 **来源**：react.dev — 在 transition 中使用 deferred value
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  useReducer 相比一堆 useState 到底买到了什么？为什么说 reducer 让状态逻辑更可测、更易优化？
+
+买到三点：① 集中转换规则——多字段、相互关联、跨处触发的状态更新收进一个纯 reducer，「怎么变」与「在哪触发」解耦，避免 setState 散落导致的遗漏/不一致；② 可测——reducer 是纯函数 `(state, action) => next`，无需渲染就能喂各种 state+action 断言输出，天然适合单测（对齐本包测试关）；③ 优化——`dispatch` 引用在整个生命周期内恒定（React 保证），把它传进 memo 子组件不会因函数变化击穿 memo，也可安全放进 effect 依赖。代价：样板多、异步/副作用不能写在 reducer（要保持纯），需配合 thunk 或在事件里编排。判据：「多个 state 联动、转换逻辑复杂、需要时间旅行或集中审计」才上，简单两三个独立值用 useState 更清爽。
+
+**来源**：React useReducer 文档（dispatch 恒定、reducer 纯）；何时选 useReducer vs useState 的官方指引。
+
+### 14.  React 19 的 useActionState / useOptimistic / useFormStatus 把手写表单状态机简化了什么？
+
+过去写「提交中/成功/失败」三态 + 防重复提交 + 乐观更新，要在事件里手动 setPending、try/catch setError、成功后 setList。React 19 的 Actions 原语把这些内建：useActionState 让你传一个 async 函数作为表单 action，自动提供「当前 state、是否 pending、返回的新 state」，表单 submit 期间天然 pending、天然序列化错误；useFormStatus 让「提交按钮」在所属 form 的 action 运行期间读到 pending（无需层层透传）；useOptimistic 提供「先行乐观值 + action 失败自动回滚到真值」。本质是把「异步状态转换」这一最易写错的部分收进框架，配合 startTransition 让提交可打断不卡输入。迁移时理解这套，就理解了 React 想让你少写 effect/手动 pending。
+
+**来源**：React 19 useActionState/useFormStatus/useOptimistic 文档与 Actions 动机。
+
+### 15.  什么是并发渲染下的「tearing」？useSyncExternalStore 靠什么机制消除它？
+
+tearing = 同一次渲染过程中，因读到外部可变 store 在并发被打断/重渲染之间发生了改变，导致一棵树里不同组件「基于不同版本的外部状态」渲染，出现撕裂画面（如 A 组件读到旧值、B 读到新值）。在引入可中断 render 前不成问题（一次渲染原子跑完），并发特性把它暴露。useSyncExternalStore 的解法：订阅 store 变化 + 提供 getSnapshot；React 在 render 里「读一次快照值」并在校验阶段比对——若 render 期间外部值变了，它会强制重新渲染并确保整棵树用同一个快照提交，从而消除撕裂。这要求 getSnapshot 在值没变时返回同一引用（否则误判为一直变化→死循环）。这是把「外部可变源」安全接入并发 React 的唯一正解，替代手写 useEffect+forceUpdate。
+
+**来源**：React「useSyncExternalStore」文档关于 tearing/concurrent reading；社区对外部状态源并发安全的技术剖析。

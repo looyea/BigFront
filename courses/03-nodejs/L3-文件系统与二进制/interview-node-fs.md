@@ -1,6 +1,6 @@
 # node-fs 面试题精选
 
-> 共 12 题，覆盖 **三形态取舍 / 编码与 Buffer / 目录与元信息 / 文件描述符与资源 / 大文件与流 / 权限与原子写** 六类。
+> 共 15 题，覆盖 **三形态取舍 / 编码与 Buffer / 目录与元信息 / 文件描述符与资源 / 大文件与流 / 权限与原子写** 六类。
 
 ---
 
@@ -133,3 +133,25 @@ catch (e) { if (e.code === "ENOENT") return def; throw e; }  // 只兜"不存在
 相对路径是相对**当前工作目录 `process.cwd()`**（进程从哪启动），**不是**相对脚本所在目录（呼应 node-basics 的 `__dirname` vs `process.cwd()`）。`cwd` 随启动方式（`node src/x.js` vs 从别处调用/pm2/systemd）变化，于是"明明在目录里，运行位置一变就 ENOENT"。根治：**基于脚本自身位置拼绝对路径**——CJS 用 `path.join(__dirname, 'config.json')`；ESM 无 `__dirname`，用 `fileURLToPath(import.meta.url)` 还原（详细在 **node-path-url** 展开）。绝不把裸相对路径写进可能被不同 cwd 启动的代码。
 
 **来源**：Node.js — "process.cwd vs __dirname"; 社区 — "ENOENT because of cwd not script dir"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. os.rename 是原子写的基石——讲讲「写临时文件+rename」的完整工序与它的失效边界。
+
+工序：写 `target.tmp-随机串` → 数据落地（关键：filehandle.sync()/fs.fsync 刷**数据**，rename 只保证目录项原子）→ rename 覆盖目标（POSIX 单文件系统内原子替换：读者永远看到「旧完整版或新完整版」）→ 目录 fsync（掉电保目录项）。失效边界：跨文件系统 rename 报 EXDEV（tmp 必须与目标同盘，别丢 /tmp）；Windows 覆盖需 MOVEFILE_REPLACE_EXISTING（Node rename 在 Win 可覆盖已存在文件但非无锁）；并发追加写者会在 rename 后继续写旧 inode（日志 rotate 的丢行根源，需 SIGHUP 重开文件）。应用：配置保存、sqlite WAL checkpoint、日志轮转 copytruncate vs create 之争——本关原子写与 appendFile 交错题的展开。
+
+**来源**：Node fs.rename 文档（UV_ERR_FS_* 与平台差异）；PostgreSQL/etcd fsync 讨论与 LWN《filesystem sync 语义》。
+
+### 14. fs.watch 为什么「不可靠」？跨平台文件监听工程上怎么做？
+
+底层异构：macOS FSEvents（可能合并事件、路径粒度粗）、Linux inotify（移动=unlink+create 两事件、目录递归要逐子目录挂、watch 数受 fs.inotify.max_user_watches）、Windows ReadDirectoryChangesW（网络盘/重命名语义漂移）。通病：不保证事件不丢（高负载队列溢出只给你一个 "event overflow"）、同一变更次数不定、rename 语义缺信息。工程：① 去抖+二次确认（setTimeout 收束窗口，写完再 stat 验存在与 mtime）；② 递归自己 walk 挂；③ 兜底轮询（chokidar 的 usePolling 就是给 NFS/Docker 挂载卷的——容器 volume 里 inotify 穿不透是部署经典坑）；④ 优先「事件源改造」：能让写方发通知（Redis pub/sub、DB CDC）就别监听文件系统。库选 chokidar 但理解它也只是缓解。
+
+**来源**：Node fs.watch「not guaranteed across platforms」官方警告段；chokidar README《non-realtime filesystems》。
+
+### 15. 一个 HTTP 服务频繁报 EMFILE，从错误语义到根因到修复列一条完整线。
+
+语义：进程文件描述符表满——fd 不只对应文件，socket/epoll/timer(uv handle 占 fd 或 pipe) 全算。根因排查：① 泄漏：open/createReadStream 无 close/destroy（错误分支漏 finally 是本关「隐藏患」题实装）、keepAlive 连接数超预期（每客户端连接一个 fd）；② 合法高并发：ulimit -n 默认 1024 太低。工具：lsof -p /dev/fd 计数、process._getActiveHandles 粗看、/proc/self/fd 数量监控。修复：代码层 finally 关流、server.maxRequestsPerSocket + keepAliveTimeout 收紧、系统层 ulimit/nofile（容器要改 security-opt 或 systemd LimitNOFILE）；防复发：fd 使用量进监控曲线。顺带：集群多进程时 listen socket 是共享的，worker 泄漏才是增量元凶。
+
+**来源**：Node 官方《Handling EMFILE》诊断指引（fd 资源模型）；lsof/ulimit 运维手册与 K8s nofile 配置文档。

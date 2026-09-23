@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Cache-Control: no-cache 的准确含义是？",
       "options": [
-        "完全不缓存响应",
         "可以缓存，但每次使用前的请求服务器验证（走协商缓存，可能 304）",
+        "完全不缓存响应",
         "禁止代理缓存",
         "立即过期且不验证"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "no-cache = 不用强缓存直接返回，总得向服务器验证（If-None-Match）→ 没变返回 304 复用。真正不缓存是 no-store。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "为什么带 content hash 的 JS 文件可以设 max-age=31536000（一年）？",
       "options": [
         "因为文件很重要",
-        "内容变则 hash 变→文件名变，不会与旧文件冲突；未变则安全命中长缓存",
         "因为 JS 不会变",
+        "内容变则 hash 变→文件名变，不会与旧文件冲突；未变则安全命中长缓存",
         "因为浏览器不支持更短的时间"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "文件名含内容哈希，不同内容必不同名 → 长缓存不会拿到错文件；发版时 index.html（no-cache）引用新名即可。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "协商缓存中精度最高、最推荐用的是哪一对头？",
       "options": [
         "Last-Modified / If-Modified-Since",
-        "ETag / If-None-Match",
         "Expires / Pragma",
-        "Cache-Control / Age"
+        "Cache-Control / Age",
+        "ETag / If-None-Match"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "ETag 是内容哈希，能捕捉秒内多次修改、内容回滚等 Last-Modified 误判的情况，优先级也更高。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "Node 单线程处理文件 IO 浪费且占连接。Nginx/CDN 高并发、缓存、边缘分发 → 静态交给它，Express 只跑业务逻辑。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " express.static 默认 serve 目录里的 .git、.env 这类点文件吗？",
+      "options": [
+        "默认全部 serve",
+        "默认 dotfiles 为 ignore（不 serve）——但 dotfiles: allow 一旦为图方便打开，源码库与环境文件就整目录裸奔，要开必须配具体路径白名单",
+        "报错拒绝加载",
+        "只 serve 图片"
+      ],
+      "answer": 1,
+      "explanation": "静态目录的\"暴露面清单\"要显式审查：dotfiles、index 列表、follow symlinks 三个选项各是一个漏洞类别。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " SPA 用 history 路由时，Express 端的 fallback 应该怎么配？",
+      "options": [
+        "每个前端路由注册一条 get",
+        "静态资源路由全部 miss 后，兜底中间件对\"GET 且非 API 路径且 Accept HTML\"的请求统一 sendFile(index.html)——并且要防把资源请求也回退成 HTML 的坑（按扩展名/Accept 判定）",
+        "返回 404 让前端处理",
+        "用 redirect 到首页"
+      ],
+      "answer": 1,
+      "explanation": "fallback 的判定条件是精髓：刷新深链接要 200+index，而缺图的 .png 请求回退成 HTML 会让 img 静默坏死。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " SPA 部署里 index.html 与带 hash 的 JS 资源各自的缓存策略应是？",
+      "options": [
+        "都 no-cache",
+        "index.html 用 no-cache（每次都协商，保证发版可达）或短 max-age，hash 资源用 max-age 一年 + immutable——入口可换、内容不可变",
+        "都 max-age 一年",
+        "都 public"
+      ],
+      "answer": 1,
+      "explanation": "\"入口协商、资产强缓存\"是 Content Hash 体系的另一半：入口永远新鲜，资产永远不可变，两把钥匙缺一不可。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 静态目录里有同名不同内容的文件在多台应用服务器间漂移（手工补过文件），会引发什么？",
+      "options": [
+        "只是显示不一致",
+        "同一用户请求被负载到不同机器拿到不同字节流 → ETag 来回变化引发缓存反复失效，甚至\"半新半旧\"的资源引用断裂——根治是把静态资产从应用实例挪到对象存储/CDN 单一源",
+        "Express 会自动同步",
+        "加机器解决"
+      ],
+      "answer": 1,
+      "explanation": "实例本地磁盘不是\"源\"，是 N 份互相漂移的副本——有状态文件放无状态多实例是架构级错误。"
     }
   ]
 }

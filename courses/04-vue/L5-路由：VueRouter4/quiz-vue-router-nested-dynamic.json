@@ -8,11 +8,11 @@
       "prompt": "嵌套子路由的 path 为什么通常不写前导 /？",
       "options": [
         "写了会报错",
-        "子 path 是相对父级的，写 / 会变成绝对路径脱离父结构",
         "/ 表示默认子路由",
+        "子 path 是相对父级的，写 / 会变成绝对路径脱离父结构",
         "纯粹风格问题"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "子 path 相对父级拼接；path:'' 才是默认子路由（呼应 vue-router-nested-dynamic 第一节）。"
     },
     {
@@ -20,27 +20,37 @@
       "type": "single",
       "prompt": "props: true 配置的作用是什么？",
       "options": [
-        "把路由 params 自动作为 props 传给组件、解耦组件与 $route",
         "开启缓存",
         "禁止导航",
-        "把 query 存进 store"
+        "把 query 存进 store",
+        "把路由 params 自动作为 props 传给组件、解耦组件与 $route"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "组件收 props 而非直接读 route，更可复用可测（呼应 vue-router-nested-dynamic 第二节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "路由 /files/:name* 中的 :name* 表示？",
-      "options": ["name 可选、单个值", "name 零或多段、值为数组", "name 必须是数字", "匹配 404"],
-      "answer": 1,
+      "options": [
+        "name 零或多段、值为数组",
+        "name 可选、单个值",
+        "name 必须是数字",
+        "匹配 404"
+      ],
+      "answer": 0,
       "explanation": "* 零或多段(数组)，? 可选单个，+ 至少一段（呼应 vue-router-nested-dynamic 第三节）。"
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": "catch-all 404 路由 /:pathMatch(.*)* 应放在 routes 数组的什么位置？",
-      "options": ["最前", "最后", "任意位置", "紧跟首页"],
+      "options": [
+        "最前",
+        "最后",
+        "任意位置",
+        "紧跟首页"
+      ],
       "answer": 1,
       "explanation": "通配会吞其它路由，故必须最后（呼应 vue-router-nested-dynamic 第三节）。"
     },
@@ -74,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "route.query 里取到的值类型通常是？",
-      "options": ["number", "字符串（或字符串数组），需自行转数值", "boolean", "Object"],
+      "options": [
+        "number",
+        "字符串（或字符串数组），需自行转数值",
+        "boolean",
+        "Object"
+      ],
       "answer": 1,
       "explanation": "URL 参数都是字符串，别当数字用（呼应 vue-router-nested-dynamic 第五节、node-config env 皆字符串）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "嵌套路由里父组件 <RouterView> 不渲染任何内容，但子路由确认匹配，最可能的原因是：",
+      "options": [
+        "子路由 path 写错",
+        "父组件模板里漏写 <RouterView> 出口（或写了 name 与子路由 components 的具名出口不匹配）——嵌套渲染是「模板出口驱动」，路由表配了没有出口照样不显示",
+        "缓存冲突",
+        "props 类型错"
+      ],
+      "answer": 1,
+      "explanation": "「路由 匹 配 成 功 但 页 面 空 白」排 查 第 一 步：to.matched 数组 与 模板 `<RouterView>` 出 口 的 **数 量 与 name 对 齐**（本关 matched 题 的 诊 断 用 法）；多 层 布 局 里 中 间断 了 一 层 出 口 最 代 表 性。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "params 传的对象里带了一个路由 path 中不存在的多余字段（如 { id: 1, from: \"banner\" }），结果是：",
+      "options": [
+        "原样保留在 URL",
+        "多余字段被丢弃且开发模式警告——params 必须与路由定义的动态段一一对应，携带额外上下文应该用 query 或 state（push 的 state 选项）",
+        "抛异常中断导航",
+        "存进 sessionStorage"
+      ],
+      "answer": 1,
+      "explanation": "这 是 「params 突 然 消 失」三 大 来 源 之 一（另 两 个：命 名 路 径 缺 段 被 忽略、刷 新 后 未 参 与 URL 的 隐 式 params 本 就 不 存 在——params 的 「非 URL 段」不 落 地 是 设 计 而 非 bug，本关 params/query 题 的 完 整 一 面）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "可选参数 `/user/:id?` 与 `pathMatch(.*)?` 配合时的匹配特性是：",
+      "options": [
+        "两者等价",
+        "可选参数匹配不到该段时该段为 undefined（不产生空字符串）；catch-all 可选版本几乎永不推荐——它会让任意垃圾路径静默 200 空页，404 必须显式兜底组件而非「可选的无」",
+        "可选参数只能放末尾",
+        "undefined 会变 null"
+      ],
+      "answer": 1,
+      "explanation": "段 缺 席 时 `route.params.id === undefined` 的 判 定 写 法（不 是 falsy 判 定，id=0 类 业 务 会 误 伤）；catch-all 的 正确 形 态 永远 是 「最 后 一 条 + 明 确 404 组 件」（本关 404 位置 题 的 语义 补 完）。"
     }
   ]
 }

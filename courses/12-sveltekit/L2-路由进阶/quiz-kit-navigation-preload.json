@@ -3,6 +3,7 @@
   "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
+      "id": "q1",
       "type": "single",
       "prompt": "官方新建项目脚手架里，全站数据预取默认是怎么配置的？",
       "options": [
@@ -15,6 +16,7 @@
       "explanation": "预取是纯 DOM 属性驱动，默认模板直接把 hover 挂在 app.html 的 body 上，全站链接悬停即预取——不在配置文件、不在 load。"
     },
     {
+      "id": "q2",
       "type": "single",
       "prompt": "data-sveltekit-preload-code 的四个取值里，哪两个只对\"导航完成后当场存在于 DOM\"的链接生效？",
       "options": [
@@ -27,6 +29,7 @@
       "explanation": "eager 与 viewport 需要 Kit 主动扫描链接，官方为避免 DOM 观察性能陷阱，只认导航完成时已在场的链接；{#if} 后渲染的链接要等 hover/tap 触发。"
     },
     {
+      "id": "q3",
       "type": "single",
       "prompt": "用户在系统里开启了省流量模式（navigator.connection.saveData 为 true），预取行为是？",
       "options": [
@@ -39,6 +42,7 @@
       "explanation": "官方明话：选择了减少数据用量的用户面前，preload-data 与 preload-code 属性一律被忽略——内置的尊重用户策略。"
     },
     {
+      "id": "q4",
       "type": "single",
       "prompt": "某链接同时写 data-sveltekit-preload-data=\"hover\" 与 data-sveltekit-preload-code=\"tap\"，实际效果是？",
       "options": [
@@ -51,6 +55,7 @@
       "explanation": "预取代码是预取数据的前提步骤：hover 预取数据时必然已在 hover 时预取代码。tap 比 hover 保守，写了等于没写。官方明确该属性只在更激进档位时才有效果。"
     },
     {
+      "id": "q5",
       "type": "single",
       "prompt": "全局 hover 预取已开启，但侧边栏广告位不该预取（防误触刷量），官方方案是？",
       "options": [
@@ -63,6 +68,7 @@
       "explanation": "所有 data-sveltekit-* 选项都支持 \"false\" 值在局部关闭继承；data-sveltekit-reload 是整页导航，杀鸡用牛刀还改了导航语义。"
     },
     {
+      "id": "q6",
       "type": "single",
       "prompt": "rel=\"external\" 与 data-sveltekit-reload 的共同点与差异是？",
       "options": [
@@ -75,6 +81,7 @@
       "explanation": "官方：带 data-sveltekit-reload 的链接点击触发整页导航；rel=\"external\" 受到同样待遇，另外 prerender 阶段会忽略这类链接（不顺着它爬）。"
     },
     {
+      "id": "q7",
       "type": "single",
       "prompt": "关于编程式预取 API，正确的是？",
       "options": [
@@ -85,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "两个函数都在 $app/navigation。preloadData 与 hover/tap 触发的行为同一条链、返回 load 结果的 Promise；preloadCode 只 import 代码且接受通配路径。绕过 saveData 是官方禁止的方向。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " data-sveltekit-reload 挂在链接上的效果是？ ",
+      "options": [
+        " 禁用预取但保持 SPA 导航 ",
+        " 该链接点击时放弃客户端导航，走整页加载刷新 ",
+        " 强制重新登录 ",
+        " 刷新当前页 "
+      ],
+      "answer": 1,
+      "explanation": " reload 让单个链接退回浏览器原生导航，用于指向旧版页面、下载链接或第三方需要整页生命周期的场景。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " data-sveltekit-replacestate 的作用？ ",
+      "options": [
+        " 用 replaceState 记录历史，点击后浏览器后退不再回到来源页 ",
+        " 清空历史栈 ",
+        " 预取失败时回退 ",
+        " 替换查询参数编码 "
+      ],
+      "answer": 0,
+      "explanation": " 典型用于面包屑纠正、一次性引导页，避免用户后退陷入循环；仅影响该链接触发的导航。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 全站 hover 预取下，搜索结果下拉里的几百个候选链接最合理的处理是？ ",
+      "options": [
+        " 全部禁用预取 ",
+        " 在下拉容器上加 data-sveltekit-preload-data=off 或 tap 层级控制，避免每个 hover 都打 load ",
+        " 改用 <button> 渲染 ",
+        " 关掉全站预取改为手动 "
+      ],
+      "answer": 1,
+      "explanation": " 容器级属性可继承覆盖：对高频渲染、命中率低的目标列表降级预取等级，是官方建议的过度预取治理手段。 "
     }
   ]
 }

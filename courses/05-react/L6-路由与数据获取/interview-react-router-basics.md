@@ -1,6 +1,6 @@
 # react-router-basics 面试题精选
 
-> 共 12 题，覆盖 A 路由原理 / B 声明式配置 / C 导航与读取 / D 嵌套·Vue 对照四类。
+> 共 15 题，覆盖 A 路由原理 / B 声明式配置 / C 导航与读取 / D 嵌套·Vue 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：① **配置式 → 声明式**：路由写在 JSX `<Route>` 树里、可条件生成，而非一份 `routes` 数组；② **没有全局 beforeEach**：鉴权/守卫改用包裹组件 + `<Navigate>`，逻辑组件化；③ **读信息用 hooks 而非 `this.$route`**：`useParams/useLocation/useNavigate/useSearchParams` 分散在组件里取，且要注意"同路由换参数不重挂载"需自行依赖参数重新取数。弄懂这三点，Vue Router 的经验几乎可平移（呼应 vue-router-basics）。
 
 **来源**：React Router 文档 — Getting Started、Vue Router 文档对比
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  useParams 与 useLocation().state 传数据的本质差异？为什么刷新后 location.state 会丢、哪些数据绝不能只放 state？
+
+useParams 来自 URL 路径段，是「可分享、可收藏、刷新不丢、后退可恢复」的一等公民——凡「重新访问该 URL 应看到同样页面」的数据（资源 id、页码、筛选）必须进 path/param 或 query。useLocation().state 走的是 history 条目里的 state（pushState 携带、不进 URL），适合「一次性、不该出现在地址栏」的上下文（如从列表带去的来源标记、跨页传递的草稿）。坑：① 刷新时浏览器会用当前 history 条目重载，state 可能保留但也依赖实现与用户路径，绝不能把它当可靠存储；② 分享链接不带 state；③ 直达/新标签页 state 为 null 必须有兜底。判据一句话：URL 是真相的就进 params/query，只是导航上下文的才进 state，且代码要容忍 state 缺失。
+
+**来源**：React Router useLocation/state 与 History 的 pushState 语义；MDN Session History API 持久化限制。
+
+### 14.  React Router 的两种声明方式（JSX `<Routes>` 组件式 vs config 路由数组）怎么选？嵌套布局如何共享？
+
+JSX 式（`<Routes><Route .../></Routes>`）直观、就近声明、适合路由不太多或想边写边看结构的 app，但无法在 React 树之外访问路由表。config 数组式（v6.4+ 配合 createBrowserRouter 或 data router）把路由集中成数据，便于：全局 layout 路由（`element:<Layout/>, children:[...]` 子路由渲染进父的 <Outlet/>）、代码分割集中声明、以及在应用启动/鉴权层遍历。嵌套共享靠「父路由放布局组件 + <Outlet/> 出口」，父组件保持挂载、子路由变化只换出口内容——这跟 Vue Router 的 children+<RouterView> 完全同构。选型：用了 Data Router（loader/action）基本就走 config 式，因为 data API 需要路由对象。
+
+**来源**：React Router 路由概念（声明式 JSX vs 路由对象/嵌套与 Outlet）官方文档。
+
+### 15.  从 Vue Router 迁到 React Router，最容易踩的三个心智差异是什么？
+
+① 声明载体：Vue 是集中配置数组 + 命名路由，React 传统是 JSX 元素树（v6.4 后又有 config 式 data router），别把 Vue 的 routes:[{path,component}] 直接搬。② 守卫模型：Vue 有全局 beforeEach/beforeEnter 三档导航守卫，React Router 没有等价的「导航守卫钩子」——鉴权靠「包裹组件渲染 <Navigate/>」或（Data Router）loader 里 return redirect，把「拦截」从「事件钩子」变成「渲染/数据产物」。③ 参数与查询：Vue 的 route.params/route.query 在一个响应式对象上，React 拆成 useParams（路径段）+ useSearchParams（查询串）两个 Hook，且解引用非响应式快照——组件复用时同前一课 params 变化要监听/靠 loader 重跑，不会自动重置组件。理解这三条，迁移里的「为什么我的写法不生效」基本都有解。
+
+**来源**：Vue Router 导航守卫 vs React Router loader/声明式重定向的对照；两者参数 API 差异。

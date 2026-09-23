@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "纯派生用 $derived,有副作用才用 $effect(呼应 svelte-reactive-runes 第二、三节)。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 下面哪一对 runes 的语义描述正确？",
+      "options": [
+        "$derived 用于写、$state 用于读",
+        "$state 声明可变响应式值、$derived 声明由其他响应式值计算出的只读值、$effect 跑副作用——三者职责不可互换",
+        "$effect 有返回值给模板用",
+        "$state 只能用于数字"
+      ],
+      "answer": 1,
+      "explanation": "写=state、纯算=derived、副作用=effect，是 runes 的基本三分；混用（在 derived 里写、在 effect 里返回）是新手头号错。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 关于 $state 对复合类型的处理，正确的是？",
+      "options": [
+        "数组和对象内部不被追踪",
+        "默认深度代理——$state 对象的嵌套属性/数组元素变化都会触发更新（要\"只换引用不追内部\"用 $state.raw）",
+        "只有 class 实例响应",
+        "必须手动 trigger"
+      ],
+      "answer": 1,
+      "explanation": "深代理是默认（对应 quiz 既有题的 raw 反例）；raw 用于大对象/不可变数据换性能（与 performance 关呼应）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 想在组件外复用一段含 runes 的响应式逻辑，正确的文件形态是？",
+      "options": [
+        "普通 utils.js 直接写 $state",
+        ".svelte.js / .svelte.ts 模块——只有这个扩展名会被编译器处理 runes（顶层或导出函数里用），普通模块会编译报错",
+        "必须写进 .svelte 的 context=module",
+        "用 .json 描述"
+      ],
+      "answer": 1,
+      "explanation": ".svelte.js/.svelte.ts 是\"可跨组件共享的响应式单元\"的官方载体（与 global-state 关的工厂函数题配套）。"
     }
   ]
 }

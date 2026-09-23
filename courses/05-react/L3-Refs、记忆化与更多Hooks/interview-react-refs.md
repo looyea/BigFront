@@ -1,6 +1,6 @@
 # react-refs 面试题精选
 
-> 共 12 题，覆盖 A ref 本质 / B 时机与 DOM / C 子组件与句柄 / D state vs ref 与对照类。
+> 共 15 题，覆盖 A ref 本质 / B 时机与 DOM / C 子组件与句柄 / D state vs ref 与对照类。
 
 ## 一、ref 本质（A 类）
 
@@ -57,3 +57,25 @@ Vue 3.5 `useTemplateRef`/`ref` 属性绑定、`<script setup>` 默认封闭要 `
 ### 12. 高频场景里 ref 能帮你省掉哪些渲染？举两例。
 ① 记录鼠标/滚动坐标做节流计算，只存 ref 不 setState，需要时再同步到 state；② 集成 Canvas/ECharts，实例与句柄存 ref，靠命令式 `chart.setOption` 更新而非 React 重渲染整树（呼应 react-effect-patterns、react-performance）。
 **来源**：web.dev — 节流、ECharts + React 集成实践、React 性能模式
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 对象 ref、回调 ref、以及「在 effect 里读 ref」三者时机差异是什么？测一个元素尺寸该选哪种？
+
+对象 ref（useRef）：commit 时被赋值，之后任意时刻（事件/effect）可读，但 render 里读到的是上帧值。回调 ref：在 DOM attach 的瞬间被调用，比被动 effect 更早，适合「拿到节点立即做件事」（如自动聚焦、初次测量）。在 effect 里读 ref：DOM 已就位，被动 effect 在 paint 后、layout effect 在 paint 前。测量尺寸若关系到「绘制前就要据其定位、不能闪」→ useLayoutEffect + ref；若只是异步统计（如上报元素尺寸、懒加载可见性）→ 被动 effect 或直接上 ResizeObserver（放进 effect 订阅、cleanup 里 disconnect）。选型关键：读 DOM 的时机是否影响「用户看到的第一帧」。
+
+**来源**：React refs / callback ref 文档；ResizeObserver API 与「测量后同步改 DOM 用 layout effect」指引。
+
+### 14. 用 ref 命令式改 DOM（手动加 class、改 style、插入节点）为什么会和 React 打架？怎么安全地做？
+
+React 的协调基于「虚拟 DOM 与它自己认为的真实 DOM」做 diff，它不知道你手改了什么。你若绕过它改同一节点的受控属性（className、style、children），下次该组件 render 时 React 可能按 props 把你的改动覆盖、或在 diff 时做出错误最小化决策，导致闪烁/丢状态/难以复现的 bug。安全边界：① 只操作 React 不管的「外部注入」子树（如挂载一个第三方库的容器 div，React 对该 div 内部用 suppressHydrationWarning 或空 children 保持不碰）；② 改的属性不是任何 prop 驱动的（如给 canvas 画东西）；③ 需要 React 感知的结果就 setState 让它重渲染，而非手改。原则：ref 是逃生舱，用来「出 React 的世界」，不是「在 React 的世界里手动干 React 的活」。
+
+**来源**：React refs 文档与 DOM 不可变性约定；社区「手动操作 DOM 与 reconciliation 冲突」案例。
+
+### 15. 把「组件方法」暴露给父组件调用，除了 ref + useImperativeHandle 还有更 React 化的替代吗？
+
+useImperativeHandle（配 ref）能定义对外暴露的最小命令式接口（如 `focus()`、`reset()`），但它是「命令式」范式。更 React 的路子是「把控制权交回数据」：受控化——父用 state 驱动，子只渲染（如 `<Modal open={open}/>` 而非 `modalRef.current.open()`）；或用「回调 + 事件」把子内部状态提升；或用声明式 props 表达意图（`<Video playing/>`）。命令式 ref 保留给「无法/不该被状态化」的浏览器原生能力：focus、scrollIntoView、播放/暂停媒体、测量。取舍判据：能表达成「一个值」就别用 ref 方法，只有「瞬时动作」才走 imperative handle。这与本包组合关「props 传节点优于配置对象」是同一种「让数据流表达意图」的哲学。
+
+**来源**：React refs 与「Imperative Functions」文档；受控组件设计优先于命令式 ref 的社区共识。

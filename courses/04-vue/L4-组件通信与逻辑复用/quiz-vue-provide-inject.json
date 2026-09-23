@@ -7,35 +7,50 @@
       "type": "single",
       "prompt": "provide/inject 主要解决什么问题？",
       "options": [
-        "替代所有 props",
         "跨多层组件传递依赖，避免 prop drilling",
+        "替代所有 props",
         "只做父子一层通信",
         "管理 CSS"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "祖先 provide、任意后代 inject，跳过中间层（呼应 vue-provide-inject 第一、五节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "要让后代注入到的值能随祖先更新，应该 provide 什么？",
-      "options": ["值的快照 obj.value", "ref/reactive 本身（或含修改函数的对象）", "JSON 字符串", "普通字面量"],
-      "answer": 1,
+      "options": [
+        "值的快照 obj.value",
+        "JSON 字符串",
+        "ref/reactive 本身（或含修改函数的对象）",
+        "普通字面量"
+      ],
+      "answer": 2,
       "explanation": "传响应式源本身才保持更新；快照是一次性的（呼应 vue-provide-inject 第二节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "为什么推荐用 Symbol / InjectionKey 而不是字符串做 key？",
-      "options": ["Symbol 更快", "避免不同库/组件间 key 撞名，InjectionKey 还能带类型", "字符串不能用", "能自动响应式"],
-      "answer": 1,
+      "options": [
+        "Symbol 更快",
+        "字符串不能用",
+        "能自动响应式",
+        "避免不同库/组件间 key 撞名，InjectionKey 还能带类型"
+      ],
+      "answer": 3,
       "explanation": "字符串易冲突；Symbol 唯一、InjectionKey 绑定类型（呼应 vue-provide-inject 第三节）。"
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": "inject(key) 找不到任何 provider 时（未给默认值）会？",
-      "options": ["抛异常", "返回 undefined（并可能告警）", "自动创建", "返回 null 且报错"],
+      "options": [
+        "抛异常",
+        "返回 undefined（并可能告警）",
+        "自动创建",
+        "返回 null 且报错"
+      ],
       "answer": 1,
       "explanation": "无 provider 且无默认值返回 undefined；给第三参可降级（呼应 vue-provide-inject 第四节）。"
     },
@@ -77,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "暴露 inc() 等函数、别就地乱改，保持可追踪（呼应 vue-provide-inject 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "祖先用 provide(key, readonlyState) 下发状态，后代 inject 后调用祖先一并 provide 下来的 setState 函数修改，这个模式的本质是：",
+      "options": [
+        "反模式应该直接改",
+        "迷你 Flux/单向下行+显式上行——状态只读下发、变更集中回祖先函数，比「下发可变对象」多了单点拦截（校验/日志）且守住了数据主权（本关稳妥做法题的正解形态）",
+        "等价于 Pinia",
+        "Vue 不支持"
+      ],
+      "answer": 1,
+      "explanation": "这 就 是 官方 「用 组合式 函数 封装 provide/inject」示例 背 后 的 思想：provide **API**（state+actions 打包）而 不 是 provide **裸 状态**；再 进 一 步 就 是 Pinia 的 「state 只读 + actions 变更」模 型（本关 定位 题 的 演进 链）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "inject 的默认值传了个对象且第三参 treatDefaultAsFactory=true，语义是：",
+      "options": [
+        "默认值被冻结",
+        "工厂函数模式：Vue 调用该函数取返回值作默认（每处 inject 独立生成），用于默认值是对象/需要惰性构造的场景，避免多注入方共享同一默认实例互相写脏",
+        "默认值被深拷贝",
+        "抛类型错"
+      ],
+      "answer": 1,
+      "explanation": "不 开 工厂 时 `inject(key, {})` 的 那 个 字面量 对象 是 **同 一 个**（provider 缺失 时 所有 注入 方 拿 同 引用 互 踩）；工厂 还 省 掉 无需 默认 时 的 构造 开销（本关 三 参数 题 的 陷阱 面）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "嵌套两层 Provider（祖先 A provide theme=dark，中间 B provide theme=light），深层后代 inject 得到：",
+      "options": [
+        "A 的值（就近原则的反面）",
+        "B 的值——注入沿组件树向上查找，第一个命中的 provider 生效（与作用域链/原型链同构）；配 inject 旧值再透传可手动实现「覆盖但可回溯」",
+        "合并两者",
+        "随机"
+      ],
+      "answer": 1,
+      "explanation": "「先 拿 `const outer = inject(key)` 再 provide 加工 后 的 值」= 中间 件 式 的 主题/配置 覆盖 链（样 式 框架 的 常见 内核）；忘 了 先 inject 会 把 外 层 配置 整 段 截 断（本关 查找 规则 题 的 应用 式 写法）。"
     }
   ]
 }

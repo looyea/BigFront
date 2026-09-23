@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "把对象放进 useEffect 依赖却每次新引用，导致 effect 狂跑，正确修法之一是？",
-      "options": ["改成空依赖数组", "删掉依赖检查规则", "用 useMemo 稳定该对象引用（或改依赖其中的原始值）", "用 useCallback 包住 effect"],
+      "options": [
+        "改成空依赖数组",
+        "删掉依赖检查规则",
+        "用 useMemo 稳定该对象引用（或改依赖其中的原始值）",
+        "用 useCallback 包住 effect"
+      ],
       "answer": 2,
       "explanation": "稳定引用或只依赖原始值（呼应 react-memo-hooks 第二节、react-useeffect）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "React 无内置响应式缓存，靠手动/编译器（呼应 react-memo-hooks 第六节、vue-reactivity-theory）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " useCallback 单独使用（子组件没被 memo、也没当依赖）时，效果通常是？",
+      "options": [
+        "一定带来性能提升",
+        "几乎无收益甚至负收益——被 memo 的函数本身有创建/比较成本，若消费方不依赖引用稳定，包它是纯开销；只有当函数作为 props 传给 memo 子组件、或作为 effect/其它 hook 依赖时才真正有用",
+        "会把函数变异步",
+        "替代了 useMemo"
+      ],
+      "answer": 1,
+      "explanation": "useCallback(fn, deps) 等价于 useMemo(() => fn, deps)，它「稳定的是引用」而非「省去计算」。若没有谁因为这个引用变化而多渲染或多跑，缓存就是负资产（额外分配 memoized 函数 + 每帧比较 deps）。React 文档明确：不要条件性滥用，Compiler 落地后这类机械 memo 更应由编译器按需生成。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 给 useMemo 传了不完整/错误的依赖数组，最典型的后果是？",
+      "options": [
+        "每次都重算",
+        "返回「基于旧依赖」的陈旧缓存结果——计算被跳过但读到的还是上次依赖时的值，产生难复现的 stale bug；useMemo 依赖必须与函数体真实读取的外来值一致",
+        "直接抛错",
+        "自动补齐依赖"
+      ],
+      "answer": 1,
+      "explanation": "useMemo 与 effect 共享同一契约：依赖数组是「我读取了哪些外部值」的声明，声明少了就读到 stale。区别只在 effect 会跑副作用、useMemo 会返回旧缓存。正确修法是把所有被读的值纳入依赖，或干脆「直接每次算」（若计算廉价）——缓存不是免费的，别为微小的重算引入 stale 风险。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " React.memo 在什么场景下真正带来正收益？",
+      "options": [
+        "包住任何组件都有收益",
+        "props 引用稳定且子树渲染成本高、且它常因父渲染而被连带重渲染时才有收益；若父每次传的 children/对象都是新的，memo 反而因比较与包装白做功",
+        "只在类组件生效",
+        "只优化首屏"
+      ],
+      "answer": 1,
+      "explanation": "memo 是「用一次浅比较换一次可能的高成本重渲染」。收益公式：省下的渲染成本 > 比较 + 包装开销。杀手场景是「children 由父传入」——父每次 render 都新建 children 元素，memo 比较必然不等，包了也白包。所以 memo 要配「稳定 props」一起用，且应先用 Profiler 证实是瓶颈再上（对齐本包性能关）。"
     }
   ]
 }

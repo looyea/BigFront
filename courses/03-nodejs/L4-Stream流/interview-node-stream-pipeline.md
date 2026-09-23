@@ -1,6 +1,6 @@
 # node-stream-pipeline 面试题精选
 
-> 共 12 题，覆盖 **pipe 的缺陷 / pipeline 语义 / 错误与资源清理 / finished 与 consumers / async 迭代与 Web 流 / 取消与实战** 六类。
+> 共 15 题，覆盖 **pipe 的缺陷 / pipeline 语义 / 错误与资源清理 / finished 与 consumers / async 迭代与 Web 流 / 取消与实战** 六类。
 
 ---
 
@@ -111,3 +111,25 @@ await pipeline(
 建议改成 **`await pipeline(a, b, c)`**（`stream/promises`）。理由：① 裸 `pipe` 链上任一流出错都可能"无 error 监听崩进程"（呼应 node-events 第三节）或**静默泄漏**（fd/半成品文件未清）；② `pipe` 链的错误要你自己给每段补 `.on('error')` 且要手动 `destroy`，易漏；③ `pipeline` 一处收口错误、自动销毁所有流、Promise 化能与 async 上下文与 AbortController 协同（呼应第 2、3、5、10 题）。若必须用回调风格，退而用回调版 `pipeline`。这也是为什么老牌的 `pump` 最终被 Node 内建 `pipeline` 取代（呼应 node-stream-pipeline 第二节）。
 
 **来源**：Node.js — "pipeline vs pipe recommendation"; 社区 — "replace pipe with pipeline"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. pipe 到底漏在哪：用一个「读文件→gzip→写盘、中途磁盘满」的例子把错误路径走一遍。
+
+ENOSPC 时 write 流 emit error：① 裸 pipe 链上只有 dest 知道错误，src 与 gzip 全被遗忘——它们继续读盘压缩，写端已 destroyed，数据进黑洞，无错误冒泡（监听 dest error 的救火代码漏挂 src=泄漏 FD）；② 无统一收尾：谁 destroy 谁？手工链要三层 each 挂；③ 背压与 error 竞态老实现行为不一致。pipeline 的对照：任一环节 error → **所有其他流 destroy**（传播方向定义好），promise reject 携带原始 err（cause 保留），结束保证每个流 close 后落定（本关「半写文件」题：还留 ENOSPC 时的 partial out——需要「要么完整要么没有」就 tmp+rename，pipeline 不代管原子性）。结论句：pipe 只转发数据与「dest 断供」，错误与生命周期归 pipeline。
+
+**来源**：Node 官方《pipe 与 pipeline 对错误处理差异》文档示例；stream.promises.pipeline 错误语义说明。
+
+### 14. 手写一个背压正确的 Transform（如按行切分），说明每个回调与状态机的责任。
+
+骨架：_transform(chunk, enc, cb)：缓冲累积 remainder+=chunk.toString；while（含完整行且 this.push(line)===true）继续推；**this.push 返回 false 不是错误**——继续吃输入但停止再 push？不对：Transform 的正确姿势是照 push、由内部 writable 侧高水位自然让上游 read 停（push false 时可读侧挂起是 Duplex 读写两半的事）；行残段留 remainder。_flush(cb)：EOF 时把 remainder（无换行尾行）push 出去再 cb——漏 flush=最后一行蒸发（本关 CSV 题的经典失分点）。状态：跨块引号内换行（CSV 带引号）要 FSM 不能 split。测试剧本：单行多块/多块一行/无尾换行/多字节切断（用 string_decoder！本关 Buffer 题——TextDecoder({stream:true}) 或 StringDecoder 处理跨块 utf8）。纪律：cb 只调一次、错误 destroy(err) 而非 emit。
+
+**来源**：Node Transform 文档（_transform/_flush 契约）；string_decoder 模块动机段。
+
+### 15. 「大文件转码 pipeline」上线后内存锯齿飙升甚至 OOM，排查与修复路线图。
+
+看形态：平稳高位=缓冲设计容量问题；**锯齿飙升**=背压断了某处。查：① 找「双速环节」——下游 I/O（网络/磁盘）抖动时上游仍以满速 push，谁在攒？在每段流挂 queueLength/write-call 统计（自定义 Transform 里 this.readableLength/ writableLength 打点）；② 定位常见元凶：collect 型 Transform（全进一出=缓冲无界，转码里「整段缓冲」是反模式）、事件桥（data 里 async 处理不 await 即 fire-and-forget）、外部 API 上传不 await（本关 S3 题）；③ 工具：--trace-gc + heap 采样看 ArrayBuffer 去向（external）、clinic heap 看闭包。修：无界点改 Writable 攒批+await、加 highWaterMark 显式、并发上传用 p-limit 入 pipeline 内、给整链超时/AbortSignal。验收：抖动注入测试（下游人为 sleep(5s)）峰值有界。制度：流式作业上线前必测「下游停顿」场景——没测过背压的流等于没写完。
+
+**来源**：Node《Backpressuring in Streams》官方指南；clinic.js heap 分析文档。

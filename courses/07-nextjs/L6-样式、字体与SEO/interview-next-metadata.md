@@ -1,4 +1,4 @@
-# next-metadata 面试题（12 题）
+# next-metadata 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点 Next SEO 与 Metadata 高频面经，中文重述。
 
@@ -65,3 +65,19 @@ generateMetadata 里 fallback 链：运营字段 → 正文首段截断（去 ma
 **12. 你负责审计一个 Next 大站的 SEO 健康度，设计可自动化的检查项与阈值。**
 **来源**：知乎《大站 SEO 巡检系统设计》
 参考矩阵：title 重复率/缺失率（build 期抽 manifest 全量）、description 长度分布、canonical 自指率、hreflang 成对率、sitemap-索引差集、404 率曲线、OG 图可访问性与尺寸、渲染口径内容完整性（无 JS 抓取比对）。全部可脚本化挂 CI/定时——把"SEO 做没做好"变成指标而非玄学（呼应 next-perf 度量工作流、react-performance 的指标观）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  静态与动态 metadata 的边界在哪？哪些 SEO 信息只能运行时给？**
+**来源**：Next.js 官方 Metadata Files / generateMetadata 文档；掘金《OG 图动态生成踩坑记》
+边界跟"值是否依赖请求"走：静态（导出对象）——标题模板、品牌默认 OG、全站图标、静态 sitemap.ts/robots.ts（构建期产出固定文件）；动态（generateMetadata 函数）——依赖 params/searchParams/cookie 的标题描述（文章页读库）、私有页按权限输出 noindex、多语言按 locale 换文案；再往运行时一层——opengraph-image.tsx 这类 ImageResponse 端点本质是请求期 Route Handler（可按参数出图）。只能运行时给的：一切个性化/权限相关信号（noindex 私有页）、按数据生成的 OG 图、依赖域名的绝对 URL 兜底。坑：① 动态 metadata 里的 fetch 要带缓存/tag，否则每次页面再生都多一跳；② generateMetadata 与页面并不同生命周期（metadata 失败别拖垮页面）；③ 静态导出模式下运行时全不可用。
+
+**14.  给一个内容站做 SEO 深化：metadata 体系之外，你还会检查哪些点？列优先级。**
+**来源**：Google 官方 SEO 新手指南；InfoQ《Next.js 站点 SEO 审计清单》
+按影响优先级：① 可抓取性——sitemap.xml（sitemapIndex 分片）、robots 指令分层（页面级 noindex 覆盖全局）、规范链接 canonical 指向唯一 URL（治参数爆炸 ?utm/?page）；② 结构化数据——JSON-LD（Article/BreadcrumbList/Product），Google 富结果入口，比 meta 描述更影响点击率；③ 分享卡——OG/Twitter 卡按页动态出图、验证各平台抓取器（微信缓存是重灾区）；④ 国际化信号——hreflang 集群 + 语言前缀 URL（呼应 next-i18n）；⑤ 性能即排名——Core Web Vitals 报告进 RUM、图片字体尺寸声明（与 next-perf 合流）；⑥ 细节卫生——404/410 真状态码（客户端软 404 是经典扣分）、重定向链收敛、内链与预取策略（prefetch 对导航链接）。审计方法：Screaming Frog 类爬站 + Search Console 覆盖率报告双轨，别只盯代码。
+
+**15.  "改完 OG 图微信/推特还显示旧图"——完整归因与工程对策。**
+**来源**：SegmentFault《社交平台抓取缓存怎么办》；Next.js OG Image 文档
+归因：OG 图是"抓取方"（各平台爬虫服务器）抓走并缓存的，不是你用户的浏览器缓存——微信对外链卡片缓存激进且无公开刷新入口，Twitter 有 card-validator 可强制重抓，各家 TTL 不一。对策分层：① URL 不可变是根因解法——给动态 OG 图带版本参数 /api/og/[id]?v=hash（内容变 URL 变），从根本上绕开任何抓取缓存，metadata 里拼这个 URL 最干净；② 主动刷新渠道——Twitter validator、FB/LinkedIn 批量重抓接口（有就刷）、Google 依赖重抓周期；③ 服务端 cache-control 设置要短（对刚改的页面别配一年期 og-image 缓存头，CDN 层也可能再缓存一跳）；④ 验证纪律——发布流程里带一步"抓取器视角"检查（代理 UA 模拟爬、看真实返回）。面试收口句：客户端缓存、CDN 缓存、抓取器缓存三层各有各的 TTL，OG 图问题九成在第三层。

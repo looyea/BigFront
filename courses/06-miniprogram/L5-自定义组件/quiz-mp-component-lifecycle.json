@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "组件里想 safe 地查询自身节点宽高/初始化播放器，应放哪个钩子？",
-      "options": ["created", "ready", "attached", "onShow"],
+      "options": [
+        "created",
+        "ready",
+        "attached",
+        "onShow"
+      ],
       "answer": 1,
       "explanation": "ready=首次渲染完成（呼应 mp-component-lifecycle 第一节）。"
     },
@@ -53,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "定时器该在哪个钩子清理？",
-      "options": ["ready", "onUnload", "hide", "detached"],
+      "options": [
+        "ready",
+        "onUnload",
+        "hide",
+        "detached"
+      ],
       "answer": 3,
       "explanation": "组件唯一销毁点是 detached（呼应 mp-component-lifecycle 铁律3）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "近似 Vue mixin 的选项合并（呼应 mp-component-lifecycle 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 在组件 created 里执行 this.setData({...})，结果是？",
+      "options": [
+        "正常更新视图",
+        "created 时组件实例刚创建、尚未进入节点树（未 attached），此时 setData 不会反映到视图（甚至告警），要初始化数据应在 attached 或用 properties/data 初值",
+        "抛异常中断",
+        "会自动延到 ready"
+      ],
+      "answer": 1,
+      "explanation": "created=实例已构造但未挂载，data 结构可在此读但 setData 推给渲染层无意义（还没有对应视图节点）。派生初值放 attached、查节点/初始化播放器放 ready（首次渲染完成）、清理放 detached。created 适合\"纯 JS 的一次性准备\"，不要碰视图。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 组件被父级 wx:if 从 false→true 反复重建时，其内部 data 会？",
+      "options": [
+        "始终保留上次的值",
+        "每次被销毁(detached)再新建，内部 data 回到初始定义、状态丢失；要跨显隐保留状态得把该状态提升到父/外层、或改用 hidden 保节点",
+        "自动持久化到 storage",
+        "取决于 styleIsolation"
+      ],
+      "answer": 1,
+      "explanation": "wx:if 真销毁真重建→子组件 data 复位；hidden 只隐藏不销毁→状态与节点都留着。这与 React\"组件从树上移除即丢 state、要保留得提升状态或保持挂载\"一模一样。选 wx:if（省渲染、丢状态）还是 hidden（留状态、占节点）取决于\"是否要保活内部态\"。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " price 的 observer 里又 this.setData({ price: x }) 修改 price 本身，通常会导致？",
+      "options": [
+        "完全无害",
+        "自我触发的循环风险——改 price 又进 observer，若不加\"新旧值/阈值\"守卫会无限或重复 setData（小程序不保证自动去重），派生应写进别的字段而非回写被观察的 prop",
+        "编译期禁止",
+        "只会触发一次"
+      ],
+      "answer": 1,
+      "explanation": "observer 的输入与输出要分开：观察 price，派生结果写 this.data.priceYuan，别再改 price。回写被观察字段是典型死循环/抖动源，与 React effect 里 setState 触发自身、Vue watch 里改被 watch 的源同理。必须回写就用条件守卫（值确实变化才 set）。"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # node-http 面试题精选
 
-> 共 12 题，覆盖 **req/res 本质 / 请求解析 / body 与背压 / 响应与状态码 / 路由与框架关系 / keep-alive 与流式 / 客户端 fetch / 安全** 八类。
+> 共 15 题，覆盖 **req/res 本质 / 请求解析 / body 与背压 / 响应与状态码 / 路由与框架关系 / keep-alive 与流式 / 客户端 fetch / 安全** 八类。
 
 ---
 
@@ -116,3 +116,25 @@ res.on("close", () => { if (!res.writableEnded) { aborted = true; controller.abo
 感知到断开就 `AbortController.abort()`，用它取消进行中的下游 fetch、停止 `pipeline`（呼应 node-stream-pipeline 第 10 题）、中断 DB 查询等，避免"没人要了还在算"浪费资源。Node 16 起 `'close'` 在请求完成/失败后都会触发（语义更可靠）。老代码里区分 `aborted` 属性已不推荐，用 `writableEnded`/`req.destroyed` 判断。
 
 **来源**：Node.js — "response 'close' / writableEnded"; 社区 — "detect client disconnect node"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 客户端中途断开，服务端 handler 里怎么感知并止损？给完整机制。
+
+事件链：req/res 是 socket 的视图——客户端断开触发 res close 事件与 req aborted（现代：req.aborted=false 但 res.close 必到；AbortSignal 版：AbortSignal.any([signalTimeout, res close 转 signal])）。止损动作：① 停止生成（流式响应里 destroy 生产流——本关 pipeline signal 题的 HTTP 实装）；② 取消下游（把同一 signal 透传给 fetch/DB 取消长查询）；③ 落账（已扣款/半提交要幂等对账，**别假设断开=未发生**）。误区：res.writableEnded 后 close 也到（正常完成）——判「半途」要 ended 标记。实现模板：`res.on('close', () => { if (!res.writableEnded) abortCtrl.abort(new Error('client disconnected')) })`。别忘了：响应头已发后断开你其实无法补救——止损价值在 CPU/带宽/下游账单。
+
+**来源**：Node http 文档 res close/writableEnded 语义；AbortSignal 与流联动（本包 pipeline 关 signal 题）实战模式。
+
+### 14. 裸 http 与框架之间：Express 到底在 http 之上加了什么？哪些能力裸写也能要？
+
+Express 加的：路由表（方法+路径+参数提取）、中间件洋葱模型（错误签名 4 参）、req/res 增强（json/send/params 等便利层）、视图与 app 级配置。裸写也能要的：body 解析+大小限制、超时（本关收 body 题）、统一错误出口（try/catch 包裹 + res 未头时兜 500）、日志中间件化（栈式 handler）。选型判据：需要「中间件顺序的心智模型」时框架价值最大；单接口 webhook/内部代理裸 http 反而少一层黑箱（本关「只用 http 能做出路由吗」题的立场：能，但要自己维护 404/方法不匹配/转义三件套）。趋势注脚：Fastify 证明「贴近原生+schema」可以更快——http 层原语（IncomingMessage 事件模型）理解越深，选框架越不慌。
+
+**来源**：Express 源码 router/middleware 层与 Node http 文档对照；Fastify 官方「为什么不是 Express」性能设计篇。
+
+### 15. Node http 客户端侧：fetch、http.request、undici 三者关系与选型。
+
+关系：Node 18 的 fetch **就是 undici 的内置暴露**（globalThis.fetch→undici 的 fetch+dispatcher 体系），三方安装 undici 可用更多控制（拦截器、连接池参数）。差异：fetch 流式 body/AbortSignal/keepalive 默认好，但没有 per-request timeout（用 AbortSignal.timeout）；http.request 是 legacy：agent 选项、socketPath、method 大小写等旧语义，新代码官方口风「use fetch」；undici 直用：APIResponse、mock 拦截（测试！本关 http 集成测试的客户端替身）、Client/Pool 连接层自定义。选型：业务默认 fetch；要连接级策略（自定义 dispatcher 走代理/内网解析）或 mock 测试 → undici；遗留隧道/代理老栈才 http.request。陷阱：fetch 对**非 2xx 不 reject**（ok=false 手动判——本关状态码题在客户端侧的回声）、自动 gzip 但 body 流式解压后 Content-Length 变化。
+
+**来源**：Node 官方 fetch 文档（undici 实现说明与「不要用 http.request 新代码」指引）；undici docs Dispatcher/mock 章节。

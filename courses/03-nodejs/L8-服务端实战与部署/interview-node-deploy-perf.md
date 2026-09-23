@@ -1,6 +1,6 @@
 # node-deploy-perf 面试题精选
 
-> 共 12 题，覆盖 容器化 / 优雅退出 / 进程守护 / 性能剖析 / 内存与就绪 五类。
+> 共 15 题，覆盖 容器化 / 优雅退出 / 进程守护 / 性能剖析 / 内存与就绪 五类。
 
 ---
 
@@ -98,3 +98,25 @@ PID 1 有特权语义：默认**不处理未显式注册的信号**（尤其 SIG
 区分原因：依赖暂时不可用（如下游抖动）应**摘流**而非重启（重启只会雪上加霜）；而真正死锁才重启（呼应 node-deploy-perf 第六节、Express L8）。
 
 **来源**：Kubernetes — "Liveness / Readiness probes"、社区 — "Health check endpoints best practices"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 写一个「生产级」Node Dockerfile，逐条解释每层的动机与常见错误。
+
+骨架：FROM node:22-slim（alpine 的 musl/原生模块坑多，除非无 native 依赖）→ 多阶段：builder 装全依赖+编译（tsc/esbuild/原生 addon），runtime 只 `COPY --from=builder /app/dist` + `npm ci --omit=dev --ignore-scripts`（本关 dev 依赖收益题：镜像瘦+攻击面缩）。顺序即缓存：先 COPY package*.json 再 install 最后 COPY 源码（本关题1）；锁文件必须进（npm ci 只认 lock）。运行期：USER node（别 root）、 tini/dumb-init 作 PID 1（信号转发+僵尸收割，本关 PID1 题）、`NODE_OPTIONS=--max-old-space-size=` 对齐容器内存 limit 的 ~75%（V8 不认 cgroup 老版本时期教训，现代 V8 已读 cgroupv2 但显式更稳——本关堆上限题）。ENV NODE_ENV=production（别在 build 前设——npm ci 会跳过 dev 依赖是双刃，构建阶段需要 dev 依赖的仓库这是头号「装不上」原因）。健康检查交给 K8s（HEALTHCHECK 与编排重复）。常见错：整 repo+node_modules 拷进镜像（.dockerignore 缺失）、latest 基础镜像（sha256 钉+定期 Renovate）、secrets 进 env 文件层（镜像可还原）。验收：`docker history` 看层大小分布、trivy 扫零高危、冷启动时间入 CI 阈值。
+
+**来源**：Node 官方 Docker best practices 文档；blog.resiliency《PID 1 僵尸与 tini》与 V8 cgroupv2 内存感知说明。
+
+### 14. 接口偶发 P99 从 80ms 飙到 4s，监控显示与 GC 相关——给出完整定位与修复线。
+
+证实：GC 日志（--trace-gc/运行时 performance event 的 gc 耗时直方图）+ 堆使用曲线；「飙到 4s」量级=major GC/mark-compact 长暂停，诱因通常是**堆逼近上限**（回收不彻底→反复 full GC）。找泄漏/大对象：heap snapshot 三连 diff（本关题3 方法）或 clinic heapprofiler 看分配热点；元凶常为：无上限缓存（Map 当 LRU 用）、一次性 readFile 大文件（本包 fs 关）、响应聚合（全量 JSON.stringify 百 MB）。修：缓存加 max+TTL、大转换流式化、对象复用降分配率（热路径小对象是 scavenger 压力源但 full GC 多因「活得够久进老生代」）。调：--max-old-space-size 给足（容器 limit 内）、必要时 --max-semi-space-size 减 young GC 频率。验证：压测注入相同负载对比 GC 暂停 p99 与接口 p99 曲线**同形**消除。防复发：GC 耗时/堆占用进 SLO 大盘，发布带 heap 对比测试。
+
+**来源**：Node 诊断指南《Memory/GC》与 v8.dev《tracing GC 与堆大小》；clinic.js heapprofiler 文档。
+
+### 15. 给「一次滚动发布引发的线上 503 尖刺」写复盘：列出你会检查的全部时序竞态点。
+
+时间轴取证：发布事件标记 × 503 曲线对齐，看尖刺落在「新 Pod ready 前」还是「老 Pod 关闭中」。竞态清单：① readiness 通过≠应用真就绪（首请求懒加载编译/连接池冷启动慢，就绪探针应「预热后再 true」或 startupProbe+首请求兜底）；② 摘流竞态：Endpoint 删除与 SIGTERM 并行——preStop 不 sleep 摘除=新请求打向已关进程（本关 preStop 题）；③ 优雅窗口错配：gracePeriod(30s) < 最长请求/排空时间 → SIGKILL 腰斩在途（本关 SIGKILL 题实装）；④ keep-alive 双端错位：Node server.keepAliveTimeout < LB idle 触发「连接被服务端关而客户端复用」502 抖动（本包 http 关 5s 设计题）；⑤ DB/下游连接风暴：新 Pod 并发建池打满 max_connections（启动加抖动/池预热）；⑥ maxUnavailable 比例与副本数（3 副本 25%≈1 台全摘容量不足自压）；⑦ 版本混跑窗口内协议不兼容（老 worker 处理新任务）。修复模板：readiness 含 warmup、preStop 5-10s、grace≥P99 请求、滚动参数 maxSurge=1/maxUnavailable=0、发布金丝雀+自动回滚阈值。复盘产出=runbook 步骤，不是口号。
+
+**来源**：Kubernetes 滚动更新与优雅终止文档（preStop/terminationGracePeriod 时序）；Nginx/ALB keep-alive race 与 Node 5s 默认值设计说明。

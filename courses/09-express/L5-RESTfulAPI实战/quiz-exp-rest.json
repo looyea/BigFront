@@ -6,16 +6,26 @@
       "id": "q1",
       "type": "single",
       "prompt": "下列哪个 HTTP 方法是幂等的？",
-      "options": ["POST", "PATCH（如 {views:+1}）", "PUT", "都不幂等"],
-      "answer": 2,
+      "options": [
+        "PUT",
+        "POST",
+        "PATCH（如 {views:+1}）",
+        "都不幂等"
+      ],
+      "answer": 0,
       "explanation": "PUT 全量替换——同一请求执行 N 次结果一致。POST 会重复创建，语义 PATCH 每次累加不幂等。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "用户未登录访问受保护资源，应返回哪个状态码？",
-      "options": ["403 Forbidden", "401 Unauthorized", "404 Not Found", "400 Bad Request"],
-      "answer": 1,
+      "options": [
+        "403 Forbidden",
+        "404 Not Found",
+        "401 Unauthorized",
+        "400 Bad Request"
+      ],
+      "answer": 2,
       "explanation": "401 = 未认证（缺/错凭证，需登录）。403 = 已认证但无权限。'Unauthorized' 实为'未认证'的历史命名。"
     },
     {
@@ -24,18 +34,23 @@
       "prompt": "POST 创建资源成功的规范响应是？",
       "options": [
         "200 + 空 body",
-        "201 Created + Location 头指向新资源",
         "204 No Content",
-        "301 Moved"
+        "301 Moved",
+        "201 Created + Location 头指向新资源"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "201 表示已创建，Location: /users/42 告诉客户端新资源 URI。"
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": "注册时用户名已存在，最贴切的状态码是？",
-      "options": ["400", "409 Conflict", "422", "500"],
+      "options": [
+        "400",
+        "409 Conflict",
+        "422",
+        "500"
+      ],
       "answer": 1,
       "explanation": "409 = 请求与当前资源状态冲突（重复创建）。400 太泛，422 侧重格式对但语义校验失败。"
     },
@@ -43,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "哪个 URL 更符合 REST 资源命名规范？",
-      "options": ["/getUsersByPage", "/users?page=2", "/fetchUserList", "/user/listData"],
+      "options": [
+        "/getUsersByPage",
+        "/users?page=2",
+        "/fetchUserList",
+        "/user/listData"
+      ],
       "answer": 1,
       "explanation": "REST 用复数名词表资源、query 参数表过滤/分页，动词交给 HTTP method。"
     },
@@ -59,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "向后兼容的变更（加字段、加可选参数）不升版；只有破坏既有契约才升大版本。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " 资源创建成功但需要异步加工（如视频转码）才可读，最贴切的响应是？",
+      "options": [
+        "同步 201 假装就绪",
+        "201 + 资源表示（state: processing）+ 指向进度端点的 Link，或 202 Accepted——让状态可查询，别用字段骗客户端",
+        "200 空体",
+        "301 到详情页"
+      ],
+      "answer": 1,
+      "explanation": "\"资源存在\"与\"资源就绪\"是两个时刻；把它们压进一个 201 是轮询风暴与\"半资源\"bug 的根源。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 删除一个正在被其他资源引用的记录，符合 REST 精神的处理是？",
+      "options": [
+        "级联静默删光",
+        "冲突则 409 返回 machine-readable 原因（被哪些引用挡住），可选提供 force 查询参数或软删+异步清理——把决策权交还客户端",
+        "直接 500",
+        "默默软删不告知"
+      ],
+      "answer": 1,
+      "explanation": "409 Conflict 是\"当前资源状态与该请求不兼容\"的精确语义；破坏性操作的影响面透明是 API 设计伦理。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " API 需要\"部分更新但清空某字段\"，PATCH 体系下的正确表达是？",
+      "options": [
+        "传空字符串代表清空（无法与真空串区分）",
+        "null 显式表示清空该字段（JSON Merge Patch 语义），并在文档定义 null 的语义——缺省=不动、null=清空，两种 PATCH（merge patch 与 JSON Patch）二选一别混用",
+        "单独开 /clearField 接口",
+        "不支持清空"
+      ],
+      "answer": 1,
+      "explanation": "PATCH 的难点就是\"缺省与显式空\"的区分，选标准媒体类型（application/merge-patch+json）而不是自发明哨兵值。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 幂等键（Idempotency-Key 请求头）最适合解决哪类问题？",
+      "options": [
+        "查询加速",
+        "POST 创建的重复提交——客户端生成唯一键，服务端按键缓存首次结果，重放返回同一响应（含 409/201 原样），弱网重试不再产生重复订单",
+        "防 XSS",
+        "替代事务"
+      ],
+      "answer": 1,
+      "explanation": "HTTP 幂等性是方法级的，POST 天然不幂等——幂等键是给它打的协议补丁，支付/下单类接口的标配。"
     }
   ]
 }

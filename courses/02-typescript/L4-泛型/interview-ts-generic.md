@@ -1,6 +1,6 @@
 # ts-generic 面试题精选
 
-> 共 12 题，覆盖 **泛型本质 / 类型推断 / 泛型接口类 / 默认参数 / 泛型 vs any / 擦除** 六类。
+> 共 15 题，覆盖 **泛型本质 / 类型推断 / 泛型接口类 / 默认参数 / 泛型 vs any / 擦除** 六类。
 
 ---
 
@@ -101,3 +101,25 @@ TS 用**调用处的实参类型**去匹配形参中出现的类型变量，解�
 基础类型描述"值属于哪个集合"（`number` 是所有数字）。泛型进一步表达**跨位置的类型关系/依赖**：`map<T,U>(arr: T[], fn: (x: T) => U): U[]` 编码了"输出数组元素类型 = 回调返回类型、且回调入参 = 输入数组元素类型"这一**约束链**；`Result<T,E>` 表达"成功携带 T、失败携带 E"。配合约束/条件类型（下两关），还能表达"当 T 是字符串时返回 A 否则 B"这类**计算出的关系**。泛型把类型从静态标签升级为可参数化、可推理的关系系统。
 
 **来源**：TypeScript — "generics express relationships"; "parametric polymorphism"; Shape of Programming (类型多态)
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 泛型接口的「变体」：为什么 Array<Dog> 能赋给 Array<Animal> 在类型上其实不健全？
+
+数组可变：`const ds: Dog[]=[]; const as: Animal[]=ds; as.push(cat as Cat)`——cat 顺着引用进了 Dog[]，读 ds[1] 即崩。TS 因历史 ergonomics（大量函数式消费场景）维持**双向协变**（unsound 妥协），只读消费请用 `readonly Dog[]`——它是真·协变安全（push 不存在）。理解三条线：函数参数逆变（strictFunctionTypes）、对象属性协变（也是 unsound，可变属性）、readonly 家族恢复理论正确性。
+
+**来源**：TS Handbook《Type Relationships: variance》；TS 设计文档「Why is array covariance allowed」。
+
+### 14. 泛型是怎么被「推断引擎」定型的？多个候选位置冲突时按什么规则归并？
+
+每个使用位置是带「优先级」的收集器：返回值位置权重最高，参数位置先字面量后基类型兜底；同优先级候选→取**联合**（`f(1) / f("a")` 分别调用各自定型，单次调用多参冲突才 union）；上下文敏感函数（回调）分两轮：先定 T 再给回调 contextual type——所以 `(x) => x as number` 不干扰 T 推断。加宽时机：无约束裸 T 的字面量参数会 widen 到基类型，除非 `T extends string` 或调用点 as const。推断不出→unknown 兜底→显式类型参数。
+
+**来源**：TS 深入文档《Type inference, contextually typed》；Deep Dive inangod 的 inference candidates 章节。
+
+### 15. 泛型擦除导致运行时要「类型判断」拿不到 T，工程上有哪些标准代偿？
+
+经典三式：① **传工厂**：`create<T>(factory: new ()=>T)` 用构造签名当运行时令牌（DI 容器标准姿势）；② **传 schema**：`parse<T>(s: ZodSchema<T>)` schema 既给类型又给运行时（zod 的核心卖点）；③ **传字典**：`register<T>(map: Record<string, Ctor<T>>)` 用键找实现。设计口径：**类型参数只影响编译，行为需要运行时信息就作为值传入**——把「class 当类型用 vs 当值用」（typeof C）分清楚，是泛型 API 设计第一课。
+
+**来源**：TS Handbook《Generic class types / construct signatures》；NestJS DI 文档 @Injectable token 机制。

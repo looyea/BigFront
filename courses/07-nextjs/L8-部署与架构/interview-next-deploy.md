@@ -1,4 +1,4 @@
-# next-deploy 面试题（12 题）
+# next-deploy 面试题（15 题）
 
 > 主题：Next 部署形态、standalone/Docker、环境变量纪律、Nginx/CDN 与发布策略。
 
@@ -81,3 +81,25 @@
 **答**：流程：① 门禁——lint/typecheck/build 零告警 + bundle 体积红线 + 测试绿（呼应 next-testing D3 那套）；② 镜像带 git sha，推仓库；③ 预发布环境全量冒烟：黄金路径 E2E + Lighthouse CI 卡 LCP + health 检查；④ 生产分批：先 1 台摘流量升级→内部预热→放量 10% 观察窗（错误率、digest 突增、CWV p75），无异常逐批推进；⑤ 回滚预案：切流回旧版本实例组（蓝绿秒级）或 kubectl rollout undo，保留最近 5 个镜像 tag；⑥ 数据兼容红线：新旧版本共存的窗口内 DB 迁移必须向后兼容（先加列后删列），发布可回滚的前提是" schema 不回滚也能跑"。
 
 **来源**：掘金《一次发布体系的搭建复盘》；SegmentFault《前端全栈应用的回滚工程学》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  把 Next 应用装进 Docker 自托管，从 Dockerfile 到优雅下线你会写哪些关键点？
+
+**答**：要点清单：① 多阶段：builder（装依赖、next build、若用 next/image 本地优化保 sharp 原生依赖在目标 arch 构建）→ runner（node:slim，只 COPY .next/standalone、.next/static、public，别拷 node_modules 全量）；② 端口与探活：PORT/HOSTNAME 环境变量（standalone server 读它们），健康检查打一个轻量 Route Handler（检查依赖连通）而非首页（ISR 页可能慢/冷）；③ 反向代理：X-Forwarded-Proto/Host 透传（Next 靠它们生成正确重定向与绝对 URL），代理层别吞流式响应（buffering off）；④ 缓存与失效：多实例共享 CacheHandler/Redis、.next/cache 挂载或在镜像内只读；standalone 里 next/image 的优化缓存目录可写或指外部；⑤ 优雅下线：SIGTERM→停止收新连接→等在途请求（含 after() 任务）→exit；K8s readiness 起步慢（冷启动 JIT）配 startupProbe；⑥ 构建期 env 与运行期 env 分列清单（NEXT_PUBLIC 归构建、DB_URL 归运行），.env 文件绝不进镜像（CI 注入或 secrets 挂载）。
+
+**来源**：Next.js 官方 Deploying Standalone 示例；InfoQ《Next.js 容器化最佳实践》。
+
+### D5.  "密钥泄露到浏览器"事故复盘：NEXT_PUBLIC 误配、source map 外泄、调试信息各怎么进包的？防线与处置？
+
+**答**：三条泄露路径：① NEXT_PUBLIC_ 前缀=构建期内联进客户端 JS（名字里写着"公开"，手滑放 DB_URL/内部 API key 即全员可见）；② source map 随产物发布（.map 文件被同域 served，还原源码含内联常量；CI 上传监控平台时也别把 map 留公网）；③ 运行时泄露——服务端组件的报错把 env/连接串带进 digest 页面或日志被前端接口透传（Route Handler 返回 error.message 的习惯）。防线：CI 密钥扫描（gitleaks + 构建日志脱敏）、env 命名 lint（NEXT_PUBLIC_ 名单化审查）、生产关 sourcemap 公开（上传 Sentry 私有）、错误响应统一"码+文案"不透堆栈。处置剧本：立即轮换（泄露面=全站访客，按最高时效处理）→ 下线含密钥版本/map → CDN 与搜索引擎缓存 purge（JS 文件带 hash 但旧 URL 可能被缓存）→ 审计密钥使用日志确认是否被利用 → 复盘入库。加分句：能区分"构建时内联"与"运行时读取"两种泄露时间线，说明真管过发布。
+
+**来源**：InfoQ《前端密钥泄露事故复盘》；Vercel 官方环境变量安全说明。
+
+### D6.  同一构建产物跑测试/预发/生产三环境：哪些东西能后置、哪些必须构建期定死？设计一套 env 方案。
+
+**答**：构建期定死（产物烙印）：NEXT_PUBLIC_*（内联进 bundle）、basePath/assetPrefix（改了 URL 全变必须重建）、feature flag 里被 tree-shake 的常量分支、图片域名白名单（next.config 参与构建）、SWC 编译产物路径。运行期可后置（server 启动读 env）：DB_URL、第三方服务密钥、PORT/HOSTNAME、revalidate/缓存 TTL（代码里读 process.env 非公开变量时）、日志级别。方案：三环境共用 Docker 镜像 + 部署平台注入运行 env；NEXT_PUBLIC 类走"构建参数一次、运行覆盖一次"的两段——若必须每环境不同，说明它其实该是服务端配置（挪到运行时变量由 RSC 注入 props）或该拆构建。灰度/多租户的 per-request 配置连"运行期 env"都不是，要配置中心。验收：容器启动自检脚本打印"公开配置清单"（只 key 不 value）给 SRE 核对。收口：这道题的满分在识别"哪些配置本质是架构决策（basePath/域名）而非值"。
+
+**来源**：12-Factor 配置条款；Next.js 官方环境变量参考；SegmentFault《一次构建多环境发布的坑》。

@@ -92,6 +92,45 @@
       ],
       "answer": 0,
       "explanation": "与 mp-network 拦截器、mp-route redirect 场景闭环（呼应 mp-login 第五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 关于\"把 openid 直接当业务用户 ID 塞进前端接口参数（如 ?openid=xxx 查订单）\"，问题是？",
+      "options": [
+        "完全安全",
+        "openid 是\"用户在某 appid 下的稳定标识\"而非密钥，一旦当前端可伪造/替换的入参，等于\"报个身份证就当你\"——身份必须靠服务端从登录态(token→session)解析，前端顶多传不透明 token",
+        "openid 会过期不能用",
+        "只有 unionid 能用"
+      ],
+      "answer": 1,
+      "explanation": "正确姿势：登录成功后服务端签发自有 token，后续请求带 token、服务端验签得到\"你是谁\"，绝不信任前端传来的身份标识（openid/uid）。openid 可暴露为\"展示/关联\"用途，但绝不能作为\"鉴权凭据\"。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 现在合规获取用户\"头像昵称\"的主流方式是？",
+      "options": [
+        "wx.getUserInfo 静默获取",
+        "getUserProfile 已收紧/下线，改为\"用户主动填写/选择\"——open-type=chooseAvatar 的按钮 + type=nickname 的输入框，由用户亲手确认，不能再弹窗一键拿",
+        "直接读 globalData",
+        "用 canvas 抓"
+      ],
+      "answer": 1,
+      "explanation": "平台把\"默认给昵称头像\"改成\"用户主动提供\"（隐私最小化）。头像用 `<button open-type=\"chooseAvatar\">`、昵称用 `<input type=\"nickname\">`，在用户交互中拿到并回填。理解这条演进的主线是：授权点从\"进页就要\"后移到\"用到才要、且要用户主动\"。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 隐私接口未弹\"同意\"或功能直接失败，最先该检查的是？",
+      "options": [
+        "重启手机",
+        "是否接入隐私协议指引（后台配置《用户隐私保护指引》+ 必要时 __usePrivacyCheck__ 处理同意时机）——未获用户同意前，采集个人信息/调隐私接口的能力会被容器拦截",
+        "清空 Storage",
+        "换域名"
+      ],
+      "answer": 1,
+      "explanation": "平台强制\"先告知同意、再采集\"。没配隐私指引或未拿到同意，涉及个人信息接口（定位、手机号、相册等）会被挡、审核也可能不过。弹窗设计原则：一屏说清\"收集什么、干嘛用\"，同意时机贴着首次真正使用，别开局糊一脸。"
     }
   ]
 }

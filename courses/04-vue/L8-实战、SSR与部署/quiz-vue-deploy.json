@@ -8,11 +8,11 @@
       "prompt": "history 路由(createWebHistory)部署后刷新子路由报 404，根因是？",
       "options": [
         "Vue 路由 bug",
-        "服务器上没有该真实路径对应的文件，需回退到 index.html",
         "没有打包 CSS",
+        "服务器上没有该真实路径对应的文件，需回退到 index.html",
         "base 设置错误"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "pushState 的真路径刷新需服务器 fallback（呼应 vue-deploy 第三节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "Nginx 里修复 SPA history 刷新 404 的常用配置是？",
       "options": [
-        "try_files $uri $uri/ /index.html;",
         "proxy_pass 到 8080",
         "add_header Cache-Control no-store",
-        "rewrite ^ /404.html"
+        "rewrite ^ /404.html",
+        "try_files $uri $uri/ /index.html;"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "try_files 找不到文件就回退 SPA 入口（呼应 vue-deploy 第三节、10-vite-deploy）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "关于 VITE_ 前缀环境变量，正确的是？",
       "options": [
-        "运行时从服务器读取，安全",
         "构建时内联进前端产物、公开可反解，不能放密钥",
+        "运行时从服务器读取，安全",
         "所有 env 变量都会自动注入客户端",
         "只有生产环境生效"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "VITE_ 变量构建期内联且公开（呼应 vue-deploy 第四节、node-config 密钥不外泄）。"
     },
     {
@@ -71,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "应用部署在子路径 /admin/ 下资源 404，应调整什么？",
-      "options": ["改 router 模式为 hash", "设 vite base:'/admin/' 并与服务器 root/CDN 前缀对齐", "关闭 gzip", "换包管理器"],
+      "options": [
+        "改 router 模式为 hash",
+        "设 vite base:'/admin/' 并与服务器 root/CDN 前缀对齐",
+        "关闭 gzip",
+        "换包管理器"
+      ],
       "answer": 1,
       "explanation": "非根路径需设 base（呼应 vue-deploy 第二节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "静态托管 vs 运行时的差异（呼应 vue-deploy 第七节、vue-ssr-nuxt）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "灰度发布里「新旧版本并存」对 chunk 哈希体系的隐藏要求是：",
+      "options": [
+        "新旧可以互相加载对方 chunk",
+        "同一用户会话内的 chunk 必须来自同一版本（HTML 与 assets 版本原子性：sticky 会话或 edge 按版本隔离），跨版本混装是 chunk 404/Missing export 的隐形来源",
+        "灰度只切后端",
+        "版本要写进文件名即可无需会话粘滞"
+      ],
+      "answer": 1,
+      "explanation": "带 hash 的 资 源 「天 然 多 版本 共存」的 前 提 是 **入口 的 版本 自 洽**（旧 HTML+旧 assets 继 续 可 服 务 到 用 户 离 开）；这 一 条 大 多 数 团队 是 故 障 后 倒 推 出 来 的（本关 chunk 失败 题 的 发布 体系 层，CDN 旧 版 保留 窗 口 要 长 于 最 长 会 话）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "SPA 首屏优化里收益有硬数据支撑、且属于「先做这五件」清单的是：",
+      "options": [
+        "换 Vue 为更小的框架",
+        "预压缩（brotli 产物上 CDN）、路由级分包与关键 chunk 预加载（modulepreload）、第三方脚本延迟加载（隐私/分析用 requestIdleCallback/交互触发）、图片与字体（preconnect/子集化/格式协商）、缓存命中（长 hash + HTML 短存）——五件全为确定性收益，与玄学调参无关",
+        "给所有组件加 v-once",
+        "手写虚拟 DOM"
+      ],
+      "answer": 1,
+      "explanation": "顺 序 逻辑：先 砍 **网 络 与 业 务 不 相 关 的 JS**（三 方 脚 本/字 体/图 片 占 首 屏 大 头 的 情 况 极 常 见），再 谈 框 架 运 行 时——「先 资 源 后 代 码」的 专 业 版；本 关 手 段 题 的 决 心 版 清 单，面试 报 出 「预压 缩/预 加 载/延 迟 三 方」三 件 即 不 会 跑 偏。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Docker 化前端产物部署时，nginx 镜像的体积与安全双优化点是：",
+      "options": [
+        "用 latest 标签保新鲜",
+        "基础镜像版本钉死（可复现构建）+ 非 root 运行（改 nginx pid/端口到 8080 配 K8s runAsNonRoot）+ 最小 COPY（不 把 构建 工具 链 带 进 运行 镜 像，多 阶 段 构建）——三 件 事 分 别 管 可 复 现、安全 基 线、体 积",
+        "镜像越大越稳",
+        "把源码一起 COPY 方便排查"
+      ],
+      "answer": 1,
+      "explanation": "前 端 镜 像 的 平 台 门 禁 清 单：非 root、只 读 文 件 系 统（tmpfs 给 cache/run）、无 密 钥 残 留（VITE_ 变量 进 了 JS 就 不 是 密 钥，但 .env 别 COPY 进 镜 像，本关 密 钥 题 的 构建 层 形 态）；多 阶 段 构建 让 node_modules 永 不 进 运 行 镜。"
     }
   ]
 }

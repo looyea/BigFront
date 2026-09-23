@@ -1,4 +1,4 @@
-# nuxt-overview 面试题（12 题）
+# nuxt-overview 面试题（15 题）
 
 > 主题：Nuxt 定位、三层结构、Nitro 引擎与框架选型视野。
 
@@ -81,3 +81,25 @@
 **答**：站在 Web 标准（Request/Response/Headers）这一边。脉络：Express 是古典 req/res 的王者但绑死 Node 且异步错误处理烂账多年（09 包讲过）；H3 是 Nitro 团队给"任意运行时"做的 Express 风格薄封装；Hono 用 Router 层极致轻量抢新场景。判断：框架会老，标准会变薄——事件对象/标准 Response 写法在 Cloudflare/Vercel/Nitro 里几乎通吃（Next Route Handler 也是这套，呼应 next-route-handlers 第 1 节），迁移成本最低。个人投资方向：把 Web 标准 API 与"请求-响应"抽象学透，具体框架当适配器看。
 
 **来源**：知乎《Web 标准正在统一 Node 服务端吗》；掘金《从 Express 到 H3：一次中间件迁移》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4. "Nuxt 全家桶"与"Vite+Vue 前端 + 独立 Node 后端"两套架构，你会怎么列选型账？
+
+**答**：五栏账：① 交付速度——全家桶一个仓库一条部署，类型/校验/数据层跨端共享零契约成本，3 人以下团队近乎碾压；分离制要求 API 规范、联调排期、双份 CI；② 能力边界——Nuxt+Nitro 覆盖 BFF/轻量业务（数据库直连、服务端路由、定时任务靠外部 cron 补），重领域逻辑/消息队列/长连接仍该独立服务，"框架能做"不等于"框架该做"；③ 团队画像——前端兼全栈=全家桶红利期；前后端分工明确、后端要服务多端（App/小程序）=分离制天然；④ 演化与爆炸半径——同仓同部署意味着一次前端改动可打挂接口，要靠分层纪律（server 按模块、数据层独立）留切缝；⑤ 退出成本——Nuxt 的 Vue 组件与 Nitro handler 都是标准件，拆得开；Next 的 RSC 深度耦合反而难平移——这是 Nuxt 路线的隐性优势。收口：小产品快迭代选全家桶、平台化多消费者选分离，中间态（BFF 进 Nuxt、域服务独立）最常见也最该被明说。
+
+**来源**：Nuxt 官方文档 When should you use Nuxt？；知乎《小团队该不该上全栈框架》。
+
+### D5.  Nitro 作为"通用服务引擎"，在 Nuxt 里承担了哪些别人散件干的活？离开 Nuxt 它还能做什么？
+
+**答**：Nitro 在 Nuxt 内的职责：服务端路由与中间件的运行时（server/ 目录扫描注册）、dev 与 preview 与 build 三态统一（同一套 h3 应用）、routeRules 落地（redirect/rewrite/proxy/缓存 swr/isr/prerender 全在它这层执行）、输出物 .output 自包含可跑（server bundle+public 分离）、多运行时适配（node-server/cloudflare/vercel/aws/netlify/deno/bun…preset 切换）、以及 SSR 的入口封装（vue 服务端渲染对它是又一个 event handler）。"服务器无关"是它的设计核心：h3 的事件模型与 Web Standard Request/Response 让它可嵌进任何能拿到请求的宿主。离开 Nuxt：独立写 API 服务/微服务（nitro 模板项目）、给静态站补一个带缓存策略的 API 层、做 BFF 网关（proxy 规则中心）、给 Electron/本地工具内嵌 HTTP 服务——课程 03-node 视角看它=Express/koa 的"构建期+部署期增强版"，但放弃了中间件生态深度换跨平台。加分句：能说出"nitro 让部署从『框架特性』变『输出目标选择』"这句，就算理解了这层架构。
+
+**来源**：Nuxt/Nitro 官方文档；InfoQ《Nitro：把部署从框架里拆出来》。
+
+### D6.  用 Nuxt 做"重交互但 SEO 只占 20% 页面"的产品，架构上怎么给两端各留活路？
+
+**答**：按路由域切策略而不是按全站一刀切：① 公开域（/、/blog、/docs）走 SSR/预渲染+缓存头（public/swr），保 SEO 与首屏；② 应用域（/app/**）标 ssr:false 退化为 SPA（壳仍出 HTML 供加载与鉴权跳转），交互密度高的钱花在客户端；③ 两域共享组件库与设计系统（app/components 自动导入天然），差异只在数据层：公开域用 useFetch 走 payload 水合、应用域客户端态为主（useState/Pinia 按共享范围选）；④ 鉴权在两个域语义不同——公开域"未登录=能看"、应用域 middleware 统一跳登录页——用 per-route middleware 分开表达，别拿全局中间件硬套；⑤ 部署同一份 .output，routeRules 就是这份"策略注册表"，评审任何新页面先问"进哪个域、按什么规则缓存"。加分句："SSR 与 SPA 是路由级选项而非项目级信仰"——这题的分界线就在这句。
+
+**来源**：Nuxt 官方文档 Single Page App / routeRules 混合策略；掘金《一个后台+门户双形态产品的 Nuxt 架构》。

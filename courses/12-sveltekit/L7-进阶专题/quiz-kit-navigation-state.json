@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-navigation-state",
-  "title": "导航状态与新代际 · 自测",
+  "title": "kit-navigation-state 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "关于 $app/stores 与 $app/state，正确的说法是？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 $app/stores 与 $app/state，正确的说法是？",
       "options": [
         "$app/state 里的 page 仍是 store，需 $page 订阅",
         "$app/stores 的 page/navigating/updated 已 deprecated，官方建议改用 $app/state（需 Svelte 5、2.12+）",
@@ -11,10 +13,12 @@
         "$app/state 只提供 page，navigating/updated 仍只能从 stores 拿"
       ],
       "answer": 1,
-      "explain": "$app/state 于 2.12 加入，提供三个只读响应对象；$app/stores 三件套均已 @deprecated，Svelte 5 下建议迁到 $app/state。"
+      "explanation": "$app/state 于 2.12 加入，提供三个只读响应对象；$app/stores 三件套均已 @deprecated，Svelte 5 下建议迁到 $app/state。"
     },
     {
-      "q": "从 $app/state import 的 page，要追踪它的变化，正确写法是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "从 $app/state import 的 page，要追踪它的变化，正确写法是？",
       "options": [
         "let id = $derived(page.params.id)",
         "let badId; $effect(() => badId = page.params.id); 之后再不读",
@@ -22,10 +26,12 @@
         "let id = page.params.id（一次性赋值）"
       ],
       "answer": 0,
-      "explain": "page 的变化只能用 runes 感知。$derived(page.params.id) 会正确更新；老式 $: id = page.params.id 永不更新。"
+      "explanation": "page 的变化只能用 runes 感知。$derived(page.params.id) 会正确更新；老式 $: id = page.params.id 永不更新。"
     },
     {
-      "q": "navigating 对象在没有导航进行时、以及服务端渲染期，值是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "navigating 对象在没有导航进行时、以及服务端渲染期，值是？",
       "options": [
         "抛出访问错误",
         "一个 route.id 为 null 的对象",
@@ -33,10 +39,12 @@
         "恒为 { type: 'enter' }"
       ],
       "answer": 2,
-      "explain": "$app/state 的 navigating 只读对象，无导航发生或服务端渲染时 from/to/type 等值为 null；导航中才带 from/to/type（popstate 另有 delta）。"
+      "explanation": "$app/state 的 navigating 只读对象，无导航发生或服务端渲染时 from/to/type 等值为 null；导航中才带 from/to/type（popstate 另有 delta）。"
     },
     {
-      "q": "willUnload 在 $app/state 体系里是什么？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "willUnload 在 $app/state 体系里是什么？",
       "options": [
         "挂在导航对象上的布尔属性，表示本次导航是否会卸载文档（leave 或 to.route 为 null 的 link）",
         "$app/state 的第四个顶层导出",
@@ -44,10 +52,12 @@
         "一个需要在 handle 里手动设置的响应头"
       ],
       "answer": 0,
-      "explain": "$app/state 只导出 page/navigating/updated 三件；willUnload 是导航对象上的布尔属性（leave、以及 to.route===null 的 link 为 true），不是顶层导出。"
+      "explanation": "$app/state 只导出 page/navigating/updated 三件；willUnload 是导航对象上的布尔属性（leave、以及 to.route===null 的 link 为 true），不是顶层导出。"
     },
     {
-      "q": "表单有未保存改动，想在用户关标签/离开应用时弹'确定离开？'，应怎么做？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "表单有未保存改动，想在用户关标签/离开应用时弹'确定离开？'，应怎么做？",
       "options": [
         "在 afterNavigate 里判断并 alert",
         "用 goto(url, { replaceState: true })",
@@ -55,10 +65,12 @@
         "beforeNavigate 里对 navigation.type==='leave' 调 navigation.cancel()，触发浏览器原生卸载确认"
       ],
       "answer": 3,
-      "explain": "beforeNavigate 是拦截器，type==='leave'（关标签/离开）时调 cancel() 会触发浏览器原生'确定离开？'确认框，最终去留由用户决定。"
+      "explanation": "beforeNavigate 是拦截器，type==='leave'（关标签/离开）时调 cancel() 会触发浏览器原生'确定离开？'确认框，最终去留由用户决定。"
     },
     {
-      "q": "检测到新版本（version.pollInterval 轮询到更新）后，updated 的行为是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "检测到新版本（version.pollInterval 轮询到更新）后，updated 的行为是？",
       "options": [
         "把 updated.current 置 true，但不自动重载页面",
         "自动 location.reload() 刷新到新资源",
@@ -66,10 +78,12 @@
         "自动重跑所有 load 但不换 bundle"
       ],
       "answer": 0,
-      "explain": "轮询发现新 version 只把 updated.current 置 true，updated.check() 可强制立即查；它不会自动重载，以免打断用户，需你自行提示刷新。"
+      "explanation": "轮询发现新 version 只把 updated.current 置 true，updated.check() 可强制立即查；它不会自动重载，以免打断用户，需你自行提示刷新。"
     },
     {
-      "q": "preloadCode 与 preloadData 的关键区别是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "preloadCode 与 preloadData 的关键区别是？",
       "options": [
         "preloadCode 只预取路由代码不跑 load；preloadData 既取代码又调用 load",
         "preloadData 只能用于外部 URL",
@@ -77,7 +91,46 @@
         "preloadCode 会跑 load，preloadData 只取代码"
       ],
       "answer": 0,
-      "explain": "preloadCode(pathname) 只 import 路由代码不调 load（支持 /blog/* 通配）；preloadData(href) 预取代码并跑 load，等价 data-sveltekit-preload-data。"
+      "explanation": "preloadCode(pathname) 只 import 路由代码不调 load（支持 /blog/* 通配）；preloadData(href) 预取代码并跑 load，等价 data-sveltekit-preload-data。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " $app/state 相对 $app/stores 的本质变化是？ ",
+      "options": [
+        " 换了存储介质 ",
+        " page 等从需 $ 前缀订阅的 store 变成普通响应式对象属性，可直接在 runes 体系里追踪 ",
+        " 只能在服务端用 ",
+        " 支持写入 "
+      ],
+      "answer": 1,
+      "explanation": " state 版对齐 Svelte 5 runes：属性即时读取且自动追踪，免去订阅样板，也避免 store 在非组件上下文的解绑问题。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " navigating 快照（$app/state.navigating）何时为 null？ ",
+      "options": [
+        " 永远有值 ",
+        " 没有进行中的导航时为 null；导航开始后携带 from/to 等信息 ",
+        " 仅服务端为 null ",
+        " 仅移动端 "
+      ],
+      "answer": 1,
+      "explanation": " 官方语义：idle 态即 null，可据此渲染进度条或禁用交互，配合 from/to 做细粒度 UI。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 想让某个编程式导航替换历史记录而非压栈，goto 的选项是？ ",
+      "options": [
+        " { noScroll: true } ",
+        " { replaceState: true } ",
+        " { keepFocus: true } ",
+        " { invalidate: false } "
+      ],
+      "answer": 1,
+      "explanation": " replaceState 对应 history.replaceState 语义；noScroll 控制滚动、keepFocus 控制焦点，三者各管一个维度。 "
     }
   ]
 }

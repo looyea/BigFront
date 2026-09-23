@@ -8,11 +8,11 @@
       "prompt": "字段 \"type\": \"module\" 的作用是？",
       "options": [
         "让项目只能用 TypeScript",
-        "决定 .js 文件按 ESM 解析（否则按 CJS）",
         "禁止安装依赖",
-        "开启严格模式"
+        "开启严格模式",
+        "决定 .js 文件按 ESM 解析（否则按 CJS）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "type:module 让 .js 视为 ESM；单个文件可用 .cjs/.mjs 覆盖（呼应 node-npm 第一节、node-esm-cjs）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "peer 期望宿主已装某包/版本，避免多份实例导致状态/单例问题（呼应 node-npm 第五节、Express 中间件）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "npm workspaces 与 pnpm workspace 在安装布局上的关键差异是：",
+      "options": [
+        "没差异",
+        "npm 把依赖尽量提升到根 node_modules（幽灵依赖空间仍在）；pnpm 用硬链接虚拟store+严格非扁平 node_modules，未声明依赖直接 require 不到",
+        "workspaces 只支持 TS",
+        "pnpm 不支持 lockfile"
+      ],
+      "answer": 1,
+      "explanation": "pnpm 的「严格」来自 .pnpm 目录+符号链接图——phantom dependency 被物理封杀（本关幽灵依赖题的机制终局）；提升式布局下「能 import 没声明的包」迟早在全新安装/缓存清理时爆雷。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "\"exports\": { \".\" : { require: \"./cjs/index.cjs\", import: \"./esm/index.js\" } } 这种条件导出的求值规则是：",
+      "options": [
+        "按字母序",
+        "按**声明顺序**自上而下取第一个匹配条件，\"default\" 兜底放最后；types 条件必须最前否则类型解析被短路",
+        "Node 自动全兼容",
+        "仅 import 有效"
+      ],
+      "answer": 1,
+      "explanation": "顺序即优先级是 exports 最易踩的规范（TS 的 types 在前、node>browser>default 惯例）；配 attw（Are The Types Wrong）与 publint 在 CI 校验条件表完整性。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "npm dedupe 与 overrides 的配合使用场景是：",
+      "options": [
+        "永久锁死漏洞包",
+        "传递依赖树里同一包多版本冲突：overrides 强制归一（安全修复/兼容垫片），dedupe 收敛可合并的副本——两者都不能替代「看清 tree 再动手」",
+        "仅 monorepo 有效",
+        "自动更新 lockfile 所有包"
+      ],
+      "answer": 1,
+      "explanation": "overrides 是「越权改写子依赖声明」的核选项：解决双版本 instanceof 崩（本包 modules 关双实例题）与 CVE 应急，代价是可能塞进不兼容版本——修完必跑全量测试并留注释说明原因。"
     }
   ]
 }

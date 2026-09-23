@@ -1,6 +1,6 @@
 # react-data-fetching 面试题精选
 
-> 共 12 题，覆盖 A 服务端状态心智 / B useQuery 缓存 / C useMutation / D 与 Context·Vue·loader 对照四类。
+> 共 15 题，覆盖 A 服务端状态心智 / B useQuery 缓存 / C useMutation / D 与 Context·Vue·loader 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：`queryFn` 返回的 Promise：pending→`isLoading/isFetching`，reject→`isError`+`error`，resolve→`data`。默认对失败**自动重试**（`retry`，指数退避，默认 3 次），SSR/4xx 常关掉。`error` 会冒给 `errorElement`/你自己渲染错误块。也可用 `Suspense` 模式（`useQuery` 的 `suspense:true`）把加载交给上层边界（呼应 react-render-control、react-effect-patterns 异步错误不吞）。
 
 **来源**：TanStack Query 文档 — Error Handling、Retry、Suspense
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  queryKey 就是请求参数吗？如何设计缓存粒度（太粗漏失效、太细不共享）？
+
+queryKey 不是「参数」而是「这份数据的身份」：它既编码请求所需输入（如 ['posts', {filter,page}]，函数里解构出来拼 URL），又是缓存与失效的匹配键。粒度权衡：太粗（如把整页对象塞进 key，含不该区分数据的字段）会导致本应共享的取不到同一份、或频繁 miss；太细（漏掉影响结果的输入，如只 key 到 ['posts'] 却按 filter 返回不同数据）会造成「读到错数据」和「该失效的没失效」。原则：① 凡是「影响响应结果」的输入都必须进 key（URL 路径参数、query、当前用户租户 id）；② 用数组层级便于「前缀失效」（invalidateQueries({queryKey:['posts']}) 命中所有 posts*）；③ 别把不改变数据的 UI 态混进 key。这套与 React 依赖数组、Data Router 的 params 是同一思维。
+
+**来源**：TanStack Query queryKeys 指南（key 即数据身份、层级与前缀失效）。
+
+### 14.  把乐观更新的完整链路讲清：onMutate 快照、回滚、竞态与最终一致性怎么保证？
+
+标准四段：① onMutate——先 `cancelQueries` 停掉进行中的相关取数，`setQueryData` 直接把缓存改成「预期结果」（UI 秒更新），并返回一个 context 存「变更前快照」；② mutation 执行真实请求；③ onError——用 context 里的快照 `setQueryData` 回滚，并提示失败；④ onSettled（成功或失败都跑）——`invalidateQueries` 重新取真值，让 UI 最终与服务端对齐。竞态处理：多个乐观写并发时以「请求级序列/后端返回的版本号」收敛，回滚要回滚到「本次变更前」而非「最初」，故用 onMutate 返回的局部快照而非全局初值。React 19 的 useOptimistic 把「渲染乐观值+失败回滚」内建，但仍需配合 Query 做缓存失效。乐观是「先斩后奏」，onSettled 的再取是「事后对账」，缺一会漂移。
+
+**来源**：TanStack Query 乐观更新官方示例（onMutate/cancelQueries/回滚/onSettled）；React useOptimistic。
+
+### 15.  Data Router 的 loader 与 TanStack Query 什么关系？什么项目该同时用、怎么组合？
+
+它们解决重叠但不相同的问题：loader 把「取数」放到路由层、天然并行与竞态安全，但它的 loaderData 是「一次性、按路由分支」的，没有跨页共享缓存/去重/staleTime/后台再取；Query 提供「按 key 的全局缓存、去重、失效、乐观、后台刷新」。组合姿势（官方推荐的 SSR/流式协作）：在 loader 里 `queryClient.ensureQueryData(...)` 预取并让首屏数据就绪，客户端 hydrate 后由 Query 接管缓存与再验证（配 `dehydrate/hydrate` 传递缓存），组件用 useQuery 消费。小项目纯 loader 够；一旦有「多页复用同一数据、写后局部刷新、后台轮询、无限滚动」等需求，就是 Query 进场的时候。别把同一份数据的「权威缓存」同时维护在 loaderData 和 Query 两处——定一个为主。
+
+**来源**：React Router + TanStack Query data prefetching 官方集成指南；dehydrate/hydrate 说明。

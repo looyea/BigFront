@@ -1,6 +1,6 @@
 # react-render-control 面试题精选
 
-> 共 12 题，覆盖 A 条件渲染 / B 显隐与 null / C ErrorBoundary / D Suspense·Vue 对照四类。
+> 共 15 题，覆盖 A 条件渲染 / B 显隐与 null / C ErrorBoundary / D Suspense·Vue 对照四类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：把三态（loading / error / success）显式建模，而不是散落 if。方案一：组件内部用 `status` 状态 + 条件渲染（early return loading、error 时渲染错误块）。方案二：交给 Suspense + ErrorBoundary 边界声明式处理——数据层 throw promise 触发 Suspense fallback、throw error 触发 ErrorBoundary fallback，组件本体只写"成功时"的样子，最干净。关键是别让"缺一个态"导致白屏或卡 spinner（呼应 react-data-fetching、react-effect-patterns）。
 
 **来源**：React 官方文档 — Suspense / Error Boundaries、Dan Abramov — Suspense for Data Fetching
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  ErrorBoundary 捕获不到哪些错误？它与全局错误处理、Suspense 该如何分工成一张错误治理网？
+
+ErrorBoundary 捕获不到：① 事件处理器里的错误（用 try/catch）；② 异步代码如 setTimeout/promise.then（未走 React 渲染栈）；③ SSR 阶段（用 renderToString 外层 try/catch）；④ ErrorBoundary 自身抛出的错误（上层再来一个边界）。它捕获的是「渲染生命周期/effect 里的抛错」。分工：Suspense=loading，ErrorBoundary=子树渲染崩溃兜底 UI，全局 window.onerror/unhandledrejection（或 Sentry）=未捕获的运行时兜底与上报。层级策略：路由级/大块各放一个 ErrorBoundary（局部崩不白整屏）+ 顶层一个总兜底。生产还要把「lazy chunk 加载失败」映射到「提示刷新」而非死错误页。
+
+**来源**：React Error Boundary 文档「What it catches」；全局错误事件与 Sentry 集成实践。
+
+### 14.  为什么 ErrorBoundary 至今必须是类组件？React 19 / 编译器时代有没有替代趋势？
+
+需要的是「渲染出错时触发并进入特殊渲染分支」的生命周期：`static getDerivedStateFromError`（把错误转成 state）与 `componentDidCatch`（上报副作用），而这两个至今没有对应的 Hook——Hook 无法表达「捕获子树渲染中抛出的错误」这种错误边界语义（错误向上冒泡到最近的边界组件，与函数式无副作用的 Hook 模型冲突）。所以只要用 componentDidCatch 语义就得写类。替代趋势：生态里已有 react-error-boundary 把类封装成组件 API 降低样板；更前沿的 Actions/`useActionState` 把「异步 action 抛错」转成 error state（不是渲染边界错误，而是操作错误），覆盖了大量原需手写 error 的表单场景。渲染级错误边界短期内仍是类组件的地盘。
+
+**来源**：React 官方对 componentDidCatch 无 Hook 对应物的说明；react-error-boundary 与 Actions 错误处理。
+
+### 15.  一个「既异步加载、又可能失败、还允许取消/竞态」的组件，你会怎么把渲染编排好？给完整方案。
+
+分层包裹：外层 ErrorBoundary（兜 chunk/渲染/请求抛错，给「重试/刷新」UI）→ 内层 Suspense（兜加载态 fallback，骨架而非全屏闪）→ 组件本体用「资源读取」而非裸 effect fetch：优先 `use(promise)` / 数据层（Query）配合，天然与 Suspense/并发协作。竞态与取消：请求带 AbortController，queryKey/依赖变化时旧请求作废，或用 `useDeferredValue`/`startTransition` 把「输入触发的取数」标为可打断（旧结果保留、新结果就绪再切，避免闪烁与错序）。空/错误/loading 三态都显式呈现且可访问（aria-busy、live region）。要点是把 loading 交给 Suspense、error 交给边界、cancellation 交给并发/数据层，各归各位，而不是全塞进一个组件里的三段 useState。
+
+**来源**：React Suspense + ErrorBoundary 组合模式；use()/并发取数与 abort/竞态处理最佳实践。

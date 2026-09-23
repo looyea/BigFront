@@ -1,6 +1,6 @@
 # vue-pinia-basics 面试题精选
 
-> 共 12 题，覆盖 概念与选型 / store 定义 / 响应性与 storeToRefs / actions 与异步 / 模块化 五类。
+> 共 15 题，覆盖 概念与选型 / store 定义 / 响应性与 storeToRefs / actions 与异步 / 模块化 五类。
 
 ---
 
@@ -93,3 +93,25 @@ store 实例是 **reactive 对象**，解构 state/getter 得到的是脱离代�
 能，但要**先 `app.use(createPinia())` 之后再调用** `useXxx()`——否则会报"no active pinia"。常见于 axios 拦截器里取 token、`beforeEach` 里判登录态。在 setup/组件生命周期内调用则无需担心时机（呼应 vue-router-guard-lazy 第四节、vue-pinia-basics 第一节）。
 
 **来源**：Pinia — "使用 store 的时机 / no active pinia"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. "这个状态该不该进 store" 的决策树完整版：组件局部、提升、provide、store、URL、持久化六级各怎么判？
+
+六级 递 减 参 与 度：① 只 有 一 个 组 件 用 → ref 局 部；② 父 子 几 层 用 → 提 升 或 props/emit（本包 组件 关 拆分 题 的 状 态 侧）；③ 跨 树 段 但 同 一 实 例 树（表 单 联 动）→ provide/inject（实 例 级 隔离 优 于 全局）；④ 跨 无 关 树 段/组件 外 要 读（守 卫/拦截 器）→ store；⑤ 用 户 会 想 收 藏/分享/后 退（页 码 筛 选 标 签）→ **URL 优 先**（store 只 放 URL 的 镜像，本包 路由 query 题 的 状态 侧 答 案）；⑥ 刷 新 后 还 要 在（草 稿/首 选 主 题/登 录 态）→ store + 持 久 化 插 件 并 显 式 列 白 名（敏 感 不 落，本包 advanced 持久 化 题）。反 直觉 条 款：**store 是 最后 的 便 利 不 是 第 一 反应**——每 进 store 一 份 状态，就 给 全 应用 增加 一 层 「谁 都 能 看 到 谁 都 能 改」的 潜 在 耦 合；测 试 里 起 store 的 成 本 也 是 局 部 状态 免 付 的。
+
+**来源**：Pinia 文档「从事件总线/store 迁移」与状态分类指引；user-facing state 模式通行总结。
+
+### 14. Pinia 的响应式底座是什么？为什么 store.state 能直接 reactive 而 $reset 在 setup store 失效——从实现层讲透。
+
+选 项 式 store：state 就 是 `reactive(stateFn())`，getter 是 computed，action 绑 store——**store 对 象 本身 是 reactive 代理**，所 以 解 构 丢 响应（代 理 读 取 丢 失，本关 storeToRefs 题 的 机 理 面），方法 不 依 赖 this 所 以 解 构 安 全。setup store：内 部 是 一 个 执 行 `setup()` 收 ref/computed/函 数 的 过程，Pinia 对 返 回 Map 做 `reactify`（ref 拆 到 外 层 reactive 保 持 响应 而 不 是 整 体 reactive 包 装——这 是 官 方 源码 注 释 里 的 「ref unwrap 于 顶 层」复用 了 组件 setup 同 一 套 unwrap 机 制）。$reset 失 效 的 原因 随 之 明 白：选项 式 拿 得 到 `state()` 工厂 所 以 能 `$patch(reset)` 回 工 厂 值；setup 式 的 局部 变量 Pinia 无 法 通 用 重 置（不 知 道 哪 些 是 状态 哪 些 是 派 生）——自 实 现：把初 始 值 收 进 工厂 函 数 + 自 定 义 `reset()` action，或 `Pinia 插件 注 入 $reset`（把 这 个 缺口 做 成 生态 练习 题 的 官方 姿势，本包 advanced $reset 题 的 源码 层）。
+
+**来源**：Pinia 源码（reactive 包装与 refify 处理）；官方 $reset 移除动机 issue 与 stores composition 指南。
+
+### 15. 在 setup 外面用 store（axios 拦截器、router 守卫、webcompoent 适配器）的正确时机与三个经典翻车。
+
+正 确 姿势：`useAuthStore()` 在 **函数 体 内 调 用**（拦截 器 回 调 里 取，不 要 模 块 顶 部 取），前 提 是 pinia 已 `app.use`——这 一 句 就 是 全 部 风 险 所在。翻 车 一：模 块 顶 层 `const store = useAuthStore()` import 即 执 行，此 时 activePinia 未 设 → 「no active pinia」炸 或 拿 到 别 的 pinia（测 试 里 多 实 例 时 尤 毒）；翻 车 二：SSR 请 求 处 理 函 数 外 的 模 块 级 引用 跨 请 求 共 享（状 态 串 线，本包 advanced SSR 题 的 基础 版）；翻 车 三：守 卫 里 用 store 判 登 录 但 store 的 初 始 化 依赖 一 个 异 步 恢复（持久 化 插件 hydrate 中，守 卫 早 于 hydrate 跑 → 决 定 性 误 判 踢 回 登录 页，首 屏 永远 回 不 到 深 链）——治 疗：恢复 同步 化（localStorage 同 步 读）或 给 插件 一 个 ready Promise 让 守 卫 await。附 加 请 求 头 注入（token）这 类 只 读 场 景 最 安 全；改 状态 的（401 登 出）要 确 保 action 幂 等（多 请 求 同 时 401 只 登 出/跳 转 一 次，本 关 无 感 刷 新 单 飞 题 的 姊妹 案）。
+
+**来源**：Pinia 文档「在组件外使用 store」与 TS/SSR 注意事项；社区 store 与路由守卫/拦截器时序事故案例。

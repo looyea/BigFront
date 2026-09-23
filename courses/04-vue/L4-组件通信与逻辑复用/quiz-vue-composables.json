@@ -7,27 +7,37 @@
       "type": "single",
       "prompt": "组合式函数（composable）的常见约定是？",
       "options": [
-        "必须以 use 开头、内部用响应式 API、在 setup 中调用",
         "必须是 .vue 文件",
         "必须默认导出一个组件",
+        "必须以 use 开头、内部用响应式 API、在 setup 中调用",
         "必须全局注册"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "use 前缀 + 响应式逻辑 + setup 同步调用才绑得上生命周期（呼应 vue-composables 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "组合式函数返回一个 reactive 对象，调用方解构后会发生什么？",
-      "options": ["照常响应", "解构出的是普通值、丢失响应性", "编译报错", "自动变 ref"],
-      "answer": 1,
+      "options": [
+        "照常响应",
+        "编译报错",
+        "自动变 ref",
+        "解构出的是普通值、丢失响应性"
+      ],
+      "answer": 3,
       "explanation": "reactive 解构丢响应；应返回 ref 或用 toRefs（呼应 vue-composables 第二节、reactivity-theory 第六节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "要让组合式函数既能接收 ref 又能接收普通值，通常怎么处理参数？",
-      "options": ["只允许传 ref", "用 toValue/unref 归一", "强制传字符串", "用 JSON 解析"],
+      "options": [
+        "只允许传 ref",
+        "用 toValue/unref 归一",
+        "强制传字符串",
+        "用 JSON 解析"
+      ],
       "answer": 1,
       "explanation": "toValue/unref 把两者统一成可读值（呼应 vue-composables 第三节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "服务端无 DOM，浏览器 API 要延后到客户端（呼应 vue-composables 第六节、vue-ssr-nuxt）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "组合式函数内部用 getCurrentInstance() 兜底（脱离 setup 时手动注册卸载钩子），这手法说明的是：",
+      "options": [
+        "官方推荐写法",
+        "框架级逃生舱：onXxx 钩子靠「当前实例指针」关联，异步回调里指针为 null 才需手动 scope.onScopeDispose/patch onUnmounted——业务代码走到这一步意味着调用时机已错，应先修结构",
+        "性能优化技巧",
+        "TS 类型补丁"
+      ],
+      "answer": 1,
+      "explanation": "VueUse 内部 就 有 `tryOnScopeDispose` 这 类 兜底（本关 VueUse 设计 题 的 细节 面），但 它 的 使用 前提 是 「库 无 法 强 制 调用 者 同 步 调 用」；业务 里 出现 = 把 同步 契约 打 进 异步，改 调 用 位置 优 先。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "把组合式函数的返回值整个传给子组件 props，最佳实践是：",
+      "options": [
+        "返回 reactive 整体直传",
+        "解构保持 ref 逐个传（或传函数 API），别把含 ref 的普通对象整个丢 props——顶层 ref 在 props 传递中不解包、子组件用 .value 会破坏模板约定，且整对象引用传下去违反单向流",
+        "返回 JSON 字符串",
+        "用 provide 替代一切"
+      ],
+      "answer": 1,
+      "explanation": "「组合式 函数 返回 值 的 消费 协议」：ref 要 保持 到 达 模板 顶层 才 享受 自动 解 包，任何 中间 容器（props 对象/嵌套 数组）都 会 让 解 包 规则 失 效——这 是 返回 reactive 解构 丢 响应 题 的 姐妹 坑。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "effectScope.run(() => { const s = useSubscription() }) 这个模式的价值是：",
+      "options": [
+        "性能加速",
+        "把一组响应式订阅装进手动生命周期：scope.stop() 一键停掉其中所有 watch/computed/注册的 onScopeDispose——路由级/弹窗级「离开即整体回收」，不依赖组件实例存在",
+        "替代 Pinia",
+        "让代码可 tree-shake"
+      ],
+      "answer": 1,
+      "explanation": "典型 应 用：跨 组件 的 「页 面 级 组合 池」（setup 外 也 能 建 作用 域）、单例 组合 函数 的 可 重置（stop 后 重 新 run=状 态 机 归 零）、SSR 每 请求 一 个 scope 防 交叉 污染（本关 effectScope 双 题 的 操 作 系 版）。"
     }
   ]
 }

@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-adapters",
-  "title": "adapters 落地形态 · 自测",
+  "title": "kit-adapters 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "adapter 在 SvelteKit 构建流程中何时运行、职责是什么？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "adapter 在 SvelteKit 构建流程中何时运行、职责是什么？",
       "options": [
         "在 vite build 末尾运行，把中间产物转换成某部署目标需要的形态",
         "在 dev server 启动时运行，负责热更新",
@@ -11,10 +13,12 @@
         "在 npm install 时运行，负责下载依赖"
       ],
       "answer": 0,
-      "explain": "adapter 是 build 末尾运行的小插件，把 vite build 产出的中间形态落地成 static/node/平台等具体部署产物。"
+      "explanation": "adapter 是 build 末尾运行的小插件，把 vite build 产出的中间形态落地成 static/node/平台等具体部署产物。"
     },
     {
-      "q": "用 adapter-static 做纯静态站，文档点名的两条硬前置是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "用 adapter-static 做纯静态站，文档点名的两条硬前置是？",
       "options": [
         "设 fallback 且关闭 ssr",
         "配 adapter-auto 且开 precompress",
@@ -22,10 +26,12 @@
         "trailingSlash 必须 always 且必须配 paths.base"
       ],
       "answer": 2,
-      "explain": "adapter-static 需根 layout `prerender=true` 让整站静态化，且 ssr≠false——否则预渲染只存空壳页而非完整内容。"
+      "explanation": "adapter-static 需根 layout `prerender=true` 让整站静态化，且 ssr≠false——否则预渲染只存空壳页而非完整内容。"
     },
     {
-      "q": "adapter-static 的 fallback 选项解决什么？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "adapter-static 的 fallback 选项解决什么？",
       "options": [
         "指定 404 页文案",
         "为未被预渲染的 URL 生成一个兜底入口页（如 200.html）供 SPA 接管",
@@ -33,10 +39,12 @@
         "声明静态资源的 CDN 前缀"
       ],
       "answer": 1,
-      "explain": "fallback 为『没有对应静态文件的 URL』提供一个 SPA 入口 HTML，由客户端路由接管；官方警告其对性能/SEO 有大的负面影响，仅特定场景推荐。"
+      "explanation": "fallback 为『没有对应静态文件的 URL』提供一个 SPA 入口 HTML，由客户端路由接管；官方警告其对性能/SEO 有大的负面影响，仅特定场景推荐。"
     },
     {
-      "q": "为什么『带 form action 的页面』不能预渲染？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么『带 form action 的页面』不能预渲染？",
       "options": [
         "action 语法与 SSR 不兼容",
         "预渲染会丢弃页面所有 JS",
@@ -44,10 +52,12 @@
         "action 的 POST 请求需要服务器在处理，纯静态文件无法响应"
       ],
       "answer": 3,
-      "explain": "页面有 actions 就意味着必须有服务器处理 POST，死文件做不到，因此这类页不能预渲染（要动态 adapter 或 SPA fallback）。"
+      "explanation": "页面有 actions 就意味着必须有服务器处理 POST，死文件做不到，因此这类页不能预渲染（要动态 adapter 或 SPA fallback）。"
     },
     {
-      "q": "prerender='auto' 与 prerender=true 的关键差别是？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "prerender='auto' 与 prerender=true 的关键差别是？",
       "options": [
         "auto 会禁用客户端水合",
         "auto 只预渲染、彻底不进 manifest",
@@ -55,10 +65,12 @@
         "auto 等价于 prerender=false"
       ],
       "answer": 2,
-      "explain": "true 会把路由从动态 SSR manifest 排除（只能以文件存在，漏爬到会报错）；'auto' 两样都占——热门 slug 发文件、没预渲染到的仍回落服务器现渲。"
+      "explanation": "true 会把路由从动态 SSR manifest 排除（只能以文件存在，漏爬到会报错）；'auto' 两样都占——热门 slug 发文件、没预渲染到的仍回落服务器现渲。"
     },
     {
-      "q": "关于 adapter-auto，下列正确的是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 adapter-auto，下列正确的是？",
       "options": [
         "它是便利默认、探测部署平台自动转发；需精确平台选项时应换成专用 adapter 手写配置",
         "它是唯一能产出 SSR 的 adapter",
@@ -66,10 +78,12 @@
         "它只能用于 Netlify，不支持其它平台"
       ],
       "answer": 0,
-      "explain": "adapter-auto 探测平台转发给对应适配器、方便上传即部署，但非生产最优；平台特定选项给不满时应换专用 adapter。"
+      "explanation": "adapter-auto 探测平台转发给对应适配器、方便上传即部署，但非生产最优；平台特定选项给不满时应换专用 adapter。"
     },
     {
-      "q": "adapter-node 产物运行时需要哪三样？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "adapter-node 产物运行时需要哪三样？",
       "options": [
         "源代码、.env、dev 依赖",
         "build 输出目录、package.json、生产依赖 node_modules",
@@ -77,7 +91,46 @@
         "vite.config、svelte.config、node_modules 全量"
       ],
       "answer": 1,
-      "explain": "跑 adapter-node 产物需要 build/、package.json、以及 npm ci --omit dev 得到的生产依赖；外部化依赖运行时从 node_modules 取。"
+      "explanation": "跑 adapter-node 产物需要 build/、package.json、以及 npm ci --omit dev 得到的生产依赖；外部化依赖运行时从 node_modules 取。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " adapter 的准确职责边界是？ ",
+      "options": [
+        " 编译 Svelte 组件 ",
+        " 在 vite build 末尾把 Kit 的中立产物改写成目标部署形态（目录结构/入口/静态服务） ",
+        " 运行时代理请求 ",
+        " 生成路由表 "
+      ],
+      "answer": 1,
+      "explanation": " Kit 产出与平台无关的服务端与客户端资源，adapter 只做形态翻译，不碰业务编译。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 纯静态站用 adapter-static 时，文档点名的硬性前提是？ ",
+      "options": [
+        " 必须用 TS ",
+        " 全站 prerender=true 且 ssr=false（或全站预渲染），不能依赖任何服务端能力 ",
+        " 禁用 form ",
+        " 必须配 CDN "
+      ],
+      "answer": 1,
+      "explanation": " 静态产物没有服务器，动态渲染、action、端点都不存在，官方要求显式声明全站预渲染意图。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " adapter-auto 的工作机制是？ ",
+      "options": [
+        " 自动选择最优性能 adapter ",
+        " 按环境变量探测托管平台，命中则委托给对应官方 adapter，探测不到则报错 ",
+        " 永远用 node ",
+        " 打包多份全平台产物 "
+      ],
+      "answer": 1,
+      "explanation": " adapter-auto 是开发期便利，CI 构建应锁定具体 adapter，产物可复现且不依赖环境猜测。 "
     }
   ]
 }

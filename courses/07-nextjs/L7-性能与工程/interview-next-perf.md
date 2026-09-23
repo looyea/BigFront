@@ -1,4 +1,4 @@
-# next-perf 面试题（12 题）
+# next-perf 面试题（15 题）
 
 > 主题：Core Web Vitals、包体优化、渲染与数据通路性能。
 
@@ -81,3 +81,25 @@
 **答**：先测后医：真实用户数据（web-vitals p75 按路由分桶）找出最痛的 Top 3 路由 → 归因分层：HTML 慢（数据/缓存层）、JS 多（边界/包体层）、资源重（图片字体层）、交互卡（主线程层）→ 按 ROI 排序执行：通常先做零风险默认项（next/image、next/font、并行取数），再做策略项（ISR/缓存层级、prefetch 调整），最后动结构（拆 'use client' 边界、组件下沉服务端）→ 每项改动后回归 build 日志与真实指标，防止按下葫芦浮起瓢（如 ssr:false 加多反而 LCP 变差）。
 
 **来源**：InfoQ《性能优化项目的推进方法论》；掘金《一次 Next.js 站点性能治理复盘》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  对慢路由做性能审计，按 RSC 架构你会检查哪些层？各用什么工具？
+
+**答**：分层清单：① 度量层——先接 Vercel Analytics 或自建 web-vitals 上报，按路由模板拿 LCP/INP/CLS 分位数 + Next 15 的 cache 命中率指标，定位"哪类页慢"而非猜；② 渲染层——React DevTools Profiler 含水合火焰图（哪棵树重渲）、next build 日志看路由被标静态还是动态（ƒ vs ○）、Suspense 边界 flush 时序（performance.mark 打点）；③ 数据层——Data Fetching 瀑布：layout/page 链上 await 是否并行、重复 fetch（memoization 键是否被新对象 options 打断）、缓存命中（x-nextjs-cache）；④ 包体层——@next/bundle-analyzer 看客户端岛 import 图与第三方贡献、字体/图片体积；⑤ 传输层——预取是否过激（/_next/data 或 RSC 请求占带宽比例）、CDN 命中、压缩、HTTP 版本；⑥ 基础设施——函数冷启动、边缘区域回源延迟。工具随层走，先 ① 定嫌疑再下钻，别一上来开 analyzer。
+
+**来源**：Next.js 官方 Analytics / Debugging 与生产指标指南；InfoQ《App Router 性能审计分层法》。
+
+### D5.  预取（prefetch）是性能优化还是性能负债？给你一个"治理预取带宽"的操作手册。
+
+**答**：手册：① 定性——预取换"点击后时延"，成本是"点击概率×payload 体积"，导航链接高概率值、内容条目低概率亏；② 测量——Network 面板/服务端日志统计 RSC 预取请求 vs 真实导航的比值（>3:1 即过度）、CDN 出带宽按路径归因；③ 分级——主导航/面包屑/上一页下一页保持默认，搜索结果列表/商品流/带参筛选链接 prefetch={false}，长列表里"前 K 项预取"可自定义（进视口+停留再预取的小封装）；④ 降本——把动态段的预取成本压小（RSC 壳轻、重数据 Suspense 后懒取）、静态段预吃 CDN 缓存；⑤ 预算——预取带宽占比写进发布检查，改版复测。收口句：prefetch 默认值是"导航站善意"，流量大站必须自己掌勺——一句话把"为什么"与"怎么办"都占了。
+
+**来源**：Vercel 官方 <Link> 预取文档；掘金《列表页带宽翻倍的真凶是 prefetch》。
+
+### D6.  把"构建时长从 25 分钟压回 6 分钟"的工程任务交给你，按 Next 项目常见病因开药。
+
+**答**：病因与药：① 页面生成量爆炸——SSG 页 × locale × 分页全枚举：generateStaticParams 按热度分层（长尾让 dynamicParams 运行时生成 + CDN 缓存首访），或构建期分批/增量站点；② 类型检查——大仓 tsc 占半壁：next build 里 typescript.ignoreBuildErrors + 把 tsc 拆成并行 CI job（lint/type/test 解耦），ESLint 同理可 noEmit 并行；③ 依赖图与缓存——monorepo 里大量无 shared 缓存的重复编译：Turbopack（实验稳定化路线）或至少开启 .next 与 node_modules 的 CI 缓存、锁文件级增量；远程缓存（Vercel 自建 runner 缓存/自定义构建缓存实验）；④ 数据预取进构建——build 时 fetch 外部服务拉全站数据（一慢全慢、一挂构建挂）：改为构建产物只出壳、首请求 SWR 填充，或数据层加本地快照；⑤ 图片/字体下载——Google Fonts 构建期网络抖：CI 内网镜像/本地化字体文件；next/image 远程图构建期优化关掉。度量先行：build --debug + 阶段日志分清"编译/类型/生成"三堆时间再动刀，25 分钟的项目常常 15 分钟在类型、8 分钟在页面生成——药方完全不同。
+
+**来源**：InfoQ《Next.js 构建提速实录》；SegmentFault《next build 慢在哪：依赖图/类型/SWC》。

@@ -1,48 +1,136 @@
 {
-  "lesson": "solid-capstone",
-  "title": "毕业项目 · 自测",
+  "title": "solid-capstone 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "看板项目里\"服务器来的板/卡/用户数据\"的正确落地方式是？",
-      "options": ["拷进一个全局 store 再手动同步", "useState 存一份", "localStorage 缓存", "query + createAsync 作单一事实源，客户端不再另存一份"],
+      "id": "q1",
+      "type": "single",
+      "prompt": "看板项目里\"服务器来的板/卡/用户数据\"的正确落地方式是？",
+      "options": [
+        "拷进一个全局 store 再手动同步",
+        "useState 存一份",
+        "localStorage 缓存",
+        "query + createAsync 作单一事实源，客户端不再另存一份"
+      ],
       "answer": 3,
-      "explain": "服务端数据走 query/createAsync 缓存复用，避免在客户端复制一份造成失同步（L6/L7 原则的工程落点）。"
+      "explanation": "服务端数据走 query/createAsync 缓存复用，避免在客户端复制一份造成失同步（L6/L7 原则的工程落点）。"
     },
     {
-      "q": "拖拽换列要\"秒响应、失败还能回滚\"，应组合哪几个能力？",
-      "options": ["createMemo + Show", "Suspense + ErrorBoundary", "mutate 本地即时改 + server action 落库 + 失败经错误边界/回滚", "batch + onCleanup"],
+      "id": "q2",
+      "type": "single",
+      "prompt": "拖拽换列要\"秒响应、失败还能回滚\"，应组合哪几个能力？",
+      "options": [
+        "createMemo + Show",
+        "Suspense + ErrorBoundary",
+        "mutate 本地即时改 + server action 落库 + 失败经错误边界/回滚",
+        "batch + onCleanup"
+      ],
       "answer": 2,
-      "explain": "乐观更新三件套：mutate 立刻反映 UI、action 提交后端、出错回滚并提示——全课 resource/mutation/error 的综合。"
+      "explanation": "乐观更新三件套：mutate 立刻反映 UI、action 提交后端、出错回滚并提示——全课 resource/mutation/error 的综合。"
     },
     {
-      "q": "某一列远程数据拉取失败，不想整页白屏，应？",
-      "options": ["把该列包进就近 ErrorBoundary，给重试（reset）", "在全局 window.onerror 兜", "用 try/catch 包住组件", "忽略，让用户刷新"],
+      "id": "q3",
+      "type": "single",
+      "prompt": "某一列远程数据拉取失败，不想整页白屏，应？",
+      "options": [
+        "把该列包进就近 ErrorBoundary，给重试（reset）",
+        "在全局 window.onerror 兜",
+        "用 try/catch 包住组件",
+        "忽略，让用户刷新"
+      ],
       "answer": 0,
-      "explain": "ErrorBoundary 把错误关在局部子树、fallback(err,reset) 提供重试，正是 L5 边界的工程用法。"
+      "explanation": "ErrorBoundary 把错误关在局部子树、fallback(err,reset) 提供重试，正是 L5 边界的工程用法。"
     },
     {
-      "q": "/board/[id] 这类含登录个性化数据的页，在渲染形态上应？",
-      "options": ["加进 prerender routes 静态化", "crawlLinks 让它被爬成静态", "服务端渲染但缓存成同一份 HTML 给所有人", "保持 SSR/CSR，不进预渲染"],
+      "id": "q4",
+      "type": "single",
+      "prompt": "/board/[id] 这类含登录个性化数据的页，在渲染形态上应？",
+      "options": [
+        "加进 prerender routes 静态化",
+        "crawlLinks 让它被爬成静态",
+        "服务端渲染但缓存成同一份 HTML 给所有人",
+        "保持 SSR/CSR，不进预渲染"
+      ],
       "answer": 3,
-      "explain": "HTML 无法在构建期完全确定（按用户/按数据），预渲染只会把同一份静态壳发给所有人——个性化页走动态渲染（L7/8）。"
+      "explanation": "HTML 无法在构建期完全确定（按用户/按数据），预渲染只会把同一份静态壳发给所有人——个性化页走动态渲染（L7/8）。"
     },
     {
-      "q": "让一次\"改名\"提交吃到 single-flight，路由侧的必备前提是？",
-      "options": ["组件里 onMount 手动 refetch", "被改数据的 query 有 route.preload（且 action 在服务端执行）", "把数据存进 signal", "关掉 SSR"],
+      "id": "q5",
+      "type": "single",
+      "prompt": "让一次\"改名\"提交吃到 single-flight，路由侧的必备前提是？",
+      "options": [
+        "组件里 onMount 手动 refetch",
+        "被改数据的 query 有 route.preload（且 action 在服务端执行）",
+        "把数据存进 signal",
+        "关掉 SSR"
+      ],
       "answer": 1,
-      "explain": "官方两前提：action 走服务端函数 + 目标数据被 preload，才能在同一响应里 revalidate 并流回（L8）。"
+      "explanation": "官方两前提：action 走服务端函数 + 目标数据被 preload，才能在同一响应里 revalidate 并流回（L8）。"
     },
     {
-      "q": "卡片\"完成度百分比\"这类从源数据算出的值，架构上应？",
-      "options": ["用 createMemo 派生", "写进 store 每次手动更新", "在 onMount 里算一次存好", "用 createEffect set 回信号"],
+      "id": "q6",
+      "type": "single",
+      "prompt": "卡片\"完成度百分比\"这类从源数据算出的值，架构上应？",
+      "options": [
+        "用 createMemo 派生",
+        "写进 store 每次手动更新",
+        "在 onMount 里算一次存好",
+        "用 createEffect set 回信号"
+      ],
       "answer": 0,
-      "explain": "可推出的量一律 memo（惰性+缓存+即时一致），绝不存进 state 手动同步——贯穿 L2/L6 的纪律在毕业项目的落点。"
+      "explanation": "可推出的量一律 memo（惰性+缓存+即时一致），绝不存进 state 手动同步——贯穿 L2/L6 的纪律在毕业项目的落点。"
     },
     {
-      "q": "实现\"看板内的卡片详情\"嵌套动态路由，正确的文件名是？",
-      "options": ["routes/board/[id]/card/[cardId].tsx", "routes/board-card.tsx", "routes/[id][cardId].tsx", "routes/board/[id].[cardId]/index.tsx"],
+      "id": "q7",
+      "type": "single",
+      "prompt": "实现\"看板内的卡片详情\"嵌套动态路由，正确的文件名是？",
+      "options": [
+        "routes/board/[id]/card/[cardId].tsx",
+        "routes/board-card.tsx",
+        "routes/[id][cardId].tsx",
+        "routes/board/[id].[cardId]/index.tsx"
+      ],
       "answer": 0,
-      "explain": "动态段目录逐级嵌套：/board/:id/card/:cardId → board/[id]/card/[cardId].tsx（L7 文件路由约定的组合）。"
+      "explanation": "动态段目录逐级嵌套：/board/:id/card/:cardId → board/[id]/card/[cardId].tsx（L7 文件路由约定的组合）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 看板拖拽改列后服务端写失败，最稳的落点在？ ",
+      "options": [
+        " 只弹 toast ",
+        " store 路径级更新做乐观移动，失败时按变更集回滚原路径并保留用户重试入口 ",
+        " 禁用拖拽 ",
+        " 整表重取 "
+      ],
+      "answer": 1,
+      "explanation": " 路径级回滚通知面小、不打断其他卡片编辑；整表重取会丢全局选中/编辑态，是懒政解。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 看板路由 /board/:id 开启预渲染时，参数怎么处理？ ",
+      "options": [
+        " 随机生成 ",
+        " dynamicParams 枚举已知看板 id 预生成，未命中走 SSR 兜底或 404 ",
+        " 关掉 SSR ",
+        " 换成查询参数 "
+      ],
+      "answer": 1,
+      "explanation": " 预渲染需要静态参数集；私有动态看板本不该预渲染，枚举+兜底双轨是公开/混合内容的标准答。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " hover 预取看板详情在流量与体验间怎么收口？ ",
+      "options": [
+        " 一律 prefetch 全量 ",
+        " 视口内行 hover 延迟触发轻量 metadata 预取，pointer 离开即取消 ",
+        " 不预取 ",
+        " 点击后预取 "
+      ],
+      "answer": 1,
+      "explanation": " 延迟+视口过滤+可取消三件套控制误触流量；预取粒度到 metadata 而非整卡数据，与 loader 的缓存键对齐。 "
     }
   ]
 }

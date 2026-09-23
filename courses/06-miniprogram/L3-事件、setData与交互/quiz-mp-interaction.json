@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "文案散落正是裸调之痛，应集中映射（呼应 mp-interaction 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 关于 wx.showLoading 与 wx.showToast 的关系，正确的说法是？",
+      "options": [
+        "二者可叠无数个互不影响",
+        "它们共用同一层\"全局反馈\"通道：showLoading 本质是 icon 为 loading 的 toast；未先 hideLoading 就 showToast 会互相顶替/冲突，成对调用（show 后必 hide）是铁律",
+        "showToast 会自动关 loading",
+        "loading 会阻塞 toast 队列"
+      ],
+      "answer": 1,
+      "explanation": "小程序的 toast/loading 是同一单例通道，\"后显示顶掉先显示\"是常见误用源：先 showLoading 又立刻 showToast 会出现 loading 被吞或文案错乱。规范做法——封装统一 feedback、show 必配 hide、并发请求用引用计数管 loading。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " hideLoading 放在哪最稳，避免\"loading 一直转不停\"？",
+      "options": [
+        "放在 showLoading 后面一行",
+        "放在请求的 complete（或 then+catch 汇聚处）——无论成功失败都必执行 hide；只放 success 会让失败分支 loading 永挂",
+        "放 onUnload",
+        "不用手动 hide"
+      ],
+      "answer": 1,
+      "explanation": "wx.request 有 success/fail/complete，hideLoading 必须无条件执行，放 complete 一处最省心；用 Promise 时则 .finally。\"只 hide 成功路径\"导致的悬挂 loading 是真实高频 bug，也顺带解释了 toast 顶掉后\"看着消失了\"其实通道错乱的根因。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " showModal 只能带最多两个按钮，需要\"取消/稍后/去设置\"三个操作时官方方案是？",
+      "options": [
+        "showModal 传三个 confirmText",
+        "用 showActionSheet（下方滑出的多选项）或自定义弹层组件；showModal 语义固定为\"确认+取消\"两选一",
+        "循环调用两次 showModal",
+        "用 showToast 变通"
+      ],
+      "answer": 1,
+      "explanation": "showModal 是二值决策 API（confirmText/cancelText）。≥3 分支要么 showActionSheet（系统样式的选项列表）、要么自绘弹层组件换可控性。这属于\"原生能力边界\"——原生 API 轻量、不占 setData、跨端一致，但样式与交互受限，复杂反馈就该回落到自定义组件。"
     }
   ]
 }

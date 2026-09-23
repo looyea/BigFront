@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "为什么原始类型要用小写 number 而不是大写 Number？",
       "options": [
-        "大写是语法错误",
         "小写是原始类型，大写是包装对象类型，几乎永远不该拿来标注变量",
+        "大写是语法错误",
         "大写性能更好",
         "没有区别"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "number/string/boolean 是原始类型；Number/String/Boolean 是对象/构造函数类型，用错会带来 null 可赋值等怪异问题。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "const s = 'hi' 与 let s = 'hi' 推断出的类型分别是？",
       "options": [
         "都是 string",
-        "const 推成字面量类型 'hi'，let 推成宽类型 string",
         "都是 'hi'",
+        "const 推成字面量类型 'hi'，let 推成宽类型 string",
         "const 推成 string，let 推成 'hi'"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "const 不可变→保留最精确字面量类型；let 可变→拓宽为 string。这个差异在联合/映射类型里很有用。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "关于类型注解，推荐的工程实践是？",
       "options": [
         "每一处都强制写类型注解",
-        "能推断就别重复标注，但导出的公共函数边界要显式参数/返回类型",
         "永远不写，全靠推断",
-        "只在变量上写"
+        "只在变量上写",
+        "能推断就别重复标注，但导出的公共函数边界要显式参数/返回类型"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "重复标注啰嗦易过时；对外 API 显式签名固化契约、报错更准、防实现改动悄悄改变外部类型。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "空数组无初值可推断元素类型，显式 string[] 告诉编译器后续要放什么。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`const t = [1, \"a\"] as const` 的类型是：",
+      "options": [
+        "`(number | string)[]`",
+        "`readonly [1, \"a\"]`",
+        "`[1, \"a\"]`",
+        "`never[]`"
+      ],
+      "answer": 1,
+      "explanation": "as const 递归字面量化 + readonly：数组变只读元组、元素停最窄字面量——配 switch 路由表、枚举替代的标准底座。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`function f(a = 1) {}` 的调用与参数类型：",
+      "options": [
+        "a 是 `number | undefined`，必须传参",
+        "a 推断为 number，且调用方可省略实参",
+        "必须写 `(a: number = 1)` 否则报错",
+        "a 是 any"
+      ],
+      "answer": 1,
+      "explanation": "默认参数把「可省略」编码进签名：调用方 `f()` 合法，函数体内 a 已排除 undefined（推断 number）——这是最省事的可选参数姿势。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`let s: string = \"up\"; const dir: \"up\" | \"down\" = s;` 的结果：",
+      "options": [
+        "合法，双向随便赋",
+        "报错：string 不能赋给字面量联合",
+        "运行时自动收窄",
+        "需要 as const"
+      ],
+      "answer": 1,
+      "explanation": "字面量类型是 string 的**子集**：字面量→string  widening 合法，string→联合则可能越界被拒——需要 `s as const` 或让 s 一开始就是窄类型。"
     }
   ]
 }

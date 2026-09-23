@@ -1,6 +1,6 @@
 # vite-hmr 面试题精选
 
-> 共 12 题，覆盖 **HMR 原理 / API / 框架集成 / 自定义 HMR / 性能 / 降级** 六类。
+> 共 15 题，覆盖 **HMR 原理 / API / 框架集成 / 自定义 HMR / 性能 / 降级** 六类。
 
 ---
 
@@ -132,3 +132,25 @@ Vite 默认只处理 `.js/.ts/.vue` 等——其他文件 import 后不会热更
 **批量 debounce**（50ms 窗口）：短时间内多次 change → 合并成一个 `update` 消息 → 一次推多个 updates 数组 → 浏览器并行动态 import → 一次 accept 循环。避免连锁多次 HMR 导致的中间状态闪烁。
 
 **来源**：Vite source — `onFileChange` debounce; chokidar `awaitWriteFinish`
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  monorepo 里 linked 的本地包想在 dev 时获得与主应用源码同等的 HMR 体验，要打通哪些环节？
+
+三道关卡逐个过：① 解析关——包的 exports 必须指向 src（.vue/.svelte/.jsx 源文件），指向 dist 则改动要等包自己 rebuild；② 转换关——源文件类型要能被应用的插件链处理（跨 root 的 @fs 路径 + server.fs.allow 覆盖 workspace 根，否则 403；框架插件的 include 范围默认常只含应用 root，要扩到包目录）；③ 依赖关——该包自己的 node_modules 依赖会被 Vite 识别为"未预构建的新依赖"触发重新预打包+整页 reload（optimizeDeps.include 把它们提前收编是止血，exclude 包本身+include 其依赖是标准口诀）。HMR 边界：包源码进入应用模块图后 HMR 与普通模块无异，但包若持有单例状态（store/客户端实例）注意双实例问题——linked 与 npm 版同时在场时 ws 断开/状态各持一半。验证手段：改包文件看 Network 里是否有对应 /@fs/... 的 update 而非 full-reload；出现 reload 顺从消息里的 acceptedPath 找断点。收口句："改了库页面不动"从来不是一个 bug，是解析/转换/依赖三层各自的失效模式——排查表比记忆更有价值。
+
+**来源**：Vite 官方 Monorepo 指南（optimizeDeps.exclude/include 连锁）；pnpm workspace 讨论；SegmentFault《改了组件库没反应的三层排查》
+
+### 14.  HMR 更新瞬间组件状态为什么会丢？hot.accept、hot.dispose、hot.data 三件套的正确配合姿势是什么？
+
+机制：模块被替换=旧模块实例的闭包世界整体作废，"状态"若是模块级变量/组件实例内部值必然随迁失败——accept 声明"我能自接受"只是阻止向上传播触发刷新，状态迁移要自己搬。三件套分工：accept（谁负责应用这个模块的新版本）；dispose(cb)（替换前钩子：旧实例交出资源——关连接、清定时器、卸载副作用，这是防"热一次多一条泄漏"的关键，漏写就是幽灵连接事故）；data（旧→新的值通道：dispose 里存入、新实例 accept 回调里取——把"外部资源句柄"跨版本传递，如 WebSocket、播放器实例）。边界选择：① 能derive 的状态别存（派生态重建即可，只有"外部世界句柄/昂贵初始化"值得搬）；② 框架组件内部状态由框架的 HMR 层负责（Vue 保留 setupState、Svelte 保留 local——各自编译器注入，别自己接管框架层）；③ accept 的粒度陷阱：accept 了但没做状态恢复=静默的"看起来热了但数据错了"，不如让它 full-reload 诚实。加分句：HMR 状态保留是"开发体验与正确性的交换"——每个自定义 accept 都该在 code review 里回答"dispose 里清了啥、data 里传了啥"两问。
+
+**来源**：Vite HMR API 官方文档；Mannye《Vite HMR 机制图解》；掘金《写了一个带 WebSocket 连接的 Hook 后被热更新的教益》
+
+### 15.  为什么 Vite 的 HMR 边界（accept 链）到 index.html 入口就断了？full-reload 的触发全景与工程意义。
+
+边界模型：HMR 传播沿"导入者链"向上找 accept，找不到到边界（无父模块的入口/被 HTML 直接引用的模块）就升级 full-reload——入口没有"可替换的宿主"，页面级重载是唯一正确语义。触发清单归类：① 结构边界（入口、HTML 改动、vite.config 变更）；② 能力边界（模块类型不认/插件没实现 HMR，如新增静态资源引用方式）；③ 依赖边界（node_modules 预构建产物变化——新依赖发现触发 reload 而非补丁，"dev 中偶发 reload 先查是否加了新 import"）；④ 显式触发（location.reload、插件调用 ws.send full-reload）。工程意义两面：full-reload 不是失败而是"诚实兜底"——热补丁的语义错误（状态不一致）比刷新一次贵得多；治理动作是给高频改动路径补 accept 边界（设计系统入口、路由表的 self-accept）把 reload 降级为补丁，但低频入口保留 reload 的简单正确。加分句：讲 HMR 不讲边界传播模型等于没讲——accept 是"链"不是"点"，这句话能压住面试官的追问。
+
+**来源**：Vite 官方 HMR 边界文档；Rollup 模块图概念；CSDN《改了 main.ts 为什么整个页面刷新》

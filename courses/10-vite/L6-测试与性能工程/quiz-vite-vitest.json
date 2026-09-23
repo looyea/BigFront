@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "测组件需要 document/window，Vitest 靠什么配置提供？",
-      "options": ["environment: 'jsdom'（或 happy-dom）", "globals: true", "pool: 'threads'", "provider: 'v8'"],
+      "options": [
+        "environment: 'jsdom'（或 happy-dom）",
+        "globals: true",
+        "pool: 'threads'",
+        "provider: 'v8'"
+      ],
       "answer": 0,
       "explanation": "默认环境是 node，DOM 测试要显式声明 jsdom/happy-dom（呼应 vite-vitest 第一、三节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "不碰 Vite 管道的代码不需要 Vitest 红利；node-testing 学的内置 runner 在此归位（呼应 vite-vitest 第五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " vi.mock(第三方 SDK 包名, factory) 时，对未 mock 的具名导出最稳妥的处理是？",
+      "options": [
+        "全部手写假实现",
+        "importOriginal + 扩展（保留真实未用部分）或 async vi.hoisted 预声明共享假值——只 mock 用到的导出、其余透传原模块，避免\"漏导出导致 undefined\"的脆弱假",
+        "mock 成空对象即可",
+        "用 vi.unmock 抵消"
+      ],
+      "answer": 1,
+      "explanation": "vi.mock 工厂整体替换模块；手写不全就是埋雷，importOriginal 是官方给出的\"部分 mock\"正解。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 要拦截一个\"已经被 import 进来的对象上的方法\"（如同模块内 obj.fetchData）并断言调用，该用？",
+      "options": [
+        "vi.fn 直接替换变量",
+        "vi.spyOn(obj, fetchData)——在不动模块结构的前提下包掉属性访问，可断言参数/次数、可 mockImplementation 改行为、afterEach restore 防污染",
+        "proxy 手写代理",
+        "delete 掉再断言报错"
+      ],
+      "answer": 1,
+      "explanation": "spyOn 适合\"观察\"，vi.fn 适合\"整体伪造\"；模块顶层已绑定的引用无法整体换，属性层拦截是唯一入口。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 测防抖函数：cb 在 300ms 后只调用一次，关键三步是？",
+      "options": [
+        "真等 300ms 再断言",
+        "vi.useFakeTimers() → 触发 N 次调用 → vi.advanceTimersByTime(300) → 断言 toHaveBeenCalledTimes(1) → vi.useRealTimers() 收尾",
+        "vi.setSystemTime 一次即可",
+        "用 setTimeout 包断言"
+      ],
+      "answer": 1,
+      "explanation": "假定时器把\"等时间\"变成\"推时间\"；setSystemTime 只动时钟读数不触发定时器，防抖测试无效——两者常混。"
     }
   ]
 }

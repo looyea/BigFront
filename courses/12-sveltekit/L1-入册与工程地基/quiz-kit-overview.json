@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "组件还是 Svelte 5、数据协议 load 与 SSR 管线都是 11 包概念的 Kit 化编排——真正的新增是 +文件族契约、失效协议与 hooks 管道这三样（本包主线）。D 的'只是路由插件'低估了编排层的工程量。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " SvelteKit 与 Vite 的关系，正确的是？ ",
+      "options": [
+        " Kit 自带独立打包器，与 Vite 无关 ",
+        " Kit 的开发服务器与构建完全由 Vite 驱动，可直接叠加 Vite 插件与配置 ",
+        " Vite 只在生产构建介入，开发期用 Webpack ",
+        " 必须先把项目转成纯 Vite 应用才能用 Kit "
+      ],
+      "answer": 1,
+      "explanation": " Kit 是架在 Vite 之上的一层：dev/build 都走 Vite 管线，vite.config.js 里的插件、alias 等配置照常生效。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Kit 项目里一个站内链接被点击后，默认会发生什么？ ",
+      "options": [
+        " 浏览器整页刷新并重新请求 HTML ",
+        " Kit 拦截点击，做 SPA 式导航：只跑必要的 load 并局部更新组件 ",
+        " 总是先请求 ?_data 再整页跳转 ",
+        " 取决于 href 是否以点开头的文件 "
+      ],
+      "answer": 1,
+      "explanation": " 渐进增强核心：无 JS 时是普通超链接走整页；有 JS 时 Kit 接管点击做客户端导航，仅重跑受影响的路由层。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Kit 2.0 把路由文件族统一改成 + 前缀（如 +page.svelte），主要解决什么？ ",
+      "options": [
+        " 提升运行时性能 ",
+        " 让路由约定文件与用户自己放进步目录的普通文件在语法层面一眼区分，消除保留名冲突 ",
+        " 兼容 CommonJS ",
+        " 支持大写文件名 "
+      ],
+      "answer": 1,
+      "explanation": " 1.x 时代 _layout 等保留名可能与用户文件撞名且难以辨认，2.0 用 + 前缀把约定文件显式化，改名/迁移也更安全。 "
     }
   ]
 }

@@ -1,6 +1,6 @@
 # kit-error-boundaries 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) error()/redirect()/json() 三件套各自的调用契约与禁区？
 **来源**：投掷工具基础题的转述。
@@ -63,3 +63,25 @@ SEO：业务 404 用 `error(404, ...)` 抛（响应码真 404，别渲染个"未
 链路：handle 解析 session 塞 locals（每条请求、含 action 后 load 之前——L3 鉴权策略）→ 各 +page.server.js 里 `if (!locals.user) redirect(307, '/login?redirectTo=' + url.pathname)`；**端点与页面分叉**：fetch 型请求（Accept: JSON）给 `error(401, ...)` 而非 redirect（JSON 客户端不跟 3xx 语义）。登录页 action 成功 `redirect(303, redirectTo)`。安全债两条要点名：redirectTo 未白名单校验＝开放重定向钓鱼（L5 安全清单的债）；307 保留 POST 方法意味着"带着原方法撞登录页"，页面路径用 303 更干净——说得出这层方法语义差别算满分。
 
 🚀 **下一组**：L4 课后作业——actions 契约、校验管道与错误几何的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  给 SSR 站设计 404/500 策略：SEO、监控、用户三者如何同时满足？ 
+
+ 404 用真实状态码而非软 404（SPA 壳返 200 会被收录），500 页带重试与反馈入口；两端 handleError 接 Sentry 且服务端记录 event 上下文；sitemap/robots 与 canonical 保证可抓性。 
+
+**来源**： https://svelte.dev/docs/kit/errors 
+
+### 14.  svelte:boundary 与 Kit 路由级 +error.svelte 两套边界，分工是什么？ 
+
+ 路由边界管 load/action/渲染的整页级错误，组件级 svelte:boundary 管局部交互抛错与流式片段失败；粒度、呈现位置、是否影响 URL 语义是三条分界线。 
+
+**来源**： https://svelte.dev/docs/svelte/svelte-boundary ； https://svelte.dev/docs/kit/errors 
+
+### 15.  流式页面里慢 Promise reject，用户已看到正文，错误应该在哪呈现？怎么设计？ 
+
+ 用 {:catch} 就地替换槽位而非弹全局错误页，正文与状态码不受影响；监控侧在 catch 里 untrack 上报，UX 上保留重试按钮，这是流式错误分而治之的标准答案。 
+
+**来源**： https://svelte.dev/docs/kit/streaming 

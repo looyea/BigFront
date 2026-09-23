@@ -1,6 +1,6 @@
 # exp-3rd-party 面试题精选
 
-> 共 12 题，覆盖 **Cookie/Session / CSRF / 文件上传 / 日志选型 / 限流 / 压缩 / 监控** 七类。
+> 共 15 题，覆盖 **Cookie/Session / CSRF / 文件上传 / 日志选型 / 限流 / 压缩 / 监控** 七类。
 
 ---
 
@@ -127,3 +127,25 @@ pinoHttp({
 或用中间件：`res.on('finish', () => { if (duration > SLOW_MS) logger.warn({ duration, url }, 'Slow request'); })`。
 
 **来源**：pino-http README — "customLogLevel"; Google SRE — "Latency vs Response Size"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  把 session 存 Redis 之后，express-session 这套还剩哪些坑？和直接上 JWT 比你怎么选？
+
+Redis 化后的残留坑：① 每请求一跳 Redis——latency 预算要计入（本地 ioredis 连接池、keys 用 hash tag 避免集群 CROSSSLOT），会话体超 1KB 就是设计失误（存 id 引用而不是塞对象）；② 过期与续期策略——rolling 与 cookie maxAge 双时钟容易配出"客户端还有效服务端已过期"，统一以服务端 TTL 为准并明确滑动窗口语义；③ 序列化陷阱——session 里塞 class 实例（反序列化变普通对象方法丢失）、塞 Date/BigInt（JSON 序列化失真），会话内容必须是纯 JSON；④ 删除风暴——登出/封禁用户要联动删 Redis 会话（JWT 阵营做不到吊销正是它的死穴，对比要讲这条）。选型账：服务端渲染 + 浏览器为主 → session（可吊销、体积零风险）；跨服务无中心验证 / 移动原生 / 三方 API → JWT（验签免查存储），且 JWT 也要配刷新+吊销表，"无状态"是幻觉。收口：认证方案的选择本质是"吊销需求 vs 验证成本"的权衡，与框架无关。
+
+**来源**：express-session 官方 README（performance/security 警告）；InfoQ《Session vs Token 之争的当代结论》
+
+### 14.  如何用 OpenTelemetry 给 Express 服务建立请求追踪？和打日志的边界在哪？
+
+接入形态：① NodeSDK 启动期初始化 + @opentelemetry/instrumentation-express 自动包裹路由（http 层自动 span），pg/redis/axios 等 instrumented 包自动续链，业务代码零侵入；② traceparent 头传播——入口 extract、出站 inject（W3C 标准头），跨服务同一 traceId，这是"网关到 DB"一张火焰图的前提；③ 采样策略——头部采样（1/N）省成本但会丢"低频错误请求"这种最该看的样本，重要服务用尾部采样（全收→按错误/慢保留，配 collector）；④ 手动埋点——关键业务段（支付对账、批量任务）用 span.addEvent 打里程碑，别把每个循环都开 span。与日志的边界：trace 回答"这次请求慢在哪个环节"（采样、结构化链路），日志回答"这次请求为什么错"（全量、带上下文细节）；衔接点是日志注入 traceId/spanId（pino mixin 统一出口），从告警日志一键跳 trace。常见反模式：把 span 当日志用（成本爆炸）、只接服务不接消息队列（追踪断链在 consumer 处）、忘配 exporter 批处理同步 flush（P99 被拖高）。
+
+**来源**：OpenTelemetry JS 官方文档（express instrumentation）；掘金《一个慢请求在 8 个微服务里的旅程》
+
+### 15.  压缩、HTTPS 终止、缓存这些"中间件该不该开"的问题，在反向代理架构下怎么划界？
+
+划界原则——"能在边缘做的别进应用，需要业务语义的别放边缘"。归代理/Nginx 层：TLS 终止（证书集中管理、会话复用）、静态资源强缓存（配置化）、粗粒度限流（连接数/请求速率）、gzip 对已缓存/高压缩比资源的重复劳动（已压缩的 jpg/zip 再 gzip 白烧 CPU，配 gzip_comp_level 与 gzip_min_length/gzip_types 才不烧冤枉钱）。归 Express 层：需要业务语义的决策——按用户角色决定 Vary/缓存键（代理不知道这个人是谁）、SSE/流式响应的逐块 flush（compression 要处理 flush 时机，代理缓冲会把流变成块，必须 proxy_buffering off 或应用直出）、针对响应内容的动态压缩豁免（已签名/加密 payload）。经典事故串：① 应用 ETag + 代理改 body（gzip 层不一致）→ 弱 ETag 分家，代理重压缩会让应用 strong ETag 失效；② Nginx buffering 打开 + SSE → 客户端收不到心跳判定断线；③ HTTPS 在代理终止但应用 req.secure 恒 false → 重定向死循环（trust proxy + X-Forwarded-Proto 才解）。收口句：中间件开不开不是框架问题，是"这个能力在你的拓扑里由哪个节点做成本最低"的架构问题——面试考的就是你有没有画过这张拓扑图。
+
+**来源**：Nginx 官方 gzip 模块文档；MDN 压缩与内容协商；知乎《谁来做 gzip：网关还是应用》

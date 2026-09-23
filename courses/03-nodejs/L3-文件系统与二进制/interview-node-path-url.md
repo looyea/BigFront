@@ -1,6 +1,6 @@
 # node-path-url 面试题精选
 
-> 共 12 题，覆盖 **path 语义 / __dirname 与 cwd / ESM 路径 / file URL 互转 / WHATWG URL 解析 / os 与跨平台 / 安全** 七类。
+> 共 15 题，覆盖 **path 语义 / __dirname 与 cwd / ESM 路径 / file URL 互转 / WHATWG URL 解析 / os 与跨平台 / 安全** 七类。
 
 ---
 
@@ -105,3 +105,25 @@ ESM 是**标准化、跨环境**的模块系统（浏览器/Node 共用语法）
 它们是**两套分隔符与编码规则**：文件系统走 `path`（平台分隔符、`%` 不一定编码）、URL 恒用 `/` 且有百分号编码、`#`/`?` 是保留字符（呼应 3.2）。把磁盘路径当 URL 片段前要 `replaceAll(path.sep, '/')` 并做 `encodeURIComponent`；反之从 URL 映射到磁盘路径要 decode 后再过一遍第 11 题的遍历防护（静态文件服务的高危点，呼应 Express L4 静态、node-http）。别用 `path.join` 去拼"对外暴露的 URL"——Windows 会插进 `\`，浏览器不认。
 
 **来源**：Node.js — "path vs URL separators"; MDN — "encodeURIComponent"; OWASP — "static file serving traversal"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. path 与 URL 两套 API 的边界在哪？什么代码该全程用 URL？
+
+path 处理**文件系统路径**（OS 语义：分隔符、盘符、UNC、扩展名），URL 处理**标识符**（scheme/host/path/query/fragment，RFC 3986）。交界规则：① 一切先 URL 后转换——fileURLToPath 落地给 fs、pathToFileURL 喂 import()/fetch；② 动态拼「要 import 的路径」必须 import(pathToFileURL(path).href)（Windows 盘符冒号会被当 scheme、中文需百分号——本关动态 import 题的机理）；③ 模块解析/网络用 URL 语义（斜杠永远、无相对盘符），磁盘落 fs 用 path；④ 别拿 path 处理 req.url（那是 URL 且只有 pathname+search），别拿 URL 拼 win 路径（反斜杠进 pathname 会被编码）。口诀：标识符=URL，文件位置=path，中间只经 fileURLToPath/pathToFileURL 摆渡。
+
+**来源**：Node 官方《url》模块「WHATWG URL vs legacy url」与 path↔file URL 转换说明。
+
+### 14. 为什么服务器 handler 里的 req.url 不能直接 new URL(req.url)？正确构造方式？
+
+req.url 永远只是「origin 之后的 path+search」（如 /a?x=1，HTTP 请求行如此规定），缺协议与 host——new URL("/a?x=1") 无 base 直接 TypeError。正确：`new URL(req.url, 'http://'+req.headers.host)`（构造用假 base 只为拿 pathname/searchParams，别拿 href 对外）；或 new URL(req.url, 'http://localhost')。headers.host 可被客户端伪造（SSRF/缓存投毒素材），要校验白名单或改用可信配置拼 base；HTTPS 下别把假 http base 的 href 回写进重定向。反向坑：res 侧 Location 要绝对 URL 时用可信 host。本关「req.url 直接 new URL」题的展开：base 不信任链、不硬编码端口。
+
+**来源**：Node http 文档 IncomingMessage.url 定义（request-target 仅 path+query）；MDN URL() 双参构造。
+
+### 15. 写一个「配置文件默认放用户主目录」的跨平台功能，怎么做得体？
+
+主目录：os.homedir()（HOME/USERPROFILE 兜底），别读 process.env.HOME（Win 无）。目录惯例：XDG_CONFIG_HOME 优先、回退 ~/.config（Linux 习惯）——Win 用 %APPDATA%（process.env.APPDATA）、mac 用 ~/Library/Application Support；库选择 env-paths/untildify 别手搓。细节：首次运行 mkdir recursive + 权限（配置含密钥时 mode 0o600，posix 才有意义）；路径含空格/中文全靠 path 族不手拼；可覆盖：--config 旗标与环境变量后门（排障命脉）；导出/导入时路径相对化（tmp 目录、软链 realpath 后比较）。测试：HOME 指向 tmp 目录跑用例——「碰用户目录」的程序都要能在沙箱里被驯服（本关 os.homedir 题的工程闭环）。
+
+**来源**：XDG Base Directory 规范；Node os.homedir 文档与 env-paths 包平台表。

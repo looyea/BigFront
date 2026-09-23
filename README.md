@@ -125,20 +125,31 @@ git push -u origin main
 
 ```
 BigFront/
-├─ package.json          # 根：统一 dev/build 脚本
-├─ server/               # Express 后端（index.js 为核心）
-├─ web/                  # Vue3 前端外壳
+├─ package.json              # 根：统一 dev / start / build / install:all 脚本
+├─ run-dev.bat / run-prod.bat    # 开发（5173+3001）/ 生产（仅 3001）一键启动
+├─ server/                   # Express 后端（index.js：课程扫描、全部 API、托管 dist）
+├─ web/                      # Vue3 + Vite 前端
+│  ├─ vite.config.js
+│  ├─ dist/                  # 构建产物（:3001 直接托管）
 │  └─ src/
-│     ├─ views/          # Home 地图 / Package 关卡 / Lesson 学习页
-│     ├─ components/     # FloatingNav 悬浮导航 / Quiz 小测
-│     ├─ api.js          # 接口 + 进度 + 时长打点
-│     └─ styles/theme.css
-├─ courses/              # 13 个课程包（内容层）
-│  └─ <包>/interviews/   # 面试题库（与关卡同名同目）
-└─ data/
-   ├─ progress.md          # 当前学习进度档案（自动重建，可手改，纳入 Git）
-   ├─ progress.initial.md  # 零进度空白模板（拷给别人/从零开始时复制为 progress.md）
-   └─ sample-progress.md   # 进度的字段含义与修改示例
+│     ├─ views/              # Home 课程地图 / Package 关卡列表 / Lesson 单栏课文 / LessonPart 小测・面试题
+│     ├─ components/         # FloatingNav 悬浮导航 / Quiz 小测组件
+│     ├─ router.js           # /p/:pkg、/l/:pkg/:lessonId（+/quiz、/interview）
+│     ├─ api.js              # 接口封装 + 进度 + 时长打点
+│     └─ styles/theme.css    # 暗色主题
+├─ courses/                  # 13 个课程包（内容层），全部已统一为扁平布局：
+│  └─ <包>/                  #   包根 = course.json + 每个阶段一个文件夹（如 L1-变量与作用域）
+│     ├─ lesson-<id>.md          # 课文正文
+│     ├─ quiz-<id>.json          # 小测（≥6成及格即自动通关）
+│     ├─ interview-<id>.md       # 面试题（带来源）
+│     ├─ homework-<阶段id>.md    # 阶段作业（自学资料，无 UI 入口）
+│     └─ example-<id>-<名>.js    # 可运行示例（前缀带关卡 id 防重名；首批两包附带）
+├─ tools/                    # audit-probe.cjs 等内容审计探针脚本
+├─ data/
+│  ├─ progress.md            # 当前学习进度（后端自动回写；手改须先停后端；纳入 Git）
+│  ├─ progress.initial.md    # 零进度空白模板（拷给别人/从零开始时复制为 progress.md）
+│  └─ sample-progress.md     # 进度的字段含义与修改示例
+└─ audit-blueprint.txt       # 内容缺口审计蓝图记录（内部资料）
 ```
 
 ## 九、内容完成度说明

@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "strict 模式下 email?: string 的真实类型是？",
-      "options": ["string", "string | undefined", "string | null", "只表示'可省略'，类型仍是 string"],
-      "answer": 1,
+      "options": [
+        "string",
+        "string | null",
+        "只表示'可省略'，类型仍是 string",
+        "string | undefined"
+      ],
+      "answer": 3,
       "explanation": "可选属性等价于 T | undefined，使用前需判空或用可选链。"
     },
     {
@@ -66,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "想表达'键任意、值未知的对象'，最推荐？",
-      "options": ["Object", "{}", "Record<string, unknown> 或 { [k: string]: unknown }", "any"],
+      "options": [
+        "Object",
+        "{}",
+        "Record<string, unknown> 或 { [k: string]: unknown }",
+        "any"
+      ],
       "answer": 2,
       "explanation": "Object/{} 语义怪异、any 放弃检查；Record<string,unknown> 既表达任意键又强制取值时收窄。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "in 运算符参与控制流分析，可把 Shape 联合收窄到 Circ（详见 ts-narrowing）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`type T = { [k: string]: number; total: string }` 的结果：",
+      "options": [
+        "合法，专属字段优先",
+        "报错——total 必须兼容索引签名的 number",
+        "total 被静默丢弃",
+        "自动把索引签名改 unknown"
+      ],
+      "answer": 1,
+      "explanation": "索引签名是「所有键的公约」：任何具名属性都必须是它的子类型；想让 count/total 例外，索引签名就得升 unknown 并收窄使用处，或拆分类型。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`type M = Record<string, number>` 后 `m.foo` 与 `m[\"bar\"]` 的求值时机问题是：",
+      "options": [
+        "不存在的键返回 undefined 且类型是 number（谎报）",
+        "编译期报错",
+        "返回 0",
+        "需要 as"
+      ],
+      "answer": 0,
+      "explanation": "Record<string,T> 的键是「全可能」假设：读缺失键类型仍是 T 而非 T|undefined——开了 noUncheckedIndexedAccess 才修正为 T|undefined；映射表务必开它。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "把一个多余属性的变量（非字面量）赋给少属性类型：",
+      "options": [
+        "一律报错（多余属性永不被接受）",
+        "合法——过剩属性检查只针对新鲜对象字面量",
+        "需要 as const",
+        "运行时自动删多余键"
+      ],
+      "answer": 1,
+      "explanation": "EPC 只在「字面量直赋」那一刻生效：`const obj={x,y,z}; const p: Pt = obj` 过——结构化类型本质是「够用了就行」，多余属性是常态（DOM 对象、展开的 DTO）。"
     }
   ]
 }

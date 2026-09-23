@@ -93,3 +93,21 @@ console.log(user?.profile?.name ?? '默认');
   **追问 1**：如果 city = 0 或 ''，旧代码会**吞**为 '未知'，新代码保留——**语义更精确**。
   **追问 2**：`user?.profile ?? defaultProfile` 与 `user?.profile || defaultProfile` 的区别？—— ?? 只在 nullish 时兜底。
 - 来源：MDN；TC39 提案；StackOverflow 高票。
+
+---
+
+**13）dynamic import() 在工程里有哪些标准用法？它返回什么？**
+- 参考要点：返回 `Promise<Module Namespace>`——静态 import 的一切（命名导出、live binding、default）都能从 ns 拿到。四大用法：① 路由/组件懒加载（框架层 split chunk）；② 条件加载（`if (needsPolyfill) await import(...)`，按 feature detect 少传字节）；③ 构建工具插件系统（运行时加载用户插件）；④ 打破循环依赖。区别于静态：不参与构建期摇树判定、可写任意 specifier（打包器会警告动态路径），副作用缓存（同 URL 只执行一次）。
+- 来源：MDN《dynamic import》；web.dev《Loading code with dynamic imports》。
+
+---
+
+**14）Intl API 能替你干什么？为什么直接 toLocaleString 可能慢？**
+- 参考要点：Intl 是标准库本地化引擎：NumberFormat/DateTimeFormat/PluralRules/RelativeTimeFormat/ListFormat/Collator（排序）/Segmenter（ES2022 分词）。坑：每次调用 `toLocaleString` 都新建 formatter——循环里格式化一万个金额会重；正解 **创建一次 NumberFormat 实例复用**（内部 ICU 查表才快）。复数规则（PluralRules select + 文案模板）是国际化文案正确性核心，字符串拼接式 i18n 在俄语/阿语必翻车。
+- 来源：MDN《Intl》；Mozilla Hacks《Internationalizing numbers with Intl.NumberFormat》性能建议。
+
+---
+
+**15）BigInt 的现实边界：哪些地方会把它打回原形？序列化怎么办？**
+- 参考要点：typeof "bigint"；与 Number 混合运算 TypeError（`1n + 1` 抛）、Math 方法全拒、JSON.stringify 直接 TypeError。序列化三选一：字符串化（`.toString()` + 解析端 BigInt()）、lossless-json 类库（按 token 拦截）、或干脆别用 BigInt 而是 decimal.js（小数场景 BigInt 也做不了除法原生精度）。适用面就是整数：雪花 ID、金额分、位运算大数；需要小数精度请上 decimal 方案。
+- 来源：MDN《BigInt》"Mixed operations" 限制表；tc39/proposal-bigint FAQ 序列化讨论。

@@ -1,6 +1,6 @@
 # ts-tooling 面试题精选
 
-> 共 12 题，覆盖 **转译 vs 类型检查 / 构建器选型 / isolatedModules / 类型感知 Lint / 运行 .ts / 增量与 monorepo** 六类。
+> 共 15 题，覆盖 **转译 vs 类型检查 / 构建器选型 / isolatedModules / 类型感知 Lint / 运行 .ts / 增量与 monorepo** 六类。
 
 ---
 
@@ -102,3 +102,25 @@
 一句话：**每个工具只干它最擅长的一段，靠 CI 把它们串成一条不可回退的流水线。**
 
 **来源**：Anthony Fu — "Library creation in 2023"; tsup / Vite / typescript-eslint 官方 best-practices
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. tsgo（Go 原生编译器）会把前端工具链格局怎么改？
+
+tsgo（微软 2025 官方 Go 端口，TS 7 路线）：全量类型检查约 10x、IDE 首屏大幅提速——**checker 不再是构建瓶颈**后：① 各 bundler 内嵌检查（fork-ts-checker、vite-plugin-checker）失去存在意义，「build + check 一体化」回归；② 语言服务插件（ts-plugin/vue-tsc）需走新 API 适配层（tsgo 提供 JS-API 兼容但 AST 结构不同，自定义 lint/代码生成器迁移成本高）；③ 大仓 tsc --build 增量/机器规格焦虑缓解。风险提示：发布节奏（tsgo→TS7 主线）与生态（Decorators/自定义 transformer）兼容是 2-3 年话题，工具选型按「编译器可替换」架构（转译与检查解耦）下注。
+
+**来源**：MS devblogs《10x faster TypeScript type checker》（Andrew Bran 2025）；TypeScript 5.7/7.0 路线图 issue。
+
+### 14. 设计一条大型 TS 仓库工具链：dev/transpile/check/bundle/d.ts 五环节各选什么、为什么？
+
+参考选型：dev=vite（ESM 无打包 + HMR）；转译=esbuild/SWC（Vite 内置，纯局部）；检查=tsc --noEmit（增量缓存）或 vue-tsc/tsgo，IDE 与 CI 同一版本 TS 钉进 lockfile；bundle=Rollup/Rspack（生产按分包策略）；d.ts=tsdown/dts（rolldown-plugin-dts，比 tsc emit 快一个量级）。原则：**每个环节的失败域独立**（转译快但错、检查慢但准）——CI 并跑 check 与 build 而非串行；本地 husky 只跑增量（tsc --incremental + lint-staged 定向）。
+
+**来源**：Vite 6 / tsdown 文档工具链章节；TS 官方《Comparing TypeScript with Flow / Compilation 性能博客》。
+
+### 15. 打开大仓 VS Code 为什么 TS 服务转圈？内存、项目规模、插件各怎么排查？
+
+① program 体量：include 圈太宽（test/dist 全进来）——开 `tsc --listFiles` 数文件，收窄 include/exclude；② @types 雪崩：node_modules 里所有 @types 默认全局加载——`types:[]` 白名单；③ 内存：VS Code `typescript.tsserver.maxTsServerMemorySize`（默认 ~4GB/4096）；4 开 `--diagnostics`/「Type Script 版本」看 program 大小，`performance.mark` 定位慢检查；⑤ 插件：type-aware eslint（需要第二个 program）与语言插件叠加会让双份内存——editor 关 typed lint、CI 兜底；⑥ 终极：workspace 拆分 references 或上 tsgo 服务。
+
+**来源**：VS Code TS 性能排查官方文档；typescript-eslint typed lint 性能说明。

@@ -58,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "下面哪类值最适合放 Context？",
-      "options": ["读得多改得少且很多层要用的主题/语言/登录用户", "输入框每帧变化的文本", "单个列表项的临时 hover", "组件私有 state"],
+      "options": [
+        "读得多改得少且很多层要用的主题/语言/登录用户",
+        "输入框每帧变化的文本",
+        "单个列表项的临时 hover",
+        "组件私有 state"
+      ],
       "answer": 0,
       "explanation": "低频广布的值才用 Context（呼应 react-context 第二节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "封装 + fail fast（呼应 react-context 第六节、vue-provide-inject）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Provider 每次渲染都传一个新对象作为 value，直接后果是？",
+      "options": [
+        "只有真正用到变化字段的消费者重渲染",
+        "所有消费者（无论读哪个字段）都会重渲染——Context 以 value 引用是否变化决定广播，引用一变就穿透 memo 通知整棵子树的消费者",
+        "只是 React DevTools 变慢",
+        "value 会被自动浅比较"
+      ],
+      "answer": 1,
+      "explanation": "Context 无「选择订阅」：value 引用变 = 全部 consumer 失效重渲染（且 React.memo 挡不住 context 变化）。所以给 Provider 传内联对象是第一大坑。缓解：用 useMemo 稳定 value、把低频 state 与高频 dispatch/回调拆到不同 Context、或把高频消费下沉到小组件。真要字段级订阅，就是升级到 Zustand/Redux 这类带 selector 的外部 store 的信号。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 用「内容/布局分离」缓解 Context 广播重渲染的要点是？",
+      "options": [
+        "把 value 变大",
+        "把随高频变化的 value 放进一个尽量小的 Provider，并把「不读该 context 的稳定子树」作为 children 从外面传进来——它不消费 context，Provider 重渲染时被 React 复用不连带重渲",
+        "给每个字段建一个 Provider",
+        "关掉 StrictMode"
+      ],
+      "answer": 1,
+      "explanation": "关键机制：一个组件若不 useContext 某 Context，其渲染不受该 Context value 变化影响。把静态结构作为 `children` prop 从 Provider 外部传入（引用不变即被复用），Provider 内部只渲染「真正读变化值」的小叶子。这是官方推荐的「用组合限制 Context 重渲染范围」手法，比重构 state 形状更直接。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 在 Provider 包装组件里「短路 return children」能否阻止消费者随 value 更新？",
+      "options": [
+        "能，短路后消费者就不更新了",
+        "不能——Context 的传播走的是 consumer 订阅链，与 Provider 组件自身是否重渲染不是一回事；且 children 元素引用不变时也谈不上靠短路挡更新，正确思路仍是稳定 value 与拆分/下沉",
+        "取决于 children 类型",
+        "能，只要加 key"
+      ],
+      "answer": 1,
+      "explanation": "常见误解。消费者更新由「它 useContext 的 Provider value 引用变化」驱动，独立于祖先组件是否因短路而少渲染。想减少广播要么让 value 稳定、要么缩小消费面（拆两个 Context / 把消费放小叶子）。把 Provider 组件本身 memo 起来也挡不住其下 consumer 因 value 变而重渲染。"
     }
   ]
 }

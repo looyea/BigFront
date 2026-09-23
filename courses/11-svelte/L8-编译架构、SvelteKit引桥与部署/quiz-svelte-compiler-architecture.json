@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "create/update/apropos 一族是 Svelte 4 及以前的编译产物形态，5 被 template+effect 模型取代。'编译成定向更新'的思想一脉相承，但照抄老 API 会直接编译报错——版本嗅觉题。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 编译产物里看到 $.template(<button>...) 之类的调用，说明什么？",
+      "options": [
+        "运行时字符串模板",
+        "Svelte 把静态标记编译成一次性创建的 DOM 模板（template 缓存复用），运行时做的是克隆节点 + 精准 set 文本/属性，不是字符串解析 HTML（对应既有\"$.template 说明什么\"题）",
+        "用了 VDOM",
+        "有 bug"
+      ],
+      "answer": 1,
+      "explanation": "静态块被提取成 template 克隆、动态部分才是 set 表达式（对应\"编译期优化 class 提取静态节点\"题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Svelte 5 里状态变化后，更新的真实粒度是？",
+      "options": [
+        "重渲染整个组件",
+        "信号级/表达式级——只有依赖了变化 signal 的那个具体 effect（往往精确到某个文本节点/属性）更新（对应既有\"更新粒度\"题）",
+        "重渲染子树",
+        "刷新页面"
+      ],
+      "answer": 1,
+      "explanation": "细粒度=Svelte 无组件级 re-render，更新精确到读写该 signal 的最小 effect（呼应 performance 关）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Svelte 5 把一个已编译组件挂到页面，正确的运行时 API 是？",
+      "options": [
+        "new App({ target })",
+        "mount(App, { target })（Svelte 5 引入 mount/hydrate/unmount/flushSync/finalize 运行时 API，取代 Svelte 4 的 new Component 构造）（对应既有\"挂载 API\"题）",
+        "render(App)",
+        "createApp"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 5 运行时是函数式 mount/unmount（对应 compiler-architecture 关 mount 系列题）。"
     }
   ]
 }

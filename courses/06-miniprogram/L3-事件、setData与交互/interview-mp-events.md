@@ -1,6 +1,6 @@
 # mp-events 面试题精选
 
-> 共 12 题，覆盖 A 事件流与绑定 / B dataset 与事件对象 / C 性能与高频事件 / D 组件边界与跨框架对照。
+> 共 15 题，覆盖 A 事件流与绑定 / B dataset 与事件对象 / C 性能与高频事件 / D 组件边界与跨框架对照。
 
 ## 一、事件流与绑定（A 类）
 
@@ -57,3 +57,25 @@ detail：组件"值语义"的载荷——input/change 的 value、picker 选择�
 ### 12. input 输入即搜索（联想）在小程序里怎么做不卡？
 `bindinput` 里**防抖 300ms** 再发请求；回包后 setData 只写 `suggestions` 一个字段；列表项 key 稳定；必要时渲染层 wxs 格式化避免二次加工。核心：**把"每次击键"与"每次网络/渲染"解耦**——和 React 受控输入的 debounce 完全同构（呼应 react-forms、react-effect-patterns 竞态处理）。
 **来源**：微信开放社区搜索联想性能实践；Lodash debounce 文档概念对照
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  bind/catch × 冒泡/捕获 组成的四种绑定，各自在事件流的哪个阶段生效、能否阻断？
+
+事件流=捕获(自外向内)→目标→冒泡(自内向外)。默认 bindtap/catchtap 挂在冒泡阶段：冒泡经过该节点时触发，catch 会阻止继续向上冒泡、bind 不阻止。capture-bind:tap / capture-catch:tap 挂在捕获阶段：向下传递经过该节点时触发，capture-catch 会终止捕获阶段的继续下行、并连带阻止后续目标与冒泡（用于最外层接管手势）。要点：一个节点可同时在捕获与冒泡各绑一次；"阻止"只作用于它所在阶段的后续传播。选型：需要"父先判断要不要接管子的手势"→capture-catch；只想阻止按钮点击冒泡到行→普通 catchtap。对照 DOM：bind≈addEventListener(false 冒泡)、capture-≈capture:true、catch≈stopPropagation 的声明式版。
+
+微信官方文档《事件机制》；掘金《bind 与 catch：小程序事件冒泡止于此的方式》
+
+### 14.  一次"点击→setData→视图更新"在双线程下完整经过哪些角色？为什么整条链路天然是异步的？
+
+① 渲染层捕获原生 touch/tap，合成事件对象（去掉不可序列化部分，保留 type/target/currentTarget/dataset/detail）；② 经 Native 中转把事件与"要调的回调名"发到逻辑层；③ 逻辑层按 WXML 里写的"方法名字符串"在 Page/组件实例上找回调并执行；④ 处理函数里 setData 把新数据序列化，再经 Native 发回渲染层；⑤ 渲染层 diff 更新节点。异步根源：逻辑层与渲染层是两个线程、消息要经 Native 中转往返，所以 setData 之后同步读不到新视图、要测量/操作渲染后内容得放进 setData 回调或用 createSelectorQuery 异步查询。也解释了"为什么绑的是字符串而非函数引用"——函数无法跨线程序列化传递，只能传"名字"在逻辑层本地解析。
+
+SegmentFault《tap 与 click 的 300ms 历史问题在小程序里》；知乎《小程序自定义事件 dataset 传值的坑》
+
+### 15.  高频事件（scroll、touchmove）绑复杂 handler 会卡，有哪些"绕开或摊薄 setData 往返"的手段？
+
+三条路径：① 节流/合并——把每帧触发降频为按时间片，且一次 setData 只传必要增量（scrollTop 用于渐显导航栏这类可 rAF 合并）；② 用 wxs 响应手势在渲染层就地处理——page-scrolling、拖拽位移等纯视图层可算的（返回 style/class/transform），完全不进逻辑层、零跨线程往返，是官方推荐给"高频+轻计算"交互的解法；③ 减少数据量——别把整个列表塞进滚动回调的 setData，别每帧传大对象。反模式：onPageScroll 里 setData 全页数据、绑 touchmove 每帧跨线程算大逻辑。判断标准：这次交互是"只需改视图"（交给 wxs/渲染层）还是"要改业务状态"（才进逻辑层 setData），前者一次都别跨线程。
+
+CSDN《表单组件与 button open-type 事件全解》；InfoQ《一次长按误触引发的交互重构》

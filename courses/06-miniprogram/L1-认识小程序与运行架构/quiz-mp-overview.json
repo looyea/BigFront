@@ -7,20 +7,25 @@
       "type": "single",
       "prompt": "小程序的\"双线程架构\"指的是哪两个线程分离？",
       "options": [
-        "主线程 和 UI 线程",
         "逻辑层(JS 引擎) 和 渲染层(WebView)",
+        "主线程 和 UI 线程",
         "网络线程 和 存储线程",
         "下载线程 和 编译线程"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "逻辑层与渲染层分离（呼应 mp-overview 第三节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "在小程序逻辑层里，下列哪个对象通常不存在？",
-      "options": ["wx", "Date", "document", "JSON"],
-      "answer": 2,
+      "options": [
+        "wx",
+        "Date",
+        "JSON",
+        "document"
+      ],
+      "answer": 3,
       "explanation": "没有 DOM，document 不存在（呼应 mp-overview 第三、四节）。"
     },
     {
@@ -29,11 +34,11 @@
       "prompt": "小程序更新界面的正确方式是？",
       "options": [
         "querySelector 拿到节点后改 innerHTML",
-        "改数据并通过 setData 通知渲染层",
         "直接操作 CSS 对象",
+        "改数据并通过 setData 通知渲染层",
         "调用 window.location.reload"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "数据驱动视图，靠 setData（呼应 mp-overview 第五节）。"
     },
     {
@@ -53,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "相比 H5，小程序做\"禁止任意访问 DOM/BOM\"主要出于？",
-      "options": ["节省内存", "安全可控、可审核、体验一致", "因为技术做不到", "为了兼容 IE"],
+      "options": [
+        "节省内存",
+        "安全可控、可审核、体验一致",
+        "因为技术做不到",
+        "为了兼容 IE"
+      ],
       "answer": 1,
       "explanation": "沙箱是安全与体验的地基（呼应 mp-overview 第四节）。"
     },
@@ -74,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "小程序的\"更新\"方式和原生 App 相比最大特点是？",
-      "options": ["必须重装", "静默热更新、无需走应用商店发版审核", "不能热更", "只能靠 URL 刷新"],
+      "options": [
+        "必须重装",
+        "静默热更新、无需走应用商店发版审核",
+        "不能热更",
+        "只能靠 URL 刷新"
+      ],
       "answer": 1,
       "explanation": "平台托管、可热更新（呼应 mp-overview 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 双线程模型里，逻辑线程（无 window/DOM）与多个渲染 WebView 的数量关系通常是？",
+      "options": [
+        "一个页面一个逻辑线程，一一对应",
+        "所有页面共享一个逻辑线程（单 JS 运行环境），但每个页面各有一个渲染 WebView——所以逻辑层模块级变量跨页共享，而视图彼此隔离",
+        "逻辑线程与 WebView 都在同一线程",
+        "渲染线程只有一个、被所有页面复用"
+      ],
+      "answer": 1,
+      "explanation": "这套「单逻辑 + 多渲染」结构解释了怪现象：app.js 里 `let count=0` 在所有页面间共享（是逻辑单例，不是 per-page），而 setData 只影响当前页 WebView。也解释了为什么逻辑层不能用 DOM、跨页状态要靠 globalData/事件而非「读别的页 data」。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 关于 setData 的数据在双线程间的旅程，正确的描述是？",
+      "options": [
+        "直接改视图层 DOM",
+        "逻辑线程把数据 JSON 序列化后经 Native 中转发给渲染线程，渲染线程 diff 更新 WXML——所以 setData 的值必须可序列化（函数/undefined/循环引用会出问题），且量大时序列化+跨线程序列通信就是卡顿源",
+        "在同一内存里零拷贝共享",
+        "只在逻辑层生效"
+      ],
+      "answer": 1,
+      "explanation": "「必须可序列化」这条直接推出实践约束：别往 setData 塞方法（方法挂 Page/组件实例上，不进 data）、别塞超大数据（列表全量）、避免频繁 setData。想优化就是「只传变更字段（路径 setData）、合并批量、大数据放视图层外或分页」。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 小程序相比「单个 WebView 套 H5」，把逻辑与渲染拆两线程的核心收益是？",
+      "options": [
+        "包体积更小",
+        "防止脚本恶意行为导致的安全问题，且让交互逻辑不被单线程渲染阻塞、体验更接近原生（渲染与逻辑可并行）；代价是跨线程通信开销与不能用 DOM",
+        "可以随便跳转外链",
+        "开发更快"
+      ],
+      "answer": 1,
+      "explanation": "拆两线程一举两得：安全（逻辑层无 window/location，无法随意跳转/注入/读 cookie，宿主统一管控）与体验（JS 计算不卡渲染帧）。代价正是你踩到的坑：setData 异步跨线程、无法直接操作 DOM、需按数据驱动改视图。答「套壳 H5 错在哪」就用这组对比。"
     }
   ]
 }

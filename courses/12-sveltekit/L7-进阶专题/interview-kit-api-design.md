@@ -1,6 +1,6 @@
 # kit-api-design 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) +server.js 的路由模型是什么？处理器签名与返回契约？
 **来源**：Kit 端点基础开场题的转述。
@@ -63,3 +63,25 @@ GET /api/articles 支持分页/过滤用 url.searchParams，返回 json 并设�
 用 ReadableStream 作 Response body，content-type: text/event-stream，start 里把消息 enqueue（每帧 `data: ...\n\n`），保持连接不 close 直到客户端断开；在 pull 里对接事件源、用 controller 错误时 close。坑：① 缓冲型平台（Lambda）不真流式；② Nginx 等反代要关响应缓冲、超时调大；③ 客户端断连要感知并释放资源；④ 鉴权走不了 EventSource 的自定义头，通常用 cookie/locals 或首帧握手。
 
 🚀 **下一组**：kit-i18n-routes 面试题——可选段、matcher、协商路线与 SEO 闭环的高频考法。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  自家页面 load 调自家端点会多一跳 HTTP，何时值得、何时直调函数？ 
+
+ 端点有独立鉴权限流、或给移动端/第三方复用时值得（SSR 内 event.fetch 还享受去重与凭证继承）；纯内部一次性聚合直调 $lib/server service 更省，边界是复用需求而非形式统一。 
+
+**来源**： https://svelte.dev/docs/kit/load#Fetching-from-the-server 
+
+### 14.  端点如何做 SSE 实时推送？平台与代理层有什么坑？ 
+
+ 返回 text/event-stream + ReadableStream，心跳注释防超时；坑：反代缓冲（Nginx proxy_buffering off）、serverless 响应总时长上限、连接数计费，断线重连靠 Last-Event-ID 自实现。 
+
+**来源**： https://svelte.dev/docs/kit/adapter-node#Streaming ； https://html.spec.whatwg.org/multipage/server-sent-events.html 
+
+### 15.  公开 API 的 CORS：OPTIONS 处理器与全局 handle 注入两种做法怎么选？ 
+
+ 少数端点需要时写 OPTIONS 导出精确控制；全站统一策略在 handle 按前缀注入并处理预检短路，注意 credentials 模式下 Origin 不能为 *、Allowed-Headers 要回显，上线前用真实跨域站验证预检缓存（Max-Age）。 
+
+**来源**： https://developer.mozilla.org/docs/Web/HTTP/CORS ； https://svelte.dev/docs/kit/advanced-routing#Endpoints 

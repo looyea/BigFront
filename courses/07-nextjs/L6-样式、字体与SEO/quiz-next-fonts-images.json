@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "next/font 相比手写 <link> 引 Google 字体的两个决定性优势是？",
-      "options": ["自动加粗、自动斜体", "支持更多字体格式", "构建期自托管（同源无外部请求）+ 度量补偿防 CLS", "无需声明 fallback"],
+      "options": [
+        "自动加粗、自动斜体",
+        "支持更多字体格式",
+        "构建期自托管（同源无外部请求）+ 度量补偿防 CLS",
+        "无需声明 fallback"
+      ],
       "answer": 2,
       "explanation": "网络面与布局面双收：无外部请求、字体到位前后不跳行（呼应 next-fonts-images 第一节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "中文字体上 next/font 最需要额外操心的是？",
-      "options": ["不支持 woff2", "体积大需子集化/分片，自动度量对 CJK 不可靠需手工补", "必须放 public", "不能配 CSS 变量"],
+      "options": [
+        "不支持 woff2",
+        "体积大需子集化/分片，自动度量对 CJK 不可靠需手工补",
+        "必须放 public",
+        "不能配 CSS 变量"
+      ],
       "answer": 1,
       "explanation": "拉丁字体的自动度量补偿不覆盖中文，MB 级文件要自己切片（呼应 next-fonts-images 第一节 CJK 警告）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "next/image 优化远程图时，域名白名单不配置的后果是？",
-      "options": ["组件直接报错不渲染优化图", "静默跳过优化原样输出", "自动放行所有域名", "降级为 <img>"],
+      "options": [
+        "组件直接报错不渲染优化图",
+        "静默跳过优化原样输出",
+        "自动放行所有域名",
+        "降级为 <img>"
+      ],
       "answer": 0,
       "explanation": "remotePatterns 是安全设计：不声明即拒绝，防止端点被当开放图片代理滥用（呼应 next-fonts-images 第三节）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "priority 属性的正确用法是？",
-      "options": ["所有首屏图都加，多多益善", "只给详情页图", "给折叠线下方的图", "只给 LCP 候选大图：取消懒加载并预加载"],
+      "options": [
+        "所有首屏图都加，多多益善",
+        "只给详情页图",
+        "给折叠线下方的图",
+        "只给 LCP 候选大图：取消懒加载并预加载"
+      ],
       "answer": 3,
       "explanation": "滥用会把懒加载红利反向变成带宽抢占（呼应 next-fonts-images 第四节罪1药1）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "width/height 在 Image 上的首要作用是？",
-      "options": ["限制上传尺寸", "控制文件压缩质量", "渲染时预留比例空间，防图片到达后布局跳动", "声明裁剪比例"],
+      "options": [
+        "限制上传尺寸",
+        "控制文件压缩质量",
+        "渲染时预留比例空间，防图片到达后布局跳动",
+        "声明裁剪比例"
+      ],
       "answer": 2,
       "explanation": "浏览器据比例先占坑——CLS 的第一道闸（呼应 next-fonts-images 第二、四节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "placeholder='blur' 的模糊底来自哪里？",
-      "options": ["运行时再请求一张小图", "CDN 的边缘缓存", "CSS filter 对原图实时模糊", "内联在 HTML 里的极小 base64（import 自动生成或手给 blurDataURL）"],
+      "options": [
+        "运行时再请求一张小图",
+        "CDN 的边缘缓存",
+        "CSS filter 对原图实时模糊",
+        "内联在 HTML 里的极小 base64（import 自动生成或手给 blurDataURL）"
+      ],
       "answer": 3,
       "explanation": "data URI 进 HTML 不占请求——渐进显影零成本（呼应 next-fonts-images 第五节）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "public 里的图片用 next/image 引用，收益是？",
-      "options": ["与站内 import 图完全一样", "几乎无优化收益：绕开了构建期资源管线，仅尺寸/格式参数仍可用", "加载反而更快", "自动获得 srcset"],
+      "options": [
+        "与站内 import 图完全一样",
+        "几乎无优化收益：绕开了构建期资源管线，仅尺寸/格式参数仍可用",
+        "加载反而更快",
+        "自动获得 srcset"
+      ],
       "answer": 1,
       "explanation": "优化红利挂在 import 资源链上，public 绕开了它（呼应 next-fonts-images 第三节、next-groups-matchers）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " next/font 默认把 Google 字体 self-host 到同源，主要收益是？",
+      "options": [
+        "字体文件更小",
+        "构建期下载并随静态资源发布：消除到第三方域的连接建立/DNS 开销、避免第三方 CDN 波动与 GDPR 合规问题，且自动带 preload 与 display 策略",
+        "自动做中文子集化",
+        "免除 font-display"
+      ],
+      "answer": 1,
+      "explanation": "self-host 把\"外部依赖\"变\"自家静态资源\"（还吃到 /_next/static 的永久缓存），配合自动 preload 首字渲染更早；子集化则要靠调整 unicodeRange/手动裁剪，默认不做。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 中文字体上 next/font 最需要额外操心的是？",
+      "options": [
+        "授权与子集化——整套中文常 5-10MB，必须 unicodeRange 子集/字体子集服务，否则 preload 反成拖累",
+        "浏览器兼容",
+        "font-display 无效",
+        "不支持可变字体"
+      ],
+      "answer": 0,
+      "explanation": "中文 webfont 的黄金组合=子集化（按页面用字或分片 unicode-range）+ fallback 字体栈 + 度量对齐防 CLS；不子集化的\"全套中文 webfont\"是所有性能审计里的常客。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " next/image 的 width/height（或 aspectRatio）首要作用是？",
+      "options": [
+        "决定导出体积",
+        "渲染前预留版面盒，防止加载后布局跳动（CLS）——同时供 srcset 计算",
+        "触发懒加载",
+        "启用 blur 占位"
+      ],
+      "answer": 1,
+      "explanation": "布局稳定优先于尺寸优化：src 到位前浏览器已按宽高占好格子；懒加载与 blur 是另两个独立开关，别混。"
     }
   ]
 }

@@ -1,4 +1,4 @@
-# next-routing 面试题（12 题）
+# next-routing 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点历年 Next.js 路由高频面经，中文重述。
 
@@ -65,3 +65,19 @@ Vite 系 TanStack Router、Nuxt（definePageMeta+文件路由）都走约定式�
 **12. 面试被问"Next 路由和 React Router v6 数据路由谁好"，怎么答不踩坑？**
 **来源**：知乎《React Router v6.x data API 与 Next.js 对比》
 先分场景再表态：SPA 内交互密集型（工作台类）React Router 的 loader/action + 客户端状态更灵活；内容/全栈型 Next 的嵌套布局+RSC+缓存一体优势明显。展示你理解"路由与数据/渲染耦合深度"这条光谱（呼应 react-router-data、react-architecture 的取舍方法论），比站队更加分。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  App Router 的"URL 结构与目录结构同构"带来哪些工程收益与代价？**
+**来源**：掘金《App Router 目录即路由的工程实践》；SegmentFault《文件路由的利与弊》
+收益：① 可发现性——新人打开 app/ 就是网站的 URL 地图，不用查路由表；② 代码分割天然按路由做——每段一个 chunk、layout 与 page 组合关系与运行时嵌套关系一致；③ 嵌套 layout 让"共享 UI + 局部子树"不用像 React Router 那样显式写 Outlet/parent route；④ 路由组/私有文件夹/并行/拦截等所有"高级路由"都是目录级操作，与文件浏览器/编辑器/版本控制契合。代价：① 目录深=URL 深，重构改目录=改 URL 语义（SEO/书签），迁移成本比"改路由表"高；② 文件即路由带来的"魔法目录名"（[id] / [...slug] / (group) / @slot / (.)intercept / _private / +modal 等）学习曲线陡、拼错无强提示；③ 大型站 app/ 树膨胀时组织策略必须靠路由组与私有文件夹，而这些不是所有团队都熟悉；④ Route Handler 也在同一棵树里、和页面抢段名（page/route 冲突），需要规划 api/ 子域。
+
+**14.  一个中大型 App Router 项目（300 页 + 30 API 路由 + 后台/公开两套），app/ 目录你会怎么组织？**
+**来源**：InfoQ《大型 Next.js 项目的目录组织》；知乎《Next.js 路由组与私有文件夹怎么用》
+按"公开站 vs 后台 vs API"三大域切顶层路由组，域内再按业务子域、避免按文件类型平铺：app/(public)/{home,blog,pricing,about,layout.tsx}, app/(admin)/dashboard/{orders,users,settings,layout.tsx}, app/api/v1/{orders,users,...}/route.ts。跨域共享放 app/_shared（私有段、不映射 URL）或更常见的直接放到 src/features/* 与 src/components/*（不占用路由段），只在 pages/components 里 import。要点：① 路由组用括号 (public)/(admin)——保持 URL 干净；② 私有 _components 目录放组件、避免误当路由；③ 鉴权用 middleware 按段前缀（/dashboard/*）分派，layout 内再用 session 渲染对应导航；④ API 版本化从 v1 起（未来好切），Route Handler 别混进页面段；⑤ 站点级 layout 只放"全站骨架"（html/body/font/全局 metadata），域级 layout 放各自导航。这套与前端"feature-first"同构——只是路由树的物理形态把这套约束"钉"在了文件系统上。
+
+**15.  Pages Router 迁移到 App Router，路由与数据获取上最容易踩的三类坑？**
+**来源**：Next.js 官方《Upgrading: App Router》迁移指南；掘金《我们从 Pages Router 迁 App Router 踩的坑》
+① 数据入口从"getServerSideProps/getStaticProps + _app + Router 事件"变到"组件里直接 await + 嵌套 layout + 生命周期 hook（loading.tsx/error.tsx）"——老代码里"页面级取数集中一处"的形态被打散到组件级，要重设取数边界与错误边界，别把 SSR 请求散成一堆 await 却仍用 useSWR 在客户端二次拉；② <Link> 与 useSearchParams 语义差异——App Router 下 useSearchParams 在 Server Component 直接读会强制整页动态（要包 Suspense 或下推到 client），Pages 没这问题；路由跳转 useRouter 的 push/replace 与 prefetch 时机也不同（App 走 RSC payload 预取）；③ 布局与状态持久——App Router 的 layout 在跨子路由切换时不重挂载，Pages 时代"每页独立"的心智会让"页面里 useEffect 只在挂载跑一次"的初始化逻辑不再执行（切到兄弟路由时组件被复用），要把"每次进入都跑"的放 usePathname 依赖 effect 或改用 route group 分壳。迁移策略是先切新页、老页保留 Pages 共存，不要一次性重写全站。

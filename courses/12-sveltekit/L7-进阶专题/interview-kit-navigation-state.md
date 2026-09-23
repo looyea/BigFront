@@ -1,6 +1,6 @@
 # kit-navigation-state 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) $app/stores 和 $app/state 是什么关系？为什么要迁移？
 **来源**：两代状态 API 开场题的转述。
@@ -63,3 +63,25 @@ preloadCode(pathname) 只预取路由代码、不跑 load（支持 /blog/* 通�
 在 +layout.js 导出 `scroll({ to, from, type })` 返回目标（如 {x,y,behavior:'smooth'} 或锚点 top/left）。Kit 默认：链接导航滚顶、popstate 恢复原位。侧栏等内部容器滚动因组件跨导航被**复用**（不销毁重建）天然保留；若需禁用内置处理自己接管用 disableScrollHandling()（官方劝退）。要在导航间存取滚动位置，配合 onNavigate 抓快照、较新版本用 getScrollPosition/setScrollPosition。
 
 🚀 **下一组**：L7 课后作业——端点契约、i18n 路由与导航状态的综合复盘。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  快速点 A→B 后，A 路由的慢 load 晚返回把 B 数据盖住，怎么防？ 
+
+ 导航事务本身有中止机制（新导航作废旧承诺），自定义异步（组件内 fetch/轮询）需用 info.navigation.signal 或 AbortController 挂断；code review 关注一切脱离框架管线的裸异步。 
+
+**来源**： https://svelte.dev/docs/kit/state 
+
+### 14.  version poll 检测到新版本后默认行为是什么？你要电商场景的更新策略？ 
+
+ 轮询 manifest 变更只置 updated 标记，不自动刷新，由应用 subscribe/检查后决定；电商不能打断下单流：导航间隙提示刷新或表单空闲时软加载 chunk，配合 action 幂等兜底。 
+
+**来源**： https://svelte.dev/docs/kit/configuration#version 
+
+### 15.  接管滚动：文档站要点侧栏锚点滚到指定位置且保留各页侧栏滚动位，怎么做？ 
+
+ 关默认滚动恢复或 opts.scroll(x,y) 精确控制；侧栏独立容器滚动位置存在组件状态或 sessionStorage（按路由 key），hash 导航交给 fragment 逻辑而非整页 scroll，三处状态源要分离。 
+
+**来源**： https://svelte.dev/docs/kit/state#scroll 

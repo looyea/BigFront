@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "express-session 默认 MemoryStore 在生产环境的问题是什么？",
       "options": [
-        "太慢",
         "内存不共享（多进程/多实例 session 不互通）且重启丢失",
+        "太慢",
         "不支持 Cookie",
         "不安全"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "MemoryStore 存在进程内存里 → pm2 cluster 多 worker 各有独立 store → 用户请求被分到不同进程 → session 丢失。生产用 Redis。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "JWT 放在 Authorization header 里为什么天然防 CSRF？",
       "options": [
         "JWT 有签名",
-        "浏览器不会自动携带自定义 Header → 伪造请求带不上 Token",
         "JWT 是加密的",
+        "浏览器不会自动携带自定义 Header → 伪造请求带不上 Token",
         "用了 HTTPS"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "CSRF 攻击利用浏览器自动带 cookie 的特性。Authorization header 需要 JS 手动设置 → 跨站伪造的表单/请求无法携带 → 免疫 CSRF。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "multer fileFilter 里调用 cb(new Error('...')) 后错误如何传递？",
       "options": [
         "自动返回 500",
-        "multer 内部调 next(err) → 进入 Express error handler",
         "需要手动 res.status(400).json()",
-        "错误被静默忽略"
+        "错误被静默忽略",
+        "multer 内部调 next(err) → 进入 Express error handler"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "multer 是中间件，fileFilter cb(err) → multer 调 next(err) → 全局 error handler 捕获 → 统一返回 400。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "signed 用 HMAC 签名 → 用户改 cookie 值 → 验签失败 → 被丢弃。但 XSS 可直接读 cookie 发走 → 需 httpOnly 防。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " 生产环境用 express-session 时，会话数据存哪里是合理选择？",
+      "options": [
+        "就用 MemoryStore 加机器内存",
+        "Redis（或兼容存储）——MemoryStore 单进程、重启全丢、内存泄漏警告三连，只配出现在教程里；会话外置后滚动发布不掉登录态",
+        "写进 localstorage",
+        "存 MySQL BLOB 每请求查一次无缓存"
+      ],
+      "answer": 1,
+      "explanation": "会话存储选型的第一判据是\"发布/重启会不会踢掉全体用户\"，第二是横向扩容下的共享。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 会话固定（session fixation）攻击的防御动作是？",
+      "options": [
+        "加长 session id",
+        "登录成功后强制重新生成 session id（req.session.regenerate）并迁移旧会话数据——攻击者预埋的 id 在登录后即作废",
+        "改用 JWT 就叫防御",
+        "对 cookie 加密"
+      ],
+      "answer": 1,
+      "explanation": "签名防篡改、httpOnly 防窃取，但都不防\"攻击者预先种给你一个 id 再坐收你的登录态\"——regenerate 是唯一正解。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " morgan 和 pino-http 同时挂上，常见的问题与取舍是？",
+      "options": [
+        "日志更完整没有代价",
+        "同一请求两份访问日志、双份 I/O 与存储成本——二者选一并统一格式；要结构化查询用 pino-http，只要人读的调试日志才用 morgan",
+        "会互相死锁",
+        "morgan 必须放最后"
+      ],
+      "answer": 1,
+      "explanation": "第三方中间件叠加审查是\"清单即文档\"治理的一部分：功能重叠的中间件只留一个生产者。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " express-rate-limit 配合认证使用时，限流键应该怎么设计？",
+      "options": [
+        "一律按 IP",
+        "按场景分键：登录等敏感接口按\"IP+账号\"复合键防爆破（防绕过换 IP）、已认证接口按用户 id、匿名读按 IP，并且反向代理后要先配 trust proxy 否则全是代理 IP",
+        "随机键",
+        "不设限"
+      ],
+      "answer": 1,
+      "explanation": "单一 IP 键在 NAT/公司出口下误伤一片正常用户，对分布式爆破又形同虚设——限流键是安全设计不是默认值。"
     }
   ]
 }

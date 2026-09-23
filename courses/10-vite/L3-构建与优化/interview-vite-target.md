@@ -1,6 +1,6 @@
 # vite-target 面试题精选
 
-> 共 12 题，覆盖 **target 语义 / 语法与API / polyfill / browserslist / legacy插件 / 双产物 / 决策** 七类。
+> 共 15 题，覆盖 **target 语义 / 语法与API / polyfill / browserslist / legacy插件 / 双产物 / 决策** 七类。
 
 ---
 
@@ -104,3 +104,25 @@ legacy chunk 被转成 ES5，但 ES5 没有原生模块系统 → 用 **SystemJS
 ① 默认 `build.target: 'modules'`（或 es2017/2018）覆盖近 5-6 年设备，放弃 IE 与极老 Android WebView；② 用真实埋点看 UA 分布，<0.5% 的浏览器不为难；③ 不默认上 plugin-legacy（成本高、收益低），仅当有政企/老旧内网需求时再针对性开；④ 用 feature detection 而非 UA 嗅探；⑤ 监控老浏览器报错率数据驱动回补；⑥ CSS 用 browserslist + Autoprefixer，JS API 需要时按需 core-js。
 
 **来源**：caniuse — "browser usage"; web.dev — "Baseline / modern defaults"; 前端趋势 — "放弃 IE" 公告
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  dev 能跑但 build 报语法/运行时错误，或反过来——dev 与 build 的目标解析差异会产生哪些不一致？
+
+差异清单：① 转译目标不同轴——dev 的 esbuild transform 按"现代浏览器"（支持原生 ESM 的下限）基本不降级，build 按 build.target 降级/报错：某些新语法 dev 畅通、build 时 target 不支持直接编译失败（或更低版本浏览器运行时炸）；② 特性可用面≠语法——CSS 嵌套/@layer（css.target 独立通道）、原生 ES Module 行为差异（dev 逐模块 vs bundle 提升后的循环依赖顺序）；③ 树摇只在 build：dev 里"未引用但有副作用"的代码照样执行，build 后消失——依赖 import 副作用注册的东西（i18n locale 注册表、自定义元素定义）在 build 被摇掉是高频事故（sideEffects 配置与显式 import 是解）；④ 环境变量与 define 注入时机（dev 动态读、build 常量折叠改变可达性死代码）。防御清单：build 进 CI 的 PR 流程（不许只有 dev 验证）、target 与真实用户分布对齐（别用默认赌运气）、关键"副作用依赖"加集成冒烟（真打开 build 产物跑核心路径，preview 环境）。收口句：dev/build 双模型（引擎/树摇/目标三处不对称）是 Vite 架构选择的全部代价面——能把不对称清单讲全的人，排查这类鬼问题不会超过 20 分钟。
+
+**来源**：Vite 官方 build.target 与 esbuild transform 差异文档；Rollup tree-shaking 副作用讨论；掘金《dev 一切正常，上线当天白屏》
+
+### 14.  兼容降级怎么验收？给一个"低配安卓+企业老 Chrome"混合用户的 Web 项目的测试与监控方案。
+
+三层验收：① 构建期静态保障——target 配置评审（数据定的基线）+ 产物语法扫描（检查输出 chunk 是否含超出目标引擎的语法：es-check/自定义正则扫顶层 await/可选链/类字段等，CI 门禁"语法合规"比"能编译"更严）；② 真机/仿真矩阵——云真机平台（browserstack 类）覆盖声明的最低引擎组合 + 一台真实低配安卓（性能与兼容双重信号，模拟器测不出 WebView 内核碎片）；legacy 产物要专测 nomodule 加载路径（禁 ESM 的仿真很麻烦，最直接是 legacy chunk 在支持的浏览器里直接当现代脚本跑的验证法）；③ 线上兜底与观测——首屏错误按 UA/引擎版本分维度上报（老浏览器集中爆 SyntaxError=降级失守的第一信号）、"Unsupported browser"软拦截页（特性检测而非 UA 嗅探：检测动态 import/optional chaining 等能力位决定展示升级提示）、错误平台聚合看板里"浏览器版本×错误类型"是常规巡检维度。性能与兼容常被合并决策的点：低配机降级不只是"能跑"，还有动画/长列表在其上的可接受度（与 performance 关的低端机预算合并）。收口句：兼容验收的成熟度=声明的基线有 CI 证明、有真机样本、有线上仪表——三者缺一就是在许愿。
+
+**来源**：browserstack/Sauce 矩阵实践；Sentry 按浏览器版本分组；web.dev 旧设备测试
+
+### 15.  库模式（library mode）的 target 与 polyfill 策略为什么必须比应用更保守？给出你的发布配置检查单。
+
+库的 target 服务对象是"消费者的消费者"——你的 build.target 假设的是自己的用户，库该假设的是所有宿主应用的下限，且宿主往往已在自己侧做降级：库再降一遍=重复包裹与体积膨胀；行业默认：库出 ESM 现代产物（es2020 级语法可接受，让宿主的构建链做最终降级），polyfill 原则零内置（运行时依赖宿主环境——README 声明 engines/最低 Node/BOM 特性，peerDependencies 管框架依赖，BOM 级需求列清单）。检查单：① formats（es+cjs 双出兼容 Node 消费，UMD 按需）；② external 覆盖所有 peer 依赖与 node 内置（漏一个 peer 进产物=宿主双实例，框架类库最贵事故）；③ target 声明与 README 兼容表一致（CI 用 es-check 验证产物语法不超声明档）；④ CSS/资源出口策略（style.css 独立+导出路径进 exports 映射）；⑤ sideEffects 精确标记（宿主摇你时别摇坏）；⑥ engines.node + packageManager 锁定（发布链与消费链分离的声明源）。Vite 特有坑：lib entry 多入口时共享 chunk 的产物名治理（entries 与 formats=cjs 冲突时 Rollup 会报拆块——需要单 entry 或 advancedChunks 配合）。收口句："库不 polyfill、只声明"这六个字能挡掉发布后一半的兼容性工单——前提是你 README 里的声明诚实且可执行。
+
+**来源**：Vite Build Library Mode 文档；node exports/engines 语义；pkg.exports 条件解析讨论

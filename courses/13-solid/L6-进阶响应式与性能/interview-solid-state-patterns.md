@@ -1,6 +1,6 @@
 # 状态组织 · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (C) 一个状态该用 createSignal 还是 createStore？判断标准是什么？
 
@@ -61,3 +61,25 @@ Solid store 没有全局单一 store、reducer 或 action 仪式，它就是"局
 
 一致性由结构承载（不必手动跨 signal 同步）、支持路径级精准更新、可整体放进 context 共享、能配合 produce 一次改多字段。本质是把"分散易失步"升级为"集中且细粒度"。
 **来源**：官方 complex-state-management 引入 store 动机一段的转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  购物车这类跨路由存活又被多处消费的状态，你的分层设计？ 
+
+ 会话内 store 挂根 owner（路由 layout 层 context 下发），持久化在后端为真值、本地是缓存；派生（数量/总价）memo 化；多标签同步走 storage 事件或 BroadcastChannel 再进 store 路径更新。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createstore 
+
+### 14.  produce 与直接路径 setter 何时各有优势？嵌套三层以上的更新怎么写最不别扭？ 
+
+ 单点改一两个路径用路径 setter（通知面最小、代码最短）；批量构造/删除过滤类操作用 produce 写可变逻辑更直白；深嵌套优先拉平数据结构（按 id 存字典），路径浅是第一位的设计约束。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#produce 
+
+### 15.  表单状态方案对比：受控 signal、非受控 ref、以及状态库（Form API）各自边界？ 
+
+ 校验/联动即时反馈需要值在响应式里→受控；大文本域高频键入且无派生→非受控+提交时读；复杂 schema 表单交给库统一 dirty/touched 语义；三层按派生需求递增，默认从最简受控起步。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/stores 

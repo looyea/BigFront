@@ -87,3 +87,21 @@ console.log(x);
   用到 `??=`（惰性初始化）、`Promise.any`（竞速取最快成功、忽略失败源）、`AggregateError`（全挂时兜底）。
   **追问**：想「3 秒没成功就用默认」→ 与一个 `timeout()` race。
 - 来源：MDN Promise.any / logical assignment；GreatFrontEnd 场景题；TC39(ES2021)。
+
+---
+
+**13）WeakRef 和 FinalizationRegistry 的正确心智模型与坑是什么？**
+- 参考要点：GC 时机完全由引擎决定：**不保证回调何时跑、甚至不跑**；跨 realm/带循环引用可能永远不触发 registry 回调。所以铁律：FinalizationRegistry 只能做「清理加速器」（提前释放显存/句柄），不能做正确性依赖（计数、结算、数据落盘）——要确定性清理用显式 dispose 协议 + try/finally（或 ES2026 的 using 语法）。WeakRef 的正当场景：内存缓存表（deref 判活）、DOM 节点弱持有。
+- 来源：MDN《FinalizationRegistry》"caveats" 章节；v8.dev《WeakRef and FinalizationRegistry》。
+
+---
+
+**14）replaceAll 相比 replace 修了什么？正则版有什么强制要求？**
+- 参考要点：`replace(搜索串, x)` 只换第一处、且参数带正则才有全局语义——字符串模式写 /|/g 之类根本不对。replaceAll 对**字符串模式即全替换**；传正则时必须带 g 旗标否则 TypeError（防止「以为全局其实没有」继续存在）。底层语义：匹配后按**不重叠**推进，替换串里的 `$<name>` 支持命名组。老代码 `split(sep).join(x)` hack 全部可以替换掉。
+- 来源：MDN《String.prototype.replaceAll》；tc39/proposal-replaceAll 动机（g-only 正则约束）。
+
+---
+
+**15）数字分隔符的书写规则有哪些？会影响运行时吗？**
+- 参考要点：纯源码层糖：解析后不存在任何痕迹（值、typeof、序列化全不受影响）。规则：只能夹在**数字之间**——开头/结尾/相邻两个 `1__0`、`1._0`、`0x_1` 之外的非法位都 SyntaxError；BigInt 也行 `1_000n`。工程收益是读数：`1_000_000`、`0b1111_0000`、信用卡号分段；配合 eslint `no-numeric-separators` 反向禁用属于团队口味问题。
+- 来源：MDN《Numeric separators》；tc39/proposal-numeric-separator 语法边界用例表。

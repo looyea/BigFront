@@ -1,4 +1,4 @@
-# next-context-streaming 面试题（12 题）
+# next-context-streaming 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎、InfoQ 等站点流式渲染与 Suspense 高频面经，中文重述。
 
@@ -65,3 +65,19 @@
 **12. 从 CSR 迁移到流式 SSR，老代码里的 useEffect 取数怎么处置？给迁移三步。**
 **来源**：SegmentFault《CSR 到 RSC 的取数迁移剧本》
 ① 纯展示数据上移为服务端组件 await+Suspense 包裹慢源；② 交互态数据保留客户端（乐观更新、轮询），配 use() 或数据库；③ loading 分支 JSX 删除，由 fallback 接管——多数 CSR 骨架代码是被手工模拟的 Suspense。收尾判断标准：客户端 bundle 是否下降+首帧是否含内容（呼应 next-server-client、react-data-fetching）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13. "Context 能穿透服务端组件"是常见误解——讲清 Context 的真实作用域，以及跨 server/client 共享状态的三条合法通道。**
+**来源**：React 官方 Server Components 上下文说明；Next.js 官方 Passing State 文档
+Context 是客户端运行时的订阅机制，服务端组件在请求期一次性渲染、根本没有"Provider 树被读取"的运行时——所以不存在"服务端组件读 Context"。三条合法通道：① 序列化 props——服务端读好的值以 props 下发给客户端岛（岛内再用 Context 扩散）；② 请求域隐式上下文——cookies()/headers() 在任意服务端组件直接读（如 locale、session），等价于"请求级 Context"；③ 特殊引用——Server Actions 这类可序列化的"函数引用"跨界。Provider 模式在客户端岛内部完全可用，"全站一个大 Provider 让服务端组件消费"才是要放弃的幻觉。误解来源多是 React 18 客户端文档与 RSC 提案早期的表述混读；答出"请求级 vs 会话级状态各归何处"即可拉开差距。
+
+**14.  loading.tsx、Suspense、PPR 三者都在解决"慢内容体验"，分别在哪一层起作用？**
+**来源**：Vercel 博客《Partial Prerendering》；Next.js 官方 Streaming / PPR 文档
+三个层：① loading.tsx 在客户端导航层——Router 拿到段更新前展示段级 UI，改善"感知"，对直达刷新几乎无首字节贡献；② Suspense 在服务端响应流层——决定 HTML flush 的分段粒度，shell 先到、边界后补，改善 TTFB/FCP 与慢边界的隔离；③ PPR 在构建产物层——把"静态段进预渲染产物、动态边界留占位"，让运行时只流式补动态部分，兼得静态托管与动态能力。关系：PPR 以 Suspense 边界为切分依据；loading.tsx 的骨架与 Suspense fallback 最好同构（尺寸一致）否则 CLS。加分句：三者分别优化"感知性能、首字节、产物形态"——只提其中一个说明对流式管线理解不完整。
+
+**15.  一个流式站点在弱网下 TTFB 很好但 LCP 反而变差，可能的原因与验证方案？**
+**来源**：web.dev LCP 与流式渲染的交互；InfoQ《流式 SSR 的性能陷阱》
+可能原因：① LCP 候选被关在 Suspense 边界里、其数据在 shell 之后串行取（shell 里的取数未并行、await 瀑布），动态段很晚才补上；② 边界过多过小，HTML 分块+RSC payload 重复传输使总字节显著增加，弱网下每块都要排队；③ 骨架到真实内容的尺寸变化使视口内布局跳动，候选元素位移被重新计时；④ HTTP/1.1 下分块与预取资源抢连接；⑤ LCP 记录了 shell 内某大图但真正主体内容更晚——度量口径本身要复核。验证：Lab（Lighthouse/自定义 trace 打 performance.mark 对比各边界 flush 时间）+ RUM 按"边界数量开/关、压缩、HTTP/2"做 A/B；修复方向：慢边界数据与 shell 取数并行化（先 kick off promise 再 await）、合并碎片化边界、骨架尺寸对齐、检查 CDN 是否吞掉 flush（关闭 proxy buffering）。能把"流式不是免费"讲清楚即高分。

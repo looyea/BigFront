@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "装饰器本质上是什么、什么时候运行？",
       "options": [
-        "一种注释，不运行",
         "一个函数，在它所贴的声明被定义时运行，可读取/修改目标或登记元数据",
+        "一种注释，不运行",
         "运行时才动态生成的类",
         "一种类型别名"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "装饰器=定义期执行的高阶函数，作用于类/方法/字段/访问器/参数五类。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "NestJS/TypeORM 为什么需要 experimentalDecorators + emitDecoratorMetadata？",
       "options": [
         "为了性能",
-        "它们基于老版装饰器语义，且 DI 靠 emitDecoratorMetadata 把构造参数类型写进 design:paramtypes 元数据",
         "为了支持泛型",
+        "它们基于老版装饰器语义，且 DI 靠 emitDecoratorMetadata 把构造参数类型写进 design:paramtypes 元数据",
         "只是习惯，不开也行"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "老版签名 + 反射类型元数据是其 DI 的地基；新版标准装饰器暂未含参数装饰器/类型反射（第二节）。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "@register(\"user\") 这种带参数装饰器为什么写成'工厂返回装饰器'？",
       "options": [
         "语法糖，等价于两个函数拼写",
-        "因为 TS 要求 @ 后是表达式：先调用 @register(\"user\") 得到真正的装饰器函数再去装饰目标",
         "为了异步",
-        "其实不能带参数"
+        "其实不能带参数",
+        "因为 TS 要求 @ 后是表达式：先调用 @register(\"user\") 得到真正的装饰器函数再去装饰目标"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "带参装饰器=装饰器工厂：外层接收配置参数、返回真正的 (target)=>... 装饰器。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "纯函数场景 const memo=memoize(fn) 更清晰、无框架/编译开关锁定（第六节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "标准（TC39/TS5）class 装饰器返回 void 的含义是：",
+      "options": [
+        "装饰失败",
+        "保持原类——只有显式返回新构造器才替换；老版「返回值被忽略」的语义不同",
+        "返回 undefined 报错",
+        "必须返回 class"
+      ],
+      "answer": 1,
+      "explanation": "标准装饰器统一「返回替换物或不返回」：class/方法/字段都遵守；老实验版 class 装饰器返回值才被忽略——两套并存正是 NestJS 钉旧版的原因。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "标准方法装饰器的第二个参数是：",
+      "options": [
+        "property descriptor",
+        "context 对象 { kind, name, static, private, addInitializer }",
+        "原型对象",
+        "属性类型"
+      ],
+      "answer": 1,
+      "explanation": "descriptor 反射被废，换 context + 「替换函数本身」的写法（装饰器收到 value 原方法，返回新的替代）——更安全（无 this 泄漏）且不依赖运行时元编程。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "字段装饰器的执行时机是：",
+      "options": [
+        "类定义时一次",
+        "每次实例化时参与初始化（装饰器返回函数可改写初值）",
+        "访问属性时",
+        "GC 时"
+      ],
+      "answer": 1,
+      "explanation": "字段是「每实例」的：装饰器在实例化流程里包 initializer（返回 `(initialValue)=>新值`）；这也是它改不了「类形状」、只能改值的语义根源。"
     }
   ]
 }

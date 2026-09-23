@@ -1,6 +1,6 @@
 # kit-form-validation 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) "客户端校验是 UX、服务端校验是安全"——用攻击路径把前半句证伪成后半句。
 **来源**：校验分工第一问的转述。
@@ -63,3 +63,25 @@ Kit：错误与值都是**服务端 action 返回值**（form prop），客户�
 required/type/minlength/pattern 无 JS 参与就生效（渐进增强第一层白送），且浏览器焦点管理（定位第一个无效控件）天生无障碍友好。但口径比 schema 松得多：`type="email"` 认 a@a.a 合法、数字输入框也能被 DevTools 改出任意文本。害死的设计是"**只写 HTML 校验、服务端信任它**"——表单看起来验证齐全、action 裸奔。正确姿势：HTML 属性当体验与无障碍资产保留，zod 当法槌；两边规则若同源生成（constraints→属性的自动注入，superForms 的 constraints 机制正是干这个的），才不会漂移成两套真相。
 
 🚀 **下一组**：kit-error-boundaries 面试题——两套错误世界、边界几何与 fallback 链路。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  上传表单（文件+文本混合）在 Kit action 里怎么读 multipart 数据？ 
+
+ request.formData() 原生解析，文件是 File 对象可直接 stream 落盘/转存；注意平台 body 大小限制与内存缓冲策略，大文件应尽快转储，配合 schema 校验类型与大小。 
+
+**来源**： https://svelte.dev/docs/kit/form-actions#FormData 
+
+### 14.  三步向导表单要跨步存活，用 FormData、sessionStorage 还是服务端会话？ 
+
+ 无 JS 约束决定主数据必须走表单字段；服务端会话（签名 cookie 或 DB 草稿）保证可靠与可恢复，sessionStorage 只适合非关键 UX 加速，三案组合并按敏感级别分流是稳妥答法。 
+
+**来源**： https://svelte.dev/docs/kit/form-actions#Progressive-enhancement 
+
+### 15.  同一份 zod schema 双端复用，错误消息文案与表单字段结构怎么保持同步不漂移？ 
+
+ schema 放 $lib 共享、字段路径即 key 约定，回显用 get(error, path) 定位；配类型派生（z.infer）让表单纯组件依赖同一类型，漂移在编译期暴露，再加一组双端快照测试兜底。 
+
+**来源**： https://svelte.dev/docs/kit/form-actions#Validation 

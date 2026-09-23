@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "类型收窄（narrowing）的本质是？",
       "options": [
-        "用 as 手动改类型",
         "编译器顺着控制流(if/switch等)自动把变量在当前点缩小到更精确类型",
+        "用 as 手动改类型",
         "运行时做类型转换",
         "重新声明变量"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "收窄是控制流分析的自动结果，局部可逆；与 as 断言（你说了算、不校验）不同。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "为什么 typeof x === 'object' 之后通常还要 && x !== null？",
       "options": [
         "因为 null 是对象",
-        "因为 typeof null === 'object'，不排除 null 后续访问属性可能运行时崩溃",
         "因为 TS 不认识 object",
-        "没必要，多此一举"
+        "没必要，多此一举",
+        "因为 typeof null === 'object'，不排除 null 后续访问属性可能运行时崩溃"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "JS 历史遗留：typeof null 返回 'object'，判对象必须额外排除 null。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "name 可能为 0 或 '' 也是合法值，想只排除 null/undefined，用哪个判断最稳？",
-      "options": ["if (name)", "if (name != null)", "if (!!name)", "if (typeof name)"],
+      "options": [
+        "if (name)",
+        "if (name != null)",
+        "if (!!name)",
+        "if (typeof name)"
+      ],
       "answer": 1,
       "explanation": "truthiness 会误伤 0/'' ；!= null 只挡 null 与 undefined，保留合法的假值。"
     },
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "要把 Cat | Dog 联合缩到含 meow 的那支，最合适？",
-      "options": ["typeof", "instanceof", "\"meow\" in a", "as Cat"],
+      "options": [
+        "typeof",
+        "instanceof",
+        "\"meow\" in a",
+        "as Cat"
+      ],
       "answer": 2,
       "explanation": "两支是结构相似的对象、无共同 class，用 in 探测独有属性收窄最自然。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "可辨识联合 + 对判别字段的 switch/相等比较触发收窄（呼应 ts-union）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`const u: unknown` 过 `Array.isArray(u)` 后，u 的类型是：",
+      "options": [
+        "`unknown[]`",
+        "`any[]`（数组守卫把 unknown 收敛为 any[]）",
+        "`never[]`",
+        "仍是 unknown"
+      ],
+      "answer": 1,
+      "explanation": "lib 里 Array.isArray 签名 `(arg: any) => arg is any[]`——从 unknown 只能落到 any[]，成员仍需逐层收窄；想要元素类型请先 parse/guard。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "let 变量在 if 里收窄后，在之后注册的回调里使用：",
+      "options": [
+        "收窄保持（CFA 全局有效）",
+        "收窄失效——回调延迟执行，let 可能已被改写，TS 回退声明类型",
+        "自动加锁",
+        "仅严格模式失效"
+      ],
+      "answer": 1,
+      "explanation": "闭包/回调边界重置非 const 变量的收窄；`const` 锁或立即执行处用是解法——TS 5.x 起对 `const` 缓存判据（aliased conditions）有改进，但「回调里的可变捕获」依然要就地再判。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`isCat(x: unknown): x is Cat` 为真的分支之外，`animal: Cat | Dog` 的 else 分支类型：",
+      "options": [
+        "`Cat | Dog`",
+        "`Dog`——谓词自动从联合里剔除 Cat（互补推断）",
+        "unknown",
+        "never"
+      ],
+      "answer": 1,
+      "explanation": "x is T 在 false 分支做 Exclude 运算（要求声明参数与目标类型对得上）——写一个守卫就同时拿到两条分支，这是它比手动 as 强的根因。"
     }
   ]
 }

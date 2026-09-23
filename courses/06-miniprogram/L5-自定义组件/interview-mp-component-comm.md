@@ -1,6 +1,6 @@
 # mp-component-comm 面试题精选
 
-> 共 12 题，覆盖 A 事件通信 / B slot 与内容分发 / C 命令式 API / D 设计原则与跨框架。
+> 共 15 题，覆盖 A 事件通信 / B slot 与内容分发 / C 命令式 API / D 设计原则与跨框架。
 
 ## 一、事件通信（A 类）
 
@@ -57,3 +57,25 @@ props：visible(Boolean 受控)、title、maskClosable；events：close/mask-cli
 ### 12. "数据向下、事件向上"在双线程架构下有什么额外成本？设计大列表组件时如何省？
 每次下行=一次跨线程 setData 序列化，父子链上多跳多次；大列表若"父全量+子再全量"传输量翻倍。优化：列表数据直入子组件的 properties（一跳）、子内部虚拟滚动只渲染视口、上行只传 id 不传整项（父用 id 反查）（呼应 mp-setdata、mp-performance）。
 **来源**：小程序性能优化指南；社区长列表组件设计帖
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  用 selectComponent 缓存了子实例引用、但子被 wx:if 销毁后仍持有它，会有什么后果？组件方法暴露该用"调方法"还是"属性驱动"？
+
+后果：detached 后实例已从组件树摘除，缓存的引用是"僵尸"——调它的方法可能静默失效或操作已销毁上下文、造成内存无法回收（你持着它，GC 不掉），页面反复进/出会累积泄漏。所以：能"属性驱动"就别"命令式调方法"——把 play/pause 这类翻成 `playing` prop + observer，走单向数据流，子随父重建自然复位，父也无需持引用。确需命令式（ imperative，如 focus、scrollTo、表单 validate），则 selectComponent 即取即用、别长期缓存，或在子 detached 里通知父清引用。这与 React 从"refs+imperativeHandle"转向"受控 props"、Vue 从 ref 调用转向 props/emit 的取向一致：优先声明式，命令式是不得已的逃生舱。
+
+微信官方文档《组件间页面间通信》；掘金《selectComponent、triggerEvent、slot 三种通道怎么选》
+
+### 14.  "数据向下、事件向上"在双线程架构下有什么额外成本？设计一个大列表组件时如何省？
+
+额外成本来自"每一次向下 setData、每一次向上再触发父 setData 都是跨线程往返"：大列表若把每项的点击都 triggerEvent 回父、父再改整表数据 setData 下发，等于一点击两次跨线程 + 整表 diff，巨贵。省法：① 子组件自管交互态（选中/展开）放组件自身 data、不每次惊动父，只在"提交"时上抛一次聚合结果；② 局部更新用路径 setData（list[i].checked）而非整数组下传；③ 高频纯展示计算用 wxs 留在渲染层；④ 用 eventChannel/委托思想——容器绑一次事件 + dataset 反查，避免每项各绑各的回调把事件对象也放大；⑤ props 只传必要字段而非整对象。核心：把"每次交互的跨线程次数"与"每次 setData 的数据量"双降——这恰是 React 大列表要 memo + 稳定 key + 局部 state 的同款理由。
+
+SegmentFault《组件方法调用返回 undefined 的常见原因》；知乎《行为与 relation 跨组件通信实战》
+
+### 15.  设计一个可复用弹窗组件，给出 props / events / slots / 方法 的完整接口，并说明各方案取舍。
+
+Props（向下）：visible（受控显隐，父用属性驱动而非子自改）、title、confirmText/cancelText、maskClosable、type（alert/confirm/custom）。Events（向上）：confirm/cancel/close（携带需要的载荷，如确认时表单值）、mask-click——统一在动作时上抛让父决定"要不要关、关之前做啥"，避免子自己 hide 与父不同步。Slots（扩展）：默认 slot 放自定义内容、footer slot 放自定义按钮组，用 `<block wx:if>` 兜默认——满足"90% 通用 + 10% 可定制"。方法（逃生舱）：确需外部命令式打开可暴露 selectComponent().open()，但优先 visible prop。取舍：受控(visible) 优于非受控(内部 show/hide)——受控让父掌握单一真相源、易与路由/权限联动；catchtouchmove 锁背景滚动要处理；用 slot 而非把内容做成一堆 props，换取灵活又不过度定制。这套接口在 Vue/React 弹窗里长得几乎一样，差别只是语法。
+
+CSDN《组件事件总线在小程序中的边界与反模式》；InfoQ《组件库升级中通信协议的兼容设计》

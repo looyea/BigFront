@@ -6,7 +6,12 @@
       "id": "q1",
       "type": "single",
       "prompt": "app/pages/users/index.vue 生成的路由是？",
-      "options": ["/users/index", "/users", "/users/*", "不生成路由（index 是模板文件）"],
+      "options": [
+        "/users/index",
+        "/users",
+        "/users/*",
+        "不生成路由（index 是模板文件）"
+      ],
       "answer": 1,
       "explanation": "目录+index=段根，映射为 /users——与 Next 的 users/page.tsx 异曲同工（呼应 nuxt-routing 第 1 节）。"
     },
@@ -14,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "NuxtLink 指向站外 https 地址时必须？",
-      "options": ["把 to 改成字符串常量", "加 rel=\"nofollow\"", "用 <a> 标签替代（NuxtLink 不支持外链）", "加 external 属性"],
+      "options": [
+        "把 to 改成字符串常量",
+        "加 rel=\"nofollow\"",
+        "用 <a> 标签替代（NuxtLink 不支持外链）",
+        "加 external 属性"
+      ],
       "answer": 3,
       "explanation": "不加 external 会被当作内部 path 接管成 SPA 导航并拼出错误路由（呼应 nuxt-routing 第 2 节）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "关于 NuxtLink 的预取，正确的是？",
-      "options": ["默认关闭，需手动 prefetch 开启", "只预取 HTML 文档", "默认对进入视口的链接预取路由代码与数据，可按链接或全局调整", "预取的是 RSC Payload"],
+      "options": [
+        "默认关闭，需手动 prefetch 开启",
+        "只预取 HTML 文档",
+        "默认对进入视口的链接预取路由代码与数据，可按链接或全局调整",
+        "预取的是 RSC Payload"
+      ],
       "answer": 2,
       "explanation": "视口触发自动预取是默认行为；预取对象是页面 chunk+数据，RSC Payload 是 Next 的概念（呼应 nuxt-routing 第 2 节、next-link-router 第 1 节对照）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "页面服务端渲染时要发起一个带真实 302 状态码的重定向，应使用？",
-      "options": ["navigateTo('/login')（SSR 感知上下文）", "location.href 赋值", "router.replace('/login')", "setTimeout 后 push"],
+      "options": [
+        "navigateTo('/login')（SSR 感知上下文）",
+        "location.href 赋值",
+        "router.replace('/login')",
+        "setTimeout 后 push"
+      ],
       "answer": 0,
       "explanation": "navigateTo 在服务端上下文设置响应状态码并中断渲染；location 在 SSR 不存在、router.* 只作用客户端（呼应 nuxt-routing 第 3 节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "definePageMeta 里能写 if (user.isAdmin) { layout = 'admin' } 吗？为什么？",
-      "options": ["能，它是普通函数调用", "能，但要包在 computed 里", "不能，它会被编译提取，只接受静态对象字面量", "不能，layout 只能在 nuxt.config 全局设置"],
+      "options": [
+        "能，它是普通函数调用",
+        "能，但要包在 computed 里",
+        "不能，它会被编译提取，只接受静态对象字面量",
+        "不能，layout 只能在 nuxt.config 全局设置"
+      ],
       "answer": 2,
       "explanation": "definePageMeta 是编译宏，代码外置到路由表——运行时逻辑应放进 middleware 动态决定（呼应 nuxt-routing 第 1 节、nuxt-layouts）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "await router.push('/x') 可能被中间件中断，正确防御是？",
-      "options": ["包 try/catch 或 .catch(() => {})，否则未处理的 rejection", "不用处理，Nuxt 内部吞掉", "改用 window.location.href", "先 await router.isReady()"],
+      "options": [
+        "包 try/catch 或 .catch(() => {})，否则未处理的 rejection",
+        "不用处理，Nuxt 内部吞掉",
+        "改用 window.location.href",
+        "先 await router.isReady()"
+      ],
       "answer": 0,
       "explanation": "vue-router 导航被 abort/redirect 时 Promise reject，裸 await 会炸控制台（呼应 nuxt-routing 第 3 节、vue-router-guard-lazy）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "想让 /blog/abc 这类非法 id 直接 404，最 Nuxt 味的做法是？",
-      "options": ["在 app.vue 里全局判断", "definePageMeta 的 validate: route => /^\\d+$/.test(route.params.id)", "middleware 里对所有路由正则匹配", "Nginx rewrite 拦截"],
+      "options": [
+        "在 app.vue 里全局判断",
+        "definePageMeta 的 validate: route => /^\\d+$/.test(route.params.id)",
+        "middleware 里对所有路由正则匹配",
+        "Nginx rewrite 拦截"
+      ],
       "answer": 1,
       "explanation": "validate 是路由级校验钩子，返回 false 自动 404——比中间件更内聚，比手写判断更声明式（呼应 nuxt-routing 第 4 节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " app/pages/users/index.vue 与 users.vue 同时存在时的路由树是？",
+      "options": [
+        "冲突报错",
+        "users.vue 成父级（带 <NuxtPage/> 出口），index.vue 匹配 /users 作为其子路由——嵌套路由由文件名约定表达，等价于 vue-router 的 children",
+        "index.vue 胜出",
+        "两个都注册随机命中"
+      ],
+      "answer": 1,
+      "explanation": "pages/index.vue+嵌套是 Nuxt 文件路由的\"layout 出口\"机制，漏写 <NuxtPage/> 子路由全空白是本项目第一高频坑。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " SSR 首屏页面要\"资源不存在直接 404\"，正确 API 是？",
+      "options": [
+        "router.push('/404')",
+        "throw createError({ statusCode: 404, statusMessage: ' Not Found' })——SSR 侧以真实状态码响应并渲染错误页；客户端 push 只改 URL、状态码仍是 200",
+        "return notFound()",
+        "abort()"
+      ],
+      "answer": 1,
+      "explanation": "与 Next 的 notFound() 对照记：Nuxt 一切 HTTP 语义走 createError；SEO 页面的\"不存在\"必须是 404 状态码，软 404 是收录事故。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " NuxtLink 默认预取策略是？",
+      "options": [
+        "hover 预取",
+        "视口可见且浏览器空闲时预取组件 chunk+页面数据（prefetch），可关（prefetch=false）或强制（routeRules 调优）",
+        "点击后才加载",
+        "启动时预取全部链接"
+      ],
+      "answer": 1,
+      "explanation": "与 App Router 的\"视口预取 RSC payload\"神似——长列表都要关；Nuxt 关的是组件+数据预取，带宽账一模一样。"
     }
   ]
 }

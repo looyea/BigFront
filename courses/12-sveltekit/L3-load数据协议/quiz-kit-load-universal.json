@@ -3,6 +3,7 @@
   "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
+      "id": "q1",
       "type": "single",
       "prompt": "首访一个 SSR 页面时，+page.js 的 load 实际执行了几次？为什么第二次不打网络？",
       "options": [
@@ -15,6 +16,7 @@
       "explanation": "官方纪律：SSR 跑一次、hydration 再跑一次（复用 fetch 响应，这些响应在渲染时被捕获内联进 HTML），此后客户端导航都在浏览器跑。"
     },
     {
+      "id": "q2",
       "type": "single",
       "prompt": "load 里读 event.url.hash，SSR 首请求时拿到的值是？",
       "options": [
@@ -27,6 +29,7 @@
       "explanation": "文档原话：url.hash cannot be accessed during load, since it is unavailable on the server——浏览器发送请求时从不把 # 后的内容带给服务端。"
     },
     {
+      "id": "q3",
       "type": "single",
       "prompt": "根 layout load 返回 {a:1,b:2}，子 page load 返回 {b:3,c:4}。+page.svelte 里 data 的值是？",
       "options": [
@@ -39,6 +42,7 @@
       "explanation": "官方规则：多个 load 返回同名键时最后一个赢——layout 数据先向下游合并，page 的 b 覆盖 layout 的 b，得到 {a:1,b:3,c:4}。"
     },
     {
+      "id": "q4",
       "type": "single",
       "prompt": "某 load 里只调用过 url.searchParams.get('x')。用户从 ?x=1&y=1 导航到 ?x=1&y=2，该 load 会重跑吗？",
       "options": [
@@ -51,6 +55,7 @@
       "explanation": "官方明示查询参数独立追踪：x=1→x=2 会重跑，但 y 从 1→2（x 不变）不会——依赖粒度到单个查询参数。"
     },
     {
+      "id": "q5",
       "type": "single",
       "prompt": "为什么 server load 不会因为 fetch(url) 而自动登记对该 URL 的失效依赖？",
       "options": [
@@ -63,6 +68,7 @@
       "explanation": "官方原话：Server load functions will never automatically depend on a fetched url to avoid leaking secrets to the client。server load 里要手动失效信号用 depends() 显式声明。"
     },
     {
+      "id": "q6",
       "type": "single",
       "prompt": "invalidate 让某 load 重跑、data 更新后，对应的 +page.svelte 组件发生什么？",
       "options": [
@@ -75,6 +81,7 @@
       "explanation": "重跑 load 更新 data prop 但不重建组件——内部 state 保留是特性。官方给的两个清态出口：afterNavigate 回调里手动重置、{#key} 块包裹强制重建。"
     },
     {
+      "id": "q7",
       "type": "single",
       "prompt": "关于 setHeaders，下列哪种行为是官方定义的错误？",
       "options": [
@@ -85,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "官方两条红线：同一 header 设置多次（即使在不同 load 里）即错误；set-cookie 不能走 setHeaders，要用 server load 的 cookies.set。B 场景 ssr=false 时它压根不执行（那属于无效果，不算报错）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " universal load 里读 event.url.searchParams.get(k)，依赖粒度是？ ",
+      "options": [
+        " 整个 url 都算依赖 ",
+        " 仅该 key 被追踪，其他查询参数变化不触发重跑 ",
+        " searchParams 全量 ",
+        " 不被追踪 "
+      ],
+      "answer": 1,
+      "explanation": " Kit 对 url 做属性级代理追踪，按需最小化重跑，这是官方『惰性依赖』设计的一部分。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 子页面 load 里 await input.parent() 的作用？ ",
+      "options": [
+        " 等父 load 完成后拿其数据，并可读取更新 ",
+        " 强制重跑父 load ",
+        " 跳过父级数据合并 ",
+        " 注册子路由 "
+      ],
+      "answer": 0,
+      "explanation": " parent() 返回 promise，await 才串行等待；不 await 则与父并行执行，数据仍会由框架合并进页面。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 同一个 load 里连续两次 fetch 同一 URL，会发生什么？ ",
+      "options": [
+        " 两次真实网络请求 ",
+        " SSR 期间去重缓存（一次请求结果复用），配合平台缓存跨请求合并 ",
+        " 直接报错 ",
+        " 第二次被丢弃 "
+      ],
+      "answer": 1,
+      "explanation": " event.fetch 在 SSR 内对同 URL 去重，水合时把结果内联进 HTML 免二次请求；跨请求去重靠 adapter 的缓存接口。 "
     }
   ]
 }

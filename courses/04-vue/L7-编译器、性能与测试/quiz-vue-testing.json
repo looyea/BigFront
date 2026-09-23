@@ -8,11 +8,11 @@
       "prompt": "mount 和 shallowMount 的核心区别是？",
       "options": [
         "mount 用于生产、shallowMount 用于开发",
-        "mount 渲染整棵子组件树，shallowMount 用桩替换子组件只测本组件",
         "shallowMount 不能触发事件",
-        "二者完全等价"
+        "二者完全等价",
+        "mount 渲染整棵子组件树，shallowMount 用桩替换子组件只测本组件"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "单元测隔离优先用 shallowMount（呼应 vue-testing 第二节）。"
     },
     {
@@ -71,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "在测试环境做路由跳转断言，最合适的 history 是？",
-      "options": ["createWebHistory", "createWebHashHistory", "createMemoryHistory", "不用 history"],
+      "options": [
+        "createWebHistory",
+        "createWebHashHistory",
+        "createMemoryHistory",
+        "不用 history"
+      ],
       "answer": 2,
       "explanation": "memory 路由不依赖浏览器地址栏，专供测试/Node（呼应 vue-testing 第六节、vue-router-basics）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "错的东西也会被快照固化，行为断言为主（呼应 vue-testing 第七节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "测试里「点按钮 → 等异步取数 → 断言列表渲染」的最小正确写法组合是：",
+      "options": [
+        "setTimeout 等待",
+        "userEvent.click（带真实事件语义）→ 等 findBy（内建轮询）或 await flushPromises + 再 nextTick——「trigger 后 DOM 未更新」的异步根因（微任务/渲染队列）由 findBy 类 API 消解，不手写等待",
+        "sleep(1000) 硬等",
+        "同步断言即可"
+      ],
+      "answer": 1,
+      "explanation": "优 先 级：findBy > flushPromises > nextTick > setTimeout（越 右 越 是 竞 态 器）；v-testing-library 的 「不 过 期 手 动 等 待」哲学 = 查 询 API 负 责 等，断 言 负 责 判（本关 偶 发 红 题 的 结 构 化 防 治）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "给组件写测试时「mount 真实 Pinia store + mock 底层 fetch」相比「直接改 store state 造场景」的取舍是：",
+      "options": [
+        "前者测试成本更高且无收益",
+        "前者测「状态流转全链路」（action 逻辑不绕过，回归保护强），后者只测「组件对状态的渲染反应」（单 元 快、故 障 隔 离 好）——两层都要，全链路放 store 层测、渲染反应放组件测用假 store",
+        "只 要 mock store",
+        "只 要 真 store"
+      ],
+      "answer": 1,
+      "explanation": "操 作 形 态：组 件 测 里 `setActivePinia(createTestPinia({ fakeState }))` 或 `mockStore` 注 入（测 试 工 具 箱 化）；一 句 判 据：行 为 的 承 诺 经 过 哪 层，就 在 哪 层 之 上 用 真 件、之 下 用 假 件——测 集 成 度 的 配 方（本关 隔离 题 的 架 构 面）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "测试 VueUse 类组合式函数（useMouse/useFetch）时，与时间/环境相关的两件标配是：",
+      "options": [
+        "真实时钟 + jsdom",
+        "vi.useFakeTimers（推进 debounce/节流/轮询，断言配 vi.advanceTimersByTimeAsync 让微任务同 步 清 算）+ 环境 mock（window 事 件 派发/ResizeObserver stub，VueUse SSR 安 全 分 支 用 vi.stubGlobal 关 环 境 对 象 验 证）",
+        "禁 用 一 切 mock",
+        "只 测 组 件 形 态"
+      ],
+      "answer": 1,
+      "explanation": "`advanceTimersByTime` 与 `...Async` 版 的 区 别（同 步 版 不 冲 微 任务 队列 → 防 抖 背 后 的 promise 断 不 到，「偶 发 红」的 另 一 来 源）；组 合 式 函数 测 试 的 作 用 域 载 体=effectScope（本关 composable 单 测 题 的 操 作 完 善）。"
     }
   ]
 }

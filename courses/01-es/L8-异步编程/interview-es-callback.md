@@ -102,3 +102,21 @@ console.log('4');
 **12）Node 里的 `process.nextTick` 与 `setImmediate` 与 `setTimeout(fn, 0)` 分别在什么时机执行？**
 - 参考要点：`process.nextTick` 在**当前操作完成后、事件循环继续前**执行——优先级最高，会「插队」；`queueMicrotask` 与 Promise 微任务同级；`setImmediate` 在 **check 阶段**（I/O 完成后）；`setTimeout(fn, 0)` 在 **timers 阶段**（有最小延迟）。**推荐**：新代码用 `queueMicrotask`（浏览器/Node 通用），避免用 `process.nextTick`（可能饿死事件循环）。
 - 来源：Node.js 官方《Event Loop, Timers, process.nextTick》。
+
+---
+
+**13）为什么回调又叫 CPS（续体传递风格）？它和 return 的本质关系是什么？**
+- 参考要点：CPS：函数不通过 return 交还结果，而是把「接下来要做的事」（续体 continuation）作为参数接收，由自己决定何时、以什么值调用它。return 是语言层控制的交还，CPS 是手工控制的交还——每个 CPS 函数都隐含「谁是我的下一步」。async/await 编译器做的事就是把 await 之后的代码打包成续体注册给 promise 的 then，所以「await 之后的代码」本质上就是回调。
+- 来源：Wikipedia《Continuation-passing style》；Brian McNamara《CPS paper 经典讨论帖》。
+
+---
+
+**14）手写回调 API 如何防御「双调用」与「永不回调」？工程上有哪些标准做法？**
+- 参考要点：双调用：入口包 `once()`（闭包标志位），或用 Promise 做内部 settle 幂等层；never-call：加超时兜底（`setTimeout` + 标志位，超时强制 reject/回调 Error‘timeout’）、`AbortController` 透传取消；所有出口路径（early return、catch 分支）静态检查必须触达回调——lint 规则 `callback-return` 专门管这个。更稳的做法：对外只暴露 Promise / async 迭代器，把 settle-once 语义交给规范。
+- 来源：async 库《eachSeries》文档；Node.js 最佳实践清单（goldbergyoni）；ESLint promise/no-callback-in-promise。
+
+---
+
+**15）EventEmitter 的 ‘error’ 事件有什么特殊语义？监听器数量泄漏怎么排查？**
+- 参考要点：特殊：emit(‘error’) 若无人监听会把异常**抛到调用栈**（其他事件名没有监听者就静默返回）——这是流/网络对象崩成 uncaughtException 的经典路径，务必先挂 error 监听。监听器泄漏：重复 addListener 不 removeListener，堆到 >10 个同一事件触发 `MaxListenersExceededWarning`（默认上限 10，`setMaxListeners` 可调或 Infinity）；排查用 `emitter.listenerCount(event)` / `eventNames()` 打点，长生命周期对象（单例 emitter 订阅短命监听器）是重灾区，优先 AbortSignal/once 自动解绑。
+- 来源：Node.js 官方文档《events: Error events / MaxListeners》；nodejs/best-practices。

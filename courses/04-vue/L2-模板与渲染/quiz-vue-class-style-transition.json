@@ -8,11 +8,11 @@
       "prompt": "要根据多个布尔条件动态组合 class，最清晰的写法是？",
       "options": [
         "字符串拼接 if/else",
-        ":class=\"{ active: isActive, disabled: isDisabled }\" 对象语法",
         "只能写死静态 class",
+        ":class=\"{ active: isActive, disabled: isDisabled }\" 对象语法",
         "用 v-html 拼 class"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "对象语法把类名和布尔条件一一对应，最声明式（呼应 vue-class-style-transition 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "想让 JS 状态驱动一个 CSS 自定义属性(--main-color)，怎么写？",
       "options": [
-        ":style=\"{ '--main-color': color }\"",
         ":class=\"'--main-color:' + color\"",
         "v-bind:style=\"{ mainColor: color }\"",
-        "无法在模板里做"
+        "无法在模板里做",
+        ":style=\"{ '--main-color': color }\""
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "CSS 变量用方括号键 '[--x]' 绑定（呼应 vue-class-style-transition 第二节）。"
     },
     {
@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "切换两个元素时进/出场重叠、难看，应给 <Transition> 加什么？",
-      "options": ["appear", "mode=\"out-in\"", "type=\"animation\"", "name"],
+      "options": [
+        "appear",
+        "mode=\"out-in\"",
+        "type=\"animation\"",
+        "name"
+      ],
       "answer": 1,
       "explanation": "mode=\"out-in\" 让旧的先离场、新的再进场（呼应 vue-class-style-transition 第三节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": ":style 会自动补前缀（呼应 vue-class-style-transition 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "用 JS 状态驱动 CSS 自定义属性（--dur 等）参与动画计算，正确的绑定写法是：",
+      "options": [
+        ":style=\"{ '--dur': dur + 'ms' }\" 驼峰/连字符均可，Vue 3 对以 -- 开头的变量名原样透传不驼峰化",
+        "CSS 变量不能用 :style 绑定",
+        "只能写在 <style> 里",
+        "必须配 v-bind() 才生效"
+      ],
+      "answer": 0,
+      "explanation": "两条 路 都 通：`:style` 直接 绑 `--dur`，或 SFC `<style>` 里 `v-bind(dur)`（编译 后 其实 也 是 CSS 变量 注入）；「Vue 3 把 CSS 变量 名 原样 保留」是 本关 驼峰 题 的 反面 补充。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "<Transition> 内元素进场动画还没播完就被再次切换（连点标签），默认行为是：",
+      "options": [
+        "动画排队",
+        "默认打断：旧过渡被放弃直接切换，配 :duration 或 mode 才能控制节奏——高频切换场景必须显式处理否则动画鬼畜",
+        "Vue 自动暂停等播完",
+        "第二次切换被丢弃"
+      ],
+      "answer": 1,
+      "explanation": "过渡 不是 事务：新 状态 到来 时 旧 过渡 被 中断（leave 取消 钩子 触发）。连点 场景 三 件套：mode=\"out-in\"、禁点 按钮、:duration 显式 兜底（CSS 动画 结束 事件 丢 发 时 防 卡死，本关 结束 判定 题 的 续 集）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "页面首次加载希望列表项依次入场，正确的组合是：",
+      "options": [
+        "watch 里手动加类",
+        "<TransitionGroup> + stagger：进入时按序号配 transition-delay（data-index 或内联 --i 变量），并配 appear 让首屏也走过渡",
+        "CSS 不支持依次入场",
+        "用 v-once 配合"
+      ],
+      "answer": 1,
+      "explanation": "appear 属性=「挂载 时 也 播 过渡」（默认 只 管 切换），stagger 的 延迟 用 CSS 变量 `--i: index` 传 进 style——本关 六 类名 题 的 实战 延伸；注意 延迟 要 在 leave 时 清零 否则 退场 也 排队。"
     }
   ]
 }

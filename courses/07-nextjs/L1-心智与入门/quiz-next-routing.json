@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "App Router 中，一个目录要成为可访问的路由，必须包含哪个文件？",
-      "options": ["layout.tsx", "route.ts", "page.tsx", "index.tsx"],
-      "answer": 2,
+      "options": [
+        "layout.tsx",
+        "route.ts",
+        "index.tsx",
+        "page.tsx"
+      ],
+      "answer": 3,
       "explanation": "有 page 才是可访问路由；route.ts 是 API 版、layout 只是壳（呼应 next-routing 第一节表）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "从 /blog 导航到 /blog/hello，app/blog/layout.tsx 的状态会？",
-      "options": ["重置，因为布局在导航时重新挂载", "保持，layout 跨子路由导航持久化不重挂载", "取决于是否用了 Link 组件", "只在生产构建后才保持"],
+      "options": [
+        "重置，因为布局在导航时重新挂载",
+        "保持，layout 跨子路由导航持久化不重挂载",
+        "取决于是否用了 Link 组件",
+        "只在生产构建后才保持"
+      ],
       "answer": 1,
       "explanation": "layout 持久化是默认行为，要重置请换 template（呼应 next-routing 第四节对照表）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "layout 与 template 的核心区别是？",
-      "options": ["layout 只能有一个，template 可以多个", "template 每次导航重新挂载、状态清零；layout 复用", "layout 是客户端组件，template 是服务端组件", "二者只是命名新旧区别"],
+      "options": [
+        "layout 只能有一个，template 可以多个",
+        "template 每次导航重新挂载、状态清零；layout 复用",
+        "layout 是客户端组件，template 是服务端组件",
+        "二者只是命名新旧区别"
+      ],
       "answer": 1,
       "explanation": "换 key = 换人生：template 相当于给壳换了 key（呼应 next-routing 第四节、react-lists-keys）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "根布局 app/layout.tsx 的铁律是？",
-      "options": ["必须渲染 <html> 和 <body>，且不可删除", "必须包含导航栏", "必须声明 metadata", "必须用 tsx 扩展名"],
+      "options": [
+        "必须渲染 <html> 和 <body>，且不可删除",
+        "必须包含导航栏",
+        "必须声明 metadata",
+        "必须用 tsx 扩展名"
+      ],
       "answer": 0,
       "explanation": "Next 没有 index.html，html/body 只能由根 layout 提供（呼应 next-routing 第三节、next-overview 第三节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "子路由页面全部白屏但根页面正常，最可能的原因是？",
-      "options": ["子页面没导出命名组件", "某层 layout 接收了 children 却没有渲染它", "缓存未清除", "没装 react-router 依赖"],
+      "options": [
+        "子页面没导出命名组件",
+        "某层 layout 接收了 children 却没有渲染它",
+        "缓存未清除",
+        "没装 react-router 依赖"
+      ],
       "answer": 1,
       "explanation": "layout 不渲染 {children}，子段内容无处安放——最常见白屏 bug（呼应 next-routing 第六节；Next 也根本不需要装 react-router）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "Next App Router 里新增一个页面，需要像小程序那样去某个 json 注册吗？",
-      "options": ["需要，在 app/routes.json 注册", "需要，在 next.config.ts 声明", "不需要，文件放进去路由即生效", "不需要，但必须重启 dev server"],
+      "options": [
+        "需要，在 app/routes.json 注册",
+        "需要，在 next.config.ts 声明",
+        "不需要，文件放进去路由即生效",
+        "不需要，但必须重启 dev server"
+      ],
       "answer": 2,
       "explanation": "约定优于配置、零注册；对照小程序 app.json pages 数组的老规矩（呼应 next-routing 第一节、mp-directory）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "要为某一段写 GET/POST 接口（如 /api/stats），应创建？",
-      "options": ["该段的 route.ts", "该段的 page.tsx 里导出 fetch", "middleware.ts", "server/api/stats.ts"],
+      "options": [
+        "该段的 route.ts",
+        "该段的 page.tsx 里导出 fetch",
+        "middleware.ts",
+        "server/api/stats.ts"
+      ],
       "answer": 0,
       "explanation": "route.ts 是同一路由段的处理器，导出 HTTP 方法函数即可（呼应 next-routing 第一节表、L4 next-route-handlers 细讲）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " App Router 里想让 /blog 与 /blog/[id] 共用一套侧栏布局但 URL 里不出现额外段，最合适的机制是？",
+      "options": [
+        "把侧栏塞进每个 page",
+        "用路由组 app/(blog)/ 把 blog 相关文件聚到一个不映射到 URL 的目录；或在 blog/layout.tsx 里放侧栏——路由组只影响组织不影响 URL 段",
+        "在 middleware 里 rewrite",
+        "在 next.config 里配 redirects"
+      ],
+      "answer": 1,
+      "explanation": "路由组 (folder) 与私有前缀 _folder 都是\"影响组织、不改 URL\"的机制。要\"侧栏共用\"，最本质的答案是嵌套 layout（layout.tsx 会包其下所有子段），路由组只解决\"代码归属\"；两者常配合使用——按域切分组、按嵌套 layout 复视图。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 同一个 app/docs/[id]/ 目录里同时创建 page.tsx 与 route.ts，Next 会？",
+      "options": [
+        "优先 page.tsx，忽略 route.ts",
+        "冲突——page（页面）与 route（Route Handler）在同一 URL 上互斥，构建/启动直接报错",
+        "合并成同一 handler",
+        "按 HTTP 方法分流"
+      ],
+      "answer": 1,
+      "explanation": "一个路径要么是页面（返回 HTML/RSC）要么是 API（返回 Response），二者不能并存。想要\"页面 + 相关接口\"，把 route 放子段（如 app/docs/[id]/route/route.ts 或 app/api/docs/[id]/route.ts）。这是 App Router 路由段语义的基础约束。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 根 layout（app/layout.tsx）的\"铁律\"是？",
+      "options": [
+        "可选包含 <html><body>",
+        "必须包含 <html> 与 <body> 标签并渲染 children——因为它是全站唯一的 HTML shell 生产者；且不能再被上层 layout 包裹",
+        "不能有 metadata",
+        "必须是 'use client' 边界"
+      ],
+      "answer": 1,
+      "explanation": "根 layout 直接对应浏览器文档的骨架，<html><body> 与全局 metadata/lang/字体注入都发生在这；Next 用它作为 SSR/SSG 输出的 HTML 模板根。缺失或写成非根布局会导致构建报错或首屏 HTML 不完整。"
     }
   ]
 }

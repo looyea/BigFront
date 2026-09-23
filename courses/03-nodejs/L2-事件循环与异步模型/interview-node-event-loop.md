@@ -1,6 +1,6 @@
 # node-event-loop 面试题精选
 
-> 共 12 题，覆盖 **三层队列 / 六阶段与 poll / 线程池 / 顺序判断 / nextTick 陷阱 / 卡顿与退出** 六类。
+> 共 15 题，覆盖 **三层队列 / 六阶段与 poll / 线程池 / 顺序判断 / nextTick 陷阱 / 卡顿与退出** 六类。
 
 ---
 
@@ -113,3 +113,25 @@ console.log('sync');
 四条主线：① **定位**：Node 单线程跑 JS，靠事件循环 + libuv 异步 I/O 支撑高并发（区分 CPU/IO 密集）；② **结构**：同步 → nextTick → 微任务 → 六阶段（timers/pending/idle-prepare/**poll**/check/close），阶段间排空 tick+微任务；③ **底层**：网络 I/O 走内核异步不占线程池，fs/dns/crypto/zlib 走 libuv 线程池（默认 4）；④ **易错点**：nextTick vs setImmediate vs 递归饿死、timer 是"至少等待"、进程无活跃句柄才退出、CPU 密集会卡死整个循环。能把"顺序判断题 + 为什么"讲透，比背阶段名更能体现理解（呼应本课全篇、node-basics、node-workers）。
 
 **来源**：Node.js 官方 Event Loop 文档; 社区 — "explain the node event loop interview"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 给一条「事件循环延迟」诊断决策树：CPU 高/低分别说明什么、下一步查什么？
+
+指标先行：perf_hooks monitorEventLoopDelay 或 `node --inspect` 的 loop 面板拿 p99 延迟，CLI 观测用 clinic.js（event-loop 冒烟枪）/0x。分叉：① **CPU 高**=主线程被同步占（大循环、序列化、正则回溯、同步 fs）→ --cpu-prof/clinic flame 找热点栈；② **CPU 低但 loop 延迟高**=等待异常：libuv 线程池饥饿（并发大文件/crypto 满屏）、信号/句柄风暴（每轮回调巨多摊薄时间片）、GC 长暂停（堆濒临上限，看 --trace-gc）；③ 都不明显→ 外部依赖慢（DB 池耗尽表现为 await 堆积，查活跃句柄数 process._getActiveHandles 与队列长度）。口诀「延迟高先分忙与饿」，修复方向完全不同（挪计算 vs 调池 vs 限并发）。
+
+**来源**：Node 官方《Diagnostic User Guide: Event Loop Delay》与 perf_hooks monitorEventLoopDelay 文档；clinic.js event-loop 工具页。
+
+### 14. nextTick 为什么在微任务之前？这个「优先级特权」为什么被设计成不可递归？
+
+nextTick 有独立队列且在**当前宏任务结束、微任务之前**清空——历史动机：CJS 模块加载/事件发射需要「本 tick 立即续跑」的确定性（早于 Promise 存在的时代产物，官方现建议新代码用 queueMicrotask）。微任务在其后（Promise 回调、await 续体）。防饿死：nextTick 递归会在微任务之前无限自我续约 → I/O 永不处理，Node 对 nextTick 队列**单轮不重复补充**（每轮清空一次，微任务同理按规范跑空但微任务里再 spawn 微任务同样能饿死 loop——浏览器/Node 都有此风险）。判定口径：递归 nextTick/微任务=同步死循环的伪装形态（本关题干考过），需要分片让位就 setImmediate 或 timer 让步。
+
+**来源**：Node 官方《nextTick and microphone queue 顺序》process 文档；TC39 微任务语义与「starvation」讨论。
+
+### 15. 六个阶段背下来只是开始——说说 poll 阶段的完整决策流程与「什么时候会卡在 poll」。
+
+poll 决策两步：① 有已到期 I/O 回调 → 循环执行直到队列空或达到系统上限；② 队列空 → **阻塞等待**回调（epoll_wait）：若有 setImmediate 待跑则提前结束等待进 check；若代码调度了近 timer，Node 计算 sleep 先到 timers 再回到 poll。卡住的三种含义：a) 真在等网络/磁盘（正常空闲，不叫延迟）；b) 大量 readable/connection 回调排队（惊群/连接风暴）——单轮太长；c) 回调里同步重活让 poll「名义在跑实则没收新事件」。观测：`--inspect` 的 Performance 面板、`node --cpu-prof` 的 idle 栈占比。理解 poll 才能解释「I/O 回调里 setImmediate 优先于 setTimeout(0)」（本关经典顺序题的机理层）。
+
+**来源**：Node 官方《The Node.js Event Loop, timers, and process.nextTick》图解；libuv 文档 uv_run 阶段说明。

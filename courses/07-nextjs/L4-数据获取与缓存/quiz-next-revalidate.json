@@ -6,15 +6,25 @@
       "id": "q1",
       "type": "single",
       "prompt": "页面里读了一行 cookies()，其他什么都没改，该页默认会变成？",
-      "options": ["仍然 SSG", "自动转为动态渲染（每次请求现渲）", "构建直接失败", "变成纯 CSR"],
-      "answer": 1,
+      "options": [
+        "仍然 SSG",
+        "构建直接失败",
+        "变成纯 CSR",
+        "自动转为动态渲染（每次请求现渲）"
+      ],
+      "answer": 3,
       "explanation": "cookies 是动态反应物，静态优先被放弃（呼应 next-revalidate 第二节、render-modes 推断表）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "export const revalidate = 60 作用于页面时，含义是？",
-      "options": ["页面每 60 秒由定时器主动重build", "该段缓存产物 60s 后视为过期，首个过期请求拿旧页并触发后台重渲染", "所有 fetch 强制 60s 超时", "浏览器轮询间隔 60s"],
+      "options": [
+        "页面每 60 秒由定时器主动重build",
+        "该段缓存产物 60s 后视为过期，首个过期请求拿旧页并触发后台重渲染",
+        "所有 fetch 强制 60s 超时",
+        "浏览器轮询间隔 60s"
+      ],
       "answer": 1,
       "explanation": "SWR 语义：翻新由请求触发而非定时器（呼应 next-revalidate 第三节生命周期）。"
     },
@@ -22,7 +32,12 @@
       "id": "q3",
       "type": "single",
       "prompt": "调用 revalidatePath('/blog') 之后，紧接着的下一个 /blog 请求拿到？",
-      "options": ["必定是新渲染的页面", "可能仍是旧页：失效是异步的，后台翻新完成前旧页继续服务", "503 等待中", "空白页直到完成"],
+      "options": [
+        "必定是新渲染的页面",
+        "可能仍是旧页：失效是异步的，后台翻新完成前旧页继续服务",
+        "503 等待中",
+        "空白页直到完成"
+      ],
       "answer": 1,
       "explanation": "异步失效+永不阻塞是 ISR 的设计底色，强一致场景需另行设计（呼应 next-revalidate 第三节特性②）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "PPR（Partial Prerendering）的产物形态是？",
-      "options": ["整页静态 HTML", "整页动态渲染", "构建期静态壳 + 请求时流式补齐的动态 hole", "只生成 RSC Payload 不生成 HTML"],
+      "options": [
+        "整页静态 HTML",
+        "整页动态渲染",
+        "构建期静态壳 + 请求时流式补齐的动态 hole",
+        "只生成 RSC Payload 不生成 HTML"
+      ],
       "answer": 2,
       "explanation": "SSG 的壳走 CDN，动态部分以 Suspense hole 流式补——一页并存两种模式（呼应 next-revalidate 第四节）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "force-static 配置下页面里的 cookies() 调用会？",
-      "options": ["正常读取", "返回空值桩（静默失效），因此危险", "抛运行时异常", "自动降级为 ISR"],
+      "options": [
+        "正常读取",
+        "返回空值桩（静默失效），因此危险",
+        "抛运行时异常",
+        "自动降级为 ISR"
+      ],
       "answer": 1,
       "explanation": "强制静态=拒绝一切动态来源，反应物被桩化——所以要用它必须自查代码（呼应 next-revalidate 第一节）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "revalidateTag 之后浏览器端预取过的旧 payload（Router Cache）怎么办？",
-      "options": ["服务端 tag 会远程清空所有浏览器内存", "不会即时同步，靠客户端 TTL/版本轮换自然过期", "自动触发所有标签页 refresh", "tag 其实也写进了 localStorage"],
+      "options": [
+        "服务端 tag 会远程清空所有浏览器内存",
+        "不会即时同步，靠客户端 TTL/版本轮换自然过期",
+        "自动触发所有标签页 refresh",
+        "tag 其实也写进了 localStorage"
+      ],
       "answer": 1,
       "explanation": "服务端失效与浏览器内存缓存是两个世界，跨标签脏读由此而来（呼应 next-revalidate 第五节、link-router 面试 11）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "段配置里 runtime: 'edge' 意味着什么？",
-      "options": ["部署到离用户最近的机房且用轻量运行时（部分 Node API 不可用）", "启用实验性边缘渲染库", "页面走 CDN 缓存", "使用 WebAssembly 渲染"],
+      "options": [
+        "部署到离用户最近的机房且用轻量运行时（部分 Node API 不可用）",
+        "启用实验性边缘渲染库",
+        "页面走 CDN 缓存",
+        "使用 WebAssembly 渲染"
+      ],
       "answer": 0,
       "explanation": "Edge=V8  isolate 模型，无 Node API（fs 等），middleware 默认就是它（呼应 next-revalidate 第一节、L5 middleware、next-deploy）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " revalidatePath 与 revalidateTag 的失效粒度差异是？",
+      "options": [
+        "前者清 CDN、后者清内存，能力等价",
+        "revalidatePath 按 URL（可精确/按段层级）作废旧渲染，触发点是\"哪些页面\"；revalidateTag 按数据标签作废 fetch 缓存并连带影响所有渲染了该数据的页面，触发点是\"哪份数据\"——tag 粒度更贴数据依赖图、但要求取数处纪律性地打 tag",
+        "revalidateTag 更快所以推荐全用 tag",
+        "两者都只是提示，不保证生效"
+      ],
+      "answer": 1,
+      "explanation": "Path 思维是\"页面视角\"（改价了我刷哪 12 个页），Tag 思维是\"数据视角\"（price 这份数据变了）。大规模站点里 path 清单会失控，tag 把失效面收敛到数据依赖本身，代价是 tag 命名治理。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 内容平台 CMS 发布一篇文章后，想让 Next 站\"尽快且不打爆服务器\"地更新，最佳组合是？",
+      "options": [
+        "把 revalidate 设成 5 秒全站轮询",
+        "on-demand：发布回调里 revalidateTag(文章/列表) + 相关页保留较长 TTL 兜底 + 再生用 stale-while-revalidate（先喂旧页后台翻新）+ 失效调用放 after() 异步重试",
+        "每次发布全站重新 build",
+        "关掉缓存全 SSR"
+      ],
+      "answer": 1,
+      "explanation": "on-demand 精确失效解决\"快\"，SWR 解决\"不打爆\"（第一位访客拿旧页、后台再生），长 TTL 兜底解决\"漏触发最终也会新\"；revalidate=5s 会让缓存几乎形同虚设，全站 build 是十分钟级的灾难。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 首页有\"每秒变动的库存数\"与\"每天变动的推荐位\"，用缓存策略的正确拆法是？",
+      "options": [
+        "整页 revalidate=60 折中",
+        "整页不缓存最安全",
+        "页面走 ISR/PPR：推荐位进全路由缓存（tag/TTL 按天），库存数放进客户端动态岛或 Suspense 边界内 no-store 取数——一页之内两种新鲜度各走各的层",
+        "库存数也进 SSG 构建产物"
+      ],
+      "answer": 2,
+      "explanation": "缓存设计的单位是\"数据块的新鲜度\"而非\"页面\"：静态壳预渲染 + 动态岛屿实时取，PPR/流式就是为这种混合页生的。一刀切要么牺牲缓存红利要么数据撒谎。"
     }
   ]
 }

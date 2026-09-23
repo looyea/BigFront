@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "build.target 主要降级的是什么？",
       "options": [
-        "运行时 API（如 fetch、Promise）",
         "JS 语法特性（如可选链、class fields）",
+        "运行时 API（如 fetch、Promise）",
         "CSS 样式",
         "网络请求"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "build.target 用 esbuild 做语法转译。API polyfill 不在其职责内，需 core-js/plugin-legacy。"
     },
     {
@@ -22,10 +22,10 @@
       "options": [
         "自动 polyfill 正常运行",
         "构建报错",
-        "运行时 TypeError: ... is not a function（esbuild 不补 API）",
-        "自动降级为索引访问"
+        "自动降级为索引访问",
+        "运行时 TypeError: ... is not a function（esbuild 不补 API）"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "at() 是 ES2022 运行时 API 不是语法，esbuild 只降语法不 polyfill API → 必须手动引 core-js 或用 legacy 插件。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "@vitejs/plugin-legacy 生成的双产物靠什么机制分发给不同浏览器？",
       "options": [
         "Cookie",
-        "type=\"module\" 与 nomodule 双 script 标签",
         "localStorage",
+        "type=\"module\" 与 nomodule 双 script 标签",
         "URL 参数"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "支持 ESM 的浏览器执行 type=module 忽略 nomodule；老浏览器反之执行 nomodule 里的 SystemJS ES5 产物。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "降得越低，越多现代语法被转成冗长 ES5 helper → 体积涨、性能降。应基于真实用户数据取舍。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " build.target 的合法取值形态包括？",
+      "options": [
+        "只有 es5/es6",
+        "esXXXX 语法档、chromeXX/safariXX 等引擎档、数组多目标、以及 Vite 7 默认 baseline-widely-available——引擎档能做按特性的精细决策（只降级某引擎缺的那几个特性）",
+        "必须是数字",
+        "跟 tsconfig 同格式"
+      ],
+      "answer": 1,
+      "explanation": "按引擎声明的隐藏红利：Vite/esbuild 能做特性级差集降级，比\"一刀切到 ES 版本\"产物更小。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " css.target 与 build.target 的关系是？",
+      "options": [
+        "自动相同",
+        "独立配置——CSS 的降级面（嵌套、颜色函数等）与 JS 语法是两个演进曲线，默认都走 browserslist/基线但可分别钉（比如 JS 能等、CSS 新特性先降）",
+        "CSS 不降级",
+        "后者包含前者"
+      ],
+      "answer": 1,
+      "explanation": "\"JS 兼容够了但 CSS 新语法炸了\"是 2024 后的新型兼容事故（嵌套/@layer 在旧引擎静默失效）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " plugin-legacy 生成的 legacy chunk 在老浏览器里靠什么机制被加载？",
+      "options": [
+        "UA 嗅探",
+        "<script nomodule> 标签——支持 ESM 的浏览器忽略 nomodule 脚本，不支持的执行它（SystemJS 风格的 IIFE chunk 与 modern 的 ESM 天然分流）",
+        "service worker 分发",
+        "CSS hack"
+      ],
+      "answer": 1,
+      "explanation": "nomodule 是 HTML 层的双通道协议：现代/legacy 两组 script 各留标记，浏览器自己选门进。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " polyfill.io 事件的教训对应到 Vite 项目的正确姿势是？",
+      "options": [
+        "禁用所有 polyfill",
+        "polyfill 来自自己构建产物/可信源（core-js 按 usage 打进 bundle 或自托管），不把\"运行时下发 JS\"外包给第三方脚本域名——供应链信任问题不是性能问题",
+        "只用 IE polyfill",
+        "换 cdnjs"
+      ],
+      "answer": 1,
+      "explanation": "投毒事件的核心是\"域名+第三方可控脚本注入\"两条叠加；自托管 + 锁定版本 + SRI 三件拆掉任何一条都难再重演。"
     }
   ]
 }

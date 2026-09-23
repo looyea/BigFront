@@ -1,48 +1,136 @@
 {
-  "lesson": "solidstart-overview",
-  "title": "SolidStart 总览 · 自测",
+  "title": "solidstart-overview 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "新建一个 SolidStart 项目的官方脚手架命令是？",
-      "options": ["npm create vite solid", "npm init solid", "npx solid-start new", "npm gen solid"],
+      "id": "q1",
+      "type": "single",
+      "prompt": "新建一个 SolidStart 项目的官方脚手架命令是？",
+      "options": [
+        "npm create vite solid",
+        "npm init solid",
+        "npx solid-start new",
+        "npm gen solid"
+      ],
       "answer": 1,
-      "explain": "v2 文档：create-solid 系列入口（npm init solid / pnpm create solid / bun create solid…），随后按提示选模板。"
+      "explanation": "v2 文档：create-solid 系列入口（npm init solid / pnpm create solid / bun create solid…），随后按提示选模板。"
     },
     {
-      "q": "SolidStart v2 的应用配置住在哪个文件？",
-      "options": ["solid.config.ts", "vinxi.config.ts", "vite.config.ts 的 solidStart() 插件", "app.config.ts"],
+      "id": "q2",
+      "type": "single",
+      "prompt": "SolidStart v2 的应用配置住在哪个文件？",
+      "options": [
+        "solid.config.ts",
+        "vinxi.config.ts",
+        "vite.config.ts 的 solidStart() 插件",
+        "app.config.ts"
+      ],
       "answer": 2,
-      "explain": "v2 配置面收敛到 vite.config.ts：plugins: [solidStart()]，可带 middleware、devOverlay 等选项。（v1 时代才跑在 Vinxi 上。）"
+      "explanation": "v2 配置面收敛到 vite.config.ts：plugins: [solidStart()]，可带 middleware、devOverlay 等选项。（v1 时代才跑在 Vinxi 上。）"
     },
     {
-      "q": "app.tsx 在项目里的角色是？",
-      "options": ["HTML 根：客户端与服务端共同的渲染外壳", "只服务端用的入口", "路由表定义文件", "全局样式入口"],
+      "id": "q3",
+      "type": "single",
+      "prompt": "app.tsx 在项目里的角色是？",
+      "options": [
+        "HTML 根：客户端与服务端共同的渲染外壳",
+        "只服务端用的入口",
+        "路由表定义文件",
+        "全局样式入口"
+      ],
       "answer": 0,
-      "explain": "官方：app.tsx 是应用的 HTML root，两端渲染共用的 shell，内部挂 Router 与 FileRoutes。"
+      "explanation": "官方：app.tsx 是应用的 HTML root，两端渲染共用的 shell，内部挂 Router 与 FileRoutes。"
     },
     {
-      "q": "Router 的 root 组件里不把 props.children 包进 Suspense，官方预告会出现什么？",
-      "options": ["路由 404", "SEO 降级", "服务端函数不执行", "一些意外的水合错误"],
+      "id": "q4",
+      "type": "single",
+      "prompt": "Router 的 root 组件里不把 props.children 包进 Suspense，官方预告会出现什么？",
+      "options": [
+        "路由 404",
+        "SEO 降级",
+        "服务端函数不执行",
+        "一些意外的水合错误"
+      ],
       "answer": 3,
-      "explain": "每个路由组件都被自动 lazy 加载，没有 Suspense 兜住异步边界，官方明说可能出现意外的 hydration 错误。"
+      "explanation": "每个路由组件都被自动 lazy 加载，没有 Suspense 兜住异步边界，官方明说可能出现意外的 hydration 错误。"
     },
     {
-      "q": "import { db } from \"~/lib/db\" 里的 ~ 解析到哪里？",
-      "options": ["项目仓库根", "node_modules", "应用根 src/（即 src/lib/db）", "public/"],
+      "id": "q5",
+      "type": "single",
+      "prompt": "import { db } from \"~/lib/db\" 里的 ~ 解析到哪里？",
+      "options": [
+        "项目仓库根",
+        "node_modules",
+        "应用根 src/（即 src/lib/db）",
+        "public/"
+      ],
       "answer": 2,
-      "explain": "SolidStart 内置 ~ 别名指向 appRoot，默认下 ~/lib/db 即 src/lib/db，免写相对爬楼。"
+      "explanation": "SolidStart 内置 ~ 别名指向 appRoot，默认下 ~/lib/db 即 src/lib/db，免写相对爬楼。"
     },
     {
-      "q": "src/routes 下一个文件被识别为 API 路由的条件是？",
-      "options": ["放在 api 子目录即可", "导出 HTTP 方法名（如 GET、POST）", "default export 一个异步函数", "文件名以 .api.ts 结尾"],
+      "id": "q6",
+      "type": "single",
+      "prompt": "src/routes 下一个文件被识别为 API 路由的条件是？",
+      "options": [
+        "放在 api 子目录即可",
+        "导出 HTTP 方法名（如 GET、POST）",
+        "default export 一个异步函数",
+        "文件名以 .api.ts 结尾"
+      ],
       "answer": 1,
-      "explain": "v2 约定：default export 组件 = UI 路由；导出 HTTP 方法名 = API 路由。<FileRoutes /> 只收 UI 路由。"
+      "explanation": "v2 约定：default export 组件 = UI 路由；导出 HTTP 方法名 = API 路由。<FileRoutes /> 只收 UI 路由。"
     },
     {
-      "q": "关于开发期 toolbar（dev toolbar），正确的说法是？",
-      "options": ["它仅开发期存在、不进生产构建，可用 devOverlay:false 隐藏", "它生产也会显示", "它是浏览器扩展", "它只能看路由列表"],
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于开发期 toolbar（dev toolbar），正确的说法是？",
+      "options": [
+        "它仅开发期存在、不进生产构建，可用 devOverlay:false 隐藏",
+        "它生产也会显示",
+        "它是浏览器扩展",
+        "它只能看路由列表"
+      ],
       "answer": 0,
-      "explain": "v2 文档：开发期加一个检查应用错误与服务端函数调用的 toolbar，生产构建不含；solidStart({ devOverlay:false }) 可关。"
+      "explanation": "v2 文档：开发期加一个检查应用错误与服务端函数调用的 toolbar，生产构建不含；solidStart({ devOverlay:false }) 可关。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " entry-client.tsx 的职责是？ ",
+      "options": [
+        " 定义路由 ",
+        " 客户端启动入口：决定 hydrate 还是 render、把 root 挂到容器，可在此包 Provider 或做启动探测 ",
+        " 服务端中间件 ",
+        " 环境变量声明 "
+      ],
+      "answer": 1,
+      "explanation": " 它是客户端 bundle 的 main，SSR 下执行 hydrate、纯客户端模式下 render，是应用级 Provider 与启动逻辑的落点。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 同构组件里访问 window 的官方姿势是？ ",
+      "options": [
+        " typeof window === undefined 判断 ",
+        " 从 solid-js 导入 isServer 做分支（或把逻辑放进 onMount） ",
+        " try/catch 包所有代码 ",
+        " process.env 判断 "
+      ],
+      "answer": 1,
+      "explanation": " isServer 是框架级常量且构建期可摇树；onMount 则天然只跑浏览器，两把钥匙覆盖绝大多数场景。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " v2 里客户端调用服务端函数时的类型与调用桩由什么提供？ ",
+      "options": [
+        " 手写 d.ts ",
+        " 构建管线扫描指令自动生成：导入即得跨端函数签名（RPC 桩） ",
+        " 运行时反射 ",
+        " OpenAPI 文件 "
+      ],
+      "answer": 1,
+      "explanation": " vite 插件编译期抽取带指令的模块生成客户端 stub 与类型，参数返回值两端共享一份签名，这是其类型安全卖点。 "
     }
   ]
 }

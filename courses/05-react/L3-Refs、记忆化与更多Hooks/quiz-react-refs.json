@@ -9,17 +9,22 @@
       "options": [
         "每次渲染都是一个新对象",
         "改了 .current 会触发重渲染",
-        "组件生命周期内是同一引用，改 .current 不触发渲染",
-        "只能存 DOM 节点"
+        "只能存 DOM 节点",
+        "组件生命周期内是同一引用，改 .current 不触发渲染"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "ref 是跨渲染保持的可变盒子（呼应 react-refs 第一、二节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "要把滚动位置实时显示在页面上，应该用？",
-      "options": ["useState（因为它参与渲染）", "useRef（因为不想重渲染）", "全局变量", "useContext"],
+      "options": [
+        "useState（因为它参与渲染）",
+        "useRef（因为不想重渲染）",
+        "全局变量",
+        "useContext"
+      ],
       "answer": 0,
       "explanation": "会出现在输出里的值用 state；只是记一笔才用 ref（呼应 react-refs 第二节口诀）。"
     },
@@ -53,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "首帧渲染时 `inputRef.current` 通常是什么？",
-      "options": ["null（节点尚未挂载，访问前要判空）", "input 元素", "undefined 报错", "一个 Promise"],
+      "options": [
+        "null（节点尚未挂载，访问前要判空）",
+        "input 元素",
+        "undefined 报错",
+        "一个 Promise"
+      ],
       "answer": 0,
       "explanation": "挂载后 React 才填入节点（呼应 react-refs 第一、五节）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "定时器 id 不参与渲染、跨渲染保持，正好用 ref（呼应 react-refs 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "React 19 中回调 ref（给 ref 传函数）的新行为是？",
+      "options": [
+        "回调只在挂载时调用一次",
+        "挂载时用节点调用、卸载时用 null 调用；React 19 起回调还可「返回一个清理函数」，卸载时 React 会调用它，无需再手动处理 null 分支",
+        "回调不再支持返回函数",
+        "回调 this 指向 DOM"
+      ],
+      "answer": 1,
+      "explanation": "回调 ref 传统签名 `(node) => { ... }`，卸载收到 null。React 19 允许 `return () => {...}` 做清理，与 effect 的 cleanup 模型对齐，避免了「每次写 if(node) 挂 else 摘」的样板。这也是 forwardRef 被弱化的配套之一：函数组件现在可直接把 ref 当普通 prop 接收。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "关于「ref 何时才有值」，正确的是？",
+      "options": [
+        "render 阶段就能读到已挂载 DOM",
+        "refs 在 commit 阶段被 React 赋值/清空，渲染函数执行时读到的是「上一次提交」的值或 null；要基于 DOM 尺寸做同步布局，须在 useLayoutEffect 里读",
+        "ref.current 一旦赋值永不改变",
+        "ref 只能给原生 DOM 用"
+      ],
+      "answer": 1,
+      "explanation": "ref.current 的写入发生在提交阶段、渲染之后——所以「同一次 render 里 ref.current 尚未指向本帧 DOM」。测量/操作 DOM 的正确时机是 layout effect（绘制前、DOM 已就位）或事件处理器。这与本关「为什么不该在渲染阶段读写 ref」是一体两面。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "React 19 里让函数组件接收父传来的 ref，推荐写法是？",
+      "options": [
+        "仍必须外套 forwardRef",
+        "函数组件直接把 ref 作为普通 prop 接收 `function Input({ ref }) {...}`，forwardRef 不再是必需（被官方标注为可迁移的遗留 API）",
+        "用 context 传 ref",
+        "只能用类组件"
+      ],
+      "answer": 1,
+      "explanation": "React 19 把 ref 提升为常规 prop（不再被 JSX 特殊剥离），函数组件无需 forwardRef 即可拿到 ref；forwardRef 保留但官方建议新代码去掉这层包装。类组件本就能收 ref。这一变更顺带解决了「forwardRef 与 HOC/泛型组件配合别扭」的老痛点。"
     }
   ]
 }

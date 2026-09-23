@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "一个需要被用户频繁展开/收起、内容很重的面板，应优先用？",
-      "options": ["v-if", "v-show", "v-for", "v-once"],
-      "answer": 1,
+      "options": [
+        "v-show",
+        "v-if",
+        "v-for",
+        "v-once"
+      ],
+      "answer": 0,
       "explanation": "频繁切换用 v-show（只切 display，不反复销毁重建）（呼应 vue-conditional-list 第一节）。"
     },
     {
@@ -17,18 +22,23 @@
       "options": [
         "v-if 为假时节点仍在 DOM，只是隐藏",
         "v-show 切换会触发组件的 mounted/unmounted",
-        "v-if 为假时不渲染，切换会触发挂载/卸载",
-        "两者完全等价"
+        "两者完全等价",
+        "v-if 为假时不渲染，切换会触发挂载/卸载"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "v-if 惰性渲染并触发生命周期；v-show 一直渲染只切 CSS（呼应 vue-conditional-list 第一节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "登录/注册两个结构相似的表单用 v-if/v-else 切换，输入内容会串味。最佳修法？",
-      "options": ["改用 v-show", "给两者加不同的 key", "去掉 v-else", "用 computed 过滤"],
-      "answer": 1,
+      "options": [
+        "改用 v-show",
+        "去掉 v-else",
+        "给两者加不同的 key",
+        "用 computed 过滤"
+      ],
+      "answer": 2,
       "explanation": "加不同 key 强制 Vue 不复用同一 DOM，切换即重建（呼应 vue-conditional-list 第三节）。"
     },
     {
@@ -74,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "v-for 遍历对象 (v, k, i) 三个别名分别代表？",
-      "options": ["键、值、索引", "值、键、索引", "值、索引、键", "只能写一个"],
+      "options": [
+        "键、值、索引",
+        "值、键、索引",
+        "值、索引、键",
+        "只能写一个"
+      ],
       "answer": 1,
       "explanation": "对象遍历顺序为 value, key, index（呼应 vue-conditional-list 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "同一元素上同时写 v-for 和 v-if（Vue 3），实际执行结果是：",
+      "options": [
+        "v-if 先判定，false 则不渲染列表",
+        "v-if 优先级更高——它先执行且拿不到迭代变量（引用 item 会报错），官方要求用 template 包裹或 computed 过滤分离两者",
+        "谁先写谁执行",
+        "运行时报错"
+      ],
+      "answer": 1,
+      "explanation": "Vue 2 是 v-for 优先（两者都能访问但每 项 都 判），Vue 3 反转 成 v-if 优先——版本 行为 差异 是 面试 与 迁移 双 考点；「过滤 后 的 列表」永远 交给 computed（本关 过滤 题 的 正解 形态）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "v-for 的 key 用了 Math.random()，最准确的后果描述是：",
+      "options": [
+        "只是不好看",
+        "每次重渲染 key 全变 → 所有节点被当作新节点销毁重建（diff 全部失效）——比 index 作 key 更糟，列表动画/输入焦点/组件状态全部丢失",
+        "仅影响动画",
+        "Vue 会自动去重"
+      ],
+      "answer": 1,
+      "explanation": "key 的 契约=「同 一 数据 项 在 不同 渲染 中 key 稳定」；random 直接 撕 约：性能 跌 到 无 diff，状态 全 丢。与 index key 的 区别：index 是「错位 复用」（数据 换位 但 节点 不 换），random 是「全 重建」——两者 都 该 换 稳定 id（本关 index 题 的 对照 表）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "v-show 控制的元素初始值就是隐藏状态时，首屏渲染的代价是：",
+      "options": [
+        "零代价",
+        "v-show 仍会渲染并挂载元素（display:none），后续切换只是改样式；v-if 初始 false 则完全不渲染不编译进首屏——首屏体积敏感（移动端列表折叠区）优先 v-if",
+        "v-show 会跳过编译",
+        "两者完全等价"
+      ],
+      "answer": 1,
+      "explanation": "代价 方向 相反：v-if 贵 在 切换（销毁/创建），v-show 贵 在 初始（永远 渲染）——「频繁 切换 用 show，很少 显示 用 if」 的 口诀 从 这 来（本关 取舍 题 的 定量 版）。"
     }
   ]
 }

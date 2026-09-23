@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "SPA 里用 <RouterLink> 而不是普通 <a href> 的关键原因是？",
       "options": [
-        "RouterLink 更好看",
         "<a> 会触发整页刷新丢失 SPA 状态，RouterLink 做客户端导航不刷新",
+        "RouterLink 更好看",
         "<a> 不能被样式化",
         "两者完全等价"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "RouterLink 拦截点击走前端路由，避免整页加载（呼应 vue-router-basics 第三节）。"
     },
     {
@@ -21,26 +21,36 @@
       "prompt": "用 createWebHistory 时，用户直接刷新 /about 出现 404，通常因为？",
       "options": [
         "Vue Router 有 bug",
-        "服务器没有 /about 文件、未配置回退到 index.html",
         "组件没懒加载",
+        "服务器没有 /about 文件、未配置回退到 index.html",
         "没装 history 插件"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "HTML5 history 刷新会真发请求，需服务器 fallback（呼应 vue-router-basics 第二节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "想读当前路由的 query/params，用哪个 API？",
-      "options": ["useRouter", "useRoute", "router.push", "$attrs"],
-      "answer": 1,
+      "options": [
+        "useRouter",
+        "router.push",
+        "$attrs",
+        "useRoute"
+      ],
+      "answer": 3,
       "explanation": "useRoute 是只读的当前路由快照；useRouter 用于导航（呼应 vue-router-basics 第四节）。"
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": "登录后跳转到首页、且不希望用户\"后退\"回到登录页，应使用？",
-      "options": ["router.push", "router.replace", "router.back", "location.href="],
+      "options": [
+        "router.push",
+        "router.replace",
+        "router.back",
+        "location.href="
+      ],
       "answer": 1,
       "explanation": "replace 替换当前历史条目、不留后退项（呼应 vue-router-basics 第五节）。"
     },
@@ -74,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "router.push(...) 在导航被守卫取消时会怎样？",
-      "options": ["静默失败", "返回的 Promise 会 reject/中止", "抛同步异常崩溃", "自动重试"],
+      "options": [
+        "静默失败",
+        "返回的 Promise 会 reject/中止",
+        "抛同步异常崩溃",
+        "自动重试"
+      ],
       "answer": 1,
       "explanation": "push 返回 Promise，中断即 reject，需 catch（呼应 vue-router-basics 第五节、node-async-errors）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "同一组件的路由 /dict/A 与 /dict/B 之间切换时，希望「滚动位置各自记忆」，正确的认知是：",
+      "options": [
+        "浏览器自动处理",
+        "scrollBehavior 只按「导航类型+路由」维度记忆，同组件不同 params 默认被视为同一位置——要按 params 区分需把 key 融入 savedPosition 判定（to.params 对比）或给组件 :key 强制视为不同路由",
+        "用 scrollTo 轮询",
+        "localStorage 存位置"
+      ],
+      "answer": 1,
+      "explanation": "这 是 scrollBehavior 的 细 分 盲区：savedPosition 对 「同 一 页 面 身份」才 生效；列表-详 情 多 开/标 签 页产 品 形 态 下 「每 个 详情 页 各 自 滚 动」要 业务 自 建 映 射（本关 滚动 题 的 进阶 面，也 是 后台 tab 系统 常见 需 求）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "route 对象是响应式全局单例，组件里 `const id = route.params.id`（解引用）后 URL 再变，这个局部变量的值是：",
+      "options": [
+        "自动更新（route 是 ref）",
+        "定格在取值时的快照——解引用即失去响应，同路由组件复用场景不会随 URL 更新；要跟随变化必须保持 `route.params.id` 表达式在模板/computed/watch 中存活",
+        "变 undefined",
+        "抛错"
+      ],
+      "answer": 1,
+      "explanation": "与 Pinia 解构 丢 响应 是 同 一 族 陷阱（本包 pinia 题 的 路由 版）：`useRoute()` 返回 的 是 reactive 对象 不 是 ref，「解 构/取 值」都 快照 化。跨 路由 复用 组件 时 这 个 坑 会 以 「数据 是 上 一 个 id 的」形 式 出 现。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "多页签后台里想让「每个标签页各自的当前路由」可被 store 记录，最可靠的原料是：",
+      "options": [
+        "route.fullPath",
+        "route.fullPath 作 key + 组件 name 去重（同名组件多实例时 fullPath 才唯一）；也可用 RouterView 的 :key 配 自定 义 标 识——但 要 理 解 同 path 复用 实例 是 默认 行为，「标 签 身份」必须 业务 显 式 定 义",
+        "$route.matched.length",
+        "history.state"
+      ],
+      "answer": 1,
+      "explanation": "「组 件 不 重 新 挂 载」的 另一 面 就 是 标签 页 系统 的 身份 难题：/user/1 与 /user/2 是 同 一 实例，标签 若 按 组 件 分 就 只 有 一 张——按 fullPath 分 则 要 接 受 实 例 复用 的 数 据 重 取（本关 watch params 题 与 嵌套 关 的 交 界 实 战）。"
     }
   ]
 }

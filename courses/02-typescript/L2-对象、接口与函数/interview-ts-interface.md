@@ -1,6 +1,6 @@
 # ts-interface 面试题精选
 
-> 共 12 题，覆盖 **interface vs type / 声明合并 / 扩展方式 / 开放封闭 / 函数与可索引接口 / 选型** 六类。
+> 共 15 题，覆盖 **interface vs type / 声明合并 / 扩展方式 / 开放封闭 / 函数与可索引接口 / 选型** 六类。
 
 ---
 
@@ -117,3 +117,25 @@ class 可以 `implements` 一个对象类型的 **type 别名**（只要它解�
 部分合理但不全面。用 type 确实能覆盖绝大多数日常场景且心智统一，但 interface 有两个 type 暂时替代不了的能力：**声明合并**（增强第三方/全局类型、库的可扩展契约）与更友好的**具名报错/开放扩展**。一个健康的策略是：**默认用 type，需要"被合并/被扩展"的对象契约（尤其库作者）才用 interface**——把选择交给能力需求，而非站队。团队一致比选哪个更重要。
 
 **来源**：Matt Pocock — "type vs interface (2024)"; Effective TS — item 9; TS design discussions
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. interface 和 type 的完整差异清单？给一个团队的选型决策树。
+
+type 独占：联合/元组/原始别名/条件与映射/`infer`/泛型默认值（interface 也能带默认约束但少用）；interface 独占：**声明合并**（库扩展的正门）、`class implements` 报错更友好、extends 错误提示直指接口名。性能：历史上 interface 名义缓存更快，现代 TS 对 type 的展开已优化，大仓影响趋零。务实决策：对象契约且预期被第三方扩展（插件/主题配置）→ interface；其余（函数签名、联合、工具运算）→ type；团队只需一条规则「对象优先 interface，联合和一切非对象用 type」。
+
+**来源**：TS Handbook《Comparison: Interfaces / type aliases》；Type Challenges 社区对 open/closed 建模的讨论。
+
+### 14. 交叉类型 A & B 出现同名异型属性会怎样？怎么发现与防御？
+
+`{a: string} & {a: number}` 的 a 变 `string & number` = never（字面量场景）或不可能的交叉——属性还在、类型成 never，读它直接到处报错。经典事故：两个 mixin 接口各带 `size`（一个是 number 一个是函数）、第三方类型与自己的声明合并撞名。防御：合并前 `type Test = A["size"] & B["size"]` 目测 never；用 `Omit<A,"size"> & B` 显式仲裁；开 declaration merging 检查的 lint（eslint-plugin @typescript-eslint/consistent-type-definitions 管使用面）。运行时对象 merge 的坑在 spread（后覆盖前）而类型上仍是交叉——两套语义不对齐是根因。
+
+**来源**：TS Deep-Dive《Intersection Types》never 归约说明；React 社区 useTheme 配置交叉覆盖事故复盘文。
+
+### 15. "interface 是开放的、type 是封闭的"到底什么意思？什么时候这是安全考量？
+
+interface 声明合并=**可增量扩张**：库作者无法锁死用户往 Window/Express.Request/自定义配置接口里塞字段（augment 是特性）；但反过来，你发布的关键类型被依赖方偷偷 augment 可能破坏内部不变量——需要「封闭对象」时用 `type X = {...}`（同名合并会冲突报错，天然防篡改）。更硬的封闭是**私有 brand**：`interface Hidden { #priv: void }` 或函数返回匿名对象（结构可推断但无法命名 augment）。API 设计题：配置类型开放（留扩展点）、内部不变量类型封闭（防误改），选错方向是隐性事故源。
+
+**来源**：TS Handbook《Declaration Merging 的开放性》；sindresorhus《Typing (non-extensible) objects》实践帖。

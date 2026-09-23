@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "async 函数的返回值规则是：",
       "options": [
-        "原样返回",
         "永远包成 Promise（return 42 → Promise<42>；throw → rejected）",
+        "原样返回",
         "只能返回 Promise",
         "只能返回 undefined"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "async 函数总返回 Promise——即使 return 普通值或抛错。这是与同步函数最大的语义差别。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "以下代码有什么问题？\n\n```js\nconst a = await fetchA();\nconst b = await fetchB();\n```",
       "options": [
         "语法错误",
-        "**无依赖却串行**——总耗时 = a + b，应用 Promise.all 并行",
         "fetch 不能用 await",
-        "没有问题"
+        "没有问题",
+        "**无依赖却串行**——总耗时 = a + b，应用 Promise.all 并行"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "两者不互相依赖 → 可并行：`const [a, b] = await Promise.all([fetchA(), fetchB()])`。有依赖才必须串行。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "async 函数里的 throw 会变成它自己**返回的 Promise** 的 rejection，与外层同步栈无关。要接住得 `foo().catch(...)`。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`await` 暂停的准确含义是：",
+      "options": [
+        "阻塞主线程等待结果",
+        "只暂停**当前 async 函数**自身，外层同步代码继续跑到完",
+        "暂停整个微任务队列",
+        "让出给下一个宏任务"
+      ],
+      "answer": 1,
+      "explanation": "await 之后的代码被编译成续体挂到 promise 上，函数立刻返回 pending promise——调用栈照常展开，外层毫无感知。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "async 函数里 `return p` 与 `return await p` 的差别是：",
+      "options": [
+        "完全等价",
+        "return await 会多等一帧",
+        "return await 的外层 try/catch 能捕获 p 的 rejection；直接 return p 则错误抛给调用方",
+        "return p 非法"
+      ],
+      "answer": 2,
+      "explanation": "return p 时 promise 在函数边界外 reject，内部 catch 够不着；await 把 settle 拉回函数体内，try/catch 生效。性能差一 tick 可忽略，**语义**才是选择依据。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "以下代码打印顺序？\n\n```js\nasync function f() { console.log(\"a\"); await null; console.log(\"b\"); }\nf(); console.log(\"c\");\n```",
+      "options": [
+        "a b c",
+        "a c b",
+        "c a b",
+        "b a c"
+      ],
+      "answer": 1,
+      "explanation": "async 函数体**同步执行**到第一个 await 才让出：a → 函数返回 → c；await null（thenable 解包）排入微任务 → b。所以 a c b。"
     }
   ]
 }

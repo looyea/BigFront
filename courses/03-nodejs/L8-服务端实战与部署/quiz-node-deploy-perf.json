@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Dockerfile 里为什么先 COPY package*.json 并 npm ci，之后再 COPY 源码？",
       "options": [
-        "纯属个人习惯",
         "利用镜像层缓存：源码变化时不必重装依赖，构建更快",
+        "纯属个人习惯",
         "node_modules 不能被 COPY",
         "防止源码泄露"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "依赖层稳定→命中缓存；改代码只使源码层失效（呼应 node-deploy-perf 第一节）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "运行阶段用 `npm ci --omit=dev` 的收益是？",
       "options": [
         "装得更快但功能不变",
-        "生产镜像不含 devDependencies，体积更小、攻击面更小",
         "会自动跑测试",
+        "生产镜像不含 devDependencies，体积更小、攻击面更小",
         "能装更多包"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "只装运行时依赖，镜像精简、少漏洞面（呼应 node-deploy-perf 第一节、node-npm 第五节）。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "graceful shutdown 收到 SIGTERM 后的正确第一步通常是？",
       "options": [
         "process.exit(0)",
-        "server.close() 停止接受新连接、让在途请求 drain 完",
         "kill 所有子进程",
-        "重启机器"
+        "重启机器",
+        "server.close() 停止接受新连接、让在途请求 drain 完"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "先 close 停止接单再等在途完成，最后关资源退出（呼应 node-deploy-perf 第二节、node-cluster 第六节）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "受限 cgroup 下默认估算可能偏大→OOM；显式设小于限额（呼应 node-deploy-perf 第五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "K8s 里 readiness 与 liveness 探针在 Node 服务中的正确分工是：",
+      "options": [
+        "同一 URL 同检查",
+        "readiness=「现在能不能接流量」（依赖就绪/并发满载可临时 false）；liveness=「是否卡死」（检查事件循环活性探针，失败重启）——liveness 依赖外部 DB 会让 DB 抖动引发全量重启",
+        "都可选即可省",
+        "仅 startup 需要鉴权"
+      ],
+      "answer": 1,
+      "explanation": "经典事故模板：liveness 探「/health 里 ping 了 MySQL」→ DB 闪断 → 全 Pod 重启潮 → 恢复时雪崩；活性探针只测「主循环还能转」（如 setImmediate 心跳计数器被 handler 读取）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "preStop hook + terminationGracePeriodSeconds 的组合用于：",
+      "options": [
+        "加速镜像拉取",
+        "SIGTERM 前给「从负载均衡摘除」留窗口（sleep 几秒/调注销接口），优雅退出总时长要 < 宽限期否则被 SIGKILL 腰斩——顺序：摘流→排空→退出",
+        "滚动发布回滚",
+        "仅 debug 用"
+      ],
+      "answer": 1,
+      "explanation": "K8s「杀进程」与「摘 Endpoint」是并行竞态：不等摘除就关服务=发布期 502 尖刺（本关 graceful 完整步骤题的编排侧补丁）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "V8 堆快照对比找泄漏时，\"mRetainedSize 持续增长的对象\"里 Node 服务高频真凶是：",
+      "options": [
+        "字符串常量",
+        "闭包捕获大数组/请求上下文、未清理的定时器与事件监听、ALS store 在长生命周期对象上挂请求引用、Buffer 未释放（external 涨）——按「谁还引用着它」的 retention path 定位挂载点",
+        "GC 本身",
+        "npm 缓存"
+      ],
+      "answer": 1,
+      "explanation": "三张快照（基线→压测→空闲后）diff 增量对象 + 从 GC root 的 retain 路径反查；本包 events/workers 关的监听器与句柄清单是排雷地图。"
     }
   ]
 }

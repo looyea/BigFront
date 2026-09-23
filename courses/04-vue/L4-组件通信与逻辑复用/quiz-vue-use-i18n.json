@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "VueUse 函数参数普遍能同时接受 ref 和普通值，靠的是？",
-      "options": ["类型断言", "内部用 toValue/unref 归一读取", "自动深拷贝", "Proxy 拦截"],
+      "options": [
+        "类型断言",
+        "内部用 toValue/unref 归一读取",
+        "自动深拷贝",
+        "Proxy 拦截"
+      ],
       "answer": 1,
       "explanation": "MaybeRefOrGetter 参数 + toValue 归一，是 VueUse 全库统一契约（呼应 vue-use-i18n 第一节、vue-composables 第三节）。"
     },
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "vue-i18n 9 组合式 API 里，格式化数字 1234.5 为带货币符号的本地写法用哪个函数？",
-      "options": ["t()", "n()", "d()", "f()"],
+      "options": [
+        "t()",
+        "n()",
+        "d()",
+        "f()"
+      ],
       "answer": 1,
       "explanation": "n=number、d=datetime、t=翻译；n 底层是 Intl.NumberFormat（呼应 vue-use-i18n 第三、四节、01-es Intl）。"
     },
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "'错键不错文'——错误通道传 key，呈现层查词典（呼应 vue-use-i18n 第五节、vue-forms-validation 第四、五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "vue-i18n 里 $t 与 useI18n().t 的本质差别是：",
+      "options": [
+        "性能",
+        "legacy 模式（global scope 的 $t/$i18n 原型 注入）vs 组合式 local scope——useI18n 支持按组件隔离词条、TS 推导、tree-shaking（legacy 会带进全部格式化的兼容层代码），新 项 目 应 `legacy: false` 一 步 到 位",
+        "$t 已 移 除",
+        "t 只 能 查 静 态 键"
+      ],
+      "answer": 1,
+      "explanation": "legacy 的 真实 代价：global 词条 改 一 处 全 应 用 相 关 组 件 重 渲（legacy 响应 式 更 粗），且 混 用 两 套 API 时 composer 与 vm 的 状 态 同 步 有 已 知 坑——「为 什 么 官 方 推 legacy:false」（本关 legacy 题 的 机 制 层）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "文案「已选择 {count} 项」在中文下不需要复数变形，vue-i18n 的复数规则怎么处理中文？",
+      "options": [
+        "也写两条规则",
+        "中文等无复数语言用单一词条即可（|分隔的列表会按 CLDR 复数类别选择，zh 只有 other 一类，写多条反而永远命中 other）——复数交给 Intl.PluralRules 的语言事实，不是前端约定",
+        "运行时强制返回 index 0",
+        "用 v-if 判断"
+      ],
+      "answer": 1,
+      "explanation": "这 是 i18n 最 容 易 「按 英 语 习 惯 定 规 范」的 点：阿拉伯 语 有 双 数/多 数 六 类，俄语 三 类——`n item | n items` 结构 在 词 条 规 范 阶段 就 要 按 CLDR 设计（本关 复 数 题 的 语 言 学 底 座）；数字 格 式 同 理 交给 `Intl.NumberFormat`（复 数 语 法 与 本 地 数字 格 式 是 两 回 事）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "团队里「翻译由运营在平台维护、前端发版才生效」的痛点，工程解法是：",
+      "options": [
+        "让运营改代码仓库",
+        "词条作为运行时资源：翻译平台产出 JSON 按 locale 分片，应用启动/切语言时按需拉取并合并进 i18n 实例（mergeRepository/setLocaleMessage），构建期只保底包默认语言——发版与词条解耦",
+        "每次翻译都全量重打包",
+        "用 localStorage 缓存词条"
+      ],
+      "answer": 1,
+      "explanation": "动态 词 条 = 多 了 「缺 键 兜底 显示 什 么」（默 认 语 fallback）与 「词 条 版本 号/缓存 策 略」两 件 事；CI 里 的 键 完整性 检 查 要 改 成 **构建 包 vs 平台 全 量** 的 双 源 比对（本关 缺 键 拦截 题 的 动态 词条 变 体）。"
     }
   ]
 }

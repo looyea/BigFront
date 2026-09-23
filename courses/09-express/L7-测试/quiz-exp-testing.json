@@ -8,11 +8,11 @@
       "prompt": "测试金字塔推荐的健康比例是？",
       "options": [
         "大量 E2E + 少量单元测试",
-        "大量单元测试 + 适量集成测试 + 少量 E2E",
         "全部写集成测试最省事",
+        "大量单元测试 + 适量集成测试 + 少量 E2E",
         "各占三分之一"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "单元多快稳、集成适量、E2E 少而脆。全压 E2E 会慢且难维护。"
     },
     {
@@ -21,18 +21,23 @@
       "prompt": "为什么要把 app 定义和 server.listen 拆成两个文件？",
       "options": [
         "为了代码更短",
-        "让测试能 import app 用 supertest 在内存发请求，无需真开端口",
         "Express 强制要求",
-        "提升运行性能"
+        "提升运行性能",
+        "让测试能 import app 用 supertest 在内存发请求，无需真开端口"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "app.js 只组装导出、server.js 才 listen。测试拿到 app 即可测完整中间件链，不占用真实端口。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "单元测试 Service 层时 mock 掉 Repository，依赖的是哪种设计？",
-      "options": ["继承", "依赖注入（DI）", "全局单例", "静态方法"],
+      "options": [
+        "继承",
+        "依赖注入（DI）",
+        "全局单例",
+        "静态方法"
+      ],
       "answer": 1,
       "explanation": "有 DI（工厂 + composition root）才能把真 repo 换成 fake，不连 DB 测全部业务分支。"
     },
@@ -100,6 +105,32 @@
       ],
       "answer": 1,
       "explanation": "nock/msw 拦截 HTTP，测试快、稳定、可断言外部是否被正确调用，不依赖真实第三方。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 测试数据 builder/factory 解决的核心问题是？",
+      "options": [
+        "跑得更快",
+        "每个用例显式声明\"与断言相关的最小字段\"、其余给合理默认并按需覆盖——测试可读性的载体：一眼看出\"这个断言依赖数据的哪个属性\"",
+        "省磁盘",
+        "替代迁移"
+      ],
+      "answer": 1,
+      "explanation": "一大段硬编码 fixture 的测试改一处崩三处；builder 模式让测试数据\"意图显式化\"，这是可维护测试的第一设施。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 上千测试的 CI 变慢，第一优先的结构性优化通常是？",
+      "options": [
+        "删测试",
+        "按变更路由 + 并行分片：monorepo 受影响包才跑、无依赖关系的用例集分片到多 runner（配好测试间隔离），全量留到夜间——反馈时长决定测试文化",
+        "加 --forceexit",
+        "合并成一个大 e2e"
+      ],
+      "answer": 1,
+      "explanation": "\"永远等得起的全量测试\"不存在；快反馈是主路径、夜间全量兜底，这个双轨制是测试基础设施的骨架。"
     }
   ]
 }

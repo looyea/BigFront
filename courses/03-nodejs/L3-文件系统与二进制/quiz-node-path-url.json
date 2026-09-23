@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "path.join('a','..','b') 与 path.resolve('a','..','b') 的主要区别是？",
       "options": [
-        "完全一样",
         "join 只做拼接/规范化（结果可能仍是相对路径），resolve 返回基于 cwd 的绝对路径",
+        "完全一样",
         "resolve 只支持 Windows",
         "join 会访问文件系统"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "join 拼接并规范化、结果可相对；resolve 一定给出绝对路径（以 cwd 或首个绝对段为锚）（呼应 node-path-url 第一节）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "为什么不应在代码里手写 `dir + '/' + file` 拼路径？",
       "options": [
         "因为太慢",
-        "因为分隔符跨平台不同（win 用 \\），应交给 path.join 自动处理",
         "因为字符串不能拼接",
+        "因为分隔符跨平台不同（win 用 \\），应交给 path.join 自动处理",
         "因为 path 会修改文件"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Windows 用 \\、POSIX 用 /，手拼在别的平台会出错；path.join 用平台正确分隔符并顺带规范化（呼应 node-path-url 第一节）。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "在 ESM 模块里想拿到『当前文件所在目录』，正确写法是？",
       "options": [
         "直接用 __dirname（ESM 也有）",
-        "path.dirname(fileURLToPath(import.meta.url))",
         "process.cwd()",
-        "path.resolve('.')"
+        "path.resolve('.')",
+        "path.dirname(fileURLToPath(import.meta.url))"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "ESM 没有 __dirname，用 import.meta.url（file URL）经 fileURLToPath 还原再取 dirname（呼应 node-path-url 第二节、node-esm-cjs）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "os.EOL 给出当前平台换行符（win \\r\\n / posix \\n），用它保证本地打开不错行（呼应 node-path-url 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "path.posix 与 path.win32 的存在意义是：",
+      "options": [
+        "废弃别名",
+        "两套实现同时暴露——在 Windows 上按 POSIX 语义处理（如解析 URL 风格/容器内路径），或反向测试跨平台行为，不必运行时 if 判断",
+        "仅测试 mock 用",
+        "按 cwd 自动切换"
+      ],
+      "answer": 1,
+      "explanation": "默认 path 跟随 process.platform；显式选实现处理「本机是 Win 但路径属于 Linux 容器」这类场景（Docker 工具链常见），配合 path.toNamespacedPath 处理 Win 长路径前缀。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "new URL(\"config.json\", import.meta.url) 这个用法的意图是：",
+      "options": [
+        "拼接字符串省内存",
+        "以「当前模块文件」为基址解析出 file: URL，等价旧的 path.join(__dirname,...)——动态 import、fetch 本地资源统一走 URL 族",
+        "转义中文",
+        "校验合法文件名"
+      ],
+      "answer": 1,
+      "explanation": "URL 构造函数带 base 的语义照搬浏览器；配合 fileURLToPath 落回 fs，或以 URL 直接喂 import()/fetch——本关 pathToFileURL 题的「为什么」层。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "处理用户输入的下载文件名（可能含 ../../ 或绝对路径），正确的防御是：",
+      "options": [
+        "正则删掉 .. 即可",
+        "path.resolve(root, input) 后校验结果仍以 root 为前缀（sep 边界），或用 path.relative(root, target) 结果不以 .. 开头且非绝对",
+        "拒绝中文名",
+        "全部转 base64 再解码"
+      ],
+      "answer": 1,
+      "explanation": "「删 ..」可被 ....// 等重组绕过；前缀比较要带分隔符（/root 与 /root_evil 前缀陷阱）。这就是路径穿越（zip slip/static 服务逃逸）的标准堵法——本关安全题的落地式。"
     }
   ]
 }

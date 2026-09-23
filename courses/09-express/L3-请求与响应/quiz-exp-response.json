@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "res.sendFile() 为什么要配 root 选项？",
       "options": [
-        "提升性能",
         "限制文件访问范围——防路径穿越攻击（../../etc/passwd）",
+        "提升性能",
         "设置 Content-Type",
         "指定缓存策略"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "root 指定安全根目录 → Express 只允许访问该目录下的文件 → 攻击者无法用 .. 跳出。"
     },
     {
@@ -21,19 +21,24 @@
       "prompt": "res.vary('Accept-Encoding') 的作用是什么？",
       "options": [
         "强制压缩",
-        "告诉中间缓存：不同 Accept-Encoding 要分别缓存响应变体",
         "拒绝不支持 gzip 的客户端",
+        "告诉中间缓存：不同 Accept-Encoding 要分别缓存响应变体",
         "设置响应编码"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "CDN/Proxy 看 Vary → 知道同一个 URL 要按 gzip/br/identity 分别存储 → 不会把压缩版发给不支持的客户端。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "SSE (Server-Sent Events) 的 Content-Type 是？",
-      "options": ["application/json", "text/event-stream", "text/plain", "multipart/mixed"],
-      "answer": 1,
+      "options": [
+        "application/json",
+        "text/plain",
+        "multipart/mixed",
+        "text/event-stream"
+      ],
+      "answer": 3,
       "explanation": "SSE 用 text/event-stream + 每条消息 `data: xxx\\n\\n` 格式 → 浏览器 EventSource API 自动解析。"
     },
     {
@@ -61,6 +66,71 @@
       ],
       "answer": 1,
       "explanation": "finish = res.end() 后所有缓冲已 flush 到 OS socket → 日志/morgan 用此时机记录 statusCode+时间。不代表客户端收到。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": " Express 默认对 res.send 的响应生成 ETag，想关闭它应怎么做？",
+      "options": [
+        "响应头手动清空",
+        "app.set('etag', false) 全局关或 res.set('ETag', false) 单响应关——典型动机是响应体已含随机字段（时间戳/nonce）导致 ETag 永不同、或上游缓存层已负责协商缓存",
+        "删掉 etag 模块依赖",
+        "无法关闭"
+      ],
+      "answer": 1,
+      "explanation": "动态 body 配自动 ETag 是纯浪费（每请求 hash 一次永不命中），关闭动作要写进架构决策记录而不是随手一行。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " 返回 204 No Content 时的协议约束是？",
+      "options": [
+        "可以带短 body",
+        "不得有响应体也不应有 Content-Length——适合删除成功、轮询无新数据；Express 里 res.status(204).end() 即可，send(空串) 也是 204 语义但靠不住",
+        "必须带 Location",
+        "不能设缓存头"
+      ],
+      "answer": 1,
+      "explanation": "204 是\"成功且无内容\"的精确语义，比返回 {code:0,data:null} 的 200 更 REST——语义化状态码是 API 自描述性的一部分。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 对 HEAD 请求，Express 的行为是？",
+      "options": [
+        "自动 405",
+        "默认复用 GET handler 并剥离 body（只回头部）——若 GET 里做了计数/计费副作用，HEAD 会一起触发，需要时用 head 方法单独注册或短路",
+        "需要手动注册 head 才支持",
+        "返回 200 空头"
+      ],
+      "answer": 1,
+      "explanation": "HEAD 语义是\"只要元数据\"，自动支持是 connect router 的行为；副作用敏感接口（下载计数、按次计费）要显式审查。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " NDJSON 流式接口（逐行推送进度）里，让数据实时到达客户端的必要动作是？",
+      "options": [
+        "提高 buffer 上限",
+        "发送后显式 res.flush()（compression 中间件存在时）并确认代理层关闭响应缓冲（Nginx proxy_buffering off / X-Accel-Buffering: no 头）——否则首块前全被扣住",
+        "用 chunked 编码即可自动实时",
+        "设置 Connection: close"
+      ],
+      "answer": 1,
+      "explanation": "\"应用发了、代理攒着、客户端卡着\"是流式接口的头号联调问题，flush 与边缘缓冲配置要一起检查。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 一个请求经过多次 res.write 后，错误中间件还能给出 500 JSON 吗？",
+      "options": [
+        "可以，Express 会自动回滚响应",
+        "不能——首块写出即 headersSent，只能中止流（res.end/销毁连接）并让客户端按\"不完整流\"处理（NDJSON 以终止事件/尾标记判断完整性）",
+        "会自动转 206",
+        "改写响应头重发"
+      ],
+      "answer": 1,
+      "explanation": "流式响应的错误预算要前置：首块前失败走标准错误链，首块后失败走协议内错误事件——设计流协议时就要留这个位置。"
     }
   ]
 }

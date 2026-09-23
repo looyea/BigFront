@@ -1,6 +1,6 @@
 # ts-publish 面试题精选
 
-> 共 12 题，覆盖 **产物形态 / package.json 指向 / 双包与模块解析 / 类型打包 / 版本与契约 / 发布工程与安全** 六类。
+> 共 15 题，覆盖 **产物形态 / package.json 指向 / 双包与模块解析 / 类型打包 / 版本与契约 / 发布工程与安全** 六类。
 
 ---
 
@@ -111,3 +111,25 @@ Node 与 TS 对 `exports` 的**条件做有序匹配，先匹配先赢**。TS �
 ① **账号侧**：开 **2FA**（发布需 OTP），更好是用 **npm Trusted Publishing / OIDC provenance**（CI 里免长期 token、并能生成可验证的"这个包由这个仓库这次 CI 发布"证明，防投毒）；② **产物侧**：`files` 白名单最小化、发布前 `npm pack --dry-run` + `publint`/`attw` 验收，别把密钥/源码误发（呼应第 11 题）；③ **依赖侧**：锁定并审查依赖（lockfile、`npm audit`、避免幽灵依赖被劫持）、`provenance` 可追溯。这与后端部署的 CI/CD 安全同源（呼应 Express L8 部署、Express L7 CI）。核心心态：**发布即供应链，一个包被劫持能波及所有下载者**（2021 起多起事件）。
 
 **来源**：npm — "Trusted Publishing / provenance"; GitHub — "npm supply chain attacks guidance"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 类型入口的三代演进：types 字段 → typings → exports.types 条件，今天的正确姿势？
+
+历史：`types`/`typings`（TS 1.x 时代，顶层字段）→ DT 时代 @types 兜底 → 现代：`exports` 每个条件**内嵌 types 且必须放最前**（`{types:"./dist/index.d.ts", import:"...", require:"..."}`）+ 顶层 `types` 保留给老解析器兼容。姿势清单：types 条件先于 import/require/default；按格式双发 d.cts/d.mts；`moduleResolution node16/bundler` 消费端才会走 exports；typesVersions 只服务旧 TS（<4.7）消费者，新包能不打就不打。自检：attw 跑 ESM/CJS × TS 四种解析模式矩阵。
+
+**来源**：TS 5.x《module resolution: exports 中 types 条件》文档；attw 官方矩阵说明。
+
+### 14. 发布 CI 上，类型质量闸门按什么顺序摆？
+
+构建后、发布前串四关：① `publint`（package 规范：exports/files/types 完整性）；② `attw --pack .`（各解析模式可达性——ESM 包最易翻车处）；③ 类型测试（tsd/expect-type 断言导出签名形状）；④ API 快照（`@microsoft/api-extractor` 或 ts-api-measurer，diff 即评审对象）；再加体积（size-limit）。触发层：PR 跑全链 + main 分支 npm provenance 发布（OIDC 无 token）。加分：changesets 的「type check 失败 block release」+ 发布 dry-run（npm pack）进制品扫描。目标：把「类型破坏」拦在版本固化前。
+
+**来源**：publint/attw/api-extractor 各自 CI 集成文档；npm provenance 发布指南。
+
+### 15. "只改类型不改运行时"能不能发 patch？给一个可辩护的判断框架。
+
+看「消费者可观察行为」：① 类型**放宽**（加可选、union 扩成员、参数变宽）→ patch（旧代码仍编译）；② 类型**收紧/删除**（去 any、删字段、可选变必填）→ major（下游可能编译失败），哪怕运行时字节不变；③ 修复型（any→unknown 之外的精确化、错误签名纠正）：DT 惯例算 patch，但严肃 SDK 走 minor + CHANGELOG 显著标注「类型收紧」+ 提供 `// @ts-expect-error` 迁移清单。框架：把「消费者的 tsc 会不会红」当唯一判据；配 changeset 模板强制「type-only change 必答 impact」。
+
+**来源**：Semantic Versioning FAQ（类型 API 立场）；DefinitelyTyped 版本策略文档 + TypeScript 博客「types are public API」讨论。

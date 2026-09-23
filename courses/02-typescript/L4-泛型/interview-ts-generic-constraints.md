@@ -1,6 +1,6 @@
 # ts-generic-constraints 面试题精选
 
-> 共 12 题，覆盖 **extends 约束 / keyof / 索引访问 / 约束关联 / 构造器令牌 / 拓宽抑制** 六类。
+> 共 15 题，覆盖 **extends 约束 / keyof / 索引访问 / 约束关联 / 构造器令牌 / 拓宽抑制** 六类。
 
 ---
 
@@ -106,3 +106,25 @@ function setProp<T, K extends keyof T>(o: T, k: K, v: T[K]) { o[k] = v; }
 实践准则：① 一层约束一层职责——先用 `extends` 限定输入形状，再用条件类型基于该形状做**窄范围**计算，别把三层条件塞一行；② 把中间结果**命名**为独立 `type`（`type Core<T> = ...` 再喂给下一步），报错时可逐层 hover 检查；③ 避免在约束里做复杂条件（TS 对约束位置的推断能力弱于别名位置）；④ 深嵌套会触发"Type instantiation is excessively deep"，此时用具体类型或拆分。可读性 > 类型花活（贯穿 ts-advanced）。
 
 **来源**：TypeScript — "avoid deep conditional nesting / excessively deep"; Total TypeScript — "readable type helpers"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 约束后的 T 为什么仍保留调用方的精确类型？这个「只收窄不改写」的设计带来什么？
+
+约束是**准入检查**不是类型转换：`T extends HasLength` 后 T 仍是 `"abc"` 或 `{len:1, name:"x"}` 原样——于是 `o.k` 能拿到精确键、返回 `T[K]` 能落到具体成员。收益：约束提供「最小公共面」（只保证 length 存在），精确面留给成员访问；两处协作让「泛型函数」既对全家可用又逐调用返回最准。反例理解：如果把 T 塌缩成约束类型，所有精确推断一夜归零（Go 接口风格）——TS 选的是 Scala/Rust trait bound 风格。
+
+**来源**：TS Handbook《Generic Constraints》；TypeCasts《Constraints do not narrow T》。
+
+### 14. 用泛型约束 class 组件（工厂/DI）时，new () => T 有什么坑？typeof Stack 为什么丢 T？
+
+① `typeof Stack`（泛型 class）得到 `typeof Stack<any>` 形状的构造签名，实例变 any——要留 T 就写 `<T>(ctor: new (...a:any[]) => Stack<T>)` 或用 TS4.7 `abstract new` 覆盖抽象类；② 构造签名的参数逆变导致「参数更多」的 class 塞不进窄签名（new(a:string)=>X ≠ new()=>X）；③ 静态侧实例侧两套：InstanceType<typeof C> 取实例类型，但含 private 的 class 与结构形状不兼容（名义化检查）；④ 运行时传 class 当值（`register(User)`）+ 类型侧 typeof 当型——一物两用是 Angular/Nest DI 全站的基石，也是「decorators 拿 constructor 元数据」的动机。
+
+**来源**：TS 4.7《Natural Rest Types / abstract new》release notes；TS FAQ「class 名义兼容」条目。
+
+### 15. keyof 的返回集合什么时候会「不听话」？索引签名对工具类型的连锁污染举几个。
+
+keyof 含 string|number|symbol 三原色：有字符串索引签名时 keyof 直接并入 string——`Record<keyof T, X>` 变成 {[k:string]:X} 全体淹没；`Omit<T,"a">` 走 Exclude<keyof T,"a"> = string 后索引签名丢失（Distributive Omit 的起源）；映射类型遍历会把索引签名当「键之一」产出 {[x:string]} 意外产物。防御：`Exclude<keyof T, string|number>` 取具名键；`PickByProp` 类工具先判 HasIndexSignature；库设计里对含索引签名的 DTO 慎用 keyof 驱动的工具组合。
+
+**来源**：TS 2.9「keyof includes index signatures」release notes；type-challenges #5 Distributive Omit 题面。

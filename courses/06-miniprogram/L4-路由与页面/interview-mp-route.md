@@ -1,6 +1,6 @@
 # mp-route 面试题精选
 
-> 共 12 题，覆盖 A API 与页面栈 / B tabBar 与规则 / C 传参与回传 / D 与 SPA 路由对照。
+> 共 15 题，覆盖 A API 与页面栈 / B tabBar 与规则 / C 传参与回传 / D 与 SPA 路由对照。
 
 ## 一、API 与页面栈（A 类）
 
@@ -57,3 +57,25 @@ url 中 `encodeURIComponent` 过的值，onLoad 拿到时官方文档提示：**
 ### 12. 小程序怎么做"路由参数校验/类型安全"？
 没有 loader/中间件帮你做：在 onLoad 里白名单校验+转换（`const id = Number(options.id); if (!Number.isFinite(id)) return back()`），或封装 `guardTo/parseQuery` 统一处理；TS 项目可给每页定义 `interface Query` 约束接收端（呼应 ts-narrowing、exp-validation、react-router-data 的 loader 校验思想）。
 **来源**：TypeScript 官方文档《Narrowing》；小程序参数校验实践帖汇总
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  navigateTo / redirectTo / reLaunch / switchTab / navigateBack 各自的栈语义与典型场景？
+
+navigateTo：压栈新页、可返回（最多 10 层），用于"进入详情可退回"。redirectTo：用新页替换当前栈顶（不增不减深度，当前页 onUnload），用于"登录成功后替换登录页、流程下一步不留返回"。navigateBack：出栈返回（可传 delta），触发上一页 onShow。switchTab：切到 tabBar 页并关闭栈里所有普通页，专用于底部 tab。reLaunch：清空整个栈只留目标页（可 tabBar 可普通），用于"退出登录回首页/异常兜底/强制重置导航"。选型口诀：要不要能回（To vs 替换）、是不是 tab（switchTab/reLaunch）、要不要一把清栈（reLaunch）。对应 onHide/onUnload：被 navigateTo 覆盖→onHide（不销毁、回来只 onShow）；被 redirectTo/reLaunch/switchTab 关掉的页→onUnload（真销毁）。
+
+微信官方文档《路由：navigateTo/redirectTo/switchTab/reLaunch 语义》；掘金《小程序路由栈溢出与页面复用实战》
+
+### 14.  "详情页点了喜欢，返回列表要同步那颗红心"，在小程序里你有哪几条链路？各自代价？
+
+① onShow 拉取：列表页 onShow 重新取关注/喜欢状态——最解耦，但多一次请求、依赖服务端。② 回调约定：列表 navigateTo 前把"更新函数"挂到 getCurrentPages() 拿到的上一页实例、或 globalData/eventChannel 上，详情里调用回填——精准但产生页面间隐式耦合。③ eventChannel：navigateTo 的 success 里拿 openerEventChannel，详情 emit、列表 onLoad 里 on 监听——官方推荐的双向通信、随页面栈生命周期自然销毁，优于裸挂全局。④ 全局状态 + 订阅：把"喜欢集合"放 store（globalData/自研），列表订阅、详情改即广播——适合跨多页共享，但要管解绑防泄漏。选型：单链父子回传优先 eventChannel，多处共享状态走订阅式 store，图省事且能接受成本就 onShow 重取。
+
+SegmentFault《跳转白屏/backURL 参数丢失排查手册》；知乎《小程序深链接与场景值如何设计跳转策略》
+
+### 15.  小程序没有路由守卫，登录/权限拦截、以及参数类型安全你会怎么系统性实现？
+
+拦截：把"进入页即校验"封装成工具/HOF——页 onLoad 统一入口调 checkAuth（读 token，未登录则 redirect 到登录页并带 returnUrl），或用 Behavior/组件高阶封装复用；跳转前拦截则在自研 navigate 封装里判断目标页是否需要登录再决定放行/跳登录。关键点：小程序无全局 beforeEach，所以拦截逻辑必须"约定式地"注入到每个页的进入路径，靠封装而非自觉。returnUrl 要 encode、登录后回跳用 redirectTo/reLaunch 避免栈里留登录页。参数类型安全：封装"取参即规范化"层——声明每页参数 schema（类型/必填/枚举），onLoad 里 parse+校验（Number()/布尔归一/枚举白名单），失败走兜底或提示，杜绝把 url 原始串直接当类型用。这套等于"手动搭了个极简 router guard + 参数校验"，工程化程度决定它散不散。
+
+CSDN《分包预下载与路由性能的关系》；InfoQ《一次路由中间件（统一拦截登录态）的落地》

@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "Svelte 5 的 SSR 输出埋注释节点作对位锚点（if 分支/each 边界/文本切分），吃掉锚点=拆桥——这条'别动 body 输出'纪律是手搓 SSR 与基础设施团队签的隐形合同。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Svelte 5 中服务端渲染用的 render() 函数从哪里导入、返回什么？",
+      "options": [
+        "从 svelte 导入，返回 HTML 字符串",
+        "从 svelte/reactive 或 svelte 的 server 入口导入 render()，返回 RenderOutput（含 body 的可迭代流/字符串、head、status 等），不是简单一个字符串（对应既有 render 导入与 RenderOutput 题）",
+        "从 vite 导入",
+        "全局函数"
+      ],
+      "answer": 1,
+      "explanation": "render() 返回结构化 RenderOutput（body/head/status 分开），供服务端组装响应（对应既有 RenderOutput 题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " hydrate() 与 mount() 的核心契约差异是？",
+      "options": [
+        "完全相同",
+        "hydrate 认领服务端已渲染的 DOM（不重新创建，校验一致并接上事件/状态），mount 是从零创建 DOM 挂到 target（对应既有\"hydrate 与 mount 契约差异\"题）",
+        "hydrate 更快而已",
+        "mount 用于 SSR"
+      ],
+      "answer": 1,
+      "explanation": "hydrate 的前提是\"DOM 已在且应与组件输出匹配\"，靠编译期 hydration 标记认领节点（对应既有\"hydrate 怎么知道哪个节点\"题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 把服务端数据注入 HTML 时，为什么 JSON.stringify(data) 直接塞进 <script> 有 XSS 风险？",
+      "options": [
+        "没有风险",
+        "数据里若含 </script> 或 U+2028 等，会提前闭合脚本/注入代码——必须先转义（防 script 逃逸）再注入，或用框架安全的序列化通道（对应既有\"JSON.stringify 注入必须处理\"题）",
+        "只影响性能",
+        "只在 IE"
+      ],
+      "answer": 1,
+      "explanation": "注水数据的 script 逃逸是真实 XSS 通道，序列化要转义敏感序列（呼应 vite-ssr 数据注水题）。"
     }
   ]
 }

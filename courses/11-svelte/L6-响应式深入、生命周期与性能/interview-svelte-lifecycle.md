@@ -1,6 +1,6 @@
 # svelte-lifecycle 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与大厂前端面经高频主题的转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与大厂前端面经高频主题的转述。
 
 ---
 
@@ -91,3 +91,25 @@ beforeMount≈构建 DOM 后插入前——Svelte 不暴露（无真实需求）
 **来源**：SvelteKit  issues — hydration mismatch 系列问题汇编
 
 ① 服务端 HTML 少了只有 effect 里补的内容（水合后不 flush 就白屏一块）→ 首屏可见数据必须在同步体/load 拿；② `Math.random()`/`Date.now()` 在同步体里参与模板 → 服务端与客户端两次求值不一致 → hydration mismatch 警告与节点错乱 → 时间戳类"仅客户端"渲染包 `{#if mounted}`（onMount 置位）；③ 依赖 localStorage 初值 → 服务端读不到渲出空态水合后闪一下 → 同样 mounted 门闸或 `browser` 判断（`$app/environment` 到 Kit 讲）。原则：**SSR 只认同步体的确定性输出**。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Svelte 5 为什么把 onDestroy/beforeUpdate 等生命周期钩子基本废掉、改用 $effect？这背后的统一模型是什么？
+
+统一模型：runes 想把"生命周期"归约成"响应式的建立与销毁"——$effect 本身就同时是 create（首次运行）、update（依赖变重跑）、destroy（重跑前/组件销毁时跑 cleanup）三合一（对应既有"为何移除 onDestroy"题）。传统钩子（onMount/onDestroy/onDestroy）是把"时刻"切散给不同 API，Svelte 5 认为"副作用的生灭应跟随它依赖的数据"而非"组件的固定阶段"。收益：① 建立与清理物理相邻（一个 effect 里订阅、return 退订，不会忘配对——对比 React 依赖数组易错）；② 组件级销毁只是"effect 不再需要时清理"的特例；③ 心智从"记住有几个钩子何时跑"变成"effect = 一段有生命周期的响应式订阅"。代价：纯"只挂载一次/只销毁一次"的组件级时机仍要 onMount（DOM 引用场景）或 $effect.root（脱离组件生命周期，对应 effects-advanced 题）。加分句：能把这个演进讲成"从『组件时刻驱动』到『数据依赖驱动副作用』"的范式迁移，就抓住了 Svelte 5/React/Vue3 共同的收敛方向（三者都在往 effect/scope 收敛，只是语法不同）——呼应 lifecycle 关 React/Vue 生命周期对照题。
+
+**来源**：Svelte 5 生命周期简化说明；effect cleanup 模式；React useEffect 对照
+
+### 14.  一个组件放在 {#if} 里被反复开关，它的状态、effect、动画分别发生什么？和"用 display 隐藏"怎么选？
+
+{#if} 翻假：块内组件被 unmount——$state 全部销毁（下次翻真是全新实例、初始值）、所有 $effect 跑 cleanup 并停止、transition 播放出场（若有）、DOM 移除；翻真：重新 mount（初始 state、effect 首跑、进场动画）。后果：表单值、滚动位置、内部定时器在"关"时全丢（既有"开关一次后表单填的值没了"题）。与 display:none 对比：display 保留实例（state/effect/定时器都活着、隐藏期继续跑，可能白耗资源或后台轮询），切换零重建（对应 component-composition 关同主题题、lifecycle"旧页面定时器还在跑"事故）。选择：需要"关即彻底重置 + 停掉一切"→{#if}；需要"关只是看不见、开即回到原状"→display/visibility/或 keep 实例；要"保留 DOM 但停副作用"→{#if} 配状态提升（把要留的数据提到不被销毁的父层）。加分句：这题考的是"状态所有权与生命周期绑在哪"——{#if} 把状态生命周期绑到"条件为真"，display 绑到"组件实例存在"；成熟的组件设计会显式决定"哪些状态该比可见性活得更久"并据此放置（提升到父/context/全局），而不是被 {#if} 的默认销毁行为坑到才发现。
+
+**来源**：条件块与组件实例生命周期；effect teardown；既有"{#if} 开关后表单值"题
+
+### 15.  action、onMount、$effect 都能在"挂载后"做事，三者时机与能力差异是什么？怎么选？
+
+时机：action 在"它绑定的那个元素被创建插入时"触发（最贴近元素、且携带 node 引用）；onMount 在"组件首次挂载到 DOM 后"跑一次（客户端 only）；$effect 在"组件 state 变化后的 flush 时"跑（可能重复、SSR 不跑，首跑也在挂载后）。能力：action 天生持有它服务的 DOM 节点、生命周期跟随该节点（元素消失自动 destroy）——最适合"给某元素加可复用行为"；onMount 是"组件级、只跑一次、需要 DOM 就绪的初始化"（且 return 函数做销毁）；$effect 是"响应式驱动、会随依赖重跑"。选择口诀：绑元素的可复用 DOM 行为→action；组件一次性初始化（拿 bind:this 引用、初始化第三方）→onMount；数据变了要同步点什么→$effect（对应既有三者辨析题）。加分句：区分点是"你做的事跟随什么变化"——跟随某个元素的存亡用 action、跟随组件挂载这一次用 onMount、跟随某些数据的每次变化用 $effect；很多误用是把"只该跑一次的 DOM 初始化"写进了会重跑的 $effect（既有"定时器还在跑"事故的一种成因就是把订阅放错生命周期载体）。
+
+**来源**：Svelte mount 时机；action vs onMount vs effect；既有"三者都能挂 DOM"辨析

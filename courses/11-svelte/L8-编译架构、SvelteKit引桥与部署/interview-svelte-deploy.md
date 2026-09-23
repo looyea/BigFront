@@ -1,6 +1,6 @@
 # svelte-deploy 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线部署运维面试与社区事故复盘的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线部署运维面试与社区事故复盘的高频主题转述。
 
 ---
 
@@ -75,3 +75,25 @@ CDN：全量静态上 CDN，源站只兜 index.html 与未命中；缓存：asse
 **来源**：平台工程通识题（跨栈管理岗收官变体）
 
 提案要点：运维不该按框架分工，按**交付物类型**分工——三套系统归一为两种产物：静态包（Vue SPA/Next export/Svelte SPA）进同一条"CDN+缓存头+原子切换"流水线；Node 服务（Next SSR/Svelte SSR via Kit adapter-node）进同一条"容器+守护+优雅退出+错误上报"流水线（09-express/03-node 的服务端标准复用）。框架差异止步于构建步骤（各仓库自己出 dist），交付层只认"不可变产物+清单文件+健康检查"三要素——这正是全课程"部署预告"反复埋线的终点：**工具是环节，流水线才是平台**（呼应 vite-ci-perf 终题闭环）。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  从 .svelte 源文件到 dist 产物，画出构建管线，并说清哪些环节最可能引入部署事故。
+
+管线：.svelte → vite-plugin-svelte 编译（compiler generate client、preprocess、作用域 CSS）→ Vite 模块图（TS 擦除、依赖解析、代码分割）→ Rollup/Rolldown 打包（tree-shaking、chunk 拆分、hash 命名）→ dist（index.html + assets，含 CSS 提取、静态资源拷贝）。事故高发环节：① base/公开路径配错（子路径部署资源 404，对应 quiz）；② CSS 提取策略（SSR/预渲染首屏 FOUC 或样式丢失，呼应 styling FOUC）；③ 代码分割产物相对加载（懒加载 chunk 404/ChunkLoadError，发版竞态，与 vite splitting 关同源）；④ 环境变量注入（VITE_ 前缀/secret 误打进客户端 bundle，与 Kit 的 .server 边界呼应）；⑤ 缓存头错配（index.html 被长缓存导致新版不生效或 hash 不缓存导致爆缓存，对应"immutable/index no-cache 纪律"题）。加分句：把"部署事故"归到"构建管线的配置断点"而不是运维运气——每个事故都能回溯到上面某一环的一个配置，建立"产物检查清单（base 对不对、有无 secret 泄漏、CSS 是否提取、chunk 是否齐全、缓存头是否分层）"是根治之道（呼应 deploy 关"CI 绿部署白屏"排障题）。
+
+**来源**：Svelte 编译 + Vite 构建链；产物结构；部署事故根因；既有".svelte 到 dist 画管线"深化
+
+### 14.  发布后用户报"刷新个别路由 404、首页正常"，紧接着该怎么查？最可能的根因是什么？
+
+定性：首页正常、刷新子路由 404 → 典型是"服务端未对前端路由做 history 回退"（服务器把 /about 当真实路径找文件、找不到返回 404；SPA 用 try_files/index.html 回退解决）。但"个别路由"这个限定要警惕第二个根因：① 若某些路由配了 prerender/真实文件（如 /blog/xxx 生成了静态 html 而 /dashboard 没生成），回退规则没覆盖到非预渲染路径；② 发版期间旧页面请求新 hash chunk 已丢失（ChunkLoadError 表现为资源 404，不是路由 404，要分清是 HTML 的 404 还是 js 的 404——看 Network 是哪个请求）；③ base/子路径配错使回退指向错文件。排查动作：看 404 的是 document 还是 asset、看服务器回退规则、看该路由是否 prerender 与其余不一致。加分句：这题的功力在"先区分 HTML 404 还是资源 404"——前者指向路由回退（服务端配置），后者指向发版竞态/缓存（产物与部署时序），两者根因和解法完全不同；能问出"是刷新页面本身 404，还是页面能开但某个白屏/报错"就把方向钉死了（呼应 splitting 关 ChunkLoadError 竞态题）。
+
+**来源**：history 路由回退配置；发版 chunk 竞态；缓存与回退；既有"刷新个别路由 404"深化
+
+### 15.  纯 Svelte SPA、Kit+adapter-static 预渲染、Kit+adapter-node SSR 三种形态，分别适合什么、代价是什么？
+
+① 纯 Svelte SPA（Vite build，静态托管）：适合后台/工具类（不需 SEO、需登录才有内容、强交互）；代价=首屏空壳 + SEO 弱 + 白屏期，部署最简（任意静态 + 回退）。② Kit + adapter-static（构建期预渲染成静态 HTML）：适合内容相对固定/营销站/文档（SEO 好、极快、最省——丢 CDN 即可），代价=数据只能在构建期确定（动态内容要客户端补或 ISR 式重建），每次内容变要重构建。③ Kit + adapter-node/auto（运行时 SSR）：适合数据高频变化且要 SEO/首屏的（每请求渲染，动态内容进 HTML），代价=要有常驻 Node/serverless 运维、成本与安全面升高（跨请求状态泄漏风险，呼应 global-state SSR 题）。选择轴="内容动态性 × SEO 需求 × 运维预算"三角。加分句：成熟判断会给"混合方案"——同一 Kit 项目里营销页 prerender（static 形态）、App 后台走 CSR、动态且 SEO 敏感的页走 SSR（页级 prerender/ssr 开关 + adapter 支持混合，呼应 sveltekit-bridge adapter 题）；能说出"不是选一个形态而是按页分配渲染策略"就把这题从背对比表提升到了架构设计。
+
+**来源**：SvelteKit 部署形态对比；jamstack vs SSR vs SPA 权衡；既有"三种形态对比"深化

@@ -45,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "data-user-name=\"a\" 在 dataset 里怎么取？",
-      "options": ["e.dataset['data-user-name']", "e.dataset['user-name']", "e.dataset.userName", "e.dataset.username"],
+      "options": [
+        "e.dataset['data-user-name']",
+        "e.dataset['user-name']",
+        "e.dataset.userName",
+        "e.dataset.username"
+      ],
       "answer": 2,
       "explanation": "连字符转小驼峰（呼应 mp-events 第四节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "边界即隔离，跨边界走自定义事件（呼应 mp-events 第六节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 想在事件的\"捕获阶段\"就拦截（先于目标与冒泡），WXML 里应使用？",
+      "options": [
+        "catchtap 就是捕获",
+        "capture-bind:tap / capture-catch:tap（capture- 前缀把绑定放到捕获阶段，capture-catch 会终止后续捕获与整个冒泡）",
+        "bindtap.capture",
+        "stop 修饰符"
+      ],
+      "answer": 1,
+      "explanation": "小程序事件流有捕获→目标→冒泡三段，bind/catch 默认作用于冒泡段；加 capture- 前缀改绑到捕获段，用于\"父先于子感知\"的手势拦截（如整页拖拽时父层先在捕获期判断是否接管）。与 DOM 的 capture:true、Vue 的 .capture 同义。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 受控地把输入框内容同步进 data，bindinput 处理函数里的关键动作是？",
+      "options": [
+        "读 e.target.value 即可，无需回写",
+        "从 e.detail.value 取当前输入值 setData 回 data；若还想限制/格式化输入，必须 setData 回填新值，否则原生输入框以自己为准、你的\"过滤\"不生效",
+        "e.mp.value",
+        "只能靠 wx:model"
+      ],
+      "answer": 1,
+      "explanation": "input 的值在视图层，逻辑层拿到 e.detail.value 后若改了（如去空格、限长）不回写 setData，视图不会跟着变——这就是\"小程序受控输入\"的坑，也是做联想/过滤时看似没生效的原因。与 React value+onChange 受控完全同构。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 子节点绑 bindtap、其父节点绑 catchtap。点击子节点时，父的 catchtap 会不会触发？兄弟节点的 bindtap 呢？",
+      "options": [
+        "父触发、其它兄弟也触发",
+        "父 catchtap 会触发（它在冒泡链上、位于子之上），且 catch 会阻止再往更上层冒泡；不在该冒泡链上的兄弟节点不会收到",
+        "父不触发",
+        "所有节点都触发"
+      ],
+      "answer": 1,
+      "explanation": "catch 只\"截断继续向上的冒泡\"，不截断已经在链上的祖先——所以父（链上祖先）仍执行、其自身被 catch 后不再上传。兄弟不在同一条冒泡路径上，天然收不到。理清\"冒泡是沿祖先链向上传\"就不会误以为 catch 会波及全页。"
     }
   ]
 }

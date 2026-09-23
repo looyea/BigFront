@@ -1,6 +1,6 @@
 # react-useeffect 面试题精选
 
-> 共 12 题，覆盖 A 语义与时机 / B 依赖与清理 / C 闭包与严格模式 / D 反模式与对照类。
+> 共 15 题，覆盖 A 语义与时机 / B 依赖与清理 / C 闭包与严格模式 / D 反模式与对照类。
 
 ## 一、语义与时机（A 类）
 
@@ -57,3 +57,25 @@ effect/handler 闭包捕获了"某一次渲染"的变量快照，之后 state �
 ### 12. 对比 Vue 的 watch/watchEffect，React useEffect 的心智差异？
 Vue `watch` 天生是"值变回调"、能拿 (new,old)、可配 flush/deep/immediate，且由响应式系统自动追踪依赖；React effect 是"每轮渲染后按依赖数组同步"、要手写全依赖、靠重跑+cleanup 建模、无自动追踪。Vue 更声明自动化，React 更手动/显式（呼应 react-useeffect 第一、二节、vue-watch）。
 **来源**：Vue watch API vs React useEffect 设计对比
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. useEffect 的定位到底是什么？为什么「用它响应值变化去 setState」多半是设计错误？
+
+官方定位：effect 是「与 React 之外的系统同步」的逃生舱（订阅、手动 DOM、网络/存储、定时器），不是「值变了就跑的回调」。多数「A 变就 setState B」的需求应改用：① 派生——直接在渲染里由 A 算 B，根本别存 B；② 事件——用户操作触发的同步放事件处理器而非 effect；③ key 重置——props 变要重置子树 state 用 key；④ 渲染期调整——需要「prev props vs next」比较时用官方 prev-state 模式。滥用 effect 的害处：多一次多余渲染、引入 stale/竞态、把可推导的东西变成需要同步的两份真相（违反 SSOT）。把「哪些变化该在 render 消化、哪些副作用才交 effect」这条线画清，是 React 心智从新手进阶的分水岭。
+
+**来源**：React「You Might Not Need an Effect」官方文档；「A Complete Guide to useEffect」（effect 作为与外部同步而非值监听）。
+
+### 14. StrictMode 双跑 effect 到底在测什么？什么样的 effect 通不过、该怎么改成幂等？
+
+开发环境下 StrictMode 会「挂载→卸载→再挂载」组件、并双调用 render 与 effect，目的是暴露「缺少清理 / 非幂等 / 依赖不干净」的 bug——真实并发与未来特性（快速复用、Offscreen）也会让 effect 重跑，所以提前用双跑逼你写出可重复建立/销毁的逻辑。通不过的典型：① 建立全局订阅/副作用但没在 cleanup 里撤（出现双份监听、计数翻倍）；② 依赖里塞了每次新引用的对象导致 effect 失控；③ 在 effect 里做非幂等的一次性动作（如 push 埋点跑两遍）。修法：任何建立的东西都在返回的 cleanup 里对称销毁；一次性逻辑（如 toast）不该放 effect，应放事件；数据请求用 AbortController + 幂等缓存层（Query）而非裸 fetch。理解「双跑不是 bug 是体检」是答好这题的关键。
+
+**来源**：React StrictMode「双调用」文档与动机；社区 effect 幂等性/双订阅案例。
+
+### 15. useEffect、useLayoutEffect、useInsertionEffect 三者的执行时机、用途与代价分别是什么？
+
+都在 commit 阶段跑，但时机不同：useInsertionEffect 最早，在 DOM 更新「之前」、其它 layout effect 与读布局之前注入样式（仅 CSS-in-JS 库作者用得着，业务几乎不用，且不能读布局/ setState）。useLayoutEffect 在 DOM 变更后、浏览器绘制(paint)前同步执行，会阻塞绘制——用于「读几何(尺寸/滚动)后必须同步改 DOM 否则闪烁」的场景（测量后定位 tooltip、滚动位置恢复）。useEffect（passive）在绘制之后异步批量跑，不阻塞，是绝大多数订阅/请求的默认。代价：layout effect 里的同步重排/读取会打断浏览器优化，滥用直接掉帧；passive effect 因延后，可能让用户瞥到「旧布局一帧」。选择原则：默认 passive，确有视觉闪烁/布局依赖才升级 layout，insertion 留给样式库。
+
+**来源**：React useEffect/useLayoutEffect/useInsertionEffect API 文档；CSS-in-JS 与布局测量场景说明。

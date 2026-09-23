@@ -1,6 +1,6 @@
 # react-nextjs 面试题精选
 
-> 共 12 题，覆盖 A 渲染动机 / B App Router 与策略 / C Server/Client / D 水合·Next 独有类。
+> 共 15 题，覆盖 A 渲染动机 / B App Router 与策略 / C Server/Client / D 水合·Next 独有类。
 
 ---
 
@@ -55,7 +55,7 @@
 
 **来源**：React — Server Components、Next.js — Thinking about Server/Client Components
 
-### 7 `'use client'` 放在一个文件顶部意味着什么？它的所有子组件都变客户端吗？
+### 7. `'use client'` 放在一个文件顶部意味着什么？它的所有子组件都变客户端吗？
 
 **答**：标记该组件为客户端模块边界——它及其**导入的子组件**都被打包进客户端并在浏览器渲染（形成一棵 client 子树）。但它作为 Server Component 里渲染的子元素时，仍先在服务端为其生成初始 HTML（RSC payload），客户端再水合交互部分。所以"标一个 client 组件会把其 import 图拖进客户端 bundle"，别在 client 组件里 import 服务器专属/含密钥的模块（要经 props 注入）。
 
@@ -94,3 +94,25 @@
 **答**：说清定位——纯 React 是 **UI 库**（只管视图），Next 是**全栈框架**：加了文件路由、SSR/SSG/ISR、Server/Client 组件、数据获取、API routes/Server Actions、图片/字体/缓存/中间件。差别体现在：① 渲染从"纯客户端"变"服务端优先 + 水合"；② 组件要划 Server/Client 边界；③ 数据可在 server `await`；④ 部署从"丢静态"变"可能要 Node/edge 运行时"。再补一句"我在 Nuxt/Vue SSR 里也见过同构问题（水合、SSR 数据、history 回退）"，把认知连成体系（呼应 vue-ssr-nuxt、react-deploy）。
 
 **来源**：Next.js — How Next.js works、Create React App vs Next.js、React 官方 — 框架优先
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Next.js 里取数放在哪：Server Component 直接 await、Route Handler、Server Actions、还是外部 API + Query？怎么选？
+
+按「读/写 + 触发时机」分：① 页面首屏读——Server Component 直接 await（可访问 DB/内网/密钥、零客户端往返、可流式），最省心；② 需要在客户端交互后按需读、且要跨页缓存/去重/后台刷新——Route Handler（或 RSC 里发起）配 TanStack Query 接管缓存；③ 写操作且想「表单→校验→重验证」一体化——Server Actions（useActionState/revalidatePath，天然带 pending、可渐进增强）；④ 非 Next 运行时消费/多端共享——独立 API。判据：数据只在服务端要、首屏即定→SC await；要客户端可变与缓存→Query；提交后让服务端数据自动重取→Action+revalidate。别把「该 server 取的」搬到 useEffect，也别给一次性静态数据硬上 Query。
+
+**来源**：Next.js Server Components 数据获取、Route Handlers、Server Actions 官方文档的分工说明。
+
+### 14.  讲清 Next.js 的多层缓存（数据/fetch 缓存、路由段缓存、客户端 Router Cache、CDN）与如何 bust。
+
+分层要分清：① Data Cache/fetch 缓存——server 侧 fetch 的 GET 结果缓存，历史上靠 `revalidate`/`cache:no-store`/`cache:{}` 控制（Next 15 起默认不再自动缓存 fetch，减少「意外长期缓存」）；② Full Route Cache——静态路由在构建/ISR 期缓存整页产物，`revalidatePath/revalidateTag` 失效；③ Router Cache——客户端在内存缓存已访问路由段以即时导航；④ CDN/浏览器 HTTP 缓存——静态资源与 HTML 的 HTTP 头。bust 手段：revalidatePath（按路由）、revalidateTag（按标签做依赖失效，最优雅）、动态路由强制 no-store 走每次渲染、以及渲染时 `dynamic = "force-dynamic"`。最大的坑是「隐式缓存叠加」——以为没缓存其实某层缓存了，排查从「这页到底在哪层被缓存」问起。新版收敛默认值正是为降低这套心智负担。
+
+**来源**：Next.js caching 文档（Data/Full Route/Router Cache、revalidateTag）与 15 版缓存默认变更说明。
+
+### 15.  ISR 页面部署到 Edge 运行时要注意什么？冷启动、流式与 PPR 如何影响选择？
+
+Edge 运行时（V8 isolates）启动极快、贴近用户、适合静态/流式渲染，但受限：非 Node API（fs、部分原生依赖、某些 ORM driver）不可用，取数要走 fetch/边兼容库。ISR 在边缘的形态：静态产物由 CDN/边缘缓存命中，再生成回源。要「同一页里静态壳秒出 + 动态 personalized 部分异步填」，用 PPR（Partial Prerendering）：静态骨架预渲染并缓存，动态部分 Suspense 边界流式补——兼顾 TTFB 与新鲜度，代价是要正确处理 streaming 与 hydration 回退。冷启动在 edge 几乎可忽略、在 Node serverless 则是明显尾延迟。选型：内容型+全球分发→edge + ISR/PPR；强依赖 Node 生态/重后端计算→Node 运行时自托管或容器。
+
+**来源**：Next.js Edge Runtime 限制、Partial Prerendering 与流式渲染文档；serverless 冷启动对照。

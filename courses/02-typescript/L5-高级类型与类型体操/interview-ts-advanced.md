@@ -1,6 +1,6 @@
 # ts-advanced 面试题精选
 
-> 共 12 题，覆盖 **类型断言测试 / 深变换递归 / 路径类型 / 品牌与名义模拟 / 函数签名透传 / 性能与工程边界** 六类。
+> 共 15 题，覆盖 **类型断言测试 / 深变换递归 / 路径类型 / 品牌与名义模拟 / 函数签名透传 / 性能与工程边界** 六类。
 
 ---
 
@@ -132,3 +132,25 @@ declare function memoize<F extends Fn>(fn:F): F & { cache: Map<any,any> };
 ① **数组处理**：是否允许 `items.0.name` 数字下标，要在 `Paths` 里显式加 `number` 分支否则被当对象拆；② **可选/空值**：递归穿过 `T | undefined` 会污染路径类型，常用 `NonNullable` 归一；③ **深度爆炸**：配置对象很大时 `Paths` 联合成员数随层数指数增长，需限深或按需 `Extract` 子树；④ **函数/Date 短路**（见第 2 题），否则路径会钻进去出不来；⑤ **循环引用**用 `interface` 或访问集兜底；⑥ 对外仍以运行时校验为准（类型只是开发期护栏，i18n key 缺失要配 CI 扫描，呼应 Express L7、ts-guards）。把这些边界处理好，`Paths` 才从"玩具"变"生产力"。
 
 **来源**：i18next — "typed translations"; type-fest; vue-i18n — "resource type inference"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 实现一个工程可用的 DeepReadonly，逐分支讲取舍。
+
+骨架：`T extends Function ? T : T extends (infer U)[] ? readonly DeepReadonly<U>[] : T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T`。逐条：函数必须在 object 前（函数是 object 但映射它会废签名）；数组走元组保持通道（同态映射对 tuple 也可用，但写 `(infer U)[]` 会拍平元组——需要 tuple 分支）；Map/Set/Date/RegExp 特判否则被对象化（Map 的 size 变只读属性、方法还在但语义错位）；readonly 数组挡写不挡**浅引用**？不——递归版逐层封。加一句：DeepReadonly 是类型承诺不是运行时保证，配合 Object.freeze 才双全（或 type-only 用于纯展示层）。
+
+**来源**：type-fest《ReadonlyDeep》源码（内置类型排除清单）；TS FAQ DeepReadonly 实现。
+
+### 14. Equal<A,B> 为什么能「测类型相同」？解释背后的条件类型同一性机制。
+
+泛型条件类型未实例化时是**延迟对象**：`T extends A ? 1:2` 作为类型节点，其可赋性比较走「同一性快速路径」——两个延迟条件类型判同，比较的是 A/B 的**类型对象身份**（结构完全一致的 readonly/可选差异都过不了），而非放宽的可赋关系。`(<T>()=>...)` 借函数类型把两个条件类型包起来触发这次「恒等比较」。副作用：它连 `any vs unknown`、可选 vs undefined、字面量 vs 基类型全都能分辨——所以类型测试（expect-type）的地基就是这行。面试讲清「assignability ≠ identity」这对概念即及格。
+
+**来源**：type-challenges/#2 Equal 题解 + TS 编译器 isTypeIdenticalTo 源码注释；tsd expectType 实现。
+
+### 15. brand 类型给 API 边界带来的价值与代价？zod v4 的 branded/valibot 怎么落地？
+
+价值：把「名义」塞回结构系统——`string` 直接当 userId/orderId/sessionToken 传错的低级事故被编译期拦截；`declare const Brand: unique symbol; type B<T,N extends symbol> = T & {[Brand]:N}` 多品牌可组合。代价：每次进入边界要一次显式构造（`UserId.parse()`/`asBrand()`），断言纪律决定有效性；与 JSON（无 brand 概念）之间序列化边界要集中；泛型工具对 branded 字符串会 `T extends string` 命中（brand 丢失），写通用工具要透传。zod 4 `z.string().brand("Email")` 原生内置（运行时零成本、推导自动带 brand），已是主流姿势。
+
+**来源**：TS 2.7 unique symbol 与 branded types 提案讨论；zod 4 文档 branded schemas 章节。

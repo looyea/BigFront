@@ -1,4 +1,4 @@
-# next-fonts-images 面试题（12 题）
+# next-fonts-images 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点图片/字体优化高频面经，中文重述。
 
@@ -65,3 +65,19 @@ SVG 可内嵌脚本/外链——同源伺服即 XSS 面。配套：contentDispos
 **12. 图片与字体的优化项要不要进 CI 防回归？设计三个可机检的断言。**
 **来源**：CSDN（性能预算实践合集）
 例：① 首屏页 HTML 里无未声明尺寸的 `<img>`（AST/规则扫描）；② LCP 候选图必须带 priority/预加载标注（路由配置表比对）；③ 字体请求全部同源（产物 grep 外链域名）；可选：图片字节预算（构建产物报告阈值）。哲学同 L3 边界审计：**把性能从"人记得"变成"机器守着"**（呼应 next-perf、exp-testing）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  用 next/font 治理 Webfont 性能：你会打出哪些组合拳？各治什么？**
+**来源**：web.dev 字体优化清单；Next.js font 指南（调整与 fallback）
+组合拳按瓶颈分层：① 传输——子集化（拉丁按 unicode-range 拆、中文手动裁剪/分片），字体从 MB 到几十 KB；格式 woff2 起步、可变字体一文件多字重（权衡：单文件大但请求少）；② 关键路径——self-host 同域 + next/font 自动 preload 字重字面（先拿正文要用的那个）；第三方 GTM 类字体一律本地化；③ 渲染策略——display 默认 swap（快显），对 CLS 敏感时配 adjustFontFallback 度量对齐的 fallback（size-adjust/ascent-override），浏览器模拟字体与真字体占位几乎同宽；④ 覆盖范围——font-display: optional 给非关键装饰字体（本次访问不闪、下次缓存生效）；⑤ 验证——Lighthouse 字体审计 + RUM 上 FOUT/CLS 事件采样。收口：字体优化=传输、关键路径、渲染三段各自的账，只说 swap 或只说子集都不算修完。
+
+**14.  远程图（CMS/用户头像）在 next/image 下的优化链路怎么搭？白名单外来一手怎么办？**
+**来源**：Next.js Images 远程域名配置；SegmentFault《图片优化代理被当 DDOS 工具的事故复盘》
+标准链路：images.remotePatterns 按域名+协议声明白名单（新版本替代 domains），优化器拉取→变换（格式协商 AVIF/WebP）→ 浏览器缓存，可再配 loader 指向上游图片 CDN（自己不做二次优化只签名）。白名单外=请求 400——防"优化端点被滥用为任意 URL 代理/SSRF/DDOS 跳板"，这是必须讲的安全面。用户头像素解法：① 上传即转存自家对象存储 + loader 指向它（白名单稳定）；② 动态第三方域用自定义 loader 生成带签名参数的代理 URL（签名验域名+尺寸，防开放代理）；③ 实在不可控的第三方小图退化为原生 <img>（丢优化不丢正确）。加分点：优化器缓存目录在 serverless 下不持久（重复回源），量大走 CDN 层缓存或外部图片服务；AVIF 协商看 UA、别在 edge 层误剥 Accept 头。
+
+**15.  LCP 元素是张 Hero 大图——围绕它把图片相关优化全做一遍，你的清单是？**
+**来源**：web.dev LCP 图片优化；掘金《一张 Hero 图把 LCP 从 3.2s 做到 1.1s 的全过程》
+清单：① 发现——priority（等价手动 preload）：LCP 图禁止 loading=lazy（懒加载让发现推迟到布局后，是最常见自伤）；② 尺寸——srcset/sizes 与设备像素匹配，移动端别下发桌面大尺寸；响应式断点配合布局稳定（width/height 或 aspectRatio 防 CLS）；③ 编码——格式（AVIF/WebP 协商）、质量-体积曲线（hero 可容忍 q 稍低）、动图改视频/静态首帧；④ 网络——CDN 边缘出图、HTTP/2 复用、优化后文件参与内容哈希长期缓存；⑤ 渲染——placeholder=blur 给即时视觉反馈（感知）、字体/主色不抢该图线程（LCP 计时到真正绘制）；⑥ 度量——RUM 上报 LCP 元素（onCLS 同类技巧）按模板/断点分布看，Lab 里 devtools 看"发现时间/请求时间/渲染时间"三段哪段长。能把 LCP 拆解成"发现→传输→渲染"三段并各给手段，这题就是满分结构。

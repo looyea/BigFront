@@ -1,6 +1,6 @@
 # svelte-actions 面试题精选
 
-> 共 12 题，覆盖 A 契约与时机 / B 实战模式 / C 边界与陷阱 / D 对照与设计。
+> 共 15 题，覆盖 A 契约与时机 / B 实战模式 / C 边界与陷阱 / D 对照与设计。
 
 ## 一、契约与时机（A 类）
 
@@ -57,3 +57,25 @@ action 内建 `IntersectionObserver`，`isIntersecting` 时执行回调并 `disc
 ### 12. 为什么说 "action ≈ DOM 行为复用，hook ≈ 状态逻辑复用"？给一个两者配合的例子。
 hooks（React/Vue 组合式/Svelte runes 函数）复用的是**响应式状态+派生**（usePagination：page/total/next）；action 复用的是**节点上的命令式挂摘**（observer/监听/库实例）。典型配合：tooltip 组件内部用 runes 管 `visible` 状态（内容可交互），对外用 `use:tooltip` action 焊在任意元素上触发——行为与状态各归各位（呼应 react-custom-hooks、svelte-global-state 第二节）。
 **来源**：Headless UI/Radix 组件设计思想平移
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  action 与 $effect 都能碰 DOM，执行时机与适用边界分别是什么？
+
+时机：action 在节点"被创建并插入 DOM 时"调用（拿到 node 引用那一刻），其 update 随参数、destroy 随节点移除；$effect 在组件 state 变化后的 flush 阶段跑（DOM 已更新，但作用域是"响应式依赖"而非"某个 DOM 节点的生命周期"）。适用边界：① 行为"绑定在某个 DOM 元素上、随其生灭、需要持有该节点引用做原生 DOM 操作/第三方库初始化"→ action（tooltip、longpress、点击外部、把图表库挂到某 div——对应"曝光/点击外部"既有题）；② 逻辑是"响应式数据变了要跑副作用（同步到任意地方）"→ $effect。关键差异：action 的"依赖"是它服务的 DOM 节点（元素没了自动 destroy），$effect 的"依赖"是它读到的 signal（数据不变不重跑）。加分句：一个记忆锚——"action 回答『这个元素发生了 DOM 级的事』，$effect 回答『这些数据变了做点事』"；当一个需求既有节点生命周期又有响应式数据时，常见模式是 action 管节点、内部读写 $state（既有"action 里能读写 $state 吗"答案是能），两者不是竞争是分层。
+
+**来源**：Svelte actions 文档；$effect 时机；action vs effect 选型
+
+### 14.  为什么说 action ≈ DOM 行为复用、而 hooks 是逻辑复用？action 与 Vue 自定义指令的逐项对比。
+
+定位：action 把"对某个 DOM 元素施加的可复用行为"封装成一个函数（click-outside、draggable、tooltip、自动聚焦），跨组件复用同一套"元素级行为"——这是 DOM 行为复用。React hooks 是"有状态逻辑复用"（可在任意组件用、管的是渲染与 state），不专属于某个 DOM 节点，碰 DOM 要靠 ref——两者抽象层级不同（既有"action 与 hooks 定位差异"题）。与 Vue 指令逐项对比：Vue 指令 v-xxx 有钩子（created/mounted/updated/unmounted 等更多档位），Svelte action 只有"调用 + update + destroy"三段（更精简，update 对应 Vue 的 updated）；Vue 指令可全局注册、作用域广（也能操作组件级），Svelte action 就是普通函数（import 即用，和组件注册哲学一致，对应 composition 关"无全局注册"）；传参 Vue 用 value/arg/modifiers、Svelte 用第二参对象 + update。加分句：把三者放一条轴——"距离 DOM 的远近 × 是否可复用"：action/Vue 指令都是"贴着元素生命周期"的 DOM 行为抽象，React hooks 是"贴着组件渲染"的逻辑抽象；Svelte 里 DOM 行为用 action、逻辑用 runes+函数组合，职责分离得比"用 useEffect 兼顾两者"更清晰（呼应既有"action 与 Vue 指令逐项对比"题）。
+
+**来源**：Svelte action 设计；Vue 自定义指令（mounted/updated/unmounted）对照；行为复用模式
+
+### 15.  同一元素上多个 action、以及 action 与 bind/事件的执行顺序与协作坑，怎么理清？
+
+执行顺序：同一元素多个 action 按"书写顺序"依次调用（初始化序），destroy 通常逆序或按实现约定——依赖彼此初始化先后时要警惕（尽量让 action 相互独立）。与 bind:this：两者都能拿节点——action 在节点就绪即以参拿到（最早、最自然），bind:this 在挂载后才有值（既有"bind:this 与 action 都要拿节点怎么分工"题）：需要"元素一存在就跑这段 DOM 逻辑"用 action，需要"组件里持有引用供后续命令式使用"用 bind:this。与事件：action 内部常 addEventListener（click-outside 就是挂 document click），注意与模板上的 on:click 不冲突但要注意捕获/冒泡阶段（action 里用 capture 可抢在元素自身 handler 前）。参数坑：longpress(node, cb) 里父换了 cb 函数，若不实现 update，action 拿的还是旧 cb（闭包捕获初始化那次）——要 update 里重新绑定（既有"父换了回调"题）。加分句：action 的坑几乎都是"生命周期与捕获"问题——它只在挂载那一次拿到 node 与初始 params，后续变化要么靠 update 要么靠自己订阅 $state；把 action 想成"一个针对该节点的迷你组件（有 create/update/destroy）"就能预判所有时序，而不是把它当一次性函数调用。
+
+**来源**：Svelte action 顺序；bind:this 与 action 拿节点分工；事件与 action 交互

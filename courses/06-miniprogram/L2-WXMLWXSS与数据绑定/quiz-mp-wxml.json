@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "写的是方法名字符串，找不到方法只静默警告（呼应 mp-wxml 第三节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 想在列表渲染时给每一项加序号「从 1 开始」，在不引入额外 data 字段的前提下最合适的做法是？",
+      "options": [
+        "在 bindtap 里算",
+        "用 wx:key 配合 `{{ index + 1 }}`（wx:for 的默认索引变量 index 可直接参与表达式）——WXML 支持简单运算，比把序号预先塞进 data 更省 setData",
+        "用 wxs 才能做",
+        "做不到"
+      ],
+      "answer": 1,
+      "explanation": "`{{}}` 里允许算术/三元/逻辑等「表达式」（非语句），`index+1` 直接可用，无需为纯展示派生再走一遍 setData。真正复杂的格式化（日期、脱敏）才考虑 wxs 或在逻辑层预处理成字段。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " wxs 与其他语言的本质差异决定了它能做什么、不能做什么，下列正确的是？",
+      "options": [
+        "wxs 运行在逻辑线程，可随便调 setData 和微信 API",
+        "wxs 运行在渲染线程、不能调用逻辑层方法/setData、不能访问 Page data，只用于「渲染期纯计算/格式化」——正因独立在视图层才能避免跨线程往返",
+        "wxs 就是 ES6",
+        "wxs 可 async/await"
+      ],
+      "answer": 1,
+      "explanation": "wxs 的价值恰在「离渲染更近」：在视图层就地做格式化（如根据值返回 class/文本），省去「为一点显示逻辑专门 setData 跨线程传一次」。代价是沙箱受限：不能反向影响逻辑层、不支持部分新语法、无 async。适合「高频但轻、只在渲染用」的转换，别拿它当业务逻辑容器。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 关于 `{{}}` 与富文本，若 rawHtml 是字符串 `<b>hi</b>`，直接 `{{rawHtml}}` 会？",
+      "options": [
+        "渲染成加粗的 hi",
+        "把标签当纯文本转义显示（页面看到字面的 `<b>hi</b>`），WXML 不解析插值里的 HTML——要渲染富文本须用 rich-text 组件配 nodes 数组/受控 HTML",
+        "抛编译错",
+        "自动去除标签"
+      ],
+      "answer": 1,
+      "explanation": "与 JSX 一样，插值默认转义，杜绝注入类安全问题；显示后端给的 HTML 要用 `<rich-text nodes=\"...\"/>`，且 nodes 建议传「结构化数组」或对字符串先做白名单净化再渲染，避免脚本/危险标签。这条安全边界和 React dangerouslySetInnerHTML 完全同构。"
     }
   ]
 }

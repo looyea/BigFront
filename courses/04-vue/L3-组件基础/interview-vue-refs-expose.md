@@ -1,6 +1,6 @@
 # vue-refs-expose 面试题精选
 
-> 共 12 题，覆盖 模板 ref 与时机 / useTemplateRef / 函数与数组 ref / defineExpose / 设计判断 五类。
+> 共 15 题，覆盖 模板 ref 与时机 / useTemplateRef / 函数与数组 ref / defineExpose / 设计判断 五类。
 
 ---
 
@@ -93,3 +93,25 @@ ref 在元素**挂载后**才被赋值，`setup` 执行时 DOM 尚未创建，`e
 异步组件解析完成后才渲染，其内部/自身 ref 在解析+挂载前都是 `null`；`v-if` 切换、动态组件替换也会重置 ref。凡"可能还没有"的 ref 都要判空，并在依赖它动作前 `await nextTick()` 或等组件出现（呼应 vue-refs-expose 第六节、vue-async-suspense）。
 
 **来源**：Vue.js — "Async Component / ref timing"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 模板 ref 拿子组件「实例」在 script setup 下被刻意收窄成只能 defineExpose——这个设计给库作者和普通业务各带来什么连锁后果？
+
+给 库 作者：暴露 面 = API（instance 不再 是 黑盒 接口），倒逼 出 显式 契约——Element Plus 等 库 的 `暴露 focus/validate/scrollTo` 方法 集 就是 组件 API 文档 本身，类型 用 `InstanceType` 不 再 可靠（要 `Ref<typeof Comp>` + 官方 导出 的 实例 类型）；代价：老 代码 习惯 的 `ref.value.$el/form 内部 状态` 全 断，迁移 期 出现 大量「透传 式 defineExpose」（暴露 一 堆 内部 东西）= 收窄 形 同 虚设。给 业务：正向 后果=组件 重构 不 怕 外部 掏 内部（封装 真正 成立）；负 面=调试 时 「控制台 打 不 开 内部」（devtools 仍 可）；最 佳 实践：暴露 **动词** 不 暴露 状态（validate() 而 非 form 对象），配 「能 用 props/emit/v-model 表达 就 不 开 方法 口」的 阶梯（本关 调用 子 方法 方式 题 的 判据 版）。
+
+**来源**：Vue 文档 defineExpose 与 script setup 封闭性说明；Element Plus 组件实例 API 设计。
+
+### 14. ref 指向 v-if 元素、异步组件、Suspense 三种场景时，「什么时候能拿到非 null」分别是什么规则？
+
+v-if：false 期间 ref=null（渲染 出 去 后 的 最 早 可靠 读取 点 = 该 次 更新 的 `flush:post`/nextTick，本关 时序 题）——比 这 更 稳 的 是 干脆 用 函数 ref（挂载 即 通知，免 时序 推理）。异步 组件（defineAsyncComponent）：解析 完成 前 模板 ref 一直 null，loading 兜底 组件 还会 先 占 位——要 「就绪 通知」用 组件 内 emit 事件 或 onLoaded 回调，别 轮询 ref。Suspense：默认 插槽 挂 载 时机 整体 延迟 到 异步 依赖 resolve，ref 可用 点 = Suspense 的 `@resolve` 事件（外部 监听）而 非 宿主 组件 mounted——这 是 本包 async-suspense 关 与 ref 关 的 接缝 题；通用 防线：所有 「ref 到手 就 初始化」（观察 器/图表）改用 函数 ref 或 watch(ref) 驱动，把 null→非 null 当 状态 迁移 处理，一 劳 永 逸 掉 时机 玄学。
+
+**来源**：Vue 异步组件 onLoaded 文档；Suspense resolve 事件与 template ref 时序 issue 结论。
+
+### 15. 「拿 DOM 引用做测量/定位」类需求（滚动定位、元素尺寸、浮层对齐）的组件化方案光谱：从 ref 手写到浏览器原生 API 到组合式抽象。
+
+底 层 手写：ref + getBoundingClientRect + scrollIntoView，问题 在 **窗口 resize/滚动/字体 加载 后 的 重 测量** 全 要 自己 管。原生 升级：`IntersectionObserver`（可见 性 触发，懒 加载/曝光，本包 指令 关 v-lazy 的 引擎）、`scrollIntoView({behavior:smooth})`/`scroll` 事件 配 `getComputedStyle` 慎用（强制 同步 布局，循环 里 读 rect 写 style = layout thrash 教科书，读 写 分 离/用 transform 替代 top）。组合 式 抽象：VueUse 的 useIntersectionObserver/useTemplateRef + onScopeDispose 自动 拆 观察 器——「生命 周期 绑定」这 一 层 才 是 库 的 真正 价值（本关 函数 ref 清理 题 的 库 化 终 局）。浮层 对齐 单独 点名：popper.js/floating-ui 用 「策略 层 计算 + position:fixed 渲染 层」，不 自己 碰 宿主 组件 的 ref，接口 是 传 锚 元素——锚 元素 从 哪 来（ref？事件 target？）才 是 组件 该 关心 的。判据：测量 逻辑 出现 在 两 个 组件 里 就 抽 `useMeasure`，别 复制 rect 数学。
+
+**来源**：MDN IntersectionObserver/getBoundingClientRect；VueUse useIntersectionObserver 设计；floating-ui 文档架构篇。

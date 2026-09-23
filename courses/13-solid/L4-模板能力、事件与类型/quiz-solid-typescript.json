@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-typescript",
-  "title": "TypeScript 类型 · 自测",
+  "title": "solid-typescript 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "Solid 项目 tsconfig 里 \"jsx\" 必须设成什么、为什么？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "Solid 项目 tsconfig 里 \"jsx\" 必须设成什么、为什么？",
       "options": [
         "\"preserve\"，因为 Solid 的 JSX 转换与 TypeScript 的 JSX 转换不兼容，转换交给 solid 编译器",
         "\"react\"，和 React 项目一样",
@@ -11,10 +13,12 @@
         "\"preserve\"，为了让 JSX 变成 React.createElement"
       ],
       "answer": 0,
-      "explain": "TS 只保留 JSX 做类型检查，实际转换由 babel-preset-solid 做；配合 jsxImportSource:\"solid-js\" 提供 JSX 类型。"
+      "explanation": "TS 只保留 JSX 做类型检查，实际转换由 babel-preset-solid 做；配合 jsxImportSource:\"solid-js\" 提供 JSX 类型。"
     },
     {
-      "q": "createSignal<number>() 与 createSignal(0) 的类型差别是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "createSignal<number>() 与 createSignal(0) 的类型差别是？",
       "options": [
         "完全相同",
         "前者是 Accessor<number>、后者带 | undefined",
@@ -22,10 +26,12 @@
         "后者必须写类型参数否则报错"
       ],
       "answer": 2,
-      "explain": "无初值时可能 undefined；给默认值既自动推断类型又消掉 | undefined。"
+      "explanation": "无初值时可能 undefined；给默认值既自动推断类型又消掉 | undefined。"
     },
     {
-      "q": "useContext(Ctx) 的返回类型为什么默认带 | undefined，推荐怎么安全消除？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "useContext(Ctx) 的返回类型为什么默认带 | undefined，推荐怎么安全消除？",
       "options": [
         "因为 context 永远是 undefined",
         "祖先链上可能没有 Provider；用工厂+ReturnType 定型并在 useXxx 里对空值抛错守卫，比 ! 断言安全",
@@ -33,10 +39,12 @@
         "只能靠非空断言 ! 消除"
       ],
       "answer": 1,
-      "explain": "createContext<T>() 是 Context<T|undefined>；抛错守卫能在误用时给出可读错误，胜过默默 ! 断言。"
+      "explanation": "createContext<T>() 是 Context<T|undefined>；抛错守卫能在误用时给出可读错误，胜过默默 ! 断言。"
     },
     {
-      "q": "要写一个泛型组件 <T>(props:{items:T[]})，用 Component<{...}> 可以吗？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "要写一个泛型组件 <T>(props:{items:T[]})，用 Component<{...}> 可以吗？",
       "options": [
         "可以，Component 支持泛型参数",
         "可以，但要写成 Component<T>",
@@ -44,10 +52,12 @@
         "不行，Solid 不支持泛型组件"
       ],
       "answer": 2,
-      "explain": "Component 类型无法承载组件自身的泛型；箭头版还要 <T,> 尾逗号避免被当成 JSX，函数声明最省心。"
+      "explanation": "Component 类型无法承载组件自身的泛型；箭头版还要 <T,> 尾逗号避免被当成 JSX，函数声明最省心。"
     },
     {
-      "q": "为什么 `{user() && user().name}` 在 TS 里报 'possibly undefined'？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么 `{user() && user().name}` 在 TS 里报 'possibly undefined'？",
       "options": [
         "因为 .name 不存在",
         "因为 && 优先级问题",
@@ -55,10 +65,12 @@
         "因为 user() 是函数调用，TS 不认为两次调用返回同一个非空值，无法像普通对象那样收窄"
       ],
       "answer": 3,
-      "explain": "accessor 每次调用被当作可能不同，&& 收窄失效；这是 Solid 独有的反直觉点。"
+      "explanation": "accessor 每次调用被当作可能不同，&& 收窄失效；这是 Solid 独有的反直觉点。"
     },
     {
-      "q": "对上一条，用 `<Show when={user()}>{u => ...}</Show>`（非 keyed）回调里的 u 是什么？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "对上一条，用 `<Show when={user()}>{u => ...}</Show>`（非 keyed）回调里的 u 是什么？",
       "options": [
         "已收窄的非空 accessor（读要 u()），且不重建 children",
         "值本身，且值变即重建",
@@ -66,10 +78,12 @@
         "原始可能为 undefined 的 signal"
       ],
       "answer": 0,
-      "explain": "非 keyed 回调拿到收窄后的 accessor（u()），不重建；keyed 才把 u 当值且值变即重建。"
+      "explanation": "非 keyed 回调拿到收窄后的 accessor（u()），不重建；keyed 才把 u 当值且值变即重建。"
     },
     {
-      "q": "在 <div on:mousemove={...}/> 上 TS 默认报类型错，正确解法是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "在 <div on:mousemove={...}/> 上 TS 默认报类型错，正确解法是？",
       "options": [
         "改成 onClick 就好",
         "扩展 JSX 命名空间：declare module \"solid-js\" 里让 CustomEvents extends HTMLElementEventMap（或 Pick 需要的），自定义事件则声明其类型",
@@ -77,7 +91,46 @@
         "Solid 不支持 on: 事件"
       ],
       "answer": 1,
-      "explain": "原生 on: 事件不在 Solid 默认类型里；扩 JSX.CustomEvents（可 extends/Pick HTMLElementEventMap）即可用。"
+      "explanation": "原生 on: 事件不在 Solid 默认类型里；扩 JSX.CustomEvents（可 extends/Pick HTMLElementEventMap）即可用。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 给组件 props 追加 div 原生属性的惯用类型写法是？ ",
+      "options": [
+        " extends JSX.Element ",
+        " interface Props extends ComponentProps<『div』> 再补自有字段 ",
+        " React.HTMLAttributes 全家桶 ",
+        " type Props = Record<string, unknown> "
+      ],
+      "answer": 1,
+      "explanation": " ComponentProps 从 JSX 内在元素类型提取全集，spread 到目标元素后类型严丝合缝，是官方文档推荐模式。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " createSignal 不传初值（只给类型参数）时，读 accessor 的返回类型是？ ",
+      "options": [
+        " T ",
+        " never ",
+        " T | undefined ",
+        " unknown 恒定 "
+      ],
+      "answer": 2,
+      "explanation": " 无初值信号读取可能发生在写入前，类型层以 T | undefined 如实暴露，强制调用点处理空态。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 无初值 createResource 在渲染里直接取值，TS 给出的元素类型特征是？ ",
+      "options": [
+        " 类型报 undefined 不可用 ",
+        " 值类型含 undefined，需在 JSX 条件里收窄后才当 T 用 ",
+        " 自动断言非空 ",
+        " 与运行时无关 "
+      ],
+      "answer": 1,
+      "explanation": " 资源 accessor 返回 T | undefined，配合 Suspense/Show 收窄；跳过收窄直接运算会被 strictNullChecks 拦下。 "
     }
   ]
 }

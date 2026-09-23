@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "相比 useEffect 手动 fetch，TanStack Query 主要额外提供什么？",
       "options": [
-        "自动加样式",
         "缓存、请求去重、失效重取、加载/错误态、乐观更新等一整套",
+        "自动加样式",
         "替代 JSX",
         "免鉴权"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "把服务端状态管理标准化（呼应 react-data-fetching 第一、三节）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "新鲜窗口，配合失效策略（呼应 react-data-fetching 第三节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 多个组件同时用相同 queryKey 调 useQuery，网络层发几次请求、为什么？",
+      "options": [
+        "每个组件各发一次",
+        "同一「去重窗口」内只发一次并被多方共享——QueryClient 以 queryKey 归并进行中请求，且各观察者计数，数据缓存在客户端共享",
+        "每次都发但忽略多余响应",
+        "取决于 staleTime"
+      ],
+      "answer": 1,
+      "explanation": "去重是 Query 的核心价值之一：同 key 的并发订阅复用同一个 in-flight Promise（dedupe），返回后各组件拿到同一份缓存数据。这与「Data Router loader 按路由分支缓存」不同——Query 是全局按 key 的缓存与去重，这也是「多处要同一份数据」时它更合适的根因。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " useQuery 的 `select` 选项用来做什么、好处是？",
+      "options": [
+        "筛选服务端返回的行",
+        "对已缓存的原始数据做「组件级派生/映射」再交给该消费者——不改缓存里的原始结果、各组件可有不同 select，实现「一份缓存、多种视图切面」",
+        "选择发不发请求",
+        "选择重试次数"
+      ],
+      "answer": 1,
+      "explanation": "`select: data => data.items.map(i=>i.id)` 让你在读取时派生，避免为每个视图变体把数据再拷一份进缓存或塞 useEffect 转换。原则「服务端数据是缓存、派生尽量算出来而非存起来」在 Query 里的官方落点。注意 select 若每帧返回新引用会引发重渲染，必要时配 useMemo/稳定化。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " `staleTime: 0` 与 `gcTime`（旧称 cacheTime）分别控制什么？",
+      "options": [
+        "是一回事",
+        "staleTime 是「数据多久变陈旧」——到期后一旦组件挂载/窗口聚焦等触发就 refetch；gcTime 是「缓存无人引用后保留多久才垃圾回收」，两个独立时钟",
+        "staleTime 管回收、gcTime 管新鲜度",
+        "都只影响首屏"
+      ],
+      "answer": 1,
+      "explanation": "常混淆：stale=「是否该重新取」，gc=「缓存条目是否还留着」。数据变 stale 但仍在 gc 窗口内时，重挂载会「先秒出旧缓存、后台再取」（stale-while-revalidate）。staleTime:Infinity 则永不过期不自动 refetch；调 gcTime 决定离线可用时长。二者组合就是 Query 的缓存生命周期模型。"
     }
   ]
 }

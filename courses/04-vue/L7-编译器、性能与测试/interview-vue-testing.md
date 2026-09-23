@@ -1,6 +1,6 @@
 # vue-testing 面试题精选
 
-> 共 12 题，覆盖 A 工具与理念 / B 挂载与查询 / C 交互与异步 / D mock 与快照类。
+> 共 15 题，覆盖 A 工具与理念 / B 挂载与查询 / C 交互与异步 / D mock 与快照类。
 
 ## 一、工具与理念（A 类）
 
@@ -57,3 +57,25 @@ store 是单例，跨用例复用会把上一个用例改过的状态带过来�
 ### 12. composable（如 useMouse）如何单测，不依赖任何组件？
 可用一个极小的宿主组件 `mount` 后读它暴露的 ref，或用 Vitest 直接调用其纯逻辑部分；对含副作用/生命周期（effectScope、onScopeDispose）的，测试里 `mount` 一个临时组件并在 `unmount` 后断言副作用被清理。本质仍是"隔离 + 断言可观测输出"（呼应 vue-composables 的 effectScope、node-testing 的 mock）。
 **来源**：Vue.js 官方文档 — 测试组合式函数、Vue Use 测试实践
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 组件测试的「查询优先级」：getByRole 在 Vue 测试环境怎么落地？无障碍属性在模板里的多缺失对测试意味着什么？
+
+Vue Testing Library 提 供 角 色 查 询（getByRole/findByRole），但 它 的 有 效 性 完全 取决 于 组 件 的 **语义 地 基**：按钮 用 `<button>` 不 是 `<div @click>`、输入 配 `label for/aria-label`、图 标 按 钮 有 可 访问 名——这 些 缺 一，测 试 只 能 退 化 回 class/test-id 查 询，「按 用 户 视 角」变 成 伪 命 题。所 以 **测 试 写 不 动 = a11y 缺 陷 的 报 警 器**：给 「删 掉 类 名 测 试 还 活 吗」一 个 机 器 判 据（类 名 查 询 出 现 在 PR diff = code smell）。操 作 顺 序：role → label/placeholder → text → test-id（最 后 手 段 且 test-id 命 名 要 业 务 语 义 而 非 样 式 语 义）；断 言 端 同 理：`toBeDisabled` 断 言 「按 钮 disabled」比 断 言 「出 现 了 .disabled 类」抗 重 构——行 为 断 言 的 第 一 公 民 是 **可 访 问 性 API**（ARIA 就 是 测 试 的 稳 定 公 开 契 约，与 「公 开 接 口 测 试」理 论 同 源，本关 查询 理 念 题 的 理论 终 点）。
+
+**来源**：Testing Library query priority 文档；Vue Testing Library 角色查询实现。
+
+### 14. 测试金字塔在 2020s 前端还成立吗？给一套 Vue 项目的现实测试配比、各层验收标准与「不测什么」。
+
+修正 版 形 状：组 件 集 成 测 是 主 体（Testing Library 天 然 「通 过 UI 断 言 行 为」，单 元/集 成 合 流）、纯 函 数/组合 式 轻 单 测（无 mount 快 节 奏，覆 盖 复 杂 逻 辑 与 边 界）、E2E 很 少 且 只 打 关 键 旅 程（下 单/登 录，Playwright 带 真 后 端 或 契约 mock 的 选 择 要 显 式 表 态）。配 比 经 验 值：30 组 件 测 / 10 逻 辑 单 测 / 3-5 E2E，**倒 三 角（E2E 主 力）的 病 是 反馈 循 环 分钟 级 + 失败 诊 断 成 本**（排 查 一 条 红 的 E2E 时 间 够 写 五 条 单 元）。验 收 标 准 分 层：单 测 追 覆 盖 分 支、组 件 测 追 行 为 场 景 清 单（每 个 组 件 的 状 态 机 路 径 有 没 有 全 打 到）、E2E 追 业 务 健 康 度。不 测 什 么：第三 方 库 自 身（组 件 库 的 渲 染 快 照）、纯 样 式、编 译 器 包 治 的 样板（getter 同 款）——「测 试 是 给 未 来 改 代 的 放 心 券」，发行 决 定 哪 些 未 来 改 得 起：低 频 + 低 危 险 的 不 补 测（追 求 全 覆 盖 的 团 队 最 后 集 体 弃 疗，本关 快照 态度 题 的 经济 学 版）。
+
+**来源**：Testing Pyramid 在 RTL 时代的修正论述（testing trophy 等）；Playwright 官方最佳实践。
+
+### 15. CI 里的测试工程：并行、分层跑、失败归因、偶发红治理四件事的 Vue 项目实操。
+
+并 行：Vitest 按 心 数 切 worker（`--max-workers` 控 CI 容 器 内 存 爆 炸，小 项 目 反 要 关 闭 isThread 类 隔 离 换 速）；分 层 跑：PR 只 跑 受 影 响 用 例（`--changed` 基 于 依 赖 图，组 件 测 主 体 的 红利），main 全 量 + 定 时 E2E 深 夜 跑。失败 归 因：统 一 报 告 格 式（junit 进 CI 面 板 按 套件 聚 合）、异 常 带 「场 景 说 明」（测 试 名 = Given/When/Then 句 子，「偶 发 红 的 诊 断 速 度」十 倍 于 断 言 详 情）；Vue 特 有：hydration/teleport 类 断 言 失 败 优 先 怀 疑 时 序 而 非 逻 辑（挂 载 操 作 忘 await 是 第 一 嫌 疑，本关 flushPromises 题 的 CI 规 模 化 版）。偶 发 红 治 理 三 刀：① 禁 时 间 相 关 裸 操 作（全 局 装 fake timers 基 线，只 有 主 动 释 放 才 走 真 时 钟）；② 禁 测 试 间 共 享（每 用 例 新 mount 与 新 pinia/router，全 局 事 件/URL 的 修 改 afterEach 复 位）；③ 隔 离 跑 复 现 器（`--no-isolate` 复 现 污 染、shard+重 跑 定 位 顺 序 敏 感）——超 过 三 个 月 未 治 的 红 名 单 直 接 删（测 试 债 也 是 债，本包 架构 关 工 程 纪 律 的 收 尾）。
+
+**来源**：Vitest 并行/changed 模式文档；CI 偶发测试失败的隔离与复现通行策略。

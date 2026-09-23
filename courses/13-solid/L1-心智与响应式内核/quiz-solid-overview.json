@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-overview",
-  "title": "Solid 心智总览 · 自测",
+  "title": "solid-overview 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "支撑 Solid 的两条支柱是什么？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "支撑 Solid 的两条支柱是什么？",
       "options": [
         "虚拟 DOM + 单向数据流",
         "细粒度响应式（signal）+ 编译期把 JSX 拆成命令式 DOM 操作",
@@ -11,10 +13,12 @@
         "不可变状态 + 组件重渲"
       ],
       "answer": 1,
-      "explain": "Solid = 细粒度响应式（只更新真正订阅了的节点）+ 编译期 JSX（组件只执行一次、无 vdom 常驻 diff）。"
+      "explanation": "Solid = 细粒度响应式（只更新真正订阅了的节点）+ 编译期 JSX（组件只执行一次、无 vdom 常驻 diff）。"
     },
     {
-      "q": "Solid 的组件函数在执行次数上有什么关键特性？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "Solid 的组件函数在执行次数上有什么关键特性？",
       "options": [
         "只在挂载时执行一次，之后靠细粒度订阅直接更新 DOM，不重跑",
         "每次状态变化都重新执行",
@@ -22,10 +26,12 @@
         "每次 props 变化都重跑整棵子树"
       ],
       "answer": 0,
-      "explain": "组件是搭一次性结构的工厂，返回真实 DOM；后续更新走响应式订阅，不重跑组件——这是 React 式'重执行整函数'的反面。"
+      "explanation": "组件是搭一次性结构的工厂，返回真实 DOM；后续更新走响应式订阅，不重跑组件——这是 React 式'重执行整函数'的反面。"
     },
     {
-      "q": "官方用哪句话对比 Solid 与 React 的单属性更新？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "官方用哪句话对比 Solid 与 React 的单属性更新？",
       "options": [
         "Solid 重建整棵虚拟树再比对",
         "React 只更新变化的那个文本节点",
@@ -33,10 +39,12 @@
         "Solid 更新 targeted attribute，而 React 会为单个属性变化重跑整个组件"
       ],
       "answer": 3,
-      "explain": "文档原话：Solid 只改需要改的那个 attribute，React 则为一个属性变化重新执行整个组件，后者可能做了无用功。"
+      "explanation": "文档原话：Solid 只改需要改的那个 attribute，React 则为一个属性变化重新执行整个组件，后者可能做了无用功。"
     },
     {
-      "q": "同属编译派，Solid 与 Svelte 最主要的差别是什么？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "同属编译派，Solid 与 Svelte 最主要的差别是什么？",
       "options": [
         "Svelte 用 JSX，Solid 用自有模板",
         "两者完全相同只是改名",
@@ -44,10 +52,12 @@
         "Solid 有虚拟 DOM，Svelte 没有"
       ],
       "answer": 2,
-      "explain": "两家都真细粒度、都不重渲组件；差别在写作形态与 runtime：Solid 留 JSX 与很轻的 reconciler，Svelte 靠自有模板把更新编译进产物。"
+      "explanation": "两家都真细粒度、都不重渲组件；差别在写作形态与 runtime：Solid 留 JSX 与很轻的 reconciler，Svelte 靠自有模板把更新编译进产物。"
     },
     {
-      "q": "为什么 Solid 里条件/列表渲染要用 <Show>/<For> 而不是 && 和 .map？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "为什么 Solid 里条件/列表渲染要用 <Show>/<For> 而不是 && 和 .map？",
       "options": [
         "因为 JSX 不支持表达式",
         "因为组件只执行一次，原生 &&/.map 只在首跑求值一次、之后不随状态更新",
@@ -55,10 +65,12 @@
         "因为 Solid 没有数组类型"
       ],
       "answer": 1,
-      "explain": "组件不重渲，原生的 &&/.map 在首次执行就算完了；<Show> 靠 when 变化切换、<For> 做 keyed 复用 DOM 才能响应式更新。"
+      "explanation": "组件不重渲，原生的 &&/.map 在首次执行就算完了；<Show> 靠 when 变化切换、<For> 做 keyed 复用 DOM 才能响应式更新。"
     },
     {
-      "q": "下面哪种情形最不该选 Solid？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "下面哪种情形最不该选 Solid？",
       "options": [
         "团队要 React 式 JSX 又不想要 vdom 常驻成本",
         "交互密集、对运行时性能/包体极敏感的仪表盘",
@@ -66,10 +78,12 @@
         "愿意接受细粒度响应式的心智与学习曲线"
       ],
       "answer": 2,
-      "explain": "框架收益 < 迁移/生态成本时，留在原栈优化才是正解；其余三项正是 Solid 的适用面。"
+      "explanation": "框架收益 < 迁移/生态成本时，留在原栈优化才是正解；其余三项正是 Solid 的适用面。"
     },
     {
-      "q": "React 属于哪一派、靠什么换来了简单心智？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "React 属于哪一派、靠什么换来了简单心智？",
       "options": [
         "运行时派，靠虚拟 DOM + 状态驱动重渲",
         "编译派，靠把逻辑编译进产物",
@@ -77,7 +91,46 @@
         "信号派，靠 getter 拦截读"
       ],
       "answer": 0,
-      "explain": "React 是运行时派代表：状态变就重跑组件、重建 vdom 再 diff，用这层抽象换来'随便写、渲染即重算'的简单心智，代价是连带 diff。"
+      "explanation": "React 是运行时派代表：状态变就重跑组件、重建 vdom 再 diff，用这层抽象换来'随便写、渲染即重算'的简单心智，代价是连带 diff。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Solid 编译 JSX 后产出的更新机制是？ ",
+      "options": [
+        " 每次状态变化重跑组件函数 ",
+        " 把 JSX 拆成命令式 DOM 构造与细粒度 effect，状态变化只触碰对应文本节点/属性 ",
+        " 虚拟 DOM diff ",
+        " 模板字符串 innerHTML 替换 "
+      ],
+      "answer": 1,
+      "explanation": " 编译器把动态表达式就地包成极小的订阅单元，更新粒度精确到单个节点属性。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Solid 的更新粒度处于什么层级？ ",
+      "options": [
+        " 组件级 ",
+        " 元素甚至属性/文本节点级 ",
+        " 页面级 ",
+        " 模块级 "
+      ],
+      "answer": 1,
+      "explanation": " 这正是与组件级重渲染框架（React）的本质分野：一个属性变化不牵动兄弟节点与组件函数。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 官方基准语境里，Solid 不依赖虚拟 DOM 还能高效更新列表的关键原因是？ ",
+      "options": [
+        " 数组操作被特殊优化 ",
+        " 细粒度订阅让增删改只落在真实变化的 DOM 操作上，无需比对 ",
+        " 浏览器缓存 ",
+        " Web Worker 渲染 "
+      ],
+      "answer": 1,
+      "explanation": " 虚拟 DOM 是为重跑组件兜底的比对层；Solid 根本不全量重跑，比对层失去存在必要。 "
     }
   ]
 }

@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-context-composition",
-  "title": "Context 与组件组合 · 自测",
+  "title": "solid-context-composition 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "Solid 的 context 为什么能'共享状态却不触发全树重渲'？关键在 value 里放什么？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "Solid 的 context 为什么能'共享状态却不触发全树重渲'？关键在 value 里放什么？",
       "options": [
         "放一个字符串常量",
         "每次渲染重新 new 一个对象",
@@ -11,10 +13,12 @@
         "放 signal/store(或其 accessor)——响应式留在 signal 层，context 只负责传到深处"
       ],
       "answer": 3,
-      "explain": "context value 本身非响应式；把 signal/store 放进 value，消费者各自细粒度订阅，只有读到的部分更新。"
+      "explanation": "context value 本身非响应式；把 signal/store 放进 value，消费者各自细粒度订阅，只有读到的部分更新。"
     },
     {
-      "q": "useContext(Ctx) 在'没有 Provider 且 createContext 没给默认值'时会？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "useContext(Ctx) 在'没有 Provider 且 createContext 没给默认值'时会？",
       "options": [
         "静默返回 undefined",
         "抛错",
@@ -22,10 +26,12 @@
         "自动创建一个默认 Provider"
       ],
       "answer": 1,
-      "explain": "无 Provider 又无默认值时 useContext 抛错——别指望它像'读不到就是 undefined'。"
+      "explanation": "无 Provider 又无默认值时 useContext 抛错——别指望它像'读不到就是 undefined'。"
     },
     {
-      "q": "Local Context 模式的三要素是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "Local Context 模式的三要素是？",
       "options": [
         "Provider 组件内部建 signal/store 作 value、子树暴露、配一个 useXxx 收口 useContext",
         "全局单例 store + 手动 subscribe + 手动 unsubscribe",
@@ -33,10 +39,12 @@
         "用 Redux 的 Provider/dispatch"
       ],
       "answer": 0,
-      "explain": "让一个组件当'自己的状态容器'：内部建状态经 context 暴露给子树，用一个取用函数封装 useContext。"
+      "explanation": "让一个组件当'自己的状态容器'：内部建状态经 context 暴露给子树，用一个取用函数封装 useContext。"
     },
     {
-      "q": "为什么在 Solid 里'拆很多小组件'几乎零运行时成本？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么在 Solid 里'拆很多小组件'几乎零运行时成本？",
       "options": [
         "因为编译器会把小组件又合并回大组件",
         "因为小组件不用写 return",
@@ -44,10 +52,12 @@
         "因为 Solid 不支持嵌套组件"
       ],
       "answer": 2,
-      "explain": "没有重渲循环，拆分的代价仅是一个 createComponent/Owner 节点，故鼓励按职责大胆拆。"
+      "explanation": "没有重渲循环，拆分的代价仅是一个 createComponent/Owner 节点，故鼓励按职责大胆拆。"
     },
     {
-      "q": "Solid 里 `useMouse()` 这类'复用逻辑函数'和 React Hook 最本质的区别是？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "Solid 里 `useMouse()` 这类'复用逻辑函数'和 React Hook 最本质的区别是？",
       "options": [
         "必须写成 class 组件才行",
         "它只是普通函数(在 owner 内调用即可)，不靠调用顺序魔法/依赖数组，靠 signal 订阅 + Owner 回收",
@@ -55,10 +65,12 @@
         "它每次渲染都要重新创建"
       ],
       "answer": 1,
-      "explain": "可复用逻辑=普通函数，内部自由建 signal/effect；清理靠 onCleanup 随 Owner 触发，没有 Hook 规则。"
+      "explanation": "可复用逻辑=普通函数，内部自由建 signal/effect；清理靠 onCleanup 随 Owner 触发，没有 Hook 规则。"
     },
     {
-      "q": "提供 context 值的正确 JSX 写法是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "提供 context 值的正确 JSX 写法是？",
       "options": [
         "<Ctx value={...}>",
         "<Ctx.set value={...}>",
@@ -66,10 +78,12 @@
         "<Ctx.Provider value={...}>{children}</Ctx.Provider>"
       ],
       "answer": 3,
-      "explain": "createContext 返回的对象带 .Provider；用 <ThemeCtx.Provider value=...>包裹子树。"
+      "explanation": "createContext 返回的对象带 .Provider；用 <ThemeCtx.Provider value=...>包裹子树。"
     },
     {
-      "q": "props 只读的前提下，数据'往上'流动的三条正路是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "props 只读的前提下，数据'往上'流动的三条正路是？",
       "options": [
         "回调 prop / 共享 signal-store(含 context) / 状态提升",
         "直接给 props 赋值 / mutate 父状态 / 全局变量",
@@ -77,7 +91,46 @@
         "只能用全局变量"
       ],
       "answer": 0,
-      "explain": "三条都保持单向流：读走 props/context、改走 setter/回调，绝不去改 props。"
+      "explanation": "三条都保持单向流：读走 props/context、改走 setter/回调，绝不去改 props。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Solid 的 context 向下传递的实现介质是？ ",
+      "options": [
+        " 全局注册表 ",
+        " 沿 owner 链的原型链普通对象 ",
+        " React fiber 记忆 ",
+        " 事件总线 "
+      ],
+      "answer": 1,
+      "explanation": " Provider 把值挂成子 owner 的原型属性，useContext 是一次原型链查找——无订阅、无广播。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 后代读取 context 的时机窗口是？ ",
+      "options": [
+        " 任意时刻动态解析 ",
+        " 组件创建期（同步执行时）沿祖先链查找一次，之后拿到的是引用 ",
+        " 仅渲染后 ",
+        " 仅 effect 内 "
+      ],
+      "answer": 1,
+      "explanation": " 查找发生在构造阶段；所以 Provider 后代的条件渲染只影响能否构造成功，不存在运行中换 context 的隐式重解析。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 提供 context 的官方组件形态是？ ",
+      "options": [
+        " <Context value={v}> 内置组件 ",
+        " <Ctx.Provider value={v}>（Provider 是 context 对象自带的组件属性） ",
+        " <Provider ctx={Ctx}> ",
+        " ctx.provide(v) 命令式 "
+      ],
+      "answer": 1,
+      "explanation": " 与 React 写法形似但机制不同：value 可传 getter，消费端取值才追踪，Provider 本身零响应式开销。 "
     }
   ]
 }

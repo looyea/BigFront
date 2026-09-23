@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "src.pipe(dest) 时若源流 emit('error') 且未给源流单独挂 error 监听，会怎样？",
       "options": [
-        "错误自动转发给 dest",
         "'error' 无人监听 → 抛未捕获异常崩进程，且 dest 不会被关闭",
+        "错误自动转发给 dest",
         "自动重试源流",
         "静默忽略、dest 正常 end"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "pipe 不传播 error，未监听的 'error' 会崩进程（呼应 node-events 第三节），且目标流不会被关闭，留下半成品/泄漏资源（呼应 node-stream-pipeline 第一节）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "stream.pipeline 相比裸 pipe 主要多保证了什么？",
       "options": [
         "读取更快",
-        "任一环节 error 统一回调一次，且所有流自动 destroy 清理资源",
         "不需要 highWaterMark",
+        "任一环节 error 统一回调一次，且所有流自动 destroy 清理资源",
         "自动压缩数据"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "pipeline 统一收口错误 + 自动销毁所有参与的流，避免 fd/socket 泄漏与半成品文件（呼应 node-stream-pipeline 第二节）。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "用 stream/promises 的 pipeline，错误是通过什么机制被处理的？",
       "options": [
         "全局 process.on('error')",
-        "返回的 Promise 被 reject，可用 await + try/catch 捕获",
         "抛同步异常需立刻 catch",
-        "写日志后继续"
+        "写日志后继续",
+        "返回的 Promise 被 reject，可用 await + try/catch 捕获"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Promise 版 pipeline 任一环节出错即 reject，纳入 async 的统一错误路径（try/catch），符合现代错误处理（呼应 node-async-errors、node-stream-pipeline 第三节）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "signal 允许中途 abort 整条管道，触发流销毁并让 Promise reject(AbortError)——用于请求取消、graceful shutdown（呼应 node-stream-pipeline 第三节、node-deploy-perf）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "destroy(signal) 与 pipeline 的 { signal } 组合下，abort 触发时的错误是：",
+      "options": [
+        "普通 Error",
+        "signal.reason（默认 AbortError DOMException 风格的 code 名），且 pipeline 会等已发起的 flush 收尾再 destroy——「及时但不撕裂」",
+        "静默成功",
+        "进程崩溃"
+      ],
+      "answer": 1,
+      "explanation": "AbortSignal.reason 可自定义（abort(新 Error('客户断连')) 带上下文进 catch）；与 finished 的 cleanup 选项配合确保 FD/临时文件不留。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "pipeline 中某个 Transform 的 _transform 回调里调用 callback(null, extraChunk) 返回第二个数据块，pipeline 会：",
+      "options": [
+        "接受额外推入",
+        "报错/警告——streams3 的 push 模型禁止在回调里「多给」（应 this.push 后再 callback），混用旧式返回值是迁移遗留坑",
+        "静默丢",
+        "自动拆两帧"
+      ],
+      "answer": 1,
+      "explanation": "老流允许 callback(chunk) 风格的历史包袱在重写后成雷区；写 Transform 统一「this.push(out); cb()」，review 时盯 callback 带数据这种「新旧混血」。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "对 pipeline 返回的 promise 加超时，正确的姿势是：",
+      "options": [
+        "Promise.race 后不管",
+        "用 AbortSignal.timeout(ms) 传入 pipeline——超时真正 destroy 整条链释放资源；单纯 race 只丢引用不关流",
+        "pipeline.setTimeout",
+        "包一层 setTimeout 不 destroy"
+      ],
+      "answer": 1,
+      "explanation": "race 的「孤儿流」继续占句柄背压满挂起（本关断连题的资源侧）；signal 是唯一能把超时翻译成「全链拆毁」的正道——AbortSignal.any 可并客户断开+超时两来源。"
     }
   ]
 }

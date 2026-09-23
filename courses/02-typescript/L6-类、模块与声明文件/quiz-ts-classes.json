@@ -8,11 +8,11 @@
       "prompt": "TS 的 private 和 ES 的 #field 最大区别是？",
       "options": [
         "没区别",
-        "private 只在编译期检查、擦除后字段仍可被 JS 访问；#field 是运行时真正的私有",
         "#field 是编译期的",
+        "private 只在编译期检查、擦除后字段仍可被 JS 访问；#field 是运行时真正的私有",
         "private 运行时更强"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "private/protected 是类型层约束，编译产物无痕迹；要硬私有用 ES 的 #field（呼应 ts-intro）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "constructor(public x: number) 这种写法叫什么、省了什么？",
       "options": [
-        "参数属性；省去声明字段 + this.x = x 赋值样板",
         "默认参数",
         "剩余参数",
-        "装饰器"
+        "装饰器",
+        "参数属性；省去声明字段 + this.x = x 赋值样板"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "参数属性把'可见性+类型+赋值'合到构造参数一行完成。"
     },
     {
@@ -84,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "泛型 class Stack<T> 的 static 成员能否使用类型参数 T？",
-      "options": ["能", "不能——静态作用域看不到实例的类型参数", "只在 abstract 里能", "加了 readonly 就能"],
+      "options": [
+        "能",
+        "不能——静态作用域看不到实例的类型参数",
+        "只在 abstract 里能",
+        "加了 readonly 就能"
+      ],
       "answer": 1,
       "explanation": "类型参数属于实例侧作用域，static 成员无法引用 T（会报 unknown 类约束错误）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "派生类构造器里把 `super()` 写在 `this.x = 1` 之后：",
+      "options": [
+        "运行时正常",
+        "编译期报错——super() 必须先于任何 this 访问（TDZ 语义的类型侧执行）",
+        "自动提升",
+        "仅 lint 警告"
+      ],
+      "answer": 1,
+      "explanation": "TS 在编译期实现「super 前不能用 this」检查（2377/2376 系错误），把 ES 的运行时 ReferenceError 前移——class 字段初始化顺序同理（字段初始化在 super 返回后）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "TS 4.3 起 getter 与 setter 的类型：",
+      "options": [
+        "必须完全相同",
+        "可以不同——读返回 string、写接受 string|number 合法（此前报 TS2380 的旧限制已放开）",
+        "只能都是 any",
+        "setter 不支持类型"
+      ],
+      "answer": 1,
+      "explanation": "读写异型让「规范化属性」可建模（写入 string|number、读出永远是 string）；Angular/表单库大量受益。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "一个外部类能否 implements 含 private 成员的 interface：",
+      "options": [
+        "能——private 只是文档",
+        "不能——该 private 必须来自同一声明（名义化检查），外部类无法满足",
+        "加 ! 可以",
+        "仅 abstract 类能"
+      ],
+      "answer": 1,
+      "explanation": "interface 带 private/protected 就变成「只有该 class 家族可实现」的名义类型——这正是「含 private 的类互不兼容」的另一面，也是 DI 里用 private 锁实现的手法。"
     }
   ]
 }

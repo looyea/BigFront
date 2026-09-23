@@ -1,6 +1,6 @@
 # vue-async-suspense 面试题精选
 
-> 共 12 题，覆盖 异步组件 / 配置项 / Suspense / 与分包和路由 四类。
+> 共 15 题，覆盖 异步组件 / 配置项 / Suspense / 与分包和路由 四类。
 
 ---
 
@@ -92,3 +92,25 @@
 控制异步组件是否把它的加载 Promise **上报给祖先 `<Suspense>`** 管理。默认 `true`（受 Suspense 协调，Suspense 会在其就绪前显示 fallback）；设 `false` 则异步组件用**自己的** loading/errorComponent、不参与祖先 Suspense 的 pending（呼应 vue-async-suspense 第一、三节）。
 
 **来源**：Vue.js — "defineAsyncComponent suspensible"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. Suspense 被官方称为实验性却已被 Nuxt/Vue Router 深度使用——「内部功能稳定」和「公共 API 稳定」的差距到底指什么？生产该押哪边？
+
+实 验 性 的 具 体 指 向：未 定 型 的 **公 共 契约**——事件（resolve/pending 的 触发 细 节）、多 层 嵌套 的 竞 态（同 一 帧 内 兄 弟 陆 续 resolve 的 切换 策 略）、与 keep-alive/transition 组合 的 行 为 矩阵、错 误 冒 泡 的 归 属（子 异 步 setup 抛 错 该 谁 接——onErrorCaptured 与 #fallback 的 交 界 区）。运行 时 本身 的 挂 起/恢复 内核（异步 setup 组件 的 suspense 状态 机）早 已 被 生态 锤 稳。**决 策 框架**：库/框 架 作 者 直 接 用（Nuxt 这 样 的 生 态 主 权 者 可 能 锁 版 本）；业 务 应 用 优先 押 在 **由 它 们 封装 后 的 API**（路由 级 懒 加载、useAsyncData/defineAsyncComponent 的 加载 态 选项）上，让 中 间 层 吸 收 breaking change；UI 局 部 的 #fallback 交 互（列 表 占 位）可 以 用、关 键 流 程（支 付 页 挂 载）不 押。答 案 的 答 案：把「实 验 性」翻译 成 「谁 来 承 担 API 漂移 的 成本」，而 不 是 「是 否 会 崩」。
+
+**来源**：Vue 官方对 Suspense experimental 状态说明（RFC/文档）；Nuxt 团队关于 Suspense 稳定性诉求的 issue 讨论。
+
+### 14. 路由组件的异步加载和 Suspense 组合时的「双重懒加载」陷阱：chunk 就绪 ≠ 数据就绪，加载态应该由谁呈现？分层方案给出。
+
+三 段 时序：chunk 下载（defineAsyncComponent/路由 懒 加载）→ 组件 setup → 数据 请求（onMounted/watchEffect 发 起 或 顶层 await）——每 段 空 窗 都 会 被 「单 层 loading」的 期待 背 叛（骨架 屏 闪 两 次/黑 屏）。分 层 正 解：① chunk 层 用 骨架 兜 住（Suspense #fallback 或 路由 守卫 预 加 载），要 求 **秒 开 不 闪**（delay 200ms 才 显 loading，本关 delay 题 的 组 合）；② 数据 层 loading 归 组件 内（业 务 形 状 决 定 是 骨 架 还 是 spinner，绝 不 让 Suspense 替 业 务 发 言）；③ 最 优 化 是 **合并 等待**：路由 守 卫/数 据 层 预 取（Vue Router 的 数据 加载 API 3.6+/useAsyncData 在 导 航 阶段 就 发 请 求），组 件 挂 载 时 数据 已 在——「chunk 与 数据 并行」把 两 段 空 窗 压 成 一 段（本包 路由 关 懒 加载 题 的 时间 轴 版）。反 模式：Suspense 嵌 Suspense 套 娃 等 待 语义 互 踩、fallback 里 再 发 请 求。
+
+**来源**：Vue Router 数据加载（lazy component + 导航守卫预取）文档；Nuxt route middleware/useAsyncData 预取模式。
+
+### 15. 给「网络抖动导致异步组件加载失败」做一套生产级自愈：重试、降级、上报各怎么落？
+
+重试：loader 工厂 里 自 包 retry（指 数 退避+上限 2-3 次，只 重 **网络 异常**不 重 404——chunk 404 多 半 是 版 本 漂移 不 该 无 限 重 试）；更 关 键 的 环 节：发布 后 旧 HTML 状 态 的 用 户 点 到 新 路由 → 旧 chunk 哈希 已 不 存 在（vite/webpack 「Loading chunk failed」头 号 线上 事故），**唯 一 有 效 处 置 是 强 刷**（catch 到 加载 失败 后 `location.reload()` 一 次 性 标记 防 循 环 刷 新）。降级：errorComponent 给 「点 击 重 试」的 友 好 页 而 不 是 白 屏；关 键 功 能（下 单 流 程）改 前 置 加 载（守 卫 里 await 完 再 放 行，失 败 决 定 是 否 阻 断 导航）。上 报：捕 获 `Failed to fetch dynamically imported module` 特 征 串 单 独 维度（区 分 chunk 失败 vs 业 务 异 常），带 版 本 哈希 上 报——「发 布 潮 尖 爆 的 加载 失败」= 版 本 漂移 指纹，配 CDN 长 期 保留 旧 chunk（保 留 策 略 写 进 部署 规范，本包 部署 关 的 异步 组件 往 回 拉 手 段）。
+
+**来源**：Vite/webpack chunk 加载失败与部署漂移社区方案（preload 报错重试/reload 兜底）；web-vitals 之外的前端错误上报维度实践。

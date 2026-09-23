@@ -92,6 +92,45 @@
       ],
       "answer": 3,
       "explanation": "content-visibility:auto 让浏览器跳过视口外子树的布局/渲染，contain-intrinsic-size 提供占位尺寸防滚动条跳动。其余选项都不产生'跳过渲染'效果。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 下面哪类 React 典型性能问题在 Svelte 中基本不存在？",
+      "options": [
+        "首屏包体积",
+        "父组件 setState 导致所有子组件无条件重渲染（因为 React 默认整棵子树 re-render）——Svelte 细粒度更新只改真正变化的 DOM，无此通病（对应既有\"哪类 React 问题不存在\"题）",
+        "长列表滚动",
+        "图片加载"
+      ],
+      "answer": 1,
+      "explanation": "细粒度响应式消灭了\"重渲染级联\"，这是 React 需要 memo/useCallback 而 Svelte 不需要的根因（对应既有 useMemo 对照题）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 一个几 MB 的只读查找表（永不修改），最好的存放方式是？",
+      "options": [
+        "$state 包起来",
+        "不包 $state（或 $state.raw）——只读大数据做深代理是纯浪费，用普通常量/模块变量或 raw 只追踪引用（对应既有\"只读大表怎么存\"题）",
+        "放 store",
+        "放 context"
+      ],
+      "answer": 1,
+      "explanation": "深代理成本随访问上升，只读大表不需要响应性（呼应 $state.raw 性能取舍题）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 模板里同一昂贵纯函数 {fmt(a)} 出现 5 处，性能上更优的做法是？",
+      "options": [
+        "保持原样",
+        "用 $derived 计算一次复用（或提前 memo）——避免每个表达式各自在各自 effect 里重复算（对应既有\"昂贵函数多处调用\"题）",
+        "拆成子组件",
+        "用 {#each}"
+      ],
+      "answer": 1,
+      "explanation": "$derived 缓存 = 一次计算多处读；散落 5 处可能触发 5 份 effect 各算（呼应 derived 缓存与编译器表达式题）。"
     }
   ]
 }

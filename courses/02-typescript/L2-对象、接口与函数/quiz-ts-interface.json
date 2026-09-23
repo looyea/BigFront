@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "下面哪种类型只能用 type 而不能用 interface 表达？",
-      "options": ["对象形状 { x: number }", "函数形状 (a:number)=>void", "联合类型 string | number", "带方法的对象"],
-      "answer": 2,
+      "options": [
+        "对象形状 { x: number }",
+        "函数形状 (a:number)=>void",
+        "带方法的对象",
+        "联合类型 string | number"
+      ],
+      "answer": 3,
       "explanation": "interface 只能描述对象/函数/可索引形状；联合、交叉、映射、条件、原始别名必须用 type。"
     },
     {
@@ -87,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "按能力自然分工 + 一致性，避免无谓内耗。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "同名 interface 分两处声明，成员类型不兼容时：",
+      "options": [
+        "后声明覆盖前者",
+        "两处都报错（合并失败）",
+        "自动取并集类型",
+        "只有第一处生效"
+      ],
+      "answer": 1,
+      "explanation": "声明合并是**合取**：方法可叠重载、同名非函数属性类型不一致直接双端报错。给库「改」类型只能扩展不能覆盖，覆盖是 class/继承的事。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "为同一接口写多个调用签名实现函数重载，可用的形式是：",
+      "options": [
+        "type Fn = { (a:string):void } 再声明一次同名 type",
+        "interface 里多行调用签名（自动合并成重载）",
+        "两者都行",
+        "都不行，只能用泛型"
+      ],
+      "answer": 1,
+      "explanation": "type 不允许重名合并（同名再声明=重新定义冲突）；interface 多次声明合并，调用签名顺序即重载匹配顺序——「一个可调用又带属性的对象」（如带静态方法的函数）只有 interface 能优雅表达。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`class C implements SomeType` 中 implements 的作用是：",
+      "options": [
+        "让 C 成为 SomeType 的子类型并影响实例类型检查与继承",
+        "仅校验 C 满足结构，不改变类型关系、不参与运行时",
+        "自动生成接口方法",
+        "禁止 C 有额外成员"
+      ],
+      "answer": 1,
+      "explanation": "implements 是一句话类型测试（检查器验证兼容性），不注入类型也不管继承；实例类型仍由自身决定。运行时更拿不到接口——这是它和 Java implements 的本质区别。"
     }
   ]
 }

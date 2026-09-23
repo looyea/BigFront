@@ -1,6 +1,6 @@
 # react-custom-hooks 面试题精选
 
-> 共 12 题，覆盖 A 自定义 Hook 本质 / B Rules of Hooks / C 返回值与组合 / D 与 Vue composable·SSR 对照四类。
+> 共 15 题，覆盖 A 自定义 Hook 本质 / B Rules of Hooks / C 返回值与组合 / D 与 Vue composable·SSR 对照四类。
 
 ---
 
@@ -99,3 +99,25 @@
 **答**：给出判断标准而非死记：① 一段逻辑在**多个组件**里重复（订阅事件、请求数据、读写本地存储、表单校验）；② 组件函数体过长、混杂了"订阅外部值/派生计算"，想让视图层更纯；③ 需要封装对某个第三方库/Hook 的复用。反例：只是纯函数计算就不必做成 Hook（普通 util 即可，避免占用 Hook 槽位、避免受 Rules 约束）。答题时点出"以 use 开头、内部遵守 Rules、返回稳定值、注意 SSR 守卫、跨组件共享靠 Context/store"能体现体系化理解。
 
 **来源**：React 官方文档 — Escape Hatches、Thinking in React、Dan Abramov — A Complete Guide to useEffect
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  eslint-plugin-react-hooks 靠「use 前缀」这条命名约定在编译/静态期替我们挡住了哪些 bug？
+
+两条规则：rules-of-hooks（Hook 只能在组件或自定义 Hook 顶层调用，不能在条件/循环/嵌套函数/早返回之后调用）与 exhaustive-deps（effect/useCallback/useMemo 依赖完整性）。之所以能静态检查，全因「use 前缀」让 linter 认出「这是个 Hook、内部会动状态槽位」。挡住的高频 bug：① if 里调用 useState 破坏顺序→状态错位/Invalid hook call；② 依赖漏写→读到 stale 值；③ 在早返回后写 Hook→某次渲染少跑几个 Hook 崩。理解「命名约定不是风格洁癖而是 lint 与 React 运行时的接口契约」，就理解了为何自定义 Hook 必须 use 开头。
+
+**来源**：eslint-plugin-react-hooks 文档（rules-of-hooks / exhaustive-deps 动机）；React 官方对 lint 的推荐。
+
+### 14.  想做「多个组件真正共享同一份状态」的自定义 Hook，模块级可变变量、Context、外部 store 三条路各自的坑？
+
+① 模块级可变变量：`let currentUser; export function useUser(){ ... }` 简单，但破坏 React 数据流——一个模块变量被多实例共享，SSR 会跨请求串数据（服务端模块在请求间复用），且改它不会触发重渲染，要靠额外 forceUpdate，且并发/StrictMode 下不可靠。② Context 承载共享：走正规 Provider，SSR 安全，但「value 引用变即全体广播」的粗粒度（见 Context 关），高频更新会痛。③ 外部 store + useSyncExternalStore：订阅式、可按字段选择、并发安全（防 tearing），是 Zustand/Redux 的路子。结论：共享状态绝不裸用模块变量，Context 起步、量大上外部 store。
+
+**来源**：「Why you should not put state in a module-level variable」社区剖析；useSyncExternalStore 与 SSR 单例污染说明。
+
+### 15.  React 自定义 Hook 与 Vue 3 composable 都叫「逻辑复用」，执行模型上有什么根本差异？
+
+相同点：都以 use/驼峰约定命名、都封装「响应式/状态 + 副作用」、都靠调用而非继承/mixin 复用。根本差异在执行时机与上下文：① React Hook 在「每次渲染」都会重新执行整个组件函数（含所有 Hook 调用），靠「调用顺序」把每次的 useState 对齐到上次的槽位——所以必须顶层、无条件；② Vue composable 在 setup 里通常「只执行一次」，内部用 ref/reactive 建立响应式后由渲染 effect 精确追踪，没有「顺序=槽位」的约束，可以在条件块、循环、任意函数里调用（只要在其作用域内）。由此派生：React 需要 useCallback/useMemo 手动稳定引用，Vue 的 computed 天然惰性缓存；React 有 stale closure，Vue 读 .value 永远最新。理解这条就能解释两框架各自的「为什么这样设计」。
+
+**来源**：Vue 3 Composition API「composables」文档与 React Hooks 规则对照；两者执行模型差异社区综述。

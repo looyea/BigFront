@@ -77,6 +77,45 @@
       "options": ["true", "false", "TypeError", "undefined"],
       "answer": 1,
       "explanation": "invariant 只禁止对 target 上的**非可配置**属性在 has 里返回 false。此例 `a` 是普通可配置属性，has trap 可以撒谎返回 false，`'a' in p` 得 false。" 
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`new Proxy({ a: 1 }, { ownKeys: () => [] })`，再访问 `Object.keys(proxy)` 会？",
+      "options": [
+        "得到 []（trap 说了算）",
+        "静默降级为 target 的键",
+        "返回 ['a'] 但不可枚举",
+        "抛 TypeError：ownKeys 必须覆盖 target 全部自有键"
+      ],
+      "answer": 3,
+      "explanation": "**invariant**：ownKeys 结果必须包含 target 全部不可配置键，且目标非可扩展时不能多给；连普通键的覆盖性都有要求——漏键直接 TypeError。trap 可以**过滤可配置键的可见性**（靠 getOwnPropertyDescriptor 配合），但不能无中生有也不能丢三落四。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Vue 3 用 Proxy 替代 defineProperty 的直接收益**不包括**：",
+      "options": [
+        "感知新增/删除 key（set / deleteProperty trap）",
+        "天然支持数组索引与 length 变化",
+        "嵌套对象用懒代理，避免一次性递归劫持",
+        "读写性能全面优于普通对象"
+      ],
+      "answer": 3,
+      "explanation": "Proxy 恰恰**更慢**——每次 trap 都是一次函数调用，V8 无法给它做 inline cache；热路径要靠 shallowReactive/markRaw 减层。前三项才是真实收益。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "想把 target 上的 getter 经 proxy 读出来，且保证 getter 内部 `this.other` 也触发 get trap，关键是：",
+      "options": [
+        "用 `target[key]` 取值最简单",
+        "用 `Object.getOwnPropertyDescriptor` 手动求值",
+        "`Reflect.get(target, key, receiver)` 把第三个参数原样透传",
+        "把 getter 改成普通函数"
+      ],
+      "answer": 2,
+      "explanation": "getter 的 `this` 由**调用基准对象**决定：`Reflect.get(t, k, receiver)` 把 receiver（即 proxy）传下去，getter 内的 `this.other` 会继续走 get trap——Vue 3 嵌套依赖收集全靠这一点；`target[key]` 会把 this 变成裸 target，断链。"
     }
   ]
 }

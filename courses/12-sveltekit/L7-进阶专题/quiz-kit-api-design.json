@@ -1,9 +1,11 @@
 {
-  "lesson": "kit-api-design",
-  "title": "+server 端点 API 工程 · 自测",
+  "title": "kit-api-design 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "关于 +server.js 的方法导出，正确的是？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 +server.js 的方法导出，正确的是？",
       "options": [
         "导出的函数名必须是 default，靠 request.method 内部分支",
         "只支持 GET 和 POST 两个动词",
@@ -11,10 +13,12 @@
         "每个动词函数返回一个普通对象，Kit 自动 JSON 化"
       ],
       "answer": 2,
-      "explain": "+server.js 导出 GET/POST/PUT/PATCH/DELETE/OPTIONS/HEAD 及 fallback，签名 (event)=>MaybePromise<Response>，必须返回 Response 或抛错。"
+      "explanation": "+server.js 导出 GET/POST/PUT/PATCH/DELETE/OPTIONS/HEAD 及 fallback，签名 (event)=>MaybePromise<Response>，必须返回 Response 或抛错。"
     },
     {
-      "q": "只导出了 GET 处理器时，对同一端点发 HEAD 请求会怎样？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "只导出了 GET 处理器时，对同一端点发 HEAD 请求会怎样？",
       "options": [
         "自动返回该 GET 响应体的 content-length，无需单独写 HEAD",
         "返回 405 Method Not Allowed",
@@ -22,10 +26,12 @@
         "返回空 200 且没有任何头"
       ],
       "answer": 0,
-      "explain": "官方规则：只要有 GET 处理器，HEAD 请求自动返回 GET 响应体的 content-length。"
+      "explanation": "官方规则：只要有 GET 处理器，HEAD 请求自动返回 GET 响应体的 content-length。"
     },
     {
-      "q": "要接住 MOVE 这类没有专属导出的冷门请求方法，应导出？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "要接住 MOVE 这类没有专属导出的冷门请求方法，应导出？",
       "options": [
         "catchAll",
         "fallback",
@@ -33,10 +39,12 @@
         "handle"
       ],
       "answer": 1,
-      "explain": "导出 fallback 处理器可匹配任何未专门导出的请求方法，包括 MOVE 等冷门动词；没 fallback 也没对应动词则 405。"
+      "explanation": "导出 fallback 处理器可匹配任何未专门导出的请求方法，包括 MOVE 等冷门动词；没 fallback 也没对应动词则 405。"
     },
     {
-      "q": "关于 json() 辅助函数，下列说法正确的是？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 json() 辅助函数，下列说法正确的是？",
       "options": [
         "只接收一个字符串参数，不能传对象",
         "会自动把响应缓存到 CDN",
@@ -44,10 +52,12 @@
         "自动补 Content-Type: application/json 与 Content-Length 头"
       ],
       "answer": 3,
-      "explain": "json(data, init?) 从数据生成 JSON Response，自动加 Content-Type: application/json 和 Content-Length，init 可带 status/自定义头。"
+      "explanation": "json(data, init?) 从数据生成 JSON Response，自动加 Content-Type: application/json 和 Content-Length，init 可带 status/自定义头。"
     },
     {
-      "q": "端点里 throw error(400, ...) 或抛未预期错误时，响应如何呈现？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "端点里 throw error(400, ...) 或抛未预期错误时，响应如何呈现？",
       "options": [
         "按请求 Accept 头返回 JSON 错误体或 fallback 错误页，且不渲染 +error.svelte",
         "总是渲染该路由的 +error.svelte 组件",
@@ -55,10 +65,12 @@
         "静默返回 200 空响应"
       ],
       "answer": 0,
-      "explain": "端点无 UI 边界：错误按 Accept 头给 JSON 表示或 src/error.html 兜底页，+error.svelte 不会被渲染。"
+      "explanation": "端点无 UI 边界：错误按 Accept 头给 JSON 表示或 src/error.html 兜底页，+error.svelte 不会被渲染。"
     },
     {
-      "q": "关于 +server.js 与 +layout 的关系，正确的是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 +server.js 与 +layout 的关系，正确的是？",
       "options": [
         "layout 的 load 返回值会注入端点的 event.locals",
         "+layout 文件对 +server.js 毫无影响，跨请求逻辑应放 handle hook",
@@ -66,10 +78,12 @@
         "端点必须写在某个 layout 目录之下才能生效"
       ],
       "answer": 1,
-      "explain": "官方明确 +layout 对 +server.js 无影响；想在每个请求前跑逻辑用 server 的 handle hook。"
+      "explanation": "官方明确 +layout 对 +server.js 无影响；想在每个请求前跑逻辑用 server 的 handle hook。"
     },
     {
-      "q": "关于 OPTIONS 处理器的 CORS 头，正确的是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 OPTIONS 处理器的 CORS 头，正确的是？",
       "options": [
         "Vite 只在生产注入 CORS 头，dev 需要自己加",
         "CORS 头由 Kit 内置的 CSRF 机制自动管理",
@@ -77,7 +91,46 @@
         "导出了 OPTIONS 就永远不需要关心 CORS 头"
       ],
       "answer": 2,
-      "explain": "dev 下 Vite 会注入这两个 CORS 头，生产环境不会自动带上，要跨域必须自己在 OPTIONS 或 handle 里加。"
+      "explanation": "dev 下 Vite 会注入这两个 CORS 头，生产环境不会自动带上，要跨域必须自己在 OPTIONS 或 handle 里加。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 未导出某个 HTTP 方法时，对该方法的请求默认得到？ ",
+      "options": [
+        " 200 空响应 ",
+        " 404（GET 才有 HEAD 自动映射，其余未导出方法即未命中） ",
+        " 405 自动 ",
+        " 500 "
+      ],
+      "answer": 1,
+      "explanation": " 端点按导出的方法名匹配，未导出即路由不存在；要 405 语义需自行导出兜底处理。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " json() 辅助函数的准确行为是？ ",
+      "options": [
+        " 把对象存进 cookie ",
+        " 设置 content-type application/json、序列化 body 并返回 Response，状态码可传 ",
+        " 仅 stringify 不设头 ",
+        " 自动加 CORS "
+      ],
+      "answer": 1,
+      "explanation": " json(data, init?) 是端点标准出口，init 里可覆盖 status/headers；同类还有 text/error。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 端点里需要读请求体 JSON，正确姿势是？ ",
+      "options": [
+        " event.request.json()（原生 Request API） ",
+        " event.body ",
+        " context.params ",
+        " readBody(event) "
+      ],
+      "answer": 0,
+      "explanation": " RequestEvent.request 是标准 fetch Request，直接 await request.json()/formData()；SvelteKit 不提供额外 body 解析中间件。 "
     }
   ]
 }

@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "要执行一个输出很大、需要边读边处理的命令（如 tail -f），该用？",
-      "options": ["exec", "execFile", "spawn", "fork"],
-      "answer": 2,
+      "options": [
+        "spawn",
+        "exec",
+        "execFile",
+        "fork"
+      ],
+      "answer": 0,
       "explanation": "spawn 的 stdout 是流，可边出边处理、不受 maxBuffer 限制；exec/execFile 会把输出缓冲到内存、超上限会杀进程（呼应 node-child-process 第一、二节）。"
     },
     {
@@ -16,11 +21,11 @@
       "prompt": "为什么把用户输入拼进 exec 的命令串有命令注入风险？更安全的替代？",
       "options": [
         "没问题，exec 会自动转义",
-        "exec 经 shell 解析，; && | 等会被当命令执行；应改用 execFile + 参数数组（不经 shell）",
         "exec 只能跑系统命令",
-        "加引号即可彻底安全"
+        "加引号即可彻底安全",
+        "exec 经 shell 解析，; && | 等会被当命令执行；应改用 execFile + 参数数组（不经 shell）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "exec 开 shell，用户输入里的 ; | && 会被 shell 当语法执行→注入；execFile 直接传数组参数、不经过 shell，输入只作普通参数（呼应 node-child-process 第二节）。"
     },
     {
@@ -79,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "fork 的 IPC 消息里，不能直接发送的是？",
-      "options": ["普通对象", "字符串", "函数 / 不可序列化对象", "数组"],
+      "options": [
+        "普通对象",
+        "字符串",
+        "函数 / 不可序列化对象",
+        "数组"
+      ],
       "answer": 2,
       "explanation": "IPC 走序列化（结构化克隆/JSON），函数、Symbol、原型方法等不可序列化发不过去；可 transfer 的是句柄/ArrayBuffer（呼应 node-child-process 第五节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "spawn 的 stdio 选项写成 [\"ignore\",\"pipe\",\"inherit\"] 表示：",
+      "options": [
+        "三段都管道",
+        "stdin 关闭、stdout 管道可读、stderr 直通父进程终端（日志实时可见但不进程序内解析）",
+        "顺序反了",
+        "仅 Win 有效"
+      ],
+      "answer": 1,
+      "explanation": "三元素按 0/1/2 对应 stdin/stdout/stderr；取值 inherit/pipe/ignore/ipc/fs fd——「子进程报错刷屏父终端」就是 stderr inherit 的效果（调试友好、生产日志混排的根源之一）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "execFile 与 exec 的本质区别是：",
+      "options": [
+        "没区别",
+        "execFile 不经过 shell（参数数组直传），免 shell 注入与引号地狱、也失去管道通配能力；exec=shell+缓冲输出",
+        "exec 更快",
+        "execFile 只能同步"
+      ],
+      "answer": 1,
+      "explanation": "「用户输入拼命令」的根治方案就是 execFile+args 数组（本关注入题的正解）；确需 shell 时自己引号转义（shell-quote）或 -- 分隔。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "child.unref() + 父进程退出的组合行为是：",
+      "options": [
+        "子进程立刻被杀",
+        "父的事件循环不再等它、父退出不带走子（POSIX 成孤儿进程挂到 init；Win 无此语义进程树另有行为）——守护/分离启动器姿势",
+        "自动 kill 孙进程",
+        "仅调试模式"
+      ],
+      "answer": 1,
+      "explanation": "unref=「不等它」而非「杀掉它」；配 detached:true 独立进程组。Linux 容器里 PID 1 会收留孤儿——「spawn 出去关我什么事」的清理责任要显式设计（本关孙子进程题的另一半）。"
     }
   ]
 }

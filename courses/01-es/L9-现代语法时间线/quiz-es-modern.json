@@ -6,23 +6,38 @@
       "id": "q1",
       "type": "single",
       "prompt": "`Object.groupBy` 是哪一年引入的？",
-      "options": ["ES2019", "ES2022", "ES2024", "ES2020"],
-      "answer": 2,
+      "options": [
+        "ES2024",
+        "ES2019",
+        "ES2022",
+        "ES2020"
+      ],
+      "answer": 0,
       "explanation": "ES2024 标准化 Object.groupBy 与 Map.groupBy——替代 lodash _.groupBy 与手写 reduce。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "以下哪个 lodash 功能**还没有**原生替代？",
-      "options": ["_.flatten", "_.groupBy", "_.debounce", "_.toPairs"],
-      "answer": 2,
+      "options": [
+        "_.flatten",
+        "_.groupBy",
+        "_.toPairs",
+        "_.debounce"
+      ],
+      "answer": 3,
       "explanation": "debounce / throttle 没有原生 API——仍需手写或引第三方。其余三项：flat / groupBy / Object.entries 都标准化了。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "Array 不可变方法 `toSorted` / `with` 是哪一年？",
-      "options": ["ES2020", "ES2022", "ES2023", "ES2024"],
+      "options": [
+        "ES2020",
+        "ES2022",
+        "ES2023",
+        "ES2024"
+      ],
       "answer": 2,
       "explanation": "ES2023 引入 toSorted / toSpliced / with——不改变原数组就得到排序/替换后的新数组。"
     },
@@ -64,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "targets 越现代 → 降级越少 → 体积越小。last 2 Chrome 基本**不需要** Babel 转任何语法。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "`arr.toSorted()` 与 `arr.sort()` 的关键差别：",
+      "options": [
+        "排序算法不同",
+        "toSorted 返回新数组不改原数组（ES2023）",
+        "toSorted 更快",
+        "sort 已废弃"
+      ],
+      "answer": 1,
+      "explanation": "ES2023 不可变家族：toSorted/toReversed/toSpliced/with——React/Vue 状态更新不再需要 `[...arr].sort()` 两段式。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "脚本首行 `#!/usr/bin/env node` 从 ES2023 起在 JS 文件里：",
+      "options": [
+        "依然报错",
+        "被规范合法化（引擎解析时剥离 hashbang）",
+        "必须用注释包裹",
+        "仅 Node 支持"
+      ],
+      "answer": 1,
+      "explanation": "Hashbang 语法标准化：CLI 脚本顶层 `#!` 行合法，浏览器/构建器统一剥离——此前各引擎私自容忍的历史债还清。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`Intl.Segmenter` 解决的是哪类问题？",
+      "options": [
+        "日期格式化",
+        "按语言环境的文本切分：词、句子、字素簇（emoji 家族正确计数）",
+        "数字本地化",
+        "排序比较"
+      ],
+      "answer": 1,
+      "explanation": "ES2022 的 Segmenter 是「数一个 emoji 长度/中文分词」正解：`segmenter.segment(s)` 迭代字素簇——Array.from 只到码点，家族符号仍会被拆开。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "structuredClone **不能**克隆下列哪项？",
+      "options": [
+        "Map/Set",
+        "函数与 DOM 节点（抛 DataCloneError）",
+        "Date/RegExp",
+        "TypedArray"
+      ],
+      "answer": 1,
+      "explanation": "能克隆：纯数据结构（含循环引用）。不能：function、DOM/代理对象、类实例（原型丢失变 plain object——深拷贝 class 要自己实现序列化）。"
     }
   ]
 }

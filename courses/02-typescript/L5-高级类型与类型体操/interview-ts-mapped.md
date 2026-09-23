@@ -1,6 +1,6 @@
 # ts-mapped 面试题精选
 
-> 共 12 题，覆盖 **映射类型本质 / 修饰符控制 / 键重映射 as / 模板字面量类型 / 同态与数组元组 / 工程实战** 六类。
+> 共 15 题，覆盖 **映射类型本质 / 修饰符控制 / 键重映射 as / 模板字面量类型 / 同态与数组元组 / 工程实战** 六类。
 
 ---
 
@@ -111,3 +111,25 @@ type R = AwaitAll<[Promise<number>, Promise<string>, boolean]>;
 克制 + 上保险：① **能简单就别炫技**——优先内置工具类型和显式类型，体操留给确实需要的通用库层（呼应 ts-utility 第 12 题）；② **加断言测试**——用 `type Expect<T extends true>` + `Equal<A,B>` 给复杂类型写"类型单测"，改坏立刻红（详见 ts-advanced）；③ **控深度、防循环**——深递归要设终止条件，警惕 `excessively deep`，循环引用结构加显式标注；④ **命名 + 注释**——每层拆成命名 type、注明输入→输出意图；⑤ **关注编译性能**——超大映射/条件类型会显著拖慢 tsc，CI 里监控类型检查耗时（呼应 Express L7 CI 门禁）。类型是助力不是目的，可读性与可维护性优先。
 
 **来源**：type-sitter / ts-expect — "type testing"; Total TypeScript; Effective TS — Item 42
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 什么条件下映射类型是「同态」的？同态与非同态在 readonly/可选/修饰符上的行为差异？
+
+同态：`[P in keyof T]`（源必须字面是 keyof T，可带 as 改名不算破坏）。同态红利：自动继承 T 的可选/readonly/索引签名/tuple 形状，且 `+?/-?/readonly` 修饰符是「在继承基础上加减」。非同质（`in "a"|"b"` 或 `in Keys` 常量联合）：产普通对象，无修饰符继承、-? 无从谈起；加 as 重映射后保留同态性但被改名的键失去部分修饰符继承。深坑：`-?` 在 exactOptionalPropertyTypes 下与 `| undefined` 交互——去掉 ? 但值仍可能 undefined，Required≠非 undefined。
+
+**来源**：TS 4.1 key-remapping 提案对 homomorphic 的定义；TS Handbook Mapped types 修饰符组合表。
+
+### 14. 模板字面量类型的推断与收窄有什么实战玩法？
+
+三板斧：① **联合展开**：`` `${"get"|"post"} ${string}` `` 自动 distribute 成两族模式；② **反向推断**：`` T extends `${infer M} ${infer P}` `` 拆 HTTP 路由/日期串（定界符贪婪策略：首段吃最短匹配，要全枚举 `${number}` 内置支持）；③ **收窄**：4.8 起 `startsWith/endsWith` 判别对模板字面量类型生效（if 内从 string 变 `` `${string}px` `` 类）。实战：类型安全路由表（`Paths<"/users/:id">` 提取参数名联合）、CSS 属性 camel→kebab、i18n key 穷举。别拿它写正则解析器——超 100k 组合直接熔断。
+
+**来源**：TS 4.1《Template Literal Types》；TS 4.8《Braced string and template literals narrowing》。
+
+### 15. 用映射类型给对象「加前缀/去前缀键名」（如 event: 前缀剥离）怎么写？边界在哪？
+
+去前缀：`{[K in keyof T as K extends \`on${infer N}\` ? Uncapitalize<N> : never]: T[K]}`——as 同时做过滤+改名；组合 `Prefix<"api", Keys>` 造嵌套路由。边界：symbol/number 键在模板里 `\`${K}\`` 转 string 会毁掉键类型（用 `Exclude<keyof T, symbol>` 先挡）；`Uncapitalize` 只处理首字母，驼峰边界不动；键重映射后与 index signature 同存时 as 需对 string 分支也建模。应用：Vue defineEmits→props 映射、事件总线 on/off 命名表都靠这套。
+
+**来源**：TS 5.0《Decorators? no——String Mapping Types》: capitalized/un capitalized 内置工具（4.1）；Vue emit 类型推导实现。

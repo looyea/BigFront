@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "单个 Node 进程在 8 核机器上处理 CPU 有一定占比的 HTTP 请求，大约能用上几个核的 JS 计算能力？",
-      "options": ["8 个", "1 个", "4 个", "0 个"],
-      "answer": 1,
+      "options": [
+        "1 个",
+        "8 个",
+        "4 个",
+        "0 个"
+      ],
+      "answer": 0,
       "explanation": "JS 在主线程单线程执行，一个进程只吃 1 个核；libuv 线程池只帮 I/O/加密。要多核分摊需 cluster 起多进程（呼应 node-cluster 第一节、node-event-loop）。"
     },
     {
@@ -16,19 +21,24 @@
       "prompt": "多个 worker 都执行 listen(3000) 却不报 EADDRINUSE，本质原因是？",
       "options": [
         "端口会自动分时复用",
-        "监听 socket 由 primary 持有，通过 IPC 把句柄 transfer 给 worker，连接被分发",
         "OS 忽略了重复 bind",
+        "监听 socket 由 primary 持有，通过 IPC 把句柄 transfer 给 worker，连接被分发",
         "每个 worker 其实监听不同端口"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "共享端口的本质是 primary 持句柄 + 连接分发（呼应 node-cluster 第三节、node-child-process interview 第 9 题）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "cluster.fork() 应该由谁调用？",
-      "options": ["任意 worker", "仅 primary(isPrimary)", "仅 worker", "操作系统"],
-      "answer": 1,
+      "options": [
+        "任意 worker",
+        "仅 worker",
+        "操作系统",
+        "仅 primary(isPrimary)"
+      ],
+      "answer": 3,
       "explanation": "派生 worker 是 primary 的职责，用 cluster.isPrimary 分支判断（呼应 node-cluster 第二节）。"
     },
     {
@@ -82,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "pm2 把多核、自愈、reload、日志封装成运维工具，理解 cluster 才懂其背后（呼应 node-cluster 第八节、node-deploy-perf）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "cluster 模式下 worker 崩溃后，primary 的标准自愈动作是：",
+      "options": [
+        "重启机器",
+        "监听 worker \"exit\"，非优雅退出即按退避策略 fork 替补，并对「连环秒崩」设熔断（防 crash loop 打满 CPU）",
+        "等人工",
+        "切流量到备用端口"
+      ],
+      "answer": 1,
+      "explanation": "无脑 respawn 在「启动即崩」（配置错误）时变成 Fork 炸弹——60s 内 N 次崩溃就停手告警；这是 pm2 默认 reboot 间隔存在的理由（本关 pm2 题的算法面）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "cluster 的端口共享在 Linux 上的默认实现机制是：",
+      "options": [
+        "每个 worker 各自 bind 端口",
+        "primary 持 listen fd，把 accept 到的连接 fd 经 IPC handle 传给 worker（SO_REUSEPORT 为可选模式）",
+        "内核轮询",
+        "文件锁"
+      ],
+      "answer": 1,
+      "explanation": "fd 过继（本关 child-process IPC handle 题的实装）让「多进程同端口」成为可能；uv 的 SO_REUSEPORT 模式（Net.listen fd 复用）把 accept 交给内核，减少 primary 瓶颈与惊群——两档行为差异在连接风暴压测里可见。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "cluster 与容器编排并存的合理姿势是：",
+      "options": [
+        "二选一即冲突",
+        "K8s 多 Pod 时通常关闭 cluster（1 Pod=1 核 1 进程，扩缩交给副本）；单机裸部署/VM 里 cluster 仍有价值——两层「多核」只做一层，否则 4×4 进程超卖",
+        "cluster 必须永远开",
+        "K8s 自动管理 cluster"
+      ],
+      "answer": 1,
+      "explanation": "OS 调度 + K8s 副本已提供并行与自愈，cluster 再fork 反而稀释 cpulimit 与 HPA 指标（每 Pod 多进程让「1 CPU 1 进程」的伸缩模型失真）；混合形态（cluster:2 × 副本数）只在明确压测收益后引入。"
     }
   ]
 }

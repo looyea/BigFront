@@ -1,4 +1,4 @@
-# nuxt-styling 面试题（12 题）
+# nuxt-styling 面试题（15 题）
 
 ## A. 基础认知
 
@@ -67,3 +67,25 @@
 **答**：定三层：①**基础层**——design tokens（CSS 自定义属性）唯一来源，由设计侧产出、构建期注入，禁止组件内写死色值；②**布局与原子层**——Tailwind/UnoCSS 负责间距、排版等高频小样式，配 safelist 与自定义规则收敛"野路子类名"；③**组件层**——UI 库或自研组件承担复杂交互样式，只允许 scoped/module，全站样式禁止散落在页面组件。守的方式不是靠 code style 文档，而是自动化：Stylelint 规则禁 hex 色/禁全局选择器在组件文件中、构建期 diff CSS 体积、Storybook 视觉回归、CR 清单里"新增全局样式必须走 css 数组并说明归属"。技术选型的分歧会随时间变化，**分层与卡口才是长期有效的东西**。
 
 **来源**：《大型前端的样式治理》、《Design Tokens 落地》
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  CSS 优先级与体积的双重治理：大型项目怎么设计样式加载架构让两者不打架？
+
+优先级侧：全局只有一个优先级模型——声明层顺序（@layer theme<base<components<utilities）写进架构文档，第三方库样式统一归 components 层（入口 import 位置对齐层序），"谁压过谁"从源码考古变成层声明可读；禁止散点 !important（ESLint 规则/grep 门禁），白名单要注释理由。体积侧：全局层（reset+tokens+布局骨架）进首屏关键路径（inlineStyles 或 tiny CSS 外链），组件层靠 scoped/原子类天然按路由分割，UI 库按需引入+主题裁剪（Element 类库的样式全量引入是最常见体积事故）；审计：coverage 工具量"首屏用到多少字节"，未用规则进 dead CSS 报告。协同点：分层不只管优先级也是体积切分依据——base 层可内联、components 层可延迟，层即加载策略的声明。收口句："层=优先级+加载时机"一个机制管两本账，这是 cascade layers 被低估的红利。
+
+**来源**：web.dev 关键 CSS 指南；InfoQ《设计系统三件套：tokens/themes/components》
+
+### 14.  SSR 应用的首屏 CSS：内联关键 CSS、外链、inlineStyles 三种交付方式怎么选？
+
+三形态账：① 全外链 CSS——首屏被 CSS 请求阻塞（render-blocking），慢网络下白屏窗口=RTT+下载；胜在全站复用缓存、HTML 最小；② 全内联——首帧零阻塞，但每页 HTML 背全站样式、不可缓存、复用率越低越亏；③ 关键 CSS 内联+全量外链异步（media=print 交换/onload 加载）——理论最优，工程债在"关键集判定"与防 FOUC 的二次应用闪烁。Nuxt 的 inlineStyles 是 ③ 的组件级自动化：SSR 时把"本次渲染用到的 scoped/组件样式"抽进 HTML style 标签，剩余（全局、懒路由）走外链——自动优于手动的地方是"用到哪些"由渲染结果决定而非人猜。决策参数：页均样式复用率（内容站高→外链+预加载就够、后台/首屏复杂组件多→开）、HTML 体积预算（内联超 14KB 要重估）、HTTP/2+ 下多请求惩罚降低。验证：WebPageTest 看首帧时间线与 FOUC 录像，Lighthouse 的 CSS 交付审计。
+
+**来源**：Nuxt 官方 features.inlineStyles 说明；web.dev render-blocking CSS
+
+### 15.  多品牌（白标）+深色模式的主题体系怎么设计？CSS 变量、构建期、运行时三层各自的活？
+
+三层各司其职：① 构建期（编译进包）：字体、间距/断点等"不随品牌变的设计尺度"进 tokens 文件，多品牌若同结构可用 SCSS @use 变量分叉（品牌少、构建矩阵可控时）；② 运行初（SSR 首帧）：品牌主色/圆角这类"每客户不同但每次部署内稳定"的，走 runtimeConfig.public.brand→服务端注入根元素 CSS 变量（:root style 直出，防品牌色闪烁=水合题的样式版），或按租户构建（客户>50 时构建矩阵爆炸，变量方案完胜）；③ 会话内动态：深色/紧凑模式走 data-theme 属性+CSS 变量重定义（[data-theme=dark]{--bg:...}），持久化进 cookie 保 SSR 正确（主题闪烁标准解）。组件侧纪律：只消费语义变量（--color-brand/--surface），品牌差异零 if 分支——出现 v-if="brand" 即架构失守。验收清单：任意租户×亮暗×首帧三组合截图回归（Playwright 矩阵），"白标改一处色全站对"是这套设计的唯一度量。
+
+**来源**：Nuxt app.config 文档；掘金《一套代码 30 个白标客户的样式架构》

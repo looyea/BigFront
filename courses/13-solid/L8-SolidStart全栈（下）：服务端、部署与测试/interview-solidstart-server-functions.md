@@ -1,6 +1,6 @@
 # 服务端函数与数据变更 · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) "use server" 指令在编译层到底做了什么？
 
@@ -61,3 +61,25 @@ query getProduct("product") + route.preload 预热；action updateProduct（"use
 
 query：页面渲染要读的数据（带缓存键、可 preload，如账户信息）；action：由用户提交驱动的状态变更（登出、改名、下单）；API 路由：给**外部 HTTP 客户端**消费的端点（REST/GraphQL/tRPC，官方 api-routes 页的定位）。三者共享同一套指令与序列化机制。
 **来源**：官方 data-mutation 与 api-routes 页的分工叙述转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  服务端函数怎么处理 cookie、鉴权与请求上下文？ 
+
+ 用框架 getRequestEvent/getRequestHeader 等取当前请求（cookies/headers 经 request 读），鉴权复用中间件挂上的上下文；要点是这些 API 仅服务端函数执行域内有效，抽成纯函数传参会更可测。 
+
+**来源**： https://github.com/solidjs/solid-start 
+
+### 14.  同一份写操作，服务端函数、API 路由、表单 action 三种入口怎么选？ 
+
+ 表单优先渐进增强场景走原生 action/表单提交；类型安全的 RPC 与乐观更新配服务端函数；对外公开、被第三方调用的契约走 REST API 路由；判据是调用方是谁与要不要无 JS 兜底。 
+
+**来源**： https://docs.solidjs.com/ 
+
+### 15.  冷启动与打包：server 函数文件的顶层副作用会引起什么问题？ 
+
+ 顶层 new Client/读 env 会在每个函数首次求值时执行，连接未池化则冷启动放大、实例跨请求共享埋雷；应惰性初始化挂在 globalThis 或用平台连接池，并保证模块导入无副作用。 
+
+**来源**： https://github.com/solidjs/solid-start 

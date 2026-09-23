@@ -1,6 +1,6 @@
 # node-https-tls 面试题精选
 
-> 共 12 题，覆盖 **协议分层 / 证书与 PKI / 握手 / 校验与误用 / SNI 与 mTLS / HTTP/2 / 生产运维** 七类。
+> 共 15 题，覆盖 **协议分层 / 证书与 PKI / 握手 / 校验与误用 / SNI 与 mTLS / HTTP/2 / 生产运维** 七类。
 
 ---
 
@@ -101,3 +101,25 @@ TLS 1.3：**ClientHello**（带支持的套件 + `key_share` 密钥协商参数�
 ① **最低 TLS 1.2、力争 1.3**，`minVersion:'TLSv1.2'`；② **只保留强套件**（含 ECDHE 前向保密、AEAD），**禁用**压缩(TLS 层，防 CRIME)、弱曲线、导出套件；③ 证书用公共 CA + **自动续期**（certbot/ACME）+ **到期监控告警**；④ **HSTS** 响应头（`Strict-Transport-Security`，含 `max-age`、`includeSubDomains`、必要时 `preload`）强制后续走 https（呼应 Express L6）；⑤ http→https **301 跳转**、防降级；⑥ 私钥权限 600、绝不入库；⑦ 关闭证书校验仅限本地（第 7 题）；⑧ 定期用 SSL Labs/`testssl.sh` 扫描。这些是"面向公网"的必做项（呼应 node-deploy-perf 生产就绪清单）。
 
 **来源**：Mozilla — "Server Side TLS"; OWASP — "Transport Layer Security cheat sheet"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 用 Node 起一个生产级 HTTPS 服务，TLS 层面逐项给配置与理由。
+
+证书：ACME 自动续期（lego/greenlock 或让 LB 管）+ 链完整（fullchain 含中间证书，缺链在部分安卓/老客户端才暴露）；协议：minVersion TLSv1.2（内部全 1.3 可 min 1.3）、maxVersion 1.3；套件：默认即安全（1.3 无套件可选，1.2 留 ECDHE+AES-GCM）、禁用静态 RSA 密钥交换（保 PFS）；会话：sessionTimeout 收敛、复用 resumption 提 QPS；SNI：多域用 SNICallback 动态选证（别一次性 allCerts 内存摊大饼）；OCSP stapling 让客户端免查 CA（隐私+速度）；HTTP：加 HSTS（确认全域 HTTPS 再 preload）、 ALPN 声明 h2,http/1.1；监控：过期倒计时告警（本关基线题的闭环）、SSLLabs 外测定期回归。进程层：TLS 在 Node 终结意味着私钥进内存——高敏业务把终结外移（本关「谁终结」题），Node 只接回源明文/双向校验放边缘。
+
+**来源**：Mozilla SSL Configuration Generator；Node tls.createSecureContext 选项文档与 SSLLabs 评级实践。
+
+### 14. mTLS 与普通 TLS 在 Node 里各配什么？证书轮换工程怎么做？
+
+配置差异：服务端 requestCert:true + rejectUnauthorized:true + ca=客户端 CA（不是服务端证书！），客户端 secureContext 带 key/cert 自身证书；Node 侧取证书：res.getPeerCertificate()（详细链）——授权把 CN/SAN 映射身份（别把「能握手」当「有权限」，RBAC 在应用层）。轮换：证书寿命 ≤90 天 + 提前 1/3 自动换（SPIFFE/小证书思路）；服务端热换：server.setSecureContext 不重启（ACME webhook 触发）；客户端连接池要能感知对端重签（长连接 mTLS 的服务发现联动）。信任模型：内部 CA（Vault step-certificate）分层签发，吊销走短期证书代替 CRL；排障：握手失败先分清「证书不被信 vs hostname vs 链不完整 vs 时钟漂移」。
+
+**来源**：Node tls 文档 requestCert/getPeerCertificate；SPIFFE 短期证书与 Vault PKI 轮换实践。
+
+### 15. TLS 在 Node 终结还是交给 Nginx/云 LB？决策矩阵给一个。
+
+Node 终结的理由：端到端加密（零信任内部也要 TLS）、免一层代理开销与 hop 审计、WebSocket/mTLS 细节可控、单机部署省事。交给 LB 的理由：证书集中管理（几十实例一处续）、硬件/OS 级优化与会话票据共享、DDoS/卸载在边缘、HTTP/3 与灰度能力、合规审计边界清晰。折中：re-encrypt（LB 到 Node 仍 https，内网自签/mTLS）——兼顾集中与端到端；TLS 终结在 LB 时 Node 必须处理 forwarded/proto 伪造（X-Forwarded-Proto 只信来自可信 LB、HSTS 只在可信处加——本关安全基线题与 Express trust proxy 呼应）。决策变量：实例数、证书自动化成熟度、合规（数据明文落地面）、性能预算（Node crypto 占主线程之外的线程池，但 handshake CPU 仍是你账单）。
+
+**来源**：云厂商 LB TLS 终结文档（ALB/NLB 对比）；Zero Trust 内部 TLS 实践（Google cloud next 案例）。

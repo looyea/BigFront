@@ -96,3 +96,21 @@ console.log([...range], [...range]);
 **12）`for-await-of` 与 `for-of + await` 的语义区别？**
 - 参考要点：`for-await-of` 走 `Symbol.asyncIterator`——每个 next() 返回 Promise，引擎自动 await；**串行**（下一条要等上一条完成）。**`for-of + await`**：如果它本身是 sync iterable + await 每一项也是串行。**要并发**：`await Promise.all([...it].map(async x => ...))`。**Node.js Readable 流 / Web Streams API** 用 for-await。
 - 来源：MDN `for await...of`；Node.js 文档《stream iterator》。
+
+---
+
+**13）`yield n++` 与 `yield ++n` 有什么区别？`next(v)` 注入的是哪个位置？**
+- 参考要点：`yield n++` 先以 **n 的旧值**作为产出值，暂停点恢复前 `n++` 已发生（副作用在挂起前完成）；`yield ++n` 则先自增再产出**新值**。`next(v)` 把 v 作为**上一个 `yield` 表达式整体**的求值结果注回函数内（第一次 next 的参数会被丢弃，因为此时还没有 yield 在等）。考点常配「无限 counter + reset 注入」手写题。
+- 来源：MDN《yield 运算符》；javascript.info《高级迭代与 generator 返回》。
+
+---
+
+**14）生成器的 `return()` / `throw()` 分别何时被触发？如何用它做资源清理？**
+- 参考要点：`for-of` 提前 break/throw 时引擎调 `it.return()`，生成器从当前 yield 处**沿 finally 路径**收尾（try/finally 里的清理代码执行）；`it.throw(err)` 把异常**注入到 yield 表达式处**，可被函数内 try/catch 捕获——两方法都让 done=true。实战：包文件句柄/DB 连接的生成器在 `finally` 里 close；错误边界用 throw 做协程控制流。
+- 来源：MDN《Generator.prototype.throw/return》；TC39 iterations 提案文档。
+
+---
+
+**15）`take(10, map(x => x*x, naturals()))` 这种惰性管道，map 实际执行了多少次？为什么？**
+- 参考要点：只执行 **10 次**（严格说 take 探到第 11 个时才判定终止）。生成器不 `next()` 就不运行——整条管道是**拉取式（pull）**：消费端每要一个值才推动上游算一步，`naturals()` 的 `while(true)` 永远不会跑完。这正是 Iterator Helpers / RxJS 「冷流」雏形：`it.map(f).take(10)` 同一协议，优点是**无限序列可处理、内存 O(1)**。
+- 来源：tc39/proposal-iterator-helpers（GitHub）；javascript.info《惰性求值》。

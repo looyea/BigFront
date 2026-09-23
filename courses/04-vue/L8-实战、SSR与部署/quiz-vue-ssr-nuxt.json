@@ -8,11 +8,11 @@
       "prompt": "相比纯 CSR(SPA)，SSR 主要解决哪两个痛点？",
       "options": [
         "服务器成本和数据库压力",
-        "首屏白屏慢 与 SEO 不友好（爬虫看到空壳）",
         "打包体积和依赖冲突",
+        "首屏白屏慢 与 SEO 不友好（爬虫看到空壳）",
         "组件通信和状态管理"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "SSR 直出 HTML 加快首屏、利于收录（呼应 vue-ssr-nuxt 第一节）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "hydration（水合）指的是什么？",
       "options": [
         "客户端把服务端 HTML 丢弃后重新渲染",
-        "客户端 Vue 复用服务端产出的 DOM，绑定事件并建立响应式",
         "服务端把数据写进数据库",
-        "把 CSS 内联进 HTML"
+        "把 CSS 内联进 HTML",
+        "客户端 Vue 复用服务端产出的 DOM，绑定事件并建立响应式"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "水合是复用已有 DOM 而非重建（呼应 vue-ssr-nuxt 第二节）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "初始状态序列化注入、水合复用，避免二次请求（呼应 vue-ssr-nuxt 第三节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "hydration 阶段 Vue 对「服务端 HTML 与客户端渲染结果不一致」的生产构建处理是：",
+      "options": [
+        "自动修复为服务端版本",
+        "开发模式警告+补丁（patch 不一致节点），生产默认信任服务端——不一致表现为局部内容错乱且无警告，所以 CI 里用 dev 构建跑 hydration 冒烟是防御手段",
+        "整页重载",
+        "抛错中断挂载"
+      ],
+      "answer": 1,
+      "explanation": "3.x 的 mismatch 策 略 调 整（从 整 树 重 渲 染 到 局 部 修 补 + 警告 分级）值 得 知 道；「生 产 看 不 见 = 最 危 险」，把 dev 警告 变 成 CI 资 产（本关 mismatch 排 查 题 的 工 程 化 出 口，配 置 水 合 错 误 捕 获 上 报 双 保 险）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Nuxt 3 里「同一路由同一组件，服务端取数一次、客户端切回该页不重取」的官方机制是：",
+      "options": [
+        "手动全局变量缓存",
+        "useAsyncData 的 key 缓存 + payload 注水：服务端结果进 Nuxt payload，客户端导航命中同 key 直接复用（要强制刷新走 refresh 选项/钩子）",
+        "useState 自动缓存所有请求",
+        "SWR 内置永远缓存"
+      ],
+      "answer": 1,
+      "explanation": "这 就 是 「同 构 数 据 获 取」的 系 统 化 答 案（本关 关 键 目 标 题 的 机 制 名）：key 决 定 共 享 粒 度，`pick` 减 payload 体 积（整 对象 注 水 是 TTFB 与 HTML 膨胀 常 见 源，本包 部署 关 体积 题 的 SSR 轴）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "SSR 页面里「只在客户端渲染」的需求（地图/富交互），最完整的 Nuxt 方案是：",
+      "options": [
+        "v-if isServer",
+        "<ClientOnly> 包裹（SSR 期输出占位/插槽 fallback，客户端再渲染真身）+ 配 异步 组件（defineAsyncComponent 或 Nuxt lazy）确 保 chunk 也 推 迟——两 层 分 离：HTML 不 含 初 始 化 脚本，包 也 不 进 首 屏",
+        "display:none 藏起来",
+        "iframe 隔离"
+      ],
+      "answer": 1,
+      "explanation": "反 例 辨析：display:none 的 组件 仍 会 在 SSR 服 务 端 执行 与 进 首 屏 包（双 重 浪 费）；`process.client` 判断 只 管 代码 分 支 不 管 渲 染 输 出——ClientOnly 的 存 在 就 是 把 「同构 安 全」声明 到 模板 层（本关 仅 客 户 端 组件 题 的 声 明 式 终 形）。"
     }
   ]
 }

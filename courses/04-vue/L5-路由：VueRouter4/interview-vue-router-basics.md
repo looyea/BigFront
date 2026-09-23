@@ -1,6 +1,6 @@
 # vue-router-basics 面试题精选
 
-> 共 12 题，覆盖 前端路由原理 / history 模式 / RouterLink-View / useRoute-useRouter / 导航 五类。
+> 共 15 题，覆盖 前端路由原理 / history 模式 / RouterLink-View / useRoute-useRouter / 导航 五类。
 
 ---
 
@@ -93,3 +93,25 @@ webHistory 用 pushState，URL 干净（`/about`），但**刷新/直链需服�
 `onMounted` 只在组件**首次挂载**跑；同一路由不同参数（如 `/user/1`→`/user/2`）默认**复用组件实例**、不重新挂载。要按参数变化重取数，用 `watch(() => route.params.id, fetch, { immediate:true })`（或路由 `beforeRouteUpdate`、给 RouterView 加 `:key="route.fullPath"` 强制重建）（呼应 vue-watch、vue-router-nested-dynamic、vue-lifecycle）。
 
 **来源**：Vue Router — "Reuse of Route Components / route params watch"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. history.pushState 之外，SPA 路由还有 hashchange 与「无 URL 的应用状态」三种形态——各自适用与失效边界？
+
+pushState：干净 URL+SEO 可 达，代价 是 服务 端 兜 底（本关 刷 新 404 题）与 **同 步 约 束**（pushState 不 等 待 任 何 东西，渲染 是 异步 的，URL 与 UI 存 在 短 暂 分 叉 窗 口）。hashchange：免 服 务 端 配 置、file:// 也 能 跑（Electron 静 态 包/离线 包 场 景），代价：锚 点 语义 被 占（页 内 锚 链接 不 能 再 用 #）、hash 段 不 进 大 多 数 服务 端 日 志。无 URL 形态（组 件 内部 状态 机/弹窗 队 列/stepper）：不 需 要 收藏 与 前 进 后 退 就 不 该 进 URL——**滥用 反 例**：给 每 个 筛选 条 件 都 上 query 导 致 history 爆 炸（用户 后 退 10 次 才 出 得 去 页 面，正 解 `replace: true` 或 收敛 到 少数 状 态）；**该 上 而 没 上 的 正 例**：列 表 的 页 码/筛 选/排 序（可 分享 可 恢 复，本 关 型 题 的 产品 判 据）。终极 形 态：URL 是 **可 分享 的 应用 状态 序 列 化**，什 么 进 什 么 不 进 是 产品 决 策 不 是 技 术 惯 性。
+
+**来源**：MDN History API 与 URL 状态管理；Vue Router history 模式实现差异说明。
+
+### 14. router.push 的 Promise 返回值在 v4 里的完整故事：重复导航、守卫取消、渲染失败的 resolve/reject 各是什么？错误该谁吃？
+
+v4 push 返回 `Promise<NavigationFailure | void | Error>`：成功 开 始 → resolve(undefined)；**导 航 失 败**（包 括 NavigationDuplicated 重 复 导航、守卫 abort/cancel、chunk 加载 失败 后 的 部分 场景）→ **resolve 一 个 failure 对 象**（不 reject！这 与 3.x 的 「reject NavigationDuplicated」与 早期 控制台 噪音 之争 是 一 段 历 史：v4 把 「取 消」归 为 正常 结 果）。真 reject 只 剩 极少 数（异 常 冒 泡），所 以 业务 不 要 `.catch` 当 控 流（会 吞 掉 导 航 失 败 的 区 分 度）；要 拿 结 果 用 `isNavigationFailure(failure, ErrorTypes...)` 判 定 类 型。渲染 失败（组 件 mounted 抛 错）不 在 push 语义 内——那 是 onErrorCaptured/全局 errorHandler 的 事（本包 生命 周期 错 误 题 的 分 界）。设计 落 论：「按 钮 连 点 去 抖」不 靠 catch，靠 `replace`+按 钮 disabled（导 航 in-flight 期 间 锁 操 作，配 afterEach 解 锁）。
+
+**来源**：Vue Router 4 NavigationFailure 与 programmatical navigation 文档；v3 重复导航 reject 历史与 issue 定案。
+
+### 15. 用 RouterLink 还是自绘按钮跳路由？可访问性、新标签页、prefetch 三个维度给决策。
+
+真 `<a>`（RouterLink 渲 染 出 来 就 是）的 不 可 替 代 项：中 键/ Cmd+点 新 标 签（自 绘 div 绑 click 直接 残 疾）、浏览 器 状 态 栏 URL 预览、屏 幕 读 器 的 link 角 色、SEO 爬 虫 可 达（内 容 型 站点 的 路 由 必须 是 a）。自 绘 按钮 只 在 **行 为 不是 导 航** 时 合 法（打 开 抽屉/弹 窗，那 就 不 该 push 路 由 而 是 状态，本关 无 URL 形态 题）。prefetch：VitePress/Nuxt Link 那 样 「hover/可 见 时 预 请 求 组 件 chunk」在 纯 Vue Router 要 自 实 现（route 记 名 + import 映 射 表，鼠标 enter 触 发）——收益 是 「点 击 即 开」，代价 移 动 端 误 触 发 流 量（用 IntersectionObserver 视 口 内 预 取 更 节 制，本包 异步 关 chunk 题 的 前 置 手 段）。可访 问 细 节：当前 页 链接 要 带 `aria-current="page"`（RouterLink activeClass 只 给 class，读 屏 无 感），外链 统 一 加 标 识——「路 由 决 策 表 里 的 a11y 列」多 数 团队 空 白，主 动 讲 出 来 是 加分 项。
+
+**来源**：Vue Router RouterLink 可访问性（aria-current）文档；WebAIM 导航链接规范；VitePress 预取策略说明。

@@ -1,6 +1,6 @@
 # ts-migration 面试题精选
 
-> 共 12 题，覆盖 **共存与基线 / @ts-check 与 JSDoc / 文件迁移顺序 / 边界信任 / 补类型 / 自动化与守进度** 六类。
+> 共 15 题，覆盖 **共存与基线 / @ts-check 与 JSDoc / 文件迁移顺序 / 边界信任 / 补类型 / 自动化与守进度** 六类。
 
 ---
 
@@ -106,3 +106,25 @@ JS 里 `throw` 可以抛**任意值**（`throw "boom"`、`throw undefined` 合�
 `@ts-nocheck` 关闭**整个文件**的类型检查，等于"这些文件暂时完全裸奔"。作为**应急**（自动生成的巨型迁移文件、或一次性让 CI 变绿）可短期用，但**长期留着**就是自欺——你宣布"项目已用 TS"，实际这些文件一点类型保护都没有，且没人会主动回来摘。补救：① 把每个带 `@ts-nocheck` 的文件登记进 backlog/看板（可用脚本统计数量并纳入棘轮基线，只降不升）；② 排期逐文件移除，配 codemod 补基础类型；③ 移除时用 `@ts-expect-error` 精准兜住暂时改不动的**单行**而非整文件（呼应 ts-migration 第七节、ts-strict 第 9 题）。核心：让"逃避范围"从"整文件"收缩到"具体某行 + 有到期信号"。
 
 **来源**：TypeScript Handbook — "@ts-nocheck"; 社区 — "gradual migration pitfalls"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 接手纯 JS 老项目引入 TS，第一个月做什么？
+
+第一刀是**配置层不是代码层**：① 上 tsconfig（allowJs+checkJs+noEmit，noImplicitAny 先 false）拿「全量类型报告」不碰文件；② CI 挂 `tsc --noEmit`（baseline：当前错误数入棘轮）；③ 建 `types/` 手写核心 DTO/API 契约（收益最大）；④ 新文件一律 .ts + 严格从 src/shared 起步；⑤ 转译链不动（babel/vite 继续产 JS，TS 纯旁路）——「类型检查与构建解耦」让风险归零。里程碑：错误数下降曲线 + 新代码 100% TS，再谈 noImplicitAny 开与文件批量改名。反模式：第一天全量 rename .ts + strict 全开 = 报错雪崩回滚、团队抵触。
+
+**来源**：TS 官方《Growing up with TypeScript》指南；Airbnb/Stripe 迁移复盘公开演讲。
+
+### 14. noImplicitAny 一开冒出 800 个隐式 any，怎么消化？
+
+分类手术：**70% 是回调参数**（map/filter/事件）——给最外层 API 补类型后推断自动灌进来，根本不用逐个改，从「类型源」开刀；**20% 是解构/默认参数**——函数签名显式化，配合 codemod（ts-morph 批量加 `: unknown` 占位再逐个收窄）；**10% 是真难**（第三方无类型库）——先 @types/手写 declare 或 `any`+TODO 进豁免清单。批处理策略：按目录分片放开（ts-strict-plugin 逐文件夹跑），每 PR 20-50 个可控；原则「让推断替你干活，只标边界与源头」。
+
+**来源**：TS 文档 noImplicitAny 最佳实践；ts-morph API（批量 AST 改写）案例库。
+
+### 15. 迁移半途的「双轨税」有哪些？「迁完」的定义是什么？
+
+税单：① allowJs 下 `.js/.ts` 同名解析漂移（bundler 与 tsc 优先级不一致，幽灵模块）；② JSDoc 与 TS 类型两套真源互相腐烂；③ d.ts 手工 stub 与实际 API 脱节；④ 测试/构建链双份（babel 转译 vs tsc emit）——正解是**永远单一转译方**（TS 只做 noEmit）。终点定义（可验收）：type-coverage ≥95% 且 any 豁免清单为空；`allowJs` 关（或仅 tests）；strict 全开无 per-file 豁免；CI 类型检查与构建同源配置。文化口径：把「迁完」定义成**配置开关集合**而不是「所有文件名后缀」，防止假完成。
+
+**来源**：TS《Type migration guide（Matt Bierner 版）》；Google JS→TS 迁移论文（ICSE 2023《How do JS developers migrate to TS》）。

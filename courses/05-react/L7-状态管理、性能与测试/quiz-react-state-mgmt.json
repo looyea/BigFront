@@ -71,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "来自服务器的列表数据，本课程建议放在哪？",
-      "options": ["useState", "Redux slice", "TanStack Query（服务端状态，不进客户端 store）", "Context"],
+      "options": [
+        "useState",
+        "Redux slice",
+        "TanStack Query（服务端状态，不进客户端 store）",
+        "Context"
+      ],
       "answer": 2,
       "explanation": "服务端状态分离给 Query（呼应 react-state-mgmt 第一、五节、react-data-fetching）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "双写易不一致，能用 props/派生就别存（呼应 react-state-mgmt 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " Zustand 的 `useStore(s => s.count)` 与 `useContext(Ctx)` 在「何时重渲染」上的关键差别是？",
+      "options": [
+        "没差别，都是值变就重渲染",
+        "Zustand 用 selector 做「切片订阅」，只有选中的那部分变化才重渲染该组件；Context 是 value 引用一变，所有消费者无差别重渲染",
+        "Zustand 不触发渲染",
+        "Context 支持 selector"
+      ],
+      "answer": 1,
+      "explanation": "这正是外部 store 治 Context 广播病的核心：selector + useSyncExternalStore 让每个组件只订阅自己读的那块，天然细粒度。Context 没有「选择性订阅」，只能靠拆多个 Provider/下沉消费端近似。理解这条就理解了「量大且各读不同切片→上 Zustand」。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Redux Toolkit 的 createSlice reducer 里可以「直接改 state」（如 state.items.push(x)）的原因是？",
+      "options": [
+        "RTK 放弃了不可变",
+        "reducer 收到的是 Immer 的「draft」代理，写可变风格的代码会被 Immer 编译成不可变更新，产出新 state——既保留可预测性又免手写浅拷贝链",
+        "因为用了 Object.freeze",
+        "state 其实是普通对象无所谓"
+      ],
+      "answer": 1,
+      "explanation": "RTK 内置 Immer，把「看似 mutate」转成结构共享的不可变更新，专治「改一个深字段要一路 {...} 展开」的痛。前提仍是 reducer 纯（不读外部、不 async，异步放 createAsyncThunk/extraReducers）。这与本包 useState「不可变」不矛盾——只是把不可变的书写成本交给了库。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 判断「这段状态不该放全局 store」的合理信号是？",
+      "options": [
+        "只要两个组件用到就必须全局",
+        "只被单组件/局部子树用的瞬态、能由已有数据派生的值、以及服务端返回的缓存型数据，都应留在局部/数据层，不进全局 store",
+        "异步数据都进全局",
+        "表单值都进全局"
+      ],
+      "answer": 1,
+      "explanation": "三条反膨胀准则：局部瞬态 colocation（就近）、派生算出来（computed/渲染期）、服务端数据交查询层。全局 store 只放「真·跨页、客户端所有、无法派生」的应用状态。把「需要共享」当「需要全局」是过度提升的头号成因（呼应本关第一原则）。"
     }
   ]
 }

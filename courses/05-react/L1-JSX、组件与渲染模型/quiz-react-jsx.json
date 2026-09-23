@@ -19,7 +19,12 @@
       "id": "q2",
       "type": "single",
       "prompt": "JSX 里为什么用 className 而不是 class？",
-      "options": ["HTML 规范", "性能更好", "class 是 JS 保留字", "React 约定区分组件"],
+      "options": [
+        "HTML 规范",
+        "性能更好",
+        "class 是 JS 保留字",
+        "React 约定区分组件"
+      ],
       "answer": 2,
       "explanation": "JSX 是 JS，class 是关键字，故改名 className（呼应 react-jsx 第二节）。"
     },
@@ -40,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "count 为 0 时，渲染 `{count && <List/>}` 会发生什么？",
-      "options": ["会渲染出一个 0", "什么都不渲染", "报错", "渲染 <List/>"],
+      "options": [
+        "会渲染出一个 0",
+        "什么都不渲染",
+        "报错",
+        "渲染 <List/>"
+      ],
       "answer": 0,
       "explanation": "0 会被渲染出来，false/null/undefined 才不渲染；应用 count > 0 && ...（呼应 react-jsx 第三节）。"
     },
@@ -61,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "新自动 JSX 运行时(React 17+)相比经典写法的改进是？",
-      "options": ["必须 import React", "不再支持 Fragment", "只能在浏览器运行", "无需 import React、产物更小、利于 tree-shaking"],
+      "options": [
+        "必须 import React",
+        "不再支持 Fragment",
+        "只能在浏览器运行",
+        "无需 import React、产物更小、利于 tree-shaking"
+      ],
       "answer": 3,
       "explanation": "自动运行时编译到 react/jsx-runtime，免 import React（呼应 react-jsx 第六节）。"
     },
@@ -69,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "渲染多个平级根节点又不要多余 DOM，应使用？",
-      "options": ["Fragment <>...</>", "<div> 包一层", "用注释包裹", "返回数组字符串"],
+      "options": [
+        "Fragment <>...</>",
+        "<div> 包一层",
+        "用注释包裹",
+        "返回数组字符串"
+      ],
       "answer": 0,
       "explanation": "Fragment 不产生额外 DOM 节点；需 key 时用 React.Fragment（呼应 react-jsx 第二节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "在 JSX 里写 `const style = {{ color: \"red\" }}`，外层与内层花括号各自的含义是：",
+      "options": [
+        "重复书写，编译会报错",
+        "外层是「JS 表达式插值」定界符，内层是对象字面量——所以给 style 传对象要写两层花括号，这是初学者最常见的视觉困惑点",
+        "两层都是对象",
+        "内层是块级作用域"
+      ],
+      "answer": 1,
+      "explanation": "规则：JSX 属性值要么是字符串字面量，要么是「单个 JS 表达式」用 {} 包裹；当表达式本身是对象字面量时就得再加一层，形成 {{...}}。同理 `<Comp onClick={ () => f() }/>` 外层是插值、内层是箭头函数。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "想把一段 `{...props}` 展开后再覆盖其中某个字段，正确写法与顺序是：",
+      "options": [
+        "`<Comp {...props} id=\"x\"/>`，后写的属性覆盖展开里的同名字段",
+        "`<Comp id=\"x\" {...props}/>`，展开永远覆盖前者",
+        "展开与具名属性不能共存",
+        "只能靠 defaultProps"
+      ],
+      "answer": 0,
+      "explanation": "与 `Object.assign` 同族语义：JSX 属性按书写顺序合并，后出现的覆盖先出现的。所以「先展开、再具名覆盖」`{...props} id=\"x\"` 让 id 生效；反过来写会被展开里的 id 覆盖。这也是 React 19 里 `key` 不再被剥进 props、必须显式传的一处对照点。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "关于 JSX 里的注释，正确的是：",
+      "options": [
+        "可以直接用 `// 注释` 写在标签之间的 children 位置",
+        "children 位置的裸 `//` 会被当作文本渲染；必须写成表达式注释 `{/* ... */}`，因为 JSX 子节点区不是 JS 语句上下文而是「内容/表达式」上下文",
+        "JSX 不支持注释",
+        "只能用 `<!-- -->`"
+      ],
+      "answer": 1,
+      "explanation": "JSX 的 children 是「节点」而非「代码块」，裸文字会被渲染成文本；注释必须以 JS 表达式的形式出现，即 `{/* */}`（本质是 `{ 一个空表达式 }`）。在 `{}` 内包裹的多行逻辑里则可以正常写 `//`，因为那里是真 JS。"
     }
   ]
 }

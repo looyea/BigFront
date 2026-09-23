@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "模板 ref 指向的 DOM 元素，最早在什么时候能拿到非 null 值？",
-      "options": ["setup 执行时", "onBeforeMount", "onMounted 之后", "永远同步可用"],
-      "answer": 2,
+      "options": [
+        "onMounted 之后",
+        "setup 执行时",
+        "onBeforeMount",
+        "永远同步可用"
+      ],
+      "answer": 0,
       "explanation": "DOM 在挂载后才存在，ref 也随之有值（呼应 vue-refs-expose 第一节）。"
     },
     {
@@ -16,19 +21,24 @@
       "prompt": "useTemplateRef('input') 相比\"同名 ref 变量\"的主要好处是？",
       "options": [
         "运行更快",
-        "显式取模板引用、不与普通变量混淆、TS 能推断元素类型",
         "不需要 onMounted",
+        "显式取模板引用、不与普通变量混淆、TS 能推断元素类型",
         "能自动聚焦"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "把隐式魔法变显式 API，类型更安全（呼应 vue-refs-expose 第二节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "<script setup> 子组件没写 defineExpose，父通过组件 ref 调子方法会？",
-      "options": ["正常调用", "拿到 undefined（组件默认封闭）", "编译报错", "自动暴露全部"],
-      "answer": 1,
+      "options": [
+        "正常调用",
+        "编译报错",
+        "自动暴露全部",
+        "拿到 undefined（组件默认封闭）"
+      ],
+      "answer": 3,
       "explanation": "<script setup> 默认封闭，须 defineExpose 才开放（呼应 vue-refs-expose 第四节）。"
     },
     {
@@ -48,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "下面哪个更应改用数据驱动而不是 ref 操作 DOM？",
-      "options": ["调用 input.focus()", "手动 el.innerText='hi' 改文本", "video.play()", "editor.init(el)"],
+      "options": [
+        "调用 input.focus()",
+        "手动 el.innerText='hi' 改文本",
+        "video.play()",
+        "editor.init(el)"
+      ],
       "answer": 1,
       "explanation": "改文本该用插值/state，直接 innerText 绕过响应式模型（呼应 vue-refs-expose 第五节）。"
     },
@@ -56,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "被 v-if 隐藏的元素，其模板 ref 值是？",
-      "options": ["仍指向旧 DOM", "变回 null", "抛错", "自动 keep-alive"],
+      "options": [
+        "仍指向旧 DOM",
+        "变回 null",
+        "抛错",
+        "自动 keep-alive"
+      ],
       "answer": 1,
       "explanation": "元素不存在时 ref 复位为 null，用前判空（呼应 vue-refs-expose 第六节）。"
     },
@@ -72,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "公开 API 要窄、以方法为主，避免泄漏内部实现（呼应 vue-refs-expose 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "v-for 列表里要给「正在编辑的那一行」的 input 自动聚焦，不用 ref 数组的更优方案是：",
+      "options": [
+        "每行挂 ref 再找",
+        "focus 是 DOM 层 一次性 命令——用 数据 驱动：编辑 态 字段 配 `autofocus` 属性 只 绑 到 命中 行（v-if/v-bind:autofocus），或 函数 ref 只 持 有 当前 编辑 项 一 个 引用；维护 ref 数组 再 遍历 找 目标 是 反 模式",
+        "遍历 document.querySelectorAll",
+        "用 nextTick 轮询"
+      ],
+      "answer": 1,
+      "explanation": "「ref 数组 + 遍历 定位」= 把 状态 问题 伪装 成 DOM 问题（本关 数据 驱动 题 的 列表 版）；autofocus 动态 性 有限 时 配 `watch(编辑id) → el.focus()` 单 ref 复用 最 干净。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "函数 ref 在每次组件更新时的调用行为是：",
+      "options": [
+        "只在挂载时调一次",
+        "未变时不调；绑定的元素/实例变化时用 null 调一次（旧 引用 清理）再用 新 引用 调一次——内联箭头函数写法会每次更新都 null+新值 各调一次（引用恒变），需提出来成稳定函数",
+        "每次只传新值",
+        "必须配 unmounted 使用"
+      ],
+      "answer": 1,
+      "explanation": "「内联 函数 ref 每 次 渲染 重 调」是 观察 器 反复 挂 卸 的 隐形 杀手（把 清理 逻辑 写 在 ref 回调 里 时 尤其 致命，本关 函数 ref 生命周期 题 的 根因 面）；3.x 起 稳定 引用 = 只 在 真 变化 时 调。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "useTemplateRef 取代「同名 ref 变量」自动绑定的核心理由是：",
+      "options": [
+        "性能",
+        "解耦模板名与变量名、支持动态名（变量传参）、且让 script 里的名字不再被模板魔法占用（重命名安全、可被 TS 精确跟踪，动态组件/循环引用场景不再失效）",
+        "返回数组",
+        "仅 3.5 可用"
+      ],
+      "answer": 1,
+      "explanation": "模板 ref 的「同名 魔法」= 隐式 契约：改 个 模板 属性 名 script 悄悄 断；useTemplateRef 把 绑定 变 显式 调用（VueUse 的 templateRef 库 早 验证 了 这 个 API 形状，本关 useTemplateRef 对比 题 的 定稿 理由）。"
     }
   ]
 }

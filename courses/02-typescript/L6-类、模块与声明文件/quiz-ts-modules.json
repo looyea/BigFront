@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "TS 判定一个文件是'模块'还是'脚本'的依据是？",
       "options": [
-        "文件扩展名",
         "是否含顶层 import / export（有则为模块，顶层作用域隔离）",
+        "文件扩展名",
         "是否在 src 目录",
         "是否开了 strict"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "只要有一个顶层 import/export 就是模块；否则顶层变量进全局，容易冲突，可用 export {} 强制成模块。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "import type { Config } 的作用与好处是？",
       "options": [
         "运行时做一次类型检查",
-        "只导入类型、编译后完全擦除，避免把类型依赖带进运行时、防循环、利于单文件转译",
         "等价于 require",
+        "只导入类型、编译后完全擦除，避免把类型依赖带进运行时、防循环、利于单文件转译",
         "会生成默认导出"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "import type 明确纯类型依赖，产物里被删；配合 verbatimModuleSyntax 让删/留规则清晰。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "社区'优先命名导出而非 default'的主要理由是？",
       "options": [
         "default 不能导出 class",
-        "命名导出利于 tree-shaking、IDE 重命名/追引用，避免导入名歧义",
         "default 更快",
-        "命名导出更少样板"
+        "命名导出更少样板",
+        "命名导出利于 tree-shaking、IDE 重命名/追引用，避免导入名歧义"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "default 导入时可随便起名造成'同名不同物'，且聚合/重构工具支持更差；命名导出更友好。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "它让编译器不再自作主张增删 import，配合 isolatedModules/打包器单文件转译避免猜错。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "开启 verbatimModuleSyntax 后，类型导入忘了写 import type：",
+      "options": [
+        "自动 elide",
+        "报错——所有 import 按书写原样保留到产物，类型必须显式 import type（导出同理 export type）",
+        "仅警告",
+        "行为不变"
+      ],
+      "answer": 1,
+      "explanation": "它的组合拳价值：消灭「elision 玄学」（isolatedModules 误删副作用导入等），配合 SWC/esbuild 逐文件转译零事故——TS5.0+ 新仓标配。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "想给「未建模的 CSS 导入」补类型（declare module \"*.css\"），声明文件要：",
+      "options": [
+        "含 import/export 使其成为模块",
+        "保持**非模块**（无顶层 import/export）——才是整体环境声明；带 import 时变成对已有模块的 augmentation",
+        "放在 src 下",
+        "命名为 global.ts"
+      ],
+      "answer": 1,
+      "explanation": "同名语法的两种命运取决于文件是否模块：无导出=ambient 通配声明（新增模块）；有导出=模块增强（只能改已存在模块）。写反 = \"Cannot find module\" 依旧。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "allowSyntheticDefaultImports 的作用是：",
+      "options": [
+        "注入运行时 interop helper",
+        "仅类型层面允许 `import fs from \"fs\"`（给无 default 的 CJS 模块假造 default），运行时不负责",
+        "改变打包",
+        "已废弃"
+      ],
+      "answer": 1,
+      "explanation": "它只管「编译器让不让这么写」；真正的运行时垫片是 esModuleInterop（emit __importDefault）或打包器 interop——「编译过但运行炸」的经典断点。"
     }
   ]
 }

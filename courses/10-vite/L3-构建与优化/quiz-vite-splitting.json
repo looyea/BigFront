@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Vite/Rollup 产生异步 chunk 的关键触发条件是什么？",
       "options": [
-        "使用 import 静态导入",
         "使用动态 import() 表达式",
+        "使用 import 静态导入",
         "文件超过 500KB",
         "在 package.json 声明"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "动态 import() 让 Rollup 把目标模块及其独有依赖打成独立 chunk，运行时按需加载。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "manualChunks 函数对多个模块 id 返回同一个字符串，效果是？",
       "options": [
         "报错",
-        "这些模块被合并进同一个同名 chunk",
         "每个模块单独成 chunk",
-        "被丢弃"
+        "被丢弃",
+        "这些模块被合并进同一个同名 chunk"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "返回值即 chunk 名——返回相同字符串的模块归到同一 chunk（如都 return 'vendor' 则合并成一个 vendor.js）。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "动态变量导致 Rollup 保守地把目录下所有可能文件纳入。应改用 import.meta.glob 显式声明。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " 多个入口（或懒路由）共同 import 一个模块时，Rollup/Vite 默认如何处理？",
+      "options": [
+        "每个入口内联一份",
+        "自动提取为共享 chunk（被多方引用的模块独立成块，避免重复打包）——手动 manualChunks 干预前先看默认产物是否已经合理",
+        "报错冲突",
+        "打进 vendor 固定名"
+      ],
+      "answer": 1,
+      "explanation": "默认拆块算法已是\"公共模块提取\"，多数 manualChunks 配置是在和默认行为打架而不是补缺。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " import(./locales/ + lang + .js) 这种含变量的动态导入在构建时的结果是？",
+      "options": [
+        "直接报错",
+        "被静态分析展开为上下文 glob（该目录下所有匹配文件都可能成为候选 chunk）——\"看起来动态\"其实仍是构建期确定的有限集，目录越宽 chunk 越多",
+        "完全原样保留运行时解析",
+        "只打包第一个匹配"
+      ],
+      "answer": 1,
+      "explanation": "Vite/Rollup 的动态导入分析以\"可枚举\"为前提；真动态（运行时任意路径）必须走配置映射表而不是赌路径拼接。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " modulepreload 提示会递归应用到间接依赖吗？",
+      "options": [
+        "会，全图预载",
+        "不会——只覆盖直接依赖层（入口 chunk 的 import graph 一跳），这是浏览器预载资源预算与\"预载风暴\"的折中",
+        "取决于 crossorigin",
+        "只对 CSS"
+      ],
+      "answer": 1,
+      "explanation": "一跳是刻意设计：全递归预载等于回到瀑布的反面（一次轰炸并发），依赖深度优化交给链式 chunk 自身再带 hint。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " Vite 6+ 推荐的 manualChunks 替代方案 advancedChunks 的形态是？",
+      "options": [
+        "函数返回组名",
+        "output.advancedChunks 声明式分组（groups 数组：name+test/include/exclude/minSize/maxSize 等规则引擎）——目标是用可声明、可预测的策略替代函数式手搓，缓解顺序敏感与循环问题",
+        "配置文件 yaml",
+        "CLI 参数"
+      ],
+      "answer": 1,
+      "explanation": "函数式 manualChunks 的\"返回字符串即成组\"魔法太易踩循环引用与过度细碎，声明式规则把拆块从黑魔法变成可读配置。"
     }
   ]
 }

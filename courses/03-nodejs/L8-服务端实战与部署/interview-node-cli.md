@@ -1,6 +1,6 @@
 # node-cli 面试题精选
 
-> 共 12 题，覆盖 argv 与 bin / 三流与退出码 / 解析库 / 健壮性与发布 五类。
+> 共 15 题，覆盖 argv 与 bin / 三流与退出码 / 解析库 / 健壮性与发布 五类。
 
 ---
 
@@ -93,3 +93,27 @@ shebang 是 Unix 约定，**Windows 不认**；npm 在 Windows 下会为 `bin` �
 有**未关闭的活跃句柄**：watcher（`fs.watch`）、keep-alive 服务器、子进程、`setInterval` 定时器都让事件循环不空（呼应 node-event-loop、node-fs watcher 泄漏）。要么收到 SIGINT 时优雅 `close`/`destroy` 它们（呼应 node-deploy-perf），要么对不需要阻止退出的句柄 `unref()`（呼应 node-child-process interview 第 10 题）。
 
 **来源**：Node.js — "Why won't my process exit / active handles"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 发布一个跨平台 CLI（npm bin），从包配置到 Windows 兼容给你完整的检查清单。
+
+包面：bin 映射（Win 自动产 .cmd shim——npm 负责但 yarn/pnpm 历史 bug 版本要钉）；engines.node + 不兼容时**启动首行检查并人类可读报错**（process.exit(1) 前先 say 清「需要 ≥18，当前 x」）。路径面：所有路径过 path 族（本包 path 关）、临时文件 os.tmpdir、大小写不敏感文件系统测试（Win/mac 默认都大小写不敏感，Linux 敏感——CI 双跑）。换行：输出文件用 os.EOL 还是 
+ 看**文件消费者**（git 内容要 
+，人看的 Windows 报表才 EOL——本关 EOL 题的再辨析）。终端：isTTY/NO_COLOR/TERM=dumb 降级；Win10 旧 conhost 的 ANSI 支持差异（enable-ansi 或 colors 库探测）。进程：spawn 外部命令走 execFile 数组参数（本包 child 关注入题）、Win 无 fork 语义、信号只有 SIGTERM 近似。测试矩阵：CI 三 OS 真跑（smoke：--version/--help/一条真实命令比对 golden 输出）。发布：--provenance + GitHub release 附 changelog；`npx mycli@latest` 冷启动时间纳入指标（依赖瘦身动力）。
+
+**来源**：npm bin 字段跨平台文档与 NO_COLOR 标准；Node process 信号平台差异说明（Windows 仅 SIGINT/SIGTERM 近似语义）。
+
+### 14. CLI 的参数体系设计：子命令、旗标命名、退出码、配置文件四者怎么立规矩？
+
+子命令：名词+动词（docker commit 式）两级封顶，超两级说明该拆工具；help 分层（顶层列子命令、叶子列旗标，示例永远置顶）。旗标：kebab-case 长名 + 高频短名，布尔默认 false（--no-x 覆盖式优于 --x=false 玄学）、值旗标配环境变量兜底（--token > TOKEN_ENV > 配置文件，本包 config 关优先级同款）；破坏性操作 --force 免确认 + --dry-run 可预览（本关确认题的两翼）。退出码：0 成功 / 1 通用失败 / 2 用法错误（与 getopt 传统一致）——**机器消费型**（CI 判断）细分码要进文档表格；勿把异常都 exit 1 了事。配置：文件位置与格式（TOML/YAML/JSON 选一个生态习惯）、`--config` 可指、最后一步「打印最终合并配置+来源」子命令（doctor/config show）——排障第一入口。一致性：所有文案过 i18n 层或至少集中常量（本关 emoji 题的分寸），错误输出前缀统一、建议下一步（"did you mean"）。文档化：规矩写进 CONTRIBUTING，PR 模板含「新增旗标评审」栏。
+
+**来源**：clig.dev（Command Line Interface Guidelines）旗标/退出码章节；GNU getopt 约定与 npm scripts 透传实践。
+
+### 15. 如何给你的 CLI 写「值得信任」的测试？输出、退出码、真实子进程各怎么断言。
+
+三层：① 逻辑单测——命令处理函数与 IO 解耦（注入 stdout/argv，纯断言），不碰 spawn；② 契约集成——execa/spawnSync 跑**真 bin**（node ./bin/cli.js）断言 exit code + stdout/stderr 分离（验证本关 stderr 分工纪律：诊断信息错放=断言抓不到）；golden 文件管理长输出（更新命令 --update-golden + review diff，快照式防「手改期望」）；③ 端到端场景——tmp 目录布景（fixture git repo/文件树）跑完整工作流再断言副作用（文件内容/DB 行）。环境隔离：清空继承 env（HOME 指 tmp 防碰真配置——本包 path 关测试法）、NO_COLOR=1 保 golden 稳定、时钟固定（--use-fake-time/Date 注入）。跨平台：Win runner 真跑（路径分隔符/换行/权限模型差异全在这暴露）；长输入测 TTY 分支（node-pty 伪终端或 pty 断言动画降级）。CI：三 OS × 冒烟矩阵（--version/--help/一条主命令），全量场景 nightly。反模式：测「console.log 调用次数」（耦合实现）——测**外部可见契约**：码、流、文件。
+
+**来源**：execa/node-pty 测试实践；clig.dev「Testing CLIs」golden+契约方法论。

@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-refs-styles",
-  "title": "Refs、指令与样式 · 自测",
+  "title": "solid-refs-styles 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "官方为什么不推荐用 document.querySelector 拿 Solid 里的元素？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "官方为什么不推荐用 document.querySelector 拿 Solid 里的元素？",
       "options": [
         "因为它比 ref 慢",
         "因为它返回的是 NodeList",
@@ -11,10 +13,12 @@
         "因为 Solid 禁止所有 DOM API"
       ],
       "answer": 2,
-      "explain": "动态增删 + 同选择器返回首个匹配 → 不可靠；ref 保持 JSX 结构完整、精准引用。"
+      "explanation": "动态增删 + 同选择器返回首个匹配 → 不可靠；ref 保持 JSX 结构完整、精准引用。"
     },
     {
-      "q": "ref 的变量赋值形态，赋值发生在什么时候？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "ref 的变量赋值形态，赋值发生在什么时候？",
       "options": [
         "元素创建时、把它加入 DOM 之前",
         "组件卸载时",
@@ -22,10 +26,12 @@
         "onMount 之后"
       ],
       "answer": 0,
-      "explain": "赋值在创建时即发生、入 DOM 前；要入 DOM 前就用它就用回调形式 ref={(el)=>...}。"
+      "explanation": "赋值在创建时即发生、入 DOM 前；要入 DOM 前就用它就用回调形式 ref={(el)=>...}。"
     },
     {
-      "q": "元素被 <Show> 条件控制、可能反复挂载/卸载，想持有它的引用最合适的形态是？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "元素被 <Show> 条件控制、可能反复挂载/卸载，想持有它的引用最合适的形态是？",
       "options": [
         "let el 变量赋值",
         "document.getElementById",
@@ -33,10 +39,12 @@
         "signal 作 ref：<p ref={setElement}>，挂时 setElement(el)、卸时置 undefined"
       ],
       "answer": 3,
-      "explain": "会消失/条件存在的节点用 signal-as-ref，把元素生命周期映射进 signal，读它拿当前元素或 undefined。"
+      "explanation": "会消失/条件存在的节点用 signal-as-ref，把元素生命周期映射进 signal，读它拿当前元素或 undefined。"
     },
     {
-      "q": "父把 ref 传给子组件转发时，子组件收到的 props.ref 是什么形态？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "父把 ref 传给子组件转发时，子组件收到的 props.ref 是什么形态？",
       "options": [
         "永远是一个 DOM 元素",
         "永远是回调函数（无论父传的是变量赋值还是回调）",
@@ -44,10 +52,12 @@
         "是 undefined，需自己 new"
       ],
       "answer": 1,
-      "explain": "官方：无论父怎么传，子收到的 ref 都以回调呈现，直接 <canvas ref={props.ref}/> 即可，不必判类型。"
+      "explanation": "官方：无论父怎么传，子收到的 ref 都以回调呈现，直接 <canvas ref={props.ref}/> 即可，不必判类型。"
     },
     {
-      "q": "use: 指令相比回调 ref 的两个额外能力是什么？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "use: 指令相比回调 ref 的两个额外能力是什么？",
       "options": [
         "能改名、能删除元素",
         "能替代 state、能自动 rerender",
@@ -55,10 +65,12 @@
         "能访问 props、能访问 context"
       ],
       "answer": 2,
-      "explain": "指令 (element, accessor)：支持多指令叠加、并通过 accessor 接收随 signal 变化的值。"
+      "explanation": "指令 (element, accessor)：支持多指令叠加、并通过 accessor 接收随 signal 变化的值。"
     },
     {
-      "q": "`class={active() ? 'on' : ''}` 为什么能在 active 变化时更新 class 而组件不重渲？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "`class={active() ? 'on' : ''}` 为什么能在 active 变化时更新 class 而组件不重渲？",
       "options": [
         "该属性读了 signal，被编译成一个只更新 class 这个属性的响应式绑定(effect)",
         "因为 Solid 每帧 diff 虚拟 DOM",
@@ -66,10 +78,12 @@
         "其实它不会更新，需要手动 refresh"
       ],
       "answer": 0,
-      "explain": "读 signal 的 JSX 属性 = 一个 createRenderEffect 绑定，变化时只 setAttribute('class')，不重跑组件。"
+      "explanation": "读 signal 的 JSX 属性 = 一个 createRenderEffect 绑定，变化时只 setAttribute('class')，不重跑组件。"
     },
     {
-      "q": "关于 Solid 的样式方案，正确的是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 Solid 的样式方案，正确的是？",
       "options": [
         "内置 styled-components 等价物",
         "只能用 Tailwind",
@@ -77,7 +91,46 @@
         "不内置 CSS 方案、保持中立；class/classList/style 绑定天然响应式，可自由搭配普通 CSS/CSS Modules/UnoCSS 等"
       ],
       "answer": 3,
-      "explain": "Solid 只管把响应式属性更新到 DOM，用什么样式方案是你的自由；动态样式靠绑定 effect 而非重渲。"
+      "explanation": "Solid 只管把响应式属性更新到 DOM，用什么样式方案是你的自由；动态样式靠绑定 effect 而非重渲。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " SSR 渲染期间组件里的 ref 变量值是什么？ ",
+      "options": [
+        " 服务端元素镜像 ",
+        " undefined：元素不存在于服务端，ref 只在客户端挂载时赋值 ",
+        " 空字符串 ",
+        " 抛错 "
+      ],
+      "answer": 1,
+      "explanation": " ref 是真实 DOM 句柄，SSR 无 DOM；凡读 ref 的逻辑必须留在 onMount/effect 等客户端阶段。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " Solid 的 style={{ width: w() }} 对象绑定更新方式是？ ",
+      "options": [
+        " 重写 cssText ",
+        " 逐属性 setProperty/直接写样式属性，只动变化项 ",
+        " 每次重建元素 ",
+        " 走 class "
+      ],
+      "answer": 1,
+      "explanation": " 与 class/tokenList 一样保持键级最小写；整串 cssText 会冲掉旁路手动样式，官方刻意避开。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " use:action 指令与回调 ref 的关键差异是？ ",
+      "options": [
+        " 无差异 ",
+        " action 在元素插入后执行并可拿到响应式更新（多次调用）与注册清理的时机 ",
+        " action 只能读不能写 ",
+        " 回调 ref 可清理而 action 不可 "
+      ],
+      "answer": 1,
+      "explanation": " action 本质是随表达式更新重复运行的指令函数，配合 onCleanup 管理副作用，比一次性回调 ref 能力更宽。 "
     }
   ]
 }

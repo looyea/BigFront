@@ -79,3 +79,21 @@
 **12）ES2015 → ES2025，语法演进对构建工具产生了什么连锁影响？**
 - 参考要点：① **ESM 标准化** → Rollup / Vite 诞生（基于 ESM 静态分析 tree-shake）；② **可选链 / 类字段** → 旧工具（browserify）跟不上 → esbuild / SWC 崛起（快 10-100 倍）；③ **迭代器助手** → 不需要 Babel 转 → 产物更小；④ **TLA + 动态 import** → 打包器必须处理异步 chunk 加载。
 - 来源：vite.dev；esbuild 博客；Rollup 文档；TC39 时间线。
+
+---
+
+**13）现代项目里 polyfill 和 transpile 的边界怎么划？谁负责「新内置对象」？**
+- 参考要点：语法级（?.、TLA、class fields）只能靠 **transpile**（esbuild/SWC/babel 按 browserslist 降级）；内置对象/方法级（Promise、at、structuredClone、iterator helpers）才是 **polyfill**（core-js/polyfill.io 自建；ES2015+ 新 Symbol.iterator 挂载点 polyfill 可行，Proxy 无法模拟语言行为——它改对象语义）。构建器分工：Vite 用 esbuild 打语法糖、browserslist+`optimizeDeps`，老机型兜底靠 `@vitejs/plugin-legacy` 双 bundle。运行时检测优先 feature detect（caniuse 数据源）而非 UA。
+- 来源：Vite 文档《Build Target / legacy plugin》；MDN polyfill 定义 + tc39-shims（es-shims）工作组 README。
+
+---
+
+**14）ES6 之后标准演化流程变了什么？「每年一版」对开发者意味着什么？**
+- 参考要点：2015 大版后转 **ES2016 起年度定版**：TC39 五阶段（提案→文档→评审→Stage-4 入册）+ 「shipped first」——浏览器先实现、spec 后固化，特性以「年份包」发布（ES2020 可选链...ES2025 迭代器助手）。影响：查兼容不再「ES几支持吗」而是 **按特性查 caniuse**；构建 target 按实际用户基线而不是「最新」；库发布用 exports/engines 声明下限。面试点：能报出每年代表特性 + 说清 stage 流程即可。
+- 来源：TC39《Adding languages features》流程文档；ecma-international ES2016-2025 版本公告。
+
+---
+
+**15）团队要「原生化去 lodash」，你的落地审计流程是什么？**
+- 参考要点：1) browserslist 定基线 + eslint（ecmaVersion/targets、unicorn 插件）硬约束语法层；2) 扫描替代映射表：debounce/throttle→自写 15 行、cloneDeep→structuredClone、groupBy→Object.groupBy、get→?.+??、isEqual→按需（无原生全等，保留或用 fast-deep-equal）；3) bundle 分析（rollup-plugin-visualizer/size-limit）量化体积收益，按包入口 `lodash-es` 摇树先止血；4) polyfill 兜底（core-js 对应方法白名单）+ 兼容测试（BrowserStack 最低版本）；5) codemod（jscodeshift）批量改写 + 回归。产出是 checklist 不是信仰。
+- 来源：You-Dont-Need-Lodash-Underscore 仓库对照表；esbuild/size-limit 文档。

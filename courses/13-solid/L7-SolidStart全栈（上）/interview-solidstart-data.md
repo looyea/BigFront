@@ -1,6 +1,6 @@
 # SolidStart 数据加载 · 面试题
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 描述 v2 数据加载两件套的完整链路。
 
@@ -61,3 +61,25 @@ posts() 在解析完成前不是最终对象——直接解构要么拿到 undef
 
 preload 在**导航发生前/发生中**就把请求发出，数据与组件 chunk 下载并行、且结果进具名缓存可被组件直接接用；onMount 里 fetch 必须等组件挂载渲染完才开始，形成"渲染→取数→再渲染"的瀑布。官方数据层的默认姿势就是让取数脱离组件生命周期。
 **来源**：v2 preload 语义与传统 mount 取数模式的对比转述。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  失效策略：loader 缓存、query 缓存、HTTP/CDN 缓存三层同时存在时怎么治理？ 
+
+ 先定真值源顺序（服务端>边缘>内存），每层给 TTL 与显式失效双通道；写操作后按资源键广播失效（query invalidate + CDN purge），三层混用若无归因日志，调试时无法判断数据为何旧。 
+
+**来源**： https://github.com/solidjs/solid-start ； https://tanstack.com/query 
+
+### 14.  仪表盘五张卡片取数有快有慢，loader 层怎么组织？ 
+
+ 一个路由 loader 返回多个 promise（不 await），快数据先渲染、慢卡片各自 Suspense 槽位；或拆子路由段各自 loader；关键是失败隔离——单卡挂掉不应白屏，配 ErrorBoundary 与超时兜底。 
+
+**来源**： https://docs.solidjs.com/ 
+
+### 15.  登录态这类全站数据放哪？根 loader、handle 中间件还是组件层 context？ 
+
+ 服务端认证在中间件（每请求必跑、可短路与设 cookie），根 loader 只负责把用户数据下发给 UI，context 是客户端共享机制不承担取数；三层各解一个问题，混放会导致重复请求或鉴权漏网。 
+
+**来源**： https://github.com/solidjs/solid-start 

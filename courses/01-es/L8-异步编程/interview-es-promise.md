@@ -124,3 +124,21 @@ foo();
   ```
   **追问**：加**取消信号**？在循环里 `if (signal.aborted) throw new AbortError()`。
 - 来源：`async-retry`、`p-retry` 库源码；多份中文八股。
+
+---
+
+**13）什么是 thenable？规范为什么围绕它而不是原生 Promise？**
+- 参考要点：thenable = 任何有 `then(resolve, reject)` 方法的对象。规范（Promises/A+ 与 ECMAScript）规定所有「吸收」动作（resolve(x)、await、then 返回值）都走 thenable 鸭子判断——好处：老库（jQuery Deferred、bluebird、Q）不用 instanceof 就能与新语法互操作；代价：普通对象误挂 then 方法会被意外接管（resolve({then: 42}) 反而挂死）。加固方案：Object.freeze 无 then、或用 safe-promise 包装。
+- 来源：Promises/A+ Specification §2；MDN《Thenables》。
+
+---
+
+**14）Promise 的性能与内存开销在哪？为什么「一万个 .then 的链」比同步循环贵得多？**
+- 参考要点：每个 then 创建**两个对象**：新 promise + reaction 记录（微任务级 job）；settle 时要走状态机 + job queue 调度，V8 对 promise 的优化不如同步函数内联激进。递归 promise 链还有个经典事故：**微任务无限续杯会饿死宏任务**（浏览器里 setTimeout/渲染排不上——Node 里 nextTick 递归同理），所以长循环要定期 `setTimeout` 切回宏任务。批量场景替代：for-of + await（顺序复用同一 promise）、或聚合后一次性 settle。
+- 来源：Promises/A+ 性能讨论（domenic 博客《Promises and performance》）；HTML spec microtask 饥饿条款。
+
+---
+
+**15）`p.then(a).catch(f)` 里 f 为什么连 a 抛的错一起抓？这个设计怎么理解？**
+- 参考要点：then 的回调在一个 try/catch 里执行——抛出即把**返回的新 promise** 置为 rejected，于是下游 catch 命中的是「前面整条链任一环节失败」，语义等价于 try { a() } catch(f) 包住上方全链。两个推论：① catch 之后的 then 收到的是 catch 的**恢复值**（返回普通值即重新 fulfilled，错误到此为止）；② 想在 catch 后继续报错必须重新 throw。工程守则：catch 放在你希望「错误通道汇合」的位置，越晚放吞的环节越多。
+- 来源：ECMA-262 PerformPromiseThen 的 CallJobWithCatches；javascript.info《Promise chaining, errors》。

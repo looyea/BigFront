@@ -106,3 +106,21 @@ console.log(proxy.y);
   **追问 1**：每次 get 都新建 proxy，性能爆炸——用 WeakMap 缓存 `raw → proxy` 单例。
   **追问 2**：如何暴露原对象？→ 定 Symbol `RAW`，get 里特判返回 target。
 - 来源：Vue 3 源码 `reactivity/src/baseHandlers.ts` 反向；多份中文八股。
+
+---
+
+**13）set trap 返回 `false` 会发生什么？为什么 trap 里要 `return Reflect.set(...)` 原样透传？**
+- 参考要点：set trap 返回 false 即声明「写入失败」——**严格模式下赋值表达式抛 TypeError**，非严格模式静默忽略。`Reflect.set` 的返回值就是引擎视角的成失标志（invariant 也要靠它判定），自己 `target[k] = v` 拿不到这个 boolean，还可能触发二次 trap/丢 setter 语义。因此「Reflect 做、原样 return」是 trap 的标准姿势（deleteProperty/defineProperty 同理）。
+- 来源：MDN《Proxy: set handler》；ECMA-262 [[Set]]/[[DefineOwnProperty]] 内部方法。
+
+---
+
+**14）`Proxy.revocable` 解决什么问题？revoke 之后 target 还能访问吗？**
+- 参考要点：返回 `{ proxy, revoke }`；`revoke()` 后对 proxy 的一切操作（get/set/apply…）都抛 TypeError。但 **target 本身不受限**——拿着原引用的代码照常读写，所以它是「断别人访问路」而不是「锁数据」；附带收益：revoke 后 proxy 内部槽清空，target 若无其它引用可被 GC。场景：把对象交给不可信插件/回调后随时收权，临时凭证、一次性 API。
+- 来源：MDN《Proxy.revocable》；TC39 proxy 提案（软权限/能力安全动机）。
+
+---
+
+**15）Proxy 的代价：为什么 V8 对 proxy 对象的优化失效？工程上怎么缓解？打包器会 tree-shake 掉 `new Proxy` 吗？**
+- 参考要点：① 每次属性读写都要多调一次 trap 函数，且引擎无法确定返回值形状——**inline cache / hidden class 假设失效**，热循环实测慢 2-10 倍；② 缓解：Vue 3 提供 `shallowReactive`/`markRaw` 减代理层数，大列表用索引型访问+计算属性而非逐项深层 reactive；③ `new Proxy(target, handler)` 是**运行时副作用表达式**，Rollup/Webpack 不会摇掉（与 Map/Set 同规则）；④ 调试时栈里会多 `Proxy.get`/`Reflect.get` 帧，DevTools 可过滤。
+- 来源：v8.dev《slides for V8 team talk on Proxy performance》；Vue 3 文档《Reactivity - Performance Tips》；Rollup《Tree-shaking caveats》。

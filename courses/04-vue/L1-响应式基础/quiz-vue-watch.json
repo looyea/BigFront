@@ -8,26 +8,36 @@
       "prompt": "什么时候应该用 watch 而不是 computed？",
       "options": [
         "需要一个派生的新值时",
-        "数据变化时要执行副作用（请求/打点/同步第三方）时",
         "想缓存计算结果时",
+        "数据变化时要执行副作用（请求/打点/同步第三方）时",
         "任何时候都优先 watch"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "computed 产派生值、watch 做副作用；能用 computed 表达的别用 watch（呼应 vue-watch 第一节、vue-reactivity 第四节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "直接 watch 一个 reactive 对象整体，回调里 (n, o) 的 n 与 o 通常是什么关系？",
-      "options": ["值不相等", "是同一个 Proxy 引用，看不出具体变了什么", "o 恒为 undefined", "n 是深拷贝"],
-      "answer": 1,
+      "options": [
+        "值不相等",
+        "o 恒为 undefined",
+        "n 是深拷贝",
+        "是同一个 Proxy 引用，看不出具体变了什么"
+      ],
+      "answer": 3,
       "explanation": "侦听 reactive 整体新旧同引用；要比较具体值用 () => state.x（呼应 vue-watch 第二节）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "想在回调里访问\"本次更新渲染后的 DOM\"，应设置？",
-      "options": ["flush: 'pre'", "flush: 'post'", "immediate: true", "deep: true"],
+      "options": [
+        "flush: 'pre'",
+        "flush: 'post'",
+        "immediate: true",
+        "deep: true"
+      ],
       "answer": 1,
       "explanation": "flush:'post' 在 DOM 更新后执行；pre 是更新前（呼应 vue-watch 第三节）。"
     },
@@ -35,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "搜索框每次输入就发请求，出现\"后发的请求先返回覆盖结果\"的竞态，最好用哪个机制解决？",
-      "options": ["加 setTimeout", "回调的 onCleanup 取消上一次请求(AbortController)", "改用 computed", "设 deep:true"],
+      "options": [
+        "加 setTimeout",
+        "回调的 onCleanup 取消上一次请求(AbortController)",
+        "改用 computed",
+        "设 deep:true"
+      ],
       "answer": 1,
       "explanation": "onCleanup 在新回调前/停止时执行，可 abort 上一条请求（呼应 vue-watch 第四节）。"
     },
@@ -69,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "watch(...) 的返回值是什么、有什么用？",
-      "options": ["一个 Promise", "一个停止函数 stop()，手动终止侦听", "侦听的源", "新值"],
+      "options": [
+        "一个 Promise",
+        "一个停止函数 stop()，手动终止侦听",
+        "侦听的源",
+        "新值"
+      ],
       "answer": 1,
       "explanation": "返回 stop 句柄，组件作用域外需手动调用清理（呼应 vue-watch 第六节、vue-composables）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "watch 第一个参数传数组 `watch([a, b], ([na, ob]) => ...)` 时，触发规则是：",
+      "options": [
+        "任一变化都触发且拿得到全部新值",
+        "默认只在两个都变化时触发",
+        "只触发先变化那个",
+        "语法非法"
+      ],
+      "answer": 0,
+      "explanation": "数组源=并行侦听，回调拿新旧值数组；「变化项定位」要自己逐位比较——配 onCleanup 做「竞态取消」（本关竞态题）是列表联动查询的标准形态。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "watch 的回调默认 flush: \"pre\" 的确切含义是：",
+      "options": [
+        "组件更新前同步执行",
+        "回调在组件渲染更新前的微任务时机批量执行（能读到将更新的状态、读不到更新后 DOM）；\"post\" 在更新后、\"sync\" 同步立即",
+        "DOM 操作后",
+        "与 nextTick 等价"
+      ],
+      "answer": 1,
+      "explanation": "pre/post 都是「批量异步」，差别只在相对渲染的位置；sync 省一个 tick 但失去批处理（高频源上性能灾难）——读 DOM 用 post+nextTick 双保险（本关 flush 题族谱）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "watch 一个 getter `() => store.list.length`，回调触发时机是：",
+      "options": [
+        "store 任何属性变化",
+        "仅 length 这个数变化时（getter 返回原始值，新旧比较按 Object.is）——内容增删但长度不变则不触发",
+        "深比较每个元素",
+        "每秒轮询"
+      ],
+      "answer": 1,
+      "explanation": "侦 getter 返回什么就按什么比：要「内容变就触发」返回 [list] 包一层或加 deep；「按对象身份触发」和「按派生值触发」的区分是写对 watch 的第一课。"
     }
   ]
 }

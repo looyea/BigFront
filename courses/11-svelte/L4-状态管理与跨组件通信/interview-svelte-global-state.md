@@ -1,6 +1,6 @@
 # svelte-global-state 面试题精选
 
-> 共 12 题，覆盖 A 模块单例模式 / B 持久化与工程化 / C SSR 与 HMR / D 状态选型总览。
+> 共 15 题，覆盖 A 模块单例模式 / B 持久化与工程化 / C SSR 与 HMR / D 状态选型总览。
 
 ## 一、模块单例模式（A 类）
 
@@ -57,3 +57,25 @@ getter 暴露只读口 + 方法收口写：`return { get count(){return count}, 
 ### 12. 对比 React：为什么 React 社区离不开状态库而 Svelte 常常不需要？
 React 的响应单元是"组件函数重跑"，跨组件共享必须借钩子+引用比较（Context 粗粒度、Zustand selector）——库补的是**语言缺的信号层**；Svelte 5 的 `$state` 本身就是可脱离组件存在的信号，模块单例天然充当 store，库的剩余价值只在 devtools/时间旅行/持久化预设这些**工程配件**（呼应 svelte-overview 第二节、react-context、svelte-global-state 第一节）。
 **来源**：Svelte 5 官方博客 + React 官方">You might not need a state manager"讨论对照
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  模块级 $state 单例在 SSR 下会出什么事故？Svelte 项目里"全局态"的正确姿势是什么？
+
+事故：Node 进程是长驻的，模块顶层 $state 单例在所有请求间共享——用户 A 的请求把购物车/登录态写进单例，用户 B 的请求读到 A 的数据（跨用户数据泄露，是 SSR 最严重的安全事故，对应既有"SSR 单例最大风险"题）。正确姿势分层：① 请求级数据放"每请求实例"——SvelteKit 用 load 返回的 data + $page.data（官方数据通道，天然 per-request，对应既有"SSR 首屏数据通道"题），或每次请求 new 一份 state；② 真·全局且无身份的数据（主题、构建常量）才允许模块单例；③ 判据——"这块状态是否携带『当前用户/当前请求』身份"，有则绝不模块单例。手动 SSR（非 Kit）：自己在请求处理里创建 app 级 state 容器并靠 context 下传，切勿 import 一个顶层 $state 直接用。加分句：这题的通用原则是"服务端的全局 = 所有用户的共享"——凡是从 SPA 时代『模块单例当全局状态』的习惯带到 SSR，都是隐患；能主动讲出"我在 SSR 项目里规定请求态一律走 load/context、模块单例只放无身份 UI 偏好"，说明你把 SSR 安全当工程纪律而非事后补救（呼应既有 SSR 事故题的制度化）。
+
+**来源**：SvelteKit state 泄漏文档；module singleton SSR 危害；per-request state 模式
+
+### 14.  开发时 Vite HMR 热更新把全局购物车清零了，官方推荐的保命手段与原理？
+
+成因：改 .svelte.js 全局模块会触发该模块重新执行——顶层 $state 被重新初始化，之前的值丢失（对应既有"热更新清零官方保命手段"题）。手段：① 用 import.meta.hot.data 跨模块重载存值（HMR 提供的"存活槽"，模块热更新前后读写同一 hot.data，把状态挪进去）；② 或把全局状态初始化做成幂等（已存在就不覆盖）；③ 组件级状态靠 Svelte 的 HMR（保留组件实例 state， runes 下组件热更默认保状态，对应 tooling 关"保留组件状态"题）。原理：HMR 是"替换模块但不想丢运行状态"的机制，import.meta.hot 是模块和自己的过去通信的唯一通道。工程注意：hot.data 只治开发（生产无 HMR），别把业务持久化混进 HMR 保命逻辑（持久化用 localStorage，热更保命用 hot.data，两码事）。加分句：能把"开发期状态丢失（HMR）"与"运行期状态持久化（storage）"分成两条正交的问题讲，说明你分得清工具链行为与产品行为——很多人用一个 localStorage hack 去"修 HMR 清仓"是混淆了二者（呼应既有 HMR 清仓题的正解）。
+
+**来源**：Vite HMR 与模块状态；import.meta.hot 实践；Svelte HMR 状态保留
+
+### 15.  给你一个新的 Svelte 5 中大型项目，画一遍全局状态选型与组织决策，并说明如何防"大泥潭"。
+
+决策树（先问三问）：① 携带请求/用户身份吗？→ 是：走 Kit load + $page.data / context，禁模块单例；② 有几个互不相干的消费点、跨不跨路由？→ 单组件内：局部 $state；父子：props；跨层少量：context；广泛共享且无身份：模块 $state 单例；③ 要持久化/跨标签页/时间旅行？→ 是：加持久化层或引入 store 库。组织防泥潭：① 按 feature 分模块（cart.svelte.js、auth.svelte.js）而非一个 giant store.js；② 每模块导出"工厂或带方法的对象"而非裸 $state（封装内部、外部只能通过方法改，可追踪变更源，对应工厂函数题）；③ 派生用 $derived 就近定义、别到处读原始 state；④ 建立"谁可以写这个状态"的单向约定（写走 action/方法，读走 derived）。度量：全局模块数量与每模块消费者数要监控——一个 state 被 20 个组件读写就是拆分信号。加分句：这份决策树最值钱的是"升级触发条件 + 降级回收机制"——能说出"我们先局部、出现第 3 个消费者才提升到全局、并能一键降回"的团队，才真正掌控了状态蔓延（呼应既有"画出状态选型决策树"题的体系化落地）。
+
+**来源**：Svelte 状态组织最佳实践；feature-slice 前端架构；既有"状态选型决策树""模块怎么组织不像大泥潭"题整合

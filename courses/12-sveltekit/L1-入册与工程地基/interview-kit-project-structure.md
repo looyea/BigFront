@@ -1,6 +1,6 @@
 # kit-project-structure 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ---
 
@@ -75,3 +75,25 @@ gitignore 核心：`.svelte-kit/`（生成物）、`build/`（adapter 产物）�
 **来源**：团队规范设计题（本包 L1 三关的毕业小考）
 
 目录：①路由私有组件贴页面放、第二层引用即上收 $lib（"两次规则"）；②(group) 只做布局分组不承载业务语义；③+server.ts 集中 api/ 子树，页面目录不夹接口。命名：①动态段目录用单数（[id] 非 [ids]）；②matcher 后缀全员小写名词（[id=uuid]）；③load 返回字段 camelCase 且禁止 `data.data` 套娃。env：①PUBLIC_ 前缀变更=安全评审触发；②应用只从 $env 导入、禁 process.env 直读（lint 规则封死）；③.env.example 与部署清单双写同步。检查：①pre-commit 跑 sv check；②CI 必 build+preview 冒烟；③sv format+prettier 统一 +文件模板风格。评分口径：每条给"防什么事故"的>空列清单的。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  svelte.config.js 与 vite.config.js 双配置并存的分工逻辑？哪些能力只有其中一边有？ 
+
+ vite.config.js 管打包管线（插件、define、resolve），svelte.config.js 管 Kit 的路由/预渲染/adapter/env 等框架语义；编译器选项可写在 svelte.config.js 的 compilerOptions，而 ssr.noExternal 这类只能进 Vite 侧，混放会静默失效。 
+
+**来源**： https://svelte.dev/docs/kit/configuration ； https://svelte.dev/docs/kit/vite-plugins 
+
+### 14.  app.html 与 +layout.svelte 都能放全站内容，官方倾向把什么放哪？ 
+
+ 需要出现在首字节 HTML 的东西（meta、title 占位、样式预加载）放 app.html，因为它参与 SSR 最早期输出且不依赖 JS；交互性壳（导航栏、页脚组件）放 +layout.svelte，走组件体系可拿 data 与 slot。 
+
+**来源**： https://svelte.dev/docs/kit/faq#project-structure 
+
+### 15.  你在 monorepo 里给多个 Kit 应用共享内部包，pnpm workspace 下会遇到什么坑？ 
+
+ 共享包若只发 TS 源码需让 Vite 编译它，要配 ssr.noExternal 或用 exports 字段发布；.svelte-kit 输出目录与 tsconfig extends 在 workspace 下路径解析易错，官方建议直接依赖包暴露 .svelte.js/.svelte.ts 与标准 exports。 
+
+**来源**： https://svelte.dev/docs/kit/faq#package-json-exports ； https://turbo.build 

@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-events",
-  "title": "事件委托与原生 · 自测",
+  "title": "solid-events 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "onClick 与 on:click 把监听器分别加在哪里？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "onClick 与 on:click 把监听器分别加在哪里？",
       "options": [
         "都加在元素上",
         "onClick 加在 document(委托)、on:click 加在该元素(原生 addEventListener)",
@@ -11,10 +13,12 @@
         "都加在 document 上"
       ],
       "answer": 1,
-      "explain": "on__/onClick 委托到 document 冒泡分派；on: 直接 addEventListener 到元素——这决定后续所有差异。"
+      "explanation": "on__/onClick 委托到 document 冒泡分派；on: 直接 addEventListener 到元素——这决定后续所有差异。"
     },
     {
-      "q": "为什么委托事件大小写不敏感、而原生 on: 事件大小写敏感？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "为什么委托事件大小写不敏感、而原生 on: 事件大小写敏感？",
       "options": [
         "纯粹随机",
         "委托只能小写、原生只能大写",
@@ -22,10 +26,12 @@
         "委托由 Solid 按标准事件名归一；原生把名字原样交给 addEventListener，名字必须精确匹配"
       ],
       "answer": 3,
-      "explain": "onClick=onclick 都行；on:Custom-Event 必须和派发的事件名逐字符一致，因为它是真的 addEventListener。"
+      "explanation": "onClick=onclick 都行；on:Custom-Event 必须和派发的事件名逐字符一致，因为它是真的 addEventListener。"
     },
     {
-      "q": "一个很少触发的 mousemove，官方建议怎么写？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "一个很少触发的 mousemove，官方建议怎么写？",
       "options": [
         "用原生 on:mousemove，因为委托的收益只在大量同类事件时才成立",
         "必须用委托 onMouseMove 才快",
@@ -33,10 +39,12 @@
         "不能监听 mousemove"
       ],
       "answer": 0,
-      "explain": "委托性能来自'给大量元素省监听'；偶发事件享受不到，反而常驻一个 document 监听，用原生更好。"
+      "explanation": "委托性能来自'给大量元素省监听'；偶发事件享受不到，反而常驻一个 document 监听，用原生更好。"
     },
     {
-      "q": "在委托的 onClick 里调用 event.stopPropagation()，常出现什么意外？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "在委托的 onClick 里调用 event.stopPropagation()，常出现什么意外？",
       "options": [
         "报错",
         "阻止了默认行为",
@@ -44,10 +52,12 @@
         "会连带移除该元素"
       ],
       "answer": 2,
-      "explain": "官方例子：父 div 原生监听 + 子 button 委托 onClick+stopPropagation → 父仍先触发；button 改 on:click 才真正阻断。"
+      "explanation": "官方例子：父 div 原生监听 + 子 button 委托 onClick+stopPropagation → 父仍先触发；button 改 on:click 才真正阻断。"
     },
     {
-      "q": "`<div onClick={props.onClick} />`，父后来换了 props.onClick，点击却还用旧的——为什么？怎么办？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "`<div onClick={props.onClick} />`，父后来换了 props.onClick，点击却还用旧的——为什么？怎么办？",
       "options": [
         "事件处理器不是响应式的：传 signal/引用不会随其更新；包一层 onClick={()=>props.onClick?.()} 现读最新",
         "因为 props 不可读",
@@ -55,10 +65,12 @@
         "重启组件即可"
       ],
       "answer": 0,
-      "explain": "增删监听开销大，Solid 不把 handler 做成响应式绑定；要用最新值就在回调里现读（第二号铁律）。"
+      "explanation": "增删监听开销大，Solid 不把 handler 做成响应式绑定；要用最新值就在回调里现读（第二号铁律）。"
     },
     {
-      "q": "在 <input> 上，onInput 与 onChange 的触发时机是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "在 <input> 上，onInput 与 onChange 的触发时机是？",
       "options": [
         "onInput 每次值变化即触发；onChange 仅失焦后触发（跟原生行为）",
         "两者都每次按键触发",
@@ -66,10 +78,12 @@
         "都只在表单 submit 时触发"
       ],
       "answer": 0,
-      "explain": "Solid 尊重 DOM 原生语义，这跟 React 里 onChange≈每次输入 的习惯不同，是迁移高频坑。"
+      "explanation": "Solid 尊重 DOM 原生语义，这跟 React 里 onChange≈每次输入 的习惯不同，是迁移高频坑。"
     },
     {
-      "q": "委托事件处理器里，为什么不能把 event.currentTarget 存下来异步用？数组绑定 onClick={[h,'x']} 解决什么？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "委托事件处理器里，为什么不能把 event.currentTarget 存下来异步用？数组绑定 onClick={[h,'x']} 解决什么？",
       "options": [
         "currentTarget 一直是 null；数组绑定用于传事件类型",
         "currentTarget 分派结束后置 null，只能在处理器同步里取；数组绑定把第二个元素作为 handler 首参，避免 bind/闭包开销",
@@ -77,7 +91,46 @@
         "currentTarget 会内存泄漏；数组绑定用来做防抖"
       ],
       "answer": 1,
-      "explain": "委托下 currentTarget 分派后即失效；[handler,data] 让 data 当第一参数，省掉 handler.bind 造闭包。"
+      "explanation": "委托下 currentTarget 分派后即失效；[handler,data] 让 data 当第一参数，省掉 handler.bind 造闭包。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 组件 dispatchEvent 一个 CustomEvent（名为 widget:ping），Solid 里怎么监听？ ",
+      "options": [
+        " 只能用 addEventListener ",
+        " on:widget:ping 之类属性绑定不被允许，需改名 ",
+        " 用 on:ping 等属性直接绑定：Solid 把 on:xxx 原样翻译为 addEventListener，不改写事件名，自定义事件同样可绑 ",
+        " 自定义事件一律不冒泡，无法监听 "
+      ],
+      "answer": 2,
+      "explanation": " Solid 没有合成事件层，on: 绑定直通原生，事件名大小写与冒泡配置决定一切，因此自定义事件天然支持。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 在组件里注册 window 级键盘快捷键，正确的资源归属写法是？ ",
+      "options": [
+        " 直接顶层 addEventListener，页面刷新自然清理 ",
+        " onMount（或顶层）注册，并把 removeEventListener 交给 onCleanup，随 owner 销毁自动解绑 ",
+        " 写在 createEffect 里即可自动管理 ",
+        " 用 on:keydown 绑在 body 标签上 "
+      ],
+      "answer": 1,
+      "explanation": " 全局监听不随组件卸载消失是泄漏首因；onCleanup 挂在 owner 生命周期上，是官方推荐的配对拆除方式。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 滚动监听里高频写 signal 导致掉帧，最贴合 Solid 心智的治理是？ ",
+      "options": [
+        " 换成 onChange 事件 ",
+        " 用 rAF/节流合并在帧边界写一次 signal，配合 passive 监听；框架不会替你合并原生事件洪泛 ",
+        " 给 signal 设 throttle 选项 ",
+        " 用 memo 包一层即可 "
+      ],
+      "answer": 1,
+      "explanation": " 细粒度更新只保证写一次更新一次极便宜，事件本身的洪泛仍需在使用侧按帧聚合，这是官方性能指南的口径。 "
     }
   ]
 }

@@ -8,19 +8,24 @@
       "prompt": "什么时候把多个 useState 换成 useReducer 更合适？",
       "options": [
         "只要状态是数组就用",
-        "当一个对象里多字段联动、迁移规则复杂且想集中时",
         "永远都用 useReducer",
+        "当一个对象里多字段联动、迁移规则复杂且想集中时",
         "状态需要传给子组件时"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "多字段联动/集中迁移用 reducer（呼应 react-advanced-hooks 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "useReducer 返回的 dispatch 有什么便于优化的特性？",
-      "options": ["每次渲染都是新函数", "引用稳定，可安全传给 React.memo 子组件", "会触发两次渲染", "只能同步调用"],
-      "answer": 1,
+      "options": [
+        "每次渲染都是新函数",
+        "会触发两次渲染",
+        "只能同步调用",
+        "引用稳定，可安全传给 React.memo 子组件"
+      ],
+      "answer": 3,
       "explanation": "dispatch 引用恒定，利于 memo（呼应 react-advanced-hooks 第一节、react-memo-hooks）。"
     },
     {
@@ -79,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "SSR 场景用 useSyncExternalStore 需要多提供什么？",
-      "options": ["不需要额外", "第三个参数 getServerSnapshot", "一个 key", "一个 ref"],
+      "options": [
+        "不需要额外",
+        "第三个参数 getServerSnapshot",
+        "一个 key",
+        "一个 ref"
+      ],
       "answer": 1,
       "explanation": "服务端快照用于 SSR 渲染与水合（呼应 react-advanced-hooks 第三节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " useId 生成的 id 相比 `Math.random()` 的关键优势是？",
+      "options": [
+        "更短",
+        "在同一组件树内唯一、且在服务端与客户端「确定性地算出同一值」——避免 SSR 水合时两边 id 不一致导致 hydration mismatch，也不随重渲染变化",
+        "能保证全局唯一跨标签页",
+        "可当业务主键"
+      ],
+      "answer": 1,
+      "explanation": "useId 基于组件在树中的位置生成稳定字符串，专为「需要唯一 DOM id 但不该每次渲染都变、还要 SSR/CSR 一致」的场景（label-for、aria-*）。它刻意不保证跨浏览器/跨根唯一，也不能当数据 key（位置复用会变）。把随机 id 用在 SSR 表单上就是典型水合事故源。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " useSyncExternalStore 的 subscribe 参数返回什么？若每次都传一个新 subscribe 函数会怎样？",
+      "options": [
+        "返回布尔；无影响",
+        "返回一个取消订阅函数；若 subscribe 引用每帧变，会导致反复退订/重订（风暴），应把 subscribe 做成稳定引用（模块级或 useCallback）",
+        "返回 store 快照；会自动去重",
+        "返回 Promise；异步订阅"
+      ],
+      "answer": 1,
+      "explanation": "签名 `useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?)`。subscribe(onStoreChange) 必须返回 unsubscribe；React 在 subscribe 引用变化时重新订阅，所以 subscribe 与 getSnapshot 都要稳定引用（getSnapshot 每次返回不同值还会触发「Maximum update depth」类循环）。它解决的正是并发渲染下读外部可变源的 tearing。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 关于 useDeferredValue 与 useTransition 的分工，正确的是？",
+      "options": [
+        "完全等价",
+        "useTransition 包裹「你自己触发的 setState」，把该更新标记为可打断的低优；useDeferredValue 包裹「一个你接收到的值」，返回其延后版本，适合值来自 props/外部、你无法在其 set 处包 transition 的场景",
+        "一个管 state 一个管 props 且不可互换",
+        "deferred 会丢弃更新"
+      ],
+      "answer": 1,
+      "explanation": "两者都是并发低优渲染的工具。能拿到「触发更新的那次 setState」→ useTransition（拿到 isPending）；只能拿到「已经流到你手里的值」（如父传的 input、路由参数）→ useDeferredValue，React 先用旧值渲染保交互、再后台算新值。常常二选一即可，选哪个取决于「更新的发起点是否在你手上」。"
     }
   ]
 }

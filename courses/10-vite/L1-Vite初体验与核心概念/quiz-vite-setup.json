@@ -6,8 +6,13 @@
       "id": "q1",
       "type": "single",
       "prompt": "部署到子目录 /my-app/ 时，vite.config 里需要设置什么？",
-      "options": ["root: '/my-app'", "base: '/my-app/'", "outDir: '/my-app'", "publicDir: '/my-app'"],
-      "answer": 1,
+      "options": [
+        "base: '/my-app/'",
+        "root: '/my-app'",
+        "outDir: '/my-app'",
+        "publicDir: '/my-app'"
+      ],
+      "answer": 0,
       "explanation": "base 影响所有资源引用前缀。默认 '/'，改成 '/my-app/' 后产物里 JS/CSS/图片引用都变成 /my-app/assets/xxx。"
     },
     {
@@ -16,11 +21,11 @@
       "prompt": "前端代码能通过 import.meta.env 访问 .env 里的哪些变量？",
       "options": [
         "所有变量",
-        "只有 VITE_ 前缀的变量",
         "只有 MODE 和 DEV",
+        "只有 VITE_ 前缀的变量",
         "需要手动 export 的变量"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "安全设计——防止 DATABASE_URL 等密钥泄露到客户端。只有 VITE_ 开头的才被静态替换进产物。"
     },
     {
@@ -29,11 +34,11 @@
       "prompt": "server.proxy 配置解决什么问题？",
       "options": [
         "生产环境代理",
-        "开发时避免 CORS——前端请求 /api 由 Vite 转发到后端",
         "SSL 证书配置",
-        "域名重定向"
+        "域名重定向",
+        "开发时避免 CORS——前端请求 /api 由 Vite 转发到后端"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "dev 时前端 :5173 调后端 :8080 跨域 → proxy 让 Vite 拦截 /api 转发 → 浏览器视为同源 → 无 CORS。"
     },
     {
@@ -74,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "默认 esbuild minify（快 20-40x）；如果需要 terser 的 mangle.properties 等高级功能则配 'terser'。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " vite.config 里配了 alias @ 指向 src，TS 里 import 报\"找不到模块\"，原因是？",
+      "options": [
+        "alias 语法错",
+        "vite 的 alias 只影响打包解析，TS 语言服务/编译期要另配 tsconfig 的 paths——两处必须成对维护（或用插件生成保持同源）",
+        "要重启 IDE",
+        "Vite 不支持 @ 符号"
+      ],
+      "answer": 1,
+      "explanation": "两套解析器各管各的阶段：构建期 Vite、编辑/类型期 tsc——\"能跑但全是红波浪线\"的经典成因。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " server.host: true 的作用是？",
+      "options": [
+        "绑定域名",
+        "监听 0.0.0.0——局域网内其他设备可用你的 IP 访问 dev server（真机调试入口），同时意味着暴露面扩大，需要配合网络环境判断",
+        "开启 HTTPS",
+        "指定 HMR 主机"
+      ],
+      "answer": 1,
+      "explanation": "真机调试标配，但在公共网络上等于把源码服务开放给整个子网——用完关或走隧道。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 新版 Vite 对访问 dev server 的 Host 头限制策略是？",
+      "options": [
+        "全部放行",
+        "默认只允许 localhost 系；自定义域名/局域网主机名访问被 403 拒绝，需显式配 server.allowedHosts 加白——防 Host 头攻击与同源绕过",
+        "必须配 HTTPS",
+        "只校验端口"
+      ],
+      "answer": 1,
+      "explanation": "allowedHosts 是对历史 host 校验 CVE 的制度化回应；内网穿透域名调试时记得精确加白而不是图省事全放。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 端口被占用时默认行为与 strictPort: true 的区别是？",
+      "options": [
+        "默认报错退出；strictPort 改为自动 +1",
+        "默认自动试下一个端口；strictPort: true 则直接失败——CI/容器/固定回调白名单场景要 strict，避免\"服务活了但地址变了\"的隐性错位",
+        "两者相同",
+        "取决于 OS"
+      ],
+      "answer": 1,
+      "explanation": "OAuth 回调、E2E baseURL、iframe 嵌入写死端口时，端口漂移是比启动失败更难查的问题。"
     }
   ]
 }

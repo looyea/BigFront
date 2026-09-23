@@ -6,23 +6,38 @@
       "id": "q1",
       "type": "single",
       "prompt": "title 配置 { default, template: '%s · 学院' } 中 template 的作用是？",
-      "options": ["首页专用标题", "子页 title 自动套上统一后缀格式", "面包屑模板", "OG 图文字模板"],
-      "answer": 1,
+      "options": [
+        "首页专用标题",
+        "面包屑模板",
+        "子页 title 自动套上统一后缀格式",
+        "OG 图文字模板"
+      ],
+      "answer": 2,
       "explanation": "页面只写本页名，站名后缀由模板统一拼接（呼应 next-metadata 第一节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "generateMetadata 的执行时机是？",
-      "options": ["浏览器水合后", "与该路由的渲染同阶段（预渲染页在构建期）", "仅每次请求", "由爬虫触发"],
-      "answer": 1,
+      "options": [
+        "浏览器水合后",
+        "仅每次请求",
+        "由爬虫触发",
+        "与该路由的渲染同阶段（预渲染页在构建期）"
+      ],
+      "answer": 3,
       "explanation": "SSG 页构建期跑、动态页请求期跑——耗时计入渲染要节制 await（呼应 next-metadata 第一节规则）。"
     },
     {
       "id": "q3",
       "type": "single",
       "prompt": "客户端组件不能 export metadata，正确的替代思路是？",
-      "options": ["把 head 操作塞进 useEffect", "把需要 metadata 的页面层保持服务端组件，元数据在段级声明", "用 dangerouslySetInnerHTML 注入 head", "放弃该页 SEO"],
+      "options": [
+        "把 head 操作塞进 useEffect",
+        "把需要 metadata 的页面层保持服务端组件，元数据在段级声明",
+        "用 dangerouslySetInnerHTML 注入 head",
+        "放弃该页 SEO"
+      ],
       "answer": 1,
       "explanation": "metadata 属服务端能力：结构上让它留在 Server 侧解决（呼应 next-metadata 第一节规则2、next-server-client）。"
     },
@@ -30,7 +45,12 @@
       "id": "q4",
       "type": "single",
       "prompt": "搜索结果页/用户私有页的防收录正确做法是？",
-      "options": ["robots.txt 里写Disallow全站点", "对应段 generateMetadata 返回 robots: { index: false }", "页面不渲染内容", "加 nofollow 到所有内链"],
+      "options": [
+        "robots.txt 里写Disallow全站点",
+        "对应段 generateMetadata 返回 robots: { index: false }",
+        "页面不渲染内容",
+        "加 nofollow 到所有内链"
+      ],
       "answer": 1,
       "explanation": "页面级 noindex 精准；robots.txt 禁爬不等于禁收录且伤全站（呼应 next-metadata 第三节三件套）。"
     },
@@ -38,7 +58,12 @@
       "id": "q5",
       "type": "single",
       "prompt": "opengraph-image.tsx 这个约定的能力是？",
-      "options": ["上传固定分享图", "用 React+数据动态渲染分享卡片图（ImageResponse）", "生成 favicon 包", "压缩站内图片"],
+      "options": [
+        "上传固定分享图",
+        "用 React+数据动态渲染分享卡片图（ImageResponse）",
+        "生成 favicon 包",
+        "压缩站内图片"
+      ],
       "answer": 1,
       "explanation": "分享图即组件：每商品一张卡片成为数据驱动的事（呼应 next-metadata 第二节、mp-openapi 对照）。"
     },
@@ -46,7 +71,12 @@
       "id": "q6",
       "type": "single",
       "prompt": "改完 OG 图后微信里仍是旧图，最可能的原因是？",
-      "options": ["构建失败", "分享平台侧对卡片做了缓存（需变 URL 参数等强制重抓）", "微信不支持 OG", "metadataBase 未配置"],
+      "options": [
+        "构建失败",
+        "分享平台侧对卡片做了缓存（需变 URL 参数等强制重抓）",
+        "微信不支持 OG",
+        "metadataBase 未配置"
+      ],
       "answer": 1,
       "explanation": "平台缓存与自有 revalidate 是两个系统（呼应 next-metadata 第四节调试箱）。"
     },
@@ -54,9 +84,53 @@
       "id": "q7",
       "type": "single",
       "prompt": "metadataBase 不配置时，最容易坏掉的是？",
-      "options": ["相对路径的 OG 图/图标 URL 无法解析成绝对地址", "页面标题", "canonical 一律 404", "水合报警"],
+      "options": [
+        "相对路径的 OG 图/图标 URL 无法解析成绝对地址",
+        "页面标题",
+        "canonical 一律 404",
+        "水合报警"
+      ],
       "answer": 0,
       "explanation": "爬虫与分享平台要求绝对 URL，metadataBase 是相对值的地基（呼应 next-metadata 第一节代码注释）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " metadataBase 未配置时，最容易坏掉的元数据是？",
+      "options": [
+        "title 与 description",
+        "og:image 等相对 URL——它们必须解析为绝对地址，缺 base 时构建告警且社交平台抓不到图（OG 校验器直接报错）",
+        "canonical 链接",
+        "robots 指令"
+      ],
+      "answer": 1,
+      "explanation": "静态 metadata 里的相对路径由 metadataBase 补全成绝对 URL；绝对 URL 要求是导出值（静态可渲染），动态 metadata 函数里才允许读请求数据。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 内部搜索结果页不希望被收录，正确做法是？",
+      "options": [
+        "robots.txt Disallow 即可",
+        "响应/页面输出 noindex（robots.txt 只拦抓取不拦\"已被链接页面的收录与索引\"，且不该用于隐藏敏感页）——敏感内容还要鉴权，meta 只是防收录一层",
+        "改名 /_search 前缀",
+        "加 rel=nofollow 就安全"
+      ],
+      "answer": 1,
+      "explanation": "robots.txt=别爬（仍可能带描述收录）、noindex=别索引、鉴权=别看到——三者职责不同层；内部页三件套全上才对。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " title 配置 template: \"%s | Brand\" 的作用是？",
+      "options": [
+        "首页专用格式",
+        "子页面 title 自动套模板，保证全站品牌后缀一致且可被 generateMetadata 动态填充；default 兜底无 template 命中时",
+        "仅 OG 卡片用",
+        "多语言翻译模板"
+      ],
+      "answer": 1,
+      "explanation": "static metadata 的模板机制让\"每页带品牌后缀\"不再手抄；配合 layout/page 层级合并规则（子覆盖父）是 metadata API 的基础盘。"
     }
   ]
 }

@@ -1,4 +1,4 @@
-# next-groups-matchers 面试题（12 题）
+# next-groups-matchers 面试题（15 题）
 
 > 来源：整理自 CSDN、掘金、SegmentFault、知乎等站点 Next.js 目录组织与路由约定高频面经，中文重述。
 
@@ -65,3 +65,19 @@ app/ 下每个目录都是潜在路由段：utils/ 无 page 不生成 URL 但会
 **12. 让你给团队写一页《Next 目录军规》，写最重要的五条。**
 **来源**：知乎《框架使用规范怎么落地》
 参考骨架：① 目录名只允许出现在白名单（段/组/槽/私有/特殊文件），新前缀先 RFC；② 页面一律小写短横线，CI 正则校验；③ 域内代码先共置，第二次引用再上浮；④ public 只放约定文件，其余 import 进构建；⑤ 路由组=鉴权域，跨组不得互相 import 页面组件。规范要可被工具检查，否则等于没写（呼应 ts-strict 的"规则上锁"哲学）。
+
+---
+
+## 补充（新专题 13-15）
+
+**13.  路由组、私有文件夹、catch-all 多种 matcher 并存的大项目里，如何避免"同段冲突/意外遮蔽"这类构建期与运行期问题？**
+**来源**：Next.js 官方文档 Introduction to Sections / Defining Routes 冲突说明；SegmentFault《App Router 目录冲突排查》
+冲突主要三类：① 两个路由组在同层级映射同一 URL 且各自有 page（(a)/login 与 (b)/login 都指向 /login）——构建直接报错，这是设计使然，逼你明确"这个 URL 归谁"；若要"同 URL 不同呈现"应改用并行路由 slot 而非两个组。② catch-all 与静态段遮蔽：/docs/[...slug] 会吃掉 /docs/faq 吗？——Next 按静态>动态>catch-all 的 specificity 排序，静态优先，但跨 layout 边界时子段挂父 layout 的隐式关系易被忽略，重构挪目录时要重审。③ route.ts 与 page.tsx 同段互斥、matcher 与 rewrite 环。工程防线：把"URL 表"当公共 API——CI 里用路由清单 diff（遍历 app 段生成 URL 快照）防"重命名目录顺手改了 URL"；用 README 约定组命名语义（(site)/(auth)/(admin) 各自代表壳而非业务）；turbopack/next build 报错信息要贴进团队排障手册。
+
+**14.  为什么"URL 不变、目录可重组"值得被当成一种能力？路由组与私有文件夹如何配合做到？**
+**来源**：掘金《App Router 目录即路由的工程实践》；InfoQ《前端代码组织：路由映射与归属解耦》
+URL 是对外的长期契约（SEO/分享/书签），目录是对内的组织手段（归属/复用/权限），老式框架里两者被一张路由表软连接，文件路由则被目录结构硬绑定——路由组与私有前缀正是官方补上的"解耦阀门"：(group) 允许目录任意分壳分组而 URL 段不变，_folder/下划线前缀允许把纯实现细节（组件、数据 helper）放进 app 树而不污染 URL。收益：团队可以按 feature 重组目录、把某域拆给不同小组维护，而 URL 零变化；重组的 diff 只影响构建产物映射。边界：解耦是手段不是目的——URL 与目录大体同构仍是可读性的最大来源，只有"组织需求与 URL 语义真正打架"（同一 URL 两套壳、目录要按团队而非按域切）时才动用组/私有段，否则一个站里两套心智并存反而更贵。
+
+**15.  一个中台项目 8 个业务域共处一个 app/，你在目录与 matcher 层面怎么做"域隔离"？隔离过度会有什么代价？**
+**来源**：InfoQ《大型 Next.js 项目的目录组织》；知乎《Monorepo 与路由组：中台前端的边界治理》
+隔离做法：每域一个顶层路由组 (domainA) 配独立 layout（导航/权限壳）、域内私有 _components/_data 目录、域专属 middleware matcher 前缀、API 收敛到 app/api/domains/<a>/；跨域共享沉到 app/_shared 或 workspace 包，禁止跨域 import 内部模块（ESLint boundaries/no-cross-import 钉死）。代价与反噬：① 组爆炸——8 个组各一套 layout 后，"全站统一壳"改动要乘 8，站点级 layout 反而抽不出来；② 跳转语义碎——跨域导航丢预取连续性、cookie/鉴权态在域间命名空间不一致会互相踩；③ 构建期扫描成本与类型推导范围随树膨胀。缓解：把"壳"设计成 站点 layout(全站) > 域 layout(仅导航) > 子域(面包屑) 的严格三层，域 layout 只准组合站点层能力、禁止各自造轮子；跨域协作只允许走三条"显式桥"：路由跳转、共享包、revalidateTag。

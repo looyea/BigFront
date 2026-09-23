@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": ".d.ts 文件的本质是？",
       "options": [
-        "编译后的 JS 产物",
         "只含类型信息、无实现体（函数写成 ;），运行时不存在的'类型契约'",
+        "编译后的 JS 产物",
         "一种模块格式",
         "source map"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": ".d.ts 只描述形状供编译器/IDE 使用，运行时不存在（呼应类型擦除）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "对一个 import 'lodash' 的包，TS 首先从哪里找类型？",
       "options": [
         "总是找 @types/lodash",
-        "先看包自身 package.json 的 types/typings 或 exports 的 types 条件，找不到再看 @types",
         "看 README",
+        "先看包自身 package.json 的 types/typings 或 exports 的 types 条件，找不到再看 @types",
         "看 .js 源码推断"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "优先包自带类型（types/exports.types），再退到约定 index.d.ts，最后查 @types/pkg。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "declare 关键字在 .d.ts / 声明语句里的含义是？",
       "options": [
         "创建运行时变量",
-        "告诉编译器该值在别处运行时真实存在，这里只声明类型、不生成代码",
         "等价于 const",
-        "禁止使用"
+        "禁止使用",
+        "告诉编译器该值在别处运行时真实存在，这里只声明类型、不生成代码"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "declare 是 ambient 声明——只补类型不 emit 实现（如给全局注入变量/无类型库声明形状）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "渐进式补类型（呼应 ts-migration），先能编译、逐步提高精度，不追求一次到位。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "以下在 .d.ts 中合法的是：",
+      "options": [
+        "function f(a: number = 1): void;",
+        "function f(a?: number): void;",
+        "函数体重载实现",
+        "const x: number = 3;"
+      ],
+      "answer": 1,
+      "explanation": "声明文件=类型合同，无实现无值：默认参数值、函数体、初始化器都不出现；可选参数 `?` 是纯类型信息，合法且唯一标准写法。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "想让 tsc 只把特定 @types 包当全局加载（其余仍需 import），配置：",
+      "options": [
+        "include 白名单",
+        "compilerOptions.types: [\"node\"]——限制自动全局注入的 @types 集合",
+        "typeRoots: []",
+        "skipLibCheck"
+      ],
+      "answer": 1,
+      "explanation": "默认策略「node_modules/@types 全家桶进全局」在 CI/多环境里制造幽灵类型冲突；types 数组收口是 monorepo 基础配置——类型也讲「显式导入」。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "/// <reference types=\"vitest\" /> 三斜线指令的效果是：",
+      "options": [
+        "打包入口标记",
+        "把对应声明包并入本编译程序（等价 types 项的单文件版；还有 path/reference 变体管文件级依赖）",
+        "运行时 import",
+        "删除冲突类型"
+      ],
+      "answer": 1,
+      "explanation": "它是给 tsc 的编译指令不是代码：常见于测试配置顶部拉全局类型；滥用会让「谁提供了 describe」成谜——能显式 import 类型就别用三斜线。"
     }
   ]
 }

@@ -1,4 +1,4 @@
-# nuxt-server-routes 面试题（12 题）
+# nuxt-server-routes 面试题（15 题）
 
 > 主题：H3 事件模型、接口设计、缓存原语与服务端工程。
 
@@ -81,3 +81,25 @@
 **答**：三步走：① 不重写先包装——Nitro 里挂 H3 的 `toNodeHandlerMiddleware`/或直接 routeRules.proxy 把老服务整个代理进来当过渡层（外部契约不动）；② 逐接口绞杀——新 handler 与老服务并行，灰度按流量百分比放量，双跑期比对响应 diff（日志采样自动化）；③ 迁完再下线：保留一个季度的 proxy 兜底 + 404 监控确认无遗漏调用方。技术关注点：Express 中间件语义（req/res 直改）要重写成 H3 工具族、错误契约对齐 createError、会话兼容（cookie 同域同签名算法）。方法论与 Next/任何框架迁移同构——新框架接入，绞杀者模式永远优先于大爆炸重写（呼应 exp-deploy 的迁移章、nuxt-dynamic D2）。
 
 **来源**：InfoQ《绞杀者模式在前端仓库的复刻》；知乎《接口迁移的双跑比对怎么做》。
+
+---
+
+## 补充（新专题 13-15）
+
+### D4.  Nitro 里做实时能力（SSE 推送/WebSocket 通知）的现实选择？和独立 WS 服务怎么比？
+
+**答**：先破幻觉：SSE/WS 都是长连接，预算取决于运行时——node-server 自部署天然可行；Serverless（函数计算/API Gateway 系）多数超时掐连接、计费按连接时长，Vercel 类平台要 Fluid/专门运行时才勉强。Nuxt 侧实现：H3 定义 WebSocket 路由（routeRules 标 websocket:true，Nitro 实验支持）或 event.node.res 手写 SSE（writeHead+flushHeaders，注意中间代理 buffering 要关）。扩展性账：单机 WS 有连接数上限，横向扩要粘性会话或 Redis pub/sub 广播——"连接在一台、事件源在另一台"是实时系统常态，广播层省不掉。对比独立 WS 服务：同仓做原型的收益是部署省；跨实例房间管理、百万连接、协议定制一出现就该拆出去（连接服务+HTTP API 的边界），Nuxt 继续做 BFF。收口句：选型的决定变量不是框架支持不支持，是你的部署形态撑不撑得住长连接。
+
+**来源**：Nitro 官方 websocket 示例与 H3 docs；掘金《Serverless 上长连接的一年生死》。
+
+### D5.  server/api 接口的安全防护清单：限流、鉴权、入参、错误信息、CSRF，逐项在 Nitro 里怎么落？
+
+**答**：五道门禁各有着落：① 限流——server middleware 挂 IP/身份维度计数（存储走 useStorage 的 redis，进程内存版只在单实例有意义要明说），返回 429+Retry-After；② 鉴权——middleware 解会话挂 event.context.user，handler 内再做资源级检查（"是 owner 吗"），两层不能合并成一层（呼应 middleware-auth 的纵深）；③ 入参——zod/valibot schema 统一 parse，分页 size 封顶、排序字段白名单（不做任意列名进 SQL/索引）；④ 错误——createError({ statusCode, message }) 只给业务语义，内部堆栈 sentry 上报不下发（500 回原始 SQL 错误是入门级泄露），data/cause 区分内外；⑤ CSRF——状态变更接口校验 SameSite=Lax/Strict+关键操作二次确认或 token，"GET 幂等"写进接口纪律（GET 改状态=CSRF 白送）。加一项可观测：所有 4xx/5xx 带 request id 贯通日志。评审形态：新接口 PR 过一遍这六道勾选，比事后审计便宜一个量级。
+
+**来源**：OWASP API Security Top 10；SegmentFault《Nitro 接口的五道门禁》。
+
+### D6.  SSR 时代"BFF"在 Nuxt 里被框架化了一部分——哪些 BFF 职责写在哪、哪些坚决不要进 server/？
+
+**答**：该写进 server/ 的：页面数据编排（一次 handler 聚多上游、按视图裁剪字段）、鉴权会话建立与校验（cookie 只在第一方域名下最干净）、密钥持有与上游调用（API Key/DB 连接不出服务端）、缓存策略（defineCachedEventHandler 贴页面语义）、简单写操作的校验与事务。坚决不进 server/ 的：领域核心逻辑（计价、风控、库存扣减真身——这些属于独立服务，BFF 只编排不裁判）、长任务（视频转码、报表生成——队列+worker，HTTP 线程一占全站慢）、跨产品复用的公共 API（第二个消费者出现还留在 Nuxt 仓=耦合债，呼应 nuxt-overview 的架构账）、需要独立伸缩/独立发布节奏的模块（发前端顺带重启接口是事故放大器）。判据三问："这段逻辑有第二个消费者吗""它的伸缩/发布节奏和页面一致吗""它持有真相数据还是只编排"——三问全"只服务本页面、同节奏、只编排"才留 BFF 层。
+
+**来源**：InfoQ《BFF 十年：从中间层到框架默认能力》；知乎《Nuxt server 上线一年后我们删掉了多少代码》。

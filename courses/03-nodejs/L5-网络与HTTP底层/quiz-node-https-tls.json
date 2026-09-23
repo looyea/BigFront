@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "HTTPS 与 HTTP、TLS、TCP 的关系是？",
       "options": [
-        "HTTPS 是替代 TCP 的新传输协议",
         "HTTPS = HTTP over TLS，TLS 插在 TCP 与 HTTP 之间做加密/认证",
+        "HTTPS 是替代 TCP 的新传输协议",
         "TLS 跑在 HTTP 之上",
         "完全独立无关系"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "HTTP 字节先经 TLS 加密再落到 TCP socket；TLS 是介于 TCP 与应用层之间的加密流（呼应 node-https-tls 第一节）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "服务器证书(X.509)里主要包含什么？它的作用是？",
       "options": [
         "包含私钥，用于加密数据",
-        "包含公钥 + 身份(SAN 域名) + CA 签名，用于证明公钥归属/身份认证",
         "包含对称密钥",
+        "包含公钥 + 身份(SAN 域名) + CA 签名，用于证明公钥归属/身份认证",
         "只是文件名列表"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "证书=公钥+身份+CA签名，证明『这个公钥确实属于该域名』；私钥绝不进证书、证书也不用于加密业务数据（呼应 node-https-tls 第三节）。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "TLS 握手中，非对称加密与对称加密各承担什么？",
       "options": [
         "全程只用非对称",
-        "非对称用于身份认证+安全协商出共享对称密钥，之后业务数据用对称加密（快）",
         "对称用于认证、非对称用于数据",
-        "两者都不参与"
+        "两者都不参与",
+        "非对称用于身份认证+安全协商出共享对称密钥，之后业务数据用对称加密（快）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "非对称解决『不安全信道上建立共享密钥+验证身份』，数据量大后用对称加密（AES-GCM 等）保证性能（呼应 node-https-tls 第四节）。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "(EC)DHE 每次会话生成临时密钥，即便服务器长期私钥日后泄露也无法解密之前抓包的流量（呼应 node-https-tls 第四节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "tls socket 上 ALPN 协商（如 h2）发生的时机是：",
+      "options": [
+        "握手完成后应用层再谈",
+        "ClientHello 里携带、ServerHello 选定——所以 server 必须在 createSecureContext 时给 ALPNProtocols，握手即定「跑 h2 还是 http/1.1」",
+        "每个请求重谈",
+        "由内核决定"
+      ],
+      "answer": 1,
+      "explanation": "连接后「升级」的时代已终结（Upgrade 头是历史遗留；h2 的 prior knowledge 是另一路径）；ALPN 失败回落 http/1.1 是排障「为什么我的 h2 没生效」第一查点（本关 kALPN 题的机制层）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "session resumption（票据/ID）与 PFS 的关系是：",
+      "options": [
+        "互不相干",
+        "复用旧会话密钥会破坏前向保密——所以 TLS1.3 的 PSK 恢复默认配合新的 DH（Early data/0-RTT 例外且需单独评估重放风险）",
+        "恢复更安全",
+        "1.2 才有恢复"
+      ],
+      "answer": 1,
+      "explanation": "「省一次 RTT」与「长期密钥泄露面」的权衡贯穿 TLS 设计；开 0-RTT 要应用层幂等（重放包可被再次送达）——本关 PFS 题的进阶分支。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "证书链校验失败\"Different contact field...\"类 hostname mismatch 的判定主体是：",
+      "options": [
+        "CA",
+        "客户端：用对端证书 SAN（SubjectAltName）匹配连接用的主机名，CN 已被废弃不用（现代校验忽略 CN）",
+        "服务器",
+        "OS 内核"
+      ],
+      "answer": 1,
+      "explanation": "Node 客户端 peer 校验 = CA 链 + hostname（checkServerIdentity 可覆写但别写死 return true）；自签测试的正解是 NODE_EXTRA_CA_CERTS/传 ca 选项而非关校验（本关 REJECT_UNAUTHORIZED 题的规范替代）。"
     }
   ]
 }

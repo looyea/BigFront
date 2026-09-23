@@ -1,6 +1,6 @@
 # react-deploy 面试题精选
 
-> 共 12 题，覆盖 A 静态构建与 base / B history 回退 / C 环境变量与安全 / D 缓存·CDN·Next 部署类。
+> 共 15 题，覆盖 A 静态构建与 base / B history 回退 / C 环境变量与安全 / D 缓存·CDN·Next 部署类。
 
 ---
 
@@ -89,3 +89,25 @@
 **答**：串一遍：① `build` 出带 hash 的静态产物，配好 `base`/路由 `basename`；② 静态托管/CDN + **history 回退**到 index.html；③ **缓存策略**（资源 immutable 长缓存、html no-cache）+ 发版刷新 CDN；④ **环境变量**只放公开配置、密钥留后端、注意构建期固化；⑤ 后端配 **CORS 或同源反代**、HTTPS、压缩(brotli)；⑥ source map 上传错误监控、Sentry；⑦ CI/CD 自动化构建与原子发布、回滚预案。体现从"构建 → 托管 → 缓存 → 安全 → 监控 → 流水线"的完整链路（呼应 react-deploy、exp-deploy、vue-deploy）。
 
 **来源**：Netlify/Vercel 部署指南、MDN 部署最佳实践、web.dev — Fast and reliable site setup
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  给一套前端发布的缓存策略：hash 资源、index.html 各设什么 Cache-Control，为什么？还有什么残留风险？
+
+资源带内容 hash（app.abc123.js）：可设 `Cache-Control: public, max-age=31536000, immutable`——文件名变即等价于新资源，永不冲突，命中缓存最快。index.html 不带 hash、且引用这些资源清单：必须 `no-cache`（可缓存但每次向服务器校验，或 max-age=0 + must-revalidate），保证发版后新 HTML 能尽快被拿到、指向新 chunk。残留风险：① 用户开着旧页面、发版后点进新路由拉已删的旧 chunk（需「保留旧版本资源一段时间」或 serve-stale/懒加载失败重试刷新）；② Service Worker 自身缓存需版本化更新；③ CDN 边缘对 index.html 的缓存需按路径刷新。核心不变量：内容可变的东西别长缓存，长得长的东西必须内容哈希命名。
+
+**来源**：web.dev 缓存最佳实践（immutable hashed assets vs no-cache HTML）；发版后旧 chunk 失效处理经验。
+
+### 14.  发版后部分用户「白屏 / 资源 404」，从缓存与部署原子性角度怎么排查与根治？
+
+定性：多为「旧 HTML 指到新构建里已不存在的 chunk hash」（发版非原子：新旧产物切换、CDN 各节点缓存不一致、用户长驻旧页）。排查：看 404 的资源 hash 是否只存在于上一版；比对 index.html 与其引用的 manifest 版本；查 CDN 是否把 HTML 也缓存了（该 no-cache 却设了 max-age）。根治组合拳：① 部署尽量原子（蓝绿/不可变目录保留旧版一段时间，发版后旧 chunk 仍可服务）；② index.html 严格不缓存、资源长缓存；③ 前端捕获动态 import 失败（lazy/chunk load error）→ 提示或直接 location.reload 拉最新 HTML；④ Service Worker 做带版本号的 update 流程。把「chunk load error → reload」写成全局兜底，是 SPA 发版韧性的标配。
+
+**来源**：SPA 发版 chunk 加载失败与原子部署实践；rollup/vite 动态 import 失败处理社区方案。
+
+### 15.  静态托管、Next Node server 自托管、serverless/edge 三种部署形态怎么选？CI/CD 上各要盯什么？
+
+纯静态（CSR SPA / 静态导出 SSG）：丢 CDN/对象存储最省、天然可扩展，但 SSR/ISR/中间件/server actions 用不了，且要配 SPA fallback。Node server 自托管（next start / 容器）：功能最全（SSR、流式、revalidate、长连接），但要自己管扩缩容、进程、日志、缓存层。Serverless/Edge：按量弹性、全球边缘（ISR/PPR/RSC 流式很搭），代价是冷启动（Node 函数）、运行时受限（edge 无 Node API）、超时上限、成本随流量。CI/CD 通用心跳：构建期注入环境变量（改 env 需重建，本关 I7）、生成并保留 source map（上传错误监控但不进公开产物）、产物内容哈希+不可变、原子发布与可回滚、preview 部署（PR 级 URL）便于评审、e2e/冒烟在关键路径守门。选型的真问题是「要不要 SSR/边缘能力、能否接受供应商约束、成本模型」。
+
+**来源**：Next.js 部署（standalone/serverless/edge/静态导出）文档；前端 CI/CD source map 与原子发布实践。

@@ -1,6 +1,6 @@
 # solid-effect-tracking 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 不看文档，手搓一个"能通知依赖者"的最小 signal+effect，并指出依赖是在哪一步被登记的。
 **来源**：白板实现响应式题的转述。
@@ -61,3 +61,25 @@ Solid 靠 **Owner 树**界定作用域：组件/`createRoot` 建立的 reactive 
 **来源**：综合自洽性检验题的转述。
 
 一条主线：Solid 靠"在同步执行窗口里读 getter 建立订阅"来更新一切。(a) 组件只跑一次，故 `&&`/`.map` 的首跑求值之后无人重跑，必须靠 `<For>/<Show>` 这类**内部会持续订阅并协调 DOM** 的响应式组件；(b) 解构/`const c=count()` 是**在窗口外把 getter 求成了定值**，自然不再订阅；(c) await/setTimeout 里读发生在**同步窗口关闭之后**，无人在追踪。三者是同一机制的三个切面。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  一个 effect 意外不重跑，你的排查清单？ 
+
+ 依次看：依赖读取是否被 untrack 吃掉、分支是否早退跳过了读、信号是否被复制成普通值（解构快照）、写入是否绕过 setter（内部突变）；根因几乎都在追踪是运行期行为这一事实。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createeffect 
+
+### 14.  把 RxJS/外部响应式接进 Solid 信号体系，桥接层放哪、订阅归谁？ 
+
+ 用 createSignal + onCleanup 包裹外部订阅（observable.subscribe 的 unsubscribe 交给 onCleanup），对外暴露只读 accessor；桥接只出现在 $lib 工具层，禁止在 JSX 表达式里直接订阅。 
+
+**来源**： https://www.solidjs.com/docs/latest/api#createSignal 
+
+### 15.  SSR 阶段 createEffect、onMount 各自行为？对写同构逻辑意味着什么？ 
+
+ 二者服务端均不执行：浏览器专属副作用天然被隔离在挂载后；但 memo/信号计算照常运行，所以纯派生逻辑同构安全，涉及 window 的必须落在 effect/onMount 或 import.meta.env 守门内。 
+
+**来源**： https://www.solidjs.com/docs/latest/guides/ssr 

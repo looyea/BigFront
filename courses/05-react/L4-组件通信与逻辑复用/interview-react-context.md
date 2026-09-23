@@ -1,6 +1,6 @@
 # react-context 面试题精选
 
-> 共 12 题，覆盖 A 基础 / B 性能陷阱 / C 缓解与模式 / D 边界与对照类。
+> 共 15 题，覆盖 A 基础 / B 性能陷阱 / C 缓解与模式 / D 边界与对照类。
 
 ## 一、基础（A 类）
 
@@ -57,3 +57,25 @@ Vue 的 provide 传响应式源（ref/reactive），inject 到的组件只有真
 ### 12. Context 适合放函数（回调）吗？要注意什么？
 适合放**稳定的**分发函数（dispatch、context 里 useMemo 包的 action）。若每次渲染新建函数当 value，会让消费者重渲染。把回调连同依赖一起 `useMemo`/直接暴露 `dispatch`，是常见做法（呼应 react-context 第四节、react-memo-hooks 第二节）。
 **来源**：react.dev — Context 中放 action、useMemo 稳定回调
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  从性能模型讲清 React Context 与 Vue provide/inject 的本质差异，为什么 React 侧要强调拆 Provider 粒度？
+
+React Context：value 引用一变，所有 `useContext` 消费者重渲染，且不做字段级依赖追踪、React.memo 也穿不透——是「粗粒度广播」。Vue 的 provide/inject：默认传的值非响应式（就是个普通引用，注入方不会因为 provide 方重渲染就更新）；要响应需注入 ref/reactive，而一旦是 ref，消费者是「读了 .value 的 computed/render effect」按依赖精确重渲染，粒度天然是字段级。差异根源：Vue 有细粒度响应式依赖收集，React 靠「引用相等 + 广播」。所以在 React 里，把 state 与 dispatch/回调拆两个 Context、把高频值下沉到小 Provider、用 useMemo 稳 value，才成为必修课；而 Vue 里更多是「要不要给 ref」的问题。理解这条，能解释为何同一份「全局主题/用户」逻辑两框架优化重心不同。
+
+**来源**：React Context 性能文档与 Vue provide/inject（ref 才能响应式）文档对照。
+
+### 14.  React 19 的 `use()` 读取 Context（及 Promise）带来什么新能力与限制？
+
+`use()` 是新的读取原语：`const value = use(SomeContext)` 等价 useContext，但关键增益是——`use()` 可以「条件调用」（不像 Hook 有严格顺序约束，它更像读取而非订阅 Hook），还能直接 `use(promise)`：若 Promise 未 resolve 会挂起最近的上层 Suspense、resolve 后返回其值，把「读 Context」与「读异步资源」统一。限制：读 Promise 需附近有 Suspense 边界兜 loading；`use()` 在并发语义下与 startTransition 配合、用于组件渲染期读取。它并不改变「Context 引用变化即广播」的性能模型——所以拆粒度、稳 value 的建议依旧成立，别把 use() 当成性能银弹。
+
+**来源**：React 19 use() 文档（Context + Promise 读取、可条件调用）。
+
+### 15.  Context + useReducer 这组合被称「轻量 Redux」，它的适用天花板在哪？何时必须转外部 store？
+
+够用场景：中低频更新、消费面有限、不需要「字段级选择订阅」和中间件（持久化、日志、时间旅行、批处理）的全局状态，如主题、鉴权用户、多步表单向导、少量跨页共享配置。天花板出现在：① 消费者很多且各读不同切片——Context 广播导致「一处变、全体渲」，缺 selector 精细订阅；② 需要在组件外（事件、其它逻辑、路由守卫）读写同一状态；③ 高频更新（每帧）压垮 Provider 树；④ 需要持久化/撤销/DevTools 时间旅行。这些正是 Zustand（selector 订阅 + store 在 React 外）、Redux Toolkit（中间件+DevTools）的主场。判断线：先 Context+useReducer，出现「性能因广播失控」或「组件外要访问 store」即升级，别一上来就引入重库（对齐本包状态管理关的演进观）。
+
+**来源**：React Context 与 useReducer 组合模式；「何时从 Context 升级到 Zustand/Redux」社区经验线。

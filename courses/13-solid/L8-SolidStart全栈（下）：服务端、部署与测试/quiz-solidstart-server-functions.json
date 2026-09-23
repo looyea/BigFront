@@ -1,48 +1,136 @@
 {
-  "lesson": "solidstart-server-functions",
-  "title": "服务端函数与数据变更 · 自测",
+  "title": "solidstart-server-functions 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "使用 \"use server\" 指令需要 import 什么？",
-      "options": ["@solidjs/start/server", "createServerFunction$", "vinxi/http", "什么都不用——它是编译器识别的指令字符串"],
+      "id": "q1",
+      "type": "single",
+      "prompt": "使用 \"use server\" 指令需要 import 什么？",
+      "options": [
+        "@solidjs/start/server",
+        "createServerFunction$",
+        "vinxi/http",
+        "什么都不用——它是编译器识别的指令字符串"
+      ],
       "answer": 3,
-      "explain": "官方参考页：\"use server\" 是服务端函数编译器认的 directive，No import is required。"
+      "explanation": "官方参考页：\"use server\" 是服务端函数编译器认的 directive，No import is required。"
     },
     {
-      "q": "文件级写法\"use server\"的效果是？",
-      "options": ["整个模块导出的函数都是服务端函数", "只有第一个导出是", "仅类型检查用", "该文件被打包排除"],
+      "id": "q2",
+      "type": "single",
+      "prompt": "文件级写法\"use server\"的效果是？",
+      "options": [
+        "整个模块导出的函数都是服务端函数",
+        "只有第一个导出是",
+        "仅类型检查用",
+        "该文件被打包排除"
+      ],
       "answer": 0,
-      "explain": "文件首行放指令，模块导出函数整体转成服务端函数；函数级则是各自函数体首行标注。"
+      "explanation": "文件首行放指令，模块导出函数整体转成服务端函数；函数级则是各自函数体首行标注。"
     },
     {
-      "q": "SolidStart v2 服务端函数载荷的默认序列化模式是？",
-      "options": ["json", "js", "structuredClone", "base64"],
+      "id": "q3",
+      "type": "single",
+      "prompt": "SolidStart v2 服务端函数载荷的默认序列化模式是？",
+      "options": [
+        "json",
+        "js",
+        "structuredClone",
+        "base64"
+      ],
       "answer": 0,
-      "explain": "官方 defineConfig：v1 为兼容默认 js，v2 默认改为 json（CSP 友好）。"
+      "explanation": "官方 defineConfig：v1 为兼容默认 js，v2 默认改为 json（CSP 友好）。"
     },
     {
-      "q": "为什么 json 模式最适配严格 CSP？",
-      "options": ["它压缩率更高", "它自动加密载荷", "客户端用 JSON.parse 反序列化、不依赖 eval", "它跳过序列化"],
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么 json 模式最适配严格 CSP？",
+      "options": [
+        "它压缩率更高",
+        "它自动加密载荷",
+        "客户端用 JSON.parse 反序列化、不依赖 eval",
+        "它跳过序列化"
+      ],
       "answer": 2,
-      "explain": "js 模式（Seroval）载荷更小但客户端反序列化要 unsafe-eval；json 避开 eval，严格 CSP 下最安全。"
+      "explanation": "js 模式（Seroval）载荷更小但客户端反序列化要 unsafe-eval；json 避开 eval，严格 CSP 下最安全。"
     },
     {
-      "q": "single-flight mutation 生效的两个前提是？",
-      "options": ["用 fetch + createResource", "SSR 开启 + 客户端 hydrate", "query 加缓存键 + 组件包 Suspense", "action 在服务端函数中执行 + 被改的数据有 preload（跳转时预加载放目标页）"],
+      "id": "q5",
+      "type": "single",
+      "prompt": "single-flight mutation 生效的两个前提是？",
+      "options": [
+        "用 fetch + createResource",
+        "SSR 开启 + 客户端 hydrate",
+        "query 加缓存键 + 组件包 Suspense",
+        "action 在服务端函数中执行 + 被改的数据有 preload（跳转时预加载放目标页）"
+      ],
       "answer": 3,
-      "explain": "官方明确两要件；满足后表单提交只发一个 POST，action 完成自动重校验、结果同响应流回。"
+      "explanation": "官方明确两要件；满足后表单提交只发一个 POST，action 完成自动重校验、结果同响应流回。"
     },
     {
-      "q": "single-flight mutation 里\"自动重校验\"发生在什么时机？",
-      "options": ["下一次访问该路由时", "action 完成后，在同一次请求响应里服务端 revalidate 并流回结果", "页面空闲时后台刷新", "需手动调用 refetch"],
+      "id": "q6",
+      "type": "single",
+      "prompt": "single-flight mutation 里\"自动重校验\"发生在什么时机？",
+      "options": [
+        "下一次访问该路由时",
+        "action 完成后，在同一次请求响应里服务端 revalidate 并流回结果",
+        "页面空闲时后台刷新",
+        "需手动调用 refetch"
+      ],
       "answer": 1,
-      "explain": "因数据被 preload，框架可在同一响应里触发服务端重校验并把新数据流回——这就是\"两次请求压成一次\"。"
+      "explanation": "因数据被 preload，框架可在同一响应里触发服务端重校验并把新数据流回——这就是\"两次请求压成一次\"。"
     },
     {
-      "q": "服务端函数内想拿当前请求的 headers/url，用哪个函数？",
-      "options": ["getRequestEvent()", "useLocation()", "getServerFunctionMeta()", "window.request"],
+      "id": "q7",
+      "type": "single",
+      "prompt": "服务端函数内想拿当前请求的 headers/url，用哪个函数？",
+      "options": [
+        "getRequestEvent()",
+        "useLocation()",
+        "getServerFunctionMeta()",
+        "window.request"
+      ],
       "answer": 0,
-      "explain": "getRequestEvent 提供请求事件上下文；getServerFunctionMeta 查的是当前服务端函数的元信息。"
+      "explanation": "getRequestEvent 提供请求事件上下文；getServerFunctionMeta 查的是当前服务端函数的元信息。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 服务端函数在 SSR 渲染期间（服务端侧）被调用，实际发生什么？ ",
+      "options": [
+        " 发 HTTP 请求打自己 ",
+        " 应直接 import 并调用原函数：编译后的 fetch 桩是客户端入口，服务端侧要走本地调用 ",
+        " 抛错不可用 ",
+        " 自动排队 "
+      ],
+      "answer": 1,
+      "explanation": " 跨端调用的 RPC 桩只在浏览器有意义；服务端到服务端是进程内调用，复用同一实现、绕开序列化开销。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 服务端函数里 throw 一个错误，客户端拿到的是？ ",
+      "options": [
+        " 与运行时崩溃相同的裸异常 ",
+        " 被结构化为跨端错误传回：可 try/catch，但未携带的堆栈等信息默认不泄露 ",
+        " 永远 200 ",
+        " 静默吞掉 "
+      ],
+      "answer": 1,
+      "explanation": " 调用框架把 rejection 序列化回传并重建错误对象；敏感信息默认脱敏，需要回显的业务错误应显式定义形状。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 『use server』 指令写在函数体首行与文件首行的差别是？ ",
+      "options": [
+        " 完全等价 ",
+        " 函数级只标记该导出；文件级把该文件所有导出都变服务端函数，适合整库隔离 ",
+        " 文件级已废弃 ",
+        " 函数级不生效 "
+      ],
+      "answer": 1,
+      "explanation": " 两种粒度都是官方指令：文件级用于 server/ 目录式强隔离，函数级用于混合模块里点状暴露。 "
     }
   ]
 }

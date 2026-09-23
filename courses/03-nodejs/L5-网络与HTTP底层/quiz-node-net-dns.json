@@ -8,18 +8,23 @@
       "prompt": "『TCP 是字节流、不保证消息边界』意味着什么？",
       "options": [
         "每次 write 对端一定恰好收到一条",
-        "多次 write 可能粘成一次到达、一条大消息可能被拆成多次（粘包/拆包），需应用层分帧",
         "TCP 会丢包",
-        "必须用 UDP 才有顺序"
+        "必须用 UDP 才有顺序",
+        "多次 write 可能粘成一次到达、一条大消息可能被拆成多次（粘包/拆包），需应用层分帧"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "TCP 只保证字节有序，不保证边界，所以要靠分隔符/长度前缀在应用层定义消息（呼应 node-net-dns 第一节、node-buffer 第六节）。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "net 的 socket 在流分类中属于？",
-      "options": ["只读 Readable", "只写 Writable", "Duplex（可读写、有背压）", "Transform"],
+      "options": [
+        "只读 Readable",
+        "只写 Writable",
+        "Duplex（可读写、有背压）",
+        "Transform"
+      ],
       "answer": 2,
       "explanation": "socket 是双向的 Duplex Stream，能 write/end 也能收 data，带背压（呼应 node-streams、node-net-dns 第二节）。"
     },
@@ -87,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "分帧两大流派：分隔符（HTTP 头用 CRLFCRLF、NDJSON 用换行）或长度前缀（先读长度再精确取正文）（呼应 node-net-dns 第七节、node-buffer 第六节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "net.connect 返回的 socket 上，data 事件前就收到 EOF 的健壮处理组合是：",
+      "options": [
+        "只听 data",
+        "同时挂 data/end/error/close，并在 error 里 destroy 清理；半开连接配 socket.setTimeout 与 keepAlive 探测",
+        "轮询 buffer",
+        "等 readableEnd 事件"
+      ],
+      "answer": 1,
+      "explanation": "socket 是双向终结：error（ECONNRESET）与 end（FIN）互斥到达，漏 error=进程崩（net 的 error 不特判=uncaught——本关事件清单题的保命组合）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "server.maxConnections 与 connection listener 内立即 socket.destroy() 的区别是：",
+      "options": [
+        "等价",
+        "前者在 accept 前拒绝（OS/监听队列层面、无 fd 长期占用）；后者已建立连接才断（走完 TCP 握手、可能触发客户端重试风暴且计入连接数指标）",
+        "后者更快",
+        "前者仅 TLS 可用"
+      ],
+      "answer": 1,
+      "explanation": "过载策略差异：maxConnections 是准入、destroy 是处置；真过载还要配合队列外部化（负载均衡层）——应用层拒绝是最后一道而非第一道。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "UDP 上要做「可靠」应用层传输，需要自己实现的是：",
+      "options": [
+        "重传+顺序+分片+拥塞控制全部",
+        "只有分片",
+        "只有加密",
+        "什么都不用（内核补）"
+      ],
+      "answer": 0,
+      "explanation": "UDP 只保证「报文要么到要么不到」——可靠性全在应用层（QUIC/RakNet 皆是）；所以「要可靠就上 TCP/QUIC、要低延迟无连接才 UDP（DNS/游戏帧/发现广播）」（本关 UDP 选型题的工程注脚）。"
     }
   ]
 }

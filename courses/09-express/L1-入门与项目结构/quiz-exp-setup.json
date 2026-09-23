@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "为什么要把 app.js 和 server.js 分开？",
       "options": [
-        "性能优化",
         "测试时可 import app 用 supertest 而不需要真正 listen 端口",
+        "性能优化",
         "Express 强制要求",
         "为了热更新"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "app.js 只创建并配置 Express 实例导出；server.js 做 listen。测试只拿 app → 不占端口 → 不依赖网络。"
     },
     {
@@ -22,10 +22,10 @@
       "options": [
         "有 2 个参数 (req, res)",
         "有 3 个参数 (req, res, next)",
-        "有 4 个参数 (err, req, res, next)",
-        "名字必须叫 handleError"
+        "名字必须叫 handleError",
+        "有 4 个参数 (err, req, res, next)"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "Express 通过参数个数识别错误中间件：必须 4 个形参 (err, req, res, next)，哪怕不用 next 也必须声明。"
     },
     {
@@ -34,11 +34,11 @@
       "prompt": "express.json({ limit: '1mb' }) 防什么？",
       "options": [
         "XSS 攻击",
-        "超大 JSON body 耗尽服务器内存",
         "CSRF 攻击",
+        "超大 JSON body 耗尽服务器内存",
         "SQL 注入"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "不限制时攻击者可以 POST 一个 500MB JSON → 解析后撑爆内存。limit 超了直接返回 413 Payload Too Large。"
     },
     {
@@ -79,6 +79,58 @@
       ],
       "answer": 1,
       "explanation": "Controller 只做 HTTP ↔ 业务 的薄适配层：从 req 取参数、调 service 处理、把结果放 res 返回。不直接操作 DB（那是 model/service）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": " app.disable('x-powered-by') 关掉的是什么，为什么要关？",
+      "options": [
+        "关掉 ETag 生成",
+        "去掉响应头 X-Powered-By: Express——它向攻击者广播技术栈与版本线索，减不了多少攻击面但白送侦察信息",
+        "禁用压缩",
+        "关闭路由缓存"
+      ],
+      "answer": 1,
+      "explanation": "安全入门第一课：默认头里的技术栈指纹（X-Powered-By/Server）在生产都该清洗或改写，成本一行收益不对称。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 子路由文件（express.Router() 创建）的标准导出约定是？",
+      "options": [
+        "导出 app 实例",
+        "module.exports = router，由主文件 app.use('/api/xxx', router) 挂载——路由文件不碰 app，依赖单向，测试可单独挂到空 app",
+        "导出 handler 数组",
+        "必须默认导出配置对象"
+      ],
+      "answer": 1,
+      "explanation": "\"谁 listen 谁拥有 app\"是唯一单向依赖线；router 文件里 import app 反向挂载是循环依赖事故的头号来源。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 启动时发现必需环境变量（如 DATABASE_URL）缺失，推荐的进程行为是？",
+      "options": [
+        "打一条 warn 继续跑",
+        "fail-fast：启动阶段校验完整即退出（crash），绝不带残缺配置服务流量——半瘫运行比快速死亡贵得多",
+        "用默认值静默兜底",
+        "等第一个请求到来再报错"
+      ],
+      "answer": 1,
+      "explanation": "启动即死：编排系统会重启/换实例且告警清晰；半瘫运行：随机请求随机挂，排查半径大一个量级。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " app.use('/api', apiRouter) 而 apiRouter 内写 /api/users，实际生效路径是？",
+      "options": [
+        "/api/users",
+        "/api/api/users（挂载前缀与路由内路径是拼接关系，路由内不该重复写前缀）",
+        "/users",
+        "两者都注册"
+      ],
+      "answer": 1,
+      "explanation": "挂载是前缀叠加不是识别替换——\"404 排查先看两处路径拼没拼重\"是新手到熟手的成人礼。"
     }
   ]
 }

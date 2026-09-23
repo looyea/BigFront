@@ -1,6 +1,6 @@
 # exp-prisma 面试题精选
 
-> 共 12 题，覆盖 ORM 选型与建模 / 迁移工作流 / 查询与性能 / 事务与连接 四类 + 工程综合。
+> 共 15 题，覆盖 ORM 选型与建模 / 迁移工作流 / 查询与性能 / 事务与连接 四类 + 工程综合。
 
 ---
 
@@ -97,3 +97,25 @@ prisma.post.findMany({ where: { id: { gt: lastId } }, orderBy: { id: 'asc' }, ta
 三层策略：①单元——mock PrismaClient 方法（`vi.mock('@prisma/client')` 或注入 fake client），只测业务分支不碰库；②集成——真 Postgres（testcontainers/docker）+ `migrate deploy` + 每测试事务回滚夹具，数据真实性最高；③契约——supertest 打端点走②的库。反模式：拿生产连接串跑测试、用 SQLite 内存库"模拟" Postgres（方言差异会让它假绿）（呼应 exp-testing、exp-prisma 第六节）。
 
 **来源**：Prisma — "Testing"; node-testing / exp-testing 同题
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  Schema 变更要上生产：讲讲 online 迁移的 expand-contract 流程与 Prisma migrate 在大型团队里的现实问题。
+
+流程骨架：所有破坏性变更拆成"先扩后收"两次以上发布——加非空列（先 nullable+默认值→回填→再收紧，或分两迁）、改类型（新列双写→切读→删旧列）、重命名（Prisma 会把 rename 看成 drop+add，必须手工改 migration.sql 保数据，这是官方文档都重点警告的大坑）。每步独立可回滚、迁移与代码发布解耦（代码兼容前后两个 schema 版本，用特性开关决定读哪列）。Prisma migrate 的大型团队现实问题：① shadow database——migrate dev 需要临时库做漂移校验，生产权限收紧的企业里往往只有 DBA 能建库（团队转 migrate deploy+人工生成 SQL 或引 gh-ost/pt-osc 类在线工具接管大表变更）；② 迁移文件冲突的合并纪律（dev 分支串行化迁移号、rebase 后重新生成）；③ 大表 DDL 锁——Postgres 的 ALTER 多数瞬间完成但 CREATE INDEX 要非并发版、MySQL 的 ALGORITHM=INPLACE 要看版本，Prisma 默认生成的 SQL 不懂这些，DBA 审 SQL 的关口不能省。组织侧：migration.sql 进代码评审当 API 变更对待（一次 PR 只一个变更意图）、回填走独立批处理任务（迁移里 5000 万行 UPDATE 就是锁表事故）。收口句：迁移工具的边界是"生成与执行 SQL"，而"何时能执行、执行失败怎么退"永远是发布系统设计的事。
+
+**来源**：Prisma 官方数据库迁移指南；GitHub Blog《Scaling MySQL online schema changes》；InfoQ《一次 expand-contract 不彻底的数据故障复盘》
+
+### 14.  Prisma Client 的实例管理、连接数与冷启动，在多实例部署下有哪些必须知道的行为？
+
+实例模型：PrismaClient 内含连接池+引擎子进程/二进制，进程级单例（模块加载创建、全应用共享）——每请求 new 会把引擎与握手成本×QPS（教科书级事故）；热重载环境（dev nodemon/ts-node-dev）要 globalThis 挂载防句柄耗尽。连接数账：池默认上限是 CPU核数×2+1，真账是"副本数 × 每实例池上限" 必须小于 数据库 max_connections 减去预留（管理员/复制/监控）——盲目调大池压垮数据库（PM2 4 实例 × 池 20 = 80 条，Postgres 默认 100 直接红）。Serverless/冷启动：引擎二进制启动+握手在毫秒到秒级，Lambda 场景用连接代理（PgBouncer transaction 模式——但 Prisma 的 prepared statement 与事务型会话有兼容坑，要设 pgbouncer 参数或上 RDS Proxy）、或按需选 driver adapters（去掉引擎子进程）。部署细节：generate 在构建阶段完成（prisma generate 进 CI、node_modules 产物进镜像，运行时不 generate）、binaryTargets 对齐基础镜像（alpine 的 musl 与 debian 的 openssl 版本不匹配是容器内 engine 起不来的头号原因）、prisma CLI 与引擎版本一致性锁死。P2024（池超时）排查路径：并发量×慢查询=池饥饿，先看慢 SQL 与事务泄漏（交互式事务里 await 了外部 HTTP），而不是先调池参数。
+
+**来源**：Prisma 官方连接与 Best Practices；Prisma 讨论区（P2024 池超时）；掘金《我们把 Prisma 放进 Lambda 之后》
+
+### 15.  事务边界应该划在哪一层？结合 Prisma 谈谈单元-of-work 的划分与"跨服务一致性"的诚实方案。
+
+层内规则：事务边界=一个业务意图的原子单位，落在 service 层（controller 不感知 tx、repository 接收 tx 参数而不是自开连接）——传参式（tx 作为上下文穿透调用链，Prisma 交互式事务的 client 即 tx）优于隐式传播（ALS 存 tx 在 Node 并发下的串台风险）。边界内的纪律：外部 HTTP/消息发送/日志刷盘不进事务（连接被网络占用=池饥饿之源），用"提交后副作用"模式（先拿变更结果、提交成功后再发事件，outbox 表保证不漏）；只读查询别包事务（除非隔离需求），读从库的流量与主库写事务分开。跨聚合：同一数据库内多表，一个事务收口；跨服务/跨存储，先反问"真的需要强一致吗"——90% 场景的最终一致+对账足够： saga（正向链+补偿链，每步幂等可重放）、outbox+队列（本地事务发件箱替代分布式事务）、唯一约束/版本号做消费端幂等。强一致需求（资金账务）才上"同一库多聚合"的建模重构或 TCC/共享账本服务。常见反模式三件套：事务里调第三方（超时长事务）、为"方便"整方法包大事务（锁放大）、补偿逻辑不幂等（重试二次伤害）。收口句：PR 审查里"这个事务的边界是业务意图还是代码顺序的巧合"是区分 ORM 熟手与老手的最快一问。
+
+**来源**：Prisma 事务文档；Martin Fowler《Transaction Scope》；InfoQ《分布式事务在业务系统的真实存活率》

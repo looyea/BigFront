@@ -92,6 +92,45 @@
       ],
       "answer": 2,
       "explanation": "上限 10、超限排队——要节流（呼应 mp-network 第一节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " 小程序没有浏览器那套 CORS，那它防\"跨站盗调接口\"靠的是？",
+      "options": [
+        "靠前端 Referer",
+        "靠\"服务器域名白名单\"——只能请求在 mp 后台配置且校验过的 https 域名，容器在网络层拦截非白名单请求；服务端仍应自查鉴权/来源，因为白名单挡的是小程序容器不是任意 HTTP 客户端",
+        "不防，随便调",
+        "靠 Cookie SameSite"
+      ],
+      "answer": 1,
+      "explanation": "CORS 是\"浏览器同源策略\"产物，小程序逻辑层非浏览器、无同源限制，改为\"域名白名单 + 强制 https\"在容器层管住能连哪。安全等价物是 token 鉴权与服务端校验，绝不能以为\"反正有白名单\"就省掉后端验签。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 关于 wx.request 的\"返回值与错误判定\"，与 axios 的关键语义差异是？",
+      "options": [
+        "完全一致",
+        "wx.request 只要请求发出并收到响应就走 success（HTTP 4xx/5xx 也算 success），真正的网络失败才走 fail；axios 则按状态码把 4xx/5xx reject 进 catch——迁移过来必须自己在 success 里判 statusCode",
+        "wx.request 非 2xx 直接 fail",
+        "axios 把所有响应都 resolve"
+      ],
+      "answer": 1,
+      "explanation": "这是\"封装层\"第一课：把 wx.request promise 化时，要在 then 里手动按 res.statusCode 分流（≥400 转 reject 或按业务码处理），否则会出现\"404 却进了成功分支\"。fail 只对应断网/超时/域名不在白名单这类传输级错误。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 搜索联想里\"先发的旧请求后回来、覆盖了新输入的结果\"，最贴切的治理是？",
+      "options": [
+        "把 timeout 调大",
+        "请求序号/最新令牌（每次输入递增 reqId，回调里只接受 reqId 最大的响应）或 AbortController 取消上一次在飞请求——本质是\"丢弃过期响应\"",
+        "加 loading 挡住",
+        "让后端排序"
+      ],
+      "answer": 1,
+      "explanation": "竞态（race）与\"慢请求覆盖快请求\"要靠\"识别并丢弃过期结果\"：给每次请求打自增序号，回来时若不是最新就 ignore；或用 abort 主动取消上一个。这与 React Query/前端取数库\"按 key 取最新、旧响应作废\"同一思路，别用节流掩盖而非根治。"
     }
   ]
 }

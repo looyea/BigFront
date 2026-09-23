@@ -1,6 +1,6 @@
 # kit-route-matchers 面试题精选
 
-> 共 12 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
+> 共 15 题。A 类=原理机制；B 类=实战排坑；C 类=横向对比；D 类=场景设计。来源为一线面试与社区答疑的高频主题转述。
 
 ### 1. (A) 写一个 matcher 的完整契约：放哪、导出什么、怎么挂载？
 **来源**：SvelteKit 路由面试高频题的转述。
@@ -63,3 +63,25 @@ Express pattern（如 `/users/:id(\\d+)`）与 Kit matcher 同属**路由匹配�
 `=` 后面是 **matcher 名**（对应 src/params 下的文件），不是内联正则——Kit 没有 Next.js 那种 `[id([0-9]+)]` 内联 pattern 语法（这是两派文件路由最易口误的差别）。正解：建 `src/params/numeric.ts` 写 `/^[0-9]+$/.test(param)`，目录改 `[id=numeric]`。顺带记忆：matcher 名即文件名，全项目复用。
 
 🚀 **下一组**：kit-navigation-preload 面试题——预取档位、saveData 与导航生命周期的深水区。
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  用 matcher 挡非法参数与在 load 里校验返回 404，两种防线的分工与先后？ 
+
+ matcher 是格式级、零成本、两端统一的入口闸门，适合正则可表达的形状；存在性/业务性校验（查库、权限）只能放 load，因为 matcher 被禁止带副作用；两层配合形成格式→业务的递进防御。 
+
+**来源**： https://svelte.dev/docs/kit/advanced-routing#Matching ； https://zod.dev 
+
+### 14.  matcher 返回 false 走 404，高流量站如何监控哪条规则误伤率最高？ 
+
+ 在 handle 里对未命中路由的响应打点（记录 pathname 与候选 matcher 名），或临时在 handleError 兜底处采样 404 分布；发现误伤后收紧正则的迭代要靠 e2e 用例锁住边界样本。 
+
+**来源**： https://svelte.dev/docs/kit/hooks#server ； https://opentelemetry.io 
+
+### 15.  为什么官方 matcher 示例用 satisfies ParamMatcher 而不是 : ParamMatcher 标注？ 
+
+ satisfies 既做类型检查又保留字面量推断，match 的参数联合类型与返回类型不被 erode 成宽类型；对 matcher 这种要求导出形状严格的约定文件，satisfies 是检查与推断的最优交集。 
+
+**来源**： https://svelte.dev/docs/kit/advanced-routing#Matching ； https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html 

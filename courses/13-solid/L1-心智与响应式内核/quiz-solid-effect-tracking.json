@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-effect-tracking",
-  "title": "依赖追踪 · 自测",
+  "title": "solid-effect-tracking 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "createEffect 靠什么机制知道'自己依赖了哪些 signal'？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "createEffect 靠什么机制知道'自己依赖了哪些 signal'？",
       "options": [
         "同步执行回调期间，把那段时间读到的所有 signal 都登记为依赖，读完即注销",
         "解析函数源代码静态收集",
@@ -11,10 +13,12 @@
         "必须手动列数组依赖，否则不追踪"
       ],
       "answer": 0,
-      "explain": "登记 currentSubscriber → 同步跑 fn() → 注销。依赖 = 回调同步执行期间读到的 signal，不多不少。"
+      "explanation": "登记 currentSubscriber → 同步跑 fn() → 注销。依赖 = 回调同步执行期间读到的 signal，不多不少。"
     },
     {
-      "q": "createEffect(() => { setTimeout(() => console.log(count()), 1000); }) 里，count 变化会重跑这个 effect 吗？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "createEffect(() => { setTimeout(() => console.log(count()), 1000); }) 里，count 变化会重跑这个 effect 吗？",
       "options": [
         "会，异步里的读也算",
         "会，但只在下一帧",
@@ -22,10 +26,12 @@
         "不会——回调早已同步跑完注销订阅，setTimeout 里读时 currentSubscriber 为 null、不被追踪"
       ],
       "answer": 3,
-      "explain": "自动追踪只覆盖同步执行段；异步回调发生时无人在追踪，那次读不建立依赖边。修法：on 显式依赖 或 用 createResource。"
+      "explanation": "自动追踪只覆盖同步执行段；异步回调发生时无人在追踪，那次读不建立依赖边。修法：on 显式依赖 或 用 createResource。"
     },
     {
-      "q": "要给一个'随 a 变才重算、且能被别处当 signal 读'的派生值，该用？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "要给一个'随 a 变才重算、且能被别处当 signal 读'的派生值，该用？",
       "options": [
         "createMemo",
         "普通 const 赋值",
@@ -33,10 +39,12 @@
         "再写一个 createSignal 手动同步"
       ],
       "answer": 0,
-      "explain": "派生值用 createMemo（返回 signal、只依赖变才重算）。用 createEffect 去'派生'是误用——那是副作用工具。"
+      "explanation": "派生值用 createMemo（返回 signal、只依赖变才重算）。用 createEffect 去'派生'是误用——那是副作用工具。"
     },
     {
-      "q": "untrack(fn) 的作用是？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "untrack(fn) 的作用是？",
       "options": [
         "让 fn 里的写不生效",
         "让 fn 里读到的 signal 不被登记为当前追踪作用域的依赖（读而不订阅）",
@@ -44,10 +52,12 @@
         "禁用整个响应系统"
       ],
       "answer": 1,
-      "explain": "untrack 用于'只想拿个当下值、不希望它变化触发本 effect/memo 重跑'的场景。"
+      "explanation": "untrack 用于'只想拿个当下值、不希望它变化触发本 effect/memo 重跑'的场景。"
     },
     {
-      "q": "一次事件里连改多个 signal，想只触发一次通知，用？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "一次事件里连改多个 signal，想只触发一次通知，用？",
       "options": [
         "batch(fn)",
         "untrack(fn)",
@@ -55,10 +65,12 @@
         "for (const s of subscribers) s()"
       ],
       "answer": 0,
-      "explain": "batch 把多次写合并、结束时一次性通知，削减中间态与重复更新。"
+      "explanation": "batch 把多次写合并、结束时一次性通知，削减中间态与重复更新。"
     },
     {
-      "q": "on(deps, fn) 相比裸 createEffect 的差别是？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "on(deps, fn) 相比裸 createEffect 的差别是？",
       "options": [
         "没有任何区别",
         "on 会禁用响应式",
@@ -66,10 +78,12 @@
         "on 只能监听 store 不能监听 signal"
       ],
       "answer": 2,
-      "explain": "on 把'依赖谁'变显式，适合'依赖 a、但要顺手读 b（不希望 b 变化触发）'的清晰写法，配合 defer 可跳过首次执行。"
+      "explanation": "on 把'依赖谁'变显式，适合'依赖 a、但要顺手读 b（不希望 b 变化触发）'的清晰写法，配合 defer 可跳过首次执行。"
     },
     {
-      "q": "关于 createEffect 的正确定位是？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 createEffect 的正确定位是？",
       "options": [
         "副作用/与外界同步（日志、第三方、滚动焦点），别用它做派生",
         "替代 createMemo 算派生",
@@ -77,7 +91,46 @@
         "每次渲染后都会跑一次的 React useEffect"
       ],
       "answer": 0,
-      "explain": "createEffect 只在订阅的 signal 真变时重跑，用于副作用；派生用 memo、挂载一次性用 onMount；它没有'React 每次渲染后跑'的语义。"
+      "explanation": "createEffect 只在订阅的 signal 真变时重跑，用于副作用；派生用 memo、挂载一次性用 onMount；它没有'React 每次渲染后跑'的语义。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " on(deps, fn) 的返回值是？ ",
+      "options": [
+        " 一个 signal ",
+        " 一个 dispose 函数，可提前停止监听并回收 ",
+        " 依赖数组 ",
+        " undefined "
+      ],
+      "answer": 1,
+      "explanation": " on 返回显式停止句柄，适配命令式控制场景（如条件挂起监听）。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " createEffect 的回调相对 DOM 更新的时机是？ ",
+      "options": [
+        " 渲染前 ",
+        " DOM 提交之后运行，因此可安全读写渲染结果 ",
+        " 与渲染交错随机 ",
+        " 下一个宏任务 "
+      ],
+      "answer": 1,
+      "explanation": " 普通 effect 在渲染提交后的队列里执行；更早介入（渲染时同步）要换 createRenderEffect。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " 想让某个 effect 依赖变化后延迟合并执行（如滚动热区统计），可用哪组选项？ ",
+      "options": [
+        " equals: false ",
+        " on(..., { always/defer }) 即可 ",
+        " 配合 setTimeout/untrack 自管节流 ",
+        " omit: true "
+      ],
+      "answer": 2,
+      "explanation": " 框架不内置节流：在 effect 里把值推进受控定时器（配 onCleanup 清旧计时），是官方示例认可的节奏控制方式。 "
     }
   ]
 }

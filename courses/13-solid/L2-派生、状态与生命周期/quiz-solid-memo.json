@@ -1,9 +1,11 @@
 {
-  "lesson": "solid-memo",
-  "title": "createMemo 派生 · 自测",
+  "title": "solid-memo 随堂题",
+  "passRule": "答对 ≥60% 即通过",
   "questions": [
     {
-      "q": "createMemo(fn) 返回什么、什么时候重算？",
+      "id": "q1",
+      "type": "single",
+      "prompt": "createMemo(fn) 返回什么、什么时候重算？",
       "options": [
         "返回一个普通值，只在创建时算一次",
         "返回一个 setter，手动触发重算",
@@ -11,10 +13,12 @@
         "返回一个 Promise"
       ],
       "answer": 2,
-      "explain": "memo 像 effect 一样按依赖更新，但返回 signal 并缓存计算，是派生值的正解。"
+      "explanation": "memo 像 effect 一样按依赖更新，但返回 signal 并缓存计算，是派生值的正解。"
     },
     {
-      "q": "用 createEffect(() => setBig(count() > 5)) 来做派生，主要问题是？",
+      "id": "q2",
+      "type": "single",
+      "prompt": "用 createEffect(() => setBig(count() > 5)) 来做派生，主要问题是？",
       "options": [
         "big 会慢一帧（effect 在更新阶段才跑），还可能形成互相写入的回环",
         "完全没问题，官方推荐",
@@ -22,10 +26,12 @@
         "会让 count 失去响应"
       ],
       "answer": 0,
-      "explain": "派生要用 memo（即时一致、惰性、可复用）；用 effect 同步有中间态且易自激。"
+      "explanation": "派生要用 memo（即时一致、惰性、可复用）；用 effect 同步有中间态且易自激。"
     },
     {
-      "q": "memo 回调里 `if (!on()) return 'off'`，on 为 false 时改 unit 会不会触发重算？",
+      "id": "q3",
+      "type": "single",
+      "prompt": "memo 回调里 `if (!on()) return 'off'`，on 为 false 时改 unit 会不会触发重算？",
       "options": [
         "会，所有 signal 都常驻依赖",
         "不会——该次执行没同步读到 unit，unit 就不在本次依赖集里",
@@ -33,10 +39,12 @@
         "会，但慢一帧"
       ],
       "answer": 1,
-      "explain": "依赖由'实际同步读到什么'动态决定；早返回那支没读到的 signal 不被订阅（官方温度示例）。"
+      "explanation": "依赖由'实际同步读到什么'动态决定；早返回那支没读到的 signal 不被订阅（官方温度示例）。"
     },
     {
-      "q": "对一个每帧变化的 scrollY，用 memo 收敛过度订阅的正确做法是？",
+      "id": "q4",
+      "type": "single",
+      "prompt": "对一个每帧变化的 scrollY，用 memo 收敛过度订阅的正确做法是？",
       "options": [
         "下游 effect 直接读 scrollY()",
         "删掉 scrollY 改用局部变量",
@@ -44,10 +52,12 @@
         "showTop=createMemo(()=>scrollY()>300)，下游只订阅 showTop"
       ],
       "answer": 3,
-      "explain": "memo 当'断链'：把高频源压成粗粒度派生值，下游只在布尔翻转时触发。"
+      "explanation": "memo 当'断链'：把高频源压成粗粒度派生值，下游只在布尔翻转时触发。"
     },
     {
-      "q": "createMemo 的 equals:false 表示什么？",
+      "id": "q5",
+      "type": "single",
+      "prompt": "createMemo 的 equals:false 表示什么？",
       "options": [
         "每次依赖变化都通知下游（关掉相等短路）",
         "禁用 memo 的缓存",
@@ -55,10 +65,12 @@
         "关闭依赖追踪"
       ],
       "answer": 0,
-      "explain": "默认用 === 短路相同值；equals:false 关掉它，也可传自定义比较决定要不要通知。"
+      "explanation": "默认用 === 短路相同值；equals:false 关掉它，也可传自定义比较决定要不要通知。"
     },
     {
-      "q": "什么时候其实不该套 memo、直接内联表达式更好？",
+      "id": "q6",
+      "type": "single",
+      "prompt": "什么时候其实不该套 memo、直接内联表达式更好？",
       "options": [
         "派生计算很贵（排序/聚合）",
         "一次性、极廉价的读，如 JSX 里 {count()*2}",
@@ -66,10 +78,12 @@
         "需要把高频源收敛成低频结论"
       ],
       "answer": 1,
-      "explain": "内联时 Solid 已为该绑定建最小 effect；廉价又只用一次还套 memo 只是多一张响应式节点。"
+      "explanation": "内联时 Solid 已为该绑定建最小 effect；廉价又只用一次还套 memo 只是多一张响应式节点。"
     },
     {
-      "q": "createMemo 回调能拿到的 prev 参数是什么？",
+      "id": "q7",
+      "type": "single",
+      "prompt": "createMemo 回调能拿到的 prev 参数是什么？",
       "options": [
         "上一次的依赖 signal",
         "下一次将变的值",
@@ -77,7 +91,46 @@
         "上一次 memo 的计算结果，便于增量计算"
       ],
       "answer": 3,
-      "explain": "fn(prev, init)：prev 是上次结果、init 标记是否首次，可据此做增量/基于旧值算。"
+      "explanation": "fn(prev, init)：prev 是上次结果、init 标记是否首次，可据此做增量/基于旧值算。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": " memo 回调里某分支这次没执行到的 signal 读取，会被记为依赖吗？ ",
+      "options": [
+        " 会，全量收集 ",
+        " 不会：依赖是本次执行实际触碰的读取，分支变化依赖集随之变化 ",
+        " 仅首次执行决定 ",
+        " 取决于 equals "
+      ],
+      "answer": 1,
+      "explanation": " 动态依赖是 Solid 响应式核心特征，memo/effect 皆然，早退分支即免订阅。 "
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": " 多个组件读同一个 memo，上游变化时它的求值次数是？ ",
+      "options": [
+        " 每个读者一次 ",
+        " 一次，结果共享缓存 ",
+        " 零次（惰性从不执行） ",
+        " 随机 "
+      ],
+      "answer": 1,
+      "explanation": " memo=有缓存的共享派生；这正是它替代重复计算的价值，也是与内联表达式的分界。 "
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": " memo 在 SSR 渲染期间可用吗？ ",
+      "options": [
+        " 不可用，仅客户端 ",
+        " 可用：它是纯同步计算，服务端渲染照常求值 ",
+        " 需开 hydration ",
+        " 仅异步 memo "
+      ],
+      "answer": 1,
+      "explanation": " 与 effect 不同，memo 无挂载依赖；服务端里它能正常产出值，是 SSR/客户端共享派生逻辑的合法件。 "
     }
   ]
 }

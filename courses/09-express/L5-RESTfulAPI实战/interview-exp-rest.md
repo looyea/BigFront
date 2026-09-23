@@ -1,6 +1,6 @@
 # exp-rest 面试题精选
 
-> 共 12 题，覆盖 **REST 原理 / 方法语义 / 幂等 / 状态码 / 命名 / 版本 / 响应结构** 七类。
+> 共 15 题，覆盖 **REST 原理 / 方法语义 / 幂等 / 状态码 / 命名 / 版本 / 响应结构** 七类。
 
 ---
 
@@ -102,3 +102,25 @@ HTTP 协议层面 GET 可以有 body，但绝大多数服务器/代理/缓存会
 遵循 **Evolutionary API** 原则：① 只加可选字段（客户端应忽略未知字段）；② 不删/不改已有字段语义（废弃用 `@deprecated` + Deprecation 头过渡）；③ 新增强大功能加新端点而非改老的；④ 用功能开关。实在破坏性 → 才 URL 版本 `/v2` 并行运行 + 灰度迁移 + 旧版 sunset 计划。
 
 **来源**：Google Cloud — "API Evolution"; storify — "Life Beyond the Versioned API"; IETF — "Deprecation Header (Sunset RFC 8594)"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13.  错误响应体怎么设计？RFC 7807/9457 problem+json 和自定义 {code,message,data} 信封你怎么选？
+
+需求清单先行：人能读（message）、机器能分支（稳定 code + 类型化 errors 数组带 field）、能追踪（traceId/requestId）、能自助（type 链接指向错误文档）、不泄露（500 通用文案）。两派解剖：problem+json 是标准化方案（type/title/status/instance + 扩展字段 errors），优势在通用客户端与网关能统一理解、Swagger 原生支持；信封派（code/message/data）优势在"成功与失败同构、客户端解析路径统一"，是国内生态默认。决策维度：对外/被集成的 API 优先标准（省掉对方适配层与文档解释成本），内部全栈自家消费则信封派够用但要防三害：code 无注册表随意新增（要发号器+文档站点）、HTTP 状态码被废弃成恒 200（丢弃了中间层可观测性与缓存语义——"业务失败 200、协议失败真码"的混合规则要明文）、message 直接透传底层异常（泄露与不稳定文案）。细节加分：422 校验错误的 errors 数组（field/reason 机器可读）两派都该有；type URL 用离线可缓存的短标识而不是实时生成长链；5xx 的 instance/traceId 是客服排障的生命线——"用户报障码"要出现在响应里而不只在日志。收口：错误体是"用户侧可机读异常报告"的设计题，格式之争只是表皮，注册表治理与泄露边界才是里子。
+
+**来源**：RFC 9457 Problem Details for HTTP APIs；Google AIP-193；知乎《我们的错误码长成了意大利面》
+
+### 14.  OpenAPI 文档在你的 API 团队里是活契约还是死附件？讲讲从文档到治理的完整链路。
+
+层级递进：① 生成方向选对——代码注释生成（decorators/swagger-jsdoc）让文档随代码腐化，schema-first（OpenAPI 文件是源、代码生成骨架与类型）才能让文档成为契约；② CI 三关——lint（ Spectral 规则：命名/版本/必备字段）、breaking change 检测（optic/oasdiff 对比 git 上一版，破坏性变更需显式审批标记）、mock（Prism 按 spec 起 mock 服务，前端不候后端）；③ 契约测试——消费者驱动（pact）适合内部多团队，spec 对实现的双向验证（dredd 类）适合对外 API，核心都是"文档说的一旦实现做不到，红的是 CI 而不是线上的集成方"；④ 发布与版本沟通——changelog 由 spec diff 自动生成、SDK 由 spec 生成（openapi-generator 按语言出包）、beta/deprecated 用 spec 扩展字段标记并配 Sunset 头与移除策略（先标 deprecated+监控调用量，归零后再删）。组织现实：文档治理的最大阻力不是工具是"改契约要过谁的手"——spec 文件进 CODEOWNERS、破坏性变更走 RFC，这两条流程没有，工具链都是摆设。加分句：判断一个团队 API 成熟度，看"新人加入时 SDK 从哪来"——生成的是治理，手抄的是传说。
+
+**来源**：OpenAPI Specification 官网；Prism/dredd 契约测试工具；InfoQ《API First 落地两年的得与失》
+
+### 15.  长耗时操作（报表导出、批量导入）的 API 怎么设计才不阻塞、可恢复、可观测？
+
+反模式代价先讲：同步长接口占满连接与 worker、超时被网关掐断后"客户端以为失败服务端还在跑"、重试风暴叠加。标准形态（AIP-151 心智）：POST /exports → 202 + 一个 job 资源（Location: /jobs/123），job 资源含 status（queued/running/succeeded/failed）与百分比 progress、结果引用（done 后 resultUrl 指向签名下载地址）、失败原因（结构化可分支）。轮询协议：响应带 Retry-After（服务端给节奏）、job 支持 ?field= 轻查询、ETag/If-None-Match 让"没变化"的轮询走 304（大团队轮询风暴的省流阀）；进阶推送——完成时 webhook 回调（带签名+重试与去重）或 SSE 订阅 job 进度，轮询保底推送加速的双通道。实现层：任务队列（BullMQ 等 Redis 系）+ worker 进程与 API 进程分离（API 挂了任务不死）、job 幂等（提交去重键：同参数 5 分钟内不重复入队）、并发与配额（每用户同时 job 数上限）、孤儿回收（running 超 TTL 标 failed——worker 崩溃不能留永生中间态）。观测面：队列深度告警、端到端时延分布、失败按 stage 分类。收口句：长任务 API 的设计本质是"把一次调用换成一个资源"——有了资源身份，进度、重试、取消、审计全部顺理成章。
+
+**来源**：Google AIP-151 LRO（Long Running Operations）；MDN 202 语义；掘金《我们把导出做成同步接口后的三连故障》

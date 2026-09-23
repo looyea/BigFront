@@ -8,11 +8,11 @@
       "prompt": "泛型相对 any 的核心优势是？",
       "options": [
         "运行更快",
-        "用类型变量保留'输入类型→输出类型'的关系，既复用又不丢类型信息",
         "写法更短",
+        "用类型变量保留'输入类型→输出类型'的关系，既复用又不丢类型信息",
         "能访问任何属性"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "any 放弃类型；泛型把类型当参数传递，调用后仍精确（echo<T>(x:T):T）。"
     },
     {
@@ -21,11 +21,11 @@
       "prompt": "function identity<T>(x:T):T; identity(5) 里 T 是什么？需要手写 <number> 吗？",
       "options": [
         "T=any，必须手写",
-        "T 被推断为 number，通常无需显式指定",
         "T=unknown",
-        "报错，必须显式"
+        "报错，必须显式",
+        "T 被推断为 number，通常无需显式指定"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "类型参数推断从实参反推 T；只有推断不出或想覆盖时才显式写。"
     },
     {
@@ -92,6 +92,45 @@
       ],
       "answer": 1,
       "explanation": "信任推断减少噪音，必要时显式覆盖——与'边界显式、内部宽松'一致（呼应 ts-basics）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "泛型函数调用时显式类型参数的规则是：",
+      "options": [
+        "可以只显式一部分，其余继续推断",
+        "要么全推断要么全显式——部分显式靠「默认类型参数」实现",
+        "显式后必须再标返回值",
+        "只有 class 允许显式"
+      ],
+      "answer": 0,
+      "explanation": "TS 不支持「部分类型参数推断」（Haskell 式）， `<T=number>` 默认值 + 顺序是官方补偿；这也是 <T extends X = 兜底> 写法存在的理由。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "TS 对「类型的类型参数」（`Array<Array<T>>` 之外，把泛型本身当参数，即 HKT）的支持是：",
+      "options": [
+        "原生支持 <F<_>>",
+        "不支持——用 interface 模式（定义带泛型方法的接口再取用）模拟",
+        "5.0 已加入",
+        "仅 class 可以"
+      ],
+      "answer": 1,
+      "explanation": "HKT 提案悬置多年；社区套路：`interface BoxHKT { readonly uri: <T>(x: T) => Box<T> }` 借方法级泛型模拟——valibot/fp-ts 的类型体操都绕不过它。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "interface Box<out T> 的 out 标注（TS 2.1+）在现代 TS 里的实际作用是：",
+      "options": [
+        "启用运行时协变检查",
+        "主要是文档化+变体报错更早更准；结构性类型下兼容性判定本身不依赖它",
+        "必须配 default",
+        "关闭推断"
+      ],
+      "answer": 1,
+      "explanation": "TS 结构化检查自带变体结论；显式 in/out 是「名义化增强」：让违反声明的替换在**定义处**报错（错误信息带 variance 提示），Angular/Vue 大型库用它固化契约。"
     }
   ]
 }

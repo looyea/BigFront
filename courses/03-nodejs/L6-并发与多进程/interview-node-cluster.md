@@ -1,6 +1,6 @@
 # node-cluster 面试题精选
 
-> 共 12 题，覆盖 原理 / 端口共享 / 分发策略 / 容错自愈 / 优雅重启 / 运维选型 六类。
+> 共 15 题，覆盖 原理 / 端口共享 / 分发策略 / 容错自愈 / 优雅重启 / 运维选型 六类。
 
 ---
 
@@ -102,3 +102,25 @@ primary 会收到该 worker 的 **`'exit'`** 事件，但 **cluster 不会自动
 **通常不需要在容器内跑 cluster**。K8s 用**多副本 Pod + Service 负载均衡**在更高层做多核/多机分摊，每 Pod 一个单进程 Node 更符合"一容器一进程"、便于水平扩缩。此时 pm2 的守护/日志也多半被 K8s 探针、sidecar、集中式日志取代。裸机/单机 VM 部署时，cluster + pm2 才更有价值（呼应 node-deploy-perf、Express L8）。
 
 **来源**：Kubernetes docs — "one process per container"、社区 — "pm2 vs Kubernetes for Node"
+
+---
+
+## 补充（新专题 13-15）
+
+### 13. 从零描述 cluster 的优雅重启（零停机换代码）完整时序与每一步的坑。
+
+时序：① 新二进制/代码就绪（进程模型「reload」=fork 新 worker 跑新码，老 worker 继续服务）；② primary 依次 fork 新 worker（全量替换需新旧并存的窗口，内存翻倍预警）→ 新 worker ready（发 "listening" IPC 信号，别按 fork 时序假设就绪）；③ 老 worker 停接新连：primary 不再 fd 传给它（round-robin 侧切断）+ 自身 server.close()（只停 accept，存量 keep-alive 不断！）；④ 老 worker 排空：跟踪在途请求计数=0 且 keep-alive 空闲超时后才 process.disconnect()+exit——「close 后进程还活着」是本步最大认知坑（本关 disconnect 题实装）；⑤ 超时硬兜底（SIGTERM→SIGKILL 阶梯）。坑清单：session 粘滞（无共享存储时 socket.io 断连——本关 session 题）、滚动窗口内版本混跑要求「先兼容后清理」两跳发布、监控要区分「重启」与「崩溃」指标（restart 应 0、crash 才告警）。pm2 reload 即此协议封装，读懂再开箱。
+
+**来源**：Node cluster 文档「Scheduling requests / worker.disconnect」；pm2 graceful reload 机制说明。
+
+### 14. round-robin 与 OS 分发谁好？说出机制差异与各自的性能陷阱。
+
+默认 OS 分发：内核 accept 队列唤醒所有 sleeping worker（惊群），胜者取连接——历史上有 thundering herd 与负载不均（连接按 CPU 亲和漂移）；Node 0.12 起改「primary 轮询 + IPC fd 传递」：公平、可控、primary 单点成瓶颈（超高连接建立率时 fd 传递序列化排队）；SO_REUSEPORT（Net.listen 配 uv 选项）：每 worker 独立 accept 队列、内核按四元组哈希分发——扩展性最好但**分发不均风险**（老内核/长连接偏斜）且无 primary 干预点（灰度/摘流要靠信号协议自实现）。结论：中低并发差异可忽略；连接建立密集选 SO_REUSEPORT；需要精细流控（权重/摘 worker）选轮询。实测口径：autocannon 连接风暴下看各 worker accepted 计数方差——本关题「机制」背后的选型数据。
+
+**来源**：Node cluster scheduling 文档与 issue#2867（SO_REUSEPORT 引入讨论）；LWN《SO_REUSEPORT 的负载均衡陷阱》。
+
+### 15. cluster worker 之间需要共享状态（计数/限流/锁）吗？给出架构答案。
+
+原则：**不靠 cluster 共享内存**（进程隔离是特性不是 bug），共享状态外置是正解：计数/限流 → Redis（INCR+Lua 原子、滑动窗口/令牌桶）；锁 → Redlock/SET NX（接受其争议边界并文档化）；配置 → 版本号轮询/pub-sub 失效广播；会话 → 存储外置（本关 session 题）。内存共享的诱惑（SharedArrayBuffer 跨进程 mmap）工程上不成立（Node 无原生跨进程 SAB，第三方绑定复杂度高）。架构表达：worker 应设计成「无状态+本地缓存短 TTL」，一致性要求高的读写走外部原子源。反例：内存限流器 × N worker = 阈值×N 静默失效（本关_queues-jobs 关 cron 多实例题同构）——上线前问一句「这个计数器在几个进程里各有一份？」
+
+**来源**：Redis 速率限制模式（INCR/令牌桶）文档；Node cluster「workers 不共享端口/内存」设计说明。
