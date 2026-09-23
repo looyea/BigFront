@@ -1,0 +1,136 @@
+{
+  "title": "sig-perf 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "本关总纲把性能问题归为哪两种？",
+      "options": [
+        "内存问题和网络问题",
+        "编译问题和运行时问题",
+        "做多了（过度订阅/重渲风暴）和没断奶（漏订/泄漏）",
+        "CSS 重排和 JS 长任务"
+      ],
+      "answer": 2,
+      "explanation": "前者用户立刻骂卡、后者过俩小时骂卡——诊断入口统一：Performance 录制+commit 计数/内存快照。四坑全挂这两个钩子上。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "组件里 useStore(s => s.items.filter(i => i.done)) 引发风暴，按坑1 的记法病根是？",
+      "options": [
+        "filter 太慢",
+        "产物是现造的（每次新数组），比较面跟着永变——『凡产物现造，比较面就要现造的对策』",
+        "items 太大",
+        "不该用 selector 该用 getState"
+      ],
+      "answer": 1,
+      "explanation": "useShallow 都救不了（元素也是现造的），正解=派生收进 store 算好存或 useMemo 稳引用——za-patterns q6 的病在坑清单里的挂号单。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "定位『比较面永变』类风暴的两件轻装备是？",
+      "options": [
+        "断点逐个组件打 + alert",
+        "console.timeLog 包渲染 + debugger",
+        "重启 dev server 看还卡不卡",
+        "Performance 录屏看 commit 与业务变更频率脱钩 + selector 里 console.count 实锤"
+      ],
+      "answer": 3,
+      "explanation": "脱钩=风暴信号，计数超业务更新次数=实锤比较面问题——两条都是零依赖取证；alert/重启属于玄学时代遗物。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "MobX 组件『数据变了 UI 不动』且零报错，按坑2 排查的第一优先动作是？",
+      "options": [
+        "给 store 加 freeze",
+        "检查渲染体是否真的读到了那个字段（解构/镜像变量/分支短路三式逐一过）",
+        "把 observer 换成 memo 试试",
+        "升级 MobX 大版本"
+      ],
+      "answer": 1,
+      "explanation": "漏订=读订阅没建立，三式（解构后读、渲染期外读、分支短路）是全部案发现场；why-did-update/commit 缺席作旁证——先验证依赖集再动结构。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "路由来回切 5 次后一次输入并发 5 个请求，坑3 的定位手法与根因组合正确的是？",
+      "options": [
+        "内存快照差集找存活增长+订阅打标签看同名多份；根因=组件级 subscribe 无配对退订",
+        "CPU 火焰图；根因=React 版本低",
+        "Network 面板数请求；根因=后端重复路由",
+        "console.log 数量；根因=浏览器缓存"
+      ],
+      "answer": 0,
+      "explanation": "N 次挂载=N 份活订阅是泄漏指纹的标准显形；标签化堆快照（sub.__who）把『谁没退』直接点名——修法归层级化拥有（cleanup 返回退订/框架托管）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "一行日志 `console.log(prev === next, deepEq(prev, next))` 打出 false/true，按坑4 分型是？",
+      "options": [
+        "内容变引用没变（A 面）→ 该更没更",
+        "系统正常无需处理",
+        "引用变内容没变（B 面）→ 白渲，比较面应下移到未变叶层",
+        "两边都变，真更新"
+      ],
+      "answer": 2,
+      "explanation": "false=引用换了、true=内容没换——浅拷贝只换根+订阅面卡根层的经典 B 面；解药 useShallow/原子化 selector。A 面是 true/false 组合，修法方向相反——先分型再开药的实例。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "坑2 修法中『分支保护』的推荐写法是？",
+      "options": [
+        "提前 return null 挡整棵子树，渲染体内不碰 store",
+        "store.flag && <Body/> 且 Body 自己再订字段",
+        "可选链+默认值让读取照常发生在渲染体（flag ? <B x={store.x}/> : <Fallback x={store.x}/>），保持读订阅成立",
+        "把值拷进组件本地 state 再判"
+      ],
+      "answer": 2,
+      "explanation": "要点=订阅面不因分支而中断：D 制造镜像变量（漏订三式之二）、A 完全不读（漏订之变形）、B 子组件没挂上时同样断读；C 让需要的读取在两条路径都发生。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "§五排查流程的两条纪律是？",
+      "options": [
+        "先升级所有依赖、清 node_modules",
+        "一次只改一处（保归因）+ 优化前后各留 Profiler 基线截图（防玄学）",
+        "同时上 memo、虚拟列表、Web Worker 三件套",
+        "性能问题不修，加 feature flag 关掉功能"
+      ],
+      "answer": 1,
+      "explanation": "并发优化=归因灾难；没有基线的『感觉变快了』=玄学——两条纪律把坑清单从知识变成流程。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "『细粒度不是免检牌』（§六）指 Solid 也会栽在什么上？",
+      "options": [
+        "模板里现造派生值+无 memo：每次触底全量重算，派生成本仍要人管",
+        "Solid 的虚拟 DOM diff 太慢",
+        "Solid 不支持 computed",
+        "响应式更新必须配 immer"
+      ],
+      "answer": 0,
+      "explanation": "细粒度只保证『默认订阅面小』，arr.filter(...).length 这类现造表达式的计算与稳定性与框架无关——反复被读的派生值得带闸门的容器（memo/computed）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "修复病灶后的最后一步（流程图右下）是？",
+      "options": [
+        "写 postmortem 周报",
+        "把该组件全加 memo",
+        "给病灶补一条回归断言/用例（marble 或渲染计数断言）",
+        "删掉出 bug 的功能"
+      ],
+      "answer": 2,
+      "explanation": "性能坑的特异性在于『正常跑着』——没有断言锚定，下次重构必复发；marble 答时序病、计数断言答风暴/漏订病——修复的完成态是可执行的回归防线。"
+    }
+  ]
+}

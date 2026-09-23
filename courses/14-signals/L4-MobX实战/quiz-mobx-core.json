@@ -1,0 +1,136 @@
+{
+  "title": "mobx-core 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "MobX 与 signal 系在响应式『宪法』层面的共同点是什么？",
+      "options": [
+        "都用 Proxy 拦截对象",
+        "读到即订阅、computed 惰性缓存、写入后统一通知",
+        "都要求状态不可变更新",
+        "都依赖编译器转换语法"
+      ],
+      "answer": 1,
+      "explanation": "两派共享同一部语义宪法（自动追踪/惰性派生/批通知）；载体不同——MobX 用 Proxy 包可变对象，signal 派用显式容器，这是它们的分岔而非分歧。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "makeAutoObservable(this) 做了什么？",
+      "options": [
+        "把对象变成不可变快照",
+        "自动生成 getter 并缓存所有方法",
+        "字段标 observable、getter 标 computed、方法标 action，一键全量标记",
+        "仅深拷贝一份状态"
+      ],
+      "answer": 2,
+      "explanation": "makeAutoObservable 是 MobX 的零样板入口：按成员类型自动分配三种标记。想精细控制可传 overrides（如 { save: false } 或标 flow），大对象还可用 makeObservable 逐个标注。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "严格模式（enforceActions: 'observed'）下，在 action 之外直接改 observable 字段会怎样？",
+      "options": [
+        "开发环境收到违反 action 纪律的告警",
+        "静默失败，值不变",
+        "自动转换为 action",
+        "抛出语法错误终止程序"
+      ],
+      "answer": 0,
+      "explanation": "'observed' 是 MobX 6 默认：字段有观察者时强制要求改动包在 action 里（异步回调里补 runInAction）。目的：保住 action 的『批量事务』边界，通知统一结算。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "reaction(() => store.filter, (f) => doSomething(f, store.todos.length)) 里，store.todos 变化会触发副作用吗？",
+      "options": [
+        "会，效果函数里的读取也建依赖",
+        "会，reaction 监听整个 store",
+        "不会——只有数据函数的读取建立依赖，效果函数里的读取不记账",
+        "取决于 todos 是否是数组"
+      ],
+      "answer": 2,
+      "explanation": "reaction 的两段式设计：数据函数=盯什么（唯一建依赖处），效果函数=做什么（内部读取不追踪）。这正是 tc39-control 所说的『浅观察』姿态的 MobX 实现。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "autorun 与 reaction 的选型，正确的是？",
+      "options": [
+        "autorun 适合『盯 A 做 B』且 B 里读什么都不影响依赖的场景，优先 autorun",
+        "副作用逻辑复杂、要精确控制依赖面时选 reaction（数据/效果分离）；简单全量追踪才用 autorun",
+        "二者无任何差别",
+        "when 是 reaction 的别名"
+      ],
+      "answer": 1,
+      "explanation": "autorun 回调里读啥订啥——简单但易过度订阅；reaction 显式分离依赖面，复杂副作用的首选。when 则是『一次性放闸』语义（条件满足跑 effect 后自动 dispose），三者各司其职。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "普通函数（非组件渲染、非 computed/autorun 内）里读 store.visibleTodos.length，会发生什么？",
+      "options": [
+        "该函数被自动登记为订阅者",
+        "抛错：追踪作用域外禁止读取",
+        "computed 缓存失效",
+        "只拿到一次数值快照，不会产生任何响应——追踪只认『在追踪作用域内读』"
+      ],
+      "answer": 3,
+      "explanation": "MobX 的读时订阅只发生在追踪上下文（observer 渲染、computed、reaction/autorun）内。作用域外的读取就是普通属性访问——『在组件外读丢追踪』是第一大新手坑（mobx-react 关展开）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "MobX 的 computed 与 signal 的 computed 相同的核心行为是？",
+      "options": [
+        "惰性求值+依赖自动收集+结果缓存，依赖没脏直接给缓存",
+        "每次写入都立刻重算",
+        "只能计算数字",
+        "必须传依赖数组"
+      ],
+      "answer": 0,
+      "explanation": "两家 computed 一个脾气：无人读不算、脏了才重算、分支动态收依赖。差别在载体（getter vs 容器对象）与调度（action 事务 vs signal 队列）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "异步流程里 await 之后要改 state，正确姿势是？",
+      "options": [
+        "直接改，await 后自动仍是 action 上下文",
+        "await 会切断 action 事务边界，改状态需包 runInAction(() => ...)（或用 flow 生成器写法）",
+        "把赋值挪进 then 的第一层即可自动继承",
+        "异步里禁止修改 observable"
+      ],
+      "answer": 1,
+      "explanation": "action 是同步事务：await 之后的代码已掉出事务边界，严格模式告警。runInAction 补包，或 flow（MobX 对 async 的官方适配，本质也是帮你把异步段重新包 action）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "MobX 与 Redux DevTools 在『调试记录』上的本质差异是什么？",
+      "options": [
+        "MobX 记 action 事件流水可完整回放时间旅行；Redux 记字段 diff",
+        "两家都不支持任何状态调试",
+        "MobX 记字段变化账（谁被改成啥），Redux 记 action 事件账（可序列化可重放）——回放能力根源不同",
+        "MobX 完全没有调试工具"
+      ],
+      "answer": 2,
+      "explanation": "可变路线记『结果账』、不可变路线记『事件账』——后者天然支持时间旅行（重放 action 即重建状态），前者要靠 patch/onSnapshot 补票（mobx-stores 关见）。这是 L6 可变vs不可变对比的第一处实锤。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "团队纠结『MobX 还是 signal 系做领域状态层』，本课给的正确判断路径是？",
+      "options": [
+        "看 npm 周下载量排名",
+        "看哪个更年轻",
+        "MobX 淘汰了，一律 signal",
+        "看数据形态与框架中立需求：对象图就地改→MobX 顺滑；跨框架共享纯逻辑/显式容器心智→signal 系；两派响应式语义本就同源"
+      ],
+      "answer": 3,
+      "explanation": "两派共享语义宪法，选型因此不再是『响应式 vs 非响应式』而是『Proxy 隐式对象 vs 显式容器』的载体偏好，外加生态与团队心智——L6 sig-scenarios 给完整决策树。"
+    }
+  ]
+}

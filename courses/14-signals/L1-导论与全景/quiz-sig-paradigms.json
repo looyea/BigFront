@@ -1,0 +1,136 @@
+{
+  "title": "sig-paradigms 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "课文的核心透镜：signal 与 stream 各自表达什么？",
+      "options": [
+        "同步与异步",
+        "signal 表达'当下的值'，stream 表达'随时间变化的事件序列'",
+        "局部状态与全局状态",
+        "可变与不可变"
+      ],
+      "answer": 1,
+      "explanation": "signal 无时间维度、永远只存最新值；Observable 的本质是时序事件序列，历史与关系都是第一等公民。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "signal 的三条核心规则中，订阅关系何时建立？",
+      "options": [
+        "创建 signal 时",
+        "写入时扫描全库找引用",
+        "读取发生在正在运行的响应式作用域内时，把该作用域登记进订阅名单",
+        "手动调用 subscribe 时"
+      ],
+      "answer": 2,
+      "explanation": "'读即订阅'是 signal 家族的共同内核：不在追踪作用域里读（如 setTimeout 回调）就不会建立依赖。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "没人订阅的 computed，上游变了一百次，它会重算几次（默认惰性实现下）？",
+      "options": [
+        "一百次",
+        "一次都不重算，只在被读取且已标脏时才重算",
+        "一次（变化时立刻算好缓存）",
+        "取决于实现随机"
+      ],
+      "answer": 1,
+      "explanation": "推标记+拉计算的混合模型：写只把下游标脏，真正的重算发生在读——没人读就零成本。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "下列哪个语义是 RxJS 容易表达、signal 需要写命令式代码才能凑出来的？",
+      "options": [
+        "存储一个最新值",
+        "派生值自动缓存",
+        "副作用清理",
+        "新请求发出时丢弃上一个未完成的请求结果（switch 语义）"
+      ],
+      "answer": 3,
+      "explanation": "switchMap 的'时间轴抢占'是流的看家能力；signal 世界里要自己拿 AbortController+代际计数手写等价逻辑。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "RxJS 的『纯推』模型指的是？",
+      "options": [
+        "源头 next() 后沿管道一路推到订阅者，不管下游是否准备好",
+        "只在订阅时才创建",
+        "读取时拉取最新值",
+        "推送通知后由订阅者拉取"
+      ],
+      "answer": 0,
+      "explanation": "与 signal/MobX 的'推标记+拉计算'相对，纯推意味着下游没消费也在产（白算一场），也是背压概念的来源。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Zustand/Redux 在通知模型上属于？",
+      "options": [
+        "字段级细粒度推送",
+        "惰性拉取",
+        "粗推：store 变通知所有订阅组件，组件再用 selector 拉自己那块并做引用比较",
+        "完全不通知，每次全量重渲"
+      ],
+      "answer": 2,
+      "explanation": "粗推+手工收窄（selector+memo）是快照比较派的标配；粒度下限是组件，不是字段。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "按课文坐标系，'为什么解构会丢失响应'这个问题会出现在哪家？",
+      "options": [
+        "只有 Redux",
+        "细粒度自动追踪派（MobX/signal/Solid/Svelte runes）",
+        "只有 RxJS",
+        "所有库都一样严重"
+      ],
+      "answer": 1,
+      "explanation": "细粒度派靠'读的那一刻'记账，解构把当下值拷成普通变量、切断读取通道；粗粒度派（Redux/Zustand）本来就靠新引用发现变化，无此坑。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "stream 世界里想模拟'取当前值'的 signal 行为，惯用手段是？",
+      "options": [
+        "BehaviorSubject/scan 携带最新值",
+        "setTimeout 轮询",
+        "Object.freeze",
+        "做不到，只能换库"
+      ],
+      "answer": 0,
+      "explanation": "Observable 可能从未发值，'当下值'要靠 BehaviorSubject 或 scan 累积出伪 signal——两范式互补的实证。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "面试问『signal 会取代 Redux 吗』，课文给的满分框架是？",
+      "options": [
+        "宣布站队并贬低另一方",
+        "说不知道",
+        "只谈性能基准",
+        "分层回答：signal 是原语层、Redux/Zustand 是容器层、RxJS 是时间层，竞争与互补发生在不同层"
+      ],
+      "answer": 3,
+      "explanation": "signal 真正竞争对象是 observable/ref 这类追踪原语，和容器层、时间层不构成替代关系。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Immer 在两条更新哲学中的角色是？",
+      "options": [
+        "把不可变数据转为可变共享",
+        "给不可变派（Redux/Zustand）套上可变写法语法糖，产物仍是新引用",
+        "替代 reducer",
+        "一个流式状态库"
+      ],
+      "answer": 1,
+      "explanation": "draft 上写得像可变赋值，finalize 产出结构共享的新不可变对象——两派的和事佬（za-middleware 会实操）。"
+    }
+  ]
+}

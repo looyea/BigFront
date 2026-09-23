@@ -1,0 +1,136 @@
+{
+  "title": "tc39-frameworks 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 Angular 的 Signals，正确的说法是？",
+      "options": [
+        "语义与提案高度对齐，但实现是 Angular 自己写的，并深度参与了 signal 阵营的语义拉锯",
+        "直接内嵌了 signal-polyfill 的源码",
+        "只是实验性 API，Angular 19 已移除",
+        "与 Zone.js 冲突，必须禁用变更检测才能用"
+      ],
+      "answer": 0,
+      "explanation": "Angular 是『对齐语义、自持实现、反向输出』的典型：signal()/set/update 与 computed/effect 稳定可用，且是 zoneless 变更检测迁移的发动机。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Svelte 5 runes（$state/$derived/$effect）与 TC39 提案的关系是？",
+      "options": [
+        "runes 就是提案规定的官方语法",
+        "Svelte 反对 signal 路线，runes 是另一套东西",
+        "语义同源，但 runes 由编译器翻译成 Svelte 自己的 signal 运行时调用，不是提案 API 形状",
+        "runes 需要联网加载提案 polyfill 才能运行"
+      ],
+      "answer": 2,
+      "explanation": "『语义是 signals 的，语法是编译器的』：let count = $state(0) 与 count++ 被编译成对内部 signal 运行时的读写调用，所以看起来像普通变量。提案从未规定过 $ 前缀语法。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "@preact/signals-core 的独特价值是什么？",
+      "options": [
+        "它是唯一一个通过 TC39 认证的库",
+        "它是框架无关的纯 signal 实现（约 4KB），证明同形 API 可以脱离宿主框架在浏览器/Node/React 里存活",
+        "它内置了虚拟 DOM diff",
+        "它只能配合 Preact 组件使用"
+      ],
+      "answer": 1,
+      "explanation": "signals-core 不依赖 Preact 渲染器即可使用；@preact/signals-react 把它接进 React。『API 皮肤可以换、语义内核独立』正是提案想推广的形态。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "为什么 Vue 3 不需要『跟进对齐』TC39 Signals 提案？",
+      "options": [
+        "因为 Vue 团队反对响应式编程",
+        "因为提案性能不如 Vue",
+        "因为 Vue 的 Proxy 依赖收集体系早于提案成型、生态庞大，改名对齐收益小；概念本已同构",
+        "因为 Vue 只能Options API"
+      ],
+      "answer": 2,
+      "explanation": "ref≈signal、computed、watchEffect≈effect 早已成熟（2020）。先来的那个不需要追认——这是『标准化语义易、改既成生态难』的活例。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Angular signals 与传统 zone.js 变更检测的关系是？",
+      "options": [
+        "signal 写入可精确定向标记脏组件，成为 zoneless（去 Zone.js）迁移的发动机",
+        "signal 完全取代了组件渲染，Angular 不再 diff 模板",
+        "二者互斥，用了 signal 就必须全组件改用 OnPush",
+        "zone.js 会屏蔽 signal 的通知导致 effect 不执行"
+      ],
+      "answer": 0,
+      "explanation": "传统模式靠 zone 拦截异步事件后全树脏检查；signal 把『哪块状态变了』精确报告给渲染层，只重标脏的视图节点——这是四家里 signal 改变框架渲染模型最深的案例。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "遇到『X 框架已全面支持 TC39 Signals』的说法，最好的拆解方式是？",
+      "options": [
+        "查该框架 npm 下载量",
+        "问该框架是否 React 兼容",
+        "看有没有官方博客",
+        "分三层核：语义支持？API 形状一致？共享实现/互操作协议？"
+      ],
+      "answer": 3,
+      "explanation": "『支持 Signals』是个被严重过载的词。三层核问法能过滤绝大多数宣传噪音：多数框架只做到第一层，个别做到第二层，第三层（互操作）目前几乎无人全量交付。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "@preact/signals-react 曾引发的最大工程争议是什么？",
+      "options": [
+        "它不支持 TypeScript",
+        "绑定层绕过 React 渲染模型（配合编译器直接改 DOM 节点），与 React 的 diff 心智冲突，React 团队曾公开反对该用法",
+        "它强制全局 Provider",
+        "它把 hooks 全部废弃了"
+      ],
+      "answer": 1,
+      "explanation": "细粒度更新要收益最大化就得跳过组件重渲直改 DOM，这与 React『UI=f(状态)』的渲染契约相抵触——signal 落地 React 世界的绑定层姿势之争，是近年前端最著名的架构论战之一。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "关于 signal 生态的互操作（interop）现状，正确的是？",
+      "options": [
+        "所有主流库已共享同一份 signal 实例",
+        "浏览器原生提供了 Symbol 协议",
+        "@reactively/mobx、@flowstat/signal 等适配器已在打通各家实现，但跨库共享实例多数仍需人工桥",
+        "互操作被提案明确放弃"
+      ],
+      "answer": 2,
+      "explanation": "提案的终章是互操作契约，社区适配层正在萌芽；今天『一个库的 computed 包另一库的 signal』多数还要手写胶水，等 Stage 推进后才可能变成一行 from()。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Angular signals 的读写形状是？",
+      "options": [
+        "count() 读；count.set(v) / count.update(fn) 写",
+        "count.get 读；count.set = v 写",
+        "count.value 读写",
+        "[count, setCount] 数组解构"
+      ],
+      "answer": 0,
+      "explanation": "Angular：signal 是类实例，读用函数调用 count()，写用 .set/.update 方法。对照：polyfill 用 .get/.set 属性、Preact 用 .value、Solid 是 getter 函数+setter、React hooks 是解构对——五张嘴同一部宪法。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "对学习者而言，本课最有价值的结论是？",
+      "options": [
+        "赶紧把所有项目迁到 Angular",
+        "背熟各家 API 拼法是核心竞争力",
+        "Vue 和 Svelte 会统一到提案 API",
+        "把惰性、自动追踪、glitch-free 的语义学透，API 皮肤各家每周都在变，语义才是硬通货"
+      ],
+      "answer": 3,
+      "explanation": "四家形态差异（.get/.value/()/set 方法）是表层方言，推标记拉计算、读即订阅、判等闸门是共同语义。语义在手，任何一家的文档半小时能读完——这正是 L1 sig-map 学习地图的落点。"
+    }
+  ]
+}

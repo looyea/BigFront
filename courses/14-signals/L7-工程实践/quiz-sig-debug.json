@@ -1,0 +1,136 @@
+{
+  "title": "sig-debug 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "本关概括的状态 bug 三问是？",
+      "options": [
+        "变量名、函数名、文件名是什么",
+        "编译过没过、测试绿没绿、部署成没成",
+        "谁改的（触发源）、怎么传的（依赖/订阅路径）、改成了什么（值迁移）",
+        "是同步还是异步、在哪个闭包、能不能重启"
+      ],
+      "answer": 2,
+      "explanation": "所有调试装备是三问的 GUI——拿这三问当透镜看任何新工具，不会被面板功能晃花眼（本关方法论的根）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Zustand/Redux 系面板里，『谁改的』这一问主要靠什么功能回答？",
+      "options": [
+        "组件树检视器",
+        "Action 日志（带标签的变更序列）+ trace 调用栈",
+        "网络面板",
+        "内存快照对比"
+      ],
+      "answer": 1,
+      "explanation": "set/dispatch 第三参打标签+devtools trace:true 记栈——日志给『动作序列』，栈给『调用现场』；za-middleware 的标签习惯在调试端回收。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "MobX 项目没有现成的时间旅行面板，本关给的替代装备组合是？",
+      "options": [
+        "enforceActions 让越界写立刻 throw + why-did-update 类拦截器查重渲原因",
+        "自己写 Proxy 包全局对象再录一帧砍一帧",
+        "退回 useState 全家",
+        "靠 console.log 祖传技法别无他法"
+      ],
+      "answer": 0,
+      "explanation": "可变路线补票的调试端显形：围栏（strict throw 断在写入现场）答『谁改的』、拦截器答『怎么传的』——『把账记在面板里 vs 把围栏设在写入处』是本选项的两半。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "RxJS 时序 bug（debounce 吞错值、switch 竞态）的首选装备为什么是 marble 测试而非运行时面板？",
+      "options": [
+        "面板性能差",
+        "marble 的语法更时髦",
+        "时序 bug 在运行时是瞬时烟花，marble 用虚拟时钟把时间轴固化成可重复断言，回归防线永久生效",
+        "marble 可以自动修 bug"
+      ],
+      "answer": 2,
+      "explanation": "'a--b--c' 图即用例文档：debounce/switch 语义分歧一行图各判各的；复现一次不如断言永久——『把时间装进测试』是流系独有的调试观。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "marble 测试里 cold('abcd----|') 配 debounceTime(30) 的期望输出写成 '------d--|'，依据不含？",
+      "options": [
+        "每个新值到达重置去抖窗，a/b/c 被吞",
+        "虚拟时钟 1 格=10ms，d 在源 frame3、due 到 frame6 落地",
+        "complete 在无 pending 时透传，源 frame8 即输出 frame8",
+        "debounceTime 会丢弃所有值只保留 complete"
+      ],
+      "answer": 3,
+      "explanation": "那是 auditTime(0) 都干不出来的事：debounce 保最后值不丢 complete。本题真正考的是帧对齐心算（marble 的基本功：输出时刻必须是整数帧）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "框架内置 signal 的调试现状，本关的判断是？",
+      "options": [
+        "全部成熟，无需第三方",
+        "够用但在补课（Svelte 5 最肉、Angular/Preact 面板已可用），Redux 系工具链反而最成熟",
+        "全都没有任何面板",
+        "面板比第三方库丰富得多"
+      ],
+      "answer": 1,
+      "explanation": "§四盘点表+一句话结论——『引库的真实红利之一是工具链』的反面教材版；答题带各家名字与缺口层次即显真实使用经验。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "通用三板斧不包括下列哪项？",
+      "options": [
+        "给每次 set/dispatch 打语义标签",
+        "断点打在状态变更的唯一入口（或 setter 条件断点）",
+        "把每个字段都包成 class 方便 toString",
+        "最小复现切片+海关行/中间件层加 tap/trace 探针"
+      ],
+      "answer": 2,
+      "explanation": "C 是为调试增加结构税的过度工程；标签/入口断点/切片复现三招跨库通用，且成本近零——面板会过时，这三招不会。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "在带 persist 的 store 上用面板时间旅行，本关警告的事故是？",
+      "options": [
+        "回放会触发真实写入，污染 localStorage 真值",
+        "面板会卡顿但无副作用",
+        "persist 会自动暂停回放",
+        "只能回放不能快进"
+      ],
+      "answer": 0,
+      "explanation": "za-middleware 面试 q9 在调试主题的复收：时间旅行心智是『读』、实现走的是『写』通道——调试前摘副作用（注释 persist/白名单排除）是纪律。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "统一心法『面板只是日志的 GUI』对自研状态层的启示是？",
+      "options": [
+        "自研库必须做浏览器扩展",
+        "先把变更审计日志（动作+前值+时间戳的可查询记录）作为内核第一等公民，面板是后话",
+        "GUI 不值得投入",
+        "日志越多越好，全量深拷贝每个快照"
+      ],
+      "answer": 1,
+      "explanation": "不可变天然有账（快照）、可变靠围栏+patch、流靠 tap+marble——自研时审计先行的推论；D 的全量深拷贝是没读过 sig-mutability 结构共享的答案。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "线上用户反馈『偶发数据不对』且无法复现，devtools 面板帮不上，本关思路里最对症的是？",
+      "options": [
+        "让用户清缓存",
+        "把状态改成全局变量方便查",
+        "在生产加轻采样审计：变更打标签+环形缓冲最近 N 条，反馈时随日志导出",
+        "等 bug 自己复现"
+      ],
+      "answer": 2,
+      "explanation": "za-middleware 面试 q13（埋点中间件）的调试面孪生：面板是开发者的本地日志 GUI，线上要自带日志上船——标签+环形缓冲+脱敏白名单三件套。"
+    }
+  ]
+}

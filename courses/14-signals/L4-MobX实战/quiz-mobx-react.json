@@ -1,0 +1,136 @@
+{
+  "title": "mobx-react 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "observer HOC 让组件重渲的机制是？",
+      "options": [
+        "把组件函数体变成 reaction 作用域：渲染时读到哪个 observable 字段就订哪个，字段变则调度该组件重渲",
+        "给组件加 memo 浅比较 props",
+        "订阅 store 上任意字段变化即全组件重渲",
+        "轮询 store 快照 diff"
+      ],
+      "answer": 0,
+      "explanation": "observer=渲染即追踪：触发重渲的是『渲染时读到的数据』而非 props——所以不需要到处贴 memo，没读该字段的组件根本不进依赖名单。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "const { count } = store 后渲染 {count}，为什么界面永不更新？",
+      "options": [
+        "observer 不支持解构语法",
+        "React 会缓存解构结果",
+        "解构发生在渲染早期、只读了一次值——之后的渲染不再读 store.count，依赖没建立",
+        "count 必须是函数才能被追踪"
+      ],
+      "answer": 2,
+      "explanation": "追踪认的是『渲染期间发生的读取动作』。解构=一次性快照，之后每次重渲都不再碰 store.count，自然没人通知它。修法：JSX 里直接 store.count。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "MobX 的追踪作用域一共有哪三种？",
+      "options": [
+        "任意函数、任意对象方法、模块顶层",
+        "只有 JSX 模板内部",
+        "仅 class 组件的 render 方法",
+        "observer 组件渲染体、computed getter、reaction/autorun 回调"
+      ],
+      "answer": 3,
+      "explanation": "清单外的读取都是一次性快照：事件回调里读 store 拿得到最新值但不会建订阅。想要『变了自动做事』请回到 reaction/computed，别指望回调读取。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "严格模式的 MobX 项目里，组件 onClick 中直接 store.count++ 的问题与修法？",
+      "options": [
+        "没问题，onClick 自动是 action",
+        "违反 action 纪律告警——改动应包进 store 方法（或在组件里用 action/runInAction 包裹）",
+        "会导致死循环",
+        "count 会变成 undefined"
+      ],
+      "answer": 1,
+      "explanation": "action 是事务边界+批量结算单位，严格模式禁止裸写。组件纪律：store 是唯一权威，只调方法不伸手——onClick={() => store.increment()}。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "与裸 React『状态提升+props 下传+memo』相比，MobX+observer 主要省掉的是什么？",
+      "options": [
+        "省掉了 React 组件模型本身",
+        "省掉了 props 逐层传递与 memo/useMemo 的手工止损——订阅面由读取行为自动圈定",
+        "省掉了 JSX",
+        "省掉了虚拟 DOM 的初次渲染"
+      ],
+      "answer": 1,
+      "explanation": "数据不走 props 通道（从 context/单例直读），谁读谁订；该渲的组件被字段依赖精准圈出，人工 memo 的需求塌缩——这正是 React 官方长期把 MobX 列为推荐状态库的核心理由。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "MobX+observer 与 Solid 的细粒度更新，最准确的区别是？",
+      "options": [
+        "两者完全等价",
+        "MobX 只支持 class 组件",
+        "MobX 仍是组件粒度重渲函数体（圈得准该渲谁）；Solid 可跳过组件函数体、直改被绑定 DOM 节点",
+        "Solid 不需要重渲任何组件"
+      ],
+      "answer": 2,
+      "explanation": "『字段级订阅+组件级重渲』（MobX）vs『表达式级更新』（Solid）。MobX 把 React 的浪费圈没了，Solid 把组件函数体执行本身省了——粒度差一档（呼应 solid-fine-grained）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "渲染体里 toJS(store) 深拷贝整个 store 进 JSX，会引发什么性能事故？",
+      "options": [
+        "没有影响，toJS 是只读的",
+        "内存泄漏不可恢复",
+        "报错禁止",
+        "深拷贝遍历=对全 store 每个字段建依赖，精准订阅退化成『任意字段变、全组件重渲』"
+      ],
+      "answer": 3,
+      "explanation": "追踪只认读到什么：toJS 把整个对象图读了一遍，依赖面瞬间铺满。深读要克制（结构化浅订阅、useLocalStore 造组件私有 observable 是替代姿势）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "函数组件时代 MobX 的 React 绑定选型，推荐是？",
+      "options": [
+        "mobx-react 的 Provider+inject 全家桶",
+        "mobx-react-lite 的 observer + React context 自备 useStore",
+        "react-mobx-redux 桥接层",
+        "直接订阅 React Redux 包"
+      ],
+      "answer": 1,
+      "explanation": "lite 只提供一个 observer（无 inject/Provider 遗产），配自建 context 的 useStore 钩子——现代 MobX+React 标配。老 mobx-react 的装饰器全家桶已入维护模式。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "一个 observer 组件读了 store.a 和 store.b，父组件因别的状态重渲了它。按 MobX+React 的规则会发生什么？",
+      "options": [
+        "照常重渲（React 父渲子必渲的默认仍在），MobX 只负责额外补充『a/b 变了即使 props 没变也重渲』",
+        "绝对不重渲，observer 屏蔽父组件的一切更新",
+        "报错：双源重渲冲突",
+        "只有 a、b 同时变化才重渲"
+      ],
+      "answer": 0,
+      "explanation": "observer 不关闭 React 的默认渲染流（要挡仍可靠 memo 或 React.memo 语义）；它叠加的是第二条触发通道——数据依赖变化。两条通道并立，这是回答『MobX 会不会破坏 React 心智』的标准澄清。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "代码审查见一个 3000 行列表未做虚拟化、每行是 observer 子组件，最贴切的评价是？",
+      "options": [
+        "observer 自带列表性能优化，无需处理",
+        "每行一个 reaction 订阅本身有固定开销，大列表应虚拟化（react-window 等）+必要时行内再减订阅——粒度准不等于 DOM 便宜",
+        "应该删掉所有 observer",
+        "改用 toJS 全量深渲染"
+      ],
+      "answer": 1,
+      "explanation": "observer 解决『谁该渲』，解决不了『渲多少 DOM』——三千行的创建/协调成本摆在那，虚拟化才是主药；每组件一个 reaction 也非零成本（呼应本课性能边界提醒）。"
+    }
+  ]
+}

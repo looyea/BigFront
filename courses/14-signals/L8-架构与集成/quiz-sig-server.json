@@ -1,0 +1,136 @@
+{
+  "title": "sig-server 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "本关说『多数项目的全局 store 里一半数据架构错位』，错位的本质是？",
+      "options": [
+        "store 字段没写类型定义",
+        "把服务端数据在浏览器里的临时缓存，当客户端事实源来管理",
+        "Zustand 的 selector 用错了粒度",
+        "没把数据都放进同一个 store"
+      ],
+      "answer": 1,
+      "explanation": "user/列表/详情/配置=图书馆借来的书（你会过期、要回源、别人随时改真身），柜子（快照+persist+手同步）是为传家宝（主题/抽屉）设计的——容器与物的生命周期错配是一切后续症状的病根。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "『三段式堕落史』第二段里，为下拉刷新与竞态手工补的两样东西是？",
+      "options": [
+        "loading 三件套样板 + requestId 比对",
+        "Redux 中间件 + 洋葱模型",
+        "Web Worker + 虚拟列表",
+        "immer 中间件 + 深比较"
+      ],
+      "answer": 0,
+      "explanation": "每请求 loading/error/data 三份样板+手搓后发先至防护——Query 把这些升格为一等公民（isFetching/自动竞态丢弃）；手搓版『没测过竞态』是第三段坍塌的伏笔。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Query 模型四职责对照表里，『失效』的正确语义是？",
+      "options": [
+        "删除缓存条目，组件立刻回到初始态",
+        "把数据加密存储防篡改",
+        "标记为脏：下次读时触发重取（stale-while-revalidate），旧数据先顶着渲染",
+        "定时器轮询所有接口"
+      ],
+      "answer": 2,
+      "explanation": "invalidate=『脏了』不是『删了』——保旧渲染+后台刷新让 UI 零闪烁；手塞方案常做的『删掉+广播』恰是闪烁与空态风暴的来源。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "边界协议第 1 条：筛选条件与筛选结果各归谁管？同步方向是什么？",
+      "options": [
+        "都在 Zustand，一个 store 一把梭",
+        "条件进 store/URL（客户端事实），结果归 Query（key 引用条件）；同步方向永远客户端→服务端，反向数据流只走 Query",
+        "都在 React Query，条件也 setQueryData 存",
+        "条件放组件 state，结果手动 setSearchParams"
+      ],
+      "answer": 1,
+      "explanation": "queryKey: ['articles', filters]——参数变 key 变自动重取；把响应复制进 store 或把 UI 态塞进缓存都是双源逆流（q3 的『该退的归 Query』同族判据）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "『服务器拒绝这次更新后，UI 该不该退回』这个提问用来判断什么？",
+      "options": [
+        "接口该用 GET 还是 POST",
+        "缓存该设多长 staleTime",
+        "请求该不该重试",
+        "这次乐观更新归 Query 管（该退）还是客户端事实（不该退，本地值+异步落库）"
+      ],
+      "answer": 3,
+      "explanation": "远端会接受的值（改昵称、点赞数）拒绝即回滚=onMutate 地盘；UI 在乎的值（草稿、已读打点）服务器拒绝也保留=store 地盘。一问问出两条状态的分界。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "登出清场协议的本关版本是？",
+      "options": [
+        "跳转登录页即可，缓存会自动过期",
+        "只 queryClient.clear()，store 留着下次登录复用",
+        "queryClient.clear() 与各 UI store 的 reset 成对出现在同一个 logout 函数",
+        "刷新整页 window.location"
+      ],
+      "answer": 2,
+      "explanation": "只清一边=跨用户数据残留事故的标配成因：Query 清了 store 里 user/theme/草稿还在，A 用户登录后 B 的痕迹闪现；location 强刷是掩盖问题不是解决。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "框架数据方案（Kit load/Solid resource/RSC fetch）兴起后，本关对状态库保留地的判断是？",
+      "options": [
+        "第三方状态库彻底退场",
+        "『拉数据放哪』的答案上移到路由数据层，第三方库收缩到跨路由客户端态与域模型；但失效/竞态问题跟着数据进新层，Query 模型是思想不是那个包",
+        "框架方案只解决 SSR，与状态无关",
+        "所有框架都会内置 React Query"
+      ],
+      "answer": 1,
+      "explanation": "resource 的『信号+Promise』=海关的框架内置版；load 层的 invalidateAll/+revalidate 证明问题没消失只换 API——判断句：数据上移、职责同在。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "SSR 场景下 Zustand 模块单例的『独家债』指什么？",
+      "options": [
+        "Node 里 create 的 store 跨请求共享，需请求级实例化+注入；Query 自带 per-request client 天然免疫",
+        "Zustand 不支持浏览器环境以外运行",
+        "SSR 时 selector 会失效",
+        "persist 中间件在服务端会死锁"
+      ],
+      "answer": 0,
+      "explanation": "za-core 面试 q4『单例=SSR 负债』的正式处决：串数据事故只发生在服务端那个进程里，Query/框架数据层的 per-request 设计把这类债直接消掉。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "『存储只过值』原则在水合场景的对应要求是？",
+      "options": [
+        "水合要传输完整 class 实例保原型",
+        "服务端数据序列化进 HTML 再 hydrate——函数/Proxy/class 实例出局，数据必须可 JSON 化",
+        "水合时禁止任何数据处理",
+        "把 DOM 状态一起序列化"
+      ],
+      "answer": 1,
+      "explanation": "L4 出境协议、za-middleware q14 存储边界的第三分册（水合版）：同一条『只过值不过行为』在持久化/水合两线各自显形。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "实验『把列表字段搬去 Query 后统计删行数』示范的决策方法是？",
+      "options": [
+        "用代码行数减少量化职责归位的收益（删掉的 loading/竞态/同步代码就是选型全部理由）",
+        "比较两家库 star 增速",
+        "看谁打包更小",
+        "测 useQuery 的渲染次数"
+      ],
+      "answer": 0,
+      "explanation": "sig-size 说『先测量再吵架』，本关的测量对象换了：不是字节而是你为手同步写的代码量与 bug 面——删行数是最直观的账。"
+    }
+  ]
+}

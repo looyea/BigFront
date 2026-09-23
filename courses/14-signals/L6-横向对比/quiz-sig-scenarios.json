@@ -1,0 +1,136 @@
+{
+  "title": "sig-scenarios 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "本关说『状态选型失败的第一原因』是什么？",
+      "options": [
+        "把五种不同碗的状态当一种东西，拿一把钥匙开五把锁",
+        "没做性能压测",
+        "选了小众库",
+        "组件拆得太细"
+      ],
+      "answer": 0,
+      "explanation": "局部态/共享 UI 态/域模型/服务端缓存/URL 态——灵魂问题各不同；决策树的第一步是分类，不是比库。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "列表页的『当前筛选条件+页码』，用户要能发微信给同事打开同款结果，应归哪碗？",
+      "options": [
+        "业务域模型（MobX store）",
+        "URL 态（searchParams 为事实源，store 至多是镜像）",
+        "组件局部态 useState",
+        "服务端缓存态 React Query"
+      ],
+      "answer": 1,
+      "explanation": "『要活过分享/刷新/回退』触发决策树第一问——URL 是这类状态的第一公民（rx-inapp 分工句第三极）；塞进 store 再同步到地址栏，回退/新标签页两条路都要补脏活。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "文章列表数据已在 React Query 缓存，组件又 copy 进 Zustand 供三处读取——按本关规范判？",
+      "options": [
+        "合理，Zustand 读起来比 useQuery 快",
+        "必须再包一层 immer 修正",
+        "违规：双事实源三宗罪（陈旧、失效链断、重造归一化），组件直接从 Query 读",
+        "只要加注释说明来源即可放行"
+      ],
+      "answer": 2,
+      "explanation": "规范第 2 条『按 bug 修』级别：服务端事实源的数据禁止复制进客户端 store；store 里只该放筛选参数、游标这类请求输入。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "分工矩阵里 RxJS 与 Zustand 各自的『别让它管这个』是什么？",
+      "options": [
+        "RxJS 别管异步、Zustand 别管持久化",
+        "两家都得由 Redux 调度",
+        "RxJS 管服务端缓存、Zustand 管事件序列",
+        "RxJS 别当状态容器（shareReplay 三宗罪）、Zustand 别管服务端缓存（双事实源）"
+      ],
+      "answer": 3,
+      "explanation": "口诀：RxJS 管过程、Query 管远端、Zustand 管共享——两家的禁区恰好是隔壁的主场，矩阵读成环就记得住。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "『只有一个组件读的下拉开合状态』被同事搬进了全局 store，按本关观点怎么处理？",
+      "options": [
+        "表扬：统一存放好维护",
+        "迁移进 MobX 保持阵营统一",
+        "给它加 persist 防止刷新丢失",
+        "让它回 useState 就地老死——进全局 store 才是技术债"
+      ],
+      "answer": 3,
+      "explanation": "规范第 1 条：进全局必须有『谁同时读』的答辩；无人同读却全局化=付订阅与审计的冤枉税，还顺手把组件变不可复用。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "购物车域模型（含满减规则、库存校验、多实体引用）与弹窗队列（开关、层级）的推荐归属是？",
+      "options": [
+        "购物车→MobX 式域 store（行为跟数据走）；弹窗队列→Zustand 式共享 UI 态；且禁止互存字段",
+        "都进一个 Zustand store 图省事",
+        "都交给 React Query 托管",
+        "全部塞进 Context 用 useReducer 管"
+      ],
+      "answer": 0,
+      "explanation": "决策树末端的分岔样本：有不变量与行为的对象图→域模型家（MobX 建模红利）；纯开关层级胶水→共享态家；规范第 4 条的『禁止互存+出境快照』防两锅炖成一锅。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "框架内置信号（Angular signals/Svelte runes/Vue ref）崛起后，第三方状态库的『保留地』不含下列哪项？",
+      "options": [
+        "React 的细粒度订阅缺口（提案落地前）",
+        "跨框架复用的共享 store",
+        "管一个公司的全部业务：内置信号做不到任何共享",
+        "persist/devtools 等成熟中间件生态与域模型成建制方案"
+      ],
+      "answer": 2,
+      "explanation": "内置信号完全能做框架内共享（模块级 signal/服务单例/runes 导出）——『出不了自家框架』才是它的边界，D/A 两项才是第三方库的真保留地。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "拖拽中的实时坐标（组件间要同步预览框位置），按决策树与例外条款怎么归？",
+      "options": [
+        "URL 态，坐标进 query 可分享",
+        "共享态但走高频瞬态例外：独立小 store+transient 订阅直写，松手才 commit",
+        "服务端缓存态，拖完同步给后端",
+        "局部态：拖拽组件自己 useState 足够"
+      ],
+      "answer": 1,
+      "explanation": "多处要读（预览框在别的组件）→共享态；每帧更新→走 za-patterns 的 transient 通道；『中间过程不渲、两端 commit』。A 是行为艺术，D 撑不起跨组件同步。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "规范第 5 条的选型『三问』不含哪一项？",
+      "options": [
+        "要不要看过去（撤销/回放/对账）",
+        "更新密度与状态树形状",
+        "库的作者是否活跃维护",
+        "团队付协作纪律税还是语法学习税"
+      ],
+      "answer": 2,
+      "explanation": "三问=sig-mutability 口诀的制度化（功能天花板/性能形状/团队成本）；作者活跃度属于引依赖的通用检查，不在状态哲学三问里。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "元原则『工具跟着状态形状走』的正确执行顺序是？",
+      "options": [
+        "先定库再找场景适配",
+        "分类（哪碗）→ 判据（灵魂问题/三问）→ 选工具 → 例外写进规范",
+        "哪门熟用哪门，规范是形式",
+        "按包体积从小到大排队选用"
+      ],
+      "answer": 1,
+      "explanation": "本关全部内容的压缩版：户口表（分类）→决策树（判据）→矩阵（工具）→例外条款（持久化/高频/SSR）——倒着做的选型都是先射箭后画靶。"
+    }
+  ]
+}

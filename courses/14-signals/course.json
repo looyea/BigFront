@@ -1,0 +1,101 @@
+{
+  "id": "14-signals",
+  "title": "响应式状态管理实战：TC39 Signals / RxJS / MobX / Zustand",
+  "order": 14,
+  "tier": "钻石 · 状态管理实战",
+  "tagline": "状态管理横跨所有框架：TC39 Signals 想把响应式原语标准化、RxJS 代表流式响应式、MobX 是自动追踪的可变派、Zustand 是 React 外部 store 的极简赢家。这一包不深挖源码，主打四家主流用法、横向对比与选型落地，把 04/05/11/13 各包里反复出现的响应式概念收成一个完整知识域。",
+  "icon": "📡",
+  "color": "#7c3aed",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "导论与全景",
+      "subtitle": "简史 / 两大范式 / 定位图",
+      "lessons": [
+        { "id": "sig-landscape", "title": "状态管理简史：从 Flux 到 signals 时代", "goal": "按时间线理清十年演进：Flux 单向数据流→Redux 单一 store+不可变→MobX 自动追踪→Hooks 局部化带来的碎片化→外部 store 复兴（Zustand/Jotai）→signals 标准化之争；每代解决什么问题又引入什么问题（呼应 react-usestate、vue-reactivity-theory、svelte-reactive-runes）" },
+        { "id": "sig-paradigms", "title": "两大范式：流（stream）与信号（signal）", "goal": "建立本包的核心透镜：signal 表达'当下的值'、stream 表达'随时间变化的事件序列'；推/拉模型、细粒度/粗粒度订阅、可变/不可变更新三组坐标系；据此给四家玩家各自定位（呼应 solid-signals、solid-effect-tracking）" },
+        { "id": "sig-map", "title": "四强定位图：各自解决什么问题", "goal": "一张对照表说清 TC39 Signals（语言级原语、不是状态库）、RxJS（流处理库、事件与异步的代数）、MobX（业务域对象 store）、Zustand（React 极简外部 store）各自的适用边界与常见误用；本包学习地图（呼应 sig-scenarios）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "TC39 Signals 实战",
+      "subtitle": "核心三件套 / 订阅控制 / 框架现状",
+      "lessons": [
+        { "id": "tc39-core", "title": "signal / computed / effect：提案核心三件套", "goal": "掌握 proposal-signals 的 API 形态（signal()/computed()/effect()）、惰性求值与即时一致语义、与 Solid/Svelte/Vue 各家实现的对应关系；提案当前阶段与'标准化了什么、没标准化什么'（呼应 solid-signals、svelte-reactive-runes、vue-computed-watch）" },
+        { "id": "tc39-control", "title": "watch / untrack / equality：订阅控制", "goal": "用 watch 观察而不建立细粒度依赖、untrack 屏蔽读取、自定义 equals 控制变化判定；理解'读即订阅'带来的过度订阅与治理手段（呼应 solid-effect-tracking、svelte-effects-advanced）" },
+        { "id": "tc39-frameworks", "title": "提案在各框架的近况：Angular / Preact / Vue / Svelte", "goal": "厘清容易被吹混的事实：Angular signals 高度对齐提案语义但未直接采用其实现、Preact @preact/signals 与提案同形、Svelte 5 runes 是编译器变体、Vue reactivity 早已自成体系；跨库 interop 的现实与前景（呼应 solid-overview、react-render-model）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "RxJS 实战",
+      "subtitle": "流三要素 / 常用操作符 / 融入现代前端",
+      "lessons": [
+        { "id": "rx-basics", "title": "Observable / subscribe / teardown：流的三要素", "goal": "从 addEventListener 手工账本讲到 Observable 把'订阅+退订'收进一个对象；of/from/fromEvent/interval 入门、next/error/complete 三通道、订阅返回 teardown；冷流与热流初判（呼应 rx-operators、mp-events）" },
+        { "id": "rx-operators", "title": "日常够用的操作符：一个课说完", "goal": "只讲高频：map/filter/scan、debounceTime/distinctUntilChanged、switchMap/mergeMap/concatMap 的区别与选型、combineLatest、catchError/retry、tap 副作用；用打字机搜索一个例子把 switchMap 讲透（呼应 rx-basics、kit-streaming）" },
+        { "id": "rx-inapp", "title": "RxJS 在现代前端的位置", "goal": "React 桥接（useObservable 类 hook 的写法与坑）、与 fetch/AbortController/AsyncIterator 的分工对照、Angular 里 RxJS 是官方常客；什么时候不该用 RxJS（一次性 Promise、简单事件）与内存泄漏治理清单（呼应 tc39-core、vue-use-fetch）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "MobX 实战",
+      "subtitle": "四件套 / observer / store 组织",
+      "lessons": [
+        { "id": "mobx-core", "title": "observable / action / computed / reaction", "goal": "MobX 四件套的日常用法：makeAutoObservable 起步、state 只在 action 里改、computed 派生自动缓存、reaction/autorun 跑副作用；自动追踪的读时订阅心智与严格模式配置（呼应 solid-effect-tracking、vue-reactive）" },
+        { "id": "mobx-react", "title": "observer 组件与细粒度重渲", "goal": "mobx-react-lite 的 observer 让组件只随'渲染时读到的值'重渲；常见事故：解构后丢追踪、在组件外读、忘记 action；与 React 本身粗粒度重渲的互补关系（呼应 react-render-model、solid-components）" },
+        { "id": "mobx-stores", "title": "业务域建模：多 store 组织", "goal": "以对象图建模业务域：多 store 互相引用、fromJS/toJS 边界、patch 与 onSnapshot 做持久化；和'扁平不可变 store'路线（Redux/Zustand）的建模哲学差异；onReaction/disposer 生命周期（呼应 za-patterns、svelte-stores）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "Zustand 实战",
+      "subtitle": "最小 store / 中间件 / 高级模式",
+      "lessons": [
+        { "id": "za-core", "title": "最小 store：create / get / set 与 selector", "goal": "十行写完一个可用的 store：set 合并、selector 订阅（5.x 的 useShallow 变化）、action 写在 store 里、组件外用 getState/setState/subscribe；useSyncExternalStore 如何让外部 store 安全接入 React（呼应 react-usestate、za-middleware）" },
+        { "id": "za-middleware", "title": "日常三件套：persist / immer / devtools", "goal": "persist 做 localStorage 持久化（版本与 partialize）、immer 写可变风格更新但保持不可变产物、devtools 挂 Redux DevTools；中间件组合顺序与手写一个小中间件看懂机制（呼应 mobx-core、za-core）" },
+        { "id": "za-patterns", "title": "大 store 拆分与模式", "goal": "slices 分片组织、transient 订阅（subscribe 不走渲染）、原子化 selector 与性能边界；与 Redux Toolkit 的功能对照（谁管状态谁管异步）、与 Jotai/Context 的选型线（呼应 sig-scenarios、react-context）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "横向对比",
+      "subtitle": "signal vs stream / 可变 vs 不可变 / 选型树",
+      "lessons": [
+        { "id": "sig-vs-streams", "title": "signal vs stream：当下值与时间序列", "goal": "同一需求（搜索去抖、跨源合并、限流）分别用 signals+async 与 RxJS 写一遍，体会表达力差异：stream 擅长'事件间的关系'、signal 擅长'状态的最新快照'；两者正在互相借鉴（toRawSignals/firstValueFrom）（呼应 tc39-core、rx-operators）" },
+        { "id": "sig-mutability", "title": "可变与不可变：两条更新哲学", "goal": "MobX（代理可变+路径通知）与 Redux/Zustand（不可变+快照比较）两条路线的性能与心智代价；Immer 如何成为两边和事佬；React 为何历史上选了不可变（呼应 mobx-core、za-middleware、solid-stores）" },
+        { "id": "sig-scenarios", "title": "选型决策树：什么状态放什么家", "goal": "把'状态分层'落成决策树：组件局部态/跨组件共享态/业务域模型/服务端缓存态/URL 态各归谁管；四强+React Query+框架内置的分工矩阵；给团队的可写进规范的结论（呼应 sig-server、za-patterns）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "工程实践",
+      "subtitle": "体积 / 调试 / 性能坑",
+      "lessons": [
+        { "id": "sig-size", "title": "打包体积实测：四家各要多少钱", "goal": "gzip 后的体积量级对比与可摇树性差异（RxJS 按需 import vs MobX 整体）、依赖传递成本；用 bundlephobia/构建产物分析建立'先测量再优化'习惯（呼应 vite-bundle-analysis、10-vite）" },
+        { "id": "sig-debug", "title": "调试工具链：DevTools 四家对比", "goal": "Redux DevTools（Zustand devtools 中间件复用）、MobX-React-Before/DevTools 的 why-did-update、Angular signal 调试与 Preact devtools 现状、RxJS marble 测试；统一的心法：让'谁改了状态'可见（呼应 vite-devtools、react-devtools）" },
+        { "id": "sig-perf", "title": "性能坑清单：过度订阅与漏订", "goal": "四类高频坑：selector 每次返回新对象致重渲风暴、observer 没读到字段（渲染期未访问）、流没退订的泄漏、深层可变对象引用相等失效；每坑给症状-定位-修法三段（呼应 mobx-react、za-core、rx-inapp）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "架构与集成",
+      "subtitle": "客户端 vs 服务端状态 / 迁移 / 登录态",
+      "lessons": [
+        { "id": "sig-server", "title": "客户端状态 vs 服务端状态", "goal": "React Query/SWR 的'缓存+失效'模型为什么比把接口数据塞进 Zustand 更合理；两条状态的职责边界（缓存/失效/加载态/乐观更新谁负责）；与框架数据方案（Kit load、Solid resource）的对照（呼应 kit-load-universal、solid-resource）" },
+        { "id": "sig-migrate", "title": "迁移与共存路径", "goal": "Redux→Zustand 的渐进迁移（双写桥、按 feature 切）、在已有 Context 应用里引入外部 store 的边界、MobX 与 Zustand 在一个应用共存的分工与反模式；迁移的验证与安全网（呼应 sig-scenarios、12/13 包的迁移课）" },
+        { "id": "sig-auth", "title": "登录态实战：同一需求四种实现", "goal": "以'登录态跨页共享+路由守卫+登出清理'为需求，分别用 Zustand store、MobX store、signals+context、RxJS BehaviorSubject 实现一遍，比较代码量、心智、与框架锁定度（呼应 za-core、kit-auth-session）" }
+      ]
+    },
+    {
+      "id": "L9",
+      "title": "内核与终战",
+      "subtitle": "手写 mini-signal / 综合大题 / 复盘",
+      "lessons": [
+        { "id": "sig-internals", "title": "手写 60 行 mini-signal", "goal": "不依赖任何库实现 signal/computed/effect 最小闭环：当前观察者、订阅集、通知传播；用 13 包学过的依赖图语言解释自己的实现缺了什么（批处理、循环检测），理解提案语义的实现距离（呼应 solid-internals、svelte-reactivity-internals）" },
+        { "id": "sig-capstone", "title": "终战项目：四实现对照待办看板", "goal": "同一看板需求（列表/过滤/跨页统计/持久化）分别用 MobX、Zustand、signals、RxJS 各实现一份，产出对照报告：代码量、渲染次数、包体积、调试体验；建立'用数据选型'的完整演练（呼应 sig-size、sig-perf）" },
+        { "id": "sig-roadmap", "title": "包复盘与进阶路线", "goal": "串起 14 包知识地图：四强各自最值得深入的两个方向；与框架内置响应的合流趋势（signals 提案、服务端状态、细粒度化）；结课自检清单（呼应 sig-map、全仓各包）" }
+      ]
+    }
+  ]
+}

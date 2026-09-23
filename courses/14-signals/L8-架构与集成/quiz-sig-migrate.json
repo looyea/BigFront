@@ -1,0 +1,136 @@
+{
+  "title": "sig-migrate 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "§一『迁移第一定律』的前提是先在哪个问题上给出否定答案才允许开工？",
+      "options": [
+        "要不要写单元测试",
+        "凭什么迁——若 RTK 已抹平样板且无订阅面性能债，迁移收益≈0 就别动",
+        "要不要换 TypeScript",
+        "Zustand 是不是比 Redux 星星多"
+      ],
+      "answer": 1,
+      "explanation": "现实里更常的问题是『凭什么迁』而不是『怎么迁』；正当理由=重渲风暴治不好/样板债压不住/主动换范式——理由不成立这关当历史课读。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "双写桥三纪律里『桥只过值不过行为』要防的具体事故是？",
+      "options": [
+        "把 dispatch 包成 action 往对门塞——行为跨库回放造成隐式双写循环",
+        "值拷贝太慢",
+        "JSON 序列化丢函数",
+        "selector 返回新对象"
+      ],
+      "answer": 0,
+      "explanation": "za-middleware『存储只过值不过行为』的迁移分册：桥上传行为=同一次意图两边各执行一遍，比传值丢函数严重得多。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "迁移单位与方向纪律的正确组合是？",
+      "options": [
+        "按页面切、双向同步最快",
+        "按团队切、谁空闲谁迁",
+        "按 feature slice 切、单向双写（旧→新或新→旧二选一），双向同步=死循环预约",
+        "按文件行数切、随机方向"
+      ],
+      "answer": 2,
+      "explanation": "slice 是状态层天然的内聚边界；方向单一是桥不咬自己尾巴的条件——两条方向混着写的项目迟早出现『同一个 action 在两库来回触发』。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "哪一条『不构成』Context 应用引入外部 store 的理由？",
+      "options": [
+        "Context 值频繁变化导致消费树集体重渲",
+        "axios 拦截器里需要读写当前用户",
+        "只是传参嫌烦",
+        "三个以上 Provider 互相依赖排列组合"
+      ],
+      "answer": 2,
+      "explanation": "传参嫌烦是对 Context 的正当使用；三条真信号各有结构成因（订阅面=整棵树无 selector 可窄化/出树即死/Provider 组合爆炸）——判据写进 review 清单。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "MobX+Zustand 共存的合规接口形态是？",
+      "options": [
+        "事件总线（mitt）在两库间广播",
+        "单向、显式、过值：MobX action 末尾显式 setState 快照进 Zustand，方向固定『网→树』且写进文件头注释",
+        "reaction 里 setState，反正不常见",
+        "同一数据两处存各读各的"
+      ],
+      "answer": 1,
+      "explanation": "三大反模式（跨库联动/两处存/总线私聊）全在绕禁令；禁令的理由是两条通知事务咬合成隐式循环+glitch 出现在库接缝+两边面板各看半截日志。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "验证安全网里『行为快照对拍』提供的是单元测试给不了的什么证据？",
+      "options": [
+        "编译通过证据",
+        "包体积证据",
+        "新旧 store 在同一操作序列下最终状态的等价性证据",
+        "接口响应速度证据"
+      ],
+      "answer": 2,
+      "explanation": "单测各测各的实现，测不出『两个实现等价』；录 action 日志或 e2e 脚本分别打到新旧再 diff 终态——50 行比对器就够，无现成工具。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "渲染计数基线能抓住的 Zustand 迁移典型翻车是？",
+      "options": [
+        "功能报错崩溃",
+        "桥代码忘了删",
+        "订阅面意外变宽（selector 偷懒写 s => s）导致悄悄变慢",
+        "persist 版本对不上"
+      ],
+      "answer": 2,
+      "explanation": "迁移事故榜第一不是丢功能而是悄悄变慢（interview-sig-mutability q12 收口）——没有 commit 数基线对拍，订阅面变宽要等到用户骂卡才显形。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Redux 中间件迁移的对号入座，正确的是？",
+      "options": [
+        "thunk→删掉换直接函数调用；saga→单独评审副作用编排，多数降级 async 函数；persist→对拍迁移并重立 partialize 白名单",
+        "thunk→保留在 Zustand 里继续用",
+        "saga→原样搬进 Zustand 中间件链",
+        "persist→两边同时开自动兼容"
+      ],
+      "answer": 0,
+      "explanation": "隐藏清单里 saga 是最难啃的——『剩下的 RxJS 化而不是搬进新库』；双 persist 同时开=两份磁盘缓存各过期各的，比没迁移还乱。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "『拆桥即不可逆点』之前靠什么保证随时可撤？",
+      "options": [
+        "git revert 万能论",
+        "feature flag 控制组件读新读旧，全绿一个版本后才拆桥",
+        "双写永不停止",
+        "把旧 Redux 立刻删除防止手滑写回去"
+      ],
+      "answer": 1,
+      "explanation": "灰度开关是回滚的实体：flag 在手，读新读旧是运行时决定；删旧代码/拆桥是同一件事的两面——都发生在绿满一个版本之后。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "部署预告说桥代码『拆桥时应该全部消失，留一行都是设计失误』，这句话考核的是？",
+      "options": [
+        "代码注释质量",
+        "Redux 的 reducer 纯度",
+        "Zustand 的 API 熟练度",
+        "桥必须有明确寿命与拆除验收——无期限双写=永久双事实源"
+      ],
+      "answer": 3,
+      "explanation": "双写桥是脚手架不是建筑：每座桥配拆桥日期、进 tech-debt 看板——纪律对象是『过渡态常态化』这个迁移项目的头号慢性癌。"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "title": "sig-landscape 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "状态管理问题诞生的根本前提是？",
+      "options": [
+        "浏览器支持 ES Module",
+        "SPA 让一大坨内存数据在长会话里被无数事件并发修改",
+        "CSS 预处理器流行",
+        "HTTP/2 普及"
+      ],
+      "answer": 1,
+      "explanation": "服务器渲染年代数据在数据库、页面每次重画；SPA 出现长驻内存的共享可变数据，才产生'谁持有真相、变了谁通知谁'的架构问题。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Flux 针对的核心痛点与给出的口号是？",
+      "options": [
+        "样板代码太多；'少即是多'",
+        "双向绑定在大应用里数据传播方向不可预测；'单向数据流'",
+        "性能差；'虚拟 DOM'",
+        "状态分散；'单一 store'"
+      ],
+      "answer": 1,
+      "explanation": "Flux（2014）用 Action→Dispatcher→Store→View 的单向环治 MVC 双向绑定的乱麻，任何变更可倒溯到一个 Action。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Redux 的不可变更新（改对象必造新对象）直接换来了什么能力？",
+      "options": [
+        "更小的打包体积",
+        "自动依赖追踪",
+        "新旧状态引用可比较，从而支持时间旅行调试与快照回放",
+        "组件级细粒度重渲"
+      ],
+      "answer": 2,
+      "explanation": "引用比较是 Redux 一切工具链的地基：变化检测、memo、devtools 回放都建立在'旧状态没被就地改掉'之上。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "MobX 与 Redux 的哲学分歧本质上是？",
+      "options": [
+        "自动追踪的可变对象 vs 显式更新的不可变快照",
+        "同步更新 vs 异步更新",
+        "支持 TypeScript vs 不支持",
+        "大而全 vs 小而美"
+      ],
+      "answer": 0,
+      "explanation": "MobX：observable 代理记录'谁读了哪个字段'，直接赋值即联动；Redux：造新对象+引用比较。这条分歧贯穿本包（sig-mutability 专关）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Hooks 时代（2019 后）'不需要 Redux 了'的欢呼忽略的问题是？",
+      "options": [
+        "Hooks 性能太差",
+        "Class 组件废弃",
+        "Context 太小时髦",
+        "剩下的跨组件共享状态反而没了粒度合适的好答案（Context 一变更全员重渲）"
+      ],
+      "answer": 3,
+      "explanation": "Hooks 解决了组件内状态，但跨组件共享要么进 Context（粗粒度重渲）要么回到第三方库——这正是外部 store 复兴的缺口。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Zustand/Jotai 等外部 store 能在 React 侧复兴，依赖的关键官方机制是？",
+      "options": [
+        "React.memo",
+        "useSyncExternalStore",
+        "Suspense",
+        "Fiber 架构重写"
+      ],
+      "answer": 1,
+      "explanation": "React 18 把'订阅外部数据源'做成官方 API，解决并发渲染下的 tearing 问题，外部 store 从此是一等公民。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "TC39 Signals 提案试图解决的'碎片化'具体指？",
+      "options": [
+        "JS 语法碎片化",
+        "包管理混乱",
+        "每个框架自造一套响应式原语，库作者要发多个框架适配包",
+        "浏览器 API 不一致"
+      ],
+      "answer": 2,
+      "explanation": "Solid/Svelte/Vue/Angular 各有一套 signal 变体；提案目标是标准化 signal/computed/effect 语义，让响应式库逻辑写一次全框架通用。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "按课文的钟摆规律，下列对状态管理演进的描述正确的是？",
+      "options": [
+        "每一代完全取代上一代",
+        "演进只发生在性能维度",
+        "钟摆在'集中显式'与'分散自动'间摆动，且每次都把上一代机制吸收为子集",
+        "Redux 之后再无新范式"
+      ],
+      "answer": 2,
+      "explanation": "Action 进了 Zustand、自动追踪进了 signals、局部化被 selector 继承——四强是同一次钟摆的四个切面，不是四代遗物。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "面试被问'状态管理演进'，课文建议的三个得分点是？",
+      "options": [
+        "背 Redux 三原则、背 Flux 四角色、表忠心站队",
+        "只讲最新技术显得前卫",
+        "把每个库的 star 数背出来",
+        "说清每个方案的第一性动机、给出取舍语言、落到自己项目的分层实践"
+      ],
+      "answer": 3,
+      "explanation": "编年史不值钱，动机+取舍+落地才是架构岗要的信号；站队与数据背诵都是减分项。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Redux 引入的持久化/调试配套（如 DevTools 回放）在生产环境要注意什么？",
+      "options": [
+        "没问题，应始终全开",
+        "生产要关闭或脱敏 action 日志，否则既可能泄露敏感数据又吃内存",
+        "生产改开 Console 即可",
+        "只要加密就安全"
+      ],
+      "answer": 1,
+      "explanation": "部署预告口径：调试中间件的 action 全量日志在产线是数据泄露与内存双重风险，默认关是基线。"
+    }
+  ]
+}

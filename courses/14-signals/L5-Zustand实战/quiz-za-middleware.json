@@ -1,0 +1,136 @@
+{
+  "title": "za-middleware 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Zustand 中间件的本质是什么？",
+      "options": [
+        "编译期宏，构建时展开",
+        "注册到全局事件总线的回调",
+        "高阶函数：收一个 store 定义函数，返回加工后的定义函数（通常劫持 set）",
+        "React 组件树的 Provider 包装"
+      ],
+      "answer": 2,
+      "explanation": "没有插件系统，就是 (config) => config 的函数套娃——所以组合顺序决定 set 被逐层包装的次序，TS 下需要 curried 双括号钉住泛型。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "persist 中间件里 partialize 的作用是？",
+      "options": [
+        "白名单筛选：只把返回的字段写入存储",
+        "把大 store 拆成多个存储 key",
+        "压缩序列化后的 JSON",
+        "控制写入频率（节流）"
+      ],
+      "answer": 0,
+      "explanation": "partialize 返回什么就存什么——显式列白名单既防函数进 JSON 变 undefined 占位，也防敏感字段顺手存进 localStorage。节流是另一码事，persist 没有内建。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "store 字段结构改了（user.name 拆成 user.first/last），老用户本地存的旧数据怎么不炸页面？",
+      "options": [
+        "persist 自动识别并迁移旧结构",
+        "给用户弹提示让清缓存",
+        "没办法，只能等旧数据被覆盖",
+        "bump persist 的 version，在 migrate 回调里按旧版本号把数据搬到新结构"
+      ],
+      "answer": 3,
+      "explanation": "version+migrate 就是 localStorage 版的数据库 migration，不写就只能接受 undefined 崩页或清库存。这是 persist 从『能跑』到『能上线』的分水岭。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "immer 中间件下 set((s) => { s.a.b.c = 1 }) 的产物是？",
+      "options": [
+        "原对象就地修改，引用不变",
+        "新引用快照：改动路径上的对象全部复制，未涉及分支复用旧引用（结构共享）",
+        "整个 state 深拷贝一份",
+        "一份 JSON 字符串"
+      ],
+      "answer": 1,
+      "explanation": "Proxy 记账+路径复制：a、a.b、a.b 之下到 c 的链上新建，其余节点旧引用——所以 Object.is 判新快照≠旧（订阅生效），同时未改分支的 selector 比较照样过关。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "immer 中间件的 set 回调里，哪种写法会被禁止/报错？",
+      "options": [
+        "只修改草稿 s 的字段不返回值",
+        "只 return 一个新对象不修改草稿",
+        "既修改草稿 s 又 return 另一个新对象（两种语义混用）",
+        "在回调里先读 s 再写 s"
+      ],
+      "answer": 2,
+      "explanation": "immer 规定一次回调二选一：要么可变风格改 draft，要么函数式 return 替换。混着来语义不可判定，直接报错——这是防混叠设计不是 bug。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "devtools 中间件里 trace: true 配置的效果是？",
+      "options": [
+        "记录每次 set 的调用栈，面板里可查『是谁触发的这次更新』",
+        "把 state 变化实时发到远程日志服务",
+        "开启 React Profiler 火焰图",
+        "自动 diff 两个快照并只上报变化字段"
+      ],
+      "answer": 0,
+      "explanation": "排查『莫名其妙被改了』的第一开关：面板 Action 旁展开 trace 直接看到触发处的调用栈。性能有开销，生产关掉（enabled 跟环境变量走）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "推荐 devtools(persist(immer(...))) 从外到内的顺序，理由是？",
+      "options": [
+        "没有理由，纯属社区习惯",
+        "谁在外层谁先劫持 set——让 devtools 看到最终快照、persist 存 immer 产物，日志与存储都对得上",
+        "因为字母顺序恰好相反",
+        "因为 persist 不能包在中间层"
+      ],
+      "answer": 1,
+      "explanation": "顺序=函数套娃的包裹次序：immer 负责产出正确数据（最内），persist 存成品（居中），devtools 记录最终结果（最外）。『改数据→存数据→看数据』从内到外，记这一句就够了。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "一个页面有 useCart、useUI 两个 store 都挂了 devtools，面板里只见最后一个的名字，缺的配置是？",
+      "options": [
+        "要把两个 store 合并成一个",
+        "缺 settings.store 字符串且 name 相同——每个实例要给不同 name",
+        "devtools 只能给一个 store 用，第二个得换 redux 原库",
+        "需要在面板里手动刷新列表"
+      ],
+      "answer": 1,
+      "explanation": "Redux DevTools 扩展按实例名登记连接，多个 store 同名（或都缺省）会互相覆盖。给每个 devtools(fn, { name: 'Cart' }) 起独名即可并列观察。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "za-core 第四节的 selector 版 subscribe（s => s.bears, cb）能力来自哪个中间件？",
+      "options": [
+        "devtools——顺手送的",
+        "immer——Proxy 拦截写入时通知",
+        "persist——还原时比对触发",
+        "subscribeWithSelector——显式包上才有三参 subscribe"
+      ],
+      "answer": 3,
+      "explanation": "裸 create 的 subscribe 只有 (state, prevState) 两参回调；要 selector+equality 版必须包 subscribeWithSelector 中间件——lesson 里默认写出来了，属于『用了没意识到』型知识。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "拖拽场景每帧 set 一次坐标，最不应该发生的是？",
+      "options": [
+        "坐标更新走 transient 订阅直接写 DOM，不进渲染流",
+        "给这个 store 的 devtools 面板每帧积一条记录，很快刷爆失焦",
+        "松手时才把最终位置 commit 回主 store",
+        "用 rAF 合帧后再 set 降低频率"
+      ],
+      "answer": 1,
+      "explanation": "B 是事故不是方案：高频 set+全量记录=面板不可用+内存涨。A/C/D 都是 za-core 面试第 7 题的三板斧，『不渲』与『少记』并行；非要保留记录就打标签过滤。"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "title": "sig-internals 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "§一说『全库共有的心脏就两句』，指的是？",
+      "options": [
+        "读的时候建立依赖、写的时候广播",
+        "先 cleanup 后 effect、先 shallow 后 deep",
+        "不可变更新、纯函数 reducer",
+        "Provider 包裹、Context 透传"
+      ],
+      "answer": 0,
+      "explanation": "tc39 的读即订阅、MobX 的追踪窗口、Solid 的 get 陷阱剥到底都是 if (CURRENT) + subs.forEach——范式差异在这两句之外的档位上。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "signal.set 里 Object.is 早退对应本包哪个概念？",
+      "options": [
+        "中间件的洋葱下一层",
+        "值→变化闸门的最简家族成员——equals 配置/distinctUntilChanged 都是它的同族",
+        "批量更新的合流阀",
+        "浅比较订阅面"
+      ],
+      "answer": 1,
+      "explanation": "闸门家族收拢线（sig-vs-streams 埋、本关回收到底层）：没变化的写入不配惊动任何订阅者——一行 if 省掉整条通知链。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "computed 里 try/finally 恢复 CURRENT 被称『命门』，因为忘了会？",
+      "options": [
+        "性能下降 10%",
+        "依赖图变成树",
+        "一次异常之后全世界都在替死者订阅——栈不回滚，后续所有读取都被错误地记到失败的 compute 名下",
+        "computed 不再缓存值"
+      ],
+      "answer": 2,
+      "explanation": "CURRENT 是全局栈顶指针，异常穿透不恢复=指针永久悬空——finally 出栈是追踪机制的异常安全底座，与 React effect cleanup 同族纪律。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "『依赖图不是分析出来的，是跑出来的』指什么机制？",
+      "options": [
+        "每次 set 时遍历全部 signal 找相关者",
+        "静态 AST 扫描源码提取引用关系",
+        "构造函数里的字段声明",
+        "运行时压栈执行 fn，期间实际发生的读操作被 CURRENT 捕获成边——track 机制"
+      ],
+      "answer": 3,
+      "explanation": "所以条件依赖（flag ? store.a : store.b）天然正确——没读的那条边根本不存在；静态分析版（早期 Vue）要为条件依赖做特判，这就是两代方案的分水岭。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "a.set(1); b.set(2) 让依赖两者的 effect 以『a 新 b 旧』的缝合态跑了一遍——这对应验尸单哪一条缺失？",
+      "options": [
+        "批处理",
+        "环检测",
+        "惰性求值",
+        "值比较闸门"
+      ],
+      "answer": 0,
+      "explanation": "工业方案三家都给『先集齐本轮变更再执行』的两阶段/队列机制（MobX 推导状态机、Solid 调度器、Vue nextTick）——手写一次才知 batch 不是锦上添花。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "菱形依赖下 d 先拿『b 新 c 旧』再拿『b 新 c 新』跑两遍，§三给这个病的判词是？",
+      "options": [
+        "内存泄漏前兆",
+        "推送顺序当拓扑顺序用是原罪——glitch-free 要求先集齐变更再按拓扑序跑",
+        "水合时序问题",
+        "双事实源分叉"
+      ],
+      "answer": 1,
+      "explanation": "13 包依赖图语言的压轴概念落地题：本实现的 forEach 直推没有拓扑概念——一致性昂贵在这个菱形上最显形。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "effect 里读又写同一个 signal，本 60 行的症状是？",
+      "options": [
+        "自动合并成一次更新",
+        "只是变慢功能正确",
+        "fn() 套娃递归直到栈溢出，且普通报错看不出是环",
+        "写入被静默丢弃"
+      ],
+      "answer": 2,
+      "explanation": "无环检测=裸路；MobX reactivity-check 报错、signals 库 cycle detection 都是给这条路由警的护栏——报错信息的质量也是实现档位。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "『computed 定义即首跑、没人读也照通知』在验尸单里被判的账是？",
+      "options": [
+        "急切求值税：没人看的派生全表重算——惰性实现用 dirty 标记+读时重算省掉",
+        "内存泄漏税",
+        "序列化税",
+        "双写税"
+      ],
+      "answer": 0,
+      "explanation": "惰性是 §三第 4 条：工业 computed 多数支持『不读不算』（Solid memo、MobX 的 lazy derivation）——本实现的急切版在派生链深时账单指数涨。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "createEffect 返回 dispose 这一行，预告了 L7 哪个坑的胚胎？",
+      "options": [
+        "坑4 的引用分型",
+        "坑1 的比较面永变",
+        "坑3 订阅无主：subs 强引用 effect，销毁不调 dispose 永远存活——N 次挂载=N 份活订阅",
+        "坑2 漏订"
+      ],
+      "answer": 2,
+      "explanation": "退订纪律的出生地就在这 60 行里：Set 的强引用是泄漏的物理成因——『建立订阅那行往上看三行，有配对退订吗』的底层版。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "§四把 interview-sig-debug q15 的三级调试钩子焊上后，得出的世界观是？",
+      "options": [
+        "DevTools 面板无法自制",
+        "面板只是日志的 GUI 在 60 行上得证；会用信号是技能，知道信号廉价、一致性昂贵才是本关直觉",
+        "手写实现优于工业库",
+        "调试钩子应该留在生产代码里"
+      ],
+      "answer": 1,
+      "explanation": "写入栈/通知计数/依赖快照三钩=丑但真的 DevTools 内核；本关收口不在『造轮子值得』，在知道从 60 行到 1500 行之间全是验尸单上的名字。"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "title": "za-patterns 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Zustand 的 slices 模式在技术上到底是什么？",
+      "options": [
+        "官方内建的模块系统，需要特殊 API 注册",
+        "把 actions 和 state 强制分到不同文件的约定",
+        "一种编译期代码生成",
+        "就是『返回对象的函数』：多个 slice 函数展开合并进一个 create，无新框架概念"
+      ],
+      "answer": 3,
+      "explanation": "createCartSlice(set,get) 返回对象、组装点展开拼接——slice 可直接 call 传假 set/get 做单测，这是它比 RootStore 类更轻的地方。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "slice 拆分的推荐维度是？",
+      "options": [
+        "按业务域（购物车的一切），而非按技术角色（所有 actions 一个文件）",
+        "按文件行数每 200 行一切",
+        "按组件名一一对应",
+        "按 state 类型分组：对象一类、数组一类"
+      ],
+      "answer": 0,
+      "explanation": "高内聚判据是『一起变化的一起放』——业务域内 items+addItem 同生同灭；按技术角色切『action 层/reducer 层』是把一个文件的地狱摊到三个文件的地狱（与 mobx-stores 按域组装同一直觉）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "什么时候应该把 slice 升级为独立 store 而不是继续在一个 store 里拆文件？",
+      "options": [
+        "永远不要拆，单 store 是 Zustand 的纪律",
+        "slice 间出现循环依赖，或某块更新频率与整体差一个数量级时",
+        "字段超过 20 个就必须拆",
+        "用了 immer 之后必须拆"
+      ],
+      "answer": 1,
+      "explanation": "同 store 内 slice 经 get() 互通是双向耦合的温床（A slice 调 B、B 又调 A）；频率差异大则快照替换互相惊动。这两个信号出现就切独立 store+单向 import。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "transient 订阅（store.subscribe 直写 DOM）适用的场景是？",
+      "options": [
+        "首屏数据注水",
+        "低频全局态如主题切换",
+        "播放器进度条、拖拽坐标这类高频更新且不需要 React 参与渲染的状态",
+        "所有跨组件共享的状态都应该用"
+      ],
+      "answer": 2,
+      "explanation": "transient 的价值=每次更新零重渲，代价=绕过 React（没有虚拟 DOM 协调、JSX 里不能读它）——只在『更新频率远高于渲染需要』时划算，低频状态老老实实走 hook 订阅。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "selector 版 subscribe（三参形态）能用的前提是？",
+      "options": [
+        "包上 subscribeWithSelector 中间件",
+        "store 必须同时包 persist",
+        "React 18 以上自动获得",
+        "把组件改成 class 组件"
+      ],
+      "answer": 0,
+      "explanation": "裸 store 的 subscribe 只收 (state, prevState) 回调；selector+equality 版是 subscribeWithSelector 中间件的能力（za-middleware q9 的回收）——transient 模式常与它配套出现。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "useStore((s) => s.items.filter((i) => i.done)) 这种 selector 的问题是？",
+      "options": [
+        "性能没问题，只是风格不推荐",
+        "会自动 memo，安全",
+        "报错，selector 不允许调用数组方法",
+        "每次执行产出新数组引用，Object.is 永判『变了』→ 无关更新也重渲甚至死循环；派生应收进 store 或 useMemo"
+      ],
+      "answer": 3,
+      "explanation": "『selector 只做取、派生另安置』是原子化边界的第二刹车——useShallow 救不了它（元素引用也变），必须让派生结果稳定引用：算好存进 store，或组件内 useMemo 包。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "订 s.user.name 比订 s.user 更优的真实原因是？",
+      "options": [
+        "订阅面收窄：只有 name 真变才惊动组件，改头像/地址不再触发重渲",
+        "拿的字段少，内存显著下降",
+        "语法上更短",
+        "Zustand 对单字段订阅有内建缓存"
+      ],
+      "answer": 0,
+      "explanation": "不是省钱是收网——Object.is 比的是 user 对象引用，任何深字段更新（immer 路径复制后）都会换掉 user 引用。『原子=订阅粒度』是 Zustand 性能心智的第一句。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Zustand 与 Redux Toolkit 的功能分界线，本关给的一句话判据是？",
+      "options": [
+        "Zustand 适合小项目、RTK 适合大项目",
+        "异步编排复杂度：简单请求 Zustand 的 action 直接 await；乐观更新+回滚+轮询+失效重取这一串交给 RTK Query/React Query，两家在同一页面是分工不是替代",
+        "RTK 支持 TypeScript，Zustand 不支持",
+        "Zustand 没有 DevTools，RTK 有"
+      ],
+      "answer": 1,
+      "explanation": "『大小项目』是伪判据（Zustand 也撑得起大 SPA）。真实分界在服务端状态管理：rx-inapp 的『编排归流、缓存归 query』在此复读——Zustand 管客户端 UI 态，query 系管服务端缓存。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Zustand 与 Jotai 的哲学镜像关系体现在？",
+      "options": [
+        "自上而下（先画 store 再切 selector）vs 自下而上（先有原子再靠派生组合成图）",
+        "Jotai 只能管服务端数据",
+        "Zustand 必须有 Provider，Jotai 没有",
+        "两家机制完全相同只是包名不同"
+      ],
+      "answer": 0,
+      "explanation": "形状判据回收：状态成块跨页共享→Zustand 一颗树；碎片多派生复杂（表单联动、筛选级联）→Jotai 一张网。两家互杀场景少，团队熟哪个用哪个。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "列表 60 个组件各自 useStore 订一条消息，卡顿时的处理顺序是？",
+      "options": [
+        "先给 store 换 shallow 比较，不行再加中间层聚合 store",
+        "先拆更多字段级 selector，不行重写为 class 组件",
+        "先做虚拟化/分页减少挂载组件数，selector 调优放在有实测卡顿之后",
+        "先把 60 个订阅合并成 1 个组件渲染全部"
+      ],
+      "answer": 2,
+      "explanation": "『别用订阅技巧救架构问题』——挂载量是第一性的，60 个组件的协调成本大于任何比较优化。虚拟化立竿见影后再看订阅粒度；D 是开倒车（合并巨型组件牺牲一切粒度）。"
+    }
+  ]
+}

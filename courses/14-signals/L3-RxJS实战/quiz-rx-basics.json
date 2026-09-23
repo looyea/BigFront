@@ -1,0 +1,136 @@
+{
+  "title": "rx-basics 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Observable 三要素『配方/订阅/退订』对应的工程含义是？",
+      "options": [
+        "类/实例/原型链",
+        "请求/响应/缓存",
+        "Observable 描述随时间产生值、subscribe 才开始生产、unsubscribe 触发 teardown 清理资源",
+        "发布/订阅/广播"
+      ],
+      "answer": 2,
+      "explanation": "Observable 只是『产生值的配方』，subscribe 按下播放键，返回的 Subscription 的 unsubscribe 负责把背后的 timer/事件监听等资源还掉——三件套把异步的记账问题对象化了。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 next/error/complete 三通道，正确的是？",
+      "options": [
+        "error 或 complete 到达后流终结，next 可以有任意多个，两个终局信号至多其一",
+        "next 之后必然紧跟 complete",
+        "error 之后还能继续收 next",
+        "三通道可以同时到达"
+      ],
+      "answer": 0,
+      "explanation": "流的形态=0..n 个 next + 恰好一个终局（error 或 complete 二选一）。终局后 Observable 死亡，想重放只能重新 subscribe——这是与事件监听器『一直挂着』的本质区别。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "interval(1000) 这个流的特点是？",
+      "options": [
+        "1 秒后 complete，之前吐一个值",
+        "同步吐出 0 然后结束",
+        "每秒吐 1，需要手动给它加 complete",
+        "从 0 开始每秒递增吐数，永不自动 complete"
+      ],
+      "answer": 3,
+      "explanation": "interval 产生 0,1,2,... 的无限计数流，永不 complete——所以必须配 take/takeUntil/手动 unsubscribe 收口，是泄漏与『流不结束导致 Promise 不 resolve』类问题的常客。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "要把 fetch 返回的 Promise 接入 RxJS 管道，正确的创建器是？",
+      "options": [
+        "of(fetch(url))",
+        "from(fetch(url))",
+        "fromEvent(fetch, 'response')",
+        "interval().pipe(map(() => fetch(url)))"
+      ],
+      "answer": 1,
+      "explanation": "from 接受 Promise 与可迭代对象，把『单值未来』转成『吐一次然后 complete 的流』，可以继续在管道里 play。of(fetch(url)) 包进去的是 Promise 对象本身而非结果。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "两种最防泄漏的退订姿势是？",
+      "options": [
+        "把 Observable 存进全局变量、页面刷新自然清理",
+        "subscribe 时传第二个参数吞错误、组件卸载就不用管了",
+        "Subscription 容器统一 add 托管、或流内 takeUntil(stop$) 声明式自灭",
+        "每次卸载前 console.log 检查"
+      ],
+      "answer": 2,
+      "explanation": "容器托管（一个父 Subscription 收全部子订阅，销毁时一呼百应）与 takeUntil 流内自灭是两大工程惯例；吞错误与全局缓存都是掩耳盗铃。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "冷流与热流的本质区别是？",
+      "options": [
+        "冷流每个订阅者各自触发一份从头开始的专属生产；热流只有一个生产源，广播给订阅时在听的人",
+        "冷流同步、热流异步",
+        "冷流来自浏览器 API、热流来自网络",
+        "冷流不会 complete、热流会"
+      ],
+      "answer": 0,
+      "explanation": "点歌（冷，人手一份完整音轨）vs 直播（热，晚到没回放）。interval 是典型冷流：两个订阅各自从 0 数。share/shareReplay 把冷转热，startWith 给热补一个像冷的开头。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "两次 subscribe 同一个 WebSocket 封装流，行为不符合预期。用本课知识诊断的第一步是？",
+      "options": [
+        "检查服务器端口",
+        "给每个订阅加 catch",
+        "把 WebSocket 换成 fetch",
+        "判断这条流是冷是热：两次订阅是各建一条连接，还是共享一条在听广播？"
+      ],
+      "answer": 3,
+      "explanation": "『为什么行为不一样』的经典答案就是冷热：冷实现会建两条连接，热实现（share 过）共享一条且错过即失。冷热判断三连：订阅前在生产吗/两订阅序列一致吗/错过还有吗。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "社区里变量写成 clicks$ 的约定含义是？",
+      "options": [
+        "$ 表示这是一个 jQuery 对象",
+        "后缀 $ 标记它是 Observable（流）而非当前值，防止当成普通值使用",
+        "表示该流已经 complete",
+        "私有变量命名法"
+      ],
+      "answer": 1,
+      "explanation": "流不是值：clicks$ 不能 console.log 出『点击』，只能 subscribe。$ 后缀是 RxJS 世界最重要的阅读线索，也是 signal 时代前夜的命名遗产（与 L1 的 stream=磁带模型呼应）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "在 React 函数组件里桥接一条外部流的标准姿势是？",
+      "options": [
+        "模块顶层直接 some$.subscribe(setState)，全局共享",
+        "把流转成 class 组件的 this.state",
+        "useEffect 内 subscribe、cleanup 返回里 unsubscribe，流引用进依赖数组",
+        "用 useMemo 缓存 subscribe 的结果"
+      ],
+      "answer": 2,
+      "explanation": "useEffect(() => { const s = some$.subscribe(setState); return () => s.unsubscribe(); }, [some$]) 是 18 后的标准桥。顶层订阅会在 HMR/多实例下翻车，memo 缓存不了副作用。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "读一篇 RxJS 文章时最先该核对的『版本时钟』是？",
+      "options": [
+        "文章点赞数",
+        "rxjs/add/operator/* 猴子补丁写法属于 RxJS 5 时代，现代统一操作符函数+pipe（v7 后创建器与操作符都从 rxjs / rxjs/operators 具名导入）",
+        "作者是否 Angular 员工",
+        "文章里有没有 TypeScript"
+      ],
+      "answer": 1,
+      "explanation": "RxJS 的 import 形态经历了 5→6 的大破：老教程的增强原型写法今天直接报错。版本错位是学 RxJS 的第一大时间税，先核文章年份再看内容。"
+    }
+  ]
+}

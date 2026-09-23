@@ -1,0 +1,136 @@
+{
+  "title": "mobx-stores 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "MobX 对象图建模与 Redux/Zustand 扁平快照建模，对『实体关系』的处理分别是？",
+      "options": [
+        "对象图：实体直接互引、关系可用 computed 表达；扁平派：id 外键+选择器手工 join",
+        "两者都只能 id 引用",
+        "对象图禁止跨 store 引用",
+        "扁平快照天然支持循环引用"
+      ],
+      "answer": 0,
+      "explanation": "currentUser.posts[0].author === currentUser 在 MobX 是常态；扁平范式化里关系靠 byId Map+selector join——这是两派世界观的第一处分岔（数据库思维 vs 领域对象思维）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "多 store 组织的『RootStore 唯一组装点』纪律，主要防的是？",
+      "options": [
+        "渲染性能下降",
+        "toJS 太慢",
+        "store 间直接 import 单例互引造成的循环依赖与测试无法隔离",
+        "localStorage 配额超限"
+      ],
+      "answer": 2,
+      "explanation": "子 store 经 this.store（root）取兄弟：组装关系集中在 RootStore，测试可注入 mock root。互相 import 单例=循环引用风险+单测永远连带全家，是 MobX 项目腐化的头号路径。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "toJS(observable) 的作用与方向是？",
+      "options": [
+        "把 JSON 注水成 observable 图",
+        "observable 深拷贝为纯 JS 数据（单向断引用），用于落盘/传输/快照",
+        "比较两个 observable 是否结构相同",
+        "把函数转成字符串"
+      ],
+      "answer": 1,
+      "explanation": "toJS 是出境签证：observable 图→纯数据，别把 Proxy 漏到边界外。反方向（JSON→图）没有通用 fromJS 魔法——由你的类构造器接管注水，实体行为得以保留。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "onSnapshot 与 onPatch 的取舍，正确的是？",
+      "options": [
+        "onSnapshot 传字段级 diff 省流量，onPatch 传整图",
+        "二者等价，只是名字不同",
+        "onPatch 监听单个字段的值变化，onSnapshot 监听全部",
+        "onSnapshot 拍整图（简单但大对象贵），onPatch 记字段级流水（传输/审计/撤销友好）"
+      ],
+      "answer": 3,
+      "explanation": "拍照 vs 流水账：落盘配置页用小对象 onSnapshot(+compareStructural) 足够；协作文档/大列表同步要 onPatch 的 JSON Patch 粒度——可变 store 的回放能力全靠这条边界协议补票。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "高频写场景下给 onSnapshot 配 { equals: compareStructural } 的理由是？",
+      "options": [
+        "默认实现只触发一次，加上它才反复触发",
+        "它会暂停写入等落盘完成",
+        "默认按快照引用判『变了』，每拍皆新对象；结构比较让『内容真没变』时免跑落盘回调",
+        "能把快照压缩成 patch"
+      ],
+      "answer": 2,
+      "explanation": "每次 onSnapshot 生成的快照都是新对象，默认浅判等永远通过→回调风暴。compareStructural 做结构比对吸收无变化拍照（与 signal equals/distinctUntilChanged 同族闸门，第三次相遇了）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "store 级 reaction（autorun/onSnapshot 等）的清理，推荐姿势是？",
+      "options": [
+        "全都交给浏览器刷新",
+        "start()/stop() 成对，disposer 收进数组，stop 时遍历调用",
+        "store 对象被 GC 时订阅自动消失",
+        "在 dispose 里再建一个新 reaction 顶替"
+      ],
+      "answer": 1,
+      "explanation": "组件卸载有 React 兜底，store 销毁没人兜——MobX 所有反应都返回 disposer，收纳成数组一键灭灶是中大型项目标配。『GC 自动清』不成立：上游 observable 持有 reaction 引用，泄漏的是整条链。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "什么业务形态最能体现 MobX 对象图建模的回本优势？",
+      "options": [
+        "登录页一个 token",
+        "纯静态官网",
+        "关系密集的协作编辑器/游戏状态/复杂表单（实体互引、就地改、派生多）",
+        "只有一个接口的列表页"
+      ],
+      "answer": 2,
+      "explanation": "对象图红利=实体行为+引用关系+就地更新的顺滑度；关系密度与服务端数据占比成反比——CRUD 大盘用扁平快照+React Query 反而省事（sig-scenarios 决策树素材）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "为什么把 Zustand 塞进类实例做对象图建模不顺手？",
+      "options": [
+        "Zustand 禁止存对象",
+        "类实例没有方法",
+        "Zustand 的 selector 靠引用/浅比较判定变化，就地改不产生新引用——工具链会把你推回『不可变+扁平快照』",
+        "Zustand 不支持多 store"
+      ],
+      "answer": 2,
+      "explanation": "Zustand 当然能存任何东西，但其订阅语义建立在『替换即变化』上；MobX 建立在『字段被读被写』上。store 组织风格与原语的判定机制是配套的——这就是 L6 要正面展开的『可变 vs 不可变』工程后果。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "SSR 下 MobX store 树的正确生命周期是？",
+      "options": [
+        "模块级全局单例，所有请求共用",
+        "每请求新建 store 树、渲染后序列化状态注入 HTML、客户端用同一份注水构造",
+        "只在客户端创建，SSR 输出空壳",
+        "用 localStorage 在服务端传递"
+      ],
+      "answer": 1,
+      "explanation": "全局单例在并发请求间串数据是 SSR 头号事故；标准链路=每请求 new 树→renderToString→toJS 序列化进 window.__INITIAL__→客户端注水构造（hydrate 数据一致，呼应 mobx-react 的 SSR 条目与 L8 sig-server）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "团队需求里出现了『操作可撤销+变更同步给协作端』，在 MobX 路线上的正解是？",
+      "options": [
+        "撤销与同步都做不了，换库",
+        "onPatch 流水发往协作端，本地用 patch 逆操作栈实现撤销（或上 mobx-state-tree 全家桶）",
+        "每个操作都 toJS 全量 diff 两份快照网络传输",
+        "用 localStorage 事件广播实现撤销"
+      ],
+      "answer": 1,
+      "explanation": "patch 流是可变 store 的『事件账』补票：逆 patch（replace→旧值）天然成撤销栈、JSON Patch 天然可传输；规模大了再评估 MST（内置快照/patch 类型系统）——先边界协议后框架化，别一上来全都要。"
+    }
+  ]
+}

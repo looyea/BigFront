@@ -1,0 +1,136 @@
+{
+  "title": "sig-mutability 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "同一次『改 user.address.city』，可变路线与不可变路线的通知方式分别是？",
+      "options": [
+        "两家都是根广播；差别只在复制成本",
+        "可变=complete 通知、不可变=增量通知",
+        "可变=按路径点对点通知（读过 city 的人醒）；不可变=根广播+订阅者跑 selector 自证相关性",
+        "两家都是点对点；不可变靠 memo 减少比较"
+      ],
+      "answer": 2,
+      "explanation": "本关机制回放的骨架题：路径通知 vs 广播+过滤——『粒度天然』与『粒度自选』的一切差异都从这一条推出来。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "万行表格只改一格，两条路线的成本账？",
+      "options": [
+        "可变复制成本 O(1)+通知只达该格；不可变要复制根路径节点+全订阅者跑比较",
+        "不可变更快，因为不用建代理",
+        "两家完全一样，差在语法",
+        "可变要重渲整表，因为对象被弄脏了"
+      ],
+      "answer": 0,
+      "explanation": "大树改一叶是可变路线的招牌胜局（ MobX/solid store 的主场）；不可变这边路径复制+selector 万条比较是固定税——虽然结构共享让复制只到路径深，但通知面仍是全广播。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "『每条哲学各自的功能天花板由旧值还在不在决定』——这句话的含义是？",
+      "options": [
+        "可变对象占内存更少所以更快",
+        "不可变要全深冻结所以更安全",
+        "旧引用会阻塞 GC 所以要定时清理",
+        "撤销/回放/diff/乐观回滚这类『看过去』需求，在不可变路线是引用查表，在可变路线要自建 patch 账本补票"
+      ],
+      "answer": 3,
+      "explanation": "持久化数据结构『每个历史快照都活着』是数学性质；MobX 的 onPatch 逆操作、solid 的 immutable store 都是承认这个天花板后的补票动作（L4 的账在这对平）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "关于 immer 的定位，下列说法正确的是？",
+      "options": [
+        "真可变+读时追踪，与 MobX 同机制",
+        "可变语法+不可变产物+结构共享，两边各让一步的和离",
+        "编译期把对象字面量全部冻结",
+        "深拷贝库，改一次拷全树"
+      ],
+      "answer": 1,
+      "explanation": "za-middleware 拆过机制、本关站队形：承认『想直接改』的心智、保住『旧快照还在』的性质——注意产物深层未改分支仍是旧引用，全深冻结是误会。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "React 历史上选不可变的第一铆钉是？",
+      "options": [
+        "协调判定靠引用/浅比较：就地改会让 React 无从知道『该不该重渲』",
+        "JS 引擎不支持对象代理",
+        "Redux 作者强制要求",
+        "为了兼容 class 组件"
+      ],
+      "answer": 0,
+      "explanation": "memo/deps/shouldComponentUpdate 全是引用比较——『值不可信、引用才可信』是 React 对『怎么知道变了』的回答；Vue 用『渲染函数即订阅者』走了另一条路。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "『可变把成本付在协作纪律，不可变把成本付在语法学习』——下列哪组属于可变阵营的纪律税？",
+      "options": [
+        "必须写 reducer 且 default 分支 return state",
+        "selector 要配 useShallow 防新对象",
+        "enforceActions 严格模式、禁忌清单、devtools 查『谁改的』",
+        "函数式 set 防 stale closure"
+      ],
+      "answer": 2,
+      "explanation": "A/B/D 都是不可变阵营的语法/样板税（Redux/Zustand 家的）；可变上手零成本但『谁都能改』——围栏（严格模式）与审计（谁改的）就是它的税单（mobx-core/mobx-react 的账在这归类）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "solid 的 store 提供 mutable/immutable 双 API，这个标本证明了什么？",
+      "options": [
+        "不可变已死，两家合并了",
+        "细粒度订阅下可变 map 更省（无整树复制），且性能粒度与值纪律可以分开选型——两者不是一对绑定",
+        "同一库必须只用一种 API",
+        "可变与性能无关，纯粹是口味"
+      ],
+      "answer": 1,
+      "explanation": "『不可变=快、可变=脏』的二选一叙事被双 API 拆穿：绑定的从来不是『变不变』与『快不快』，而是『通知粒度』；细粒度到位后，复制税才是不可变的主要成本来源。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "选型三问不含下列哪一项？",
+      "options": [
+        "要不要看过去（撤销/回放/对账）",
+        "更新多密、状态树多大",
+        "库的 GitHub star 数够不够多",
+        "团队付哪种税：协作纪律还是语法学习"
+      ],
+      "answer": 2,
+      "explanation": "三问=功能天花板/性能形状/团队成本，全是内部判据；热度不进口诀——sig-scenarios 的决策树同样以需求形状为根。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "『React 必须不可变是工程选择不是逻辑必然』——当代哪两个证据支撑这句话？",
+      "options": [
+        "Vue3 删了 observable、Angular 弃用了 zone",
+        "MobX 转成了不可变实现、Redux 支持了可变",
+        "Redux 消失了、Zustand 也消失了",
+        "React Compiler 自动 memo 削弱人肉引用纪律、Signals 路线靠依赖图定位更新而非比较引用"
+      ],
+      "answer": 3,
+      "explanation": "两个铆钉的当代松动：编译器接管 memo（不再要求你供新引用）、细粒度订阅（不再需要广播+比较）——选择还在被侵蚀但没翻案，答题要带这句分寸。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "混用两家哲学的推荐姿势是？",
+      "options": [
+        "域内可变建模+全局/出境快照走不可变协议（toJS/getState 作边界），边界协议比站队重要",
+        "绝不允许混用，必须全家统一",
+        "随机：哪个文件先用哪个库",
+        "把 MobX store 直接塞进 Zustand 字段里共享引用"
+      ],
+      "answer": 0,
+      "explanation": "L4『代理不过界』与 13 包混用边界同口径；D 是事故选项——observable 代理进不可变比较世界，引用相等与追踪双双失灵（『结果账 vs 事件账』混记）。"
+    }
+  ]
+}

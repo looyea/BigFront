@@ -116,15 +116,17 @@ const map = load(pkgDir);
 
 if (cmd === 'scan') {
   for (const [id, { stage }] of map) {
-    const qa = JSON.parse(fs.readFileSync(path.join(stage, `quiz-${id}.json`), 'utf8')).questions;
+    const qf = path.join(stage, `quiz-${id}.json`);
+    const ivf = path.join(stage, `interview-${id}.md`);
+    const qa = fs.existsSync(qf) ? JSON.parse(fs.readFileSync(qf, 'utf8')).questions : [];
     const bad = qa.map((x, i) => (!x || typeof x.prompt !== 'string' || !Array.isArray(x.options) || x.options.length !== 4 || !Number.isInteger(x.answer) || x.answer < 0 || x.answer > 3 || typeof x.explanation !== 'string' || !x.explanation ? i : -1)).filter((i) => i >= 0);
     if (bad.length) console.log(`!!QUIZBAD ${id} idx=[${bad.join(',')}] ${JSON.stringify(qa[bad[0]]).slice(0, 120)}`);
     const q = qa;
-    const iv = ivParse(fs.readFileSync(path.join(stage, `interview-${id}.md`), 'utf8'));
+    const ivTxt = fs.existsSync(ivf) ? fs.readFileSync(ivf, 'utf8') : '';
+    const iv = ivParse(ivTxt);
     if (q.length >= 10 && iv.nums.length >= 15) continue;
-    console.log(`\n@@${id} q=${q.length} ans=[${q.map((x) => x.answer)}] iv=${iv.nums.length} fmt=${iv.fmt}`);
+    console.log(`\n@@${id} q=${q.length} ans=[${q.map((x) => x.answer)}] iv=${iv.nums.length} fmt=${ivTxt ? iv.fmt : 'MISSING'}`);
     console.log('  Q: ' + q.map((x, i) => (x && typeof x.prompt === 'string' ? x.prompt.replace(/\s+/g, ' ').slice(0, 30) : `!!BAD#${i}[${JSON.stringify(x).slice(0,40)}]`)).join(' | '));
-    const ivTxt = fs.readFileSync(path.join(stage, `interview-${id}.md`), 'utf8');
     const topics = [...ivTxt.matchAll(/\*\*\d+\uff09(.+?)\*\*|^###\s*\**(\d+)[\uff09.]\s*(.+)/gm)].map((mt) => (mt[1] || mt[3] || '').slice(0, 30));
     console.log('  I: ' + topics.join(' | '));
   }

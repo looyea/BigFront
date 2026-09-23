@@ -1,0 +1,136 @@
+{
+  "title": "sig-size 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "四强 gzip 体积的量级排序（核心用法口径），正确的是？",
+      "options": [
+        "MobX < Zustand < RxJS < 框架内置信号",
+        "四家都在 10-20KB，差别不大",
+        "Zustand(~1KB) < Signals 原语(~2-4KB) < RxJS(用量决定,~10-15KB) < MobX(~17KB 硬账)",
+        "RxJS < Zustand < MobX < Signals 原语"
+      ],
+      "answer": 2,
+      "explanation": "记住量级与两家『浮动方式』：Zustand/MobX 是入场价（一个近零一个硬账），RxJS 是用法价（摇树决定）——本关的骨架题。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "RxJS 项目里体积异常膨胀（全量操作符进包），最可能混进的写法是？",
+      "options": [
+        "import { map } from 'rxjs/operators'",
+        "pipe 链超过 10 个操作符",
+        "没 treeshake 的 webpack 4",
+        "某个老文件里 import { Observable } from 'rxjs/Rx' 式 barrel 导入"
+      ],
+      "answer": 3,
+      "explanation": "老 barrels（rxjs/Rx）把全家桶焊死进依赖图，named-export 摇树直接失效——13 包 barrel 反模式的 RxJS 分册，构建 treemap 一眼定位。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "为什么说『MobX 17KB 入场即全家桶』不算指控？",
+      "options": [
+        "因为 gzip 后其实不到 1KB",
+        "因为浏览器会缓存所以体积无关",
+        "因为内部反应内核耦合、摇树收益有限是事实，但账要换算功能：字段追踪+computed 图+patch 协议+生命周期都在这 17KB 里",
+        "因为可以按需 import 拆开"
+      ],
+      "answer": 2,
+      "explanation": "§四口径：体积不换算功能就是耍流氓——正确姿势是列功能清单比『凑齐这套的打包总价』，而不是单挑一个库的字节骂。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Zustand『1.1KB』的宣传价要打折的场景是？",
+      "options": [
+        "用它做 SSR 时",
+        "全开三件套时——immer 中间件会把 immer 本尊（~5-6KB）带进包，真实价约 8-10KB",
+        "组件超过 100 个时",
+        "用 selector 订阅时"
+      ],
+      "answer": 1,
+      "explanation": "中间件按支计价是 Zustand 摇树的另一面：persist/devtools 各一点，immer 这支带大件——选型报告要写『含哪些中间件』的价，不是核心价。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "用了框架内置信号（Solid/Angular/Svelte runes）时，状态层的体积账怎么算？",
+      "options": [
+        "并入框架已有体积，边际成本近零——再引第三方状态库才是净增量",
+        "内置信号每页都要额外付费",
+        "跟 Zustand 一样另算 1KB",
+        "内置的不算数，必须再买一个库"
+      ],
+      "answer": 0,
+      "explanation": "§二末条：框架自带时这笔账已并入框架——『保留地』选型（sig-scenarios q9）之外，体积维度同样先问框架。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "『bundlephobia 不能替你回答卡不卡』指的是哪笔账？",
+      "options": [
+        "下载时间与 CDN 账",
+        "tree-shaking 标注的准确性账",
+        "运行时账：Proxy 追踪层、immer copy-on-write 在内存与 CPU 里另开成本，不在字节里",
+        "gzip 压缩率账"
+      ],
+      "answer": 2,
+      "explanation": "体积=下载账，性能=运行账，两本别混——sig-perf 专收运行时账；面试里把两本混成一本是常见翻车点。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "比单库 bundlephobia 数字更诚实的体积侦察手段是？",
+      "options": [
+        "README 的体积徽章",
+        "npm ls 看依赖树深度+构建后 visualizer 看真实进包字节",
+        "GitHub star 数",
+        "问同事感觉大不大"
+      ],
+      "answer": 1,
+      "explanation": "§三第 1 条+§五流程：依赖传递与意外进包（老 barrel、被连带的 immer）只有真实构建图会说实话——先测量再吵架。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "CI 里把体积从玄学争论变成 PR 数字的标准工具组合是？",
+      "options": [
+        "eslint + prettier",
+        "lighthouse CI 单指标",
+        "source-map-explorer 手动跑",
+        "size-limit / bundlemon 设阈值报警（如 state 层 +3KB 即红）"
+      ],
+      "answer": 3,
+      "explanation": "§五第 3 步：预算制——对特定入口设字节阈值，超标 PR 自动见红；手动跑一次的工具（SE/visualizer）负责定位，预算工具负责看守。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "两家方案总价接近（zustand+immer+自研撤销 vs mobx 一站式）时，体积在决策里应扮演？",
+      "options": [
+        "唯一决定项，KB 必争",
+        "否决项降级为参考——功能/团队/场景维度升主，体积只在内存紧张的内嵌设备场景升决定项",
+        "完全忽略，没人看",
+        "换第三家，全部推翻"
+      ],
+      "answer": 1,
+      "explanation": "§四结论句：总价接近时体积从决定项降为否决项/参考项——『每 KB 买到什么』的换算做完，才轮到口味与团队说话。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "选型报告里体积栏的合格写法是？",
+      "options": [
+        "抄某博客的『Zustand 最小』四个字",
+        "只写 minify 前体积",
+        "『方案 A 进包 X KB（含功能 Y）；B 进包 Z KB 缺 W，补 W 需 +N KB——差额换 W 值不值』的句式",
+        "不写，反正用户看不出"
+      ],
+      "answer": 2,
+      "explanation": "§五第 4 步模板：体积栏要写成交换句（字节↔功能↔方案），带真实构建数字——单字『小』不构成论据。"
+    }
+  ]
+}

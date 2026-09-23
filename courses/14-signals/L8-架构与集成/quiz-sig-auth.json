@@ -1,0 +1,136 @@
+{
+  "title": "sig-auth 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "登录态需求拆成的三件事对各对应一条状态要求，正确的是？",
+      "options": [
+        "跨页共享=要求状态可订阅变化",
+        "三件事都只要求状态能持久化",
+        "路由守卫=要求状态出树可达且可同步读取（守卫函数等不了 hook）",
+        "登出清理=只要求能 set(null)"
+      ],
+      "answer": 2,
+      "explanation": "守卫/拦截器不在 React 树里且必须同步拿值——『写得动、读得快（同步）、变得可监听』三条浓缩要求里这条最筛库（Context 直接出局一半）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Zustand 版被称『教科书级贴合』的关键是？",
+      "options": [
+        "它的打包体积最小",
+        "一个对象三种用法：组件 hook 订阅、树外 getState().token 同步旁路、action 里 set——三条要求各有原生出口",
+        "它自带登出清场协议",
+        "它不需要写 action"
+      ],
+      "answer": 1,
+      "explanation": "za-core 的 getState 旁路设计在登录态需求上的兑现；清场协议是自己在 logout action 里写的（queryClient.clear+reset 成对），不是库白送——q 项混淆库能力与架构纪律。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "同一个 signals 登录态，Solid 约 12 行、React 复刻约 25 行，差价花在哪儿？",
+      "options": [
+        "React 的 setState 更慢所以要写优化代码",
+        "Solid 框架原生内置信号：模块级导出+user() 同步读+createEffect 联动；React 无原生 signal 需引库+Context/胶水",
+        "Solid 的 signal 出树不可达所以要写胶水",
+        "React 的 signal 库不稳定所以重写多遍"
+      ],
+      "answer": 1,
+      "explanation": "『框架有没有内置响应式』的差价演示——za-core 框架内置 vs 第三方库论辩在一张小考卷上的实测；C 项把出树可达性说反了。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "RxJS 版在四份答卷里的长板是？",
+      "options": [
+        "跨页共享最简单",
+        "代码量最少",
+        "守卫里同步读取最方便",
+        "登出清理可用 logout$.pipe(switchMap(clearAll)) 把多步清场编排当一等公民表达"
+      ],
+      "answer": 3,
+      "explanation": "事件流编排是 RxJS 的主场；另两项恰恰是它的短板的领域：共享要 useObservable 胶水、守卫同步读要手写 getValue() 旁路——『拧水龙头当水泵』的另一半。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "『代码量骗人』（§三）举的 RxJS 隐形首付不包括下列哪项？",
+      "options": [
+        "getValue() 同步旁路要手写",
+        "组件订阅要 useObservable 类胶水",
+        "退订纪律",
+        "RootStore 组装仪式"
+      ],
+      "answer": 3,
+      "explanation": "RootStore 组装是 MobX 的账；RxJS 三笔隐形首付=旁路+胶水+退订——行数统计只看核心声明，纪律与胶水不进表。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "锁定度维度上 MobX/Zustand 与 Solid signal 的方向差是？",
+      "options": [
+        "前者锁库（换框架大概率带得走），后者反向锁框架（换框架全部重写）",
+        "四者锁定度完全相同",
+        "都不锁定，随时可换",
+        "都锁死框架，谁也别想跑"
+      ],
+      "answer": 0,
+      "explanation": "za-core『依赖形状』论辩的重演：锁库=迁移成本在适配层，锁框架=迁移成本在全部业务代码——同一维度两个方向，评分表里唯一标了『反向』的格。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "MobX 版在这道小题里被判『杀鸡用牛刀』的原因是？",
+      "options": [
+        "MobX 不支持登出清理",
+        "MobX 的 token 读取是异步的",
+        "登录态=低频变更+纯值快照，用不上懒派生/对象网，却要付 observer 纪律+RootStore+反应式渗透写法的账",
+        "MobX 包体积太大"
+      ],
+      "answer": 2,
+      "explanation": "域模型大户顺路带没问题，单独为登录态引 MobX=为一道三行题买一整套范式；A/B 均为事实错误（observable 读本来同步）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "§四说的『真正的考纲』指的是？",
+      "options": [
+        "把四份答卷代码背下来",
+        "记住 Zustand 第一的排名",
+        "给需求文档圈出『需要 getValue 的时刻』与『需要 subscribe 的时刻』各占几处——需求形状识别，哪个多哪个库主场",
+        "比较四家库的 GitHub star"
+      ],
+      "answer": 2,
+      "explanation": "排名是 React 生态语境下的背答案；形状会移动：登录态若驱动 20 个联动副作用，形状滑向事件流，RxJS 反超——这套读法可平移到任何状态需求。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "部署预告实验『故意删掉登出清理的一半』预期结果是？",
+      "options": [
+        "Zustand 版会报错提示你",
+        "只有 RxJS 版有保护机制",
+        "四库版症状一模一样——架构协议的地位与库选型无关",
+        "MobX 版天然免疫"
+      ],
+      "answer": 2,
+      "explanation": "清场协议是应用层纪律（sig-server q6），没有哪个库能替你『成对清』；这题把 L8 前两关合上锁：库给的是能力，协议给的才是安全。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "四份答卷对『路由守卫』需求的处理方式，对应正确的是？",
+      "options": [
+        "四库守卫里都等不了 hook，各自出口不同：Zustand getState().token / MobX root.auth.token 直读 / Solid user() 调用读 / RxJS 要 getValue() 手写旁路——前三家原生同步，RxJS 多一笔手工税",
+        "都得用 await 异步等 hook",
+        "只有 Zustand 能做守卫",
+        "RxJS 的 BehaviorSubject 天然同步所以零成本"
+      ],
+      "answer": 0,
+      "explanation": "BehaviorSubject 确实有同步 getValue，但它是『流对象的旁路方法』不是流的声明式表达——守卫处用流范式反而绕，所以课里记作手工税；其余三家的读取姿势本来就是函数/属性直读。"
+    }
+  ]
+}

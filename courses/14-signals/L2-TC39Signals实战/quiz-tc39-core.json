@@ -1,0 +1,136 @@
+{
+  "title": "tc39-core 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "TC39 Signals 提案（proposal-signals）当前的真实定位是什么？",
+      "options": [
+        "浏览器已内置全局 signal() 函数，可直接使用",
+        "Stage 1 阶段，标准化的是 API 形态与响应语义，语言内置无时间表",
+        "已 Stage 4，只等传统浏览器升级",
+        "仅是提案文档，连参照实现都没有"
+      ],
+      "answer": 1,
+      "explanation": "提案处于 Stage 1，统一的是 signal/computed/effect 的形态与语义以及互操作契约；今天可用 signal-polyfill 这个 npm 参照实现，但浏览器原生内置没有时间表。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "signal-polyfill 中：a=signal(1)、b=signal(2)、sum=computed(()=>a.get+b.get)，先读一次 sum.get，然后 a.set=10、a.set=11，此后再不读 sum。computed 函数总共执行了几次？",
+      "options": [
+        "3 次：每次 set 都立刻重算",
+        "2 次：两次 set 各延迟触发一次",
+        "1 次：只有第一次 sum.get 执行，后面写入只标脏且无人再读",
+        "0 次：computed 只在 effect 里才会执行"
+      ],
+      "answer": 2,
+      "explanation": "推标记+拉计算模型：写操作只把下游标脏，重算发生在下一次读。没人再读 sum，所以函数体停留在首次读的 1 次。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "『即时一致（glitch-free）』保证的是什么？",
+      "options": [
+        "同一批写入的任何中间时刻，读派生值绝不会看到半更新状态",
+        "页面渲染永远不掉帧",
+        "computed 永远不抛异常",
+        "effect 执行是同步且不可取消的"
+      ],
+      "answer": 0,
+      "explanation": "glitch-free 指依赖图在多信号连续更新中不会暴露『a 新 b 旧』的瞬间，读者要么看到旧一致态要么看到新一致态，与渲染帧率无关。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "computed 的依赖是怎么建立的？",
+      "options": [
+        "手写依赖数组，像 useMemo 的 deps",
+        "函数体执行时『读到了谁』就自动依赖谁",
+        "必须在第三个参数里声明 signals 列表",
+        "编译期扫描全部 signal 常量"
+      ],
+      "answer": 1,
+      "explanation": "自动依赖追踪是 signal 系的核心卖点：运行期记录读取过的 signal/computed，漏写 deps 这类经典事故从机制上消失（对比 React useMemo 手动数组）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "effect() 的返回值是什么？",
+      "options": [
+        "undefined",
+        "一个布尔值表示是否已执行",
+        "一个只读的 signal",
+        "一个停止函数，调用后取消订阅"
+      ],
+      "answer": 3,
+      "explanation": "effect 返回 dispose/stop 函数，调用它即退订。组件环境里框架会自动接管这件事，裸用提案 API 时必须自己保存并清理——这是内存泄漏第一课。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下哪组对应关系是正确的？",
+      "options": [
+        "Svelte 5：createSignal / createMemo / createEffect",
+        "Vue 3：atom / selector / subscribe",
+        "Preact @preact/signals：signal().value / computed / effect",
+        "signal-polyfill：useSignal / useMemo / useEffect"
+      ],
+      "answer": 2,
+      "explanation": "@preact/signals 用 .value 读写、computed/effect 同形，最贴近提案；createSignal 系是 Solid 的 API，ref/computed/watchEffect 是 Vue 的，$state/$derived/$effect 是 Svelte 5 runes。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "signal 与 `let x = 0` 的本质差别是什么？",
+      "options": [
+        "signal 是响应式的：读取可被追踪、写入可通知他人",
+        "signal 存储性能更高",
+        "signal 是线程安全的",
+        "没有本质差别，只是命名规范"
+      ],
+      "answer": 0,
+      "explanation": "容器语义完全相同，唯一增能是『别人能知道它变了』——读登记订阅、写广播变化，这是整个 signal 体系相对普通变量的第一性差别。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "关于提案『标准化了什么、没标准化什么』，下列说法正确的是？",
+      "options": [
+        "标准化了浏览器引擎级调度器的具体实现算法",
+        "提案要求所有框架必须改用同一份 JS 源码",
+        "只标准化了 signal() 一个函数，computed 与 effect 不在范围内",
+        "标准化了 API 形态、响应语义与跨实现互操作，不规定内部调度实现"
+      ],
+      "answer": 3,
+      "explanation": "提案是『语义宪法』：形态（三件套调用形状）、语义（惰性、glitch-free）、互操作（Signal 统一接口）；各实现的批处理与调度细节保留自由。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "在 effect 回调里无条件对同一个 signal 执行 write（set 为自己），会发生什么？",
+      "options": [
+        "框架自动去重，一切正常",
+        "写入被忽略，effect 只跑一次",
+        "读取即订阅、写又触发读，形成循环更新的自伤（cyclic）错误",
+        "computed 缓存被永久污染"
+      ],
+      "answer": 2,
+      "explanation": "effect 里读谁就订阅谁，写回同一个 signal 再次触发自己——这是所有 signal 实现共同禁止或报警的循环副作用姿势，治理手段见 tc39-control。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "今天想在生产项目里体验『提案形状的代码』，最现实的路径是？",
+      "options": [
+        "等 Chrome 内置后使用",
+        "用 Babel 插件把 JSX 编译成 signal",
+        "把所有状态写进 Web Worker",
+        "npm 安装零依赖的 signal-polyfill 参照实现直接使用"
+      ],
+      "answer": 3,
+      "explanation": "signal-polyfill 是提案冠军们维护的参照实现，约 8KB、无依赖、任何构建链可用（配合 Vite 沙盒零成本实验）；其余选项均非现实路径。"
+    }
+  ]
+}

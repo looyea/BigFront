@@ -1,0 +1,136 @@
+{
+  "title": "rx-inapp 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "useObservable 桥里，组件每次重渲都重新订阅、状态被重置的经典事故，根因通常是？",
+      "options": [
+        "setState 用了函数式更新",
+        "React 的 useEffect 有 bug",
+        "subscribe 没有返回值",
+        "Observable 在组件体内现造，每次渲染都是新引用，useEffect 依赖 [obs$] 必然变化"
+      ],
+      "answer": 3,
+      "explanation": "组件体内 const v$ = interval(1000) 每次渲染重建流对象→effect 重跑→重订阅→累计清零。修法：流提到模块顶层，或 useMemo 稳定引用（deps 配平）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "同一个『from(fetch) 冷流』被两个组件各用 useObservable 订阅一次，网络层会发生什么？",
+      "options": [
+        "共享一条请求，各拿一份结果",
+        "发出两次 fetch——冷流每个订阅各自触发一份生产",
+        "第二次订阅直接报错",
+        "RxJS 自动合并成一次"
+      ],
+      "answer": 1,
+      "explanation": "冷流=点歌模型，两次订阅=两份生产。要共享必须 shareReplay({bufferSize:1, refCount:true}) 转热，或提升到单一订阅点转成状态广播（呼应 rx-basics 冷热）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "一次性数据加载（发请求→渲染→结束），本课的裁决是？",
+      "options": [
+        "async/await 或 React Query 即可——单值异步是 Promise 的正确领地，包流是抽象税",
+        "必须用 from(fetch).subscribe，这才正统",
+        "用 interval 轮询直到 complete",
+        "用 combineLatest 包一层更安全"
+      ],
+      "answer": 0,
+      "explanation": "from(fetch).subscribe(...) 本质是带 import 的 await——没有事件间关系就没有 RxJS 的用武之地。负面清单第一条：单值异步别上流。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "要把 AsyncGenerator（for-await 世界）接进 RxJS 管道，正确姿势是？",
+      "options": [
+        "firstValueFrom(gen)",
+        "fromEvent(gen, 'yield')",
+        "from(asyncGenerator())——from 直接吃异步可迭代对象，拉转推",
+        "只能手写 emitter 桥接"
+      ],
+      "answer": 2,
+      "explanation": "from 通吃 Promise、同步/异步可迭代对象；反向桥是 firstValueFrom/lastValueFrom（推转拉/取单值）。双向官方桥=『单值与顺序归 Promise/迭代器，多值与关系归流』共识的落地。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Angular 生态里 RxJS 与 Signals 的当前官方叙事是？",
+      "options": [
+        "Signals 已删除，只剩 RxJS",
+        "二者互斥，选一个",
+        "RxJS 全面废弃，迁移到 signals 是硬性要求",
+        "双轨并行：RxJS 管异步数据流编排，signal 管状态与变更检测（zoneless 方向）"
+      ],
+      "answer": 3,
+      "explanation": "连 RxJS 最大的庄家都在把它挪回『编排层』而非『全局状态层』——流的归流、状态的归状态，这是整个行业 2024 后的共同收敛姿势（呼应 tc39-frameworks）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "内存泄漏治理清单里『最隐蔽』的一类是？",
+      "options": [
+        "未处理的 error 让流无声猝死——没有内存增长可观测，UI 却永远停在旧状态",
+        "忘 unsubscribe 导致内存上涨",
+        "重复 addEventListener",
+        "console.log 太多"
+      ],
+      "answer": 0,
+      "explanation": "泄漏好歹能在 Memory 面板看到增长；error 通道没接导致流死亡是『静默瘫痪』——界面不更新、无报错、内存正常。所以清单要求 error 覆盖率 100%（subscribe 必传 error 或管道内 catchError 到位）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "『用 AbortController 还是 switchMap 处理搜索竞态』的合理结论是？",
+      "options": [
+        "二选一，switchMap 淘汰了 AbortController",
+        "各管一层：switchMap 提供『只留最新』的声明式语义，内层 fetch 仍应接 AbortController 才真正省带宽",
+        "AbortController 只管 UI 不管网络",
+        "两者都不能取消请求"
+      ],
+      "answer": 1,
+      "explanation": "switchMap unsubscribe 的是订阅；fetch 不因退订而自动 abort——语义层（谁作废）与执行层（连接真断）分家又协作，这题是管道与浏览器 API 关系的照妖镜。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "团队只有你一人会 RxJS，评审时反对引入的最强论点是？",
+      "options": [
+        "RxJS 性能差",
+        "RxJS 已停止维护",
+        "维护者认知门槛：没有第二人能 review 的管道=技术债发生器，划边界（只在数据编排层）或先培训再引入",
+        "RxJS 不支持 TypeScript"
+      ],
+      "answer": 2,
+      "explanation": "性能、维护、TS 支持都不成立（RxJS 活跃、类型一流）。真实的工程成本是团队心智——技术选型第一问永远是『我们团队明年还看得懂吗』。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "服务端数据缓存（列表+详情+失效重取）需求，本课建议？",
+      "options": [
+        "手写 Redux thunk + 三个 loading 标志",
+        "interval 轮询保新鲜",
+        "全局一个 BehaviorSubject 存所有接口结果",
+        "用 React Query/SWR 这类专用层——缓存/重试/失效已设计好，自撸 RxJS 管道是用爱发电"
+      ],
+      "answer": 3,
+      "explanation": "服务端状态是独立一层（L1 状态分层的落地，呼应 sig-server）：专用库把竞态、缓存、失效、重试全打包；RxJS 可以当它内部的编排零件，但不该由你从零攒这套语义。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "code review 口诀『见 subscribe，先问谁退订；见 pipe，先问错误归谁』针对的本质问题是？",
+      "options": [
+        "RxJS 的两类静默故障：资源泄漏与流猝死，都必须显式声明归属",
+        "代码格式规范",
+        "性能优化清单",
+        "命名风格统一"
+      ],
+      "answer": 0,
+      "explanation": "Observable 的契约里没有『自动清理』和『自动容错』——这两件事永远归使用方，不主动设计就静默出事。口诀把两大故障类变成两秒的 review 动作。"
+    }
+  ]
+}

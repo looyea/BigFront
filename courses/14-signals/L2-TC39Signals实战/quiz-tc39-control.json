@@ -1,0 +1,136 @@
+{
+  "title": "tc39-control 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "『读即订阅』机制带来的典型副作用是什么？",
+      "options": [
+        "变量提升失效",
+        "垃圾回收无法工作",
+        "过度订阅：顺手的读取会建立永久订阅，signal 每次变化本回调都重跑",
+        "signal 变成异步更新"
+      ],
+      "answer": 2,
+      "explanation": "在追踪作用域里读到谁就依赖谁，『顺便瞄一眼』也会建订阅。治理三阀：watch 浅观察、untrack 免记账、equality 管住误触发。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "untrack(fn) 的作用是什么？",
+      "options": [
+        "执行 fn，但期间对 signal 的读取不登记为依赖",
+        "暂停所有 effect 的执行",
+        "删除一个 signal",
+        "把 computed 变成 eager"
+      ],
+      "answer": 0,
+      "explanation": "untrack 是读取的『免记账通道』：值照拿，依赖不建。常用于埋点、防循环、只订阅变化事件不订阅值这三类场景。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "signal 默认用什么判定『值变了』？",
+      "options": [
+        "JSON 序列化字符串比较",
+        "Object.is（NaN 等于 NaN，对象比引用）",
+        "深度逐字段比较",
+        "只在 set 被显式调用时才认为变了"
+      ],
+      "answer": 1,
+      "explanation": "默认 Object.is：写入内容相同但引用不同的新对象会被判为『变了』，下游全部重跑——这就是需要自定义 equality 的动机。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "pos=signal({x:0,y:0}) 后执行 pos.set={...pos.get}（内容未变），在默认配置下会发生什么？",
+      "options": [
+        "什么都不会发生，判等吸收了",
+        "抛错：禁止写入同值",
+        "computed 缓存被清空但 effect 不重跑",
+        "新对象引用不同，被判为变化，所有下游依赖重跑"
+      ],
+      "answer": 3,
+      "explanation": "展开运算符产出新引用，Object.is 判不相等，整条依赖链白重算一遍。修法：自定义 equals 逐字段判等，或用结构性共享让未变字段保持旧引用。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "关于自定义 equality 函数的成本，正确的说法是？",
+      "options": [
+        "判等函数每次写入都执行，深比较可能比直接重算还贵，大对象慎用",
+        "判等只在初始化时执行一次",
+        "深比较永远比浅比较快",
+        "equality 不影响性能，只影响正确性"
+      ],
+      "answer": 0,
+      "explanation": "equals 在每次 set 的热径路上跑。浅比较近似免费；对大结构做深比较是『为了省一次重算而先付一次全树遍历』，MobX/React 社区都有血泪账，折中是结构性共享。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "团队里 untrack 被大量使用，code review 最该警惕什么？",
+      "options": [
+        "untrack 会导致内存泄漏",
+        "untrack 是语法糖无实际影响",
+        "每条 untrack 都是一个手动负责的隐式依赖，滥用等于把自动追踪的红利用手写 deps 的方式还回去",
+        "untrack 只能用在 computed 里"
+      ],
+      "answer": 2,
+      "explanation": "untrack 制造『读了但没订阅』的隐式脱钩：值不再联动时 bug 极难定位。规范：每处 untrack 必须注释理由；它是逃生舱不是常规武器。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "『浅观察』姿态（watch 语义）适合哪种需求？",
+      "options": [
+        "关心容器被整体替换这个事件，不关心内部每个字段的变化",
+        "对数组每个元素建立独立订阅",
+        "禁止一切副作用",
+        "让 computed 立即执行"
+      ],
+      "answer": 0,
+      "explanation": "watch 类语义=只订阅『换没换』这一层：容器被 set 替换才响应，深入字段不再建细粒度依赖。三种姿态对照：深度追踪/浅观察/不订阅。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "effect 里『读 count 又写 count』的死循环，用本课哪个工具可以直接掐断订阅来源？",
+      "options": [
+        "把 effect 改成 for 循环",
+        "对 count 的旁路读取包进 untrack（或把写入挪去事件回调），切断『读即订阅』的回环",
+        "调高 equality 的阈值",
+        "watch 一下就好了"
+      ],
+      "answer": 1,
+      "explanation": "循环的根在『读建立了订阅、写又触发订阅』。读取 untrack 化只掐订阅关系；更根本的是职责归位——自增属于『事』，应在命令式事件里做，不该在 effect 里。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "结构性共享（structural sharing）与 equality 的关系是什么？",
+      "options": [
+        "二者互斥，只能选一个",
+        "结构性共享是 GC 算法，与响应式无关",
+        "结构性共享保证未修改部分引用不变，让 Object.is 浅判等就能命中『没变』，从源头减少误触发",
+        "结构性共享是深比较的别名"
+      ],
+      "answer": 2,
+      "explanation": "不可变+共享结构更新时，没动到的子树还是原引用，默认浅判等直接吸收整棵子树的更新风暴——这就是 Immer/Redux 路线与 signal 判等的合流点（呼应 za-middleware）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "为什么说 watch/untrack 系的语义在提案里仍在讨论？",
+      "options": [
+        "因为浏览器厂商集体反对响应式",
+        "因为提案只关心 CSS 层",
+        "因为这三个 API 性能太差已被否决",
+        "因为提案先统一核心三件套的语义宪法，订阅控制的取舍涉及各家调度器差异，需要渐进拉锯"
+      ],
+      "answer": 3,
+      "explanation": "Stage 1 提案的当务之急是 signal/computed/effect 的形态与互操作契约；watch 等控制语义与各家调度实现纠缠更深，演进中反复调整是常态——读 API 文档时注意版本口径。"
+    }
+  ]
+}

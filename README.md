@@ -105,7 +105,7 @@ npm.cmd start
 ```bash
 git init                 # 若尚未初始化
 git add -A
-git commit -m "feat: 大前端学院学习平台（框架 + 13 个满配课程包）"
+git commit -m "feat: 大前端学院学习平台（框架 + 14 个满配课程包）"
 git branch -M main
 git remote add origin https://github.com/<你的用户名>/<仓库名>.git
 git push -u origin main
@@ -137,7 +137,7 @@ BigFront/
 │     ├─ router.js           # /p/:pkg、/l/:pkg/:lessonId（+/quiz、/interview）
 │     ├─ api.js              # 接口封装 + 进度 + 时长打点
 │     └─ styles/theme.css    # 暗色主题
-├─ courses/                  # 13 个课程包（内容层），全部已统一为扁平布局：
+├─ courses/                  # 14 个课程包（内容层），全部已统一为扁平布局：
 │  └─ <包>/                  #   包根 = course.json + 每个阶段一个文件夹（如 L1-变量与作用域）
 │     ├─ lesson-<id>.md          # 课文正文
 │     ├─ quiz-<id>.json          # 小测（≥6成及格即自动通关）
@@ -154,7 +154,7 @@ BigFront/
 
 ## 九、内容完成度说明
 
-> 截至本次更新：平台已扫描到 **13 个课程包**，且 **13 个已全部满配**；累计已产出 **331 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。既有 10 个满配包已完成一轮**内容缺口审计**：探针逐包扫描关键词覆盖，真空知识点酌情补建 **10 个新关**（三件套 + 所属阶段作业齐备），已足量内容一律不重复制品。`11-svelte`（Svelte 5）从 L8 起补齐收官三阶段、30 关满配；`12-sveltekit`（SvelteKit）9 阶段 27 关、`13-solid`（SolidJS，含 SolidStart）9 阶段 27 关均已交付；后端完整性自检 **13 包全零告警**。
+> 截至本次更新：平台已扫描到 **14 个课程包**，且 **14 个已全部满配**；累计已产出 **358 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。既有 10 个满配包已完成一轮**内容缺口审计**：探针逐包扫描关键词覆盖，真空知识点酌情补建 **10 个新关**（三件套 + 所属阶段作业齐备），已足量内容一律不重复制品。`12-sveltekit`（SvelteKit）9 阶段 27 关、`13-solid`（SolidJS，含 SolidStart）9 阶段 27 关、`14-signals`（响应式状态管理实战：TC39 Signals / RxJS / MobX / Zustand）9 阶段 27 关均已交付；后端完整性自检 **14 包全零告警**。
 
 - ✅ **已满配**（课文 + 小测 + 作业 + 面试题；可运行示例 `examples/` 为首批两包附带）：
 
@@ -166,7 +166,7 @@ BigFront/
 | `04-vue` | 8 | 27 |   | `10-vite` | 6 | 17 |
 | `05-react` | 8 | 24 |   | `06-miniprogram` | 8 | 24 |
 | `11-svelte`（Svelte 5） | 10 | 30 |   | `12-sveltekit` | 9 | 27 |
-| `13-solid`（SolidJS） | 9 | 27 |   |  |  |  |
+| `13-solid`（SolidJS） | 9 | 27 |   | `14-signals`（状态管理四强） | 9 | 27 |
 
 <details>
 <summary>缺口审计本轮补建的 10 关（点开展开）</summary>
@@ -188,8 +188,8 @@ BigFront/
 
 </details>
 
-- ✅ **新增收官**：`12-sveltekit`（SvelteKit，9 阶段 27 关）与 `13-solid`（SolidJS，9 阶段 27 关：L1–L6 响应式内核与组件/事件/异步/性能，L7–L8 SolidStart 文件路由、query+createAsync、服务端函数与部署测试，L9 内核收官 + React 迁移方法论 + 毕业项目）**已全部交付**，两包内容均基于官方文档全文精读做事实底（SolidStart 以 v2 文档为轴）。`11-svelte` 十阶段 30 关**已全部交付**（L8 编译架构/SvelteKit 引桥/部署 + L9 特殊元素/错误边界/Effect 深水区 + L10 Web Components/纯 Svelte SSR/4→5 迁移），对既有 10 个满配包的内容缺口审计**已完成**（见上方表格与明细，+10 关）。
-- 🎓 **面试题**：上述 **331 关**均一一配有 `interviews/<lessonId>.md`（每关 12 题、面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前十三包**零告警**）。
+- ✅ **新增收官**：`14-signals`（响应式状态管理实战，9 阶段 27 关：L1 导论全景 + L2-L5 TC39 Signals/RxJS/MobX/Zustand 四强各自实战 + L6 横向对比 + L7 体积/调试/性能工程实践 + L8 服务端状态/迁移共存/登录态四实现 + L9 手写 mini-signal 内核·四实现对照终战选型·进阶路线）**已全部交付**，主流应用定位为尺、不深挖源码，口诀链（海关/两税/五碗）贯穿。`12-sveltekit`（SvelteKit，9 阶段 27 关）与 `13-solid`（SolidJS，9 阶段 27 关：L1–L6 响应式内核与组件/事件/异步/性能，L7–L8 SolidStart 文件路由、query+createAsync、服务端函数与部署测试，L9 内核收官 + React 迁移方法论 + 毕业项目）**已全部交付**，两包内容均基于官方文档全文精读做事实底（SolidStart 以 v2 文档为轴）。`11-svelte` 十阶段 30 关**已全部交付**（L8 编译架构/SvelteKit 引桥/部署 + L9 特殊元素/错误边界/Effect 深水区 + L10 Web Components/纯 Svelte SSR/4→5 迁移），对既有 10 个满配包的内容缺口审计**已完成**（见上方表格与明细，+10 关）。
+- 🎓 **面试题**：上述 **358 关**均一一配有 `interview-<lessonId>.md`（面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前十四包**零告警**）。
 
 > 技术事实若不确定版本演进，请一律以各框架**官方文档 / MDN / TC39** 为准——本课程反复提醒：
 > 警惕过时教程与 AI 幻觉。

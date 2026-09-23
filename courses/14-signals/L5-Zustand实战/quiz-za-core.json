@@ -1,0 +1,136 @@
+{
+  "title": "za-core 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Zustand 的 create 返回的 hook 被多个组件使用时，状态共享靠的是什么？",
+      "options": [
+        "每个组件各自持有一份副本",
+        "模块级单例：store 在 create 时就存在闭包/模块作用域里，谁 import 谁共享，无需 Provider",
+        "React Context 自动包裹",
+        "localStorage 同步"
+      ],
+      "answer": 1,
+      "explanation": "create 产出的是一个闭包单例+绑定 hook——这是它无 Provider 即可全局共享的实现本质，也是 SSR 下要警惕跨请求串用的同一原因（L8 sig-server）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "set 的默认行为是？",
+      "options": [
+        "深比较后只替换变化的字段",
+        "直接修改 state 对象（可变更新）",
+        "替换整个 state（不合并）",
+        "浅合并：{...原state, ...传入片段} 生成新对象，除非传 replace 标记"
+      ],
+      "answer": 3,
+      "explanation": "默认浅合并是 Zustand 对 Redux『每个 reducer 返回全量』的减负设计；set(partial, true) 才整体替换。合并只到一层——深层字段要手动展开或上 immer。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "useStore((s) => ({ x: s.x, y: s.y })) 这种写法的后果是？",
+      "options": [
+        "每次执行返回新对象，Object.is 永判『变了』→ 相关更新即重渲（极端时接近无限重渲），应包 useShallow",
+        "正常工作，Zustand 会自动深比较",
+        "编译报错",
+        "只有 x 变化时才重渲"
+      ],
+      "answer": 0,
+      "explanation": "Zustand 默认只比引用。多字段选择器必须 useShallow（浅比较产物）或拆成两次单字段订阅——『selector 返回新对象』是 Zustand 第一大新手坑。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "在 action 里要基于最新状态计算，正确写法是？",
+      "options": [
+        "用组件闭包里捕获的 state 变量",
+        "set((s) => ({ count: s.count + 1 }))——函数式 set 拿到当下最新 state",
+        "先 JSON 深拷贝再改",
+        "setState 后立刻再 set 一次补偿"
+      ],
+      "answer": 1,
+      "explanation": "回调式 set 的 s 永远是最新快照，连续/异步 set 都安全；闭包旧值（组件捕获的 state）在事件回调里是经典 stale closure——函数式更新一刀切断。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "组件外（如 WebSocket 回调里）读写 store 的 API 是？",
+      "options": [
+        "只能靠 props 传进组件",
+        "useStore 直接当函数在组件外调用",
+        "useStore.getState() / setState() / subscribe() 三件套旁路",
+        "必须先渲染一个隐形组件桥接"
+      ],
+      "answer": 2,
+      "explanation": "store hook 上挂着 vanilla 层 API：组件外读写订阅全通路——这份『框架无关状态源』能力与 signal 系共享状态层的卖点同源（L6 收拢）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "useSyncExternalStore 为外部 store 解决的核心问题是？",
+      "options": [
+        "CSS 作用域冲突",
+        "自动做深比较减少渲染",
+        "让 store 自动持久化",
+        "撕裂（tearing）：并发渲染下不同组件读到同一 store 的不同时刻值，该 hook 在提交时复核快照并强制一致"
+      ],
+      "answer": 3,
+      "explanation": "React 18 并发渲染可随时中断重读——外部可变源若无复核机制，两组件同帧可能拿到新旧两份值。useSyncExternalStore 的 getSnapshot 复核补了这个洞，是外部 store 入 React 的官方正门。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "控制台报 'The result of getSnapshot should be cached to avoid an infinite loop'，最可能的写法错误是？",
+      "options": [
+        "selector 每次返回新建的对象/数组且未 memo（useSyncExternalStore 每轮都认为快照变了）",
+        "忘写 key 属性",
+        "用了函数式 set",
+        "store 里存了函数"
+      ],
+      "answer": 0,
+      "explanation": "这是 q3 的底层版本：React 直接告诉你快照不稳定。修法三选一：useShallow / 拆单字段订阅 / 把派生结果收进 useMemo 稳定引用。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Zustand 与 MobX 对『怎样算一次更新』的判定分别是？",
+      "options": [
+        "两家都是字段被写即更新",
+        "两家都要求新引用",
+        "Zustand=快照替换制（必须新引用）；MobX=字段读写制（就地改即更新，新快照反而无追踪）",
+        "Zustand 靠定时器轮询变化"
+      ],
+      "answer": 2,
+      "explanation": "机制相反：同一行 this.count++ 在 MobX 是正解、在 Zustand 是静默失败的事故——L4/L5 最经典的互相照妖镜，L6 sig-mutability 正面展开。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "action 定义在 store 里（addBear 那种）相对写在组件里再调 setState 的优势是？",
+      "options": [
+        "没有任何差别",
+        "组件就不能读状态了",
+        "逻辑与组件解耦：可被组件外/测试复用、天然拿最新 state、多组件共享同一份变更语义",
+        "渲染会更快"
+      ],
+      "answer": 2,
+      "explanation": "store 即领域对象：action 收进 store 后可在 Worker、测试、路由守卫直接 getState().addBear()，行为集中一处——这是『把 Redux 的 reducer 挪回对象方法』的 Zustand 式折中（对照 MobX 类方法，殊途同归）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "从 v3 老教程抄来的代码在 Zustand v5 项目里编译失败，最高频的原因是？",
+      "options": [
+        "v5 删掉了 create",
+        "v5 要求 TypeScript",
+        "import 路径与浅比较 API 变更（useShallow 等挪到 zustand/react/shallow、旧 subscribe 签名升级）——先对 changelog 再抄代码",
+        "v5 不再支持 selector"
+      ],
+      "answer": 3,
+      "explanation": "create/selector 仍是主干，坏在周边 API 的三次搬家。Zustand 教程库存量巨大且版本断裂明显，读旧文先核年份——与 RxJS 的教训同一条（rx-basics 版本时钟）。"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "title": "sig-map 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "按课文的'库的野心'光谱，四家的正确排布是？",
+      "options": [
+        "四家同类，只差 API 风格",
+        "MobX 是语言原语、Signals 是完整框架",
+        "TC39 Signals（语言原语）→ RxJS（流工具库）→ Zustand（React 状态库）→ MobX（完整状态解决方案）",
+        "RxJS 是状态管理库、Zustand 是流库"
+      ],
+      "answer": 2,
+      "explanation": "把四家放上同一赛道比较是本包开篇就要破除的第一误区：定位不同，'谁取代谁'多半是伪命题。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于 TC39 Signals 提案的身份，正确的说法是？",
+      "options": [
+        "它规定了 signal/computed/effect 的标准语义，是给库作者的原语标准，不含 store/devtools/框架绑定",
+        "它是新的官方状态管理库",
+        "它已被所有主流框架直接采用为内核",
+        "它是 RxJS 的官方继任者"
+      ],
+      "answer": 0,
+      "explanation": "提案只标准化积木（语义+参考实现）；Angular/Preact 等是语义同源但未采用其实现（L2 tc39-frameworks 展开）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "用 BehaviorSubject 把 RxJS 当状态库用，课文的评价是？",
+      "options": [
+        "官方推荐的最佳实践",
+        "性能超过 MobX",
+        "是 signal 的标准实现",
+        "能用但非设计目标——拿螺丝刀敲钉子，它的核心资产是事件代数"
+      ],
+      "answer": 3,
+      "explanation": "RxJS 第一性定位是'异步集合处理的工具库'；兼职存状态可行，但为此引入整个库的体积与心智不划算。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "'订单对象改一处、五个面板联动刷新'的需求，首选项与理由？",
+      "options": [
+        "Zustand，因为够小",
+        "MobX，因为有行为的深层对象图联动是它的主场（自动追踪+派生）",
+        "TC39 Signals，因为是标准",
+        "把所有面板合成一个大组件"
+      ],
+      "answer": 1,
+      "explanation": "对象图建模+字段级联动正是 MobX 的设计目标；扁平快照型状态才是 Zustand 的适用区。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "需求'三个组件共享一个侧栏开关'，课文认为用 MobX 的问题是？",
+      "options": [
+        "无法共享",
+        "不支持 TypeScript",
+        "太重——杀鸡用牛刀，选型要匹配需求当量",
+        "会引发性能问题"
+      ],
+      "answer": 2,
+      "explanation": "选型反查表第一行：标量共享用 Zustand（甚至 Context）；库没有对错，只有与需求当量是否匹配。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "课文认为状态管理选型的最大失误发生在？",
+      "options": [
+        "在 MobX 和 Zustand 之间选错",
+        "没用最新版",
+        "团队讨论太久",
+        "把服务端缓存状态错装进任何一家客户端 store（该用 React Query/SWR）"
+      ],
+      "answer": 3,
+      "explanation": "反查表第五行的'都不选'：接口数据的缓存/失效/重取有专职方案，塞进客户端 store 是比选错库高得发的错误。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Zustand 的'解决交集'不含下列哪项？",
+      "options": [
+        "Redux 的样板税",
+        "Context 的粗粒度重渲",
+        "组件外读写订阅状态",
+        "深层业务对象图的自动联动"
+      ],
+      "answer": 3,
+      "explanation": "深层对象图联动明说'不选 Zustand'——那是 MobX 地盘；前三项才是它的立锥之地。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "'写一个跨 Vue/React/Solid 的响应式动画库'，课文推荐的原语选择是？",
+      "options": [
+        "Signals 语义（或基于其的跨框架适配层）",
+        "jQuery",
+        "三个框架各写一套永远不合并",
+        "localStorage 事件总线"
+      ],
+      "answer": 0,
+      "explanation": "标准化原语的目标用户正是库作者：一次编写响应式逻辑、多框架复用。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "为什么本包把 TC39 Signals（L2）排在 RxJS/MobX/Zustand 之前讲？",
+      "options": [
+        "它最流行",
+        "signal 概念是读懂 MobX/Solid/Svelte 各家响应式的通用语言，先立坐标系",
+        "它最简单",
+        "按字母顺序"
+      ],
+      "answer": 1,
+      "explanation": "学习地图的设计逻辑：原语先行，后面三家（含 MobX 的追踪、Zustand 的订阅）都能映射到 signal 语言上。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "关于四家与 React 的绑定关系，正确的是？",
+      "options": [
+        "MobX 只能配 React 使用",
+        "四家都必须在 React 里用",
+        "Zustand 绑定 React 但 store 本体（vanilla）可独立用；MobX/Signals/RxJS 本身框架无关",
+        "RxJS 是 Angular 官方出品因此不能用于 React"
+      ],
+      "answer": 2,
+      "explanation": "Zustand 的 create 返回 React hook 但内部是 vanilla store；RxJS 框架无关，只是与 Angular 渊源深。"
+    }
+  ]
+}

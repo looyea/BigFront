@@ -1,0 +1,136 @@
+{
+  "title": "sig-vs-streams 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "『寄存器 vs 磁带』透镜下，signal 与 stream 各回答什么问题？",
+      "options": [
+        "signal 回答『发生过什么序列』；stream 回答『现在是什么』",
+        "signal 回答『现在是什么』（持有当下值）；stream 回答『发生过什么序列』（意义在顺序与间隔）",
+        "两者都只回答『现在是什么』，区别在性能",
+        "两者都只回答『何时触发』，区别在同步异步"
+      ],
+      "answer": 1,
+      "explanation": "signal 任何时刻 get 即事实；stream 的本性是事件流，想知道『最后一个值』要额外补丁（BehaviorSubject）——方向别记反。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "搜索去抖+竞态作废需求下，RxJS 版比手写 signals 版白送的能力是？",
+      "options": [
+        "把值存起来供任意代码读取",
+        "自动 batching 渲染",
+        "switchMap 自带『新请求发出即作废旧请求回调』",
+        "类型推导"
+      ],
+      "answer": 2,
+      "explanation": "signals 版要自己写 latest 比对+setTimeout 清理来表达『以最新为准』；序列关系（ debounce/switch/throttle）正是流代数的主场。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "需求描述里出现哪类短语，优先想到 stream（RxJS）？",
+      "options": [
+        "『在 X 之后』『X 时间内没发生 Y』『连续 Z 次』",
+        "『现在的 X 是多少』",
+        "『谁在读 X』",
+        "『X 的派生值 Y』"
+      ],
+      "answer": 0,
+      "explanation": "时间介词与计数短语是序列关系的信号词；『是多少/谁在读』是当下值的信号词——两句判据来自本关主场清单，面试答题直接引用。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "『双源合并：WebSocket 推送与轮询结果取最新展示』的判据写法是？",
+      "options": [
+        "两个 setInterval 互相覆盖变量",
+        "signal 直接 merge 两个源",
+        "放弃客户端合并，全部交给后端",
+        "RxJS merge(a$, b$) 进管道，出管结果再 set 进展示用 signal"
+      ],
+      "answer": 3,
+      "explanation": "多输入一输出拓扑是流的语言；signal 没有『合并两个源』的本性原语（要手写订阅）。混合形状：编排归流、展示态归 signal——本关海关句的实例。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "firstValueFrom 与 toValues(signal) 分别代表什么方向的借鉴？",
+      "options": [
+        "前者是 signal 学 stream，后者是 stream 学 signal",
+        "两者都是 promise 学的",
+        "前者是 stream 阵营补『当下值/一次性取值』能力，后者是 signal 阵营给寄存器接磁带接口（导出序列）",
+        "两者都是编译器优化"
+      ],
+      "answer": 1,
+      "explanation": "两家正在换装的铁证：RxJS 加 Signal/firstValueFrom 靠近状态，signal 生态加 toValues/from(iterable) 靠近序列——谁也没吃掉谁，因为两种世界观各有主场。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "『值→变化闸门家族』下列举哪一组全部属于该抽象？",
+      "options": [
+        "map、filter、scan",
+        "debounceTime、throttleTime、auditTime",
+        "switchMap、mergeMap、concatMap",
+        "computed 的 memo、distinctUntilChanged、signal 的 equals、Zustand selector 的 Object.is"
+      ],
+      "answer": 3,
+      "explanation": "闸门=『这一下算不算新』的判定函数。A 是变换、B 是时间阀门（闸门加计时器）、C 是合流策略——rx-operators 埋的家族锚在横向对比课收拢，B 是最易混的干扰项（它们比较+计时，核心仍是变换调度）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "为什么说『流的当下值是补丁不是本性』？",
+      "options": [
+        "因为流不能存值，要存『最后值』需 BehaviorSubject 这类有状态原语（或 shareReplay(1)）",
+        "因为流的数据不准",
+        "因为 JS 引擎不支持",
+        "因为必须配合 Redux 才能读取"
+      ],
+      "answer": 0,
+      "explanation": "裸 Observable 冷流订阅才开始、无人订阅即无历史；要『随处可读的当前值』就得引入持有状态的壳——这壳的语义已经回到 signal 的世界观了。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "2016 年 RxJS 被寄予统一天下的厚望，2024 年框架响应式最大公约数却是 signals，本关给的根本原因是？",
+      "options": [
+        "RxJS 包太大摇不掉",
+        "signals 有公司背书",
+        "UI 状态的本质是『当下值』，网络事件流的本质是序列——渲染层每天问的是『现在是什么』居多",
+        "RxJS 停止维护了"
+      ],
+      "answer": 2,
+      "explanation": "RxJS 仍活跃（v7/v8 路线在走）、体积可摇树——输的不是工程质量是任务分布：多数框架团队的主战场是状态渲染不是事件编排，原语贴着主战场设计者赢。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "混合实战的标准形状里，『两个世界的海关』指哪一行代码？",
+      "options": [
+        "pipe 里的 tap 副作用",
+        "subscribe((next) => someSignal.set(next))——事件流出口登记为状态",
+        "effect 的清理函数",
+        "import 两条库的语句"
+      ],
+      "answer": 1,
+      "explanation": "编排层（流）算完的每个结果过海关变成寄存器世界的状态，UI 只订阅状态层。海关之后序列性消失（只剩最新值）——设计时要自觉：谁需要历史，海关设在哪儿要商量。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "signal 生态处理异步（竞态、重试、进度）的主流策略是？",
+      "options": [
+        "全塞进 signal 的 set 回调里排队",
+        "禁止在 signal 项目里使用异步",
+        "让渡给专门的抽象（resource/流原语/promise+取消），signal 只当结果容器——『别硬扛』",
+        "用 setInterval 轮询包装"
+      ],
+      "answer": 2,
+      "explanation": "Solid resource、Vue useFetch 都是配对模式：signal 存结果+资源层管过程。承认世界观边界反而让两家配合顺畅——与『海关』同一思想的镜像表述。"
+    }
+  ]
+}
