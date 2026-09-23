@@ -1,0 +1,106 @@
+{
+  "title": "Array 方法 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下代码结果为？\n\n```js\nconst a = [10, 1, 5];\nconsole.log(a.sort());\n```",
+      "options": ["[1, 5, 10]", "[1, 10, 5]", "[10, 1, 5]", "[5, 1, 10]"],
+      "answer": 1,
+      "explanation": "sort 默认把元素转成字符串比较，'10' < '5'（字符 '1' < '5'）→ [1, 10, 5]。数字排序要传 `(a,b) => a-b`。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下代码结果为？\n\n```js\nconst a = [1, , 3];\nconsole.log(a.map(x => x + 1));\nconsole.log([...a]);\n```",
+      "options": [
+        "[2, empty, 4] 和 [1, undefined, 3]",
+        "[2, NaN, 4] 和 [1, undefined, 3]",
+        "[2, empty, 4] 和 [1, empty, 3]",
+        "TypeError"
+      ],
+      "answer": 0,
+      "explanation": "map 会**跳过 empty slot**（保留洞）；数组展开走迭代器协议，会把 empty 当 undefined 填。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`[].every(x => false)` 得什么？",
+      "options": ["true", "false", "undefined", "TypeError"],
+      "answer": 0,
+      "explanation": "空数组 every **永远 true**（数学空真）。校验场景要先判 length，否则「空数组自动通过」。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下哪个方法**不改变**原数组？",
+      "options": ["splice", "reverse", "slice", "sort"],
+      "answer": 2,
+      "explanation": "slice 返回新数组。splice/reverse/sort 都会改原数组。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`new Array(3).fill({})` 打印什么？",
+      "options": [
+        "[{}, {}, {}] 三个不同对象",
+        "[{ref}, {ref}, {ref}] 三个**同一引用**",
+        "[undefined, undefined, undefined]",
+        "TypeError"
+      ],
+      "answer": 1,
+      "explanation": "fill 是**用同一个值**填——引用共享。想每个是新对象：`Array.from({length:3}, () => ({}))`。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`[[1,2],[3,4]].flatMap(([a,b]) => a+b)` 得什么？",
+      "options": ["[[3],[7]]", "[3, 7]", "[1,2,3,4]", "TypeError"],
+      "answer": 1,
+      "explanation": "flatMap = map + flat(1)。map 得 [3, 7]，flat(1) 无变化 → [3, 7]。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "找出**最后一个**匹配元素的下标，最简洁的写法是：",
+      "options": [
+        "`arr.lastIndexOf(v)`",
+        "`arr.map((x,i)=>x===v?i:-1).reduce(Math.max)`",
+        "`arr.findLastIndex(x => x === v)`",
+        "以上都对"
+      ],
+      "answer": 3,
+      "explanation": "lastIndexOf 只能找基本值；findLastIndex 是 ES2023 新方法，支持谓词函数；reduce 方案兼容老环境。工程首推 findLastIndex（若 target 允许）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`Array.from({ length: 3 }, (_, i) => i)` 得到：",
+      "options": ["[0, 1, 2]", "[3]", "[undefined, undefined, undefined]", "TypeError"],
+      "answer": 0,
+      "explanation": "Array.from 第二参是映射函数，类似 map 但能处理类数组；{length:3} 被当成长度 3 的类数组遍历，产出 [0,1,2]。这也是造定长新对象数组的标准姿势。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`Array.of(7)` 与 `new Array(7)` 的区分是：",
+      "options": [
+        "两者都得到 [7]",
+        "Array.of(7) 得 [7]；new Array(7) 得长度 7、含 empty slot 的数组",
+        "两者都得到长度 7 的空数组",
+        "Array.of(7) 报错"
+      ],
+      "answer": 1,
+      "explanation": "new Array(n) 的单数字参数是「长度」而单元素——这是历史遗留歧义；Array.of 永远把参数当元素，专为补齐这个坑而生。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`[].reduce((a, b) => a + b)` 会得到：",
+      "options": ["0", "undefined", "TypeError: Reduce of empty array with no initial value", "[]"],
+      "answer": 2,
+      "explanation": "空数组无初值时 reduce 直接抛 TypeError——这是线上高频事故点；养成习惯永远传初值（至少给 [] / 0），或先判 length。"
+    }
+  ]
+}

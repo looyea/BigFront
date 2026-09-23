@@ -2,11 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Home from './views/Home.vue';
 import Package from './views/Package.vue';
 import Lesson from './views/Lesson.vue';
+import LessonPart from './views/LessonPart.vue';
 
 const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/p/:pkgId', name: 'package', component: Package },
   { path: '/l/:pkgId/:lessonId', name: 'lesson', component: Lesson },
+  // 小测 / 面试题：从课文详情页摘出的两个独立视图（作业不再提供 UI）
+  { path: '/l/:pkgId/:lessonId/quiz', name: 'lesson-quiz', component: LessonPart },
+  { path: '/l/:pkgId/:lessonId/interview', name: 'lesson-interview', component: LessonPart },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ];
 

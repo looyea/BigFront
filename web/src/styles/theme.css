@@ -102,6 +102,19 @@ a:hover { text-decoration: underline; }
 .lesson-title { font-weight: 600; }
 .lesson-goal { font-size: 13px; color: var(--text-dim); }
 
+/* 关卡行的三个独立入口：小测 / 作业 / 面试题 */
+.lesson-parts { display: flex; gap: 6px; flex-shrink: 0; }
+.part-btn {
+  font-size: 12px; padding: 5px 10px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--bg-elev);
+  color: var(--text-dim); cursor: pointer; white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s;
+}
+.part-btn:hover { border-color: var(--accent); color: var(--accent-2); }
+.part-btn.disabled { opacity: 0.4; pointer-events: none; }
+.part-links { display: flex; flex-direction: column; gap: 8px; }
+.part-links .part-btn { justify-content: flex-start; text-align: left; }
+
 /* ------------------------------ 学习页 ------------------------------ */
 .lesson-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
 @media (max-width: 980px) { .lesson-layout { grid-template-columns: 1fr; } }

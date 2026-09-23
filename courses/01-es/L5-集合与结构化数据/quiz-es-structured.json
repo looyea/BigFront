@@ -1,0 +1,111 @@
+{
+  "title": "structuredClone 与序列化 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "`JSON.stringify({ a: undefined, b: function(){}, c: Symbol() })` 结果是什么？",
+      "options": ["'{}'", "'{\"a\":null,\"b\":null,\"c\":null}'", "TypeError", "'undefined'"],
+      "answer": 0,
+      "explanation": "对象里 undefined / 函数 / Symbol 作为 value 会被**删除属性**（不是变 null）——所以剩下 {}。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`structuredClone(new Map([[1, 2]]))` 结果是什么？",
+      "options": ["Map{1=>2}", "{ '1': 2 }", "TypeError", "undefined"],
+      "answer": 0,
+      "explanation": "Map 是 structuredClone **原生支持**的类型，克隆后仍是 Map。这是它远胜 JSON 大法的地方。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`structuredClone(function(){})` 结果是什么？",
+      "options": ["undefined", "克隆出的函数", "抛 DataCloneError", "'function () { }'"],
+      "answer": 2,
+      "explanation": "**函数不能**被 structuredClone——抛 DataCloneError。同理 Symbol、DOM 节点也不行。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下代码结果为？\n\n```js\nclass Foo { x = 1; hi() { return 'hi'; } }\nconst g = structuredClone(new Foo());\nconsole.log(g.x, typeof g.hi, g instanceof Foo);\n```",
+      "options": ["1, 'function', true", "1, 'undefined', false", "抛错", "undefined, 'undefined', false"],
+      "answer": 1,
+      "explanation": "structuredClone 只拷**自有可枚举属性**——x 是实例字段所以有；hi 在原型上，原型链不保留；instanceof 失败。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`JSON.parse(JSON.stringify(cyclicObj))` 会怎样？（cyclicObj 有循环引用）",
+      "options": ["正常", "循环部分变 null", "抛 TypeError: Converting circular structure", "静默丢弃循环边"],
+      "answer": 2,
+      "explanation": "JSON.stringify 用 WeakSet 检测循环，遇到就抛错。**structuredClone 才能处理循环**——用 identity map。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`structuredClone(buf, { transfer: [buf] })` 与不带 transfer 的区别是：",
+      "options": [
+        "没有区别",
+        "transfer 是**转移所有权**（原 buffer.byteLength 变 0），性能 O(1)；不传是**拷贝**字节",
+        "transfer 会抛错",
+        "不传是异步"
+      ],
+      "answer": 1,
+      "explanation": "transferable 让大 ArrayBuffer 跨上下文（Worker）传输时不拷贝字节，只是把所有权交给新持有者——性能关键路径必用。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 `toJSON` 方法，哪个说法**对**？",
+      "options": [
+        "所有对象都有 toJSON",
+        "JSON.stringify 遇到带 toJSON 的属性时**优先调用它**，用返回值代替",
+        "toJSON 只在被克隆时调用",
+        "structuredClone 会调用 toJSON"
+      ],
+      "answer": 1,
+      "explanation": "toJSON 是**JSON.stringify 的钩子**（Moment.js、Date 都有）。structuredClone 不走这个钩子，它按内部类型规则处理。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "关于 structuredClone 支持范围，最完整的说法是：",
+      "options": [
+        "能深拷贝任意对象，包括函数和 Symbol",
+        "不能拷贝 Map / Set / Date",
+        "遇到循环引用会报错",
+        "支持大多数内置类型（typed array、Map、Set、Date、RegExp 等）与循环引用，但函数 / Symbol / DOM 节点会抛 DataCloneError"
+      ],
+      "answer": 3,
+      "explanation": "structuredClone 走的是浏览器的结构化克隆算法：Map/Set/Date/RegExp/二进制/循环都原生支持；函数、Symbol、DOM 节点不在克隆算法内，抛 DataCloneError。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "JSON 大法（stringify+parse）会丢的东西是：",
+      "options": [
+        "undefined / 函数 / Symbol 值，以及原型链与实例方法",
+        "数字",
+        "布尔值",
+        "null"
+      ],
+      "answer": 0,
+      "explanation": "对象属性值为 undefined/函数/Symbol 时整个键被丢弃；Date 变字符串、BigInt 直接抛错、循环抛错；克隆结果只剩普通数据，原型与方法全没。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`const d = new Date(); const c = structuredClone(d);` 之后正确的是：",
+      "options": [
+        "c 不是 Date，变成了字符串",
+        "c 是时间相同的新 Date 对象，c !== d",
+        "c === d（同一引用）",
+        "抛 DataCloneError"
+      ],
+      "answer": 1,
+      "explanation": "Date 是结构化克隆的内置类型：得到独立的同时间新对象（改 c 不影响 d）。这也是它优于 JSON 大法的典型场景——JSON 往返只会得到 ISO 字符串。"
+    }
+  ]
+}

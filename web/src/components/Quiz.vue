@@ -81,7 +81,7 @@ function gradedOf(qid) {
     <div v-else>
       <div :class="['quiz-result', result.pass ? 'pass' : 'fail']">
         得分 <b>{{ result.score }}/{{ result.total }}</b>
-        —— {{ result.pass ? '🎉 通过！可继续完成作业并通关' : '未达标（需 ≥60%），看看解析再战' }}
+        —— {{ result.pass ? (result.autoCompleted ? '🏆 通过！已自动通关本关并解锁下一关' : '🎉 通过！本关已通关') : '未达标（需 ≥60%），看看解析再战' }}
       </div>
       <div v-for="(q, qi) in quiz.questions" :key="q.id" class="quiz-q" style="margin-top:16px">
         <div class="q-title">{{ qi + 1 }}. {{ q.prompt }}</div>

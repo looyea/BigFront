@@ -1,0 +1,111 @@
+{
+  "title": "箭头函数 · 小测（紧扣本关知识点）",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nconst obj = {\n  name: 'Ann',\n  greet: () => this?.name,\n};\nconsole.log(obj.greet());\n```",
+      "options": ["'Ann'", "undefined", "globalThis.name", "TypeError"],
+      "answer": 1,
+      "explanation": "greet 是箭头，没有自己的 this，捕获模块/脚本外层。ESM 顶层 this 是 undefined（脚本 sloppy 是 globalThis）；此例假设模块环境，得 undefined。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "关于箭头函数，下列哪一项**不成立**？",
+      "options": [
+        "没有自己的 this",
+        "没有 arguments 对象",
+        "有 prototype 属性",
+        "不能用 new 调用"
+      ],
+      "answer": 2,
+      "explanation": "箭头函数没有 .prototype；A.prototype 是 undefined，new A() 抛 TypeError。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下代码得到什么？\n\n```js\nconst f = () => { a: 1 };\nconsole.log(f());\n```",
+      "options": ["{ a: 1 }", "undefined", "SyntaxError", "'a: 1'"],
+      "answer": 1,
+      "explanation": "{} 被解析成函数体的块语句，`a:` 是标签语句，表达式 1 被求值后丢弃；函数无 return，得 undefined。想返回对象要 `() => ({ a: 1 })`。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "class 字段箭头方法 `onClick = () => this.set(...)` 相比普通方法 `onClick() { this.set(...) }` 的关键优势是：",
+      "options": [
+        "性能更好",
+        "内存占用更小",
+        "把 this 定死在实例上，脱离调用点也能正确工作（React 事件处理器经典）",
+        "能被 new 调用"
+      ],
+      "answer": 2,
+      "explanation": "字段箭头每次实例化都新建函数，性能与内存略差；换来的是「this 绑不丢」。这是 React 类组件里最常用它的原因。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下哪种场景**不适合**换成箭头函数？",
+      "options": [
+        "数组 map 回调",
+        "闭包工具函数",
+        "Object 上的方法 `{ fn() { return this.x } }`",
+        "Promise.then 回调"
+      ],
+      "answer": 2,
+      "explanation": "对象方法要用普通函数（或 shorthand）才能通过 `obj.fn()` 拿到 obj 作为 this。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`(() => this)().call({ a: 1 })` 返回什么？",
+      "options": ["{ a: 1 }", "undefined", "TypeError", "globalThis"],
+      "answer": 1,
+      "explanation": "call/apply/bind **不能改变箭头函数的 this**。它捕获定义时的外层 this；模块环境下是 undefined。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "箭头函数读取 `arguments` 时会：",
+      "options": [
+        "拿到自己的实参类数组",
+        "拿到外层最近**普通函数**的 arguments；若无外层普通函数则 ReferenceError",
+        "总是 undefined",
+        "抛 SyntaxError"
+      ],
+      "answer": 1,
+      "explanation": "箭头没有自己的 arguments 绑定，会沿作用域链向外找最近普通函数的 arguments。工程实践：一律用 rest 参数替代。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "关于箭头函数 this 的绑定机制，最准确的是：",
+      "options": [
+        "它没有自己的 this，而是沿用定义时最近一个非箭头作用域的 this（词法 this，不是运行期绑定）",
+        "它的 this 永远指向调用它的对象",
+        "它的 this 可以用 bind 改写",
+        "它的 this 总是 undefined"
+      ],
+      "answer": 0,
+      "explanation": "箭头函数没有 [[ThisValue]] 自身绑定，编译期就确定从外层词法作用域继承；call/apply/bind 都无法改变它。这是与普通函数最根本的差异。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nconst o = {\n  factor: 2,\n  ids: [1, 2, 3],\n  double() {\n    return this.ids.map(i => i * this.factor);\n  },\n};\nconsole.log(o.double().join(','));\n```",
+      "options": ["6,12,18", "TypeError", "1,2,3", "2,4,6"],
+      "answer": 3,
+      "explanation": "double 是普通方法，this=o；map 里的箭头继承 double 的 this，因此 this.factor 正常为 2 → 2,4,6。这正是「对象方法内部用箭头遍历」的正向用法。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "在浏览器「非模块的 sloppy 脚本」顶层：`const f = () => this; console.log(f() === window);` 打印什么？（对比本关第 1 题的模块环境）",
+      "options": ["false，箭头顶层 this 永远是 undefined", "true，sloppy 脚本顶层 this 是 globalThis(window)，箭头继承它", "报错，顶层不能用 this", "取决于是否 'use strict'，与是否模块无关"],
+      "answer": 1,
+      "explanation": "箭头函数继承外层 this，外层是谁取决于运行环境：ESM/严格模式顶层 this 为 undefined（第 1 题），而非模块的 sloppy 脚本顶层 this 是 globalThis——所以这里箭头也拿到 window。"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "title": "Map / Set / WeakMap / WeakSet · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "`new Map([[NaN, 1]]).get(NaN)` 得什么？",
+      "options": ["undefined", "1", "抛错", "NaN"],
+      "answer": 1,
+      "explanation": "Map 用 SameValueZero 算法——`NaN` 与 `NaN` 视为同一个键。这与 `===` 不同。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下代码结果？\n\n```js\nconst m = new Map();\nm.set({}, 1).set({}, 2);\nconsole.log(m.size);\n```",
+      "options": ["1", "2", "undefined", "TypeError"],
+      "answer": 1,
+      "explanation": "两个 `{}` 是**不同的空对象引用**——Map 按引用作键，两个都存 → size 2。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "WeakMap 没有下列哪个方法？",
+      "options": ["get", "set", "size", "delete"],
+      "answer": 2,
+      "explanation": "WeakMap 不能枚举也不能读 size——因为**任何时刻**kv 都可能被 GC 掉。这是弱引用的语义要求。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下代码结果？\n\n```js\nconst s = new Set([1, '1', true, null, undefined, NaN, NaN]);\nconsole.log(s.size);\n```",
+      "options": ["5", "6", "7", "TypeError"],
+      "answer": 1,
+      "explanation": "1、'1'、true、null、undefined、NaN —— 其中 `1` 与 `'1'` 与 `true` 是**不同类型**（SameValueZero 严格判等）；两个 NaN 合成 1 个。共 6 个。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`JSON.stringify(new Map([['a',1]]))` 得什么？",
+      "options": ["\"{\\\"a\\\":1}\"", "'{}'", "抛 TypeError", "'[[\"a\",1]]'"],
+      "answer": 1,
+      "explanation": "Map 内部 kv 存储**全不可枚举**，JSON 只看到空对象 → `{}`。要序列化：`JSON.stringify([...map])`。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下**不适合**用 WeakMap 的场景是：",
+      "options": [
+        "DOM 节点上挂元数据，节点删除后自动清理",
+        "为 class 实例提供私有字段",
+        "缓存一张「用户 ID → 用户对象」表，需要能导出全部条目",
+        "Vue 3 里 raw ↔ proxy 的双向映射"
+      ],
+      "answer": 2,
+      "explanation": "WeakMap 不可枚举、没有 keys/values——「导出全部条目」只能靠 Map 或 Object。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下代码结果？\n\n```js\nconst A = new Set([1,2,3,4]), B = new Set([3,4,5]);\nconsole.log(new Set([...A].filter(x => B.has(x))));\n```",
+      "options": ["Set{1,2}", "Set{3,4}", "Set{5}", "Set{1,2,3,4,5}"],
+      "answer": 1,
+      "explanation": "交集：A 里元素在 B 里的 → {3, 4}。这是「集合运算」的通用套路。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "相比普通对象，Map 作为字典的核心优势最完整的说法是：",
+      "options": [
+        "保证插入顺序、键可为任意类型、size 直接可读",
+        "一定比对象快",
+        "只能处理字符串键",
+        "可以直接 JSON 序列化"
+      ],
+      "answer": 0,
+      "explanation": "Map 保留插入顺序（不像对象整数键会重排）、键可为对象/函数/Symbol、size 属性直接可用。注意：Map 反而**不能**直接 JSON 序列化。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "关于 WeakSet，说法正确的是：",
+      "options": [
+        "WeakSet 可以用 forEach 遍历",
+        "WeakSet 可以存数字、字符串等基本值",
+        "WeakSet 有只读的 size 属性",
+        "WeakSet 弱引用对象、不阻止其被回收，且不可枚举"
+      ],
+      "answer": 3,
+      "explanation": "WeakSet 只能存对象、只能 add/has/delete，不能遍历也没 size；成员是弱引用，适合「某个对象是否在集合里」的去重/标记场景。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "以下代码结果？\n\n```js\nconst m = new Map();\nm.set(0, 'a');\nconsole.log(m.has(-0), m.get(-0));\n```",
+      "options": ["false undefined", "报错", "true 'a'（SameValueZero 把 -0 与 0 视为同键）", "true 但 get 为 undefined"],
+      "answer": 2,
+      "explanation": "Map 用 SameValueZero：它与 === 一样把 -0 和 0 归为同一键（区别只在 NaN）。所以 has(-0) 为 true、get(-0) 取到 'a'。"
+    }
+  ]
+}

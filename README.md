@@ -20,16 +20,22 @@
 
   ```
   courses/01-es/
-  ├─ course.json            # 大纲 manifest：包信息 + 分级(levels) + 每级关卡(lessons)
-  ├─ lessons/<id>.md         # 课文（Markdown）——概念 + 深入讲解 + 示例 + 自检清单
-  ├─ examples/<id>/*.{js,ts}  # 该关的可运行示例代码
-  ├─ quizzes/<id>.json       # 该关小测（含正确答案，仅服务端可见，防泄题）
-  ├─ interviews/<id>.md      # 该关的面试题（课末实战，面向就业；与关卡同名同目）
-  └─ homework/L<n>.md        # 该阶段作业（Markdown）
+  ├─ course.json                    # 大纲 manifest：包信息 + 分级(levels) + 每级关卡(lessons)
+  └─ L1-变量与作用域/               # 一个阶段一个文件夹，该阶段所有文件都平铺在此
+     ├─ lesson-<id>.md              # 课文
+     ├─ quiz-<id>.json             # 小测（含正确答案，仅服务端可见，防泄题）
+     ├─ interview-<id>.md          # 面试题（课末实战）
+     ├─ homework-<阶段id>.md        # 阶段作业（自学资料库，不再在前端展示）
+     └─ example-<id>-<名>.js       # 可运行示例（前缀带关卡 id，防同阶段重名；可选）
   ```
 
+  > 【目录口径·2026-09 二次扁平化，全部 13 包已完成】取消早期的 lessons/quizzes/interviews/examples/homework 五大子目录，
+  > 改为**课程包根下直接建阶段文件夹**（名 = `level.id-level.title` 去空格），阶段内所有文件按类别加前缀
+  > （lesson-/quiz-/interview-/homework-/example-）平铺。框架仍**向后兼容**旧三布局（五目录+阶段夹 / LessonN / 平铺）作为安全网。
+  > 前端：每关**小测/面试题是 2 个独立按钮**，课文页为单栏（课文 + 文末示例），作业无 UI 入口。
+
 - **打怪升级**：包内第 1 阶段默认解锁；某阶段的全部关卡通关后，才解锁下一阶段。
-  通关一关 = **读完课文 + 看完示例 + 小测 ≥60% + 完成作业**，四步齐全。
+  **小测 ≥60%（答对六成的题）即自动通关本关**，无手动“通关”按钮、不再要求作业勾选。
   （跨包之间不互相锁，ES 是推荐的第一块地基。）
 
 ## 二、环境要求

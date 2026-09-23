@@ -1,0 +1,116 @@
+{
+  "title": "作用域 · 小测（紧扣本关知识点）",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "JavaScript 有哪三种作用域？",
+      "options": [
+        "全局 / 函数 / 块",
+        "全局 / 模块 / 类",
+        "包级 / 文件级 / 函数级",
+        "静态 / 动态 / 词法"
+      ],
+      "answer": 0,
+      "explanation": "标准答案是全局、函数、块。模块作用域在 ESM 语境下可视为特殊的全局一层，但语言规范仍归到块作用域家族。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nif (true) {\n  var x = 1;\n  let y = 2;\n}\nconsole.log(x, typeof y);\n```",
+      "options": ["1, 'number'", "ReferenceError", "1, 'undefined'", "'undefined', 2"],
+      "answer": 2,
+      "explanation": "var 不属于块，泄漏到外层函数/全局，所以 x=1；y 只在 if 块内可见，块外 typeof y 是 'undefined'（typeof 对未声明变量不抛错）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "关于 const，正确的说法是：",
+      "options": [
+        "const 声明的值不可变",
+        "const 声明的绑定不可重新赋值，但对象/数组内部仍可变",
+        "const 会自动 Object.freeze",
+        "const 与 let 只有性能差异"
+      ],
+      "answer": 1,
+      "explanation": "const 锁的是 binding，不是 value。要值也不变需 Object.freeze（且是浅冻结）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nconst x = 'g';\nfunction f() {\n  console.log(x);\n  const x = 'f';\n}\nf();\n```",
+      "options": ["'g'", "'f'", "undefined", "ReferenceError（TDZ）"],
+      "answer": 3,
+      "explanation": "函数内的 const x 让整个函数体内 x 都归它；console.log 在声明之前，落入 TDZ，抛 ReferenceError。这是「遮蔽 + TDZ」的双料陷阱题。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "作用域链查找一个自由变量时，正确的顺序是：",
+      "options": [
+        "当前函数 → 外层函数（依据定义位置）→ ... → 全局",
+        "当前函数 → 调用者函数 → ... → 全局",
+        "全局 → 当前函数",
+        "先在原型链上找，再回到作用域"
+      ],
+      "answer": 0,
+      "explanation": "JavaScript 是词法作用域（静态作用域），链由代码书写位置决定，不是调用者。这是与早期动态作用域语言的核心差别。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "for 循环 `for (let i = 0; i < 3; i++) setTimeout(() => console.log(i))` 打印 0 1 2 的原因是：",
+      "options": [
+        "let 是块作用域，块作用域天然每次迭代新建",
+        "规范特例：for+let 每轮新建绑定并从上一轮拷贝值",
+        "setTimeout 内部会做快照",
+        "V8 的即时编译优化"
+      ],
+      "answer": 1,
+      "explanation": "普通块作用域做不到这件事；这是语言规范里 for+let 的一条专门规则（CreatePerIterationEnvironment）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "关于 ESM 模块作用域，正确的说法是：",
+      "options": [
+        "模块顶层的 var 会自动挂到 window",
+        "模块顶层未 export 的变量，其他模块 import 不到",
+        "模块作用域与 IIFE 完全等价，没有区别",
+        "同一个模块文件被多次 import 会执行多次"
+      ],
+      "answer": 1,
+      "explanation": "ESM 的顶层作用域独立于全局，未 export 的绑定天然私有。且模块有实例缓存，多次 import 只执行一次。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "非严格模式下 `if (true) { function f() {} }` 之后再 `typeof f`，结果是？",
+      "options": [
+        "永远是 'function'，块内函数声明和块外没区别",
+        "非严格模式下按 Annex B 遗留语义，f 提升/初始化到最近函数/全局作用域，块外也可见；严格模式下 f 只在块内可见，块外访问 ReferenceError",
+        "任何模式下都直接 SyntaxError，块内不允许函数声明",
+        "'undefined'，函数声明不会创建任何绑定"
+      ],
+      "answer": 1,
+      "explanation": "这是 Annex B 的历史遗留：sloppy mode 给块内函数声明做了‘类 var’的补丁语义；严格模式（含模块）则回归正规定义——纯块作用域。课文第六节专门讲过这条。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "同一作用域里 `let a = 1;` 之后又写 `let a = 2;`，会发生什么？",
+      "options": ["合法，等价于重新赋值", "运行时 TypeError", "引擎实现相关，V8 允许", "SyntaxError：重复声明；同作用域里 var 与 let/const 混用同名同样报错"],
+      "answer": 3,
+      "explanation": "let/const 绑定在作用域创建时就要查重，重复声明是编译期（early error）的 SyntaxError；var 才能重复声明。var a 与 let a 同名也冲突。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nconsole.log(typeof a);\nlet a = 1;\n```",
+      "options": ["'undefined'", "'number'", "ReferenceError", "'symbol'"],
+      "answer": 2,
+      "explanation": "typeof 对「完全未声明」的变量不报错，但对 TDZ 中的 let/const 变量照样抛 ReferenceError——绑定已存在只是未初始化。这是 typeof 唯一不安全的例外。"
+    }
+  ]
+}

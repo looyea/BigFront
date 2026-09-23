@@ -1,0 +1,106 @@
+{
+  "title": "字符串与 Unicode · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "`'😀'.length` 得多少？",
+      "options": ["1", "2", "4", "抛错"],
+      "answer": 1,
+      "explanation": "U+1F600 在 BMP 之外，UTF-16 用**代理对**（2 码元）表示。length 返回码元数。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下代码打印什么？\n\n```js\nfor (const ch of 'a😀b') console.log(ch.length);\n```",
+      "options": ["'1 1 1'（单行）", "三行：1、2、1", "三行：2、2、2", "'a' '😀' 'b'"],
+      "answer": 1,
+      "explanation": "for-of 走字符串迭代器、按码点吐：'a'、'😀'、'b' 三个完整字符串分三行打印；但每个 ch 自身的 .length 按 UTF-16 码元算，emoji 是代理对占 2 码元，所以依次是 1、2、1。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "'á' 用 NFD 表达是：",
+      "options": [
+        "单个码点 U+00E1",
+        "'a' + 组合重音 U+0301（两个码点）",
+        "两个 a 拼起来",
+        "ASCII 转义"
+      ],
+      "answer": 1,
+      "explanation": "NFC 用单码点 U+00E1；NFD 分解为基本字符 + 组合附加符。两者视觉相同但码点不同，字符串比较要 normalize。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`'hello'.at(-1)` 得什么？",
+      "options": ["'o'", "'e' (倒数第二)", "undefined", "TypeError"],
+      "answer": 0,
+      "explanation": "ES2022 的 `at(i)` 支持**负下标**——`at(-1)` 等价于 `arr[arr.length-1]`。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "下列哪种**不能**正确按码点分割含 emoji 的字符串？",
+      "options": [
+        "`[...str]`",
+        "`Array.from(str)`",
+        "`str.split('')`",
+        "`for (const c of str)`"
+      ],
+      "answer": 2,
+      "explanation": "split('') 按**码元**分割，会把代理对拆两半——产生非法字符。其他三种走迭代器协议，按码点分。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`'foo bar foo'.replace('o', '0')` 结果是：",
+      "options": ["'f00 bar f00'", "'f0o bar foo'", "'foo bar f0o'", "TypeError"],
+      "answer": 1,
+      "explanation": "replace 传字符串时**只替换第一次**。要全局用 `replaceAll('o','0')` 或 `replace(/o/g, '0')`。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "中文列表按**拼音**排序，正确写法是：",
+      "options": [
+        "`arr.sort()`",
+        "`arr.sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'))`",
+        "`arr.sort((a, b) => a.charCodeAt(0) - b.charCodeAt(0))`",
+        "`arr.sort((a, b) => a > b ? 1 : -1)`"
+      ],
+      "answer": 1,
+      "explanation": "localeCompare 传 locale 才能按语言规则。'zh-Hans-CN' 默认按拼音；不同 locale 结果不同。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`'😀'.charCodeAt(0)` 与 `'😀'.codePointAt(0)` 分别是：",
+      "options": [
+        "两者永远相等，只是名字不同",
+        "128512 / 55357",
+        "都是 1（一个字符）",
+        "55357 / 128512：charCodeAt 只拿高代理项，codePointAt 拿完整码点"
+      ],
+      "answer": 3,
+      "explanation": "'😀' = U+1F600，UTF-16 拆成代理对 0xD83D 0xDE00（55357 57344）。charCodeAt(0) 只看到高代理项 55357；codePointAt(0) 识别出代理对并合成完整码点 128512（0x1F600）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`'a-b-c'.replaceAll('-', '_')` 换成第一个参数为 `/-/`（无 g 标志）的正则时：",
+      "options": ["抛 TypeError：replaceAll 的正则参数必须带 g 标志", "只替换第一个", "替换全部", "返回原串"],
+      "answer": 0,
+      "explanation": "ES2021 的 replaceAll 若传非全局正则会直接抛 TypeError（防止「名字叫 all 却只换一处」的静默 bug）；无 g 的正则请用 replace。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "在源码里用转义写一个 '😀'（U+1F600），ES6+ 支持且可读的写法是：",
+      "options": ["'\\uD83D'", "'\\u1F600'", "'\\u{1F600}'（码点转义，需配合 u 标志/字符串字面量直接可用）", "'\\x1F600'"],
+      "answer": 2,
+      "explanation": "ES6 新增码点转义 \\u{…}，直接写完整码点；\\uD83D 只是半个代理对；\\u1F600 会被解析成 \\u1F60 + '0' 两个字符；\\x 转义只到 0xFF。"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "title": "隐式转换 · 小测（紧扣本关知识点）",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "`[] + {}` 的结果是：",
+      "options": ["'[object Object]'", "'[object Object][object Object]'", "{}", "TypeError"],
+      "answer": 0,
+      "explanation": "[] ToPrimitive hint=number 得 ''（valueOf 返回自己不是 primitive，toString 返回 ''）；{} 得 '[object Object]'；'' + '[object Object]' = '[object Object]'。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`[] == ![]` 的结果是：",
+      "options": ["true", "false", "TypeError", "NaN"],
+      "answer": 0,
+      "explanation": "![] = false；[] == false → 两侧 ToNumber：[]→''→0；false→0 → true。这是 == 的经典翻车。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下 8 个 falsy 值不包括：",
+      "options": ["0", "''", "[]", "NaN"],
+      "answer": 2,
+      "explanation": "空数组 [] 是 truthy（对象一律 truthy）。8 个 falsy：false, 0, -0, 0n, '', NaN, null, undefined。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "`Object.is(NaN, NaN)` 与 `NaN === NaN` 分别是什么？",
+      "options": ["true / true", "true / false", "false / true", "false / false"],
+      "answer": 1,
+      "explanation": "Object.is 修正了 NaN 自反性；=== 保留 IEEE-754 语义 NaN !== NaN。Object.is 与 === 的第二个差别是 +0 vs -0。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下代码得到什么？\n\n```js\nconsole.log('5' - '3', '5' * '2', '5' + '3');\n```",
+      "options": ["'2 10 53'", "2 10 '53'", "'2' '10' '53'", "SyntaxError"],
+      "answer": 1,
+      "explanation": "减号/乘号只走 ToNumber；加号有一侧是 string 走拼接。这是 + 与其他算术运算符的最大差异。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于 ToPrimitive 的顺序，正确的是：",
+      "options": [
+        "始终 valueOf → toString",
+        "始终 toString → valueOf",
+        "hint=string 先 toString；hint=number/默认 先 valueOf；Symbol.toPrimitive 存在则优先",
+        "顺序由引擎实现决定"
+      ],
+      "answer": 2,
+      "explanation": "hint 决定顺序；Symbol.toPrimitive 是最高优先级，能完全接管。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "工程上强制 === 的正确 ESLint 配置是：",
+      "options": [
+        "'eqeqeq': 'error'",
+        "'eqeqeq': ['error', 'always', { null: 'ignore' }]",
+        "'eqeqeq': ['warn', 'smart']",
+        "'no-eq-null': 'error'"
+      ],
+      "answer": 1,
+      "explanation": "always + null:'ignore' 是团队项目最常用配置：默认禁 ==，但允许 x == null 作为 null/undefined 双检的简写。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`1 < 2 < 3` 与 `3 > 2 > 1` 分别是什么？",
+      "options": ["true / true：都符合数学直觉", "false / false：比较结果不能继续参与比较", "true / false：(1<2)=true→1，1<3 成立；(3>2)=true→1，1>1 不成立", "TypeError：布尔不能参与关系运算"],
+      "answer": 2,
+      "explanation": "关系运算符先对两侧 ToNumber（课文第三节：一律先转数字），true→1、false→0，所以链式比较在 JS 里完全不是数学意义上的链式。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`null == 0`、`null > 0`、`null >= 0` 的结果分别是：",
+      "options": ["true / true / true", "false / true / false", "三者结果相同，都取决于引擎版本", "false / false / true：== 对 null 短路不走数字转换；关系比较则把 null→0"],
+      "answer": 3,
+      "explanation": "== 算法第 1 步：null 与 undefined 互相只认对方，null==0 直接 false；而 >=/> 走 ToNumber，null→0，0>=0 成立——这就是著名的「null 不等于 0 但大于等于 0」矛盾题。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "关于显式转换（课文第七节），下列哪个说法正确？",
+      "options": ["Number('') 得到 NaN", "parseInt('') 得到 0", "Number(' 0x10 ') 得到 16：Number 会去空白且支持十六进制字面量；而 parseInt('') 是 NaN", "parseInt('0x10') 得到 0"],
+      "answer": 2,
+      "explanation": "Number('')=0、parseInt('')=NaN 这对反直觉差异是高频题；Number 认 '0x10' 为 16，parseInt 默认进制也认 0x 前缀得 16（第二参数才是进制）——只有 D 说反了。"
+    }
+  ]
+}

@@ -33,10 +33,15 @@ function lessonStatus(lesson, levelUnlocked) {
   if (p) return { icon: '🟡', cls: '' };  // 进行中
   return { icon: '⚔️', cls: '' };           // 可挑战
 }
-function open(lesson, levelId) {
+function open(lesson, levelId, part) {
   if (!isLevelUnlocked(levelId)) return;
-  router.push(`/l/${pkg.value.id}/${lesson.id}`);
+  router.push(`/l/${pkg.value.id}/${lesson.id}${part ? '/' + part : ''}`);
 }
+// 课文之外的两块独立视图：小测 / 面试题（作业不再提供入口）
+const parts = [
+  { slug: 'quiz', icon: '🧪', name: '小测', title: '只做本关小测' },
+  { slug: 'interview', icon: '🎓', name: '面试题', title: '只看本关面试题' },
+];
 </script>
 
 <template>
@@ -72,6 +77,15 @@ function open(lesson, levelId) {
         <div class="lesson-main">
           <div class="lesson-title">{{ lesson.title }}</div>
           <div class="lesson-goal">🎯 {{ lesson.goal }}</div>
+        </div>
+        <div class="lesson-parts" @click.stop>
+          <router-link
+            v-for="p in parts" :key="p.slug"
+            :class="['part-btn', { disabled: !isLevelUnlocked(level.id) }]"
+            :to="isLevelUnlocked(level.id) ? `/l/${pkg.id}/${lesson.id}/${p.slug}` : ''"
+            @click.prevent="isLevelUnlocked(level.id) && open(lesson, level.id, p.slug)"
+            :title="p.title"
+          >{{ p.icon }} {{ p.name }}</router-link>
         </div>
         <div v-if="lesson.progress?.completed" class="badge done">已通关</div>
         <div v-else-if="lesson.progress && lesson.progress.quizTotal > 0" class="badge">

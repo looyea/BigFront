@@ -30,7 +30,7 @@ function pipClass(pkg, level) {
 
 <template>
   <h1 class="page-title">🗺️ 大前端学习地图</h1>
-  <p class="page-sub">从 JavaScript 地基一路打到全栈框架。点一张卡进入对应课程包，按「打怪升级」逐关通关——每一关都要 <b>课文 → 示例 → 小测 ≥60% → 作业</b> 四步齐全才算过。</p>
+  <p class="page-sub">从 JavaScript 地基一路打到全栈框架。点一张卡进入对应课程包，按「打怪升级」逐关通关——每一关 <b>读完课文 + 看完示例后，小测 ≥60% 即自动通关</b>并解锁下一关。</p>
 
   <div class="tier-legend">
     <span class="tier-chip">🟨 青铜 · JS 地基</span>

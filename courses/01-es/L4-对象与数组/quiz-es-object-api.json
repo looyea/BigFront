@@ -1,0 +1,121 @@
+{
+  "title": "Object 静态方法 · 小测",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "以下代码结果为？\n\n```js\nconst o = { 10: 'a', 2: 'b', 'x': 'c', 1: 'd' };\nconsole.log(Object.keys(o));\n```",
+      "options": [
+        "['10','2','x','1']",
+        "['1','2','10','x']",
+        "['x','1','2','10']",
+        "顺序不确定"
+      ],
+      "answer": 1,
+      "explanation": "整数键升序排在前，字符串键按插入顺序在后。ES2015+ 明确保证。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`Object.keys(null)` 会得到什么？",
+      "options": ["TypeError", "[]", "null", "undefined"],
+      "answer": 1,
+      "explanation": "ES2015+ 明确把 null/undefined 视作**空对象**处理，返回 []。老的 ES5 会抛 TypeError。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "`Object.defineProperty(o, 'a', { value: 1 })` 得到的属性默认三个 flag 是什么？",
+      "options": [
+        "writable/enumerable/configurable 全 true",
+        "writable/enumerable/configurable 全 false",
+        "只有 enumerable true",
+        "只有 writable true"
+      ],
+      "answer": 1,
+      "explanation": "defineProperty 三个 flag **默认为 false**——这是最反直觉的地方。想跟普通赋值一致要显式 `writable:true, enumerable:true, configurable:true`。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下代码结果为？\n\n```js\nconst a = Object.freeze({ nested: { x: 1 } });\na.nested.x = 42;\nconsole.log(a.nested.x);\n```",
+      "options": ["1", "42", "TypeError", "undefined"],
+      "answer": 1,
+      "explanation": "freeze 是**浅**冻结——只锁外层属性引用。nested 本身没被冻结，x 可写。深冻结要递归。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "`Object.assign(target, src)` 与 `{...src}` 的关键差别是：",
+      "options": [
+        "前者深拷贝，后者浅拷贝",
+        "前者会触发 target 的 setter，后者不会",
+        "前者不拷 Symbol，后者拷",
+        "两者完全等价"
+      ],
+      "answer": 1,
+      "explanation": "Object.assign 是「写入 target」——所以 target 上的 setter 会被触发；spread 每次都**新建对象**，没有 target 侧副作用。两者都拷 Symbol、都触发 src 的 getter。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "想**保留 getter/setter** 的浅拷贝，正确写法是：",
+      "options": [
+        "const c = { ...o };",
+        "const c = Object.assign({}, o);",
+        "const c = Object.create(Object.getPrototypeOf(o), Object.getOwnPropertyDescriptors(o));",
+        "const c = JSON.parse(JSON.stringify(o));"
+      ],
+      "answer": 2,
+      "explanation": "前两种都会**触发 getter 求值**、结果属性变普通数据；JSON 会丢函数、Symbol、原型。第三种用 getOwnPropertyDescriptors 拿到原始描述符（含 getter/setter 函数），一次性 defineProperties。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "`Object.is` 与 `===` 的两个关键差别是：",
+      "options": [
+        "NaN 与 0/-0",
+        "null 与 undefined",
+        "空串与 false",
+        "对象与数组"
+      ],
+      "answer": 0,
+      "explanation": "`Object.is(NaN, NaN)` true（=== 是 false）；`Object.is(0, -0)` false（=== 是 true）。其余场景与 === 一致。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "关于 Object.entries，正确的是：",
+      "options": [
+        "包含原型链上的可枚举属性",
+        "包含 Symbol 键",
+        "返回值的数组 [[1, 'a'], …]",
+        "只返回自有、可枚举、字符串键的 [key, value] 数组"
+      ],
+      "answer": 3,
+      "explanation": "keys/values/entries 三兄第同口径：Own + Enumerable + String-key；Symbol 和原型链一概不要（要 Symbol 用 Reflect.ownKeys，要原型链用 for-in）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "`Object.fromEntries(new Map([['a', 1]]))` 得到：",
+      "options": ["{ a: 1 }", "Map(1)", "[['a', 1]]", "TypeError"],
+      "answer": 0,
+      "explanation": "fromEntries 接受任意 entries 可迭代对象，把键值对序列重建为普通对象——和 Object.entries 互逆，Map ⇄ Object 转换的标准搭档。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "`Object.hasOwn(o, 'toString')` 与 `'toString' in o` 的差别是：",
+      "options": [
+        "两者完全等价",
+        "hasOwn 含原型链，in 只查自有",
+        "hasOwn 只查自有属性（普通对象上为 false），in 会沿原型链查到 Object.prototype.toString（为 true）",
+        "hasOwn 在 ES2020 引入，仅支持 Symbol 键"
+      ],
+      "answer": 2,
+      "explanation": "经典坑：`'toString' in obj` 永远是 true（继承自 Object.prototype）。ES2022 的 Object.hasOwn 只认自有属性，且不依赖 o 自身的原型方法，连 `Object.hasOwn(null, 'x')` 都能安全处理（false）。"
+    }
+  ]
+}

@@ -78,6 +78,65 @@ const courseIndex = new Map();
 /** 扫描警告（文件缺失等），在 /api/integrity 可查，便于自查课程包完整性 */
 const scanWarnings = [];
 
+/**
+ * 阶段文件夹名：`L1-变量与作用域` 式（level.id + level.title，去文件系统非法字符），
+ * 与迁移脚本 _relevel 同一规则，保证扫描能对上目录。
+ */
+function levelDirName(level) {
+  return `${level.id}-${String(level.title ?? '').replace(/[\\/:*?"<>|\s]/g, '')}`;
+}
+
+/**
+ * 关卡文件路径解析（四布局兼容，优先命中最新口径）：
+ *  0) 最新「单层阶段夹」： <pkgDir>/<阶段夹>/<prefix>-<id>.<ext>   （如 lesson-es-scope.md）
+ *  1) 五目录+阶段夹：     <pkgDir>/<sub>/<阶段夹>/<id>.<ext>
+ *  2) 五目录+LessonN：     <pkgDir>/<sub>/Lesson<N>/<id>.<ext>
+ *  3) 五目录平铺：         <pkgDir>/<sub>/<id>.<ext>
+ * 读取端只回传存在的绝对路径，前端 API 格式不变。
+ */
+function resolveLessonFile(pkgDir, sub, prefix, levelDir, no, lessonId, ext) {
+  const newest = path.join(pkgDir, levelDir, `${prefix}-${lessonId}${ext}`);
+  if (fs.existsSync(newest)) return newest;
+  const byLevel = path.join(pkgDir, sub, levelDir, `${lessonId}${ext}`);
+  if (fs.existsSync(byLevel)) return byLevel;
+  const layered = path.join(pkgDir, sub, `Lesson${no}`, `${lessonId}${ext}`);
+  if (fs.existsSync(layered)) return layered;
+  return path.join(pkgDir, sub, `${lessonId}${ext}`);
+}
+
+/** 作业：最新 <阶段夹>/homework-<levelId>.md，回退 homework/<levelId>.md */
+function resolveHomeworkFile(pkgDir, levelDir, levelId) {
+  const newest = path.join(pkgDir, levelDir, `homework-${levelId}.md`);
+  if (fs.existsSync(newest)) return newest;
+  return path.join(pkgDir, 'homework', `${levelId}.md`);
+}
+
+/**
+ * 示例目录布局：
+ *  最新口径扁平化到 <阶段夹>/ 下，文件名 example-<id>-<file>（同阶段多关示例可能重名，故带关卡 id）；
+ *  旧口径每关一个目录：examples/<阶段夹>/<id>/ 或 examples/Lesson<N>/ 或 examples/<id>/。
+ * 返回 { base, prefix }：prefix 非空表示需按该前缀过滤 base 内的文件名。
+ */
+function getExamplesLayout(pkgDir, levelDir, no, lessonId) {
+  const stageDir = path.join(pkgDir, levelDir);
+  const prefix = `example-${lessonId}-`;
+  if (fs.existsSync(stageDir)) {
+    const hit = fs.readdirSync(stageDir).some((f) =>
+      f.startsWith(prefix) && fs.statSync(path.join(stageDir, f)).isFile());
+    if (hit) return { base: stageDir, prefix };
+  }
+  return { base: resolveExamplesDir(pkgDir, levelDir, no, lessonId), prefix: null };
+}
+
+/** 旧版 examples 目录（保留兼容）：优先 <阶段>/<关卡id>，回退 LessonN，再回退按 lessonId 命名 */
+function resolveExamplesDir(pkgDir, levelDir, no, lessonId) {
+  const byLevel = path.join(pkgDir, 'examples', levelDir, lessonId);
+  if (fs.existsSync(byLevel)) return byLevel;
+  const layered = path.join(pkgDir, 'examples', `Lesson${no}`);
+  if (fs.existsSync(layered)) return layered;
+  return path.join(pkgDir, 'examples', lessonId);
+}
+
 function buildIndex() {
   courseIndex.clear();
   scanWarnings.length = 0;
@@ -106,22 +165,29 @@ function buildIndex() {
       continue;
     }
     const lessonMap = new Map();
+    let lessonNo = 0;
     for (const level of manifest.levels) {
+      const levelDir = levelDirName(level);
       for (const lesson of level.lessons ?? []) {
-        lessonMap.set(lesson.id, { ...lesson, levelId: level.id, pkgId: manifest.id });
-        const mdFile = path.join(pkgDir, 'lessons', `${lesson.id}.md`);
+        lessonNo++;
+        const mdFile = resolveLessonFile(pkgDir, 'lessons', 'lesson', levelDir, lessonNo, lesson.id, '.md');
+        const quizFile = resolveLessonFile(pkgDir, 'quizzes', 'quiz', levelDir, lessonNo, lesson.id, '.json');
+        const ivFile = resolveLessonFile(pkgDir, 'interviews', 'interview', levelDir, lessonNo, lesson.id, '.md');
+        lessonMap.set(lesson.id, {
+          ...lesson, levelId: level.id, levelDir, pkgId: manifest.id,
+          lessonNo, mdFile, quizFile, ivFile,
+        });
         if (!fs.existsSync(mdFile)) {
-          scanWarnings.push(`[${manifest.id}] 关卡 ${lesson.id} 缺少课文文件 lessons/${lesson.id}.md`);
+          scanWarnings.push(`[${manifest.id}] 关卡 ${lesson.id} 缺少课文文件 lessons/${levelDir}/${lesson.id}.md`);
         }
-        // 面试题：每个关卡都应有 interviews/<lessonId>.md（作为课末实战）
-        const ivFile = path.join(pkgDir, 'interviews', `${lesson.id}.md`);
+        // 面试题：每个关卡都应有 interviews/<阶段>/<id>.md（作为课末实战）
         if (!fs.existsSync(ivFile)) {
-          scanWarnings.push(`[${manifest.id}] 关卡 ${lesson.id} 缺少面试题文件 interviews/${lesson.id}.md`);
+          scanWarnings.push(`[${manifest.id}] 关卡 ${lesson.id} 缺少面试题文件 interviews/${levelDir}/${lesson.id}.md`);
         }
       }
-      const hwFile = path.join(pkgDir, 'homework', `${level.id}.md`);
+      const hwFile = resolveHomeworkFile(pkgDir, levelDir, level.id);
       if (!fs.existsSync(hwFile)) {
-        scanWarnings.push(`[${manifest.id}] 阶段 ${level.id} 缺少作业文件 homework/${level.id}.md`);
+        scanWarnings.push(`[${manifest.id}] 阶段 ${level.id} 缺少作业文件 ${levelDir}/homework-${level.id}.md (或 homework/${level.id}.md)`);
       }
     }
     if (manifest.id !== dirEntry.name) {
@@ -466,12 +532,11 @@ app.get('/api/packages/:pkgId', async (req, res) => {
 app.get('/api/packages/:pkgId/lessons/:lessonId', async (req, res) => {
   await loadProgress();
   const { entry, meta } = assertLessonAccessible(req.params.pkgId, req.params.lessonId);
-  const markdown = await readTextIfExists(
-    path.join(entry.pkgDir, 'lessons', `${meta.id}.md`));
-  if (markdown === null) return res.status(404).json({ error: `课文文件缺失：lessons/${meta.id}.md` });
+  const markdown = await readTextIfExists(meta.mdFile);
+  if (markdown === null) return res.status(404).json({ error: `课文文件缺失：${path.relative(entry.pkgDir, meta.mdFile)}` });
 
   let quiz = null;
-  const quizRaw = await readTextIfExists(path.join(entry.pkgDir, 'quizzes', `${meta.id}.json`));
+  const quizRaw = await readTextIfExists(meta.quizFile);
   if (quizRaw) {
     const full = JSON.parse(quizRaw); // 解析失败由错误中间件兜底为 500
     // 关键：下发给前端时剔除正确答案与解析，防止泄题
@@ -482,8 +547,7 @@ app.get('/api/packages/:pkgId/lessons/:lessonId', async (req, res) => {
       })),
     };
   }
-  const interviewMd = await readTextIfExists(
-    path.join(entry.pkgDir, 'interviews', `${meta.id}.md`));
+  const interviewMd = await readTextIfExists(meta.ivFile);
   res.json({
     pkgId: req.params.pkgId, ...meta, markdown, quiz,
     interviews: interviewMd || '',
@@ -495,13 +559,14 @@ app.get('/api/packages/:pkgId/lessons/:lessonId', async (req, res) => {
 app.get('/api/packages/:pkgId/homework/:levelId', async (req, res) => {
   const entry = courseIndex.get(req.params.pkgId);
   if (!entry) return res.status(404).json({ error: '课程包不存在' });
-  const known = entry.manifest.levels.some((lv) => lv.id === req.params.levelId);
+  const known = entry.manifest.levels.find((lv) => lv.id === req.params.levelId);
   if (!known || !isSafeSegment(req.params.levelId)) {
     return res.status(404).json({ error: '阶段不存在' });
   }
-  const file = path.join(entry.pkgDir, 'homework', `${req.params.levelId}.md`);
+  const levelObj = known;
+  const file = resolveHomeworkFile(entry.pkgDir, levelDirName(levelObj), req.params.levelId);
   const markdown = await readTextIfExists(file);
-  if (markdown === null) return res.status(404).json({ error: `作业文件缺失：homework/${req.params.levelId}.md` });
+  if (markdown === null) return res.status(404).json({ error: `作业文件缺失：${req.params.levelId}` });
   res.json({ levelId: req.params.levelId, markdown });
 });
 
@@ -509,16 +574,18 @@ app.get('/api/packages/:pkgId/homework/:levelId', async (req, res) => {
 app.get('/api/packages/:pkgId/examples/:lessonId', async (req, res) => {
   const entry = courseIndex.get(req.params.pkgId);
   if (!entry) return res.status(404).json({ error: '课程包不存在' });
-  if (!entry.lessonMap.has(req.params.lessonId) || !isSafeSegment(req.params.lessonId)) {
+  const meta = entry.lessonMap.get(req.params.lessonId);
+  if (!meta || !isSafeSegment(req.params.lessonId)) {
     return res.status(404).json({ error: '关卡不存在' });
   }
-  const base = path.join(entry.pkgDir, 'examples', req.params.lessonId);
+  const { base, prefix } = getExamplesLayout(entry.pkgDir, meta.levelDir, meta.lessonNo, meta.id);
   let files = [];
   if (fs.existsSync(base)) {
     const dirents = await fsp.readdir(base, { withFileTypes: true });
-    files = dirents.filter((d) => d.isFile()).map((d) => d.name);
+    files = dirents.filter((d) => d.isFile() && (!prefix || d.name.startsWith(prefix))).map((d) => d.name);
   }
-  res.json({ files });
+  // dir：相对课程包目录的实际路径，供前端拼接运行命令
+  res.json({ files, dir: path.relative(entry.pkgDir, base).split(path.sep).join('/') });
 });
 
 // 单个示例文件内容（供网页内直接查看/复制运行命令）
@@ -526,10 +593,11 @@ app.get('/api/packages/:pkgId/examples/:lessonId/:file', async (req, res) => {
   const entry = courseIndex.get(req.params.pkgId);
   if (!entry) return res.status(404).json({ error: '课程包不存在' });
   const { lessonId, file: rel } = req.params;
-  if (!entry.lessonMap.has(lessonId) || !isSafeSegment(lessonId) || !isSafeSegment(rel)) {
+  const meta = entry.lessonMap.get(lessonId);
+  if (!meta || !isSafeSegment(lessonId) || !isSafeSegment(rel)) {
     return res.status(400).json({ error: '非法路径' });
   }
-  const base = path.join(entry.pkgDir, 'examples', lessonId);
+  const { base } = getExamplesLayout(entry.pkgDir, meta.levelDir, meta.lessonNo, meta.id);
   const target = safeJoin(base, rel);
   if (!target || !(await withinBase(target, base))) return res.status(400).json({ error: '非法路径' });
   const content = await readTextIfExists(target);
@@ -570,7 +638,7 @@ app.post('/api/progress/quiz', async (req, res) => {
   await loadProgress();
   const { pkgId, lessonId, answers } = req.body ?? {};
   const { entry, meta } = assertLessonAccessible(pkgId, lessonId);
-  const quizRaw = await readTextIfExists(path.join(entry.pkgDir, 'quizzes', `${lessonId}.json`));
+  const quizRaw = await readTextIfExists(meta.quizFile);
   if (!quizRaw) return res.status(404).json({ error: '本关没有小测' });
   let quiz;
   try { quiz = JSON.parse(quizRaw); }
@@ -583,15 +651,24 @@ app.post('/api/progress/quiz', async (req, res) => {
   }));
   const score = graded.filter((g) => g.correct).length;
   const total = qs.length;
+  const pass = score >= Math.ceil(total * 0.6);
   const rec = ensureLessonEntry(pkgId, lessonId);
   rec.attempts += 1;
   rec.quizBest = Math.max(rec.quizBest, score);
   rec.quizTotal = total;
+  // 新规则：小测及格（≥60%）即自动通关本关，无需手动按钮、不再要求作业勾选
+  let autoCompleted = false;
+  if (pass && !rec.completed) {
+    rec.completed = true;
+    rec.completedAt = new Date().toISOString();
+    pushEvent(pkgId, meta.id, '★ 通关（小测及格自动）');
+    autoCompleted = true;
+  }
   saveNow();
-  res.json({ score, total, pass: score >= Math.ceil(total * 0.6), graded });
+  res.json({ score, total, pass, graded, autoCompleted, unlockedLevels: computeUnlockedLevels(pkgId) });
 });
 
-// 勾选作业完成 / 取消（须已解锁）
+// 勾选作业完成 / 取消（须已解锁）——新规则下前端已无作业勾选，保留接口仅为向后兼容
 app.post('/api/progress/homework', async (req, res) => {
   await loadProgress();
   const { pkgId, lessonId, done } = req.body ?? {};
@@ -604,22 +681,19 @@ app.post('/api/progress/homework', async (req, res) => {
   res.json({ ok: true });
 });
 
-// 通关一个关卡（要求小测>=60% 且作业已完成，且已解锁）
+// 通关一个关卡（向后兼容保留：新规则下通关由小测及格自动触发；仅校验小测>=60%，不再要求作业）
 app.post('/api/progress/complete', async (req, res) => {
   await loadProgress();
   const { pkgId, lessonId } = req.body ?? {};
-  const { entry, meta } = assertLessonAccessible(pkgId, lessonId);
+  const { meta } = assertLessonAccessible(pkgId, lessonId);
   const rec = ensureLessonEntry(pkgId, lessonId);
-  const quizFile = await readTextIfExists(path.join(entry.pkgDir, 'quizzes', `${lessonId}.json`));
+  const quizFile = await readTextIfExists(meta.quizFile);
   if (quizFile) {
     let total = 0;
     try { total = JSON.parse(quizFile).questions?.length ?? 0; } catch { total = 0; }
     if (total > 0 && rec.quizBest / total < 0.6) {
       return res.status(400).json({ error: `小测成绩未达标：需答对至少 ${Math.ceil(total * 0.6)}/${total} 题（当前最好成绩 ${rec.quizBest} 题）` });
     }
-  }
-  if (!rec.homeworkDone) {
-    return res.status(400).json({ error: `请先完成本关作业并勾选"作业已完成"` });
   }
   if (!rec.completed) {
     rec.completed = true;
