@@ -1,0 +1,65 @@
+{
+  "lessonId": "pinia-async",
+  "questions": [
+    {
+      "stem": "Pinia 中 async action 的正确定义方式是？",
+      "options": ["通过 dispatch + thunk 中间件", "在 actions: {} 里写 async 函数", "Setup Store 里直接 async function", "使用 createAsyncThunk"],
+      "answer": 2,
+      "explanation": "Pinia 没有 thunk/dispatch——Setup Store 里的 async function 就是 async action。"
+    },
+    {
+      "stem": "loading 状态应该放在哪里？",
+      "options": ["数据多处消费放 store、单组件用放组件 ref", "一律放组件 ref", "一律放 store", "放 localStorage"],
+      "answer": 0,
+      "explanation": "共享数据 loading 多处消费→store；只有单组件使用→局部 ref 更简洁。"
+    },
+    {
+      "stem": "解决竞态问题（旧请求覆盖新数据），以下哪种不可行？",
+      "options": ["AbortController 取消旧请求", "请求序号 reqId 丢弃过时响应", "加 debounce 延迟发送", "用 setTimeout 延迟赋值"],
+      "answer": 3,
+      "explanation": "setTimeout 不能解决竞态——无法保证时序。AbortController/reqId/debounce 各自角度解决。"
+    },
+    {
+      "stem": "Nuxt 中页面级首屏 SSR 数据应该用什么获取？",
+      "options": ["Pinia action + onMounted", "useFetch / useAsyncData", "axios.get 在 main.ts", "store.$subscribe"],
+      "answer": 1,
+      "explanation": "Nuxt 的 useFetch/useAsyncData 自动处理 SSR+水合。Pinia action 用于交互触发的按需数据。"
+    },
+    {
+      "stem": "Pinia async action 的返回值是什么？",
+      "options": ["永远是 undefined", "store 实例本身（可链式调用）", "函数体内 return 的值", "固定的 Promise<void>"],
+      "answer": 2,
+      "explanation": "async action 与普通 async 函数一致——调用者 await 得到的就是 return 值。"
+    },
+    {
+      "stem": "以下哪种并发模式适合'加载多个不关联资源'？",
+      "options": ["Promise.allSettled 并行", "for 循环 await 串行", "只取第一个 Promise.race", "递归回调"],
+      "answer": 0,
+      "explanation": "不关联资源用 allSettled 并行取——部分失败不影响其余。"
+    },
+    {
+      "stem": "AbortController 取消 fetch 后抛出的错误 name 是？",
+      "options": ["'TimeoutError'", "'NetworkError'", "'AbortError'", "'CancelError'"],
+      "answer": 2,
+      "explanation": "AbortController.abort() 导致 fetch reject Error{name:'AbortError'}，catch 里需过滤。"
+    },
+    {
+      "stem": "为什么不建议把 useFetch 的数据塞进 Pinia store？",
+      "options": ["性能差 10 倍", "会导致双重序列化（水合两次）", "useFetch 不能在 setup 里用", "Pinia 不支持 async"],
+      "answer": 1,
+      "explanation": "Nuxt useFetch 自动序列化/水合，再塞 store 就水合两次——冗余且可能时序 bug。"
+    },
+    {
+      "stem": "请求序号(reqId)竞态方案的原理是？",
+      "options": ["只接受 id 等于最新 reqId 的响应", "自动取消旧请求", "用队列按序执行", "加锁阻止并发"],
+      "answer": 0,
+      "explanation": "每次请求 ++reqId 记录本地 id；响应回来比对——不等于最新则丢弃。简单有效无需 cancel。"
+    },
+    {
+      "stem": "Pinia action 里 await 后改 state，需要额外处理 Vue 更新时机吗？",
+      "options": ["需要手动 nextTick()", "不需要，ref.value=xxx 自动触发响应式", "需要 call setTimeout", "需要 commit 通知"],
+      "answer": 1,
+      "explanation": "Vue 响应式在赋值时立即标记 dirty，scheduler 在微任务里批处理渲染——不需要手动干预。"
+    }
+  ]
+}

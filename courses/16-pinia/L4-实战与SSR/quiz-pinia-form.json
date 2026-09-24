@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-form",
+  "questions": [
+    {
+      "stem": "以下哪种场景适合把表单状态放进 Pinia store？",
+      "options": [
+        "单页联系表单",
+        "搜索框关键词",
+        "登录表单",
+        "多步骤注册向导（跨路由保留）"
+      ],
+      "answer": 3,
+      "explanation": "跨步骤/跨路由需保留的才进 store；单页面表单留组件局部。"
+    },
+    {
+      "stem": "vee-validate 和 Pinia 在表单中的分工是？",
+      "options": [
+        "vee-validate 管值+校验，Pinia 管跨步骤状态+草稿",
+        "都管校验",
+        "Pinia 管 UI，vee-validate 管数据",
+        "两者互斥不能一起用"
+      ],
+      "answer": 0,
+      "explanation": "字段级校验归 vee-validate；跨步骤状态保留和持久化归 Pinia store。"
+    },
+    {
+      "stem": "store 里 isDirty 用什么实现？",
+      "options": [
+        "function 手动比较",
+        "computed 对比当前值与初始值",
+        "$subscribe 设 flag",
+        "watch immediate"
+      ],
+      "answer": 2,
+      "explanation": "$subscribe 在 state 变化时设 dirty=true，最简洁。"
+    },
+    {
+      "stem": "草稿自动保存用 debounce 的目的是？",
+      "options": [
+        "减少 CPU 占用",
+        "避免每次击键都写 localStorage",
+        "防止 XSS",
+        "减少组件渲染次数"
+      ],
+      "answer": 1,
+      "explanation": "500ms 内多次输入只保存最后一次——减少 I/O。"
+    },
+    {
+      "stem": "beforeunload 里怎么提示用户离开？",
+      "options": [
+        "alert()",
+        "e.preventDefault() + e.returnValue=''触发浏览器原生确认框",
+        "router.push('/warn')",
+        "confirm()"
+      ],
+      "answer": 1,
+      "explanation": "浏览器原生 beforeunload 弹窗——自定义文案被安全策略禁止。"
+    },
+    {
+      "stem": "store 的 reset() 应怎样恢复初始值？",
+      "options": [
+        "location.reload()",
+        "初始值工厂返回新对象赋值",
+        "$patch({}) 空对象",
+        "store = null"
+      ],
+      "answer": 1,
+      "explanation": "Setup Store 无内置 $reset；把初值抽函数，reset 时赋值回去。"
+    },
+    {
+      "stem": "表单字段值在 setup store 里推荐用？",
+      "options": [
+        "reactive 包整个表单对象",
+        "每字段一个 ref",
+        "shallowRef 包对象",
+        "markRaw"
+      ],
+      "answer": 0,
+      "explanation": "表单字段多且常整体 $patch/reset，reactive 更整洁；storeToRefs 后按需解构。"
+    },
+    {
+      "stem": "watch 表单对象深度监听需要？",
+      "options": [
+        "{ deep: true }",
+        "{ immediate: true }",
+        "{ flush: 'post' }",
+        "不需要选项"
+      ],
+      "answer": 0,
+      "explanation": "reactive 对象或 ref 包的对象属性变化需 deep。"
+    },
+    {
+      "stem": "store 里的 async submit action 应处理哪些状态？",
+      "options": [
+        "loading / error / success 三态",
+        "只 loading",
+        "只 error",
+        "不需要管状态"
+      ],
+      "answer": 0,
+      "explanation": "提交按钮 disabled = loading；失败显示 error；成功跳转。"
+    },
+    {
+      "stem": "跨步骤向导里第 2 步的组件卸载后数据不丢是因为？",
+      "options": [
+        "keep-alive 缓存了组件",
+        "数据在 store 里不在组件局部",
+        "v-show 隐藏",
+        "Vue 自动保留 setup 变量"
+      ],
+      "answer": 1,
+      "explanation": "Pinia store 是全局单例——组件销毁不影响 store 状态。"
+    }
+  ]
+}

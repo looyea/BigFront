@@ -1,0 +1,61 @@
+{
+  "id": "16-pinia",
+  "title": "Pinia 实战：Vue 3 官方状态管理",
+  "order": 16,
+  "tier": "铂金 · 状态管理专题",
+  "tagline": "Pinia 是 Vue 3 生态的官方状态库，取代 Vuex 成为全家桶标配。API 精简——setup store、computed getter、async action、插件、Nuxt SSR、测试、Vuex 迁移——五阶段十五关够用即止。",
+  "icon": "🍍",
+  "color": "#f0a040",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "入门与核心",
+      "subtitle": "定位 / Setup Store / 状态变更",
+      "lessons": [
+        { "id": "pinia-overview", "title": "Pinia 是什么：取代 Vuex 的官方状态库", "goal": "Vuex 痛点（mutation 冗余、module 割裂、TS 差）→ Pinia 逐条解决；setup store vs options store 两种写法；Composition API 天然亲和；安装注册 app.use（呼应 vue-reactivity-theory、sig-landscape）" },
+        { "id": "pinia-setup-store", "title": "Setup Store：defineStore 的 Composition API 写法", "goal": "ref 即 state、computed 即 getter、function 即 action；storeToRefs 保留响应式解构；类型自动推断零标注；命名与导出规范（呼应 vue-composition、sig-core）" },
+        { "id": "pinia-mutations", "title": "状态变更：直接赋值 / $patch / $subscribe", "goal": "三种粒度改动（store.count++ / $patch 批量 / action 封装）；$subscribe 与 $onAction 钩子；严格模式 dev-only 约束；与 Vue reactive 的关系（呼应 svelte-runes-mutation、za-core）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "Getters 与异步 Actions",
+      "subtitle": "派生 / HTTP / 错误处理",
+      "lessons": [
+        { "id": "pinia-getters", "title": "Computed Getters：惰性派生与带参筛选", "goal": "computed() 做 getter 缓存；getter 返回函数实现动态参数；getter 互相引用与循环；对比 Vue computed 一致性（呼应 vue-computed-watch、za-selectors）" },
+        { "id": "pinia-async", "title": "Async Actions：HTTP + loading + 竞态", "goal": "action 直接 async/await（无 thunk）；loading/error 内置 store；AbortController 取消竞态；useFetch(Nuxt) 互补（呼应 ng-http、kit-load-universal）" },
+        { "id": "pinia-optimistic", "title": "乐观更新与错误回滚", "goal": "$patch 快照 + catch 恢复；重试退避；全局 onAction 插件捕获错误→toast；离线队列思路（呼应 za-middleware、sig-mutability）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "组合与插件",
+      "subtitle": "Store 互调 / 插件 / 开发体验",
+      "lessons": [
+        { "id": "pinia-compose", "title": "Store 组合：跨 store 调用与派生", "goal": "action 里 useOtherStore()；跨 store 派生 getter 的响应性陷阱与修复；拆分粒度判据（呼应 ng-services、za-patterns）" },
+        { "id": "pinia-plugins", "title": "插件系统：给所有 store 注入能力", "goal": "createPinia().use(fn)；插件签名 (context)=>partialState；典型：persist localStorage、日志、撤销/重做；插件与 $subscribe 时序（呼应 za-middleware、exp-middleware）" },
+        { "id": "pinia-devtools", "title": "DevTools 与 HMR 热更新", "goal": "Vue DevTools Pinia 面板（时间旅行/编辑）；Vite HMR 不丢状态原理；store 热替换 acceptHMRUpdate；对比 Vuex DevTools 改进（呼应 vite-devtools、vue-devtools）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "实战与 SSR",
+      "subtitle": "登录 / 表单 / Nuxt 水合",
+      "lessons": [
+        { "id": "pinia-auth", "title": "登录态与权限 store", "goal": "token + 拦截器联动；路由守卫 useAuthStore；登出 $reset + 清 storage；跨标签页同步（呼应 sig-auth、mp-login、ng-router-guards）" },
+        { "id": "pinia-form", "title": "表单状态：向导 / 草稿 / 与 vee-validate 分工", "goal": "跨步骤向导才进 store；字段校验交 vee-validate/zod；dirty 检测 beforeunload；reset 语义；局部表单态留组件（呼应 vue-forms-validation、za-forms）" },
+        { "id": "pinia-ssr", "title": "Nuxt SSR 状态水合", "goal": "Nuxt 自动序列化/水合 Pinia；plugin 里 process.client 跳过持久化；SSR 里 asyncData 放 action vs defineNuxtRouteMiddleware；TransferState 等价（呼应 kit-load-universal、ng-ssr）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "测试·迁移·选型",
+      "subtitle": "Vitest / Vuex→Pinia / vs Composables",
+      "lessons": [
+        { "id": "pinia-testing", "title": "单元测试：store 脱离组件测", "goal": "createPinia+setActivePinia；action 改 state→断言 getter；http mock(m-sw)；组件集成 mount+plugins（呼应 ng-testing、vite-vitest）" },
+        { "id": "pinia-migration", "title": "Vuex 迁移实操", "goal": "官方 codemod；module→store 1:1；mutations→直接赋值；getters→computed；检查清单与分阶段灰度（呼应 svelte-migration-legacy、ng-version-map）" },
+        { "id": "pinia-ecosystem", "title": "选型收官：Pinia vs Composables vs Pinia Colada", "goal": "跨组件共享+持久化+时间旅行=Pinia；局部=composable；数据拉取缓存=@pinia/colada/TanStack Query 管服务端态；三问判据 + Vue 生态定位图（呼应 sig-scenarios、pinia-vs-composables）" }
+      ]
+    }
+  ]
+}

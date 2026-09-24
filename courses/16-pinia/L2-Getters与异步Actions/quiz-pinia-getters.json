@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-getters",
+  "questions": [
+    {
+      "stem": "Pinia Setup Store 中 getter 的实现方式是？",
+      "options": [
+        "getters: {} 对象",
+        "computed() 函数",
+        "function 带 get 关键字",
+        "defineGetter()"
+      ],
+      "answer": 1,
+      "explanation": "Setup Store 用 Vue 的 computed() 做 getter——与组件 computed 行为一致。"
+    },
+    {
+      "stem": "Pinia getter（computed）的求值策略是？",
+      "options": [
+        "立即求值（eager）",
+        "每次访问都重新计算",
+        "惰性+依赖不变则缓存",
+        "只在 action 里手动触发"
+      ],
+      "answer": 2,
+      "explanation": "Vue computed 是惰性的——首次访问才计算；依赖不变则返回缓存值。"
+    },
+    {
+      "stem": "带参数的 getter 在 Pinia 中如何实现？",
+      "options": [
+        "getter 返回函数",
+        "使用 mapGetters 传参",
+        "不支持带参 getter",
+        "用 $patch 参数代替"
+      ],
+      "answer": 0,
+      "explanation": "computed(() => (param) => ...) 外层 computed 缓存、内层函数按参数动态执行。"
+    },
+    {
+      "stem": "能否在 Pinia 的 computed getter 里调用 useOtherStore()？",
+      "options": [
+        "可以，任意位置",
+        "不行，getter 是惰性的时机不确定",
+        "只能在 async getter 里",
+        "需要加 await"
+      ],
+      "answer": 1,
+      "explanation": "Pinia 官方明确禁止在 getter 里使用其他 store（执行时机不确定），只能在 action 里跨 store。"
+    },
+    {
+      "stem": "以下哪个不是 Pinia computed getter 的特性？",
+      "options": [
+        "只读（外部不可直接赋值）",
+        "可被 watch 监听",
+        "支持自定义缓存大小",
+        "依赖变化时自动标记 dirty"
+      ],
+      "answer": 2,
+      "explanation": "Vue computed 没有 LRU/缓存大小配置——只有依赖变则重算、不变则缓存二态。"
+    },
+    {
+      "stem": "Pinia getter 和 Zustand selector 的核心区别是？",
+      "options": [
+        "没有区别",
+        "getter 有缓存、selector 每次渲染都执行",
+        "selector 有缓存、getter 没有",
+        "两者都是惰性的"
+      ],
+      "answer": 1,
+      "explanation": "Pinia computed 是惰性+缓存；Zustand selector 每次组件 render 都会执行（靠 shallow/Object.is 判重）。"
+    },
+    {
+      "stem": "组件中用 storeToRefs 解构 getter 后，访问方式是？",
+      "options": [
+        "double.value",
+        "store.double",
+        "double()（需要调用）",
+        "double.getValue()"
+      ],
+      "answer": 0,
+      "explanation": "storeToRefs 返回的是 ComputedRef，访问用 .value（模板自动 unwrap）。"
+    },
+    {
+      "stem": "getter 链过深（A→B→C→D）会导致什么问题？",
+      "options": [
+        "内存泄漏",
+        "死锁",
+        "类型推断失败",
+        "最终消费时整条链同步重算"
+      ],
+      "answer": 3,
+      "explanation": "A 变时 B/C/D 都被标 dirty；组件 render 读 D 时触发 D→C→B→A 同步重算链——计算量大时帧率下降。"
+    },
+    {
+      "stem": "Options Store 中 getter 互相引用用什么？",
+      "options": [
+        "直接变量名",
+        "this（如 this.double + 1）",
+        "super",
+        "$self"
+      ],
+      "answer": 1,
+      "explanation": "Options Store 用 this 跨 getter/action 互引；Setup Store 没有 this，直接引用闭包变量。"
+    },
+    {
+      "stem": "以下哪种场景更适合在 action 里算而不是 computed getter？",
+      "options": [
+        "列表过滤显示",
+        "需要访问其他 store 的派生值",
+        "表单字段验证",
+        "价格打折计算"
+      ],
+      "answer": 1,
+      "explanation": "跨 store 不能在 getter 里用，只能在 action 里手动计算赋值。"
+    }
+  ]
+}

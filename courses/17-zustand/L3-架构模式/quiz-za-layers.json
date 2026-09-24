@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-layers",
+  "questions": [
+    {
+      "stem": "列表/详情这类远端数据推荐交给？",
+      "options": [
+        "TanStack Query",
+        "Zustand 拷贝",
+        "Context",
+        "useState"
+      ],
+      "answer": 0,
+      "explanation": "服务端态由 Query 管缓存/重试/失效。"
+    },
+    {
+      "stem": "把服务端数据复制进 Zustand 的最大问题是？",
+      "options": [
+        "变大",
+        "变慢",
+        "制造两份真相与同步地狱",
+        "不类型安全"
+      ],
+      "answer": 2,
+      "explanation": "双源难以保持一致。"
+    },
+    {
+      "stem": "主题、侧栏开合属于哪层？",
+      "options": [
+        "服务端态",
+        "缓存态",
+        "业务态",
+        "UI 态"
+      ],
+      "answer": 3,
+      "explanation": "UI 偏好，低频、常持久化。"
+    },
+    {
+      "stem": "购物车、表单草稿属于哪层？",
+      "options": [
+        "UI 态",
+        "业务态",
+        "服务端态",
+        "路由态"
+      ],
+      "answer": 1,
+      "explanation": "客户端产生的业务状态。"
+    },
+    {
+      "stem": "关于写路径，正确原则是？",
+      "options": [
+        "任意处直写",
+        "每层单一写路径，server 走 mutation/invalidate",
+        "全部直写 store",
+        "只读不写"
+      ],
+      "answer": 1,
+      "explanation": "保持单一真相与可追踪。"
+    },
+    {
+      "stem": "Zustand 最适合管哪类状态？",
+      "options": [
+        "远端镜像",
+        "client-derived 客户端状态",
+        "编译期常量",
+        "DOM"
+      ],
+      "answer": 1,
+      "explanation": "客户端产生的 UI/业务态。"
+    },
+    {
+      "stem": "UI/业务态与服务端态的持久化差异？",
+      "options": [
+        "都一样",
+        "UI 常存偏好、服务端用缓存失效而非长久存",
+        "都不存",
+        "只存服务端"
+      ],
+      "answer": 1,
+      "explanation": "刷新语义不同。"
+    },
+    {
+      "stem": "三层各自的测试策略？",
+      "options": [
+        "都要 render",
+        "UI/业务纯 store 测、服务端 mock 网络",
+        "不测",
+        "只 E2E"
+      ],
+      "answer": 1,
+      "explanation": "分层带来对应测试手段。"
+    },
+    {
+      "stem": "下面哪种是反模式？",
+      "options": [
+        "Query 管列表",
+        "深层组件直改 serverCache 字段",
+        "Zustand 管主题",
+        "Zustand 管草稿"
+      ],
+      "answer": 1,
+      "explanation": "跨层直写破坏单一写路径。"
+    },
+    {
+      "stem": "“单一真相源”的含义？",
+      "options": [
+        "只用一个 store",
+        "每份数据只有一个权威归属与写入口",
+        "禁止缓存",
+        "禁止 store"
+      ],
+      "answer": 1,
+      "explanation": "分层正是为了明确归属。"
+    }
+  ]
+}

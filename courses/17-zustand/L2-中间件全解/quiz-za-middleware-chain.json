@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-middleware-chain",
+  "questions": [
+    {
+      "stem": "Zustand 中间件的核心作用对象是？",
+      "options": [
+        "set / get",
+        "render",
+        "Provider",
+        "reducer"
+      ],
+      "answer": 0,
+      "explanation": "中间件包装 set/get，从而拦截更新与读取。"
+    },
+    {
+      "stem": "immer 中间件应放在链的哪个位置？",
+      "options": [
+        "最外层",
+        "无所谓",
+        "最贴近基础 fn（最内层）",
+        "第二层"
+      ],
+      "answer": 2,
+      "explanation": "immer 需最先处理可变写法，产出不可变结果给外层。"
+    },
+    {
+      "stem": "devtools 通常放最外的原因是？",
+      "options": [
+        "性能最快",
+        "语法要求",
+        "避免循环",
+        "记录经过完整链路的所有 set，时间旅行才准确"
+      ],
+      "answer": 3,
+      "explanation": "最外层能捕获最终状态变化。"
+    },
+    {
+      "stem": "persist 包在 immer 外侧的好处是？",
+      "options": [
+        "存到 Proxy",
+        "持久化拿到最终不可变快照再序列化",
+        "更快",
+        "支持函数"
+      ],
+      "answer": 1,
+      "explanation": "避免把 immer 的 Proxy 中间态写入存储。"
+    },
+    {
+      "stem": "compose 的作用是？",
+      "options": [
+        "合并 state",
+        "把多个中间件函数串成一条增强链",
+        "创建 store",
+        "订阅"
+      ],
+      "answer": 1,
+      "explanation": "compose 从右到左应用中间件。"
+    },
+    {
+      "stem": "若把 persist 放到 immer 内侧会怎样？",
+      "options": [
+        "崩溃",
+        "可能持久化未定型的 Proxy 对象",
+        "无影响",
+        "自动修正"
+      ],
+      "answer": 1,
+      "explanation": "顺序错误导致拿到 Proxy 而非成品对象。"
+    },
+    {
+      "stem": "手写 logger 主要拦截什么？",
+      "options": [
+        "get",
+        "set 前后打印状态",
+        "render",
+        "effect"
+      ],
+      "answer": 1,
+      "explanation": "在包装的 set 调用前后打印 get() 快照。"
+    },
+    {
+      "stem": "undo/redo 中间件靠什么实现回退？",
+      "options": [
+        "时间旅行 API",
+        "维护历史快照栈 + setState(replace)",
+        "Provider",
+        "localStorage"
+      ],
+      "answer": 1,
+      "explanation": "把每次快照入栈，回退时整体替换。"
+    },
+    {
+      "stem": "中间件签名里第三个参数 store 提供？",
+      "options": [
+        "DOM",
+        "setState/getState/subscribe 等 vanilla 能力",
+        "context",
+        "reducer"
+      ],
+      "answer": 1,
+      "explanation": "store 是 vanilla store 引用，可注册 api 扩展。"
+    },
+    {
+      "stem": "关于顺序总原则，正确的是？",
+      "options": [
+        "越接近可观测越靠内",
+        "越接近数据真相越靠内、可观测越靠外",
+        "随机",
+        "字母序"
+      ],
+      "answer": 1,
+      "explanation": "数据变换(immer)靠内，日志/DevTools 靠外。"
+    }
+  ]
+}

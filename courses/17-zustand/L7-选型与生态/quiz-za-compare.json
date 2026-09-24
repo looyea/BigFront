@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-compare",
+  "questions": [
+    {
+      "stem": "Zustand 的近似 gzip 体积？",
+      "options": [
+        "~1.2KB",
+        "~15KB",
+        "~40KB",
+        "~100KB"
+      ],
+      "answer": 0,
+      "explanation": "极小。"
+    },
+    {
+      "stem": "超大团队要严格单向数据流最强 DevTools 首选？",
+      "options": [
+        "Context",
+        "useState",
+        "Redux Toolkit",
+        "Jotai"
+      ],
+      "answer": 2,
+      "explanation": "RTK 规范化与工具链最全。"
+    },
+    {
+      "stem": "服务端态最该交给？",
+      "options": [
+        "Zustand",
+        "immer",
+        "Context",
+        "TanStack Query"
+      ],
+      "answer": 3,
+      "explanation": "缓存/竞态/失效专用库。"
+    },
+    {
+      "stem": "Jotai 的建模单位是？",
+      "options": [
+        "store",
+        "atom",
+        "reducer",
+        "context"
+      ],
+      "answer": 1,
+      "explanation": "原子级 + 派生依赖。"
+    },
+    {
+      "stem": "Zustand 相比 Context 的订阅优势？",
+      "options": [
+        "更粗",
+        "selector 细粒度避免全量重渲",
+        "一样",
+        "需 Provider"
+      ],
+      "answer": 1,
+      "explanation": "Context 更新易触发子树整体重渲。"
+    },
+    {
+      "stem": "下列哪个是 Zustand 增长快的原因？",
+      "options": [
+        "需 Provider",
+        "零 Provider + TS 友好 + API 简单",
+        "体积最大",
+        "强制 action type"
+      ],
+      "answer": 1,
+      "explanation": "上手成本低。"
+    },
+    {
+      "stem": "表单字段级状态推荐？",
+      "options": [
+        "Zustand",
+        "React Hook Form",
+        "Jotai",
+        "Redux"
+      ],
+      "answer": 1,
+      "explanation": "非受控零重渲（呼应 za-forms）。"
+    },
+    {
+      "stem": "“多库共存”的正确认识是？",
+      "options": [
+        "必须选一个",
+        "按数据归属组合使用",
+        "全部禁用",
+        "只用 Context"
+      ],
+      "answer": 1,
+      "explanation": "各司其职。"
+    },
+    {
+      "stem": "需要脱离 React 读写状态时哪个更自然？",
+      "options": [
+        "Context",
+        "Zustand(vanilla)",
+        "useState",
+        "useReducer"
+      ],
+      "answer": 1,
+      "explanation": "createStore vanilla（呼应 za-store-api）。"
+    },
+    {
+      "stem": "何时用 Context 而非 Zustand？",
+      "options": [
+        "高频更新",
+        "低频、少量、纯注入(主题/语言)",
+        "复杂派生",
+        "乐观更新"
+      ],
+      "answer": 1,
+      "explanation": "低频注入 Context 足够。"
+    }
+  ]
+}

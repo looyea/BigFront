@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-async",
+  "questions": [
+    {
+      "stem": "async atom 的 getter 返回的是？",
+      "options": [
+        "Promise",
+        "值",
+        "null",
+        "Observable"
+      ],
+      "answer": 0,
+      "explanation": "async 即返回 Promise。"
+    },
+    {
+      "stem": "渲染读取未就绪的 async atom 会？",
+      "options": [
+        "返回 undefined",
+        "报错崩溃",
+        "throw promise 交给 Suspense",
+        "阻塞"
+      ],
+      "answer": 2,
+      "explanation": "这是挂起机制。"
+    },
+    {
+      "stem": "async atom 主要省去了什么样板？",
+      "options": [
+        "fetch",
+        "TS",
+        "Provider",
+        "手写 isLoading 状态"
+      ],
+      "answer": 3,
+      "explanation": "交给 Suspense fallback。"
+    },
+    {
+      "stem": "依赖的源 atom 变化时 async atom？",
+      "options": [
+        "不变",
+        "自动重新执行取数",
+        "缓存旧值",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "依赖驱动重取。"
+    },
+    {
+      "stem": "与 Zustand 在异步上的差异？",
+      "options": [
+        "Zustand 也 throw promise",
+        "Jotai 原生挂起、Zustand 需手动 loading",
+        "相同",
+        "都不能异步"
+      ],
+      "answer": 1,
+      "explanation": "呼应 za-suspense。"
+    },
+    {
+      "stem": "展示加载中 UI 靠？",
+      "options": [
+        "setTimeout",
+        "Suspense fallback",
+        "alert",
+        "store"
+      ],
+      "answer": 1,
+      "explanation": "声明式边界。"
+    },
+    {
+      "stem": "旧请求结果被忽略体现了？",
+      "options": [
+        "缓存",
+        "竞态处理",
+        "持久化",
+        "批处理"
+      ],
+      "answer": 1,
+      "explanation": "详见 jo-race。"
+    },
+    {
+      "stem": "async atom 读取用？",
+      "options": [
+        "useSetAtom",
+        "useAtomValue(在 Suspense 内)",
+        "getState",
+        "atom()"
+      ],
+      "answer": 1,
+      "explanation": "只读挂起值需包 Suspense。"
+    },
+    {
+      "stem": "组件不在 Suspense 边界内读 async atom 会？",
+      "options": [
+        "正常",
+        "冒泡到最近 Suspense 或顶层报错",
+        "返回 null",
+        "自动重试"
+      ],
+      "answer": 1,
+      "explanation": "需有边界兜底。"
+    },
+    {
+      "stem": "async atom 归类于哪种范式？",
+      "options": [
+        "大 store",
+        "异步优先/声明式取数",
+        "命令式",
+        "全局变量"
+      ],
+      "answer": 1,
+      "explanation": "Jotai 主打场景。"
+    }
+  ]
+}

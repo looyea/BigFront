@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-persist-deep",
+  "questions": [
+    {
+      "stem": "persist 默认把数据存到哪里？",
+      "options": [
+        "localStorage",
+        "sessionStorage",
+        "Cookie",
+        "IndexedDB"
+      ],
+      "answer": 0,
+      "explanation": "默认 localStorage（Web）。"
+    },
+    {
+      "stem": "partialize 的用途是？",
+      "options": [
+        "序列化格式",
+        "版本迁移",
+        "挑选哪些字段参与持久化",
+        "加密"
+      ],
+      "answer": 2,
+      "explanation": "返回要持久化的子集，排除瞬态/敏感字段。"
+    },
+    {
+      "stem": "存储结构里 version 字段作用是？",
+      "options": [
+        "性能",
+        "去重",
+        "压缩",
+        "配合 migrate 做 schema 升级"
+      ],
+      "answer": 3,
+      "explanation": "记录写入时的版本，读取时决定是否需要迁移。"
+    },
+    {
+      "stem": "migrate 函数的两个参数是？",
+      "options": [
+        "(newState, oldState)",
+        "(persistedState, version)",
+        "(set, get)",
+        "(name, storage)"
+      ],
+      "answer": 1,
+      "explanation": "收到旧持久化数据与其版本号，返回新结构。"
+    },
+    {
+      "stem": "默认 merge 策略是？",
+      "options": [
+        "深合并",
+        "浅合并（水合值覆盖初始值）",
+        "替换整体",
+        "不合并"
+      ],
+      "answer": 1,
+      "explanation": "默认浅合并，新增字段可能丢初始值，需自定义 merge。"
+    },
+    {
+      "stem": "SSR 下防止 hydration 闪烁常配哪个选项？",
+      "options": [
+        "partialize",
+        "skipHydration + 手动 rehydrate",
+        "version",
+        "storage"
+      ],
+      "answer": 1,
+      "explanation": "关闭自动水合，客户端挂载后 rehydrate。"
+    },
+    {
+      "stem": "React Native 上持久化需要？",
+      "options": [
+        "无需改动",
+        "createJSONStorage(()=>AsyncStorage)",
+        "用 localStorage",
+        "用 Cookie"
+      ],
+      "answer": 1,
+      "explanation": "提供适配 AsyncStorage 的 storage 实现。"
+    },
+    {
+      "stem": "把 loading 也持久化会导致？",
+      "options": [
+        "更快",
+        "刷新后卡在假 loading 态",
+        "报错",
+        "无影响"
+      ],
+      "answer": 1,
+      "explanation": "瞬态不应持久化，否则水合出错误状态。"
+    },
+    {
+      "stem": "自定义 storage 需实现哪些方法？",
+      "options": [
+        "read/write",
+        "getItem/setItem/removeItem",
+        "get/set/delete",
+        "load/save/clear"
+      ],
+      "answer": 1,
+      "explanation": "StateStorage 接口即这三个异步方法。"
+    },
+    {
+      "stem": "schema 改动后未升 version 的后果？",
+      "options": [
+        "自动修复",
+        "旧数据被当新结构读出不一致",
+        "崩溃",
+        "忽略"
+      ],
+      "answer": 1,
+      "explanation": "migrate 不触发，旧结构缺字段导致运行期异常。"
+    }
+  ]
+}

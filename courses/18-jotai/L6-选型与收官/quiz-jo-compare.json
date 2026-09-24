@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-compare",
+  "questions": [
+    {
+      "stem": "Jotai 的建模范式是？",
+      "options": [
+        "自上而下大 store",
+        "中心 reducer",
+        "自下而上原子",
+        "Provider 树"
+      ],
+      "answer": 2,
+      "explanation": "atom 搭积木。"
+    },
+    {
+      "stem": "哪个库原生支持 async + Suspense 挂起？",
+      "options": [
+        "Zustand",
+        "Redux 原生",
+        "Context",
+        "Jotai"
+      ],
+      "answer": 3,
+      "explanation": "async atom throw promise。"
+    },
+    {
+      "stem": "Zustand 的近似体积？",
+      "options": [
+        "~1.2KB",
+        "~30KB",
+        "~100KB",
+        "0"
+      ],
+      "answer": 0,
+      "explanation": "极小（呼应 za-compare）。"
+    },
+    {
+      "stem": "超大团队要严格规范/最强 DevTools 选？",
+      "options": [
+        "Context",
+        "Redux/RTK",
+        "Jotai",
+        "useState"
+      ],
+      "answer": 1,
+      "explanation": "工具链最全。"
+    },
+    {
+      "stem": "Context 的订阅粒度问题？",
+      "options": [
+        "太细",
+        "value 变整子树重渲",
+        "无法共享",
+        "需 reducer"
+      ],
+      "answer": 1,
+      "explanation": "缺细粒度订阅。"
+    },
+    {
+      "stem": "Jotai 相比 Zustand 订阅粒度？",
+      "options": [
+        "更粗",
+        "原子自动更细",
+        "相同",
+        "都要 selector"
+      ],
+      "answer": 1,
+      "explanation": "读即订阅。"
+    },
+    {
+      "stem": "服务端态统一推荐交给？",
+      "options": [
+        "任何状态库",
+        "TanStack Query",
+        "Context",
+        "useState"
+      ],
+      "answer": 1,
+      "explanation": "缓存/失效专用。"
+    },
+    {
+      "stem": "Jotai 是否需要 Provider 才能用？",
+      "options": [
+        "必须",
+        "不必须，有默认 store",
+        "每次",
+        "仅 v1"
+      ],
+      "answer": 1,
+      "explanation": "全局即用（呼应 jo-global）。"
+    },
+    {
+      "stem": "“数据更原子、依赖派生多”更适合？",
+      "options": [
+        "Redux",
+        "Jotai",
+        "Context",
+        "单例 store"
+      ],
+      "answer": 1,
+      "explanation": "原子图擅长。"
+    },
+    {
+      "stem": "关于共存，正确说法？",
+      "options": [
+        "必须择一",
+        "按归属组合多库",
+        "全部禁用",
+        "只用 Context"
+      ],
+      "answer": 1,
+      "explanation": "各司其职。"
+    }
+  ]
+}

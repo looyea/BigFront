@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-compose",
+  "questions": [
+    {
+      "stem": "Pinia 中跨 store 调用的正确位置是？",
+      "options": [
+        "computed getter 里",
+        "action 里 import 并调用 useOtherStore()",
+        "组件模板里直接调用",
+        "$subscribe 回调里"
+      ],
+      "answer": 1,
+      "explanation": "只有 action 里调用其他 store 是安全的，getter 惰性执行时机不确定。"
+    },
+    {
+      "stem": "两个 store 互相 import 会循环依赖吗？",
+      "options": [
+        "会，严禁互相引用",
+        "不会，import 的是工厂函数，实例延迟创建",
+        "会，但运行时才报错",
+        "取决于 Vite 版本"
+      ],
+      "answer": 1,
+      "explanation": "Pinia store 工厂函数在首次 useXxxStore() 时执行创建实例，import 不会触发循环。"
+    },
+    {
+      "stem": "以下哪个不是拆分 store 的合理判据？",
+      "options": [
+        "按业务域",
+        "按页面",
+        "两个字段永远一起变",
+        "多个页面共享同一份数据"
+      ],
+      "answer": 1,
+      "explanation": "不应按页面拆，应按业务域拆——同一域的不同页面共享同一 store。"
+    },
+    {
+      "stem": "跨 store 派生值应该怎么做？",
+      "options": [
+        "直接在 computed 里引用",
+        "action 里同步到一个本地 ref",
+        "$patch 跨 store 写入",
+        "用 event bus"
+      ],
+      "answer": 1,
+      "explanation": "getter 里不能跨 store，只能在 action 或 watch 里同步到本地 ref 供 getter 读取。"
+    },
+    {
+      "stem": "Pinia 跨 store 通信相比事件总线的优势不包括？",
+      "options": [
+        "类型安全",
+        "DevTools 可追踪",
+        "自动垃圾回收",
+        "$subscribe 监听变更"
+      ],
+      "answer": 2,
+      "explanation": "自动垃圾回收不是 Pinia 跨 store 的特有优势——事件总线也能做。"
+    },
+    {
+      "stem": "在 Setup Store 的 setup 顶层直接调用另一 store 的方法会怎样？",
+      "options": [
+        "完全正常",
+        "可能报错（另一个 store 可能还没创建）",
+        "类型推断失败",
+        "循环卡死"
+      ],
+      "answer": 1,
+      "explanation": "setup 顶层执行时被引用的 store 可能还未被首次访问创建——应放在 action 里。"
+    },
+    {
+      "stem": "以下哪个不是拆分 store 的合理理由？",
+      "options": [
+        "减少无关组件的重渲染",
+        "某字段只在特定 action 里用",
+        "字段名重复出现",
+        "减少代码行数"
+      ],
+      "answer": 3,
+      "explanation": "拆分不会减少代码行数，反而可能增加（多了导入/导出）。"
+    },
+    {
+      "stem": "Pinia 的 watch 跨 store 监听怎么写？",
+      "options": [
+        "watch(() => useCartStore().total, cb)",
+        "watch(cartStore.total, cb)",
+        "$subscribe cartStore 后读 total",
+        "不能跨 store watch"
+      ],
+      "answer": 0,
+      "explanation": "用箭头函数包裹访问表达式，在监听回调执行时 store 已创建完毕。"
+    },
+    {
+      "stem": "store 组合时谁负责初始化其他 store 的数据？",
+      "options": [
+        "每个 store 自行 init action 初始化",
+        "app.use(createPinia()) 自动初始化",
+        "由根组件 onMounted 统一初始化",
+        "不需要初始化"
+      ],
+      "answer": 0,
+      "explanation": "每个 store 暴露自己的 init action，由业务在合适时机调用；createPinia 不会自动填充数据。"
+    },
+    {
+      "stem": "关于 store 拆分粒度，下列说法正确的是？",
+      "options": [
+        "拆得越细越好",
+        "单一大 store 最省心",
+        "按变更相关性拆分，一起变的放一起",
+        "必须一个路由一个 store"
+      ],
+      "answer": 2,
+      "explanation": "拆分遵循\"高内聚\"——总是一起变化的字段放同一 store，减少无关组件订阅与重渲染。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-migration",
+  "questions": [
+    {
+      "stem": "Pinia 官方 Vuex 迁移工具是？",
+      "options": [
+        "vue-cli-service migrate",
+        "npm run codemod",
+        "npx @posva/vuex-to-pinia",
+        "pinia migrate"
+      ],
+      "answer": 2,
+      "explanation": "posva 写的 codemod 自动转 Vuex module 为 Pinia store。"
+    },
+    {
+      "stem": "Vuex mutations 在迁移到 Pinia 后怎么处理？",
+      "options": [
+        "保留为同名 action",
+        "用 $subscribe 替代",
+        "变成 getters",
+        "删除——逻辑合并到 action 或直接赋值"
+      ],
+      "answer": 3,
+      "explanation": "Pinia 无 mutation 概念，直接赋值或包在 action 里。"
+    },
+    {
+      "stem": "Vuex namespaced 跨模块 rootState 在 Pinia 里怎么替代？",
+      "options": [
+        "rootState 保留",
+        "在 action 里 useOtherStore()",
+        "用 event bus",
+        "不能跨模块"
+      ],
+      "answer": 1,
+      "explanation": "Pinia 跨 store 用 import + useXxxStore()，无 rootState 概念。"
+    },
+    {
+      "stem": "mapState/mapGetters 在 Pinia 里的等价物是？",
+      "options": [
+        "mapStores + storeToRefs",
+        "仍然用 mapState",
+        "用 $subscribe",
+        "用 inject"
+      ],
+      "answer": 0,
+      "explanation": "Setup 组件用 storeToRefs；Options 组件用 mapStores/mapState（Pinia 也提供）。"
+    },
+    {
+      "stem": "迁移期 Vuex 和 Pinia 共存会怎样？",
+      "options": [
+        "完全不能共存",
+        "可以——各自独立运行但互调不便",
+        "Pinia 会覆盖 Vuex",
+        "Vuex 会禁用 DevTools"
+      ],
+      "answer": 1,
+      "explanation": "两者独立注册互不冲突。但 Vuex module 不能直接 usePiniaStore——需组件中转。"
+    },
+    {
+      "stem": "迁移检查清单里 TypeScript 相关的要点是？",
+      "options": [
+        "保留 as 强转",
+        "移除 InferState/ThisType 手动标注——Setup 自动推断",
+        "加 @ts-ignore",
+        "换用 JSDoc"
+      ],
+      "answer": 1,
+      "explanation": "Pinia Setup Store 天然 TS 友好，之前 Vuex 的手动标注全删。"
+    },
+    {
+      "stem": "灰度迁移策略推荐的第一步是？",
+      "options": [
+        "一次性全改",
+        "新功能用 Pinia、旧 Vuex 暂不动",
+        "先删 Vuex",
+        "先装 Pinia 并删 Vuex"
+      ],
+      "answer": 1,
+      "explanation": "渐进式——新增 store 用 Pinia，逐步替换旧 Vuex module。"
+    },
+    {
+      "stem": "迁移后测试怎么改？",
+      "options": [
+        "测试不需要改",
+        "createLocalVue+Vuex → setActivePinia+createPinia",
+        "改用 Cypress",
+        "只保留 E2E"
+      ],
+      "answer": 1,
+      "explanation": "单元测试里用 setActivePinia(createPinia()) 替代 Vuex 的 localVue。"
+    },
+    {
+      "stem": "Pinia 的 $reset 在 Setup Store 中默认存在吗？",
+      "options": [
+        "存在",
+        "不存在——需手动实现",
+        "v2 后自动有",
+        "仅在 DevTools 里有"
+      ],
+      "answer": 1,
+      "explanation": "Options Store 有 $reset；Setup Store 需自己写 reset 函数。"
+    },
+    {
+      "stem": "迁移最大的心智转变是？",
+      "options": [
+        "从 ref 改成 reactive",
+        "从 dispatch/commit 字符串改为直接调用函数",
+        "从 computed 改成 method",
+        "从 reactive 改成 immutable"
+      ],
+      "answer": 1,
+      "explanation": "告别字符串分发的 dispatch('module/action') → 直接调 store.action()。"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "id": "18-jotai",
+  "title": "Jotai 实战：React 原子化状态管理",
+  "order": 18,
+  "tier": "铂金 · 状态管理专题",
+  "tagline": "Jotai 把状态拆成最小原子（atom），按需组合派生，天然支持 async/Suspense。与 Zustand 的'大 store + selector'路线互补。六阶段十八关从 atom 原语到工具原子库、store 隔离、异步 Suspense、实战到选型收官。",
+  "icon": "⚛️",
+  "color": "#64b5f6",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "原子核心",
+      "subtitle": "atom / useAtom / 无 Provider",
+      "lessons": [
+        { "id": "jo-atom", "title": "Atom 原语：一个原子一个值", "goal": "atom(initialValue) 创建读/写基元；与 useState 的区别（可跨组件共享、可派生）；与 Zustand store 的哲学差异（自下而上 vs 自上而下）；安装与 import（呼应 za-core、sig-landscape）" },
+        { "id": "jo-use-atom", "title": "useAtom / useAtomValue / useSetAtom", "goal": "三 hook 分别读写/只读/只写；只读不订(useAtomValue)减重渲；useSetAtom 稳定引用免依赖数组；selector-like 派生读 vs 整 atom 订阅（呼应 za-selectors、react-performance）" },
+        { "id": "jo-global", "title": "全局原子与模块作用域", "goal": "导出 atom 即全局单例（无 Provider 开销）；scope 需求时的 Provider + 自定义 store；atomWithStorage 做持久化全局；与 Context 对比的性能优势（只订阅该 atom 的组件更新）（呼应 za-context、sig-map）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "派生与写",
+      "subtitle": "derived / write-only / 依赖图",
+      "lessons": [
+        { "id": "jo-derived", "title": "Derived Atom：读依赖其他 atom", "goal": "atom(get => get(a) + get(b)) 惰性计算+缓存；修改源 atom 后派生 atom 自动通知订阅者；与 computed/Memo 对比（Zustand selector 不缓存、MobX computed 缓存）；循环依赖检测（呼应 tc39-core、vue-computed-watch）" },
+        { "id": "jo-write-only", "title": "Write-only Atom：封装副作用", "goal": "atom(null, (get,set,arg)=>{...}) 创建纯写 atom；useSetAtom 触发；做 action 封装（无读值、只执行）；与 Zustand action 的对应关系；批量 set 的原子性保证（呼应 za-actions、sig-mutability）" },
+        { "id": "jo-dependencies", "title": "依赖图与 Batching", "goal": "atom 依赖自动追踪（读即订阅）；同帧多 atom 变更→React 18 自动 batching；unstable_batchedUpdates 场景；深层派生链的性能影响与诊断（呼应 solid-effect-tracking、za-sync-external）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "异步与 Suspense",
+      "subtitle": "async atom / loadable / 竞态",
+      "lessons": [
+        { "id": "jo-async", "title": "Async Atom：throw Promise 与 Suspense", "goal": "atom(get => fetch(...)) 天然 async（Jotai 内部 throw Promise）；配合 Suspense boundary 做 loading fallback；与 Zustand 手动 isLoading 的对比（声明式 vs 命令式）（呼应 sig-async、kit-load-universal）" },
+        { "id": "jo-loadable", "title": "loadable / unwrap：解 Suspense 黑盒", "goal": "loadable(atom) 返回 {state:'loading'|'hasData'|'hasError'} 对象——不用 Suspense 也能处理；useAtomValue + loadable 做局部 spinner；atomWithObservable 接 RxJS/EventSource（呼应 rx-inapp、za-suspense）" },
+        { "id": "jo-race", "title": "异步竞态与取消", "goal": "async atom 自动取消过时请求（新依赖值触发重取、旧 Promise 被忽略）；AbortController 手动集成模式；retry 策略封装 atomWithRetry 工具；与 TanStack Query 的分工线（呼应 sig-server、za-layers）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "工具原子库",
+      "subtitle": "atomWithStorage / atomFamily / focus / select",
+      "lessons": [
+        { "id": "jo-storage", "title": "atomWithStorage / atomWithReducer / atomWithDefault", "goal": "内置 jotai/utils 三大工具：storage(localStorage/sessionStorage/自定义)、reducer(Redux 风格)、default(reset 到初值)；类型签名与 SSR 跳过策略；与 Zustand persist 对比（呼应 za-persist-deep、pinia-plugins）" },
+        { "id": "jo-family", "title": "atomFamily：动态创建参数化原子", "goal": "atomFamily(param => atom(...)) 按参数缓存；v2 中 atomFamily 被废弃改为 Map 手动 memo 的原因与解法；列表/表格行级状态管理；内存泄漏防控（呼应 react-performance、za-crud）" },
+        { "id": "jo-focus-select", "title": "focusAtom / selectAtom / splitAtom", "goal": "focusAtom 从对象 atom 聚焦子字段（类似 lens）；selectAtom 派生选择（shallow 比较）；splitAtom 数组 atom 拆成子 atom 列表（ToDo 项各一个 atom）；实战：表单字段级订阅（呼应 za-selectors-deep、pinia-getters）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "架构与性能",
+      "subtitle": "Store 隔离 / SSR / 性能调优 / 测试",
+      "lessons": [
+        { "id": "jo-store", "title": "Store 隔离：createStore + Provider", "goal": "全局默认 store 的问题（SSR 跨请求泄漏、测试不隔离）；createStore() 独立实例；<Provider store={...}> 作用域注入；弹窗/向导/多标签页独立状态（呼应 za-factory、ng-di-scope）" },
+        { "id": "jo-ssr", "title": "SSR / Next.js 集成", "goal": "server 每请求 createStore + Hydration 传递；Provider 包裹 layout 隔离；atomWithStorage + getOnInit 防闪烁；useAtomValue 在 RSC 不可用→Client 边界；与 Zustand SSR 方案对照（呼应 za-next-app、kit-load-universal）" },
+        { "id": "jo-perf-test", "title": "性能调优与测试", "goal": "atom 重渲粒度分析（React DevTools Profiler）；避免派生 atom 链过深；测试时 createStore 隔离 + atom.set 注入初始值；vi.mock 处理 async atom；组件集成 Provider + Suspense（呼应 za-testing-deep、ng-testing）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "选型与收官",
+      "subtitle": "四库对比 / Valyto / 毕业",
+      "lessons": [
+        { "id": "jo-compare", "title": "Jotai vs Zustand vs Redux vs Context：选型矩阵", "goal": "原子粒度 vs 整 store；async 原生支持；包体积(jotai 3KB/zustand 1.2KB)；DevTools 成熟度；适合场景（Jotai：组件树状态密集/表单/依赖图多；Zustand：全局业务逻辑；Redux：超大型团队标准化）；共存策略（呼应 za-compare、sig-compare）" },
+        { "id": "jo-valtio", "title": "Jotai 兄弟：Valtio 的 proxy 路线", "goal": "valtio(proxy) 用 Proxy 做可变对象→组件自动订阅；与 Jotai 同作者、互补关系（valtio 像 MobX、jotai 像 signals）；何时选 valtio（深层嵌套对象多）何时选 jotai（离散原子多）（呼应 mobx-core、svelte-runes-mutation）" },
+        { "id": "jo-capstone", "title": "毕业项目：原子化看板 + 全链路回顾", "goal": "用 Jotai 实现看板需求（列表 atomFamily、过滤 derived、异步加载 async atom、持久化 storage、乐观 write-only、Suspense）；与 Zustand 版实现逐行对照；毕业检查清单与进阶路线（TanStack Query 协作 / 编译器优化方向）（呼应 sig-capstone、za-capstone）" }
+      ]
+    }
+  ]
+}

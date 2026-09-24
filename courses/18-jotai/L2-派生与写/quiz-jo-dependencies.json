@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-dependencies",
+  "questions": [
+    {
+      "stem": "Jotai 如何建立依赖？",
+      "options": [
+        "getter 里 get 自动收集",
+        "手动声明",
+        "字符串匹配",
+        "Provider"
+      ],
+      "answer": 0,
+      "explanation": "读即订阅。"
+    },
+    {
+      "stem": "源 atom 更新时通知范围？",
+      "options": [
+        "全部组件",
+        "根组件",
+        "仅依赖它的派生/订阅者",
+        "无"
+      ],
+      "answer": 2,
+      "explanation": "细粒度向下游传播。"
+    },
+    {
+      "stem": "同事件多次 set 的渲染次数？",
+      "options": [
+        "每次一个",
+        "不确定必多次",
+        "两个",
+        "React 18 批处理一次"
+      ],
+      "answer": 3,
+      "explanation": "自动 batching。"
+    },
+    {
+      "stem": "派生链过深的风险？",
+      "options": [
+        "内存",
+        "末端消费触发整链重算",
+        "循环",
+        "失效"
+      ],
+      "answer": 1,
+      "explanation": "同步重算放大成本。"
+    },
+    {
+      "stem": "与 Zustand selector 的依赖建立方式差异？",
+      "options": [
+        "相同",
+        "Jotai 自动、Zustand 手动 selector",
+        "都不能",
+        "Zustand 自动"
+      ],
+      "answer": 1,
+      "explanation": "呼应 za-sync-external。"
+    },
+    {
+      "stem": "极端场景手动批处理 API？",
+      "options": [
+        "batchedUpdates 不需要",
+        "unstable_batchedUpdates",
+        "flushSync",
+        "forceUpdate"
+      ],
+      "answer": 1,
+      "explanation": "React 提供的手动批处理。"
+    },
+    {
+      "stem": "高频 atom 被大量组件依赖会？",
+      "options": [
+        "更好",
+        "更新放大重算/重渲风暴",
+        "无影响",
+        "自动节流"
+      ],
+      "answer": 1,
+      "explanation": "需拆细或降频。"
+    },
+    {
+      "stem": "给重派生加缓存的方式？",
+      "options": [
+        "每帧 new",
+        "中间 memo/更细 atom",
+        "不用派生",
+        "写回源"
+      ],
+      "answer": 1,
+      "explanation": "控制重算成本。"
+    },
+    {
+      "stem": "依赖图里循环会？",
+      "options": [
+        "静默",
+        "报错检测",
+        "自动断",
+        "变快"
+      ],
+      "answer": 1,
+      "explanation": "抛 circular 错误。"
+    },
+    {
+      "stem": "定位订阅放大的工具？",
+      "options": [
+        "console",
+        "React Profiler",
+        "Network",
+        "localStorage"
+      ],
+      "answer": 1,
+      "explanation": "看渲染命中（呼应 za-selectors-deep）。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-forms",
+  "questions": [
+    {
+      "stem": "字段级输入推荐交给？",
+      "options": [
+        "React Hook Form（非受控）",
+        "Zustand 每键 setState",
+        "Context",
+        "useState 全部"
+      ],
+      "answer": 0,
+      "explanation": "RHF 用 ref 零重渲。"
+    },
+    {
+      "stem": "把上百字段全放 store 会导致？",
+      "options": [
+        "更快",
+        "更安全",
+        "渲染风暴",
+        "无影响"
+      ],
+      "answer": 2,
+      "explanation": "每键触发订阅重渲。"
+    },
+    {
+      "stem": "什么情况才把表单数据进 Zustand？",
+      "options": [
+        "任何字段",
+        "校验规则",
+        "提交按钮",
+        "跨步骤/草稿/撤销需要"
+      ],
+      "answer": 3,
+      "explanation": "需要跨页/恢复才进。"
+    },
+    {
+      "stem": "草稿刷新恢复靠？",
+      "options": [
+        "内存",
+        "persist 持久化 wizard data",
+        "Cookie 轮询",
+        "全局变量"
+      ],
+      "answer": 1,
+      "explanation": "persist 存步骤与数据。"
+    },
+    {
+      "stem": "dirty 检测常用？",
+      "options": [
+        "手动 diff 全量",
+        "RHF isDirty 或 subscribe 变化",
+        "reload",
+        "setTimeout"
+      ],
+      "answer": 1,
+      "explanation": "就近用库能力。"
+    },
+    {
+      "stem": "离开页面前提示保存用？",
+      "options": [
+        "onload",
+        "beforeunload + isDirty",
+        "scroll",
+        "blur 必须"
+      ],
+      "answer": 1,
+      "explanation": "阻止误丢草稿。"
+    },
+    {
+      "stem": "提交时谁负责取值？",
+      "options": [
+        "store",
+        "RHF（getValues/handleSubmit）",
+        "DOM 查询",
+        "axios"
+      ],
+      "answer": 1,
+      "explanation": "RHF 管理字段值。"
+    },
+    {
+      "stem": "乐观提交展示可配合？",
+      "options": [
+        "immer",
+        "React 19 useOptimistic",
+        "persist",
+        "combine"
+      ],
+      "answer": 1,
+      "explanation": "UI 先行，store 回滚。"
+    },
+    {
+      "stem": "下面哪种是反模式？",
+      "options": [
+        "字段用 RHF",
+        "每击键 setState 全局 store",
+        "草稿进 store",
+        "提交态进 store"
+      ],
+      "answer": 1,
+      "explanation": "引发不必要重渲。"
+    },
+    {
+      "stem": "表单提交失败应？",
+      "options": [
+        "忽略",
+        "回滚乐观态并提示",
+        "清空所有输入",
+        "刷新页面"
+      ],
+      "answer": 1,
+      "explanation": "恢复用户先前内容。"
+    }
+  ]
+}

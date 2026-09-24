@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-auth",
+  "questions": [
+    {
+      "stem": "登录态 store 里 token 初始值从哪读？",
+      "options": [
+        "后端接口",
+        "cookie 解析",
+        "localStorage.getItem('token')",
+        "sessionStorage"
+      ],
+      "answer": 2,
+      "explanation": "刷新后 Pinia 重新创建，需从 localStorage 恢复 token 保持登录态。"
+    },
+    {
+      "stem": "axios 拦截器里 useAuthStore() 应注意什么？",
+      "options": [
+        "无注意事项",
+        "需要手动传 pinia 实例",
+        "必须用 await",
+        "必须在拦截器回调函数体内调用（延迟获取 store）"
+      ],
+      "answer": 3,
+      "explanation": "文件顶层调用时 pinia 可能未注册——放在回调函数体内执行时 pinia 已就绪。"
+    },
+    {
+      "stem": "路由守卫里判断登录态的正确方式是？",
+      "options": [
+        "检查 localStorage",
+        "useAuthStore().isLoggedIn",
+        "检查 cookie",
+        "Vue Router meta.token"
+      ],
+      "answer": 1,
+      "explanation": "从 store 取派生的 isLoggedIn——单一数据源原则。"
+    },
+    {
+      "stem": "登出时清所有 store 缓存可以用什么？",
+      "options": [
+        "location.reload()",
+        "pinia.state.value = {} 重置所有",
+        "逐个 store.$reset()",
+        "清除所有 DOM"
+      ],
+      "answer": 1,
+      "explanation": "Pinia 暴露 pinia.state（所有 store state 集合），赋空对象即全部重置。"
+    },
+    {
+      "stem": "跨标签页同步登出用什么事件？",
+      "options": [
+        "BroadcastChannel",
+        "window storage 事件",
+        "WebSocket",
+        "SharedWorker"
+      ],
+      "answer": 1,
+      "explanation": "一个 tab 清 localStorage 触发另一 tab 的 storage 事件——最轻量方案。"
+    },
+    {
+      "stem": "401 响应自动踢出登录的实现位置是？",
+      "options": [
+        "路由守卫",
+        "axios response 拦截器里 catch 401 → store.logout()",
+        "组件 onErrorCaptured",
+        "Vue 插件"
+      ],
+      "answer": 1,
+      "explanation": "HTTP 层统一处理 401，调 auth store 的 logout action。"
+    },
+    {
+      "stem": "isLoggedIn 为什么用 computed 而不是 function？",
+      "options": [
+        "function 性能更差",
+        "computed 有缓存且可被 watch/模板直接使用",
+        "computed 可以带参数",
+        "没有区别"
+      ],
+      "answer": 1,
+      "explanation": "computed 惰性+缓存+可响应式追踪；function 每次调用重执行且不能 watch。"
+    },
+    {
+      "stem": "hasPerm('admin') 更适合放 getter 还是 action？",
+      "options": [
+        "computed（缓存所有权限）",
+        "普通方法（按参数动态判断）",
+        "$patch 改值",
+        "watch"
+      ],
+      "answer": 1,
+      "explanation": "带参数的权限判断用普通方法——computed 不能带参数。"
+    },
+    {
+      "stem": "token 过期（非 401 场景）主动刷新用什么机制？",
+      "options": [
+        "setInterval 定时检查 + refresh 接口",
+        "只靠后端 401",
+        "用 setTimeout 递归",
+        "路由 beforeEach 判断 token exp"
+      ],
+      "answer": 0,
+      "explanation": "定时检查 JWT exp + 主动 refresh 比被动等 401 体验好。"
+    },
+    {
+      "stem": "登录成功后 redirect 回原页面怎么实现？",
+      "options": [
+        "store 里存 redirect 路径 + login 后 router.push",
+        "localStorage 存",
+        "cookie",
+        "URL query 传"
+      ],
+      "answer": 0,
+      "explanation": "守卫里把 redirect 路径存到 query/store，登录成功后 push 回去。"
+    }
+  ]
+}

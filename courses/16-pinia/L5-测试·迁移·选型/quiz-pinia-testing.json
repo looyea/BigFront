@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-testing",
+  "questions": [
+    {
+      "stem": "测试 Pinia store 的必要前置操作是？",
+      "options": [
+        "setActivePinia(createPinia())",
+        "mount 一个组件",
+        "调用 store.$init()",
+        "import vue-router"
+      ],
+      "answer": 0,
+      "explanation": "setActivePinia 让 useXxxStore() 在测试环境中可用，无需渲染组件。"
+    },
+    {
+      "stem": "测 async action 时 mock API 推荐用什么？",
+      "options": [
+        "sinon",
+        "proxyquire",
+        "jest.mock",
+        "vi.mock + vi.mocked"
+      ],
+      "answer": 3,
+      "explanation": "Vitest 内置 vi.mock/vi.mocked 是 Pinia 项目标配。"
+    },
+    {
+      "stem": "Setup Store 里没有 $reset，测试怎么保证每个用例干净？",
+      "options": [
+        "手动置 null",
+        "beforeEach 里 setActivePinia(createPinia())",
+        "store.$destroy()",
+        "vi.restoreAllMocks()"
+      ],
+      "answer": 1,
+      "explanation": "每次 create 新 pinia 实例——store 全新、状态干净。"
+    },
+    {
+      "stem": "组件集成测试挂载 Pinia 的方式是？",
+      "options": [
+        "store.inject(wrapper)",
+        "global: { plugins: [createPinia()] }",
+        "wrapper.setProps({ pinia })",
+        "beforeEach store.mount"
+      ],
+      "answer": 1,
+      "explanation": "@vue/test-utils 通过 global.plugins 传入 pinia 实例。"
+    },
+    {
+      "stem": "测持久化插件时为什么要 await nextTick()？",
+      "options": [
+        "等组件渲染",
+        "$subscribe 回调在微任务里执行（Vue scheduler）",
+        "等 HTTP 响应",
+        "等 localStorage 同步"
+      ],
+      "answer": 1,
+      "explanation": "state 变更后 Vue scheduler 异步派发 $subscribe——需等 nextTick。"
+    },
+    {
+      "stem": "vi.stubGlobal('localStorage', mock) 的目的是？",
+      "options": [
+        "加速测试",
+        "Node 环境无 localStorage——注入 fake",
+        "防止真实浏览器写入",
+        "兼容 IE"
+      ],
+      "answer": 1,
+      "explanation": "Vitest 默认跑在 Node——localStorage 不存在，需注入 mock。"
+    },
+    {
+      "stem": "测 getter（computed）时需要注意什么？",
+      "options": [
+        "getter 需要 await",
+        "getter 是惰性的——需先访问才计算",
+        "getter 需要组件环境",
+        "getter 不可测"
+      ],
+      "answer": 1,
+      "explanation": "computed 首次读时才求值——断言 store.double 即可触发。"
+    },
+    {
+      "stem": "@pinia/testing 包的主要用途是？",
+      "options": [
+        "真实测试 store 逻辑",
+        "mock 整个 store 用于隔离测组件",
+        "生成 store 脚手架代码",
+        "性能测试"
+      ],
+      "answer": 1,
+      "explanation": "testing 包的 createTestingPinia 自动 stub 所有 action 返回 undefined——隔离组件测。"
+    },
+    {
+      "stem": "以下哪种不需要测？",
+      "options": [
+        "action 改 state 正确性",
+        "getter 派生逻辑",
+        "Vue computed 内部的缓存机制",
+        "async action 错误处理"
+      ],
+      "answer": 2,
+      "explanation": "computed 缓存是 Vue 框架保证——只需测 store 业务逻辑。"
+    },
+    {
+      "stem": "测 store 跨组合（A action 改 B state）需要？",
+      "options": [
+        "mock B store",
+        "两个 store 都正常创建后测",
+        "只测 B",
+        "用 spy 拦截"
+      ],
+      "answer": 1,
+      "explanation": "setActivePinia 后 A/B 都是真 store——A.action 直接改 B 的 state 可观测。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-ssr",
+  "questions": [
+    {
+      "stem": "SSR 下 Jotai store 应如何创建？",
+      "options": [
+        "全局单例复用",
+        "每组件一个",
+        "每请求 createStore 一份",
+        "不用 store"
+      ],
+      "answer": 2,
+      "explanation": "防跨请求泄漏。"
+    },
+    {
+      "stem": "dehydrate 的作用是？",
+      "options": [
+        "水合",
+        "把 store 值序列化为可传输对象",
+        "持久化",
+        "派生"
+      ],
+      "answer": 1,
+      "explanation": "服务端导出。"
+    },
+    {
+      "stem": "hydrateAtoms 在哪一端调用？",
+      "options": [
+        "服务端",
+        "客户端水合时",
+        "构建时",
+        "两者都不"
+      ],
+      "answer": 1,
+      "explanation": "客户端注入服务端值。"
+    },
+    {
+      "stem": "async atom 在 SSR 传结果目的是？",
+      "options": [
+        "加密",
+        "避免客户端重复取数与闪烁",
+        "压缩",
+        "并行"
+      ],
+      "answer": 1,
+      "explanation": "水合已 resolve 值。"
+    },
+    {
+      "stem": "atomWithStorage 防闪烁靠？",
+      "options": [
+        "getOnInit + 一致首帧",
+        "reload",
+        "alert",
+        "禁用"
+      ],
+      "answer": 0,
+      "explanation": "控制初始读取时机（呼应 za-hydration）。"
+    },
+    {
+      "stem": "useAtomValue 能在 server 组件用吗？",
+      "options": [
+        "能",
+        "不能，需 client 边界",
+        "加 async 能",
+        "仅 dev"
+      ],
+      "answer": 1,
+      "explanation": "是 hook（呼应 za-rsc-boundary）。"
+    },
+    {
+      "stem": "server 组件读 atom 用什么？",
+      "options": [
+        "useAtom",
+        "store.get 直读",
+        "useSetAtom",
+        "Provider"
+      ],
+      "answer": 1,
+      "explanation": "非 hook 方式。"
+    },
+    {
+      "stem": "Provider 放置原则？",
+      "options": [
+        "尽量全局",
+        "放需要 store 的最小 client 子树根",
+        "禁用",
+        "每次渲染新建"
+      ],
+      "answer": 1,
+      "explanation": "保留 RSC 收益。"
+    },
+    {
+      "stem": "SSR 首屏无 store 值会？",
+      "options": [
+        "更好",
+        "内容跳动/mismatch",
+        "报错崩溃",
+        "无影响"
+      ],
+      "answer": 1,
+      "explanation": "需水合填充。"
+    },
+    {
+      "stem": "下面哪项不属于 Jotai SSR 要点？",
+      "options": [
+        "每请求 store",
+        "dehydrate/hydrate",
+        "storage 防闪烁",
+        "immer 冻结"
+      ],
+      "answer": 3,
+      "explanation": "immer 与 SSR 无关。"
+    }
+  ]
+}

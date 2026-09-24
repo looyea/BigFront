@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-storage",
+  "questions": [
+    {
+      "stem": "atomWithStorage 默认写到哪？",
+      "options": [
+        "localStorage",
+        "Cookie",
+        "内存",
+        "IndexedDB"
+      ],
+      "answer": 0,
+      "explanation": "默认 localStorage。"
+    },
+    {
+      "stem": "自定义存储需实现哪些方法？",
+      "options": [
+        "read/write",
+        "get/set/delete",
+        "getItem/setItem/removeItem",
+        "load/save"
+      ],
+      "answer": 2,
+      "explanation": "StateStorage 接口。"
+    },
+    {
+      "stem": "atomWithReducer 的更新方式是？",
+      "options": [
+        "直接 set 值",
+        "splice",
+        "push",
+        "dispatch 一个 action 给 reducer"
+      ],
+      "answer": 3,
+      "explanation": "Redux 风格。"
+    },
+    {
+      "stem": "atomWithDefault 主要提供？",
+      "options": [
+        "异步",
+        "reset 回默认值能力",
+        "持久化",
+        "派生"
+      ],
+      "answer": 1,
+      "explanation": "可写回默认。"
+    },
+    {
+      "stem": "相比 Zustand persist，atomWithStorage 少了什么？",
+      "options": [
+        "读写",
+        "内建 version/migrate",
+        "存储",
+        "类型"
+      ],
+      "answer": 1,
+      "explanation": "需自处理旧格式（呼应 za-persist-deep）。"
+    },
+    {
+      "stem": "SSR 下 atomWithStorage 默认行为？",
+      "options": [
+        "服务端也读",
+        "客户端读取，可配 getOnInit",
+        "禁用",
+        "抛错"
+      ],
+      "answer": 1,
+      "explanation": "避免访问 window。"
+    },
+    {
+      "stem": "让 storage 支持异步返回，getItem 可返回？",
+      "options": [
+        "null",
+        "Promise",
+        "number",
+        "void"
+      ],
+      "answer": 1,
+      "explanation": "允许 async storage。"
+    },
+    {
+      "stem": "单原子持久化 vs 整 store 持久化的取舍？",
+      "options": [
+        "前者更粗",
+        "前者细但迁移分散、后者集中带版本",
+        "相同",
+        "都不能迁移"
+      ],
+      "answer": 1,
+      "explanation": "粒度差异。"
+    },
+    {
+      "stem": "atomWithReducer 适合什么迁移？",
+      "options": [
+        "Vuex",
+        "已有 Redux reducer 逻辑",
+        "MobX",
+        "Context"
+      ],
+      "answer": 1,
+      "explanation": "reducer 直接复用。"
+    },
+    {
+      "stem": "reset 一个持久化 atom 到默认，用？",
+      "options": [
+        "clearStorage 必须",
+        "atomWithDefault 的 reset 写",
+        "reload",
+        "删文件"
+      ],
+      "answer": 1,
+      "explanation": "呼应 pinia $reset。"
+    }
+  ]
+}

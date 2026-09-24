@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-valtio",
+  "questions": [
+    {
+      "stem": "Valtio 的响应式核心机制是？",
+      "options": [
+        "Proxy 可变对象自动追踪",
+        "getter 显式 get",
+        "reducer",
+        "selector"
+      ],
+      "answer": 0,
+      "explanation": "proxy + useSnapshot。"
+    },
+    {
+      "stem": "读取 Valtio 状态用什么 hook？",
+      "options": [
+        "useAtom",
+        "useStore",
+        "useSnapshot",
+        "getState"
+      ],
+      "answer": 2,
+      "explanation": "返回只读订阅快照。"
+    },
+    {
+      "stem": "Valtio 与 Jotai 关系？",
+      "options": [
+        "竞品无关",
+        "后者淘汰前者",
+        "同一库",
+        "同作者互补两范式"
+      ],
+      "answer": 3,
+      "explanation": "可变 vs 原子。"
+    },
+    {
+      "stem": "深层嵌套对象多更适合？",
+      "options": [
+        "Jotai",
+        "Valtio",
+        "Context",
+        "Redux"
+      ],
+      "answer": 1,
+      "explanation": "Proxy 直改省心。"
+    },
+    {
+      "stem": "需要原生 async/Suspense 更适合？",
+      "options": [
+        "Valtio",
+        "Jotai",
+        "Context",
+        "useState"
+      ],
+      "answer": 1,
+      "explanation": "async atom（呼应 jo-async）。"
+    },
+    {
+      "stem": "Valtio 里 state.count++ 是？",
+      "options": [
+        "非法",
+        "可变直接改、Proxy 捕获",
+        "需 dispatch",
+        "需展开"
+      ],
+      "answer": 1,
+      "explanation": "命令式风格。"
+    },
+    {
+      "stem": "与 MobX 最像的是？",
+      "options": [
+        "Jotai",
+        "Valtio",
+        "Redux",
+        "Context"
+      ],
+      "answer": 1,
+      "explanation": "都可变对象自动订阅（呼应 mobx-core）。"
+    },
+    {
+      "stem": "Jotai 的更新风格是？",
+      "options": [
+        "可变直改",
+        "不可变原子 + set",
+        "reducer",
+        "splice"
+      ],
+      "answer": 1,
+      "explanation": "函数式。"
+    },
+    {
+      "stem": "Valtio 潜在心智成本？",
+      "options": [
+        "样板多",
+        "可变弱化数据流追踪",
+        "不支持 TS",
+        "体积巨大"
+      ],
+      "answer": 1,
+      "explanation": "直改随处可发生。"
+    },
+    {
+      "stem": "关于两者共存，正确说法？",
+      "options": [
+        "绝对互斥",
+        "可按数据形态同项目分工",
+        "必须同装",
+        "只能选一"
+      ],
+      "answer": 1,
+      "explanation": "风格互补。"
+    }
+  ]
+}

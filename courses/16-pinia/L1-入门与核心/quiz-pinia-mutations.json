@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-mutations",
+  "questions": [
+    {
+      "stem": "Pinia 中 store.count++ 这种直接赋值是否合法？",
+      "options": [
+        "合法，Pinia 不强制 mutation 层",
+        "不合法，必须用 $patch",
+        "只在 Options Store 合法",
+        "需要开启 strict 模式才行"
+      ],
+      "answer": 0,
+      "explanation": "Pinia 去掉了 mutation 概念，直接赋值是官方支持的方式。"
+    },
+    {
+      "stem": "同时修改 3 个字段且 DevTools 只记一条记录，应该用？",
+      "options": [
+        "连续赋值三次",
+        "action 里改三次",
+        "$patch 函数形式",
+        "$patch 对象形式"
+      ],
+      "answer": 3,
+      "explanation": "$patch({ a, b, c }) 对象形式一次批量改，DevTools 记为一条 patch object 类型的变更。"
+    },
+    {
+      "stem": "$patch 的对象形式能否执行 items.push(newItem)？",
+      "options": [
+        "能",
+        "不能，需要用函数形式",
+        "只有 Setup Store 能",
+        "需要先 $subscribe"
+      ],
+      "answer": 1,
+      "explanation": "对象形式只做浅合并赋值，不支持数组方法；函数形式 $patch(state => { state.items.push(...) }) 可以。"
+    },
+    {
+      "stem": "store.$subscribe 的回调里 mutation.type 不包含以下哪个值？",
+      "options": [
+        "'direct'",
+        "'patch object'",
+        "'patch function'",
+        "'action'"
+      ],
+      "answer": 3,
+      "explanation": "$subscribe 的 mutation.type 是 'direct'|'patch object'|'patch function'。action 调用在 $subscribe 里表现为其中一种 type（action 内部的赋值）。"
+    },
+    {
+      "stem": "$subscribe 默认行为中，组件卸载时会怎样？",
+      "options": [
+        "自动停止监听（绑定组件 scope）",
+        "继续监听直到手动 unsubscribe",
+        "报错",
+        "取决于是否用了 detached"
+      ],
+      "answer": 0,
+      "explanation": "默认 $subscribe 绑定当前组件 effect scope，组件卸载自动清理。传 { detached: true } 才脱离。"
+    },
+    {
+      "stem": "$onAction 的 after 回调什么时候执行？",
+      "options": [
+        "action 开始前",
+        "action 同步返回后或 Promise resolve 后",
+        "state 变更后",
+        "组件 unmount 时"
+      ],
+      "answer": 1,
+      "explanation": "after 在 action 返回（sync 立即、async 等 resolve）后触发；onError 在抛错时触发。"
+    },
+    {
+      "stem": "开启 createPinia({ strict: true }) 后会发生什么？",
+      "options": [
+        "生产环境报错",
+        "$patch 不再可用",
+        "组件里直接赋值会被 console.warn 提醒",
+        "computed getter 变成强制重算"
+      ],
+      "answer": 2,
+      "explanation": "严格模式开发时 warn 非 action/$patch 改值，提醒走规范路径。生产不生效。"
+    },
+    {
+      "stem": "Pinia 中做不可变更新（spread/immer）是否必要？",
+      "options": [
+        "必须，否则响应式失效",
+        "不必要，Vue Proxy 原生支持直接赋值",
+        "只在 SSR 中需要",
+        "必须配合 $patch 才生效"
+      ],
+      "answer": 1,
+      "explanation": "Pinia 底层是 Vue reactive Proxy——直接赋值即触发更新，不需要不可变模式。"
+    },
+    {
+      "stem": "$subscribe 适合用来做什么？",
+      "options": [
+        "持久化（自动存 localStorage）",
+        "拦截组件渲染",
+        "替换 computed",
+        "替代 router guard"
+      ],
+      "answer": 0,
+      "explanation": "$subscribe 在每次 state 变更后触发，是持久化插件的核心——监听变更写入 storage。"
+    },
+    {
+      "stem": "以下哪种方式修改 state 不会触发 $subscribe？",
+      "options": [
+        "store.count = 5",
+        "store.$patch({ count: 5 })",
+        "action 里 count.value = 5",
+        "以上都会触发"
+      ],
+      "answer": 3,
+      "explanation": "$subscribe 监听的是 store 实例的 state 变化——无论哪种方式改，只要最终触发了响应式更新就会收到通知。"
+    }
+  ]
+}

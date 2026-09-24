@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-plugins",
+  "questions": [
+    {
+      "stem": "Pinia 插件函数的参数包含以下哪些？",
+      "options": [
+        "store, options, app, onAction",
+        "state, dispatch",
+        "context, next",
+        "req, res, next"
+      ],
+      "answer": 0,
+      "explanation": "PiniaPluginContext 暴露 store/options/app/onAction 四个核心切面。"
+    },
+    {
+      "stem": "插件注册方式是？",
+      "options": [
+        "defineStore 第三参数",
+        "store.plugin(fn)",
+        "app.directive('pinia', fn)",
+        "createPinia().use(fn)"
+      ],
+      "answer": 3,
+      "explanation": "在 pinia 实例上 .use() 注册，对所有后续创建的 store 生效。"
+    },
+    {
+      "stem": "$subscribe 和 onAction 的区别是？",
+      "options": [
+        "完全相同",
+        "$subscribe 监听所有变更，onAction 只拦截 action 调用",
+        "onAction 也拦截直接赋值",
+        "$subscribe 只监听 SSR"
+      ],
+      "answer": 1,
+      "explanation": "$subscribe 任何 state 变更都触发；onAction 只在 action 函数被调用时触发。"
+    },
+    {
+      "stem": "持久化插件应在 $subscribe 里做什么？",
+      "options": [
+        "发 HTTP 请求",
+        "将 state 序列化到 localStorage",
+        "清除旧数据",
+        "触发路由跳转"
+      ],
+      "answer": 1,
+      "explanation": "变更即存盘：JSON.stringify(state) 写入 localStorage。"
+    },
+    {
+      "stem": "插件里恢复持久化数据应该用什么 API？",
+      "options": [
+        "store.$reset()",
+        "store.$patch(savedState)",
+        "Object.assign(store, saved)",
+        "store.state = saved"
+      ],
+      "answer": 1,
+      "explanation": "$patch 是批量恢复 state 的标准方式，不破坏响应式。"
+    },
+    {
+      "stem": "如何让某个 store 不被全局 persist 插件处理？",
+      "options": [
+        "删除该 store",
+        "defineStore 第四参数 { persist: false } + 插件里判 options.persist",
+        "加 @noPersist 注释",
+        "用 markRaw"
+      ],
+      "answer": 1,
+      "explanation": "Pinia 支持 defineStore 第四参数传自定义配置，插件通过 options 读取。"
+    },
+    {
+      "stem": "插件执行顺序是怎样的？",
+      "options": [
+        "随机",
+        "按 use() 调用顺序依次执行",
+        "字母排序",
+        "后注册的先执行"
+      ],
+      "answer": 1,
+      "explanation": "链式 .use(A).use(B) 则 A 先执行 B 后执行。"
+    },
+    {
+      "stem": "撤销/重做插件利用了什么机制？",
+      "options": [
+        "onAction 的 after + $patch 快照",
+        "$subscribe 监听变更记录历史",
+        "window.undo 事件",
+        "Vue 的 keep-alive"
+      ],
+      "answer": 1,
+      "explanation": "$subscribe 每次 state 变更时记录快照到历史栈，undo 时 $patch 恢复。"
+    },
+    {
+      "stem": "插件 return 的对象会怎样？",
+      "options": [
+        "被丢弃",
+        "合并到 store 实例上（可加属性/方法）",
+        "替换 store 的 state",
+        "注册为全局 mixin"
+      ],
+      "answer": 1,
+      "explanation": "return { myProp } 后 store.myProp 可直接访问——常用于扩展 store API。"
+    },
+    {
+      "stem": "onAction 里调 onError 的时机是？",
+      "options": [
+        "action 开始前",
+        "action resolve 后",
+        "action 抛出异常时",
+        "store 销毁时"
+      ],
+      "answer": 2,
+      "explanation": "onError 仅在 action throw/reject 时触发，after 在 resolve 时触发。"
+    }
+  ]
+}

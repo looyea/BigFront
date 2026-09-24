@@ -1,0 +1,15 @@
+{
+  "lessonId": "pinia-ecosystem",
+  "questions": [
+    { "stem": "Pinia 判据三问不包含以下哪项？", "options": ["需要跨组件共享？", "需要时间旅行/DevTools？", "需要编译时优化？", "需要 store 间组合？"], "answer": 2, "explanation": "编译时优化是框架层面的事，不是选 Pinia 的判据。" },
+    { "stem": "纯 Composable 与 Pinia 的核心区别是？", "options": ["Composable 不支持 ref", "Composable 每次调用创建独立实例，Pinia 是全局单例", "Pinia 不支持 async", "Composable 性能更差"], "answer": 1, "explanation": "Composable 调用处各自独立——不跨组件共享；Pinia 全局单例。" },
+    { "stem": "@pinia/colada 的定位是？", "options": ["替代 Pinia 的新库", "Pinia 生态的服务端数据缓存层", "Pinia 的 DevTools 插件", "替代 Vue Router"], "answer": 1, "explanation": "colada 管 API 数据拉取+缓存+失效，与 Pinia store 互补。" },
+    { "stem": "UI 主题切换（dark/light）最简方案是？", "options": ["必须用 Pinia", "composable + useLocalStorage 即可", "需要 Vuex", "需要 Redux"], "answer": 1, "explanation": "简单持久化的 UI 偏好——一个 useTheme() composable 足够。" },
+    { "stem": "服务端 API 列表数据+缓存+失效最适合放哪？", "options": ["Pinia store 手动管", "@pinia/colada 或 TanStack Query", "localStorage", "Vuex"], "answer": 1, "explanation": "服务端状态的 cache/invalidate/retry 由专用库管更合理。" },
+    { "stem": "Pinia 的 gzip 体积约为？", "options": ["~1.2KB", "~10KB", "~25KB", "~5KB"], "answer": 0, "explanation": "Pinia 极小，仅约 1.2KB gzip。" },
+    { "stem": "URL 可分享的状态（如筛选条件）应该放？", "options": ["Pinia store", "vue-router query params", "localStorage", "sessionStorage"], "answer": 1, "explanation": "URL 天然可分享/收藏/前进后退——路由 query 最适合。" },
+    { "stem": "Pinia 毕业检查里 action 的职责是？", "options": ["纯派生计算", "异步/编排/改 state", "组件渲染逻辑", "路由跳转"], "answer": 1, "explanation": "action 做业务逻辑封装（含 async）；getter 做纯派生。" },
+    { "stem": "Pinia vs Zustand 的框架锁定度对比？", "options": ["都锁定各自框架", "Pinia 锁 Vue、Zustand 锁 React", "都跨框架通用", "Zustand 也支持 Vue"], "answer": 1, "explanation": "Pinia 依赖 Vue reactivity；Zustand 依赖 React useSyncExternalStore。" },
+    { "stem": "以下哪个不是 Pinia 生态的社区包？", "options": ["pinia-plugin-persistedstate", "@pinia/testing", "pinia-colada", "redux-toolkit"], "answer": 3, "explanation": "redux-toolkit 是 Redux 生态，不是 Pinia 的。" }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-atom",
+  "questions": [
+    {
+      "stem": "Jotai 的最小状态单元是？",
+      "options": [
+        "atom",
+        "store",
+        "reducer",
+        "context"
+      ],
+      "answer": 0,
+      "explanation": "atom 即一个可读可写的值。"
+    },
+    {
+      "stem": "atom 与 useState 的根本区别？",
+      "options": [
+        "都能跨组件",
+        "useState 可派生",
+        "atom 模块级可跨组件共享、不依附组件",
+        "一样"
+      ],
+      "answer": 2,
+      "explanation": "useState 属于组件实例。"
+    },
+    {
+      "stem": "Jotai 的建模范式是？",
+      "options": [
+        "自上而下大 store",
+        "自下而上小原子组合",
+        "单例 store",
+        "Provider 树"
+      ],
+      "answer": 1,
+      "explanation": "原子搭积木。"
+    },
+    {
+      "stem": "atom((get)=>get(countAtom)*2) 是什么原子？",
+      "options": [
+        "可写",
+        "只读派生",
+        "异步",
+        "工具"
+      ],
+      "answer": 1,
+      "explanation": "只有 getter 即只读派生。"
+    },
+    {
+      "stem": "Jotai v2 使用前必须包 Provider 吗？",
+      "options": [
+        "必须",
+        "不必须，有全局默认 store",
+        "每次都要",
+        "仅 v1"
+      ],
+      "answer": 1,
+      "explanation": "import atom 即可用（呼应 jo-global）。"
+    },
+    {
+      "stem": "写原子的语义最接近？",
+      "options": [
+        "直接赋值可变对象",
+        "setState（值 + updater）",
+        "push",
+        "splice"
+      ],
+      "answer": 1,
+      "explanation": "set(atom, v) 或 set(atom, prev=>...)。"
+    },
+    {
+      "stem": "多个组件 useAtom(同一 atom) 效果？",
+      "options": [
+        "各自独立",
+        "共享同一份状态",
+        "报错",
+        "克隆"
+      ],
+      "answer": 1,
+      "explanation": "atom 是共享单元。"
+    },
+    {
+      "stem": "Jotai 相比 Zustand 的订阅粒度？",
+      "options": [
+        "更粗",
+        "天然原子级细订阅",
+        "相同",
+        "需手动"
+      ],
+      "answer": 1,
+      "explanation": "每组件只订阅用到的 atom。"
+    },
+    {
+      "stem": "下列哪个不是 atom 的合法初值形态？",
+      "options": [
+        "atom(0)",
+        "atom(\"s\")",
+        "atom(get=>get(a))",
+        "atom()无参且无 get 的读写"
+      ],
+      "answer": 3,
+      "explanation": "atom 需初值或 getter。"
+    },
+    {
+      "stem": "与 14-signals 的 signal 概念最像的是？",
+      "options": [
+        "store",
+        "atom",
+        "reducer",
+        "middleware"
+      ],
+      "answer": 1,
+      "explanation": "atom 与 signal 同为细粒度可订阅值（呼应 sig-core）。"
+    }
+  ]
+}

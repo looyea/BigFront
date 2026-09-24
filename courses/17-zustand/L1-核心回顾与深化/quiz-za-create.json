@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-create",
+  "questions": [
+    {
+      "stem": "Zustand 的 create 返回值本质上是什么？",
+      "options": [
+        "一个 store 纯对象",
+        "一个 Promise",
+        "一个 class 实例",
+        "一个 hook 函数（同时挂有 store 静态方法）"
+      ],
+      "answer": 3,
+      "explanation": "create 返回 useXxx hook，且 hook 上挂着 getState/setState/subscribe。"
+    },
+    {
+      "stem": "v5 中 selector 的默认相等判定是？",
+      "options": [
+        "shallow",
+        "deep equal",
+        "Object.is",
+        "JSON 比较"
+      ],
+      "answer": 2,
+      "explanation": "v5 默认 Object.is，返回新对象会致无限重渲，需 useShallow。"
+    },
+    {
+      "stem": "带中间件时 create 的正确 curried 写法是？",
+      "options": [
+        "create(fn)",
+        "create<T>()(fn)",
+        "create<T>(fn)",
+        "create.use(fn)"
+      ],
+      "answer": 1,
+      "explanation": "有中间件时须用 create<T>()(initializer) 的双括号形式。"
+    },
+    {
+      "stem": "set((s) => ({ count: s.count + 1 })) 相比 set({count:1}) 的优势是？",
+      "options": [
+        "性能更快",
+        "能拿到最新 state 避免竞态",
+        "语法更短",
+        "支持异步"
+      ],
+      "answer": 1,
+      "explanation": "函数式 set 基于最新 state 计算，避免闭包旧值竞态。"
+    },
+    {
+      "stem": "在组件外（如事件回调）读取当前 state 应该用？",
+      "options": [
+        "useXxx()",
+        "getState()",
+        "subscribe()",
+        "setState()"
+      ],
+      "answer": 1,
+      "explanation": "非组件环境用 store.getState() 拿快照，不走 hook。"
+    },
+    {
+      "stem": "create 与 Redux createStore 最大的心智差异是？",
+      "options": [
+        "Zustand 需要 Provider",
+        "Zustand 用 dispatch/reducer",
+        "Zustand 直接 set 无需 action 类型",
+        "两者完全相同"
+      ],
+      "answer": 2,
+      "explanation": "Zustand 直接调用 set，无 action type / reducer 仪式。"
+    },
+    {
+      "stem": "set 的第三个参数用途（第二个参数）replace=true 的效果是？",
+      "options": [
+        "触发深比较",
+        "整体替换 state 而非浅合并",
+        "跳过订阅",
+        "开启 immer"
+      ],
+      "answer": 1,
+      "explanation": "setState(partial, true) 用 partial 完全替换当前 state。"
+    },
+    {
+      "stem": "同一事件回调里连续调用三次 set，会？",
+      "options": [
+        "渲染三次",
+        "React 18 自动批处理只渲染一次",
+        "抛错",
+        "合并成一次 set"
+      ],
+      "answer": 1,
+      "explanation": "同帧多次更新被并发特性批处理，最终渲染一次。"
+    },
+    {
+      "stem": "combine 辅助函数主要解决什么？",
+      "options": [
+        "持久化",
+        "类型推断，免手写 state 泛型",
+        "中间件组合",
+        "时间旅行"
+      ],
+      "answer": 1,
+      "explanation": "combine(initial, creator) 让初值与动作类型自动推断。"
+    },
+    {
+      "stem": "关于 useXxxStore 作为 hook 使用，正确的是？",
+      "options": [
+        "必须在组件顶层调用",
+        "可在条件语句中调用",
+        "可在回调里调用",
+        "可在循环里调用"
+      ],
+      "answer": 0,
+      "explanation": "它是 React Hook，遵守 hook 规则，必须在顶层调用。"
+    }
+  ]
+}

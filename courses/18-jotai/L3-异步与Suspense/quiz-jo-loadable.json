@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-loadable",
+  "questions": [
+    {
+      "stem": "loadable 工具解决什么？",
+      "options": [
+        "把 async 变显式 pending/hasData/hasError 三态",
+        "持久化",
+        "派生",
+        "批量"
+      ],
+      "answer": 0,
+      "explanation": "不用 Suspense 也能处理。"
+    },
+    {
+      "stem": "loadable 返回对象的 state 不含哪个？",
+      "options": [
+        "pending",
+        "hasData",
+        "hasError",
+        "hasTimeout"
+      ],
+      "answer": 3,
+      "explanation": "三态无 hasTimeout。"
+    },
+    {
+      "stem": "unwrap 与 loadable 的关系？",
+      "options": [
+        "相同",
+        "都禁用",
+        "互逆：把可挂起↔三态对象",
+        "都持久化"
+      ],
+      "answer": 2,
+      "explanation": "两种风格转换。"
+    },
+    {
+      "stem": "想要局部 spinner 不用 Suspense 用？",
+      "options": [
+        "async atom 直读",
+        "loadable + useAtomValue",
+        "store.loading",
+        "alert"
+      ],
+      "answer": 1,
+      "explanation": "显式判 pending。"
+    },
+    {
+      "stem": "接 RxJS/EventSource 用什么？",
+      "options": [
+        "atomWithStorage",
+        "atomWithObservable",
+        "loadable",
+        "useAtom"
+      ],
+      "answer": 1,
+      "explanation": "推流转 atom。"
+    },
+    {
+      "stem": "loadable 读 hasError 分支应？",
+      "options": [
+        "忽略",
+        "渲染错误 UI/提示",
+        "重新 await",
+        "throw"
+      ],
+      "answer": 1,
+      "explanation": "自行处理错误态。"
+    },
+    {
+      "stem": "Suspense 风格 vs loadable 风格的核心取舍？",
+      "options": [
+        "无差",
+        "声明式优雅 vs 命令式局部灵活",
+        "后者更快",
+        "前者能拿错误"
+      ],
+      "answer": 1,
+      "explanation": "按 UI 选。"
+    },
+    {
+      "stem": "loadable 需要额外安装吗？",
+      "options": [
+        "要装插件",
+        "来自 jotai/utils 内置",
+        "要 Query",
+        "要 Context"
+      ],
+      "answer": 1,
+      "explanation": "官方 utils。"
+    },
+    {
+      "stem": "observable atom 数据到达会？",
+      "options": [
+        "不更新",
+        "通知订阅者重渲",
+        "报错",
+        "缓存不刷新"
+      ],
+      "answer": 1,
+      "explanation": "推流驱动 atom 更新。"
+    },
+    {
+      "stem": "把一个 async atom 变可局部渲染的三态？",
+      "options": [
+        "atom()",
+        "loadable(it)",
+        "unwrap(it)",
+        "atomWithStorage"
+      ],
+      "answer": 1,
+      "explanation": "呼应本关。"
+    }
+  ]
+}

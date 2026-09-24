@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-next-app",
+  "questions": [
+    {
+      "stem": "SSR 下模块级 create 单例最大的风险？",
+      "options": [
+        "跨请求状态泄漏",
+        "变慢",
+        "无法 TS",
+        "体积大"
+      ],
+      "answer": 0,
+      "explanation": "Node 进程共享单例，用户间串数据。"
+    },
+    {
+      "stem": "App Router 里 Zustand store 应放在？",
+      "options": [
+        "server 组件",
+        "middleware",
+        "layout server 端",
+        "'use client' 组件"
+      ],
+      "answer": 3,
+      "explanation": "store 是客户端逻辑，需 client 组件。"
+    },
+    {
+      "stem": "skipHydration 的作用是？",
+      "options": [
+        "禁用持久化",
+        "关闭自动水合，改手动 rehydrate",
+        "跳过渲染",
+        "关 SSR"
+      ],
+      "answer": 1,
+      "explanation": "防止水合期读存储造成 mismatch。"
+    },
+    {
+      "stem": "rehydrate 通常在哪个钩子调用？",
+      "options": [
+        "render",
+        "useEffect(挂载后)",
+        "constructor",
+        "SSR"
+      ],
+      "answer": 1,
+      "explanation": "仅客户端挂载后读取。"
+    },
+    {
+      "stem": "每请求独立 store 用什么实现？",
+      "options": [
+        "全局变量",
+        "useRef 持有 + Context 注入",
+        "localStorage",
+        "Cookie"
+      ],
+      "answer": 1,
+      "explanation": "工厂 + Provider 隔离实例。"
+    },
+    {
+      "stem": "首帧到用户数据之间用什么避免跳变？",
+      "options": [
+        "toast",
+        "loading skeleton 兜住",
+        "alert",
+        "刷新"
+      ],
+      "answer": 1,
+      "explanation": "水合前显示骨架。"
+    },
+    {
+      "stem": "列表/详情服务端数据应？",
+      "options": [
+        "拷进 Zustand",
+        "交给 RSC/Query 下发",
+        "存 localStorage",
+        "塞 Context"
+      ],
+      "answer": 1,
+      "explanation": "避免第二真相（呼应 za-layers）。"
+    },
+    {
+      "stem": "persist 不 skipHydration 会看到？",
+      "options": [
+        "无现象",
+        "hydration mismatch/闪烁",
+        "报错崩溃",
+        "变快"
+      ],
+      "answer": 1,
+      "explanation": "服务端与客户端首帧值不同。"
+    },
+    {
+      "stem": "StoreProvider 用 ref 缓存 store 是为？",
+      "options": [
+        "省内存",
+        "避免每次 render 重建 store",
+        "持久化",
+        "订阅"
+      ],
+      "answer": 1,
+      "explanation": "保证实例稳定。"
+    },
+    {
+      "stem": "下面哪条不是 App Router 集成要点？",
+      "options": [
+        "per-request store",
+        "skipHydration 水合",
+        "服务端数据入 store",
+        "skeleton 兜闪烁"
+      ],
+      "answer": 2,
+      "explanation": "服务端数据不该进 store。"
+    }
+  ]
+}

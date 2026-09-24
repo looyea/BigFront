@@ -1,0 +1,81 @@
+{
+  "id": "17-zustand",
+  "title": "Zustand 实战：React 最小状态管理",
+  "order": 17,
+  "tier": "铂金 · 状态管理专题",
+  "tagline": "Zustand 以 1.2KB、零 Provider、useSyncExternalStore 底层成为 2024–2026 React 社区增速最快的状态库。14-signals 已覆盖 3 关入门；本包做深度专讲——中间件链/并发安全/SSR/架构模式/实战——七阶段廿一关打透。",
+  "icon": "🐻",
+  "color": "#f5a623",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "核心回顾与深化",
+      "subtitle": "create / selector / store API",
+      "lessons": [
+        { "id": "za-create", "title": "create 精析与 v5 变化", "goal": "14-signals 快速回顾（za-core 已学最小 store）；v4→v5 breaking：combine 类型推断、默认 equality；create 返回 hook 同时暴露 getState/setState/subscribe；与 Redux createStore 心智对比（呼应 za-core、sig-map）" },
+        { "id": "za-selectors-deep", "title": "Selector 进阶：shallow / useShallow / equality", "goal": "selector 返回引用相等判定的原理（Object.is）；多字段 useShallow；自定义 equality fn；useSyncExternalStore getSnapshot 必须稳定引用；性能 profiler 定位过度订阅（呼应 react-performance、za-selectors）" },
+        { "id": "za-store-api", "title": "Store 外部 API：getState / setState / subscribe", "goal": "store 外非响应式读（事件回调、拦截器）；setState 在 action 外直接注入（测试/初始化）；subscribe 做 transient 更新不走渲染；与 MobX reaction 对比（呼应 sig-mutability、za-patterns）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "中间件全解",
+      "subtitle": "compose / persist / immer / devtools / 自定义",
+      "lessons": [
+        { "id": "za-middleware-chain", "title": "中间件链：compose 顺序与自定义", "goal": "zustand/middleware 的链式 wrap 机制 (fn)=>(set,get,store)=>init；顺序对 set 的影响（devtools→immer→persist 为什么这样排）；手写 logger middleware 与 undo/redo（呼应 exp-middleware、redux-middleware）" },
+        { "id": "za-persist-deep", "title": "persist 深入：版本迁移 / partialize / SSR", "goal": "version+migrate 做 schema 升级；partialize 选字段持久化；merge 策略深合并 vs 浅覆盖；skipHydration 防 SSR 闪烁；React Native AsyncStorage 适配（呼应 pinia-persist、za-ssr）" },
+        { "id": "za-immer-devtools", "title": "immer + devtools 中间件实战", "goal": "immer middleware 写可变风格→不可变产物；Proxy 开销分析与嵌套深度关系；devtools middleware 挂 Redux DevTools 时间旅行；两个一起用的正确顺序（呼应 sig-perf、za-middleware）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "架构模式",
+      "subtitle": "Slices / Factory / 分层",
+      "lessons": [
+        { "id": "za-slices", "title": "Slices Pattern：大 store 拆分标准姿势", "goal": "StateCreator<T,[...mws],[...mws],Slice> 定义切片工厂；合并多 slice 进同一 create；跨 slice action 调用 get().otherSliceAction；导出 selector 做黑盒封装（呼应 ng-arch、za-patterns）" },
+        { "id": "za-factory", "title": "Store 工厂与多实例", "goal": "createStore 工厂函数封装统一 middleware；多实例场景（弹窗/向导/表格）用 Context 注入独立 store；对比 14-signals 的 Providerless vs 需要隔离时的 Provider 模式（呼应 za-context、react-context）" },
+        { "id": "za-layers", "title": "状态分层：UI / 业务 / 服务端", "goal": "三层分 store：uiStore(主题/侧栏)、bizStore(购物车/表单)、serverCache(TanStack Query)；每层的更新频率、持久化需求、测试策略各不同；禁止跨层直写（呼应 sig-server、sig-scenarios）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "React 并发与安全",
+      "subtitle": "useSyncExternalStore / Transition / Suspense",
+      "lessons": [
+        { "id": "za-sync-external", "title": "useSyncExternalStore 底层原理", "goal": "Torn reads（撕扯）问题→useSyncExternalStore 如何解决；Zustand v4+ 的 subscribe + getSnapshot 契约；selector 返回新对象时的坑（缓存引用 or useShallow）；与旧版 useReducer 方案对比（呼应 za-react18、sig-react）" },
+        { "id": "za-transition", "title": "React 19 Transition 与 Zustand 更新", "goal": "startTransition 里 setState → 非紧急渲染；Zustand set 天然批量（同帧多次 set 只渲染一次）；useOptimistic + store 做乐观 UI；并发安全 store 读（snapshot 一致性）（呼应 react18-concurrent、za-perf）" },
+        { "id": "za-suspense", "title": "Suspense 边界里的 store 行为", "goal": "store 本身不支持 throw Promise（不像 Jotai async atom）；数据获取放 TanStack Query + Suspense、store 只留 UI 态；错误边界 + store 清理联动；retry 逻辑归属（呼应 sig-server、za-layers）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "SSR 与 Next.js",
+      "subtitle": "App Router / RSC / Hydration",
+      "lessons": [
+        { "id": "za-next-app", "title": "Next.js App Router 集成", "goal": "全局单例在 SSR 的问题（跨请求泄漏）→ per-request createStore 用 useRef；persist + skipHydration 防客户端 hydration mismatch；layout/store 初始化在 useEffect；并行 SSR+store 的时序图（呼应 next-app-router、ng-ssr）" },
+        { "id": "za-rsc-boundary", "title": "RSC 与 Client Component 边界", "goal": "RSC 不能 import zustand（server/client 分离）；Server Action 里直接 getState 操作；客户端 store 同步 server state 的模式（server 下发 → effect 注入 store）；useSyncExternalStore.server 返回稳定值防闪烁（呼应 next-app-router、sig-server）" },
+        { "id": "za-hydration", "title": "Hydration 模式与跨端持久化", "goal": "SSR 首屏 store 无值 → 客户端 hydrate 填充：loading skeleton 策略；persist middleware + getStorage 做 Cookie/localStorage 双适配；跨标签页 storage event 同步方案（呼应 kit-load-universal、za-persist-deep）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "实战专题",
+      "subtitle": "Auth / Form / Router / CRUD",
+      "lessons": [
+        { "id": "za-auth", "title": "登录态 store 实战", "goal": "token 存 store + persist；axios 拦截器 getState().token；路由守卫 canAccess selector；登出 reset + 清 storage；跨 tab storage event 同步（呼应 pinia-auth、sig-auth、ng-router-guards）" },
+        { "id": "za-forms", "title": "表单：Zustand + React Hook Form 分工", "goal": "字段级零渲染靠 RHF ref；跨步骤/草稿/undo 才进 store；dirty 检测 subscribe + beforeunload；提交 loading + 乐观 + rollback 模板（呼应 react-forms、pinia-form）" },
+        { "id": "za-crud", "title": "CRUD 看板：分页 / 乐观 / 批量 / 回滚", "goal": "entities+ids 归一化 store；乐观增改删 + 失败回滚 $snapshot；分页 loadingMore + infiniteQuery 互补；批量操作 patch 多 id（呼应 za-patterns、pinia-crud-pattern）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "选型与生态",
+      "subtitle": "对比 / 测试 / Capstone",
+      "lessons": [
+        { "id": "za-compare", "title": "Zustand vs Redux Toolkit vs Jotai vs Context", "goal": "四象限选型图：心智/体积/DevTools/生态；RTK 超大型标准化、Zustand 中小快速、Jotai 原子拆分、Context 低频注入；共存策略（服务端 Query + Zustand 客户端）；迁移成本（呼应 sig-compare、za-ecosystem）" },
+        { "id": "za-testing-deep", "title": "测试深化：纯测 store + 组件集成", "goal": "store.getState()/setState() 直接测无需 render；resetState 工厂模式每用例干净；msw mock async action；persist mock storage；组件级 renderHook + act 测 selector（呼应 ng-testing、vite-vitest）" },
+        { "id": "za-capstone", "title": "收官：团队规范与进阶路线", "goal": "封装 createStore 统一挂 middleware + 命名规范(useXxxStore/selectXxx)；lint 禁组件内 getState；store 分层 import 边界；毕业检查清单；进阶 Valtio/Jotai/TanStack Query（呼应 ng-capstone、za-factory）" }
+      ]
+    }
+  ]
+}

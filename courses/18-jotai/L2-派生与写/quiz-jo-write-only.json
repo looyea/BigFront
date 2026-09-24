@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-write-only",
+  "questions": [
+    {
+      "stem": "write-only atom 的初值参数通常写？",
+      "options": [
+        "null（占位）",
+        "一个真实值",
+        "undefined 报错",
+        "getter"
+      ],
+      "answer": 0,
+      "explanation": "atom(null, write)。"
+    },
+    {
+      "stem": "触发 write-only atom 用？",
+      "options": [
+        "useAtomValue",
+        "atom()",
+        "useSetAtom",
+        "get"
+      ],
+      "answer": 2,
+      "explanation": "拿 setter 调用（呼应 jo-use-atom）。"
+    },
+    {
+      "stem": "write 函数的参数是？",
+      "options": [
+        "(set,get)",
+        "(get,set)",
+        "(value)",
+        "(get,set,value)"
+      ],
+      "answer": 3,
+      "explanation": "get、set 与被传入的值。"
+    },
+    {
+      "stem": "write-only atom 相当于哪个概念？",
+      "options": [
+        "selector",
+        "action",
+        "reducer state",
+        "middleware"
+      ],
+      "answer": 1,
+      "explanation": "封装变更/副作用。"
+    },
+    {
+      "stem": "一个 write 里连续 set 多个 atom 会？",
+      "options": [
+        "多次渲染",
+        "React 18 批量、一致快照",
+        "报错",
+        "串行 await"
+      ],
+      "answer": 1,
+      "explanation": "自动批处理。"
+    },
+    {
+      "stem": "相比 Zustand 把 action 放 store，Jotai 的好处？",
+      "options": [
+        "更耦合",
+        "action 独立 atom、可组合易测",
+        "更快",
+        "免写函数"
+      ],
+      "answer": 1,
+      "explanation": "关注点分离。"
+    },
+    {
+      "stem": "write 里能 await 做异步吗？",
+      "options": [
+        "不能",
+        "能，之后 set",
+        "会崩溃",
+        "被忽略"
+      ],
+      "answer": 1,
+      "explanation": "异步 write 编排数据加载。"
+    },
+    {
+      "stem": "write-only atom 的读值有意义吗？",
+      "options": [
+        "有",
+        "基本是占位，一般不读",
+        "自动派生",
+        "会缓存"
+      ],
+      "answer": 1,
+      "explanation": "读为 null。"
+    },
+    {
+      "stem": "给一个 logout write atom 的正确形态？",
+      "options": [
+        "atom(0)",
+        "atom(null,(get,set)=>{set(token,null);set(user,null)})",
+        "atom(get=>...)",
+        "useAtom"
+      ],
+      "answer": 1,
+      "explanation": "集中清多个源 atom。"
+    },
+    {
+      "stem": "批量 set 的一致性靠什么保证？",
+      "options": [
+        "手动 lock",
+        "React 并发批处理 + 依赖图原子更新",
+        "setTimeout",
+        "localStorage"
+      ],
+      "answer": 1,
+      "explanation": "同一更新内合并。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-use-atom",
+  "questions": [
+    {
+      "stem": "只需写不需读某 atom 时应用？",
+      "options": [
+        "useSetAtom",
+        "useAtom",
+        "useAtomValue",
+        "getState"
+      ],
+      "answer": 0,
+      "explanation": "useSetAtom 只拿稳定 setter。"
+    },
+    {
+      "stem": "useAtomValue 的作用是？",
+      "options": [
+        "只写",
+        "读写",
+        "只读订阅",
+        "派生"
+      ],
+      "answer": 2,
+      "explanation": "返回值并订阅该 atom。"
+    },
+    {
+      "stem": "useSetAtom 返回的 setter 特点？",
+      "options": [
+        "每次新引用",
+        "只读",
+        "Promise",
+        "引用稳定，可入依赖数组"
+      ],
+      "answer": 3,
+      "explanation": "稳定不引发 effect 重复。"
+    },
+    {
+      "stem": "useAtom 返回值是？",
+      "options": [
+        "单值",
+        "[value, setter] 元组",
+        "对象",
+        "Promise"
+      ],
+      "answer": 1,
+      "explanation": "类似 useState。"
+    },
+    {
+      "stem": "写 atom 传函数 setCount(c=>c+1) 表示？",
+      "options": [
+        "非法",
+        "updater 基于前值",
+        "异步",
+        "只读"
+      ],
+      "answer": 1,
+      "explanation": "支持函数式更新。"
+    },
+    {
+      "stem": "对只读派生 atom 调用 set 会？",
+      "options": [
+        "成功",
+        "报错/无效（无 write）",
+        "自动写源",
+        "忽略但返回新值"
+      ],
+      "answer": 1,
+      "explanation": "只读 atom 不可写（呼应 jo-derived）。"
+    },
+    {
+      "stem": "相比 Zustand，Jotai 读写拆分的最大好处？",
+      "options": [
+        "更啰嗦",
+        "订阅粒度=意图，少多余重渲",
+        "更快",
+        "免 Provider"
+      ],
+      "answer": 1,
+      "explanation": "按 atom 精准订阅。"
+    },
+    {
+      "stem": "只读组件误用 useAtom 会带来？",
+      "options": [
+        "更好",
+        "多余订阅 setter 语义、意图不清",
+        "崩溃",
+        "无影响"
+      ],
+      "answer": 1,
+      "explanation": "应 useAtomValue 表意清晰。"
+    },
+    {
+      "stem": "useSetAtom 适合封装进自定义 hook 的原因是？",
+      "options": [
+        "能读值",
+        "setter 稳定便于 memo/依赖",
+        "自动渲染",
+        "免 import"
+      ],
+      "answer": 1,
+      "explanation": "稳定引用利于依赖数组。"
+    },
+    {
+      "stem": "写一个 write-only atom 时，组件里用什么触发？",
+      "options": [
+        "useAtomValue",
+        "useSetAtom",
+        "useAtom 解构 value",
+        "atom()"
+      ],
+      "answer": 1,
+      "explanation": "取 setter 调用触发写函数（呼应 jo-write-only）。"
+    }
+  ]
+}

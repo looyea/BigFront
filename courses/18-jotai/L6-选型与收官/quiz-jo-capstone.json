@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-capstone",
+  "questions": [
+    {
+      "stem": "看板卡片详情异步加载应用？",
+      "options": [
+        "per-card async atom",
+        "useEffect 手搓",
+        "Context",
+        "useState"
+      ],
+      "answer": 0,
+      "explanation": "async atom + Suspense（呼应 jo-async）。"
+    },
+    {
+      "stem": "过滤后列表用哪种原子表达？",
+      "options": [
+        "复制数组",
+        "大对象",
+        "derived 只读 atom",
+        "localStorage"
+      ],
+      "answer": 2,
+      "explanation": "惰性缓存派生（呼应 jo-derived）。"
+    },
+    {
+      "stem": "布局持久化用？",
+      "options": [
+        "手写 effect",
+        "loadable",
+        "immer",
+        "atomWithStorage"
+      ],
+      "answer": 3,
+      "explanation": "单原子持久（呼应 jo-storage）。"
+    },
+    {
+      "stem": "乐观改状态 + 回滚封装成？",
+      "options": [
+        "useState",
+        "write-only atom",
+        "Context",
+        "reducer only"
+      ],
+      "answer": 1,
+      "explanation": "action 原子（呼应 jo-write-only）。"
+    },
+    {
+      "stem": "行级独立状态管理可用？",
+      "options": [
+        "大对象 atom",
+        "focus/split 或 Map family",
+        "全局变量",
+        "Context"
+      ],
+      "answer": 1,
+      "explanation": "细粒度（呼应 jo-focus-select）。"
+    },
+    {
+      "stem": "SSR 水合 async 结果用？",
+      "options": [
+        "skipHydration",
+        "dehydrate/hydrateAtoms",
+        "reload",
+        "轮询"
+      ],
+      "answer": 1,
+      "explanation": "Jotai 方案（呼应 jo-ssr）。"
+    },
+    {
+      "stem": "与 Zustand 版最大对照点？",
+      "options": [
+        "完全相同",
+        "原子+原生异步 vs 单 store+selector+Query",
+        "都不能异步",
+        "Zustand 有 Suspense"
+      ],
+      "answer": 1,
+      "explanation": "两种范式镜像实现。"
+    },
+    {
+      "stem": "每个看板隔离用？",
+      "options": [
+        "共享全局",
+        "独立 Provider store",
+        "localStorage",
+        "useState"
+      ],
+      "answer": 1,
+      "explanation": "作用域隔离（呼应 jo-store）。"
+    },
+    {
+      "stem": "毕业后进阶方向？",
+      "options": [
+        "停止学习",
+        "Query 协作/Valtio/Compiler",
+        "换框架",
+        "只用 Context"
+      ],
+      "answer": 1,
+      "explanation": "生态协同。"
+    },
+    {
+      "stem": "性能上卡片列表防全量重渲靠？",
+      "options": [
+        "大 atom",
+        "split/focus 行级订阅",
+        "reload",
+        "轮询"
+      ],
+      "answer": 1,
+      "explanation": "细订阅（呼应 jo-perf-test）。"
+    }
+  ]
+}

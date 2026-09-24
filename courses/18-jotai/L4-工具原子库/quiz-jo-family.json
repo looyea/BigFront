@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-family",
+  "questions": [
+    {
+      "stem": "Jotai v2 对内置 atomFamily 的处理是？",
+      "options": [
+        "移除",
+        "加强",
+        "改名",
+        "默认开启"
+      ],
+      "answer": 0,
+      "explanation": "防无界缓存泄漏。"
+    },
+    {
+      "stem": "atomFamily 被移除的主要顾虑？",
+      "options": [
+        "太慢",
+        "类型差",
+        "无限缓存 + 无失效易内存泄漏",
+        "不支持 SSR"
+      ],
+      "answer": 2,
+      "explanation": "需显式回收。"
+    },
+    {
+      "stem": "现代替代核心是什么？",
+      "options": [
+        "全局数组",
+        "localStorage",
+        "Context",
+        "Map 按参数 memo + 手动失效"
+      ],
+      "answer": 3,
+      "explanation": "自控生命周期。"
+    },
+    {
+      "stem": "删除一行时应做什么防泄漏？",
+      "options": [
+        "忽略",
+        "cache.delete(id) 清对应 atom",
+        "reload",
+        "清空全部"
+      ],
+      "answer": 1,
+      "explanation": "可失效是关键。"
+    },
+    {
+      "stem": "表格每行独立选中状态适合？",
+      "options": [
+        "一个大 atom",
+        "参数化原子/focus 行",
+        "useState 数组",
+        "Context"
+      ],
+      "answer": 1,
+      "explanation": "细粒度行 atom（呼应 jo-focus-select）。"
+    },
+    {
+      "stem": "atomFamily 的“按参数缓存”含义？",
+      "options": [
+        "每次新对象",
+        "同参数返回同一 atom 实例",
+        "不缓存",
+        "异步"
+      ],
+      "answer": 1,
+      "explanation": "稳定引用。"
+    },
+    {
+      "stem": "与 v1 相比 v2 手动方案多了什么？",
+      "options": [
+        "更少控制",
+        "显式失效/引用计数",
+        "bug",
+        "依赖"
+      ],
+      "answer": 1,
+      "explanation": "把回收责任交给开发者。"
+    },
+    {
+      "stem": "防止参数 atom 无界增长可用？",
+      "options": [
+        "越大越好",
+        "LRU/引用计数回收",
+        "永不清理",
+        "全局单例"
+      ],
+      "answer": 1,
+      "explanation": "有界缓存。"
+    },
+    {
+      "stem": "focusAtom 与参数化原子关系？",
+      "options": [
+        "无关",
+        "聚焦数组元素可替代行 atomFamily",
+        "互斥",
+        "后者淘汰前者"
+      ],
+      "answer": 1,
+      "explanation": "两种行级状态手段。"
+    },
+    {
+      "stem": "本关首要防范的问题是？",
+      "options": [
+        "竞态",
+        "内存泄漏",
+        "水合",
+        "类型"
+      ],
+      "answer": 1,
+      "explanation": "呼应 react-performance。"
+    }
+  ]
+}

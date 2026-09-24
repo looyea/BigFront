@@ -1,0 +1,65 @@
+{
+  "lessonId": "pinia-overview",
+  "questions": [
+    {
+      "stem": "Pinia 取代 Vuex 成为 Vue 3 官方推荐状态库，以下哪项不是 Vuex 的痛点？",
+      "options": ["mutations 层冗余", "namespaced 模块割裂", "不支持 Composition API", "TypeScript 类型推断几乎为零"],
+      "answer": 2,
+      "explanation": "Vuex 4 通过 useStore() 可组合式使用（虽不优雅），真正痛点是 mutation 冗余、module 割裂、TS 差——'不支持 Composition API'表述过于绝对。"
+    },
+    {
+      "stem": "Pinia Setup Store 中，computed() 对应 Vuex 的什么概念？",
+      "options": ["state", "actions", "getters", "mutations"],
+      "answer": 2,
+      "explanation": "Setup Store 里 ref/reactive 即 state、computed 即 getter、function 即 action。"
+    },
+    {
+      "stem": "以下哪种注册 Pinia 的方式正确？",
+      "options": ["app.install(createPinia())", "app.use(createPinia())", "app.plugin(createPinia())", "Vue.use('pinia')"],
+      "answer": 1,
+      "explanation": "Pinia 是标准 Vue 插件，通过 app.use(createPinia()) 注册。"
+    },
+    {
+      "stem": "Pinia 相比 Vuex 的 gzip 体积约为？",
+      "options": ["~10KB", "~5KB", "~25KB", "~1.2KB"],
+      "answer": 3,
+      "explanation": "Pinia 仅 ~1.2KB gzip，Vuex 4 约 10KB。"
+    },
+    {
+      "stem": "在 Pinia Setup Store 里想保留响应式地解构 store，应该用？",
+      "options": ["storeToRefs(store)", "toRefs(store)", "destructue(store)", "Object.assign({}, store)"],
+      "answer": 0,
+      "explanation": "storeToRefs 是 Pinia 专用工具，解构 state/getter 保持响应式，action 仍用直接解构。"
+    },
+    {
+      "stem": "Nuxt 3 中使用 Pinia 的正确方式是？",
+      "options": ["手动在 nuxt.config.ts 注册 plugin", "npx nuxi module add pinia", "app.use(createPinia()) 写在 app.vue", "不需要安装，Nuxt 内置"],
+      "answer": 1,
+      "explanation": "Nuxt 通过官方 @pinia/nuxt 模块自动处理注册与 SSR 水合。"
+    },
+    {
+      "stem": "Pinia 相比 Vuex 在 TypeScript 上的核心优势是？",
+      "options": ["Setup Store 类型自动推断零标注", "需要手写 InjectionKey", "需要 as any 绕过", "只支持 Options Store 的类型"],
+      "answer": 0,
+      "explanation": "Setup Store 直接从 ref/computed/function 推断类型，无需手动标注。"
+    },
+    {
+      "stem": "Pinia 中跨 store 引用（调用另一个 store 的 action）的正确方式是？",
+      "options": ["通过 rootState 间接访问", "在 action 里 import 并调用 useOtherStore()", "namespaced commit 字符串路径", "不能跨 store"],
+      "answer": 1,
+      "explanation": "Pinia 去掉了 namespaced 概念，直接 import 另一 store 的 use 函数即可组合。"
+    },
+    {
+      "stem": "Pinia 目前支持的 Vue 版本是？",
+      "options": ["Vue 2 + Vue 3", "仅 Vue 2", "Vue 3 + React", "仅 Vue 3"],
+      "answer": 3,
+      "explanation": "Pinia 从设计之初就只面向 Vue 3（Composition API），不支持 Vue 2。"
+    },
+    {
+      "stem": "Pinia 与 Zustand 的共性哲学是？",
+      "options": ["都需要 Provider 包裹", "都用不可变更新", "少仪式感、类型友好、插件增强", "都必须用 Redux DevTools"],
+      "answer": 2,
+      "explanation": "两者都追求最少的样板代码、优秀的 TS 推断、通过插件/中间件扩展能力。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-optimistic",
+  "questions": [
+    {
+      "stem": "乐观更新的核心思路是？",
+      "options": [
+        "等服务器确认后再改 UI",
+        "发两个请求做对比",
+        "先改 UI 再发请求，失败则回滚",
+        "用缓存代替服务器"
+      ],
+      "answer": 2,
+      "explanation": "乐观 = 先改本地状态立即渲染，后台发请求；失败用快照回滚到之前状态。"
+    },
+    {
+      "stem": "Pinia 中实现乐观更新回滚的关键 API 是？",
+      "options": [
+        "$reset()",
+        "location.reload()",
+        "store.$dispose()",
+        "$patch(快照) + catch 恢复"
+      ],
+      "answer": 3,
+      "explanation": "操作前 JSON.parse(JSON.stringify(state)) 存快照，catch 里 $patch(快照) 恢复。"
+    },
+    {
+      "stem": "全局错误捕获在 Pinia 中通过什么机制实现？",
+      "options": [
+        "window.onerror",
+        "$onAction 的 onError 回调 / 插件",
+        "Vue 的 errorCaptured",
+        "try/catch 每一个组件"
+      ],
+      "answer": 1,
+      "explanation": "$onAction({ onError }) 或在插件里统一注册——action 抛错时触发。"
+    },
+    {
+      "stem": "指数退避重试的策略是？",
+      "options": [
+        "每隔固定 1 秒重试",
+        "第 N 次等待 2^N × base 毫秒后重试",
+        "只重试一次",
+        "立即同步重试直到成功"
+      ],
+      "answer": 1,
+      "explanation": "指数退避：1s→2s→4s→8s...避免服务过载时所有客户端同时重发。"
+    },
+    {
+      "stem": "乐观更新最适合哪种操作？",
+      "options": [
+        "删除账户（不可逆）",
+        "点赞/收藏（幂等+可回滚）",
+        "转账（涉及资金）",
+        "修改密码"
+      ],
+      "answer": 1,
+      "explanation": "幂等、失败可安全回滚、用户感知为\"即时\"的场景适合乐观更新。"
+    },
+    {
+      "stem": "$patch 函数形式做快照的正确写法是？",
+      "options": [
+        "const snap = store.$state（引用）",
+        "const snap = JSON.parse(JSON.stringify(store.$state))",
+        "const snap = store（同一对象）",
+        "const snap = toRaw(store)"
+      ],
+      "answer": 1,
+      "explanation": "必须深拷贝——引用赋值（$state/toRaw）拿到的不是独立副本，改 state 后快照也变。"
+    },
+    {
+      "stem": "离线队列的核心思路是？",
+      "options": [
+        "断网时弹 error toast",
+        "action 里先改 state，请求失败存队列，联网后重试",
+        "阻止一切离线操作",
+        "用 WebSocket 代替 HTTP"
+      ],
+      "answer": 1,
+      "explanation": "离线优先（offline-first）：本地改→入队→网络恢复批量提交。Pinia 插件可实现队列。"
+    },
+    {
+      "stem": "Pinia 插件里捕获所有 store 错误的正确位置是？",
+      "options": [
+        "createPinia().use(({ onAction }) => { onAction({ onError }) })",
+        "app.config.errorHandler",
+        "store.$subscribe 里 try/catch",
+        "window.addEventListener('error')"
+      ],
+      "answer": 0,
+      "explanation": "Pinia 插件 context 暴露 onAction——在插件里统一注册 onError 即可捕获所有 action 抛错。"
+    },
+    {
+      "stem": "乐观更新后请求失败需要回滚，UI 应该怎样处理？",
+      "options": [
+        "不做任何提示",
+        "回滚 + toast 通知用户失败",
+        "保留乐观值假装成功",
+        "关闭页面"
+      ],
+      "answer": 1,
+      "explanation": "回滚让数据准确，toast 让用户知道操作未成功——平衡即时性与可信度。"
+    },
+    {
+      "stem": "重试与乐观更新组合时的正确顺序是？",
+      "options": [
+        "先回滚再重试",
+        "保持乐观 UI + 后台重试；最终失败才回滚",
+        "放弃乐观+立即回滚再弹重试按钮",
+        "不做重试"
+      ],
+      "answer": 1,
+      "explanation": "重试期间用户 UI 不变（乐观态）；若全部重试失败才回滚——减少闪烁。"
+    }
+  ]
+}

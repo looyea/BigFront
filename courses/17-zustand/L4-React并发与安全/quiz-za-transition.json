@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-transition",
+  "questions": [
+    {
+      "stem": "startTransition 的作用是？",
+      "options": [
+        "把更新标记为非紧急、可被中断",
+        "强制同步渲染",
+        "禁用 store",
+        "持久化"
+      ],
+      "answer": 0,
+      "explanation": "transition 更新优先级低，可让路给紧急输入。"
+    },
+    {
+      "stem": "同一事件回调里 set 三次会渲染几次？",
+      "options": [
+        "3 次",
+        "报错",
+        "0 次",
+        "1 次（自动批处理）"
+      ],
+      "answer": 3,
+      "explanation": "React 18+ 自动批处理。"
+    },
+    {
+      "stem": "useOptimistic 典型用于？",
+      "options": [
+        "样式",
+        "提交前先行展示乐观结果",
+        "路由",
+        "埋点"
+      ],
+      "answer": 1,
+      "explanation": "先渲染预期结果，失败回滚。"
+    },
+    {
+      "stem": "isPending 用来？",
+      "options": [
+        "判断错误",
+        "标识 transition 正在进行",
+        "判断水合",
+        "控制订阅"
+      ],
+      "answer": 1,
+      "explanation": "transition 期间为 true，可做 UI 反馈。"
+    },
+    {
+      "stem": "并发渲染中读 store 应优先用？",
+      "options": [
+        "getState 轮询",
+        "useStore 订阅值保证快照一致",
+        "setTimeout",
+        "window 变量"
+      ],
+      "answer": 1,
+      "explanation": "订阅值保证同一渲染一致性。"
+    },
+    {
+      "stem": "大列表过滤不跟手，首选优化？",
+      "options": [
+        "加 throttle 丢帧",
+        "startTransition 降级更新",
+        "不用 state",
+        "强制同步"
+      ],
+      "answer": 1,
+      "explanation": "让过滤成为可中断的 transition。"
+    },
+    {
+      "stem": "useOptimistic 与 persist 乐观更新的区别？",
+      "options": [
+        "一样",
+        "前者是 React 内建乐观态、后者是 store 手动回滚",
+        "都异步",
+        "都不可回滚"
+      ],
+      "answer": 1,
+      "explanation": "机制与归属不同，可配合。"
+    },
+    {
+      "stem": "startTransition 从哪个 React 版本稳定可用？",
+      "options": [
+        "16",
+        "17",
+        "18",
+        "15"
+      ],
+      "answer": 2,
+      "explanation": "React 18 引入并发特性，19 完善。"
+    },
+    {
+      "stem": "乐观更新失败后应由谁负责回滚？",
+      "options": [
+        "React",
+        "store action 捕获后恢复快照",
+        "浏览器",
+        "Query"
+      ],
+      "answer": 1,
+      "explanation": "在 store 里保存快照并回滚。"
+    },
+    {
+      "stem": "把 setState 放进 transition 的收益？",
+      "options": [
+        "无",
+        "保持输入响应流畅、可中断长渲染",
+        "变慢",
+        "禁用并发"
+      ],
+      "answer": 1,
+      "explanation": "长任务被切分让路。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-capstone",
+  "questions": [
+    {
+      "stem": "封装统一 createStore 的主要收益？",
+      "options": [
+        "固定中间件顺序与命名、DRY",
+        "变大",
+        "免测试",
+        "免 TS"
+      ],
+      "answer": 0,
+      "explanation": "一处约定全局一致（呼应 za-middleware-chain）。"
+    },
+    {
+      "stem": "推荐的 action 更新方式是？",
+      "options": [
+        "组件内 setState",
+        "直接改 DOM",
+        "store 内动词 action + 函数式 set",
+        "全局变量"
+      ],
+      "answer": 2,
+      "explanation": "集中可追踪。"
+    },
+    {
+      "stem": "selector 命名与导出建议？",
+      "options": [
+        "随意内联",
+        "不导出",
+        "大写",
+        "selectXxx 集中导出做黑盒"
+      ],
+      "answer": 3,
+      "explanation": "封装结构（呼应 za-slices）。"
+    },
+    {
+      "stem": "应禁止的反模式是？",
+      "options": [
+        "用 action",
+        "把 Query 数据拷进 store",
+        "用 selector",
+        "用 persist"
+      ],
+      "answer": 1,
+      "explanation": "制造第二真相（呼应 za-layers）。"
+    },
+    {
+      "stem": "跨 slice 协作规定走？",
+      "options": [
+        "import 实例",
+        "get().otherAction",
+        "事件总线",
+        "localStorage"
+      ],
+      "answer": 1,
+      "explanation": "类型安全、单一入口（呼应 za-slices）。"
+    },
+    {
+      "stem": "毕业清单里 v5 最大陷阱是？",
+      "options": [
+        "Provider",
+        "selector 返回新引用致过度渲染",
+        "命名",
+        "immer"
+      ],
+      "answer": 1,
+      "explanation": "Object.is 默认（呼应 za-selectors-deep）。"
+    },
+    {
+      "stem": "进阶的 proxy 可变路线指？",
+      "options": [
+        "Redux",
+        "Valtio",
+        "MobX only",
+        "Context"
+      ],
+      "answer": 1,
+      "explanation": "Jotai 兄弟库（呼应 jo-valtio）。"
+    },
+    {
+      "stem": "服务端态进阶推荐？",
+      "options": [
+        "更多 useEffect",
+        "TanStack Query",
+        "手写缓存",
+        "全局 store"
+      ],
+      "answer": 1,
+      "explanation": "专用缓存（呼应 za-layers）。"
+    },
+    {
+      "stem": "统一 devtools 命名好处？",
+      "options": [
+        "难查",
+        "调试面板可读、可归因",
+        "变慢",
+        "无"
+      ],
+      "answer": 1,
+      "explanation": "action 名可见（呼应 za-immer-devtools）。"
+    },
+    {
+      "stem": "团队规范最终目的是？",
+      "options": [
+        "限制新人",
+        "一致、可维护、可测、少踩坑",
+        "增加样板",
+        "禁用特性"
+      ],
+      "answer": 1,
+      "explanation": "规模化协作。"
+    }
+  ]
+}

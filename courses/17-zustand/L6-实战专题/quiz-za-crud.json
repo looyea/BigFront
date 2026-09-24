@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-crud",
+  "questions": [
+    {
+      "stem": "列表数据推荐用什么结构存？",
+      "options": [
+        "ids + entities 归一化",
+        "嵌套大对象",
+        "数组里塞全量",
+        "字符串"
+      ],
+      "answer": 0,
+      "explanation": "单条更新 O(1)、易去重。"
+    },
+    {
+      "stem": "乐观更新失败后靠什么回滚？",
+      "options": [
+        "刷新页面",
+        "忽略",
+        "alert",
+        "先前快照 setState 恢复"
+      ],
+      "answer": 3,
+      "explanation": "保存旧值 catch 时恢复。"
+    },
+    {
+      "stem": "分页列表的服务端数据更该交给？",
+      "options": [
+        "Zustand 深拷",
+        "TanStack Query",
+        "localStorage",
+        "Context"
+      ],
+      "answer": 1,
+      "explanation": "server 态归 Query（呼应 za-layers）。"
+    },
+    {
+      "stem": "批量更新多个实体的好处是？",
+      "options": [
+        "多次渲染",
+        "一次 set 单帧通知减少重渲",
+        "更慢",
+        "无法 undo"
+      ],
+      "answer": 1,
+      "explanation": "单帧批量高效。"
+    },
+    {
+      "stem": "整批操作想可撤销，用哪种中间件？",
+      "options": [
+        "persist",
+        "undo/redo 历史栈",
+        "immer",
+        "devtools"
+      ],
+      "answer": 1,
+      "explanation": "快照入栈支持回退（呼应 za-middleware-chain）。"
+    },
+    {
+      "stem": "选中集合用什么类型存最合适？",
+      "options": [
+        "数组",
+        "Set",
+        "对象字符串",
+        "Map 数组"
+      ],
+      "answer": 1,
+      "explanation": "Set 增删查 O(1)、天然去重。"
+    },
+    {
+      "stem": "跨列拖拽需要改什么？",
+      "options": [
+        "只改颜色",
+        "task.columnId + ids 顺序",
+        "reload",
+        "localStorage"
+      ],
+      "answer": 1,
+      "explanation": "归属列与顺序都要更新。"
+    },
+    {
+      "stem": "updateTask 里 structuredClone 的目的是？",
+      "options": [
+        "提速",
+        "存独立快照供回滚",
+        "加密",
+        "序列化"
+      ],
+      "answer": 1,
+      "explanation": "避免引用同一对象。"
+    },
+    {
+      "stem": "下列哪项不应放这个 store？",
+      "options": [
+        "乐观覆盖",
+        "筛选/排序",
+        "原始服务端分页数据",
+        "选中态"
+      ],
+      "answer": 2,
+      "explanation": "服务端数据归 Query。"
+    },
+    {
+      "stem": "用 immer 对 CRUD 的收益？",
+      "options": [
+        "无",
+        "简化 entities/嵌套的更新写法",
+        "自动请求",
+        "自动分页"
+      ],
+      "answer": 1,
+      "explanation": "draft 写法更清晰（呼应 za-immer-devtools）。"
+    }
+  ]
+}

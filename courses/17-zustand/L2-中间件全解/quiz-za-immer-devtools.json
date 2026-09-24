@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-immer-devtools",
+  "questions": [
+    {
+      "stem": "immer 中间件把 set 的回调参数变成了？",
+      "options": [
+        "可变的 draft 代理",
+        "快照副本",
+        "Promise",
+        "reducer"
+      ],
+      "answer": 0,
+      "explanation": "produce 提供 draft，可写可变风格。"
+    },
+    {
+      "stem": "immer 未变的分支引用会？",
+      "options": [
+        "全部新建",
+        "被销毁",
+        "保持引用不变（结构共享）",
+        "变 Proxy 永久"
+      ],
+      "answer": 2,
+      "explanation": "结构共享让 selector 更精准判重。"
+    },
+    {
+      "stem": "devtools 中间件给每次 set 命名的方式是？",
+      "options": [
+        "第一个参数",
+        "注释",
+        "store id",
+        "set 的第三个参数 action 字符串"
+      ],
+      "answer": 3,
+      "explanation": "set(fn, replace, action) 第三参作为 action 名。"
+    },
+    {
+      "stem": "devtools + immer 推荐顺序？",
+      "options": [
+        "immer(devtools(fn))",
+        "devtools(immer(fn))",
+        "随便",
+        "只用一个"
+      ],
+      "answer": 1,
+      "explanation": "devtools 最外记录最终态，immer 最内产出。"
+    },
+    {
+      "stem": "immer 的主要成本来自？",
+      "options": [
+        "深拷贝",
+        "Proxy 读写拦截",
+        "正则",
+        "GC"
+      ],
+      "answer": 1,
+      "explanation": "Proxy 拦截有开销，但对 UI 通常可忽略。"
+    },
+    {
+      "stem": "Redux DevTools 的 jump 功能提供？",
+      "options": [
+        "跳代码",
+        "时间旅行到历史某个状态",
+        "跳转路由",
+        "清空 store"
+      ],
+      "answer": 1,
+      "explanation": "jump 允许回放到任意记录点。"
+    },
+    {
+      "stem": "何时可能不该用 immer？",
+      "options": [
+        "嵌套对象多",
+        "超大数组每帧高频写",
+        "想少写代码",
+        "需要 TS"
+      ],
+      "answer": 1,
+      "explanation": "高频巨型结构下 Proxy 开销明显，退回函数式展开。"
+    },
+    {
+      "stem": "不给 set 命名在 DevTools 里表现为？",
+      "options": [
+        "报错",
+        "匿名 update 难归因",
+        "不显示",
+        "自动命名"
+      ],
+      "answer": 1,
+      "explanation": "缺 action 名则显示匿名，排查困难。"
+    },
+    {
+      "stem": "features 选项用于？",
+      "options": [
+        "持久化",
+        "开关 DevTools 面板功能（jump/dispatch 等）",
+        "中间件",
+        "选择器"
+      ],
+      "answer": 1,
+      "explanation": "features 精细控制 DevTools 能力。"
+    },
+    {
+      "stem": "immer 对 selector 稳定性的正面作用是？",
+      "options": [
+        "无",
+        "未变分支引用不变，减少误重渲",
+        "总是新对象",
+        "关闭缓存"
+      ],
+      "answer": 1,
+      "explanation": "结构共享天然利于 Object.is 判等。"
+    }
+  ]
+}

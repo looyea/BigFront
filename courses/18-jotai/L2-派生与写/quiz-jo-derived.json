@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-derived",
+  "questions": [
+    {
+      "stem": "只读派生 atom 的写法是？",
+      "options": [
+        "atom(get=>...)",
+        "atom(初值)",
+        "atom(null, setter)",
+        "atom()"
+      ],
+      "answer": 0,
+      "explanation": "仅 getter 即只读派生。"
+    },
+    {
+      "stem": "派生 atom 的求值策略？",
+      "options": [
+        "立即每次",
+        "每帧",
+        "惰性 + 缓存，依赖变才重算",
+        "手动"
+      ],
+      "answer": 2,
+      "explanation": "同 computed。"
+    },
+    {
+      "stem": "与 Zustand selector 最大区别？",
+      "options": [
+        "无",
+        "都不能派生",
+        "selector 更快",
+        "derived 有缓存、selector 每次重跑"
+      ],
+      "answer": 3,
+      "explanation": "呼应 za-selectors-deep。"
+    },
+    {
+      "stem": "依赖图中出现循环会？",
+      "options": [
+        "自动断开",
+        "抛循环依赖错误",
+        "死循环",
+        "忽略"
+      ],
+      "answer": 1,
+      "explanation": "Jotai 检测并报错。"
+    },
+    {
+      "stem": "派生 atom 能否再被别的派生 atom 依赖？",
+      "options": [
+        "不能",
+        "能，构成 DAG",
+        "只能一层",
+        "需异步"
+      ],
+      "answer": 1,
+      "explanation": "可组合。"
+    },
+    {
+      "stem": "与哪个 Vue API 思想最像？",
+      "options": [
+        "ref",
+        "computed",
+        "watch",
+        "watchEffect"
+      ],
+      "answer": 1,
+      "explanation": "惰性缓存派生（呼应 vue-computed-watch）。"
+    },
+    {
+      "stem": "源 atom 未变时读派生 atom？",
+      "options": [
+        "重新计算",
+        "返回缓存结果",
+        "报错",
+        "触发渲染"
+      ],
+      "answer": 1,
+      "explanation": "命中缓存。"
+    },
+    {
+      "stem": "读取派生 atom 用什么 hook？",
+      "options": [
+        "useSetAtom",
+        "useAtomValue",
+        "useAtom 写",
+        "getState"
+      ],
+      "answer": 1,
+      "explanation": "只读用 useAtomValue。"
+    },
+    {
+      "stem": "可写派生 atom 需要几个函数？",
+      "options": [
+        "0",
+        "getter + setter 两个",
+        "只 getter",
+        "只 setter"
+      ],
+      "answer": 1,
+      "explanation": "atom(get,set)。"
+    },
+    {
+      "stem": "派生 atom 变化的通知粒度？",
+      "options": [
+        "整树",
+        "仅订阅该派生结果的组件",
+        "所有 atom",
+        "需手动"
+      ],
+      "answer": 1,
+      "explanation": "细订阅（呼应 jo-atom）。"
+    }
+  ]
+}

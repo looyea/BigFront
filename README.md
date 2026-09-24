@@ -3,7 +3,7 @@
 一个**可运行、可打卡、可扩展**的大前端「打怪升级」学习平台。暗色主题（借鉴 VS Code Dark+ / Solarized），
 专为「对大前端零概念、想在本地边学边往 GitHub 提交」的你而做。
 
-覆盖方向：JavaScript(ES6→ES2025) · TypeScript · Node.js · Express · Vue 3 · React · Svelte/SvelteKit · Solid · 微信小程序 · Next.js · Nuxt · Vite（各包完成度见第九节）。
+覆盖方向：JavaScript(ES6→ES2025) · TypeScript · Node.js · Express · Vue 3 · React · Svelte/SvelteKit · Solid · Angular · 微信小程序 · Next.js · Nuxt · Vite · Signals 状态管理 · 状态管理三强 Pinia/Zustand/Jotai（各包完成度见第九节）。
 
 ---
 
@@ -105,7 +105,7 @@ npm.cmd start
 ```bash
 git init                 # 若尚未初始化
 git add -A
-git commit -m "feat: 大前端学院学习平台（框架 + 14 个满配课程包）"
+git commit -m "feat: 大前端学院学习平台（框架 + 18 个满配课程包）"
 git branch -M main
 git remote add origin https://github.com/<你的用户名>/<仓库名>.git
 git push -u origin main
@@ -137,7 +137,7 @@ BigFront/
 │     ├─ router.js           # /p/:pkg、/l/:pkg/:lessonId（+/quiz、/interview）
 │     ├─ api.js              # 接口封装 + 进度 + 时长打点
 │     └─ styles/theme.css    # 暗色主题
-├─ courses/                  # 14 个课程包（内容层），全部已统一为扁平布局：
+├─ courses/                  # 18 个课程包（内容层），全部已统一为扁平布局：
 │  └─ <包>/                  #   包根 = course.json + 每个阶段一个文件夹（如 L1-变量与作用域）
 │     ├─ lesson-<id>.md          # 课文正文
 │     ├─ quiz-<id>.json          # 小测（≥6成及格即自动通关）
@@ -154,7 +154,7 @@ BigFront/
 
 ## 九、内容完成度说明
 
-> 截至本次更新：平台已扫描到 **14 个课程包**，且 **14 个已全部满配**；累计已产出 **358 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。既有 10 个满配包已完成一轮**内容缺口审计**：探针逐包扫描关键词覆盖，真空知识点酌情补建 **10 个新关**（三件套 + 所属阶段作业齐备），已足量内容一律不重复制品。`12-sveltekit`（SvelteKit）9 阶段 27 关、`13-solid`（SolidJS，含 SolidStart）9 阶段 27 关、`14-signals`（响应式状态管理实战：TC39 Signals / RxJS / MobX / Zustand）9 阶段 27 关均已交付；后端完整性自检 **14 包全零告警**。
+> 截至本次更新：平台已扫描到 **18 个课程包**，且 **18 个已全部满配**；累计已产出 **439 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。既有 10 个满配包已完成一轮**内容缺口审计**：探针逐包扫描关键词覆盖，真空知识点酌情补建 **10 个新关**（三件套 + 所属阶段作业齐备），已足量内容一律不重复制品。`12-sveltekit`（SvelteKit）9 阶段 27 关、`13-solid`（SolidJS，含 SolidStart）9 阶段 27 关、`14-signals`（响应式状态管理实战：TC39 Signals / RxJS / MobX / Zustand）9 阶段 27 关、`15-angular`（Angular 实战：企业级框架的主流姿势）9 阶段 27 关均已交付；本轮又新增三个**状态管理专项包**——`16-pinia`（Vue 官方状态管理，5 阶段 15 关）、`17-zustand`（React 轻量 store，7 阶段 21 关）、`18-jotai`（原子化状态，6 阶段 18 关），共 +54 关；后端完整性自检 **18 包全零告警**。
 
 - ✅ **已满配**（课文 + 小测 + 作业 + 面试题；可运行示例 `examples/` 为首批两包附带）：
 
@@ -167,6 +167,8 @@ BigFront/
 | `05-react` | 8 | 24 |   | `06-miniprogram` | 8 | 24 |
 | `11-svelte`（Svelte 5） | 10 | 30 |   | `12-sveltekit` | 9 | 27 |
 | `13-solid`（SolidJS） | 9 | 27 |   | `14-signals`（状态管理四强） | 9 | 27 |
+| `15-angular`（Angular v22） | 9 | 27 |   | `16-pinia`（Pinia） | 5 | 15 |
+| `17-zustand`（Zustand） | 7 | 21 |   | `18-jotai`（Jotai） | 6 | 18 |
 
 <details>
 <summary>缺口审计本轮补建的 10 关（点开展开）</summary>
@@ -188,8 +190,9 @@ BigFront/
 
 </details>
 
-- ✅ **新增收官**：`14-signals`（响应式状态管理实战，9 阶段 27 关：L1 导论全景 + L2-L5 TC39 Signals/RxJS/MobX/Zustand 四强各自实战 + L6 横向对比 + L7 体积/调试/性能工程实践 + L8 服务端状态/迁移共存/登录态四实现 + L9 手写 mini-signal 内核·四实现对照终战选型·进阶路线）**已全部交付**，主流应用定位为尺、不深挖源码，口诀链（海关/两税/五碗）贯穿。`12-sveltekit`（SvelteKit，9 阶段 27 关）与 `13-solid`（SolidJS，9 阶段 27 关：L1–L6 响应式内核与组件/事件/异步/性能，L7–L8 SolidStart 文件路由、query+createAsync、服务端函数与部署测试，L9 内核收官 + React 迁移方法论 + 毕业项目）**已全部交付**，两包内容均基于官方文档全文精读做事实底（SolidStart 以 v2 文档为轴）。`11-svelte` 十阶段 30 关**已全部交付**（L8 编译架构/SvelteKit 引桥/部署 + L9 特殊元素/错误边界/Effect 深水区 + L10 Web Components/纯 Svelte SSR/4→5 迁移），对既有 10 个满配包的内容缺口审计**已完成**（见上方表格与明细，+10 关）。
-- 🎓 **面试题**：上述 **358 关**均一一配有 `interview-<lessonId>.md`（面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前十四包**零告警**）。
+ 🎓 **四大框架全部收官**：`15-angular`（Angular 实战：企业级框架的主流姿势，9 阶段 27 关：L1 导论与全景 + L2 组件与模板 + L3 依赖注入与服务 + L4 响应式 signals 与 RxJS 交接 + L5 表单与 HTTP + L6 路由 + L7 状态管理与大型架构 + L8 生态与工程 + L9 收官与选型）**已全部交付**，以 v22 为事实底（standalone 默认、zoneless 默认、Signal Forms GA），主流应用为尺、不挖编译器源码，与 04/05/11/13/14 五包知识点两两对照。`14-signals`（响应式状态管理实战，9 阶段 27 关：L1 导论全景 + L2-L5 TC39 Signals/RxJS/MobX/Zustand 四强各自实战 + L6 横向对比 + L7 体积/调试/性能工程实践 + L8 服务端状态/迁移共存/登录态四实现 + L9 手写 mini-signal 内核·四实现对照终战选型·进阶路线）**已全部交付**，主流应用定位为尺、不深挖源码，口诀链（海关/两税/五碗）贯穿。`12-sveltekit`（SvelteKit，9 阶段 27 关）与 `13-solid`（SolidJS，9 阶段 27 关：L1–L6 响应式内核与组件/事件/异步/性能，L7–L8 SolidStart 文件路由、query+createAsync、服务端函数与部署测试，L9 内核收官 + React 迁移方法论 + 毕业项目）**已全部交付**，两包内容均基于官方文档全文精读做事实底（SolidStart 以 v2 文档为轴）。`11-svelte` 十阶段 30 关**已全部交付**（L8 编译架构/SvelteKit 引桥/部署 + L9 特殊元素/错误边界/Effect 深水区 + L10 Web Components/纯 Svelte SSR/4→5 迁移），对既有 10 个满配包的内容缺口审计**已完成**（见上方表格与明细，+10 关）。
+ 🎓 **状态管理三强专项收官**：在 `14-signals` 横向综述（其 L5 已带 Zustand 入门）基础上，本轮为三大主流库各立专包、按内容密度差异化分阶（非固定阶段数）：`16-pinia`（5 阶段 15 关：L1 入门与核心 + L2 Getters 与异步 Actions + L3 组合与插件 + L4 实战与 SSR + L5 测试·迁移·选型），以 Vue 官方 Store 为事实底（Setup Store、storeToRefs、$patch/$subscribe、Vuex→Pinia 迁移、Nuxt SSR 水合）；`17-zustand`（7 阶段 21 关：核心回顾与深化 → 中间件链 → 状态切片与组织 → 订阅与并发渲染 → Next.js 与 SSR 全链路 → 实战专题 → 对比·测试·终战），深度专讲 v5 create、useShallow、useSyncExternalStore、中间件链顺序、slices/factory、startTransition/useOptimistic、Next per-request + skipHydration；`18-jotai`（6 阶段 18 关：原子核心 → 派生与写 → 异步与 Suspense → 工具原子库 → 架构与性能 → 选型收官），以原子范式为轴（atom/useAtom、derived/write-only、async + Suspense、loadable/unwrap、atomWithStorage/Family/focus/split、createStore + Provider 隔离、dehydrate/hydrateAtoms）。三包均遵循「主流应用为尺、不挖源码」，与 14-signals、各框架包知识点两两对照。**累计关卡已达 439 关**。
+ 🎓 **面试题**：上述 **439 关**均一一配有 `interview-<lessonId>.md`（面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前十八包**零告警**）。
 
 > 技术事实若不确定版本演进，请一律以各框架**官方文档 / MDN / TC39** 为准——本课程反复提醒：
 > 警惕过时教程与 AI 幻觉。

@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-race",
+  "questions": [
+    {
+      "stem": "async atom 依赖变化时旧 promise 结果？",
+      "options": [
+        "被忽略，以最新为准",
+        "仍会覆盖",
+        "报错",
+        "排队等待"
+      ],
+      "answer": 0,
+      "explanation": "自动竞态处理。"
+    },
+    {
+      "stem": "后发先至问题 Jotai 如何处理？",
+      "options": [
+        "不处理",
+        "串行",
+        "加锁",
+        "按最新依赖值判定丢弃过期"
+      ],
+      "answer": 3,
+      "explanation": "过期结果不生效。"
+    },
+    {
+      "stem": "要真正中断底层请求需？",
+      "options": [
+        "什么都不做",
+        "集成 AbortController signal",
+        "setTimeout",
+        "reload"
+      ],
+      "answer": 1,
+      "explanation": "Jotai 只忽略不 abort。"
+    },
+    {
+      "stem": "abort 通常在什么时机调用？",
+      "options": [
+        "渲染中",
+        "依赖变化/组件卸载 effect cleanup",
+        "set 里",
+        "构造时"
+      ],
+      "answer": 1,
+      "explanation": "清理阶段。"
+    },
+    {
+      "stem": "重试策略怎么实现？",
+      "options": [
+        "不可能",
+        "retryCount atom 作依赖触发重取",
+        "轮询 window",
+        "alert"
+      ],
+      "answer": 1,
+      "explanation": "依赖驱动重跑。"
+    },
+    {
+      "stem": "重型缓存/失效该交给？",
+      "options": [
+        "async atom",
+        "TanStack Query",
+        "Context",
+        "localStorage"
+      ],
+      "answer": 1,
+      "explanation": "分工明确。"
+    },
+    {
+      "stem": "Jotai 竞态处理与 Query 的机制相似点？",
+      "options": [
+        "都靠 requestId 忽略过期",
+        "都靠取消",
+        "都不管",
+        "都串行"
+      ],
+      "answer": 1,
+      "explanation": "以最新为准丢弃过期。"
+    },
+    {
+      "stem": "transition 更新依赖的收益？",
+      "options": [
+        "无",
+        "保留旧 UI 到新数据、避免闪烁",
+        "变慢",
+        "重复请求"
+      ],
+      "answer": 1,
+      "explanation": "呼应 za-transition。"
+    },
+    {
+      "stem": "async atom 每次依赖变会？",
+      "options": [
+        "复用旧值",
+        "重新执行 getter 取数",
+        "冻结",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "依赖驱动重取。"
+    },
+    {
+      "stem": "下面哪项不属于本关竞态主题？",
+      "options": [
+        "忽略过期结果",
+        "AbortController",
+        "schema 迁移",
+        "退避重试"
+      ],
+      "answer": 2,
+      "explanation": "迁移属 persist（呼应 za-persist-deep）。"
+    }
+  ]
+}

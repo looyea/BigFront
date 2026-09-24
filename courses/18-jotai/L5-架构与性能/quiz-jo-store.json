@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-store",
+  "questions": [
+    {
+      "stem": "全局默认 store 在 SSR 的最大隐患？",
+      "options": [
+        "跨请求共享导致数据泄漏",
+        "变慢",
+        "不能派生",
+        "体积大"
+      ],
+      "answer": 0,
+      "explanation": "进程单例被多请求复用。"
+    },
+    {
+      "stem": "createStore 返回的实例可脱离 React 用哪些方法？",
+      "options": [
+        "render/use",
+        "mount",
+        "get/set/sub",
+        "dispatch"
+      ],
+      "answer": 2,
+      "explanation": "vanilla API（呼应 za-store-api）。"
+    },
+    {
+      "stem": "让同页多个相同组件各自独立状态用？",
+      "options": [
+        "更多 atom",
+        "各自 Provider 独立 store",
+        "useState",
+        "localStorage"
+      ],
+      "answer": 1,
+      "explanation": "作用域隔离。"
+    },
+    {
+      "stem": "Provider 的核心作用？",
+      "options": [
+        "性能优化",
+        "注入一份作用域内 store",
+        "持久化",
+        "异步"
+      ],
+      "answer": 1,
+      "explanation": "绑定独立 store。"
+    },
+    {
+      "stem": "测试隔离 atom 状态的推荐做法？",
+      "options": [
+        "共享全局",
+        "每测试新 store/Provider",
+        "reload",
+        "clearStorage"
+      ],
+      "answer": 1,
+      "explanation": "避免用例污染。"
+    },
+    {
+      "stem": "嵌套 Provider 时内层 atom 值？",
+      "options": [
+        "始终继承外层",
+        "内层独立、可按 key 覆写",
+        "报错",
+        "共享引用"
+      ],
+      "answer": 1,
+      "explanation": "作用域内独立。"
+    },
+    {
+      "stem": "store.sub 提供什么？",
+      "options": [
+        "渲染",
+        "命令式订阅 atom 变化回调",
+        "持久化",
+        "写值"
+      ],
+      "answer": 1,
+      "explanation": "vanilla 订阅。"
+    },
+    {
+      "stem": "全局 atom 与 Provider 的关系？",
+      "options": [
+        "互斥",
+        "同一 atom 可在不同 Provider 里有独立值",
+        "Provider 禁用 atom",
+        "必须都用"
+      ],
+      "answer": 1,
+      "explanation": "atom 是 key，store 是容器。"
+    },
+    {
+      "stem": "下面哪个不是默认 store 的问题？",
+      "options": [
+        "SSR 泄漏",
+        "测试污染",
+        "多实例共享",
+        "类型太弱"
+      ],
+      "answer": 3,
+      "explanation": "类型不是 store 隔离问题。"
+    },
+    {
+      "stem": "jotai/vanilla 适合什么场景？",
+      "options": [
+        "仅浏览器",
+        "非 React 环境读写订阅 atom",
+        "仅测试",
+        "仅 SSR"
+      ],
+      "answer": 1,
+      "explanation": "脱离 React 使用。"
+    }
+  ]
+}

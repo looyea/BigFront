@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-focus-select",
+  "questions": [
+    {
+      "stem": "selectAtom 的核心作用是？",
+      "options": [
+        "派生选中值且仅其变化才更新",
+        "写值",
+        "持久化",
+        "拆分数组"
+      ],
+      "answer": 0,
+      "explanation": "类似带缓存的读 selector。"
+    },
+    {
+      "stem": "focusAtom 用什么描述深层路径？",
+      "options": [
+        "字符串",
+        "数组下标",
+        "optic(lens) 链 .prop()",
+        "正则"
+      ],
+      "answer": 2,
+      "explanation": "lens 风格聚焦。"
+    },
+    {
+      "stem": "splitAtom 返回什么？",
+      "options": [
+        "单 atom",
+        "store",
+        "Promise",
+        "[子 atom 列表, remove]"
+      ],
+      "answer": 3,
+      "explanation": "数组拆成子原子。"
+    },
+    {
+      "stem": "表单字段级订阅用哪个最合适？",
+      "options": [
+        "selectAtom",
+        "focusAtom 聚焦字段",
+        "atomWithStorage",
+        "loadable"
+      ],
+      "answer": 1,
+      "explanation": "可读写深层字段（呼应 pinia-form）。"
+    },
+    {
+      "stem": "selectAtom 与 Zustand selector 相似点？",
+      "options": [
+        "都每次重跑",
+        "都按选中值判等避免多余更新",
+        "都无缓存",
+        "都不可派生"
+      ],
+      "answer": 1,
+      "explanation": "呼应 za-selectors-deep。"
+    },
+    {
+      "stem": "splitAtom 常用于什么数据结构？",
+      "options": [
+        "对象",
+        "数组(ToDo/字段列表)",
+        "Map",
+        "字符串"
+      ],
+      "answer": 1,
+      "explanation": "元素各成一个 atom。"
+    },
+    {
+      "stem": "focusAtom 得到的子原子可写吗？",
+      "options": [
+        "只读",
+        "可读写（lens 双向）",
+        "异步",
+        "只删"
+      ],
+      "answer": 1,
+      "explanation": "读写深层字段。"
+    },
+    {
+      "stem": "三者共同解决的问题？",
+      "options": [
+        "网络",
+        "大对象 atom 的订阅粒度",
+        "SSR",
+        "持久化"
+      ],
+      "answer": 1,
+      "explanation": "细分原子。"
+    },
+    {
+      "stem": "removeItem（split 返回）作用？",
+      "options": [
+        "清空全部",
+        "删除对应元素 atom",
+        "重置",
+        "复制"
+      ],
+      "answer": 1,
+      "explanation": "行级删除。"
+    },
+    {
+      "stem": "整表单一个对象 atom 想避免全量重渲用？",
+      "options": [
+        "拆成无数 useState",
+        "focusAtom 聚焦各字段",
+        "selectAtom 只读",
+        "不用 form"
+      ],
+      "answer": 1,
+      "explanation": "字段级读写订阅。"
+    }
+  ]
+}

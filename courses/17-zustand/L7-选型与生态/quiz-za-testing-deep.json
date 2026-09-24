@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-testing-deep",
+  "questions": [
+    {
+      "stem": "Zustand store 测试最大的便利？",
+      "options": [
+        "必须 render",
+        "只能 E2E",
+        "可脱离 React 纯 JS 测",
+        "无法测异步"
+      ],
+      "answer": 2,
+      "explanation": "getState/setState 直接测。"
+    },
+    {
+      "stem": "避免用例间状态污染用？",
+      "options": [
+        "共享单例",
+        "reload",
+        "localStorage",
+        "工厂每用例新建 / beforeEach reset"
+      ],
+      "answer": 3,
+      "explanation": "隔离干净。"
+    },
+    {
+      "stem": "测 async action 推荐 mock 工具？",
+      "options": [
+        "jest.fn 手写",
+        "msw",
+        "sinon",
+        "nock 必须"
+      ],
+      "answer": 1,
+      "explanation": "msw 拦截 HTTP 贴近真实（呼应 pinia-testing）。"
+    },
+    {
+      "stem": "测 selector 组件重渲用？",
+      "options": [
+        "快照",
+        "renderHook + act",
+        "截图",
+        "print"
+      ],
+      "answer": 1,
+      "explanation": "细粒度观察订阅。"
+    },
+    {
+      "stem": "测 persist migrate 的要点？",
+      "options": [
+        "必须浏览器",
+        "注入内存 storage 测纯函数",
+        "跳过",
+        "真实写盘"
+      ],
+      "answer": 1,
+      "explanation": "自定义 StateStorage。"
+    },
+    {
+      "stem": "多实例 store 组件测试需要什么？",
+      "options": [
+        "无",
+        "测试里包 StoreProvider",
+        "全局变量",
+        "手动 DOM"
+      ],
+      "answer": 1,
+      "explanation": "Context 注入独立实例（呼应 za-factory）。"
+    },
+    {
+      "stem": "测错误回滚断言什么？",
+      "options": [
+        "loading 变 true",
+        "失败后 state 恢复快照",
+        "console",
+        "DOM 删除"
+      ],
+      "answer": 1,
+      "explanation": "验证回滚（呼应 za-crud）。"
+    },
+    {
+      "stem": "beforeEach 里干净化常用？",
+      "options": [
+        "store.setState(初始)",
+        "新建 window",
+        "删文件",
+        "重启"
+      ],
+      "answer": 0,
+      "explanation": "重置到初始态。"
+    },
+    {
+      "stem": "为什么优先纯测 store？",
+      "options": [
+        "更快覆盖逻辑",
+        "组件测非法",
+        "store 不能 render",
+        "省 mock"
+      ],
+      "answer": 0,
+      "explanation": "快且稳定，组件层只补渲染。"
+    },
+    {
+      "stem": "createStore 在测试中的角色？",
+      "options": [
+        "生产禁用",
+        "工厂造独立实例便于断言",
+        "持久化",
+        "中间件"
+      ],
+      "answer": 1,
+      "explanation": "vanilla 建隔离 store（呼应 za-store-api）。"
+    }
+  ]
+}

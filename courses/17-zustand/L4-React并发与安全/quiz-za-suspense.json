@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-suspense",
+  "questions": [
+    {
+      "stem": "Zustand store 能否在渲染时 throw Promise 触发 Suspense？",
+      "options": [
+        "不能",
+        "能",
+        "需配置",
+        "仅 SSR"
+      ],
+      "answer": 0,
+      "explanation": "Zustand 不内建挂起能力。"
+    },
+    {
+      "stem": "数据获取的 Suspense 交给谁？",
+      "options": [
+        "Zustand",
+        "persist",
+        "TanStack Query useSuspenseQuery / Jotai",
+        "immer"
+      ],
+      "answer": 2,
+      "explanation": "由支持挂起的库负责。"
+    },
+    {
+      "stem": "store 在 Suspense 场景应存什么？",
+      "options": [
+        "远端数据镜像",
+        "DOM",
+        "Promise",
+        "UI/业务客户端态"
+      ],
+      "answer": 3,
+      "explanation": "客户端态归 store。"
+    },
+    {
+      "stem": "数据加载失败时 store 里的 loading 标志应？",
+      "options": [
+        "保持",
+        "在错误边界 reset 时清理",
+        "设 true",
+        "忽略"
+      ],
+      "answer": 1,
+      "explanation": "否则卡在 loading。"
+    },
+    {
+      "stem": "重试逻辑通常放哪？",
+      "options": [
+        "store",
+        "Query/Jotai",
+        "Zustand set",
+        "Context"
+      ],
+      "answer": 1,
+      "explanation": "数据层负责重试。"
+    },
+    {
+      "stem": "SSR 首屏数据注入 store 的推荐时机？",
+      "options": [
+        "render 中",
+        "客户端 effect 一次性 setState",
+        "循环里",
+        "构造函数"
+      ],
+      "answer": 1,
+      "explanation": "水合后注入避免 mismatch。"
+    },
+    {
+      "stem": "useSuspenseQuery 挂起时 Suspense 显示？",
+      "options": [
+        "null",
+        "fallback",
+        "store 值",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "fallback 占位直到数据就绪。"
+    },
+    {
+      "stem": "下列哪种做法制造两份真相？",
+      "options": [
+        "Query 管列表",
+        "把列表再拷进 Zustand 供组件读",
+        "Zustand 管草稿",
+        "错误边界清 loading"
+      ],
+      "answer": 1,
+      "explanation": "拷贝导致双源同步问题（呼应 za-layers）。"
+    },
+    {
+      "stem": "store 与 ErrorBoundary 联动的关键？",
+      "options": [
+        "无关",
+        "componentDidCatch 里 setState 清 loading",
+        "throw store",
+        "reload"
+      ],
+      "answer": 1,
+      "explanation": "捕获错误同时复位 store 标志。"
+    },
+    {
+      "stem": "Zustand 想体验“挂起式”异步应？",
+      "options": [
+        "自己 throw Promise",
+        "配合 use()/Query 或用 Jotai",
+        "加中间件即可",
+        "不可能"
+      ],
+      "answer": 1,
+      "explanation": "交给支持挂起的库。"
+    }
+  ]
+}

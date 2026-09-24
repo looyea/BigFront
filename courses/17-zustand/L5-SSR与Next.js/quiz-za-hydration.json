@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-hydration",
+  "questions": [
+    {
+      "stem": "SSR 首屏 store 无值导致的主要 UX 问题？",
+      "options": [
+        "内容跳动/mismatch",
+        "崩溃",
+        "变慢",
+        "无影响"
+      ],
+      "answer": 0,
+      "explanation": "首帧与服务端不一致。"
+    },
+    {
+      "stem": "规避水合闪烁的常见手段？",
+      "options": [
+        "轮询",
+        "alert",
+        "首帧 skeleton + 挂载后 rehydrate",
+        "禁用 persist"
+      ],
+      "answer": 2,
+      "explanation": "统一首帧再切换。"
+    },
+    {
+      "stem": "SSR 期间服务端能直接读哪种存储？",
+      "options": [
+        "localStorage",
+        "Cookie",
+        "IndexedDB",
+        "sessionStorage"
+      ],
+      "answer": 1,
+      "explanation": "只有 Cookie 随请求到服务端。"
+    },
+    {
+      "stem": "getStorage 双适配解决什么？",
+      "options": [
+        "性能",
+        "server 用 cookie、client 用 localStorage 的首屏偏好",
+        "加密",
+        "跨域"
+      ],
+      "answer": 1,
+      "explanation": "让服务端可读首屏值。"
+    },
+    {
+      "stem": "跨标签页同步靠什么？",
+      "options": [
+        "Vuex",
+        "storage 事件 / BroadcastChannel",
+        "Cookie 轮询",
+        "WebSocket 必须"
+      ],
+      "answer": 1,
+      "explanation": "同源 storage 变更会广播。"
+    },
+    {
+      "stem": "干净登出应调用？",
+      "options": [
+        "setState({})",
+        "store.persist.clearStorage()",
+        "reload",
+        "alert"
+      ],
+      "answer": 1,
+      "explanation": "同时清内存与存储。"
+    },
+    {
+      "stem": "rehydrate 一般放在？",
+      "options": [
+        "render",
+        "useEffect 挂载后",
+        "SSR",
+        "constructor"
+      ],
+      "answer": 1,
+      "explanation": "仅客户端。"
+    },
+    {
+      "stem": "不处理直接 persist 敏感 token 于 localStorage 风险？",
+      "options": [
+        "无",
+        "XSS 可窃取",
+        "变慢",
+        "失效"
+      ],
+      "answer": 1,
+      "explanation": "localStorage 不安全存敏感值。"
+    },
+    {
+      "stem": "storage 事件触发时机？",
+      "options": [
+        "本 tab 写时",
+        "其他同源 tab 写时",
+        "每秒",
+        "从不"
+      ],
+      "answer": 1,
+      "explanation": "写它的 tab 自身不触发，其他 tab 收到。"
+    },
+    {
+      "stem": "下面哪种不属于水合对策？",
+      "options": [
+        "skeleton",
+        "getStorage 双适配",
+        "BroadcastChannel 同步",
+        "给 store 加动画"
+      ],
+      "answer": 3,
+      "explanation": "动画与水合正确性无关。"
+    }
+  ]
+}

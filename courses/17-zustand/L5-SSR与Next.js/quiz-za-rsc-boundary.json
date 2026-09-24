@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-rsc-boundary",
+  "questions": [
+    {
+      "stem": "RSC 服务端组件能否使用 useXxxStore？",
+      "options": [
+        "不能，需 client 边界",
+        "能",
+        "加 async 能",
+        "仅开发能"
+      ],
+      "answer": 0,
+      "explanation": "store hook 只能在 client 组件。"
+    },
+    {
+      "stem": "Server Action 能直接改浏览器里的 client store 吗？",
+      "options": [
+        "能",
+        "await 后可",
+        "不能（不同运行时）",
+        "自动同步"
+      ],
+      "answer": 2,
+      "explanation": "server 无法访问 client 实例。"
+    },
+    {
+      "stem": "server 数据进入 client store 的推荐方式？",
+      "options": [
+        "全局变量",
+        "throw",
+        "localStorage",
+        "props 下发 + effect setState 注入"
+      ],
+      "answer": 3,
+      "explanation": "一次性水合注入。"
+    },
+    {
+      "stem": "服务端改数据后如何刷新客户端列表？",
+      "options": [
+        "直接 setState",
+        "Query invalidate/重取",
+        "alert",
+        "轮询 store"
+      ],
+      "answer": 1,
+      "explanation": "服务端态交给 Query 失效。"
+    },
+    {
+      "stem": "SSR 期外部 store 需要哪个快照保证一致？",
+      "options": [
+        "getSnapshot",
+        "getServerSnapshot",
+        "getState",
+        "none"
+      ],
+      "answer": 1,
+      "explanation": "水合需稳定 server 快照。"
+    },
+    {
+      "stem": "下面哪种破坏 client/server 边界？",
+      "options": [
+        "'use client' 子树用 store",
+        "server 组件 import store",
+        "props 下发",
+        "Query 取数"
+      ],
+      "answer": 1,
+      "explanation": "server 不能引 store。"
+    },
+    {
+      "stem": "RSC 里读数据的优势？",
+      "options": [
+        "更快水合",
+        "服务端直接 await、减少 client store 承载",
+        "免 TS",
+        "免 Provider"
+      ],
+      "answer": 1,
+      "explanation": "数据在 server 就近获取。"
+    },
+    {
+      "stem": "config 初始值注入 store 用什么避免重复？",
+      "options": [
+        "每次 render",
+        "useEffect 依赖 initial 一次性",
+        "setTimeout",
+        "subscribe"
+      ],
+      "answer": 1,
+      "explanation": "挂载时注入一次。"
+    },
+    {
+      "stem": "三层状态模型在 Next 中对应？",
+      "options": [
+        "全放 Zustand",
+        "RSC 读/Query 缓存/Zustand 交互",
+        "全放 Query",
+        "全放 Context"
+      ],
+      "answer": 1,
+      "explanation": "各归其位。"
+    },
+    {
+      "stem": "Zustand 在 SSR 项目里最该聚焦？",
+      "options": [
+        "远端数据",
+        "客户端交互/UI 态",
+        "文件 IO",
+        "数据库"
+      ],
+      "answer": 1,
+      "explanation": "不越界到 server data。"
+    }
+  ]
+}

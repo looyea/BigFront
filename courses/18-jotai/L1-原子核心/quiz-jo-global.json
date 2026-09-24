@@ -1,0 +1,115 @@
+{
+  "lessonId": "jo-global",
+  "questions": [
+    {
+      "stem": "Jotai 默认 store 的使用方式是？",
+      "options": [
+        "import atom 直接 useAtom",
+        "必须 Provider",
+        "用 Context",
+        "createStore 每次"
+      ],
+      "answer": 0,
+      "explanation": "模块级 atom 即全局单例。"
+    },
+    {
+      "stem": "相比 Context 的性能优势？",
+      "options": [
+        "更重",
+        "一样",
+        "只有订阅该 atom 的组件更新",
+        "需轮询"
+      ],
+      "answer": 2,
+      "explanation": "Context 全子树重渲。"
+    },
+    {
+      "stem": "需要作用域隔离时用什么？",
+      "options": [
+        "更多 atom",
+        "localStorage",
+        "全局变量",
+        "createStore + Provider"
+      ],
+      "answer": 3,
+      "explanation": "见 jo-store。"
+    },
+    {
+      "stem": "持久化全局原子推荐？",
+      "options": [
+        "手写 effect",
+        "atomWithStorage",
+        "Context",
+        "immer"
+      ],
+      "answer": 1,
+      "explanation": "内置工具原子（呼应 jo-storage）。"
+    },
+    {
+      "stem": "全局 atom 的隐患主要是？",
+      "options": [
+        "无",
+        "跨请求/跨实例共享(测试/SSR 污染)",
+        "太慢",
+        "不能派生"
+      ],
+      "answer": 1,
+      "explanation": "需 Provider 隔离（呼应 jo-ssr）。"
+    },
+    {
+      "stem": "按域组织 atom 的好处？",
+      "options": [
+        "混乱",
+        "相关 atom/派生/写集中成对外接口",
+        "变大",
+        "变慢"
+      ],
+      "answer": 1,
+      "explanation": "清晰的模块边界。"
+    },
+    {
+      "stem": "低频少量全局值(语言)是否一定用 Jotai？",
+      "options": [
+        "必须",
+        "Context 或轻量方案也可，看订阅粒度需求",
+        "禁止",
+        "只能 useState"
+      ],
+      "answer": 1,
+      "explanation": "按需选型。"
+    },
+    {
+      "stem": "import 一个 atom 是否会创建 store 实例？",
+      "options": [
+        "会每个 atom 一个",
+        "共享默认 store",
+        "不会订阅",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "所有全局 atom 共享默认 store。"
+    },
+    {
+      "stem": "默认全局 store 适合哪种隔离需求？",
+      "options": [
+        "多标签页独立",
+        "适合无隔离要求的全局共享",
+        "SSR 多请求",
+        "测试隔离"
+      ],
+      "answer": 1,
+      "explanation": "隔离需自定义 store。"
+    },
+    {
+      "stem": "一个域导出多个 atom 相当于？",
+      "options": [
+        "一个大 store",
+        "细粒度原子集合对外接口",
+        "Context",
+        "reducer"
+      ],
+      "answer": 1,
+      "explanation": "比大 store 订阅更精准。"
+    }
+  ]
+}

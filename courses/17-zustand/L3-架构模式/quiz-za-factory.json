@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-factory",
+  "questions": [
+    {
+      "stem": "需要每个组件实例独立状态时应使用？",
+      "options": [
+        "模块级 create 单例",
+        "setState",
+        "createStore + Context 注入",
+        "persist"
+      ],
+      "answer": 2,
+      "explanation": "工厂产 store，Context 按实例注入隔离。"
+    },
+    {
+      "stem": "createStore 与 create 的关键区别？",
+      "options": [
+        "无区别",
+        "create 不支持 TS",
+        "createStore 更慢",
+        "createStore 返回纯 store 不含 hook"
+      ],
+      "answer": 3,
+      "explanation": "vanilla createStore 不带 React 绑定。"
+    },
+    {
+      "stem": "组件里订阅一个 vanilla store 用？",
+      "options": [
+        "useStore(store, selector)",
+        "store.use()",
+        "createStore",
+        "getState"
+      ],
+      "answer": 0,
+      "explanation": "zustand 的 useStore 接受外部 store + selector。"
+    },
+    {
+      "stem": "工厂函数的典型价值？",
+      "options": [
+        "压缩体积",
+        "统一挂中间件与初始配置、批量造同类 store",
+        "SSR",
+        "时间旅行"
+      ],
+      "answer": 1,
+      "explanation": "一处定义能力集，多实例复用。"
+    },
+    {
+      "stem": "用 useRef 存 store 实例的目的是？",
+      "options": [
+        "加速",
+        "保证每次渲染拿到同一 store 不被重建",
+        "持久化",
+        "订阅"
+      ],
+      "answer": 1,
+      "explanation": "避免 render 时 new 出不同 store。"
+    },
+    {
+      "stem": "auth/theme 这类全局态推荐？",
+      "options": [
+        "每页各建一个",
+        "模块级 create 单例直接 import",
+        "Context 注入",
+        "localStorage 轮询"
+      ],
+      "answer": 1,
+      "explanation": "全局共享、无需隔离，单例最简。"
+    },
+    {
+      "stem": "per-instance 隔离本质回到什么机制？",
+      "options": [
+        "Redux",
+        "Provider/Context",
+        "immer",
+        "middleware"
+      ],
+      "answer": 1,
+      "explanation": "需要隔离即用 Context 承载独立 store。"
+    },
+    {
+      "stem": "makeTableStore 里 rows 作为参数传入的意义？",
+      "options": [
+        "无所谓",
+        "每个实例可带不同初始数据",
+        "强制持久化",
+        "开启 immer"
+      ],
+      "answer": 1,
+      "explanation": "工厂参数实现实例级差异化初值。"
+    },
+    {
+      "stem": "下列哪种组件最该用多实例 store？",
+      "options": [
+        "全局顶部导航",
+        "可重复添加的表格/编辑器",
+        "一次性启动页",
+        "根组件"
+      ],
+      "answer": 1,
+      "explanation": "同类多实例需各自独立状态。"
+    },
+    {
+      "stem": "工厂 + 中间件组合的好处？",
+      "options": [
+        "无",
+        "新增能力改一处即对所有实例生效",
+        "变小",
+        "免 TS"
+      ],
+      "answer": 1,
+      "explanation": "集中挂 devtools/persist，DRY。"
+    }
+  ]
+}

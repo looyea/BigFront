@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-devtools",
+  "questions": [
+    {
+      "stem": "Vue DevTools Pinia 面板里 Actions 列表显示什么？",
+      "options": [
+        "路由历史",
+        "仅 mutation 字符串",
+        "组件 props",
+        "action 名称、参数、返回值与 state diff"
+      ],
+      "answer": 3,
+      "explanation": "Pinia 面板记录每次 action 调用及其引起的 state 变化。"
+    },
+    {
+      "stem": "Pinia 的时间旅行记录了什么？",
+      "options": [
+        "完整 state 快照链",
+        "action 调用栈 + $patch diff",
+        "DOM diff",
+        "HTTP 请求日志"
+      ],
+      "answer": 1,
+      "explanation": "只记 diff，不存完整快照——比 Redux 省内存。"
+    },
+    {
+      "stem": "store 文件修改后 Vite HMR 默认行为会导致什么？",
+      "options": [
+        "state 保留",
+        "store 实例重建、状态丢失",
+        "页面刷新",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "没有 acceptHMRUpdate 时，模块替换导致 store 重新创建。"
+    },
+    {
+      "stem": "acceptHMRUpdate 的参数是？",
+      "options": [
+        "(pinia, hot)",
+        "(useXxxStore, import.meta.hot)",
+        "(store, module)",
+        "(app, plugin)"
+      ],
+      "answer": 1,
+      "explanation": "传 store 工厂函数和 hot 对象——Pinia 自动做 patch。"
+    },
+    {
+      "stem": "Pinia DevTools 相比 Vuex 在 UI 上的改进是？",
+      "options": [
+        "多 store 独立卡片并列",
+        "支持编辑 state",
+        "有 console 面板",
+        "支持网络请求列表"
+      ],
+      "answer": 0,
+      "explanation": "Vuex 用 namespaced 树嵌套，Pinia 用并列卡片更直观。"
+    },
+    {
+      "stem": "HMR 代码写在文件的什么位置？",
+      "options": [
+        "文件开头",
+        "defineStore 调用之前",
+        "文件末尾 if(import.meta.hot) 块里",
+        "main.ts 里统一注册"
+      ],
+      "answer": 2,
+      "explanation": "每个 store 文件末尾加 if(import.meta.hot){...} 块。"
+    },
+    {
+      "stem": "Pinia 面板里能直接编辑 state 值吗？",
+      "options": [
+        "不能，只读",
+        "能，dev-only 点击修改触发响应式",
+        "只有 string 可编辑",
+        "需要装额外插件"
+      ],
+      "answer": 1,
+      "explanation": "开发模式下 DevTools 可直接改 state，触发组件更新。"
+    },
+    {
+      "stem": "action 里 console.log(store.xxx) 可能看到旧值的原因？",
+      "options": [
+        "日志缓存",
+        "Vue scheduler 未 flush，赋值后响应式在微任务批量更新",
+        "Pinia 有防抖",
+        "DevTools 干扰"
+      ],
+      "answer": 1,
+      "explanation": "赋值后 Vue 在下一个微任务才 flush → 同步 log 看到的是更新前的值。"
+    },
+    {
+      "stem": "$subscribe 的 mutation.type 在 DevTools 里显示为？",
+      "options": [
+        "direct / patch object / patch function",
+        "mutation / action / effect",
+        "string / number / boolean",
+        "sync / async"
+      ],
+      "answer": 0,
+      "explanation": "三种 type 对应三种改 state 方式，DevTools 用不同图标区分。"
+    },
+    {
+      "stem": "哪个工具能看'某次 state 变更触发了哪些组件重渲'？",
+      "options": [
+        "Vue DevTools Performance 面板",
+        "Node 的 util.inspect",
+        "Chrome Memory 面板",
+        "npm outdated"
+      ],
+      "answer": 0,
+      "explanation": "Performance 面板的 render 瀑布图 + action 时间线交叉定位。"
+    }
+  ]
+}

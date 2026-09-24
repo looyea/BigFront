@@ -1,0 +1,115 @@
+{
+  "lessonId": "pinia-setup-store",
+  "questions": [
+    {
+      "stem": "Setup Store 中，哪个对应 Vuex 的 actions？",
+      "options": [
+        "普通 function",
+        "computed()",
+        "ref()",
+        "reactive()"
+      ],
+      "answer": 0,
+      "explanation": "Setup Store 中 function 即 action（可 async），ref 是 state，computed 是 getter。"
+    },
+    {
+      "stem": "从 store 解构 state 且保持响应式，正确做法是？",
+      "options": [
+        "const { count } = store",
+        "const { count } = toRefs(store)",
+        "const { count } = storeToRefs(store)",
+        "const count = store.count"
+      ],
+      "answer": 2,
+      "explanation": "storeToRefs 是 Pinia 专用，只转 state/getter 为 ref 保持响应式；action 仍直接解构。"
+    },
+    {
+      "stem": "Setup Store 中未被 return 的 ref 对外部的可见性是？",
+      "options": [
+        "可通过 store.xxx 访问",
+        "仅 TypeScript 可见",
+        "完全私有，外部不可访问",
+        "仅 DevTools 可见"
+      ],
+      "answer": 2,
+      "explanation": "Setup Store 的 return 即公共 API，未 return 的是私有实现——外部不可见。"
+    },
+    {
+      "stem": "Setup Store 的 TypeScript 类型是怎么获得的？",
+      "options": [
+        "手动标注泛型 defineStore<T>",
+        "需要 as 强转",
+        "需要写 interface StoreState",
+        "从 ref/computed 自动推断"
+      ],
+      "answer": 3,
+      "explanation": "ref<number> 的类型信息通过 return 自然传递给 useXxxStore() 的返回值，无需额外标注。"
+    },
+    {
+      "stem": "defineStore 的第一个参数（如 'counter'）的作用是？",
+      "options": [
+        "store 的类型标识",
+        "DevTools 显示名和内部标识（必须全局唯一）",
+        "localStorage 持久化 key",
+        "组件名"
+      ],
+      "answer": 1,
+      "explanation": "该字符串是 store 的 id，DevTools 显示 + Pinia 内部注册用，必须全局唯一。"
+    },
+    {
+      "stem": "在 Setup Store 顶层调用 useRouter() 可能出什么问题？",
+      "options": [
+        "返回 undefined（store 在 app.use(router) 前被 import 时 setup 执行）",
+        "类型报错",
+        "死循环",
+        "无问题"
+      ],
+      "answer": 0,
+      "explanation": "store 模块被 import 时 defineStore 的 setup 不一定立刻执行（仅首次 useXxxStore() 时），但如果提前执行则 inject context 未准备好。安全做法是移到 action 里。"
+    },
+    {
+      "stem": "Setup Store 中如何实现私有 action（只内部调用不暴露）？",
+      "options": [
+        "用 _ 前缀命名即可",
+        "不 return 该函数",
+        "用 private 关键字",
+        "用 markRaw 包裹"
+      ],
+      "answer": 1,
+      "explanation": "与私有 state 一致——不 return 就是私有的，外部无法从 store 实例访问。"
+    },
+    {
+      "stem": "Pinia 社区推荐的 store 文件命名约定是？",
+      "options": [
+        "store-xxx.ts",
+        "xxxStore.ts",
+        "useXxxStore.ts 或 stores/xxx.ts",
+        "PiniaStore.ts"
+      ],
+      "answer": 2,
+      "explanation": "导出函数名 useXxxStore，文件路径 stores/xxx.ts——与 Vue composable 命名一致。"
+    },
+    {
+      "stem": "Options Store 相比 Setup Store 的一个独特能力是？",
+      "options": [
+        "更好的 TS 推断",
+        "内置 $reset() 一行恢复初始 state",
+        "支持 async action",
+        "支持组合其他 composable"
+      ],
+      "answer": 1,
+      "explanation": "Options Store 自带 $reset；Setup Store 需手动实现（把初始逻辑抽函数再调）。其余选项是 Setup 的优势。"
+    },
+    {
+      "stem": "Setup Store 能直接使用以下哪些 Vue API？",
+      "options": [
+        "仅 ref 和 computed",
+        "仅 function",
+        "watch、inject、自定义 composable 均可",
+        "只能用 reactive"
+      ],
+      "answer": 2,
+      "explanation": "Setup Store 就是 setup 函数，Vue Composition API 全家桶（watch/inject/provide/composable）全部可用。"
+    }
+  ]
+}

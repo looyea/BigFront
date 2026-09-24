@@ -1,0 +1,115 @@
+{
+  "lessonId": "za-auth",
+  "questions": [
+    {
+      "stem": "在 axios 拦截器里读 token 应用？",
+      "options": [
+        "useAuthStore.getState().token",
+        "useAuthStore()",
+        "props 传",
+        "Context"
+      ],
+      "answer": 0,
+      "explanation": "非组件环境用 getState。"
+    },
+    {
+      "stem": "persist 存 token 时用 partialize 的目的是？",
+      "options": [
+        "加速",
+        "压缩",
+        "加密",
+        "只持久化必要字段、剔除瞬态/敏感"
+      ],
+      "answer": 3,
+      "explanation": "减少风险与体积。"
+    },
+    {
+      "stem": "401 响应常见的统一处理？",
+      "options": [
+        "忽略",
+        "调用 logout 清态",
+        "重试",
+        "alert"
+      ],
+      "answer": 1,
+      "explanation": "过期即登出复位。"
+    },
+    {
+      "stem": "路由守卫判断登录用？",
+      "options": [
+        "getState 一次性",
+        "useAuthStore(s=>!!s.token) 订阅",
+        "localStorage",
+        "cookie 轮询"
+      ],
+      "answer": 1,
+      "explanation": "订阅式随登录态更新。"
+    },
+    {
+      "stem": "登出必须做的两件事？",
+      "options": [
+        "reload+alert",
+        "setState 初始 + persist.clearStorage",
+        "删 DOM",
+        "关浏览器"
+      ],
+      "answer": 1,
+      "explanation": "清内存与存储。"
+    },
+    {
+      "stem": "比 localStorage 更安全的 token 存放是？",
+      "options": [
+        "全局变量",
+        "httpOnly cookie",
+        "sessionStorage",
+        "URL"
+      ],
+      "answer": 1,
+      "explanation": "httpOnly 不被 JS 读取。"
+    },
+    {
+      "stem": "跨 tab 同步登出靠？",
+      "options": [
+        "Cookie",
+        "storage 事件 / BroadcastChannel",
+        "WebSocket",
+        "定时器"
+      ],
+      "answer": 1,
+      "explanation": "同源广播一致。"
+    },
+    {
+      "stem": "SSR 下 auth store 防首屏误判已登录用？",
+      "options": [
+        "immer",
+        "skipHydration + 客户端 rehydrate",
+        "devtools",
+        "combine"
+      ],
+      "answer": 1,
+      "explanation": "避免水合期读到旧值。"
+    },
+    {
+      "stem": "name 带用户维度的作用是？",
+      "options": [
+        "美观",
+        "防不同用户数据串号",
+        "加密",
+        "提速"
+      ],
+      "answer": 1,
+      "explanation": "隔离不同账号存储。"
+    },
+    {
+      "stem": "下面哪项不是登录态 store 职责？",
+      "options": [
+        "存 token",
+        "提供 login/logout",
+        "渲染列表数据",
+        "暴露权限 selector"
+      ],
+      "answer": 2,
+      "explanation": "列表数据归 Query（呼应 za-layers）。"
+    }
+  ]
+}
