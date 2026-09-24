@@ -64,7 +64,14 @@ a:hover { text-decoration: underline; }
 
 /* ------------------------------ 首页地图 ------------------------------ */
 .tier-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
-.tier-chip { font-size: 12px; color: var(--text-dim); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; }
+.tier-chip { font-size: 12px; color: var(--text-dim); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; display: inline-flex; align-items: center; gap: 6px; }
+.cat-dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+/* 生态分层容器：每层一个色点标题 + 卡片网格，层间用 ▼ 衔接 */
+.arch-layer { border: 1px solid var(--border-soft); border-radius: 14px; background: rgba(255, 255, 255, 0.02); padding: 14px 16px 16px; }
+.arch-head { font-size: 15px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.arch-head i { width: 10px; height: 10px; border-radius: 3px; background: var(--layer-color, var(--accent)); flex: none; }
+.arch-head small { color: var(--text-faint); font-weight: normal; font-size: 12px; }
+.flow-arrow { text-align: center; color: var(--text-faint); font-size: 16px; line-height: 1.4; padding: 4px 0; }
 .pkg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
 .pkg-card {
   position: relative; background: var(--panel); border: 1px solid var(--border);
