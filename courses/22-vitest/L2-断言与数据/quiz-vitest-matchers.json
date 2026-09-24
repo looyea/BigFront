@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-matchers",
+  "questions": [
+    {
+      "stem": "测两个对象内容相等用？",
+      "options": [
+        "toBe",
+        "toEqual",
+        "toMatch",
+        "toContain"
+      ],
+      "answer": 1,
+      "explanation": "toEqual 深比较。"
+    },
+    {
+      "stem": "toBe 判断对象依据是？",
+      "options": [
+        "内容深比较",
+        "JSON 字符串",
+        "Object.is（同一引用）",
+        "长度"
+      ],
+      "answer": 2,
+      "explanation": "原始值/引用相等。"
+    },
+    {
+      "stem": "要求同一 class、区分 undefined 属性用？",
+      "options": [
+        "toEqual",
+        "toBe",
+        "toStrictEqual",
+        "toMatchObject"
+      ],
+      "answer": 2,
+      "explanation": "toStrictEqual 更严。"
+    },
+    {
+      "stem": "断言字符串匹配正则用？",
+      "options": [
+        "toBe",
+        "toMatch",
+        "toContainEqual",
+        "in"
+      ],
+      "answer": 1,
+      "explanation": "toMatch 支持串/正则。"
+    },
+    {
+      "stem": "断言 Promise 成功值？",
+      "options": [
+        "await expect(p).resolves.toBe(x)",
+        "expect(p).toBe(x)",
+        "toBe(p)",
+        "p.toEqual"
+      ],
+      "answer": 0,
+      "explanation": "resolves + await。"
+    },
+    {
+      "stem": "异步 matcher 忘了 await 会？",
+      "options": [
+        "报错",
+        "用例假绿",
+        "更慢",
+        "重试"
+      ],
+      "answer": 1,
+      "explanation": "断言在落定前跑完。"
+    },
+    {
+      "stem": "DOM 语义化断言 toBeInTheDocument 来自？",
+      "options": [
+        "Vitest 内置",
+        "@testing-library/jest-dom/vitest",
+        "jsdom",
+        "happy-dom"
+      ],
+      "answer": 1,
+      "explanation": "装扩展匹配器。"
+    },
+    {
+      "stem": "扩展匹配器一般在哪注册？",
+      "options": [
+        "每个测试文件",
+        "setupFiles",
+        "package.json",
+        "命令行"
+      ],
+      "answer": 1,
+      "explanation": "统一前置注入。"
+    },
+    {
+      "stem": "强制本用例必须有断言用？",
+      "options": [
+        "vi.fn",
+        "toPass",
+        "bail",
+        "expect.assertions/hasAssertions"
+      ],
+      "answer": 3,
+      "explanation": "防假绿空断言。"
+    },
+    {
+      "stem": "记不全 matcher 的正确做法？",
+      "options": [
+        "硬背全表",
+        "按需求 api/expect 文档",
+        "放弃断言",
+        "只用 toBe"
+      ],
+      "answer": 1,
+      "explanation": "主干用熟、细节会查。"
+    }
+  ]
+}

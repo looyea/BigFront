@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-overview",
+  "questions": [
+    {
+      "stem": "Biome 用什么语言实现？",
+      "options": [
+        "Go",
+        "TypeScript",
+        "Rust",
+        "C++"
+      ],
+      "answer": 2,
+      "explanation": "单 Rust 二进制。"
+    },
+    {
+      "stem": "Biome 同时替代的两件工具是？",
+      "options": [
+        "SWC 与 Vite",
+        "Prettier 与 ESLint",
+        "Babel 与 tsc",
+        "Jest 与 Vitest"
+      ],
+      "answer": 1,
+      "explanation": "formatter+lint。"
+    },
+    {
+      "stem": "Biome 是哪个项目的社区延续？",
+      "options": [
+        "Rome",
+        "Webpack",
+        "TSLint",
+        "Standard"
+      ],
+      "answer": 0,
+      "explanation": "源自已搁浅的 Rome。"
+    },
+    {
+      "stem": "对 ESLint 而言 Biome 的现实定位是？",
+      "options": [
+        "完全取代含插件",
+        "只能格式化",
+        "更慢",
+        "覆盖主干、插件长尾常需共存"
+      ],
+      "answer": 3,
+      "explanation": "基于插件的规则仍靠 ESLint。"
+    },
+    {
+      "stem": "本教程明确不逐条展开的是？",
+      "options": [
+        "初始化",
+        "200+ lint 规则全清单",
+        "CI 接入",
+        "格式化"
+      ],
+      "answer": 1,
+      "explanation": "只走主干、细节回规则清单查。"
+    },
+    {
+      "stem": "Biome 相对 Prettier/ESLint 的核心卖点是？",
+      "options": [
+        "更多插件",
+        "支持更多语言",
+        "快一个数量级+单配置",
+        "免费"
+      ],
+      "answer": 2,
+      "explanation": "原生二进制无 Node 冷启动。"
+    },
+    {
+      "stem": "学完本包应能做到？",
+      "options": [
+        "背下每条规则",
+        "把项目切到 Biome 或共存并接进 CI",
+        "给 Biome 写 Rust",
+        "重写 ESLint"
+      ],
+      "answer": 1,
+      "explanation": "主干流程走通。"
+    },
+    {
+      "stem": "Biome 与 10-vite 的关系是？",
+      "options": [
+        "常被设为 Vite 项目的默认格式化器",
+        "冲突不可用",
+        "同一团队",
+        "互相替代"
+      ],
+      "answer": 0,
+      "explanation": "工程化互补。"
+    },
+    {
+      "stem": "本包的收官关会把 Biome 与谁串成工具链全景？",
+      "options": [
+        "只与 SWC",
+        "SWC/Vitest/oxlint",
+        "只与 Prettier",
+        "与 Webpack"
+      ],
+      "answer": 1,
+      "explanation": "Rust/TS 新工具链。"
+    },
+    {
+      "stem": "对「没讲的东西」本课程的态度是？",
+      "options": [
+        "不重要无需知道",
+        "回官方文档按需查、但要知道入口",
+        "以后会补全",
+        "让 AI 猜"
+      ],
+      "answer": 1,
+      "explanation": "主干优先、细节回文档。"
+    }
+  ]
+}

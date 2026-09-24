@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-core-api",
+  "questions": [
+    {
+      "stem": "transform / transformSync / transformFile 返回？",
+      "options": [
+        "字符串",
+        "同构的 { code, map }",
+        "Buffer",
+        "undefined"
+      ],
+      "answer": 1,
+      "explanation": "三者一致。"
+    },
+    {
+      "stem": "API 调用默认会读 .swcrc 吗？",
+      "options": [
+        "会",
+        "不会，需 swcrc:true",
+        "总是报错",
+        "看环境"
+      ],
+      "answer": 1,
+      "explanation": "API 是显式心智。"
+    },
+    {
+      "stem": "代码传入选项与 .swcrc 谁优先？",
+      "options": [
+        "文件优先",
+        "合并报错",
+        "代码传入优先",
+        "随机"
+      ],
+      "answer": 2,
+      "explanation": "显式覆盖隐式。"
+    },
+    {
+      "stem": "忘写 sourceMappingURL 导致？",
+      "options": [
+        "编译失败",
+        "产物变大",
+        "类型报错",
+        "线上堆栈全是编译后位置"
+      ],
+      "answer": 3,
+      "explanation": "map 要自己落盘+挂引用。"
+    },
+    {
+      "stem": "@swc/core 怎么分发各平台二进制？",
+      "options": [
+        "单一 JS 包",
+        "optionalDependencies 平台包",
+        "源码编译",
+        "CDN"
+      ],
+      "answer": 1,
+      "explanation": "按 os/cpu 装对应 native。"
+    },
+    {
+      "stem": "mac lockfile 带到 linux CI 常见故障？",
+      "options": [
+        "版本冲突",
+        "找不到对应平台二进制",
+        "类型报错",
+        "watch 卡死"
+      ],
+      "answer": 1,
+      "explanation": "跨平台锁是经典坑。"
+    },
+    {
+      "stem": "@swc-node/register 的定位？",
+      "options": [
+        "构建期转译",
+        "运行时即时转译且读 tsconfig",
+        "打包器",
+        "minifier"
+      ],
+      "answer": 1,
+      "explanation": "让 node 直接跑 TS。"
+    },
+    {
+      "stem": "--legacy 包用于？",
+      "options": [
+        "新机器",
+        "旧 glibc 的纯 JS 回退",
+        "Windows",
+        "浏览器"
+      ],
+      "answer": 1,
+      "explanation": "慢但兼容。"
+    },
+    {
+      "stem": "写打包器插件通常用哪层？",
+      "options": [
+        "@swc/core 程序化 API",
+        "CLI",
+        "webpack loader",
+        "npm script"
+      ],
+      "answer": 0,
+      "explanation": "CLI 只是 API 的壳。"
+    },
+    {
+      "stem": "@swc/core 与 @swc-node 关系？",
+      "options": [
+        "二选一",
+        "前者构建期、后者运行期，都活跃维护",
+        "后者已废弃",
+        "同一包"
+      ],
+      "answer": 1,
+      "explanation": "分工不同。"
+    }
+  ]
+}

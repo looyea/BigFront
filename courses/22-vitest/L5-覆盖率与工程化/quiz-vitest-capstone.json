@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-capstone",
+  "questions": [
+    {
+      "stem": "GitHub Actions 里跑 Vitest 该用哪条命令？",
+      "options": [
+        "vitest --ui",
+        "npm start",
+        "vitest run",
+        "vitest watch"
+      ],
+      "answer": 2,
+      "explanation": "单次+退出码。"
+    },
+    {
+      "stem": "CI 加速常配什么？",
+      "options": [
+        "关掉断言",
+        "依赖缓存 + 合适 reporter / 必要时重跑",
+        "只跑一半用例",
+        "删快照"
+      ],
+      "answer": 1,
+      "explanation": "缓存+reporter。"
+    },
+    {
+      "stem": "Jest 迁移到 Vitest 首要替换的是？",
+      "options": [
+        "jest 全局 → vi、jest.config → vitest.config",
+        "换编程语言",
+        "删光测试",
+        "改用 Mocha"
+      ],
+      "answer": 0,
+      "explanation": "API+配置。"
+    },
+    {
+      "stem": "测试金字塔里 Vitest 主要承担？",
+      "options": [
+        "端到端跨浏览器",
+        "真实后端联调",
+        "性能压测",
+        "单元/组件/集成（中下层）"
+      ],
+      "answer": 3,
+      "explanation": "中下层。"
+    },
+    {
+      "stem": "mock 提升语义在迁移中属于？",
+      "options": [
+        "不存在的问题",
+        "常见坑（jest.mock vs vi.mock + hoisted）",
+        "纯收益",
+        "必然失败项"
+      ],
+      "answer": 1,
+      "explanation": "要留意。"
+    },
+    {
+      "stem": "控制失败自动重跑的配置项是？",
+      "options": [
+        "bail",
+        "maxWorkers",
+        "retry",
+        "sequence"
+      ],
+      "answer": 2,
+      "explanation": "retry 重跑。"
+    },
+    {
+      "stem": "快照从 Jest 迁来通常怎样？",
+      "options": [
+        "格式基本兼容、迁移后本地建基线并 review",
+        "必须全删",
+        "完全不能用",
+        "要换成 png"
+      ],
+      "answer": 0,
+      "explanation": "基本兼容。"
+    },
+    {
+      "stem": "本包「没讲但你该知道」的典型是？",
+      "options": [
+        "所有 matcher",
+        "全部 config",
+        "每个 reporter",
+        "browser mode / 快照解析器全表——回官方查"
+      ],
+      "answer": 3,
+      "explanation": "主干之外的入口。"
+    },
+    {
+      "stem": "Jest 的 babel 配置迁来后一般怎么处理？",
+      "options": [
+        "必须原样照搬",
+        "交给 Vite/esbuild，通常可删 babel-jest",
+        "不能测 TS",
+        "要装 webpack"
+      ],
+      "answer": 1,
+      "explanation": "少一层。"
+    },
+    {
+      "stem": "与 20-swc/21-biome 合成的全景是？",
+      "options": [
+        "Rust/TS 现代前端工具链（编译/质量/测试）",
+        "三选一",
+        "互不相干",
+        "都属后端"
+      ],
+      "answer": 0,
+      "explanation": "三件套齐。"
+    }
+  ]
+}

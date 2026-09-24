@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-jsdom",
+  "questions": [
+    {
+      "stem": "测 DOM/组件需要设置什么？",
+      "options": [
+        "pool",
+        "coverage",
+        "environment 为 jsdom 或 happy-dom",
+        "snapshotFormat"
+      ],
+      "answer": 2,
+      "explanation": "要有 DOM 环境。"
+    },
+    {
+      "stem": "happy-dom 相对 jsdom 的特点是？",
+      "options": [
+        "更完整但更慢",
+        "更轻快、覆盖常见 API",
+        "不支持 DOM",
+        "只能跑 node"
+      ],
+      "answer": 1,
+      "explanation": "轻快优先试它。"
+    },
+    {
+      "stem": "单文件临时切 jsdom 的写法？",
+      "options": [
+        "// @vitest-environment jsdom",
+        "@jsdom",
+        "/* env jsdom */",
+        "#@environment"
+      ],
+      "answer": 0,
+      "explanation": "顶部注解。"
+    },
+    {
+      "stem": "配置 jsdom 的 url/userAgent 用哪个选项？",
+      "options": [
+        "environment 字段",
+        "globals",
+        "include",
+        "environmentOptions.jsdom"
+      ],
+      "answer": 3,
+      "explanation": "environmentOptions。"
+    },
+    {
+      "stem": "jsdom 里缺 matchMedia/ResizeObserver 常怎么办？",
+      "options": [
+        "放弃组件测试",
+        "在 setupFiles 里 polyfill/stub",
+        "改用 node 环境",
+        "关掉隔离"
+      ],
+      "answer": 1,
+      "explanation": "补桩填平。"
+    },
+    {
+      "stem": "组件测完清理挂载的 DOM 靠？",
+      "options": [
+        "vi.restoreAllMocks",
+        "mockReset",
+        "afterEach 里 cleanup()（或 unmount）",
+        "useRealTimers"
+      ],
+      "answer": 2,
+      "explanation": "防用例互串。"
+    },
+    {
+      "stem": "测 DOM 断言的推荐姿势？",
+      "options": [
+        "优先 jest-dom 语义化断言",
+        "只比 innerHTML 字符串",
+        "不用断言",
+        "每步截图"
+      ],
+      "answer": 0,
+      "explanation": "语义化更可读。"
+    },
+    {
+      "stem": "document is not defined 多半因为？",
+      "options": [
+        "没装 typescript",
+        "没 await",
+        "文件名不对",
+        "没设 jsdom/happy-dom 环境"
+      ],
+      "answer": 3,
+      "explanation": "node 环境无 document。"
+    },
+    {
+      "stem": "jsdom 与真实浏览器的关系？",
+      "options": [
+        "完全等价",
+        "近似模拟、非真实渲染引擎（偏门 API 会缺）",
+        "比真机更快",
+        "能跑全部 WebGL"
+      ],
+      "answer": 1,
+      "explanation": "模拟非真。"
+    },
+    {
+      "stem": "需要真实浏览器布局行为该上？",
+      "options": [
+        "happy-dom",
+        "jsdom",
+        "browser mode 或 Playwright E2E",
+        "node 环境"
+      ],
+      "answer": 2,
+      "explanation": "真浏览器才准。"
+    }
+  ]
+}

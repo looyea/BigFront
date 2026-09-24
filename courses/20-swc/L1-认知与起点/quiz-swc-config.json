@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-config",
+  "questions": [
+    {
+      "stem": ".swcrc 三大顶层分区？",
+      "options": [
+        "parse/build/emit",
+        "jsc/module/minify",
+        "input/output/plugin",
+        "ts/js/css"
+      ],
+      "answer": 1,
+      "explanation": "jsc 编译核心、module 产物格式、minify 压缩。"
+    },
+    {
+      "stem": "env.targets 与 jsc.target 的优先级？",
+      "options": [
+        "jsc 更高",
+        "env 更高",
+        "相同",
+        "随机"
+      ],
+      "answer": 1,
+      "explanation": "env(browserslist) 覆盖 jsc.target。"
+    },
+    {
+      "stem": "扩展名如何决定解析？",
+      "options": [
+        "必须手配 parser",
+        "永远按 TS",
+        "看文件大小",
+        "按 .ts/.tsx/.js 后缀自动选"
+      ],
+      "answer": 3,
+      "explanation": "后缀驱动，通常免配。"
+    },
+    {
+      "stem": "命令行临时覆盖配置用什么？",
+      "options": [
+        "-C key=val",
+        "--force",
+        "-x",
+        "--override-json"
+      ],
+      "answer": 0,
+      "explanation": "swc -C minify=true。"
+    },
+    {
+      "stem": "--delete-dir-on-start 的作用？",
+      "options": [
+        "保留旧产物",
+        "跳过 watch",
+        "构建前清空 outDir",
+        "删源码"
+      ],
+      "answer": 2,
+      "explanation": "防止旧文件残留。"
+    },
+    {
+      "stem": "browserslist 字符串写在哪一区？",
+      "options": [
+        "jsc.target",
+        "env.targets",
+        "module.type",
+        "minify.compress"
+      ],
+      "answer": 1,
+      "explanation": "与 autoprefixer 共享目标。"
+    },
+    {
+      "stem": "module.type 管什么？",
+      "options": [
+        "降级目标",
+        "输出 ESM/CJS/UMD 格式",
+        "压缩强度",
+        "是否产 map"
+      ],
+      "answer": 1,
+      "explanation": "产物模块格式，与降级正交。"
+    },
+    {
+      "stem": "watch 模式参数？",
+      "options": [
+        "--live",
+        "--watch",
+        "-w only",
+        "--dev"
+      ],
+      "answer": 1,
+      "explanation": "swc src -d dist --watch。"
+    },
+    {
+      "stem": "为什么推荐 env.targets 而非硬 target？",
+      "options": [
+        "更快",
+        "一处 browserslist 声明多工具共享、自动算降级",
+        "产物更小一定",
+        "免装依赖"
+      ],
+      "answer": 1,
+      "explanation": "统一目标来源。"
+    },
+    {
+      "stem": "CLI 的 -d 指定的是？",
+      "options": [
+        "调试端口",
+        "输出目录 outDir",
+        "下载源",
+        "深度"
+      ],
+      "answer": 1,
+      "explanation": "-d dist。"
+    }
+  ]
+}

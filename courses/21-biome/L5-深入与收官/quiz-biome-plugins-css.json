@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-plugins-css",
+  "questions": [
+    {
+      "stem": "Biome 自定义插件系统现状？",
+      "options": [
+        "生产首选",
+        "experimental/发展中、别当今日依赖",
+        "永远不会有",
+        "等同 ESLint"
+      ],
+      "answer": 1,
+      "explanation": "诚实边界。"
+    },
+    {
+      "stem": "「不能任意自定义」应理解为？",
+      "options": [
+        "严重缺陷",
+        "快+主流+零配置的设计取舍",
+        "临时 bug",
+        "收费点"
+      ],
+      "answer": 1,
+      "explanation": "配置即策略。"
+    },
+    {
+      "stem": "遇到 Biome 没有又确实要的规则第一步？",
+      "options": [
+        "放弃 Biome",
+        "硬写 Wasm",
+        "查官方规则清单确认是真缺还是换名",
+        "ignore 一切"
+      ],
+      "answer": 2,
+      "explanation": "先核实。"
+    },
+    {
+      "stem": "确无对等的单条规则怎么补？",
+      "options": [
+        "保留个别 ESLint 插件共存",
+        "全关 linter",
+        "重写语言",
+        "忍着"
+      ],
+      "answer": 0,
+      "explanation": "极小 ESLint 补丁。"
+    },
+    {
+      "stem": "批量代码模式重构该用什么？",
+      "options": [
+        "linter",
+        "codemod（如 jscodeshift）",
+        "formatter",
+        "daemon"
+      ],
+      "answer": 1,
+      "explanation": "linter 不是改批量语义的工具。"
+    },
+    {
+      "stem": "CSS/GraphQL formatter 成熟度相对 JS/TS？",
+      "options": [
+        "更高",
+        "相同",
+        "不存在",
+        "更低、部分 experimental"
+      ],
+      "answer": 3,
+      "explanation": "重度场景留专用工具。"
+    },
+    {
+      "stem": "把「等规则长出来」纳入预期靠关注？",
+      "options": [
+        "微博",
+        "nursery 组与官方博客/路线图",
+        "猜",
+        "同事"
+      ],
+      "answer": 1,
+      "explanation": "今天的没有明天可能毕业。"
+    },
+    {
+      "stem": "该不该为一条缺规则放弃引入 Biome？",
+      "options": [
+        "应该",
+        "不该，整体收益远大于单条缺口",
+        "看心情",
+        "必须"
+      ],
+      "answer": 1,
+      "explanation": "权衡全局。"
+    },
+    {
+      "stem": "复杂 CSS 深度处理更稳的选择？",
+      "options": [
+        "Biome CSS",
+        "lightningcss/postcss 生态",
+        "不处理",
+        "手写"
+      ],
+      "answer": 1,
+      "explanation": "专用工具更成熟。"
+    },
+    {
+      "stem": "Biome 配置能表达的边界是？",
+      "options": [
+        "改规则集本身",
+        "开关/严重级别/范围的团队约定",
+        "写新规则",
+        "改 AST"
+      ],
+      "answer": 1,
+      "explanation": "不能任意自定义规则集。"
+    }
+  ]
+}

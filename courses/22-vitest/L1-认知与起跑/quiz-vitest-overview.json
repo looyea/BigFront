@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-overview",
+  "questions": [
+    {
+      "stem": "Vitest 复用哪条管线做转换？",
+      "options": [
+        "Vite 的转换管线",
+        "webpack",
+        "tsc",
+        "Babel"
+      ],
+      "answer": 0,
+      "explanation": "共享插件/别名/TS。"
+    },
+    {
+      "stem": "Vitest 与 Jest 的 API 关系是？",
+      "options": [
+        "完全不同",
+        "Jest 兼容 API",
+        "互为插件",
+        "更低的子集"
+      ],
+      "answer": 1,
+      "explanation": "迁移成本低。"
+    },
+    {
+      "stem": "相对 Jest，Vitest 处理 TS/ESM 的优势？",
+      "options": [
+        "需要 babel-jest",
+        "更麻烦",
+        "原生支持、免 Babel",
+        "只能测 JS"
+      ],
+      "answer": 2,
+      "explanation": "走 Vite/esbuild。"
+    },
+    {
+      "stem": "watch 模式的核心体验是？",
+      "options": [
+        "每次全量",
+        "像 HMR 一样改一行自动重跑相关用例",
+        "不能跑异步",
+        "仅 CI 用"
+      ],
+      "answer": 3,
+      "explanation": "即时反馈。"
+    },
+    {
+      "stem": "本包呼应哪个包的入门关？",
+      "options": [
+        "07-nextjs",
+        "10-vite",
+        "16-pinia",
+        "01-html"
+      ],
+      "answer": 1,
+      "explanation": "vite-vitest。"
+    },
+    {
+      "stem": "Vitest 最适合什么项目当默认测试？",
+      "options": [
+        "Java 项目",
+        "Vite 前端项目",
+        "纯数据库",
+        "操作系统"
+      ],
+      "answer": 1,
+      "explanation": "生态天然契合。"
+    },
+    {
+      "stem": "测 TS 需要先配 Babel transform 吗？",
+      "options": [
+        "必须",
+        "要装 core",
+        "不需要",
+        "只支持 JS"
+      ],
+      "answer": 2,
+      "explanation": "复用 Vite 转译。"
+    },
+    {
+      "stem": "本包阶段数与关卡数？",
+      "options": [
+        "5 阶段 15 关",
+        "3 阶段 9 关",
+        "8 阶段 24 关",
+        "6 阶段 18 关"
+      ],
+      "answer": 0,
+      "explanation": "五阶十五关。"
+    },
+    {
+      "stem": "下面哪项不属于本包走通的主干流程？",
+      "options": [
+        "mock",
+        "异步",
+        "编译器内核开发",
+        "覆盖率"
+      ],
+      "answer": 2,
+      "explanation": "主干是单元/mock/异步/组件/覆盖率/CI。"
+    },
+    {
+      "stem": "没细讲的 matcher/config 细节该去哪？",
+      "options": [
+        "问同事",
+        "官方 vitest.dev 按需查",
+        "猜",
+        "重开项目"
+      ],
+      "answer": 1,
+      "explanation": "主干已通、细节回文档。"
+    }
+  ]
+}

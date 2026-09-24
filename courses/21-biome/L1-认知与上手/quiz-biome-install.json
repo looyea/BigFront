@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-install",
+  "questions": [
+    {
+      "stem": "聚合 format+lint+organize imports 的命令是？",
+      "options": [
+        "biome format",
+        "biome check",
+        "biome lint",
+        "biome ci"
+      ],
+      "answer": 1,
+      "explanation": "check 是一趟全做的聚合。"
+    },
+    {
+      "stem": "--write 的作用是？",
+      "options": [
+        "只报告",
+        "删除文件",
+        "把安全修复落盘",
+        "生成配置"
+      ],
+      "answer": 2,
+      "explanation": "应用格式化/排序/safe fix。"
+    },
+    {
+      "stem": "破坏性的 lint 自动修复需要加？",
+      "options": [
+        "--force",
+        "--unsafe",
+        "--all",
+        "--danger"
+      ],
+      "answer": 1,
+      "explanation": "默认只应用安全修复。"
+    },
+    {
+      "stem": "CI 里让 warning 也算失败用？",
+      "options": [
+        "--strict",
+        "--no-warn",
+        "--fail",
+        "--error-on-warnings"
+      ],
+      "answer": 3,
+      "explanation": "收紧退出码。"
+    },
+    {
+      "stem": "biome init 生成的是？",
+      "options": [
+        ".eslintrc",
+        "最小 biome.json（带 $schema）",
+        "tsconfig",
+        "prettier 配置"
+      ],
+      "answer": 1,
+      "explanation": "带 schema 的起手配置。"
+    },
+    {
+      "stem": "VS Code 中让 Biome 保存即生效要？",
+      "options": [
+        "装扩展并设为默认格式化器+formatOnSave",
+        "重启",
+        "关 TS",
+        "装 Prettier"
+      ],
+      "answer": 0,
+      "explanation": "扩展内部走 daemon/LSP。"
+    },
+    {
+      "stem": "为什么没配 format 也报了格式问题？",
+      "options": [
+        "bug",
+        "Biome 默认就开格式化与 recommended",
+        "缓存",
+        "扩展冲突"
+      ],
+      "answer": 1,
+      "explanation": "零配置即有意义。"
+    },
+    {
+      "stem": "check ./src 与 check --write ./src 的差别？",
+      "options": [
+        "无差别",
+        "前者更快",
+        "后者写回文件",
+        "后者删文件"
+      ],
+      "answer": 2,
+      "explanation": "write 才落盘。"
+    },
+    {
+      "stem": "Biome 二进制如何分发？",
+      "options": [
+        "单一 JS 包",
+        "按平台 npm 包（optionalDependencies 思路）",
+        "源码编译",
+        "Docker"
+      ],
+      "answer": 1,
+      "explanation": "与 @swc/core 类似。"
+    },
+    {
+      "stem": "退出码在流水线里的意义是？",
+      "options": [
+        "无意义",
+        "非零可挡住含诊断的 PR",
+        "只影响日志",
+        "控制速度"
+      ],
+      "answer": 1,
+      "explanation": "CI gate 的基础。"
+    }
+  ]
+}

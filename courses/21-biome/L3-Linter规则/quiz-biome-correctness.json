@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-correctness",
+  "questions": [
+    {
+      "stem": "correctness 组的整体建议是？",
+      "options": [
+        "整组关掉",
+        "整组保持 error 常开",
+        "只留一条",
+        "降为 info"
+      ],
+      "answer": 1,
+      "explanation": "成本最低收益最高。"
+    },
+    {
+      "stem": "noUndeclaredVariables 近似抓什么？",
+      "options": [
+        "格式错",
+        "未声明/拼错的全局使用",
+        "类型错",
+        "循环依赖"
+      ],
+      "answer": 1,
+      "explanation": "lint 阶段抓运行才炸的错。"
+    },
+    {
+      "stem": "管异步悬空 Promise 的代表规则是？",
+      "options": [
+        "useConst",
+        "noFloatingPromises",
+        "useTemplate",
+        "useAltText"
+      ],
+      "answer": 1,
+      "explanation": "强制处理每个 Promise。"
+    },
+    {
+      "stem": "noFloatingPromises 报时的三条出路不含？",
+      "options": [
+        "await",
+        ".catch()",
+        "显式 void 标注",
+        "删掉函数"
+      ],
+      "answer": 3,
+      "explanation": "三选而非删码。"
+    },
+    {
+      "stem": "Biome correctness 与 tsc 的关系？",
+      "options": [
+        "完全重复其一即可",
+        "互补：类型归 tsc、浅层错误+快反馈归 Biome",
+        "互相冲突",
+        "Biome 替代 tsc"
+      ],
+      "answer": 1,
+      "explanation": "各管一段。"
+    },
+    {
+      "stem": "noConstAssign 报的是？",
+      "options": [
+        "风格问题",
+        "纯 bug（给 const 重赋）",
+        "性能",
+        "可访问性"
+      ],
+      "answer": 1,
+      "explanation": "运行时必炸。"
+    },
+    {
+      "stem": "为什么 correctness 误报率相对低？",
+      "options": [
+        "规则少",
+        "不解析",
+        "哲学是宁提醒真 bug 不制造风格噪音",
+        "只看类型"
+      ],
+      "answer": 2,
+      "explanation": "故适合整组常开。"
+    },
+    {
+      "stem": "useAwaited 关心的是？",
+      "options": [
+        "await 用在非 Promise 上等的正确用法",
+        "缩进",
+        "引号",
+        "命名"
+      ],
+      "answer": 0,
+      "explanation": "await 语义正确性。"
+    },
+    {
+      "stem": "类型错误该由谁报？",
+      "options": [
+        "Biome correctness",
+        "tsc",
+        "organizeImports",
+        "formatter"
+      ],
+      "answer": 1,
+      "explanation": "Biome 不做类型检查。"
+    },
+    {
+      "stem": "noUnusedVariables 常暴露什么？",
+      "options": [
+        "格式问题",
+        "重构残留的死代码",
+        "性能",
+        "安全"
+      ],
+      "answer": 1,
+      "explanation": "写了没用多是残留。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-config",
+  "questions": [
+    {
+      "stem": "让编辑器能补全/校验配置字段靠什么？",
+      "options": [
+        "tsconfig",
+        "$schema 指向 schema.json",
+        "package.json",
+        ".gitignore"
+      ],
+      "answer": 1,
+      "explanation": "schema 驱动补全。"
+    },
+    {
+      "stem": "划定处理范围的字段是？",
+      "options": [
+        "files.include / ignore",
+        "linter.rules",
+        "formatter.enabled",
+        "extends"
+      ],
+      "answer": 0,
+      "explanation": "files 区圈定谁被管。"
+    },
+    {
+      "stem": "linter.rules.recommended:true 的含义？",
+      "options": [
+        "全开所有规则",
+        "只开官方推荐集（低噪音）",
+        "全关",
+        "仅格式"
+      ],
+      "answer": 1,
+      "explanation": "起手基线。"
+    },
+    {
+      "stem": "想更激进地全开规则用？",
+      "options": [
+        "strict:true",
+        "max:true",
+        "all:true",
+        "every:true"
+      ],
+      "answer": 2,
+      "explanation": "all 全开含高噪音。"
+    },
+    {
+      "stem": "配置优先级从高到低？",
+      "options": [
+        "默认>文件>CLI",
+        "文件>CLI>默认",
+        "都相等",
+        "CLI>biome.json>默认"
+      ],
+      "answer": 3,
+      "explanation": "显式 CLI 最高。"
+    },
+    {
+      "stem": "团队共享公共配置靠？",
+      "options": [
+        "复制粘贴",
+        "extends 继承预设包",
+        "软链接",
+        "环境变量"
+      ],
+      "answer": 1,
+      "explanation": "extends 指向公共 biome 包。"
+    },
+    {
+      "stem": "语言级格式化/规则覆盖写在哪？",
+      "options": [
+        "顶层 formatter",
+        "javascript/typescript 分区",
+        "files",
+        "vcs"
+      ],
+      "answer": 1,
+      "explanation": "语言区可覆盖全局。"
+    },
+    {
+      "stem": "遇到未知文件类型跳过不报错用？",
+      "options": [
+        "files.include",
+        "ignoreUnknown",
+        "exclude",
+        "skip"
+      ],
+      "answer": 1,
+      "explanation": "ignoreUnknown 控制。"
+    },
+    {
+      "stem": "推荐的起手配置策略是？",
+      "options": [
+        "一上来抄满配",
+        "最小可用配置、踩到再补",
+        "禁用 linter",
+        "只开 all"
+      ],
+      "answer": 1,
+      "explanation": "按需增长降噪音。"
+    },
+    {
+      "stem": "四大功能区不含下列哪个？",
+      "options": [
+        "formatter",
+        "linter",
+        "organizeImports",
+        "bundler"
+      ],
+      "answer": 3,
+      "explanation": "Biome 不做打包。"
+    }
+  ]
+}

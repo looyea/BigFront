@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-capstone",
+  "questions": [
+    {
+      "stem": "五方里谁是类型检查唯一权威？",
+      "options": [
+        "SWC",
+        "esbuild",
+        "tsc",
+        "Oxc"
+      ],
+      "answer": 2,
+      "explanation": "只有 tsc 做类型。"
+    },
+    {
+      "stem": "Babel 相对其他的核心优势？",
+      "options": [
+        "最快",
+        "生态最大、语义最保守",
+        "最小产物",
+        "Rust 内核"
+      ],
+      "answer": 1,
+      "explanation": "冷门语法/插件全靠它。"
+    },
+    {
+      "stem": "在 Vite 项目里转译层该用？",
+      "options": [
+        "SWC",
+        "esbuild（已占位）",
+        "Babel",
+        "tsc"
+      ],
+      "answer": 1,
+      "explanation": "别逆生态硬塞 SWC。"
+    },
+    {
+      "stem": "Oxc 与 Biome 属于什么路线？",
+      "options": [
+        "编译降级",
+        "lint/format 代码质量",
+        "类型检查",
+        "打包"
+      ],
+      "answer": 1,
+      "explanation": "与 SWC 编译路线互补。"
+    },
+    {
+      "stem": "webpack 大仓嫌 babel 慢的解？",
+      "options": [
+        "换 UI 库",
+        "换 swc-loader 保留 webpack 生态",
+        "回退 ES5",
+        "删测试"
+      ],
+      "answer": 1,
+      "explanation": "渐进提速。"
+    },
+    {
+      "stem": "选型总原则一句？",
+      "options": [
+        "哪个快用哪个",
+        "转译层按框架/打包器默认最优走",
+        "全用 tsc",
+        "都上 Rust"
+      ],
+      "answer": 1,
+      "explanation": "顺生态而非硬选。"
+    },
+    {
+      "stem": "esbuild 相对 SWC 的定位？",
+      "options": [
+        "更快但语法子集小",
+        "更慢",
+        "类型检查",
+        "只做压缩"
+      ],
+      "answer": 0,
+      "explanation": "特性覆盖是差异点。"
+    },
+    {
+      "stem": "本包刻意没展开的是？",
+      "options": [
+        "CLI 用法",
+        "Wasm 插件/css/ast 深水区",
+        ".swcrc 分区",
+        "迁移验收"
+      ],
+      "answer": 1,
+      "explanation": "主干优先，细节回文档。"
+    },
+    {
+      "stem": "需要深水区细节时的入口？",
+      "options": [
+        "问同事",
+        "swc.rs/docs 相应页",
+        "重开项目",
+        "读源码"
+      ],
+      "answer": 1,
+      "explanation": "已掌握主干、细节按需查。"
+    },
+    {
+      "stem": "毕业自查覆盖的主线不含？",
+      "options": [
+        "配置/API",
+        "集成/正确性",
+        "测试/发包",
+        "写 Rust 内核"
+      ],
+      "answer": 3,
+      "explanation": "面向应用工程，不含造编译器。"
+    }
+  ]
+}

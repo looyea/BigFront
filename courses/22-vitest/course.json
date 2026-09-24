@@ -1,0 +1,61 @@
+{
+  "id": "22-vitest",
+  "title": "Vitest 实战：Vite 生态的即时测试框架",
+  "order": 22,
+  "tier": "黄金 · 工具链专题",
+  "tagline": "Vitest 复用 Vite 的转换管线，把「改一行自动重跑」的即时测试做成了前端默认选择：Jest 兼容 API、快照、mock、覆盖率、组件测试、UI 模式一应俱全。本包五阶段十五关，只走主流测试流程——不逐条罗列 expect 匹配器，以简明为主，由浅入深。",
+  "icon": "🧪",
+  "color": "#a4c936",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "认知与起跑",
+      "subtitle": "定位 / 配置 / 第一个测试",
+      "lessons": [
+        { "id": "vitest-overview", "title": "Vitest 是什么：本教程的覆盖边界", "goal": "为什么 Vite 项目自带测试最优解（复用 vite 配置/转换/别名，即时 HMR 式 watch）；与 Jest 的关系（兼容 API 但原生 ESM/TS 免 babel）；宗旨声明：不逐个讲全部 matcher 与 config 项，但单元测试、mock、异步、组件测试、覆盖率、CI 的主干流程必须走通；呼应 10-vite 的 vite-vitest 入门关" },
+        { "id": "vitest-setup", "title": "安装与 vitest.config", "goal": "npm i -D vitest；package.json scripts（vitest / vitest run / ui）；vitest.config.ts 独立 vs vite.config 里 test 字段；environment 概念（node vs jsdom）；include/exclude 匹配规则；tsconfig types 配 vitest/globals；第一条 pass 的测试" },
+        { "id": "vitest-first-test", "title": "第一个单元测试：describe/it/expect", "goal": "describe 分组 + it/test 用例；expect(x).toBe/toEqual/toThrow 核心几个 matcher 就够用；全局 API vs 显式 import（globals:true）；文件命名与放置（__tests__ / *.test.ts / *.spec.ts）；watch 模式下的即时反馈；run vs watch 的适用场景" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "断言与数据",
+      "subtitle": "matcher / 异步 / 参数化 / 快照",
+      "lessons": [
+        { "id": "vitest-matchers", "title": "断言工具箱与扩展", "goal": "值断言（toBe vs toEqual vs toStrictEqual 区别）；数字/字符串（toBeCloseTo/toMatch）；异常（toThrow 匹配）；断言取反 .not；happy-dom/jest-dom 扩展（@testing-library/jest-dom 的 toBeInTheDocument）；expect.assertions/hasProperty；别背清单——按需查文档的姿势" },
+        { "id": "vitest-async", "title": "异步与定时器测试", "goal": "async/await 直接 await 断言；rejects.resolves 断言 Promise；假定时器 vi.useFakeTimers + advanceTimersByTime/runAllTimers；vi.setSystemTime 冻结时间；真实定时器回退（useRealTimers）；轮询/防抖函数怎么测；测试超时 hookTimeout/testTimeout" },
+        { "id": "vitest-param-snapshot", "title": "参数化与快照测试", "goal": "describe.each/it.each 表格驱动；快照 toMatchSnapshot/inline 与文件存储位置；快照的适用（序列化稳定输出）与滥用警告（无脑更新=没测）；-u 更新与 CI 禁更新；文件快照 withFileSnapshots；参数化+快照组合" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "Mock 与隔离",
+      "subtitle": "函数 mock / 模块 mock / 生命周期",
+      "lessons": [
+        { "id": "vitest-mock-fn", "title": "vi.fn 与 vi.spyOn", "goal": "vi.fn 造回调（mockReturnValue/mockResolvedValue/模拟实现）；断言调用（toHaveBeenCalled... 家族、toHaveBeenCalledWith、调用次数）；vi.spyOn 监听既有对象方法（含 .mockRestore）；mock 清理（clearAllMocks/resetAllMocks 在 setup 里的坑）；什么时候根本不该 mock" },
+        { "id": "vitest-mock-module", "title": "模块 mock：vi.mock 与依赖替换", "goal": "vi.mock 自动提升与工厂函数；部分 mock（importOriginal）；mock 环境变量/网络层（配合 msw 讲边界）；顶层 await 与 mock 顺序；vi.hoisted 解决引用提升；__mocks__ 目录约定；ESM 下 mock 相对 CommonJS 的差异" },
+        { "id": "vitest-lifecycle", "title": "钩子与用例隔离", "goal": "beforeAll/afterAll/beforeEach/afterEach 及 on-test 级（tryEach）；文件间默认隔离（isolate/threads）；共享状态的陷阱与 fileParallelism；setupFiles 注入全局前置；testContext（ctx）传数据；suite 作用域与清理顺序" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "组件与集成",
+      "subtitle": "jsdom / 组件测试 / 网络 mock",
+      "lessons": [
+        { "id": "vitest-jsdom", "title": "浏览器环境与 DOM 测试", "goal": "environment:jsdom vs happy-dom 选型与安装；per-file @vitest-environment 注解；environmentOptions 配 url/userAgent；matchMedia/ResizeObserver 等浏览器 API 缺失的 polyfill setup；cleanup（组件卸载）；DOM 断言心法" },
+        { "id": "vitest-component", "title": "组件测试：Vue/React", "goal": "@vue/test-utils 与 Vitest 集成；React Testing Library + Vitest（render/screen/userEvent）；挂载 props/事件/插槽断言；Pinia/Zustand 状态在测试里的注入（呼应 16/17 包）；异步渲染与 flushPromises；组件快照的克制使用" },
+        { "id": "vitest-network", "title": "网络层 mock 与集成测试", "goal": "MSW（Mock Service Worker）与 Vitest 搭配：on-server setupFiles、handlers 定义、per-test 覆盖（呼应 19 包 devtools 测试关）；测 TanStack Query 组件的完整链路；fetch/axios 拦截取舍；真实后端集成测试的边界（何时该端到端而非单测）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "覆盖率与工程化",
+      "subtitle": "coverage / UI / CI / 迁移",
+      "lessons": [
+        { "id": "vitest-coverage", "title": "覆盖率与配置进阶", "goal": "@vitest/coverage-v8 安装与 coverage 配置（provider/lines/百分比阈值 thresholds）；include/exclude 圈定统计范围；分支/函数覆盖率解读；per-target 覆盖率报告；coverage 不是目标而是探针的纪律；reporter 家族（verbose/json/github-actions）" },
+        { "id": "vitest-ui-workspace", "title": "UI 模式与 workspace", "goal": "--ui 浏览器界面看用例与耗时；in-source testing（源码内联测试）；workspace/projects 配多环境（node+jsdom 同仓，monorepo 各包）；typecheck 类型测试（expectTypeOf）；并发与分片（shard）；debug 与 inspect" },
+        { "id": "vitest-capstone", "title": "CI 与从 Jest 迁移：收官", "goal": "GitHub Actions 跑 Vitest（缓存/reporter/失败重跑）；从 Jest 迁移清单（globals、jest→vi、mock 差异、快照格式、transform）；测试金字塔与选型（Vitest vs Jest vs Playwright 分工）；与 20-swc/21-biome 组成的 Rust/TS 工具链全景收官；毕业自查 12 条；本包没讲但你该知道：browser mode、快照解析器全表——官方文档入口" }
+      ]
+    }
+  ]
+}

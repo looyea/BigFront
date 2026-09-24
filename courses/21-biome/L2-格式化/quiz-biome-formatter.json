@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-formatter",
+  "questions": [
+    {
+      "stem": "Biome 的 lineWidth 对应 Prettier 的？",
+      "options": [
+        "tabWidth",
+        "useTabs",
+        "endOfLine",
+        "printWidth"
+      ],
+      "answer": 3,
+      "explanation": "每行最大宽度。"
+    },
+    {
+      "stem": "对应 Prettier useTabs 的 Biome 选项是？",
+      "options": [
+        "indentStyle",
+        "indentWidth",
+        "lineEnding",
+        "bracketSpacing"
+      ],
+      "answer": 0,
+      "explanation": "indentStyle: tab/space。"
+    },
+    {
+      "stem": "第一次从 Prettier 全量落地 --write 应？",
+      "options": [
+        "混进功能 commit",
+        "单独纯格式化 commit 并配 blame 忽略",
+        "禁止",
+        "关 lint"
+      ],
+      "answer": 1,
+      "explanation": "隔离格式化噪声。"
+    },
+    {
+      "stem": "对 Prettier 用户的合理排版预期是？",
+      "options": [
+        "逐字节相同",
+        "完全不同",
+        "绝大多数一致、个别断行不同",
+        "一定更差"
+      ],
+      "answer": 2,
+      "explanation": "99% 非 100%。"
+    },
+    {
+      "stem": "缩进设置应与 .editorconfig 怎样？",
+      "options": [
+        "随意冲突",
+        "尽量对齐、以 biome.json 为真源",
+        "禁用 editorconfig",
+        "二选一"
+      ],
+      "answer": 1,
+      "explanation": "防编辑器与 Biome 打架。"
+    },
+    {
+      "stem": "只想跑 lint 不想格式化用？",
+      "options": [
+        "--no-lint",
+        "--write",
+        "--unsafe",
+        "--formatter-enabled=false"
+      ],
+      "answer": 3,
+      "explanation": "CLI 层关格式化。"
+    },
+    {
+      "stem": "trailingCommas 对应 Prettier 的？",
+      "options": [
+        "trailingComma",
+        "semi",
+        "bracketSameLine",
+        "arrowParens"
+      ],
+      "answer": 0,
+      "explanation": "尾逗号策略同名近义。"
+    },
+    {
+      "stem": "对个别目录不想被格式化，正确做法？",
+      "options": [
+        "随便 ignore 掩盖该统一的",
+        "用 formatter.include/语言级 enabled 精细控",
+        "删文件",
+        "关全 linter"
+      ],
+      "answer": 1,
+      "explanation": "范围控制而非掩盖。"
+    },
+    {
+      "stem": "quoteStyle 主要控制？",
+      "options": [
+        "缩进",
+        "单/双引号风格",
+        "换行符",
+        "分号"
+      ],
+      "answer": 1,
+      "explanation": "字符串引号风格。"
+    },
+    {
+      "stem": "迁移前判断排版是否可接受的方法是？",
+      "options": [
+        "凭感觉",
+        "对典型文件 diff Biome vs Prettier 输出",
+        "问 AI",
+        "看星数"
+      ],
+      "answer": 1,
+      "explanation": "数据说话。"
+    }
+  ]
+}

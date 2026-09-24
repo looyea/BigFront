@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-linter-rules",
+  "questions": [
+    {
+      "stem": "Biome 规则的命名结构是？",
+      "options": [
+        "group/ruleName",
+        "ruleName-only",
+        "plugin/rule",
+        "编号"
+      ],
+      "answer": 0,
+      "explanation": "两段可精确寻址。"
+    },
+    {
+      "stem": "绝大多数团队的起手基线应是？",
+      "options": [
+        "all:true",
+        "recommended:true",
+        "全 off",
+        "nursery:true"
+      ],
+      "answer": 1,
+      "explanation": "低噪音推荐集。"
+    },
+    {
+      "stem": "几乎肯定是 bug 的规则归哪组？",
+      "options": [
+        "style",
+        "nursery",
+        "correctness",
+        "performance"
+      ],
+      "answer": 2,
+      "explanation": "correctness 报大概率 bug。"
+    },
+    {
+      "stem": "想读懂某规则的动机用？",
+      "options": [
+        "删配置",
+        "biome explain <rule>",
+        "重启",
+        "grep 源码"
+      ],
+      "answer": 1,
+      "explanation": "给出动机/案例/可修性。"
+    },
+    {
+      "stem": "nursery 组的定位是？",
+      "options": [
+        "已废弃规则",
+        "稳定规则",
+        "安全规则",
+        "实验/孵化中的新规则"
+      ],
+      "answer": 3,
+      "explanation": "未稳定，慎用于生产。"
+    },
+    {
+      "stem": "单条规则可调的严重级别不含？",
+      "options": [
+        "off",
+        "warn",
+        "error",
+        "fatal"
+      ],
+      "answer": 3,
+      "explanation": "无 fatal 档，最高 error。"
+    },
+    {
+      "stem": "想让 correctness 严、style 松怎么做？",
+      "options": [
+        "只能全 recommended",
+        "按 group 分别设 recommended/all",
+        "全开 all",
+        "无法做到"
+      ],
+      "answer": 1,
+      "explanation": "defaultRules 支持按组配基线。"
+    },
+    {
+      "stem": "all:true 的问题是？",
+      "options": [
+        "太慢",
+        "含强风格/高争议规则噪音大",
+        "会漏报",
+        "禁用 linter"
+      ],
+      "answer": 1,
+      "explanation": "除非知道自己要什么。"
+    },
+    {
+      "stem": "style 组的特点决定了它应？",
+      "options": [
+        "整组必开",
+        "只留团队有共识的、其余降档",
+        "整组必关",
+        "归为 error"
+      ],
+      "answer": 1,
+      "explanation": "主观易战。"
+    },
+    {
+      "stem": "没读懂的规则应怎么处理？",
+      "options": [
+        "直接 ignore",
+        "先 explain 读懂再决定",
+        "关掉整组",
+        "提交"
+      ],
+      "answer": 1,
+      "explanation": "别无脑屏蔽。"
+    }
+  ]
+}

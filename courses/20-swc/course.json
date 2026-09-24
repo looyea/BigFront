@@ -1,0 +1,61 @@
+{
+  "id": "20-swc",
+  "title": "SWC 实战：Rust 编译器驱动的工程加速",
+  "order": 20,
+  "tier": "黄金 · 工具链专题",
+  "tagline": "SWC 用 Rust 把「转译 + 压缩」做到了比 Babel 快一个数量级，并潜伏在 Next.js、Jest、Rspack 生态背后。本包五阶段十五关，只走主流应用流程——不做 parser/AST 的百科全书，以简明为主，由浅入深。",
+  "icon": "🦕",
+  "color": "#14b8a6",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "认知与起点",
+      "subtitle": "定位 / 配置 / 转译内核",
+      "lessons": [
+        { "id": "swc-overview", "title": "SWC 是什么：本教程的覆盖边界", "goal": "Rust 编译器+minifier 的定位；速度叙事（Babel 数十倍、TS 二十倍量级的官方口径）与「你已经在用它」（Next.js/Rspack/swc-jest）；教程宗旨声明：不覆盖全部文档（parser 选项、ast 包、css/modules 实验特性等不展开），但转译配置、库集成、迁移排错的主干流程必须走通；与 10-vite/esbuild 的关系" },
+        { "id": "swc-config", "title": ".swcrc 与 CLI 工作流", "goal": "npx @swc/cli + @swc/core 最小工作流；.swcrc 顶层结构（jsc/minify/module 分区）；常见字段与 parse 类型（ts/tsx/js/esm）；browserslist 目标解析；outDir 与 --delete-dir-on-start；改一行配置看产物变化的入门实验" },
+        { "id": "swc-transform", "title": "转译内核：TS/JSX 到目标产物", "goal": "jsc 区三要素 parser/syntax/transform；TS 类型擦除 vs tsc 类型检查的分工；jsx 运行时 automatic vs classic；env.targets 决定降级深度；sourceMaps 与 inlineSourcesContent；看产物：同一份源码三种 targets 的输出对比" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "库与工具集成",
+      "subtitle": "程序化 API / 打包器 / minifier",
+      "lessons": [
+        { "id": "swc-core-api", "title": "@swc/core 程序化调用", "goal": "transform/transformSync/transformFile 三形态；选项对象与 .swcrc 的合并优先级；transform 返回 code/map 的落盘处理；node API 里传 ts/tsx 的 parser 选项；npm 平台二进制包结构（optionalDependencies 按需装与跨平台锁文件的坑）" },
+        { "id": "swc-bundlers", "title": "打包器与框架里的 SWC", "goal": "webpack 侧 swc-loader 替换 babel-loader 的配置对照；Rspack 以 SWC 为 transform 内核的事实；Next.js 内置 SWC 的默认启用与自定义 babelrc 的让位关系（呼应 07-nextjs）；Rollup/vite 项目里为何通常轮不到 SWC（esbuild 占位，交代清楚）" },
+        { "id": "swc-minify", "title": "压缩与生产产物", "goal": "jsc.minify 与 cli -m；minify 选项分区（compress/mcp/format）与 terser 对照；keep_classnames 等常用豁免；compress 与 mangle 的分工；体积实测方法：同一 bundle 分别走 terser/swc minify 对比字节数与构建耗时" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "现代语法与正确性",
+      "subtitle": "装饰器 / loose / 语义边界",
+      "lessons": [
+        { "id": "swc-modern-js", "title": "装饰器与现代语法", "goal": "decorators 双版本（legacy 2017-08 vs TS TC39 提案 current）配置与选型（NestJS/Angular 走 legacy，呼应 15-angular）；legacyDecorator + decoratorMetadata 的组合；class properties/私有字段、顶层 await、import attributes 的目标矩阵；env.coreJs 注入 polyfill 的边界（不搬 core-js 全文）" },
+        { "id": "swc-correctness", "title": "正确性边界：loose 与 interop", "goal": "SWC「够快且基本够对」的定位与已知差异清单意识；commonjs 转换的 interop 细节（esModule marker、default 导入）；loose 模式对 class 展开的影响；与 Babel 输出 diff 的排查方法论（同一入口两边各编一遍对比）" },
+        { "id": "swc-cache-perf", "title": "缓存与增量构建", "goal": "swc-loader 的缓存层与 webpack persistent cache 的配合；cli 并发与 --sync 的取舍；大规模仓库转译耗时实测（同输入换 esbuild/tsc 三组对照）；什么时候 SWC 并不是瓶颈（I/O、类型检查占大头的识别）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "测试与库打包",
+      "subtitle": "swc-jest / tsdown / d.ts 分工",
+      "lessons": [
+        { "id": "swc-jest", "title": "swc-jest：给 Jest 换引擎", "goal": "Jest transform 配置替换 babel-jest 的五分钟实践；TS/JSX 项目的 jest 配置完整样例；与 22-vitest 的关系交代（Vitest 走 esbuild，两者何时并存）；覆盖率 c8 provider 配合；常见报错：装饰器元数据与 snapshot 序列化" },
+        { "id": "swc-tsdown", "title": "tsdown：库打包的现代默认", "goal": "Rolldown 生态里 tsdown 的定位与其 transform 可选 SWC（untransform）的路线；跑一个组件库打包：entry/external/dts 三配置；ESM+CJS 双格式 exports 产出；与「转译用 SWC、类型用 tsc/vue-tsc」的 d.ts 生成分工（isolatedDeclarations 前瞻一句）" },
+        { "id": "swc-lib-publish", "title": "发包视角：SWC 构建的库怎么发布", "goal": "package.json exports/typesVersions 与产物目录对齐；sideEffects 与 tree-shaking 友好产物；source map 上传/随包发布的取舍；npm pack --dry-run 验收产物；CI 里多平台矩阵构建与 optionalDependencies 二进制分包思想（借鉴 swc 自身发版）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "迁移与收官",
+      "subtitle": "插件生态 / Babel 迁移 / 选型",
+      "lessons": [
+        { "id": "swc-plugins", "title": "插件系统：JS 与 Wasm 两条路", "goal": "@swc/core 的 js plugin（实验、进程内）与 Wasm plugin（Rust/StructVisitor 生产路线）现状；styled-components/styled-jsx/swc 插件等官方已备的内置 transform 盘点；React 编译类插件（SWC React Compiler）一句带过；「什么时候不需要插件」的判断——内置开关能解决就别写" },
+        { "id": "swc-babel-migrate", "title": "从 Babel 迁移：预设对照表", "goal": "@babel/preset-env → env.targets 的直译；preset-react(automatic) → jsc.transform.react.runtime；preset-typescript → parser.ts+擦除；装饰器/样式等 Babel 插件的 SWC 对等物盘点（没有的怎么办：保留 babel 混合管线或换内置开关）；迁移验收：diff 产物+跑测试双保险" },
+        { "id": "swc-capstone", "title": "选型收官：SWC/esbuild/Babel/tsc/Oxc", "goal": "四方对照表：速度/正确性/生态/可编程性；「Vite 用 esbuild+Rollup、Next 用 SWC、老项目留 Babel」的现状解释；Oxc（Rust linter/parser 新势力）与 Biome（21 包）的关系前瞻；毕业自查 12 条；本包没讲但你该知道：Wasm 插件深水区、swc css 实验、ast 包——以及官方文档入口" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-correctness",
+  "questions": [
+    {
+      "stem": "SWC 对 Babel 的正确心态是？",
+      "options": [
+        "逐字节相同",
+        "完全兼容",
+        "够快且基本够对、非复刻",
+        "互为超集"
+      ],
+      "answer": 2,
+      "explanation": "官方列有差异清单。"
+    },
+    {
+      "stem": "ESM→CJS 的 default 解析靠什么标记？",
+      "options": [
+        "typeof",
+        "__esModule marker",
+        "Symbol",
+        "version 字段"
+      ],
+      "answer": 1,
+      "explanation": "消费方看 __esModule 决定 default。"
+    },
+    {
+      "stem": "jsc.loose:true 的代价是？",
+      "options": [
+        "语义更松（class/instanceof 细节）",
+        "更慢",
+        "产物更大",
+        "报错"
+      ],
+      "answer": 0,
+      "explanation": "换体积速度牺牲严格语义。"
+    },
+    {
+      "stem": "谁最该慎用 loose？",
+      "options": [
+        "业务应用",
+        "Node 用户",
+        "浏览器",
+        "库作者"
+      ],
+      "answer": 3,
+      "explanation": "下游期望可能落空。"
+    },
+    {
+      "stem": "「Babel 好好的换 SWC 变了」怎么办？",
+      "options": [
+        "立刻放弃 SWC",
+        "固定最小入口两边各编一遍做 diff",
+        "清缓存",
+        "升 Node"
+      ],
+      "answer": 1,
+      "explanation": "controlled diff 定位差异。"
+    },
+    {
+      "stem": "产物模块格式应和什么一致？",
+      "options": [
+        "文件名",
+        "tsconfig module 永远 esnext",
+        "运行时（ESM/CJS）",
+        "包名"
+      ],
+      "answer": 2,
+      "explanation": "别混格式。"
+    },
+    {
+      "stem": "module.strict 处理的是？",
+      "options": [
+        "互操作/导出严格性细节",
+        "加速解析",
+        "删无用 import",
+        "排序 import"
+      ],
+      "answer": 0,
+      "explanation": "interop 相关开关。"
+    },
+    {
+      "stem": "helper 注入方式差异会导致？",
+      "options": [
+        "编译失败",
+        "个别行为/体积不同，多属预期",
+        "语法报错",
+        "无法运行"
+      ],
+      "answer": 1,
+      "explanation": "查差异清单确认预期。"
+    },
+    {
+      "stem": "发现确属 SWC 已知差异后的合理选择？",
+      "options": [
+        "提交 bug",
+        "换回 webpack",
+        "删测试",
+        "关 loose/调 interop/保留个别 Babel"
+      ],
+      "answer": 3,
+      "explanation": "有对应绕法。"
+    },
+    {
+      "stem": "importInterop 的用途？",
+      "options": [
+        "决定 import 的互操作映射策略",
+        "加速解析",
+        "删无用 import",
+        "排序 import"
+      ],
+      "answer": 0,
+      "explanation": "处理跨模块格式 default 等。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-bundlers",
+  "questions": [
+    {
+      "stem": "webpack 里替换 babel-loader 用？",
+      "options": [
+        "swc-loader",
+        "ts-loader",
+        "esbuild-loader",
+        "thread-loader"
+      ],
+      "answer": 0,
+      "explanation": "options 形状同 .swcrc。"
+    },
+    {
+      "stem": "Rspack 用户如何用 SWC？",
+      "options": [
+        "装 swc-loader",
+        "内置 builtin:swc-loader 免装",
+        "不能",
+        "改 webpack"
+      ],
+      "answer": 1,
+      "explanation": "Rspack transform 内核即 SWC。"
+    },
+    {
+      "stem": "Next.js 从哪个版本默认 SWC？",
+      "options": [
+        "v10",
+        "v11",
+        "v12",
+        "v14"
+      ],
+      "answer": 2,
+      "explanation": "v12 起默认编译+minify。"
+    },
+    {
+      "stem": "Next 里出现 .babelrc 会怎样？",
+      "options": [
+        "报错",
+        "SWC 让位回 Babel",
+        "忽略 babel",
+        "自动删除"
+      ],
+      "answer": 1,
+      "explanation": "有 babel 配置则回退。"
+    },
+    {
+      "stem": "Vite dev 的转译层是？",
+      "options": [
+        "SWC",
+        "esbuild",
+        "babel",
+        "tsc"
+      ],
+      "answer": 1,
+      "explanation": "Vite 用 esbuild+Rollup。"
+    },
+    {
+      "stem": "styled-components 在 Next 的正确做法？",
+      "options": [
+        "加 babel 插件",
+        "不能",
+        "手写 runtime",
+        "用 next.config 的 SWC 插件开关"
+      ],
+      "answer": 3,
+      "explanation": "别加 babel 反而旁路 SWC。"
+    },
+    {
+      "stem": "选打包器在某种程度上等于选？",
+      "options": [
+        "UI 库",
+        "转译层",
+        "测试库",
+        "语言"
+      ],
+      "answer": 1,
+      "explanation": "本关核心心智。"
+    },
+    {
+      "stem": "swc-loader 的收益主要来自？",
+      "options": [
+        "更多特性",
+        "转译提速（分钟→秒）",
+        "免配置",
+        "更小产物"
+      ],
+      "answer": 1,
+      "explanation": "大仓冷启动尤显。"
+    },
+    {
+      "stem": "Next.js 里 SWC 编译器的实验开关放哪？",
+      "options": [
+        "tsconfig",
+        "next.config.js",
+        "package.json",
+        ".swcrc"
+      ],
+      "answer": 1,
+      "explanation": "next 用自己的配置。"
+    },
+    {
+      "stem": "Rollup 项目里为何通常不引 SWC？",
+      "options": [
+        "不兼容",
+        "Vite 默认 esbuild 占位，各有最优解",
+        "更慢",
+        "收费"
+      ],
+      "answer": 1,
+      "explanation": "别硬塞。"
+    }
+  ]
+}

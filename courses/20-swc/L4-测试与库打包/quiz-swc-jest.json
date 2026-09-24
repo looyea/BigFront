@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-jest",
+  "questions": [
+    {
+      "stem": "@swc/jest 替换的是 Jest 哪个环节？",
+      "options": [
+        "reporter",
+        "transform（转译）",
+        "runner",
+        "watch"
+      ],
+      "answer": 1,
+      "explanation": "换 babel-jest 为 SWC 转译。"
+    },
+    {
+      "stem": "@swc/jest 的配置对象形状等于？",
+      "options": [
+        "package.json",
+        ".swcrc",
+        "tsconfig",
+        "babelrc"
+      ],
+      "answer": 1,
+      "explanation": "沿用 jsc/module 那套。"
+    },
+    {
+      "stem": "Vitest 的转译层是？",
+      "options": [
+        "SWC",
+        "babel",
+        "esbuild",
+        "tsc"
+      ],
+      "answer": 2,
+      "explanation": "Vitest 走 esbuild+Vite。"
+    },
+    {
+      "stem": "@swc/jest 与 Vitest 的关系？",
+      "options": [
+        "同一工具",
+        "互相依赖",
+        "Vitest 用 swc-jest",
+        "两条路：前者服务 Jest、后者服务 Vite 生态"
+      ],
+      "answer": 3,
+      "explanation": "按生态二选一。"
+    },
+    {
+      "stem": "Nest 测试里 provider 解析失败多半缺？",
+      "options": [
+        "coverage",
+        "decoratorMetadata 开关",
+        "watch",
+        "snapshot"
+      ],
+      "answer": 1,
+      "explanation": "元数据没发射。"
+    },
+    {
+      "stem": "覆盖率与转译器解耦的 provider 是？",
+      "options": [
+        "babel",
+        "v8",
+        "istanbul",
+        "jsdom"
+      ],
+      "answer": 1,
+      "explanation": "coverageProvider:v8 采原生。"
+    },
+    {
+      "stem": "Cannot use import statement outside a module 的常见解？",
+      "options": [
+        "删测试",
+        "关 watch",
+        "补 module.type / 确认 transform 命中",
+        "升 Node"
+      ],
+      "answer": 2,
+      "explanation": "格式与 transform 覆盖问题。"
+    },
+    {
+      "stem": "换引擎前 snapshot 该怎么处理？",
+      "options": [
+        "直接重录",
+        "先在旧引擎留基线再对比",
+        "删光",
+        "禁用"
+      ],
+      "answer": 1,
+      "explanation": "避免用错误基线掩盖真回归。"
+    },
+    {
+      "stem": "测试端转译配置应与什么对齐？",
+      "options": [
+        "和构建端对齐",
+        "和 lint 对齐",
+        "随机",
+        "和 Node 版本对齐"
+      ],
+      "answer": 0,
+      "explanation": "否则编译过测试崩。"
+    },
+    {
+      "stem": "@swc/jest 的主要收益是？",
+      "options": [
+        "更多断言",
+        "TS/JSX 转译提速、免 babel 配置",
+        "自动出类型",
+        "替代 runner"
+      ],
+      "answer": 1,
+      "explanation": "甩开 babel-jest 瓶颈。"
+    }
+  ]
+}

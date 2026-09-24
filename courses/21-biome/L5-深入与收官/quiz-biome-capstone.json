@@ -1,0 +1,115 @@
+{
+  "lessonId": "选型收官",
+  "questions": [
+    {
+      "stem": "只在意多语言统一格式、不需要 lint 的轻量选？",
+      "options": [
+        "ESLint",
+        "dprint",
+        "Biome",
+        "oxlint"
+      ],
+      "answer": 1,
+      "explanation": "dprint 专精格式化。"
+    },
+    {
+      "stem": "依赖大量仅 ESLint 才有的插件的团队应？",
+      "options": [
+        "立刻全切 Biome",
+        "留在 ESLint+Prettier 或仅共存",
+        "关 lint",
+        "换框架"
+      ],
+      "answer": 1,
+      "explanation": "迁移成本大于收益。"
+    },
+    {
+      "stem": "新项目、受够双配置、以 JS/TS 为主的团队？",
+      "options": [
+        "留守",
+        "只用 Prettier",
+        "该全切 Biome",
+        "啥都不上"
+      ],
+      "answer": 2,
+      "explanation": "Biome 最契合。"
+    },
+    {
+      "stem": "oxlint 与 Biome 的竞争维度是？",
+      "options": [
+        "lint（都做快 lint）",
+        "格式化",
+        "打包",
+        "类型"
+      ],
+      "answer": 0,
+      "explanation": "二者都覆盖 lint。"
+    },
+    {
+      "stem": "20-swc/21-biome/22-vitest 分别管？",
+      "options": [
+        "都管格式",
+        "编译/代码质量/测试",
+        "都管测试",
+        "打包"
+      ],
+      "answer": 1,
+      "explanation": "Rust/TS 新工具链全景。"
+    },
+    {
+      "stem": "它们共享的底层哲学是？",
+      "options": [
+        "纯 JS 单线程",
+        "云端",
+        "无解析",
+        "Rust/原生 + 快"
+      ],
+      "answer": 3,
+      "explanation": "蚕食 Babel/ESLint/Jest。"
+    },
+    {
+      "stem": "重度定制框架 lint 又想要 Biome 速度？",
+      "options": [
+        "二选一硬来",
+        "Biome 主干 + ESLint 补插件共存",
+        "全关",
+        "忍着慢"
+      ],
+      "answer": 1,
+      "explanation": "共存取两者之长。"
+    },
+    {
+      "stem": "本包刻意没展开、需回文档的是？",
+      "options": [
+        "初始化",
+        "每条规则完整清单/vcs/LSP/插件 API",
+        "退出码",
+        "install"
+      ],
+      "answer": 1,
+      "explanation": "主干优先、细节按需查。"
+    },
+    {
+      "stem": "Biome 相对 ESLint+Prettier 最大的短板？",
+      "options": [
+        "速度",
+        "规则生态/可定制（插件弱）",
+        "格式化",
+        "配置成本"
+      ],
+      "answer": 1,
+      "explanation": "广度与可定制仍逊。"
+    },
+    {
+      "stem": "毕业能力的一项标志？",
+      "options": [
+        "背规则",
+        "能给团队给出全切/共存/留守建议",
+        "会装包",
+        "读过源码"
+      ],
+      "answer": 1,
+      "explanation": "落到选型决策。"
+    }
+  ]
+}

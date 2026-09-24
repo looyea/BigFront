@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-ui-workspace",
+  "questions": [
+    {
+      "stem": "vitest --ui 提供什么？",
+      "options": [
+        "浏览器界面看用例/状态/耗时/diff",
+        "VS Code 插件",
+        "覆盖率后端服务",
+        "格式化"
+      ],
+      "answer": 0,
+      "explanation": "可视化面板。"
+    },
+    {
+      "stem": "test.projects 解决什么问题？",
+      "options": [
+        "代码格式化",
+        "装依赖",
+        "同仓配多个测试项目（node+jsdom/monorepo 各包）",
+        "快照存储"
+      ],
+      "answer": 2,
+      "explanation": "多环境组织。"
+    },
+    {
+      "stem": "in-source testing 是什么？",
+      "options": [
+        "禁用测试",
+        "黑盒测试",
+        "外部文件测试",
+        "把测试写在源码内、构建时剔除"
+      ],
+      "answer": 3,
+      "explanation": "源码内联。"
+    },
+    {
+      "stem": "类型测试（查类型而非运行时）用什么能力？",
+      "options": [
+        "toMatchSnapshot",
+        "typecheck + expectTypeOf",
+        "coverage",
+        "spyOn"
+      ],
+      "answer": 1,
+      "explanation": "类型级断言。"
+    },
+    {
+      "stem": "expectTypeOf 从哪里导入？",
+      "options": [
+        "vitest",
+        "jest-dom",
+        "jsdom",
+        "msw"
+      ],
+      "answer": 0,
+      "explanation": "来自 vitest。"
+    },
+    {
+      "stem": "把套件切多份分发到多 CI 机提速用？",
+      "options": [
+        "bail",
+        "--shard",
+        "snapshotFormat",
+        "sequence"
+      ],
+      "answer": 1,
+      "explanation": "分片横向扩。"
+    },
+    {
+      "stem": "断点调试一条用例怎么做？",
+      "options": [
+        "删掉别的用例",
+        "关掉并行即可断点",
+        "加 sleep",
+        "it.debug / --inspect-brk 连调试器"
+      ],
+      "answer": 3,
+      "explanation": "官方调试路径。"
+    },
+    {
+      "stem": "projects 里每个子项目能各自配置什么？",
+      "options": [
+        "只能设一个 environment",
+        "什么都不能配",
+        "各自的 environment/include/setupFiles 等",
+        "只能改端口"
+      ],
+      "answer": 2,
+      "explanation": "各带一套。"
+    },
+    {
+      "stem": "IDE 里点绿三角跑单测依赖什么？",
+      "options": [
+        "Vitest 扩展 + vitest.config",
+        "快照",
+        "覆盖率上传",
+        "vi.mock"
+      ],
+      "answer": 0,
+      "explanation": "装扩展。"
+    },
+    {
+      "stem": "typecheck 会默认随普通测试一起跑吗？",
+      "options": [
+        "总是",
+        "默认不，需显式开启 typecheck",
+        "永远不能",
+        "只能在 CI"
+      ],
+      "answer": 1,
+      "explanation": "独立流程。"
+    }
+  ]
+}

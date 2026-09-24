@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-lib-publish",
+  "questions": [
+    {
+      "stem": "exports 里 types 条件应放哪？",
+      "options": [
+        "最前",
+        "最后",
+        "随意",
+        "不放"
+      ],
+      "answer": 0,
+      "explanation": "从 specific 到宽泛，types 前置。"
+    },
+    {
+      "stem": "sideEffects:false 的收益是？",
+      "options": [
+        "加速安装",
+        "禁用 CSS",
+        "让打包器安全删未引用代码（tree-shaking）",
+        "关 map"
+      ],
+      "answer": 2,
+      "explanation": "干净 ESM + 无副作用声明。"
+    },
+    {
+      "stem": "哪种会破坏 tree-shaking？",
+      "options": [
+        "纯函数导出",
+        "external",
+        "d.ts",
+        "模块顶层隐式副作用"
+      ],
+      "answer": 3,
+      "explanation": "顶层无条件副作用 shake 不掉。"
+    },
+    {
+      "stem": "source map 上传监控不随包的优点？",
+      "options": [
+        "保护源码仍可还原栈",
+        "省磁盘",
+        "免编译",
+        "加速"
+      ],
+      "answer": 0,
+      "explanation": "inlineSourcesContent 助还原。"
+    },
+    {
+      "stem": "发布前第一关命令？",
+      "options": [
+        "npm publish",
+        "npm test",
+        "npm pack --dry-run",
+        "npm audit"
+      ],
+      "answer": 2,
+      "explanation": "先核对 tarball 文件清单。"
+    },
+    {
+      "stem": "把 src/、.env 打进包怎么防？",
+      "options": [
+        "exports",
+        "files 字段白名单",
+        "sideEffects",
+        "typesVersions"
+      ],
+      "answer": 1,
+      "explanation": "白名单收口。"
+    },
+    {
+      "stem": "@swc/core 分发各平台二进制靠？",
+      "options": [
+        "单一包",
+        "optionalDependencies 平台包",
+        "CDN",
+        "源码编译"
+      ],
+      "answer": 1,
+      "explanation": "可借鉴的发版思想。"
+    },
+    {
+      "stem": "typesVersions 的用途？",
+      "options": [
+        "新解析器条件导出",
+        "给老解析器兜底类型映射",
+        "版本锁定",
+        "压缩"
+      ],
+      "answer": 1,
+      "explanation": "兼容不认识 exports 的工具。"
+    },
+    {
+      "stem": "发纯 JS 库要防的经典坑（呼应 L2）？",
+      "options": [
+        "跨平台锁文件二进制缺失",
+        "类型报错",
+        "CSS",
+        "watch 卡死"
+      ],
+      "answer": 0,
+      "explanation": "本地 mac、CI linux。"
+    },
+    {
+      "stem": "exports 与产物目录关系？",
+      "options": [
+        "无关",
+        "必须严格对齐否则用户 import 落空",
+        "随便指",
+        "只指 main"
+      ],
+      "answer": 1,
+      "explanation": "映射即脸面。"
+    }
+  ]
+}

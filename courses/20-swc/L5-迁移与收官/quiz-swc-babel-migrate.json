@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-babel-migrate",
+  "questions": [
+    {
+      "stem": "@babel/preset-env 的 targets 直译成？",
+      "options": [
+        "jsc.parser",
+        "env.targets / jsc.target",
+        "module.type",
+        "minify"
+      ],
+      "answer": 1,
+      "explanation": "browserslist 驱动降级。"
+    },
+    {
+      "stem": "preset-react(automatic) 对应？",
+      "options": [
+        "jsc.transform.react.runtime",
+        "env.coreJs",
+        "importInterop",
+        "loose"
+      ],
+      "answer": 0,
+      "explanation": "runtime 开关。"
+    },
+    {
+      "stem": "preset-typescript 对应？",
+      "options": [
+        "装 ts 插件",
+        "jsc.parser.syntax=typescript",
+        "module 设 es6",
+        "minify"
+      ],
+      "answer": 1,
+      "explanation": "自动擦类型。"
+    },
+    {
+      "stem": "心智从什么转成什么？",
+      "options": [
+        "装插件 → 配开关",
+        "写代码 → 点鼠标",
+        "CLI → API",
+        "同步 → 异步"
+      ],
+      "answer": 0,
+      "explanation": "正交开关组合替代预设堆叠。"
+    },
+    {
+      "stem": "Babel-only 无对等插件的出路不含？",
+      "options": [
+        "等价改写",
+        "混合管线",
+        "写 Wasm 插件",
+        "放弃编译"
+      ],
+      "answer": 3,
+      "explanation": "三选一而非放弃。"
+    },
+    {
+      "stem": "迁移验收的第一步？",
+      "options": [
+        "看 README",
+        "改版本号",
+        "典型模块两边编一遍 diff 产物",
+        "删 Babel"
+      ],
+      "answer": 2,
+      "explanation": "产物 diff 露差异。"
+    },
+    {
+      "stem": "为什么测试要针对产物？",
+      "options": [
+        "跑得快",
+        "行为差异只体现在编译产物上",
+        "省内存",
+        "免 lint"
+      ],
+      "answer": 1,
+      "explanation": "源码测不出转译差异。"
+    },
+    {
+      "stem": "monorepo 迁移的正确节奏？",
+      "options": [
+        "必须一把梭",
+        "渐进：先易后难、瓶颈大且插件少的先上",
+        "先迁库后迁应用",
+        "只迁测试"
+      ],
+      "answer": 1,
+      "explanation": "就近 .swcrc 友好。"
+    },
+    {
+      "stem": "从 Babel 迁 SWC 后类型检查？",
+      "options": [
+        "一起没了",
+        "仍要 tsc --noEmit（本就不查）",
+        "交给 esbuild",
+        "交给 minify"
+      ],
+      "answer": 1,
+      "explanation": "别把甩 Babel 误解成甩类型。"
+    },
+    {
+      "stem": "preset-env(corejs polyfill) 对应？",
+      "options": [
+        "jsc.transform",
+        "env.coreJs + env.mode",
+        "mangle",
+        "sourceMaps"
+      ],
+      "answer": 1,
+      "explanation": "垫片注入归 env。"
+    }
+  ]
+}

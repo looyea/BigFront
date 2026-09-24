@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-modern-js",
+  "questions": [
+    {
+      "stem": "NestJS/Angular 用的是哪套装饰器？",
+      "options": [
+        "TC39 Stage3",
+        "TS 5 默认",
+        "Legacy(2017-08)",
+        "没有装饰器"
+      ],
+      "answer": 2,
+      "explanation": "老 experimentalDecorators 即 legacy。"
+    },
+    {
+      "stem": "依赖 design:paramtypes 的 DI 迁 SWC 必须开？",
+      "options": [
+        "legacyDecorator",
+        "decoratorMetadata",
+        "importInterop",
+        "loose"
+      ],
+      "answer": 1,
+      "explanation": "缺 decoratorMetadata 元数据静默丢失。"
+    },
+    {
+      "stem": "legacyDecorator 应与什么保持一致？",
+      "options": [
+        "tsconfig 的 experimentalDecorators",
+        "package.json type",
+        "browserslist",
+        "eslint"
+      ],
+      "answer": 0,
+      "explanation": "两头对齐才不一个报错一个照编。"
+    },
+    {
+      "stem": "顶层 await 的前提是？",
+      "options": [
+        "CJS + es5",
+        "开 loose",
+        "注入 core-js",
+        "ESM + target es2017+"
+      ],
+      "answer": 3,
+      "explanation": "CJS 无顶层 await 语义。"
+    },
+    {
+      "stem": "私有字段 #x 降到老目标的实现？",
+      "options": [
+        "保持 #",
+        "直接删",
+        "WeakMap 模拟",
+        "报错"
+      ],
+      "answer": 2,
+      "explanation": "老运行时无该语法故用 WeakMap。"
+    },
+    {
+      "stem": "env.coreJs mode:usage 的含义？",
+      "options": [
+        "全量塞 core-js",
+        "按用到的 API 注入垫片片段",
+        "不注入",
+        "只注 Promise"
+      ],
+      "answer": 1,
+      "explanation": "按需 import 而非全量。"
+    },
+    {
+      "stem": "import attributes 低 target 会？",
+      "options": [
+        "永远原样",
+        "自动 polyfill",
+        "转兼容形式或报错，查 supported-browsers",
+        "忽略"
+      ],
+      "answer": 2,
+      "explanation": "跟随较新提案有边界。"
+    },
+    {
+      "stem": "两套装饰器能同时开吗？",
+      "options": [
+        "鼓励同时开",
+        "必须都开",
+        "看心情",
+        "不要混开（语义冲突）"
+      ],
+      "answer": 3,
+      "explanation": "标准装饰器别配 legacyDecorator。"
+    },
+    {
+      "stem": "decoratorsBeforeExport 属于？",
+      "options": [
+        "minify",
+        "mangle",
+        "module",
+        "标准装饰器解析的细项"
+      ],
+      "answer": 3,
+      "explanation": "与标准装饰器配合。"
+    },
+    {
+      "stem": "polyfill 补不上什么？",
+      "options": [
+        "Array 新方法",
+        "某些无法伪造的运行时全局/行为",
+        "Promise",
+        "Map"
+      ],
+      "answer": 1,
+      "explanation": "core-js 非万能。"
+    }
+  ]
+}

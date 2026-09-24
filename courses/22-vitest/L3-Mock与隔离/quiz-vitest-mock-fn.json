@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-mock-fn",
+  "questions": [
+    {
+      "stem": "vi.fn() 返回的是？",
+      "options": [
+        "造一个带调用记录的假函数",
+        "断言相等",
+        "冻结时间",
+        "替换整个模块"
+      ],
+      "answer": 0,
+      "explanation": "可编程+有记忆。"
+    },
+    {
+      "stem": "让 vi.fn 每次返回固定值用？",
+      "options": [
+        "mock.calls",
+        "mockReturnValue()",
+        "mockRestore",
+        "vi.hoisted"
+      ],
+      "answer": 1,
+      "explanation": "固定返回值。"
+    },
+    {
+      "stem": "断言回调至少被调用一次用？",
+      "options": [
+        "toEqual",
+        "toMatchObject",
+        "toHaveBeenCalled",
+        "toSatisfy"
+      ],
+      "answer": 2,
+      "explanation": "toHaveBeenCalled。"
+    },
+    {
+      "stem": "断言以指定参数被调用？",
+      "options": [
+        "toHaveBeenCalledTimes",
+        "toHaveReturnedWith",
+        "toHaveBeenLastCalledWith",
+        "toHaveBeenCalledWith"
+      ],
+      "answer": 3,
+      "explanation": "toHaveBeenCalledWith。"
+    },
+    {
+      "stem": "vi.spyOn 的用途是？",
+      "options": [
+        "替换整个网络层",
+        "监听并可控地替换既有对象上的方法",
+        "冻结 Date",
+        "生成快照"
+      ],
+      "answer": 1,
+      "explanation": "观察既有方法。"
+    },
+    {
+      "stem": "恢复 spyOn 的原实现用？",
+      "options": [
+        "mockClear",
+        "mockReset",
+        "mockRestore",
+        "unspy"
+      ],
+      "answer": 2,
+      "explanation": "restore 复原原型。"
+    },
+    {
+      "stem": "mockClear() 清除的是？",
+      "options": [
+        "mock 的调用记录（calls/结果）",
+        "mock 的自定义实现",
+        "被 mock 的模块",
+        "环境变量"
+      ],
+      "answer": 0,
+      "explanation": "只清记录。"
+    },
+    {
+      "stem": "mockReset 相比 mockClear 多做的是？",
+      "options": [
+        "什么都不做",
+        "只清时间",
+        "只清 DOM",
+        "把自定义实现也重置掉"
+      ],
+      "answer": 3,
+      "explanation": "reset 连实现清。"
+    },
+    {
+      "stem": "什么时候根本不该 mock？",
+      "options": [
+        "被测函数有外部依赖时",
+        "纯逻辑、无副作用的函数",
+        "网络请求",
+        "定时器回调"
+      ],
+      "answer": 1,
+      "explanation": "直接调它更实在。"
+    },
+    {
+      "stem": "给 vi.fn 传入实现的作用是？",
+      "options": [
+        "让它返回 undefined",
+        "禁用断言",
+        "自定义 mock 的行为（模拟实现）",
+        "冻结原型"
+      ],
+      "answer": 2,
+      "explanation": "模拟真实行为。"
+    }
+  ]
+}

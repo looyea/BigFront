@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-coverage",
+  "questions": [
+    {
+      "stem": "覆盖率 provider 常用哪个？",
+      "options": [
+        "istanbul 是唯一选择",
+        "@vitest/coverage-v8（或 istanbul）",
+        "内置无需装",
+        "babel"
+      ],
+      "answer": 1,
+      "explanation": "v8 常更快。"
+    },
+    {
+      "stem": "设最低覆盖率挡 CI 用哪个配置？",
+      "options": [
+        "reporters",
+        "environment",
+        "coverage.thresholds",
+        "include"
+      ],
+      "answer": 2,
+      "explanation": "thresholds 挡门。"
+    },
+    {
+      "stem": "coverage.include/exclude 的作用是？",
+      "options": [
+        "圈定哪些源文件计入统计",
+        "控制断言",
+        "决定并行",
+        "装依赖"
+      ],
+      "answer": 0,
+      "explanation": "算什么（统计范围）。"
+    },
+    {
+      "stem": "想让没被测到的文件也进分母怎么做？",
+      "options": [
+        "all:false",
+        "关 coverage",
+        "只测已测文件",
+        "all:true + coverage.include"
+      ],
+      "answer": 3,
+      "explanation": "戳破虚高。"
+    },
+    {
+      "stem": "分支覆盖率低通常说明？",
+      "options": [
+        "代码有语法错",
+        "有条件分支某一侧没被测到",
+        "没装 istanbul",
+        "文件太大"
+      ],
+      "answer": 1,
+      "explanation": "补边界/错误分支。"
+    },
+    {
+      "stem": "对覆盖率该有的正确心态？",
+      "options": [
+        "它是探针不是 KPI，别写空测凑数",
+        "必须无脑追 100%",
+        "可有可无",
+        "能替代断言"
+      ],
+      "answer": 0,
+      "explanation": "找出漏测路径。"
+    },
+    {
+      "stem": "v8 和 istanbul 的区别？",
+      "options": [
+        "完全相同",
+        "v8 更慢",
+        "v8 基于引擎原生覆盖常更快，istanbul 口径/可移植性不同",
+        "不能选"
+      ],
+      "answer": 2,
+      "explanation": "性能与细节差异。"
+    },
+    {
+      "stem": "perFile 阈值的意义是？",
+      "options": [
+        "只统计一个文件",
+        "关掉分支统计",
+        "按每个文件分别卡阈值，防个别高覆盖文件拉平整体",
+        "提高并行"
+      ],
+      "answer": 2,
+      "explanation": "防拉平。"
+    },
+    {
+      "stem": "reporter 里 verbose 干嘛？",
+      "options": [
+        "逐条列出用例与耗时",
+        "隐藏输出",
+        "只输出错误",
+        "关掉颜色"
+      ],
+      "answer": 0,
+      "explanation": "看得更细。"
+    },
+    {
+      "stem": "想逐行看哪行没被覆盖用什么报告？",
+      "options": [
+        "终端 text 总览",
+        "html 报告（逐行标注）",
+        "json",
+        "github-actions"
+      ],
+      "answer": 1,
+      "explanation": "html 逐行。"
+    }
+  ]
+}

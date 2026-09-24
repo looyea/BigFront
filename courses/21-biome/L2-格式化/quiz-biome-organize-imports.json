@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-organize-imports",
+  "questions": [
+    {
+      "stem": "开启 import 整理的字段是？",
+      "options": [
+        "organizeImports.enabled",
+        "linter.enabled",
+        "formatter.include",
+        "assist"
+      ],
+      "answer": 0,
+      "explanation": "organizeImports 开关。"
+    },
+    {
+      "stem": "Biome 的排序依据是？",
+      "options": [
+        "字典原序",
+        "随机",
+        "自然顺序 natural order",
+        "按行号"
+      ],
+      "answer": 2,
+      "explanation": "natural order 稳定分组。"
+    },
+    {
+      "stem": "organizeImports 是哪条命令的一部分？",
+      "options": [
+        "biome format",
+        "biome init",
+        "biome ci",
+        "biome check"
+      ],
+      "answer": 3,
+      "explanation": "check=format+lint+整理。"
+    },
+    {
+      "stem": "真正应用重排需要？",
+      "options": [
+        "只 check",
+        "--write",
+        "--unsafe",
+        "重启"
+      ],
+      "answer": 1,
+      "explanation": "check 只报、write 才改。"
+    },
+    {
+      "stem": "对照 simple-import-sort，Biome 目前偏弱在？",
+      "options": [
+        "基础排序",
+        "速度",
+        "极复杂自定义分层约束",
+        "去重"
+      ],
+      "answer": 2,
+      "explanation": "自定义分组不如插件细。"
+    },
+    {
+      "stem": "哪种 import 要特别留意整理后位置？",
+      "options": [
+        "副作用导入 import \"./x\"",
+        "类型导入",
+        "default 导入",
+        "命名空间"
+      ],
+      "answer": 0,
+      "explanation": "副作用执行顺序敏感。"
+    },
+    {
+      "stem": "与 IDE auto-import 打架时该？",
+      "options": [
+        "两个都开",
+        "择一真源、通常交给 Biome",
+        "关 Biome",
+        "都不开"
+      ],
+      "answer": 1,
+      "explanation": "保证团队一致可复现。"
+    },
+    {
+      "stem": "CI 里挡住「没整理 import」的做法？",
+      "options": [
+        "跑 --write",
+        "关 linter",
+        "跳过",
+        "跑不带 --write 的 check"
+      ],
+      "answer": 3,
+      "explanation": "无 write 即校验不落地。"
+    },
+    {
+      "stem": "organizeImports 相比 ESLint import 插件的优势？",
+      "options": [
+        "能配更多分层",
+        "支持更多语言",
+        "内置、零额外依赖、Rust 级快",
+        "不改代码"
+      ],
+      "answer": 2,
+      "explanation": "一体化+性能。"
+    },
+    {
+      "stem": "被整理掉但实际有依赖的写法应？",
+      "options": [
+        "删掉依赖",
+        "用注解/配置防误移",
+        "关掉整理",
+        "全 ignore"
+      ],
+      "answer": 1,
+      "explanation": "保留必要位置。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-first-test",
+  "questions": [
+    {
+      "stem": "分组用的 API 是？",
+      "options": [
+        "it",
+        "describe",
+        "expect",
+        "test"
+      ],
+      "answer": 1,
+      "explanation": "describe 归组。"
+    },
+    {
+      "stem": "等价于 it 的别名是？",
+      "options": [
+        "test",
+        "suite",
+        "spec",
+        "case"
+      ],
+      "answer": 0,
+      "explanation": "it === test。"
+    },
+    {
+      "stem": "深比较对象/数组用？",
+      "options": [
+        "toBe",
+        "toEqual",
+        "toMatch",
+        "toBeCloseTo"
+      ],
+      "answer": 1,
+      "explanation": "toEqual 深比较。"
+    },
+    {
+      "stem": "断言抛错用？",
+      "options": [
+        "toThrow",
+        "rejects",
+        "toError",
+        "catch"
+      ],
+      "answer": 0,
+      "explanation": "expect(fn).toThrow()。"
+    },
+    {
+      "stem": "浮点数比较用？",
+      "options": [
+        "toBe",
+        "toEqual",
+        "toBeCloseTo",
+        "gt"
+      ],
+      "answer": 2,
+      "explanation": "避免精度误判。"
+    },
+    {
+      "stem": "断言取反加什么？",
+      "options": [
+        ".negate",
+        ".not",
+        ".no",
+        ".invert"
+      ],
+      "answer": 1,
+      "explanation": "expect(x).not.toBe(y)。"
+    },
+    {
+      "stem": "开发期推荐的运行方式？",
+      "options": [
+        "run",
+        "single",
+        "dry-run",
+        "watch"
+      ],
+      "answer": 3,
+      "explanation": "watch 即时重跑。"
+    },
+    {
+      "stem": "核心 matcher 记不住怎么办？",
+      "options": [
+        "全部硬背",
+        "按需求 api/expect 文档查",
+        "不用断言",
+        "只用 toBe"
+      ],
+      "answer": 1,
+      "explanation": "别背清单、按需查。"
+    },
+    {
+      "stem": "文件放置的常见两种约定？",
+      "options": [
+        "__tests__ 或 co-located",
+        "必须根目录",
+        "只能 src",
+        "放 node_modules"
+      ],
+      "answer": 0,
+      "explanation": "择一统一。"
+    },
+    {
+      "stem": "globals:true 但没配 types 会？",
+      "options": [
+        "运行报错",
+        "TS 报找不到 expect",
+        "更慢",
+        "无法 mock"
+      ],
+      "answer": 1,
+      "explanation": "类型层面需要 types。"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-overview",
+  "questions": [
+    {
+      "stem": "SWC 是用什么语言实现的？",
+      "options": [
+        "Go",
+        "Rust",
+        "C++",
+        "TypeScript"
+      ],
+      "answer": 1,
+      "explanation": "Rust 编译成原生二进制，故快。"
+    },
+    {
+      "stem": "下面哪个不是默认在用 SWC 的？",
+      "options": [
+        "Next.js 编译",
+        "Rspack transform",
+        "Vite dev 转译",
+        "@swc/jest"
+      ],
+      "answer": 2,
+      "explanation": "Vite dev 用 esbuild。"
+    },
+    {
+      "stem": "SWC 相比 Babel 的主要卖点是？",
+      "options": [
+        "更多插件",
+        "快一个数量级",
+        "更小产物",
+        "类型检查"
+      ],
+      "answer": 1,
+      "explanation": "官方口径转译快数十倍。"
+    },
+    {
+      "stem": "本教程明确不展开的是？",
+      "options": [
+        "转译配置",
+        "迁移排错",
+        "parser/AST 与 css 实验细节",
+        "选型视角"
+      ],
+      "answer": 2,
+      "explanation": "只走主干流程。"
+    },
+    {
+      "stem": "SWC 与 tsc 在类型上的分工？",
+      "options": [
+        "SWC 做类型检查",
+        "tsc 只做转译",
+        "SWC 擦除类型、tsc 查类型",
+        "两者都不碰类型"
+      ],
+      "answer": 2,
+      "explanation": "编译过不代表类型对。"
+    },
+    {
+      "stem": "esbuild 与 SWC 的关系定位？",
+      "options": [
+        "完全竞争",
+        "esbuild 更快但特性子集小，两者可共存于不同工具",
+        "同一个项目",
+        "esbuild 已淘汰"
+      ],
+      "answer": 1,
+      "explanation": "Vite 用 esbuild、Next 用 SWC。"
+    },
+    {
+      "stem": "教程承诺学完你能做到？",
+      "options": [
+        "背下全部配置项",
+        "独立搭起并排错主干链路",
+        "给 SWC 提交 Rust PR",
+        "重写 Babel"
+      ],
+      "answer": 1,
+      "explanation": "主干流程走通，细节回文档查。"
+    },
+    {
+      "stem": "SWC 全称？",
+      "options": [
+        "Speedy Web Compiler",
+        "SWift Compiler",
+        "Static Web Compile",
+        "Safe Web Coding"
+      ],
+      "answer": 0,
+      "explanation": "S(wift/peedy) W eb C ompiler。"
+    },
+    {
+      "stem": "本包阶段数与关卡数？",
+      "options": [
+        "3 阶段 10 关",
+        "6 阶段 18 关",
+        "8 阶段 24 关",
+        "5 阶段 15 关"
+      ],
+      "answer": 3,
+      "explanation": "五阶十五关。"
+    },
+    {
+      "stem": "被列举在用 SWC 的公司/工具里没有？",
+      "options": [
+        "Next.js",
+        "Deno",
+        "Rspack",
+        "Parcel"
+      ],
+      "answer": 2,
+      "explanation": "Rspack 以内置 SWC 为内核，文档主要点名 Next/Deno/Parcel 等。"
+    }
+  ]
+}

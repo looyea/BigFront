@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-assist",
+  "questions": [
+    {
+      "stem": "Biome 行内抑制诊断的注解是？",
+      "options": [
+        "eslint-disable",
+        "// biome-ignore",
+        "@ts-ignore",
+        "// nolint"
+      ],
+      "answer": 1,
+      "explanation": "biome-ignore 系列。"
+    },
+    {
+      "stem": "biome-ignore 语法的强制要求是？",
+      "options": [
+        "写作者名",
+        "冒号后必须写理由",
+        "写日期",
+        "加大写"
+      ],
+      "answer": 1,
+      "explanation": "无裸 ignore 是纪律。"
+    },
+    {
+      "stem": "文件级豁免整类诊断用？",
+      "options": [
+        "biome-ignore-all",
+        "disable-all",
+        "suppress-file",
+        "ignore-eof"
+      ],
+      "answer": 0,
+      "explanation": "顶置 ignore-all。"
+    },
+    {
+      "stem": "assist 与 action 的定位是？",
+      "options": [
+        "纯格式化",
+        "安全改写代码结构的动作",
+        "类型检查",
+        "打包"
+      ],
+      "answer": 1,
+      "explanation": "如 import 整理等。"
+    },
+    {
+      "stem": "能被 action 自动修的问题应该？",
+      "options": [
+        "直接 ignore",
+        "让它被修，而非压制",
+        "关掉 linter",
+        "重写语言"
+      ],
+      "answer": 1,
+      "explanation": "能修就别藏。"
+    },
+    {
+      "stem": "suppress 机制的价值是？",
+      "options": [
+        "彻底禁规则",
+        "加速",
+        "让豁免可追溯、可搜索、可到期清理",
+        "免配置"
+      ],
+      "answer": 2,
+      "explanation": "记账式豁免。"
+    },
+    {
+      "stem": "用 // biome-ignore 掩盖「不想守规则」的正确态度？",
+      "options": [
+        "鼓励",
+        "应把决策写进配置而非散落代码",
+        "无所谓",
+        "永久保留"
+      ],
+      "answer": 1,
+      "explanation": "配置表达团队决策。"
+    },
+    {
+      "stem": "团队对 ignore 的合理纪律不含？",
+      "options": [
+        "必须有理由",
+        "尽量精确到单规则",
+        "定期审计数量",
+        "禁止一切 ignore"
+      ],
+      "answer": 3,
+      "explanation": "误报豁免合理，非一刀切禁。"
+    },
+    {
+      "stem": "ignore 最合理的用途是？",
+      "options": [
+        "绕过所有报错",
+        "针对 Biome 误报精确豁免",
+        "关掉格式化",
+        "跳过文件"
+      ],
+      "answer": 1,
+      "explanation": "误报才豁免、非逃避。"
+    },
+    {
+      "stem": "ignore 注解的 scope 应尽量？",
+      "options": [
+        "越宽越好",
+        "尽量精确到单行单规则",
+        "整文件",
+        "整个仓库"
+      ],
+      "answer": 1,
+      "explanation": "窄 scope 减少掩盖面。"
+    }
+  ]
+}

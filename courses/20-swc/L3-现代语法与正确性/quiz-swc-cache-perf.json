@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-cache-perf",
+  "questions": [
+    {
+      "stem": "转译结果对什么而言是纯函数？",
+      "options": [
+        "时间",
+        "源码 + 配置",
+        "环境变量",
+        "CPU 数"
+      ],
+      "answer": 1,
+      "explanation": "故可缓存。"
+    },
+    {
+      "stem": "webpack 做增量靠哪个特性？",
+      "options": [
+        "watch",
+        "dll",
+        "persistent filesystem cache",
+        "splitChunks"
+      ],
+      "answer": 2,
+      "explanation": "未变模块复用产物。"
+    },
+    {
+      "stem": "改了 .swcrc 产物却没变，多半因为？",
+      "options": [
+        "语法错",
+        "缓存没失效（.swcrc 未进 buildDependencies）",
+        "Node 版本",
+        "磁盘满"
+      ],
+      "answer": 1,
+      "explanation": "把配置纳入失效依赖。"
+    },
+    {
+      "stem": "超大目录首次冷编瓶颈常在？",
+      "options": [
+        "磁盘 I/O",
+        "CPU",
+        "网络",
+        "内存"
+      ],
+      "answer": 0,
+      "explanation": "SWC 压低碳后 I/O 成上限。"
+    },
+    {
+      "stem": "--sync 参数的用途？",
+      "options": [
+        "提速",
+        "开压缩",
+        "关缓存",
+        "强制同步逐个转译便于排错看日志"
+      ],
+      "answer": 3,
+      "explanation": "排错用。"
+    },
+    {
+      "stem": "拆解计时发现的大头往往是？",
+      "options": [
+        "SWC 转译",
+        "类型检查/依赖安装/打包",
+        "读 README",
+        "lint"
+      ],
+      "answer": 1,
+      "explanation": "SWC 常只占小头。"
+    },
+    {
+      "stem": "类型检查占大头时的优化方向？",
+      "options": [
+        "再抠 SWC 配置",
+        "换浏览器",
+        "把类型检查旁路出关键路径",
+        "关压缩"
+      ],
+      "answer": 2,
+      "explanation": "isolatedDeclarations/增量等。"
+    },
+    {
+      "stem": "esbuild vs SWC 纯转译耗时典型结论？",
+      "options": [
+        "两者数量级接近、互有胜负",
+        "SWC 永远快",
+        "tsc 更快",
+        "都一样"
+      ],
+      "answer": 0,
+      "explanation": "用自己代码测。"
+    },
+    {
+      "stem": "cache.type 设成什么启用磁盘缓存？",
+      "options": [
+        "memory",
+        "filesystem",
+        "none",
+        "disk"
+      ],
+      "answer": 1,
+      "explanation": "webpack5 持久缓存。"
+    },
+    {
+      "stem": "buildDependencies.config 的作用是？",
+      "options": [
+        "指定入口",
+        "加速",
+        "关 watch",
+        "让相关文件变更触发缓存失效"
+      ],
+      "answer": 3,
+      "explanation": "声明依赖参与失效判断。"
+    }
+  ]
+}

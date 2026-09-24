@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-lifecycle",
+  "questions": [
+    {
+      "stem": "beforeEach 何时执行？",
+      "options": [
+        "整个文件一次",
+        "每条用例前一次",
+        "每个 describe 末尾",
+        "永不"
+      ],
+      "answer": 1,
+      "explanation": "每条前跑。"
+    },
+    {
+      "stem": "afterAll 常用于？",
+      "options": [
+        "冻结时间",
+        "注册 matcher",
+        "断言",
+        "释放共享资源（关连接/服务）"
+      ],
+      "answer": 3,
+      "explanation": "套件级清理。"
+    },
+    {
+      "stem": "Vitest 文件之间默认是？",
+      "options": [
+        "隔离的（各文件独立环境）",
+        "共享全局",
+        "单线程串行且共享",
+        "只跑一个文件"
+      ],
+      "answer": 0,
+      "explanation": "默认 isolate。"
+    },
+    {
+      "stem": "config 里想关掉单文件隔离提速用？",
+      "options": [
+        "fileParallelism",
+        "testTimeout",
+        "isolate:false",
+        "sequence"
+      ],
+      "answer": 2,
+      "explanation": "isolate:false。"
+    },
+    {
+      "stem": "控制文件是否并发执行的选项？",
+      "options": [
+        "isolate",
+        "fileParallelism",
+        "pool",
+        "maxConcurrency"
+      ],
+      "answer": 1,
+      "explanation": "文件级并行。"
+    },
+    {
+      "stem": "给每个测试文件注入全局前置（匹配器/MSW）用？",
+      "options": [
+        "@vitest-environment",
+        "vitest.config 的 include",
+        "teardown",
+        "setupFiles"
+      ],
+      "answer": 3,
+      "explanation": "每文件前置。"
+    },
+    {
+      "stem": "想在单条用例上挂特殊前置可用？",
+      "options": [
+        "it.beforeEach 等 on-test 钩子",
+        "globalSetup",
+        "vi.hoisted",
+        "toMatchSnapshot"
+      ],
+      "answer": 0,
+      "explanation": "on-test 级。"
+    },
+    {
+      "stem": "testContext（ctx）的作用是？",
+      "options": [
+        "冻结时间",
+        "mock 模块",
+        "在钩子与用例间传数据/标记",
+        "设置超时"
+      ],
+      "answer": 2,
+      "explanation": "共享上下文。"
+    },
+    {
+      "stem": "钩子清理的总体顺序是？",
+      "options": [
+        "与注册无关",
+        "后注册的 after* 先跑（栈式逆序）",
+        "总是随机",
+        "afterAll 先于 beforeEach"
+      ],
+      "answer": 1,
+      "explanation": "逆序清理。"
+    },
+    {
+      "stem": "用例互相污染，首选排查什么？",
+      "options": [
+        "是否误共享可变状态/异步泄漏（detectAsyncLeaks）",
+        "调大 timeout",
+        "关掉断言",
+        "升级版本"
+      ],
+      "answer": 0,
+      "explanation": "隔离与泄漏。"
+    }
+  ]
+}

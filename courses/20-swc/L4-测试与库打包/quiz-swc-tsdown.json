@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-tsdown",
+  "questions": [
+    {
+      "stem": "库构建的两条正交轴是？",
+      "options": [
+        "lint 与 format",
+        "测试 与 文档",
+        "转译产物 与 类型生成",
+        "安装 与 发布"
+      ],
+      "answer": 2,
+      "explanation": "JS 产物 vs .d.ts。"
+    },
+    {
+      "stem": "SWC 能生成 .d.ts 吗？",
+      "options": [
+        "能，主力",
+        "不能，靠 tsc/vue-tsc",
+        "只在 watch 下",
+        "需插件"
+      ],
+      "answer": 1,
+      "explanation": "只擦类型不产声明。"
+    },
+    {
+      "stem": "库体积第一原则是？",
+      "options": [
+        "external 排除 peer/宿主依赖",
+        "开压缩",
+        "分 chunk",
+        "minify"
+      ],
+      "answer": 0,
+      "explanation": "别把框架打进包。"
+    },
+    {
+      "stem": "ESM+CJS 双格式靠 exports 的什么区分？",
+      "options": [
+        "版本号",
+        "文件权限",
+        "size",
+        "import/require 条件"
+      ],
+      "answer": 3,
+      "explanation": "条件导出。"
+    },
+    {
+      "stem": "SWC 侧如何分别出两套格式？",
+      "options": [
+        "跑两次 tsc",
+        "module.type 输出 es6/commonjs",
+        "改文件名",
+        "开 minify"
+      ],
+      "answer": 1,
+      "explanation": "产物模块格式开关。"
+    },
+    {
+      "stem": "vue 组件库的 d.ts 用什么生成？",
+      "options": [
+        "swc",
+        "esbuild",
+        "vue-tsc",
+        "terser"
+      ],
+      "answer": 2,
+      "explanation": "呼应 09-vue。"
+    },
+    {
+      "stem": "isolatedDeclarations 的意义（前瞻）？",
+      "options": [
+        "加速类型检查全量",
+        "让 d.ts 逐文件无全量检查生成",
+        "替代 tsc 全部",
+        "产 JS"
+      ],
+      "answer": 1,
+      "explanation": "趋势非现状。"
+    },
+    {
+      "stem": "当前库构建的时间大头常在？",
+      "options": [
+        "SWC 转译",
+        "d.ts 生成（全量类型）",
+        "改名",
+        "压缩"
+      ],
+      "answer": 1,
+      "explanation": "类型端最慢。"
+    },
+    {
+      "stem": "验证产物为何要针对产物测试？",
+      "options": [
+        "多余",
+        "源码过不代表打包后 import/require 对",
+        "更快",
+        "免 lint"
+      ],
+      "answer": 1,
+      "explanation": "三验：pack/require/产物测试。"
+    },
+    {
+      "stem": "npm 里看会打进 tarball 的命令？",
+      "options": [
+        "npm ls",
+        "npm pack --dry-run",
+        "npm ci",
+        "npm link"
+      ],
+      "answer": 1,
+      "explanation": "发布前第一关（下关展开）。"
+    }
+  ]
+}

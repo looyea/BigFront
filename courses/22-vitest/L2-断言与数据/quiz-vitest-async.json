@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-async",
+  "questions": [
+    {
+      "stem": "异步用例最关键的纪律是？",
+      "options": [
+        "加 try",
+        "await（或用 resolves/rejects）",
+        "设超长 timeout",
+        "关 watch"
+      ],
+      "answer": 1,
+      "explanation": "不 await 会假绿。"
+    },
+    {
+      "stem": "接管 setTimeout/setInterval 用？",
+      "options": [
+        "vi.advanceTimersByTime",
+        "vi.useFakeTimers",
+        "vi.setSystemTime",
+        "vi.waitFor"
+      ],
+      "answer": 1,
+      "explanation": "先开假定时器。"
+    },
+    {
+      "stem": "把虚拟时钟往前推 1.5 秒用？",
+      "options": [
+        "vi.runAllTimers",
+        "sleep(1500)",
+        "vi.advanceTimersByTime(1500)",
+        "wait(1500)"
+      ],
+      "answer": 2,
+      "explanation": "精确推进。"
+    },
+    {
+      "stem": "冻结 Date.now 到固定点用？",
+      "options": [
+        "vi.setSystemTime",
+        "vi.useFakeTimers",
+        "vi.advanceTimers",
+        "MockDate"
+      ],
+      "answer": 0,
+      "explanation": "测日期逻辑可复现。"
+    },
+    {
+      "stem": "假定时器用完必须？",
+      "options": [
+        "重启",
+        "vi.useRealTimers()（afterEach）",
+        "清缓存",
+        "删用例"
+      ],
+      "answer": 1,
+      "explanation": "回退真实时钟防污染。"
+    },
+    {
+      "stem": "等待异步 DOM 直到条件成立用？",
+      "options": [
+        "vi.waitFor",
+        "setTimeout",
+        "sleep",
+        "advanceTimers"
+      ],
+      "answer": 0,
+      "explanation": "轮询到通过或超时。"
+    },
+    {
+      "stem": "单用例最大执行时间配置项？",
+      "options": [
+        "hookTimeout",
+        "testTimeout",
+        "timeout",
+        "bail"
+      ],
+      "answer": 1,
+      "explanation": "testTimeout 管用例。"
+    },
+    {
+      "stem": "一个用例动辄几秒，首先怀疑？",
+      "options": [
+        "机器太慢",
+        "没 await / 该用假定时器",
+        "Vitest bug",
+        "内存"
+      ],
+      "answer": 1,
+      "explanation": "慢测多是异步问题。"
+    },
+    {
+      "stem": "防抖函数怎么测？",
+      "options": [
+        "真等 debounce 时间",
+        "不测",
+        "用快照",
+        "推进定时器后断言只触发一次"
+      ],
+      "answer": 3,
+      "explanation": "假定时器提速。"
+    },
+    {
+      "stem": "hookTimeout 管的是什么？",
+      "options": [
+        "用例",
+        "钩子函数的超时",
+        "watch",
+        "覆盖率"
+      ],
+      "answer": 1,
+      "explanation": "钩子上限。"
+    }
+  ]
+}

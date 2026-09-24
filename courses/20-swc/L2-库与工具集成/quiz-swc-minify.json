@@ -1,0 +1,115 @@
+{
+  "lessonId": "swc-minify",
+  "questions": [
+    {
+      "stem": "SWC minify 相比「先 bundle 再 terser」省在哪？",
+      "options": [
+        "省内存",
+        "转译与压缩同趟、省一次解析",
+        "省网络",
+        "省配置"
+      ],
+      "answer": 1,
+      "explanation": "一趟编译完成。"
+    },
+    {
+      "stem": "管标识符改名的开关是？",
+      "options": [
+        "compress",
+        "mangle",
+        "format",
+        "target"
+      ],
+      "answer": 1,
+      "explanation": "mangle + reserved 豁免。"
+    },
+    {
+      "stem": "drop_console 属于哪个子配置？",
+      "options": [
+        "mangle",
+        "format",
+        "compress",
+        "module"
+      ],
+      "answer": 2,
+      "explanation": "死代码/副作用删除归 compress。"
+    },
+    {
+      "stem": "反射用到的类名要防改名用？",
+      "options": [
+        "keep_classnames/reserved",
+        "passes",
+        "comments:false",
+        "pure"
+      ],
+      "answer": 0,
+      "explanation": "mangle 豁免清单。"
+    },
+    {
+      "stem": "SWC minifier 为速度做了什么？",
+      "options": [
+        "更多遍历",
+        "一组代码假设（如无 TDZ、顶层读取无副作用）",
+        "不压缩",
+        "依赖 terser"
+      ],
+      "answer": 1,
+      "explanation": "压缩后行为变了先查假设清单。"
+    },
+    {
+      "stem": "极端依赖 Function.prototype.toString 的代码？",
+      "options": [
+        "放心压缩",
+        "报错",
+        "自动跳过",
+        "可能踩假设边界，考虑回退 terser"
+      ],
+      "answer": 3,
+      "explanation": "SWC 假设不依赖其内容。"
+    },
+    {
+      "stem": "体积对比的正确姿势？",
+      "options": [
+        "凭感觉",
+        "同一入口多工具各压一遍量 gzip+耗时",
+        "只看行数",
+        "比 npm 星"
+      ],
+      "answer": 1,
+      "explanation": "数据说话。"
+    },
+    {
+      "stem": "通常结论：速度上 SWC/esbuild 相对 terser？",
+      "options": [
+        "更慢",
+        "明显更快",
+        "持平",
+        "看运气"
+      ],
+      "answer": 1,
+      "explanation": "原生+并行。"
+    },
+    {
+      "stem": "CSS 压缩本关建议？",
+      "options": [
+        "用 SWC",
+        "继续 lightningcss/cssnano",
+        "不压",
+        "用 terser"
+      ],
+      "answer": 1,
+      "explanation": "SWC 的 CSS minify 尚弱。"
+    },
+    {
+      "stem": "-C jsc.minify=true 的作用是？",
+      "options": [
+        "关缓存",
+        "命令行临时开压缩",
+        "删 map",
+        "强制 es5"
+      ],
+      "answer": 1,
+      "explanation": "CLI 覆盖配置。"
+    }
+  ]
+}

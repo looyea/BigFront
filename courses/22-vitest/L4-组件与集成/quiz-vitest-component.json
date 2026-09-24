@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-component",
+  "questions": [
+    {
+      "stem": "React 组件测试的主流搭配？",
+      "options": [
+        "React Testing Library + Vitest",
+        "Enzyme only",
+        "jQuery",
+        "Vue test-utils"
+      ],
+      "answer": 0,
+      "explanation": "RTL 为主。"
+    },
+    {
+      "stem": "Vue 官方组件测试工具？",
+      "options": [
+        "RTL",
+        "Jest",
+        "@vue/test-utils",
+        "happy-dom"
+      ],
+      "answer": 2,
+      "explanation": "test-utils/mount。"
+    },
+    {
+      "stem": "RTL render 之后推荐用什么查询？",
+      "options": [
+        "querySelector 硬编码",
+        "getById",
+        "内联快照",
+        "screen.getByRole/getByText"
+      ],
+      "answer": 3,
+      "explanation": "按用户语义查。"
+    },
+    {
+      "stem": "触发用户交互（点击/输入）推荐？",
+      "options": [
+        "直接调 onClick 属性",
+        "userEvent.click/type",
+        "手工 dispatch 所有事件",
+        "vi.fn"
+      ],
+      "answer": 1,
+      "explanation": "走真实事件流。"
+    },
+    {
+      "stem": "组件用了 Pinia/Zustand 怎么办？",
+      "options": [
+        "测试里注入真 store（createPinia / setState 预置）",
+        "不能测",
+        "mock 整个状态库",
+        "改用 Vuex"
+      ],
+      "answer": 0,
+      "explanation": "喂真实例。"
+    },
+    {
+      "stem": "组件异步渲染后 DOM 才更新，怎么等？",
+      "options": [
+        "sleep 3 秒",
+        "reload 页面",
+        "await findBy / flushPromises / vi.waitFor",
+        "关隔离"
+      ],
+      "answer": 2,
+      "explanation": "等异步落定。"
+    },
+    {
+      "stem": "组件快照的合理定位？",
+      "options": [
+        "主断言手段",
+        "替代所有 matcher",
+        "唯一测试方式",
+        "辅助防结构意外，核心仍用语义断言"
+      ],
+      "answer": 3,
+      "explanation": "少而精、辅助。"
+    },
+    {
+      "stem": "Vue 断言子组件 props/emit 用？",
+      "options": [
+        "wrapper 的 props/.emitted 等相关 API",
+        "snapshot",
+        "vi.mock",
+        "setSystemTime"
+      ],
+      "answer": 0,
+      "explanation": "test-utils 能力。"
+    },
+    {
+      "stem": "组件测试里的网络请求通常怎么处理？",
+      "options": [
+        "真打后端",
+        "不能发请求",
+        "用 MSW mock 网络层",
+        "写死返回空"
+      ],
+      "answer": 2,
+      "explanation": "请求边界拦截。"
+    },
+    {
+      "stem": "组件测试跑在什么环境？",
+      "options": [
+        "jsdom/happy-dom（需 DOM）",
+        "仅 node",
+        "browser only",
+        "没有 DOM 的 worker"
+      ],
+      "answer": 0,
+      "explanation": "组件要 DOM。"
+    }
+  ]
+}

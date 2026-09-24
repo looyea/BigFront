@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-mock-module",
+  "questions": [
+    {
+      "stem": "vi.mock 相对 import 的位置是？",
+      "options": [
+        "必须写在最后",
+        "只能在别的文件",
+        "会被自动提升到文件顶部（hoist）",
+        "随意为之且顺序固定"
+      ],
+      "answer": 2,
+      "explanation": "hoist 到最前。"
+    },
+    {
+      "stem": "vi.mock 第二参工厂函数的作用是？",
+      "options": [
+        "提供替换该模块导出的实现",
+        "冻结时间",
+        "注册 matcher",
+        "设置超时"
+      ],
+      "answer": 0,
+      "explanation": "定义替换形状。"
+    },
+    {
+      "stem": "部分 mock（保留原模块只改几个导出）用？",
+      "options": [
+        "vi.mock 无工厂",
+        "vi.spyOn",
+        "vi.hoisted",
+        "工厂里 importOriginal"
+      ],
+      "answer": 3,
+      "explanation": "importOriginal 拿真模块。"
+    },
+    {
+      "stem": "vi.hoisted 解决什么问题？",
+      "options": [
+        "冻结 Date",
+        "让被提升的 mock 工厂能引用外部变量",
+        "并行执行",
+        "生成快照"
+      ],
+      "answer": 1,
+      "explanation": "共享被提前求值的变量。"
+    },
+    {
+      "stem": "__mocks__ 目录约定用于？",
+      "options": [
+        "存放测试用例",
+        "配置覆盖率",
+        "为邻近模块放置自动 mock 实现",
+        "存快照"
+      ],
+      "answer": 2,
+      "explanation": "就近自动 mock。"
+    },
+    {
+      "stem": "ESM 下 mock 相对 CommonJS 的差异？",
+      "options": [
+        "需 importOriginal/默认导出写 default、路径须可解析",
+        "完全没差异",
+        "不能 mock 任何模块",
+        "只能 mock 默认导出"
+      ],
+      "answer": 0,
+      "explanation": "ESM 语义更讲究。"
+    },
+    {
+      "stem": "mock 环境变量（如 import.meta.env）常怎么做？",
+      "options": [
+        "改 .env 文件重启",
+        "用 vi.setSystemTime",
+        "不能 mock",
+        "vi.stubEnv 或 mock 掉提供配置的模块"
+      ],
+      "answer": 3,
+      "explanation": "stubEnv 最直接。"
+    },
+    {
+      "stem": "网络层 mock 本包推荐搭配？",
+      "options": [
+        "vi.mock axios 每个方法",
+        "MSW 在 setup 里统一拦截",
+        "关掉网络",
+        "用快照"
+      ],
+      "answer": 1,
+      "explanation": "请求边界拦截。"
+    },
+    {
+      "stem": "工厂里想调用真实原实现来对比，借助？",
+      "options": [
+        "importOriginal",
+        "mockRestore",
+        "vi.waitFor",
+        "hoisted"
+      ],
+      "answer": 0,
+      "explanation": "拿回真实模块。"
+    },
+    {
+      "stem": "vi.mock 一个不存在的模块路径会？",
+      "options": [
+        "自动创建",
+        "忽略",
+        "报错（路径须可解析）",
+        "静默成功"
+      ],
+      "answer": 2,
+      "explanation": "不会静默。"
+    }
+  ]
+}

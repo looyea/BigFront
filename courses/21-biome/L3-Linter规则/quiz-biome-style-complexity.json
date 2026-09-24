@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-style-complexity",
+  "questions": [
+    {
+      "stem": "useConst 属于哪个组？",
+      "options": [
+        "correctness",
+        "style",
+        "security",
+        "nursery"
+      ],
+      "answer": 1,
+      "explanation": "可读性/一致性风格。"
+    },
+    {
+      "stem": "@typescript-eslint/consistent-type-imports 对等是？",
+      "options": [
+        "noVarFunction",
+        "useWhile",
+        "useImportType",
+        "useTemplate"
+      ],
+      "answer": 2,
+      "explanation": "纯类型导入用 import type。"
+    },
+    {
+      "stem": "a11y 规则（如 useAltText）应视为？",
+      "options": [
+        "可关的风格偏好",
+        "产品缺陷、宜常开",
+        "性能",
+        "实验"
+      ],
+      "answer": 1,
+      "explanation": "可访问性是缺陷非风格。"
+    },
+    {
+      "stem": "useWhile / 认知复杂度属哪组？",
+      "options": [
+        "complexity",
+        "security",
+        "correctness",
+        "performance"
+      ],
+      "answer": 0,
+      "explanation": "反模式/过度复杂。"
+    },
+    {
+      "stem": "no-excessive-cognitive-complexity 的阈值应？",
+      "options": [
+        "永远最低",
+        "按团队现实设、别一上来卡死",
+        "关闭",
+        "设最高"
+      ],
+      "answer": 1,
+      "explanation": "过严到处报。"
+    },
+    {
+      "stem": "想把某不接受的 style 规则关掉，正确做法？",
+      "options": [
+        "各自行内 ignore",
+        "整组全关",
+        "卸载 Biome",
+        "写进 biome.json 逐条 off 并说明"
+      ],
+      "answer": 3,
+      "explanation": "团队级可见决策。"
+    },
+    {
+      "stem": "prefer-template 的 Biome 对等？",
+      "options": [
+        "useTemplate",
+        "useConst",
+        "useAltText",
+        "noVar"
+      ],
+      "answer": 0,
+      "explanation": "拼串用模板字符串。"
+    },
+    {
+      "stem": "style 组的性质决定了它？",
+      "options": [
+        "必须整组 error",
+        "主观易战、只留有共识的",
+        "应全开 all",
+        "等同 correctness"
+      ],
+      "answer": 1,
+      "explanation": "别用风格洁癖淹没问题。"
+    },
+    {
+      "stem": "分组降档在配置里怎么写？",
+      "options": [
+        "linter.rules.<group> 设基线/逐条 off",
+        "只能 CLI",
+        "无法分组",
+        "改源码"
+      ],
+      "answer": 0,
+      "explanation": "按组配基线。"
+    },
+    {
+      "stem": "「能 auto-fix 的 style 问题」应优先？",
+      "options": [
+        "手动改",
+        "让 --write 自动应用",
+        "忽略",
+        "关格式化"
+      ],
+      "answer": 1,
+      "explanation": "能自动修就别手工。"
+    }
+  ]
+}

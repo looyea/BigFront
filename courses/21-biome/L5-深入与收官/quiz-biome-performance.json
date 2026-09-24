@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-performance",
+  "questions": [
+    {
+      "stem": "Biome 快的根因之一是解析层面？",
+      "options": [
+        "多次解析更准",
+        "formatter 与 linter 共享同一份 AST",
+        "不解析",
+        "靠缓存"
+      ],
+      "answer": 1,
+      "explanation": "一趟解析多处用。"
+    },
+    {
+      "stem": "编辑器里近乎零延迟靠什么？",
+      "options": [
+        "重启进程",
+        "常驻 daemon/LSP",
+        "关 lint",
+        "云处理"
+      ],
+      "answer": 1,
+      "explanation": "进程不重启避免冷启动。"
+    },
+    {
+      "stem": "万级 monorepo 全量 check 的量级感受？",
+      "options": [
+        "仍是小时级",
+        "比 ESLint 慢",
+        "从分钟级压到秒级",
+        "看运气"
+      ],
+      "answer": 2,
+      "explanation": "数量级差异。"
+    },
+    {
+      "stem": "「快」真正改变的是？",
+      "options": [
+        "代码质量",
+        "你愿不愿意一直跑（保存即格式化/pre-commit 全量）",
+        "包大小",
+        "类型"
+      ],
+      "answer": 1,
+      "explanation": "取消慢带来的妥协。"
+    },
+    {
+      "stem": "哪种场景速度从加分变必需？",
+      "options": [
+        "玩具项目",
+        "单文件",
+        "静态页",
+        "超大仓/高频小 PR/lint 进每个 commit"
+      ],
+      "answer": 3,
+      "explanation": "时间被海量次数放大。"
+    },
+    {
+      "stem": "感觉 Biome 突然变慢先查？",
+      "options": [
+        "重写下",
+        "扫描范围失控（忘了 ignore 产物）/I/O",
+        "换语言",
+        "删测试"
+      ],
+      "answer": 1,
+      "explanation": "多半是扫到 node_modules/dist。"
+    },
+    {
+      "stem": "正确的大仓对比测法？",
+      "options": [
+        "同仓同机分别计时三条命令看墙钟",
+        "凭感觉",
+        "比 npm 星",
+        "看文档"
+      ],
+      "answer": 0,
+      "explanation": "数据说话。"
+    },
+    {
+      "stem": "Biome 靠 GC 提速的说法？",
+      "options": [
+        "对",
+        "错——Rust 无 V8 GC 停顿",
+        "部分对",
+        "未知"
+      ],
+      "answer": 1,
+      "explanation": "无 GC 是其优势之一。"
+    },
+    {
+      "stem": "多文件如何处理带来速度？",
+      "options": [
+        "串行",
+        "多核并行处理不同文件",
+        "单线程",
+        "排队"
+      ],
+      "answer": 1,
+      "explanation": "并行是数量级来源。"
+    },
+    {
+      "stem": "去掉 ignore 扫 dist 会？",
+      "options": [
+        "无影响",
+        "耗时飙升、验证范围失控",
+        "更快",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "产物纳入扫描代价大。"
+    }
+  ]
+}

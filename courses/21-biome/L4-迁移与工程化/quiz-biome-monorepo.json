@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-monorepo",
+  "questions": [
+    {
+      "stem": "monorepo 里公共配置怎么给子包复用？",
+      "options": [
+        "每包各写一份",
+        "子包 extends 根配置",
+        "复制粘贴",
+        "软链"
+      ],
+      "answer": 1,
+      "explanation": "继承 + 局部 override。"
+    },
+    {
+      "stem": "避免扫到别的包 dist/产物靠？",
+      "options": [
+        "删产物",
+        "files.include/ignore 或 vcs.useIgnoreFile",
+        "关 linter",
+        "忽略"
+      ],
+      "answer": 1,
+      "explanation": "划清 workspace 范围。"
+    },
+    {
+      "stem": "Biome 除 JS/TS 还能格式化？",
+      "options": [
+        "仅 JS",
+        "什么都不行",
+        "JSON/CSS/GraphQL 等（部分实验）",
+        "只图片"
+      ],
+      "answer": 2,
+      "explanation": "一个工具统一全仓排版。"
+    },
+    {
+      "stem": "对测试文件放宽某些规则用？",
+      "options": [
+        "overrides 按 glob 覆盖",
+        "整仓关",
+        "删测试",
+        "ignore 每个文件"
+      ],
+      "answer": 0,
+      "explanation": "规则跟文件类型走。"
+    },
+    {
+      "stem": "Biome 与 Turborepo/pnpm 的关系？",
+      "options": [
+        "互斥",
+        "互相替代",
+        "必须先上",
+        "正交：check 可做成可缓存 task"
+      ],
+      "answer": 3,
+      "explanation": "编排与检查分工不同。"
+    },
+    {
+      "stem": "多语言格式化用前应确认？",
+      "options": [
+        "颜色",
+        "目标语言在所用版本成熟度",
+        "包大小",
+        "作者"
+      ],
+      "answer": 1,
+      "explanation": "部分仍 experimental。"
+    },
+    {
+      "stem": "就近配置的含义？",
+      "options": [
+        "只认根配置",
+        "靠近文件的 biome.json 对该目录生效",
+        "全部合并",
+        "随机"
+      ],
+      "answer": 1,
+      "explanation": "子包只声明偏差。"
+    },
+    {
+      "stem": "vcs.useIgnoreFile 的好处是？",
+      "options": [
+        "多一层配置",
+        "复用 .gitignore、一处声明全工具共享",
+        "更慢",
+        "无用"
+      ],
+      "answer": 1,
+      "explanation": "减少重复与漂移。"
+    },
+    {
+      "stem": "对生成代码合适的处理是？",
+      "options": [
+        "纳入统一 lint",
+        "排除或用 overrides 差异化",
+        "手写",
+        "全 error"
+      ],
+      "answer": 1,
+      "explanation": "生成码别按人写码标准管。"
+    },
+    {
+      "stem": "跨包一致格式化 + 秒级 check 属于？",
+      "options": [
+        "负担",
+        "monorepo 采用 Biome 的核心收益",
+        "无关",
+        "风险"
+      ],
+      "answer": 1,
+      "explanation": "统一规范又跑得快。"
+    }
+  ]
+}

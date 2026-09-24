@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-param-snapshot",
+  "questions": [
+    {
+      "stem": "多组输入同逻辑避免复制用？",
+      "options": [
+        "it.each",
+        "for 循环",
+        "复制粘贴",
+        "快照"
+      ],
+      "answer": 0,
+      "explanation": "表驱动参数化。"
+    },
+    {
+      "stem": "it.each 标题插值占位符如？",
+      "options": [
+        "%s/%d/$a",
+        "{{a}}",
+        "${a}",
+        "#a#"
+      ],
+      "answer": 0,
+      "explanation": "支持多种插值。"
+    },
+    {
+      "stem": "toMatchSnapshot 存到哪？",
+      "options": [
+        "数据库",
+        "__snapshots__/*.snap 文件",
+        "内存",
+        "git"
+      ],
+      "answer": 1,
+      "explanation": "序列化到 snap 文件。"
+    },
+    {
+      "stem": "内联快照用哪个？",
+      "options": [
+        "toMatchSnapshot",
+        "toMatchFileSnapshot",
+        "toMatchInlineSnapshot",
+        "toInline"
+      ],
+      "answer": 2,
+      "explanation": "写回源码。"
+    },
+    {
+      "stem": "快照最大风险是？",
+      "options": [
+        "存不下",
+        "无脑 -u 更新把回归记成新基线",
+        "太慢",
+        "不能测对象"
+      ],
+      "answer": 1,
+      "explanation": "红了要先读 diff。"
+    },
+    {
+      "stem": "CI 里对待快照更新应？",
+      "options": [
+        "开 -u",
+        "禁更新（run 不带 -u）",
+        "删快照",
+        "忽略"
+      ],
+      "answer": 1,
+      "explanation": "基线变动须显式本地+review。"
+    },
+    {
+      "stem": "快照不适合用来断言什么？",
+      "options": [
+        "结构变化",
+        "关键具体业务值（金额/状态）",
+        "渲染 HTML",
+        "对象形状"
+      ],
+      "answer": 1,
+      "explanation": "具体值该用显式 matcher。"
+    },
+    {
+      "stem": "把快照存到普通文件便于 review？",
+      "options": [
+        "toMatchInlineSnapshot",
+        "toMatchSnapshot",
+        "writeFile",
+        "toMatchFileSnapshot"
+      ],
+      "answer": 3,
+      "explanation": "可人肉审阅。"
+    },
+    {
+      "stem": "定制快照序列化用？",
+      "options": [
+        "addSnapshotSerializer",
+        "setSystemTime",
+        "hoisted",
+        "spyOn"
+      ],
+      "answer": 0,
+      "explanation": "谨慎、易埋坑。"
+    },
+    {
+      "stem": "参数化与快照能否组合？",
+      "options": [
+        "不能",
+        "可以：每组各出一快照",
+        "会冲突",
+        "仅 inline"
+      ],
+      "answer": 1,
+      "explanation": "可组合使用。"
+    }
+  ]
+}

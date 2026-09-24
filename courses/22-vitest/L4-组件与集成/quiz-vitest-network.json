@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-network",
+  "questions": [
+    {
+      "stem": "本包推荐的接口 mock 方案？",
+      "options": [
+        "手写替换全局 fetch",
+        "MSW（Mock Service Worker）",
+        "vi.mock 每个 API 文件",
+        "关掉网络"
+      ],
+      "answer": 1,
+      "explanation": "请求边界拦截。"
+    },
+    {
+      "stem": "MSW 在 Vitest 里一般装在哪？",
+      "options": [
+        "每个用例",
+        "package.json",
+        "teardown",
+        "setupFiles（on-server 全局一次）"
+      ],
+      "answer": 3,
+      "explanation": "统一 server。"
+    },
+    {
+      "stem": "MSW 的 handler 定义的是什么？",
+      "options": [
+        "请求路径/方法 → 返回响应",
+        "测试超时",
+        "覆盖率阈值",
+        "快照序列化"
+      ],
+      "answer": 0,
+      "explanation": "声明假接口。"
+    },
+    {
+      "stem": "某条用例要临时改返回，用什么？",
+      "options": [
+        "删 server",
+        "改 .env",
+        "server.use(...) 临时覆盖",
+        "vi.resetAllMocks"
+      ],
+      "answer": 2,
+      "explanation": "per-test 覆盖。"
+    },
+    {
+      "stem": "测 TanStack Query 组件的完整链路？",
+      "options": [
+        "mock useQuery 本身",
+        "只测 reducer",
+        "干脆不测",
+        "QueryClientProvider + MSW + findBy 断言渲染"
+      ],
+      "answer": 3,
+      "explanation": "走真实链路。"
+    },
+    {
+      "stem": "fetch 还是 axios，MSW 怎么配合？",
+      "options": [
+        "MSW 只能配 axios",
+        "MSW 在网络层拦截，两者皆可",
+        "fetch 需另配 jsdom",
+        "必须真后端"
+      ],
+      "answer": 1,
+      "explanation": "与库无关。"
+    },
+    {
+      "stem": "何时该上 E2E（Playwright）而非这层测试？",
+      "options": [
+        "跨浏览器真实端到端用户流程",
+        "纯函数",
+        "store 逻辑",
+        "组件 props"
+      ],
+      "answer": 0,
+      "explanation": "E2E 层。"
+    },
+    {
+      "stem": "MSW server 在用例之间应该？",
+      "options": [
+        "共享永不重置",
+        "重启机器",
+        "afterEach resetHandlers() 防覆盖泄漏",
+        "冻结时间"
+      ],
+      "answer": 2,
+      "explanation": "每条复位。"
+    },
+    {
+      "stem": "mock 网络相对 vi.mock 模块的好处？",
+      "options": [
+        "完全不写代码",
+        "在请求边界拦截、被测代码不感知、更真实",
+        "一定更快",
+        "能替代类型检查"
+      ],
+      "answer": 1,
+      "explanation": "零侵入。"
+    },
+    {
+      "stem": "真实后端集成测试的正确定位？",
+      "options": [
+        "总是连真库",
+        "绝不能有外部依赖",
+        "只能本地跑",
+        "少数关键链路用真实实例/testcontainers，其余 MSW 保快稳"
+      ],
+      "answer": 3,
+      "explanation": "分层而非全扛。"
+    }
+  ]
+}

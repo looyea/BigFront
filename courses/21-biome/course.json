@@ -1,0 +1,61 @@
+{
+  "id": "21-biome",
+  "title": "Biome 实战：一个二进制接管格式化与 Lint",
+  "order": 21,
+  "tier": "黄金 · 工具链专题",
+  "tagline": "Biome 用单个 Rust 二进制同时替代 Prettier 与 ESLint 的大部分日常：快、零配置起手、一个配置文件管住格式与规则。本包五阶段十五关，只讲主流应用流程——不逐条刷规则手册，以简明为主，由浅入深。",
+  "icon": "🌿",
+  "color": "#4ade80",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "认知与上手",
+      "subtitle": "定位 / 安装 / 第一条命令",
+      "lessons": [
+        { "id": "biome-overview", "title": "Biome 是什么：本教程的覆盖边界", "goal": "一个二进制=formatter+linter+编辑器集成（原 Rome  fork）；与 Prettier/ESLint 的定位差异（性能、单工具、规则覆盖度取舍）；宗旨声明：不逐条讲 200+ 规则与全部 CLI 子命令，但初始化、格式化、lint、CI 接入、从 ESLint/Prettier 迁移的主干必须会；呼应 10-vite 工程化" },
+        { "id": "biome-install", "title": "安装与第一条 biome check", "goal": "npm i -D @biomejs/biome；biome init 生成 biome.json；biome check ./src 一把梭（format+lint+organize imports）；check vs format vs lint 三命令边界；--write 落盘与退出码；VS Code 扩展 + 设为默认格式化器" },
+        { "id": "biome-config", "title": "biome.json 结构速览", "goal": "$schema 与 autofill；files（include/exclude/ignoreUnknown）；formatter、linter、organizeImports、javascript 四大分区；enabled/defaultRules(recommended/all)；extends 预设；配置优先级 CLI>文件；一个能跑的最小团队配置" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "格式化",
+      "subtitle": "选项 / 与 Prettier 对照 / 落地",
+      "lessons": [
+        { "id": "biome-formatter", "title": "格式化器：选项与 Prettier 对照", "goal": "indentStyle/indentWidth/lineWidth/lineEnding/quoteStyle/bracketSpacing/trailingCommas 逐项对照 Prettier 同名项；tabIndent 与EditorConfig关系；formatter 关闭单文件与范围（formatter.include）；biome format --write 全量落地；对 Prettier 用户的迁移心理预期" },
+        { "id": "biome-organize-imports", "title": "import 自动整理", "goal": "organizeImports 分区排序规则（自然排序/natural order）；与 eslint-plugin-import/simple-import-sort 的对照；辅助导入辅助（@import 注解辅助）；apply 与 check 模式；和 IDE auto-import 打架时的取舍" },
+        { "id": "biome-assist", "title": "辅助动作与注解控制", "goal": "v1.9+ assist/actions（source.organizeImports、ignoredNodes）；// biome-ignore 系列注解语法与理由必填；biome-ignore-all 文件级；suppress 与 action 的关系；避免用注解掩盖真问题的纪律" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "Linter 规则",
+      "subtitle": "分组 / 常用规则 / correctness",
+      "lessons": [
+        { "id": "biome-linter-rules", "title": "规则分组与 recommended", "goal": "规则命名规则 group/ruleName；recommended/all/disabled 三档默认；六大 group（correctness/suspicious/style/complexity/security/performance/nursery）定位；defaultRules 起手 + 单条 severity(off/info/warn/error) 微调；biome explain 查规则文档" },
+        { "id": "biome-correctness", "title": "correctness：会直接报错的那些", "goal": "noUnusedVariables/noUndeclaredVariables/noConstAssign 等编译级；useAwaited/noFloatingPromises（异步悬空 Promise）；noPrecisionTypeLoss；为什么 correctness 全开成本最低收益最高；与 tsc 检查的重叠与互补" },
+        { "id": "biome-style-complexity", "title": "style / complexity / 可访问性", "goal": "style（useConst/useTemplate/noVarfulNaming、useImportType）；complexity（noExcessiveNestedTestSuites、useWhile）；a11y 组（useAltText/useKeyWithClickEvents）；这些偏主观如何按需关；与 ESLint 风格规则迁移映射" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "迁移与工程化",
+      "subtitle": "ESLint/Prettier 迁移 / CI /monorepo",
+      "lessons": [
+        { "id": "biome-migrate-eslint", "title": "从 ESLint + Prettier 迁移", "goal": "@biomejs/migrate 工具把 .eslintrc/.prettierrc 转 biome.json；映射覆盖度现实（Biome 吃下 Prettier 几乎全部、ESLint 大部分，插件类仍需 ESLint 共存）；共存策略（ESLint 只管 Biome 未覆盖的插件规则）；移除 Prettier 的清理清单；渐进式 vs 一次性切换" },
+        { "id": "biome-ci", "title": "CI 与提交前检查", "goal": "GitHub Action（biomejs/ci.yml 官方模板：--error-on-warnings、评论模式）；biome ci 子命令；husky + lint-staged 只检改动文件；biome check --changed --since=main 增量；缓存与退出码在流水线的用法；pre-commit 全量 vs 增量取舍" },
+        { "id": "biome-monorepo", "title": "monorepo 与多语言覆盖", "goal": "根 biome.json + 子包 extends/overrides 分层；files.include 划定 workspace；JSON/CSS/GraphQL 多语言格式化支持（experimental）；vcs.useIgnoreFile 与 .gitignore 复用；overrides 按 glob 覆盖（tests 关某规则）；与 Turborepo/pnpm workspace 配合" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "深入与收官",
+      "subtitle": "性能 / 插件现状 / 选型",
+      "lessons": [
+        { "id": "biome-performance", "title": "为什么这么快 + 大仓实测", "goal": "Rust 单二进制、并行、无 Node 冷启动、增量；monorepo 万文件 check 耗时实测（对照 ESLint+Prettier）；daemon/LSP 编辑器内零延迟；内存占用；「快」带来的工程习惯改变（保存即格式化、CI 秒级）；何时性能不是卖点而是必需" },
+        { "id": "biome-plugins-css", "title": "自定义规则与扩展现状", "goal": "Biome 插件系统（Wasm）的 experimental 现状与「别指望」的诚实边界；用 action/自定义 lint 的真实缺口如何绕过（保留个别 ESLint 插件）；CSS/GraphQL formatter 成熟度；配置即策略——把无法自定义视为设计哲学而非缺陷；关注 nursery 组演进" },
+        { "id": "biome-capstone", "title": "选型收官：Biome vs ESLint+Prettier vs dprint", "goal": "四方能力矩阵（格式化/lint/性能/规则生态/可定制）；什么团队该全切、什么团队该共存、什么团队留在 ESLint；与 20-swc/22-vitest/oxlint 组成的 Rust/TS 新工具链全景；毕业自查 12 条；本包没讲但你该知道：linter 全部规则清单、vcs 深挖、编辑器协议——官方文档入口" }
+      ]
+    }
+  ]
+}

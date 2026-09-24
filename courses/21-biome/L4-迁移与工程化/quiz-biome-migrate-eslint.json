@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-migrate-eslint",
+  "questions": [
+    {
+      "stem": "官方迁移工具是？",
+      "options": [
+        "eslint-to-biome",
+        "@biomejs/migrate",
+        "biome migrate-config",
+        "codemod"
+      ],
+      "answer": 1,
+      "explanation": "近似翻译现有配置。"
+    },
+    {
+      "stem": "migrate 产出的 biome.json 应？",
+      "options": [
+        "直接 commit",
+        "人工逐行 review 再用",
+        "删掉",
+        "忽略"
+      ],
+      "answer": 1,
+      "explanation": "近似翻译非保证 1:1。"
+    },
+    {
+      "stem": "覆盖度最好的是哪个方向？",
+      "options": [
+        "ESLint 插件规则",
+        "Prettier 格式化",
+        "框架专属 lint",
+        "冷门 codemod"
+      ],
+      "answer": 1,
+      "explanation": "Prettier 近乎全吃。"
+    },
+    {
+      "stem": "依赖插件的冷门 ESLint 规则通常？",
+      "options": [
+        "Biome 全有对等",
+        "自动删除",
+        "常无对等、保留 ESLint 共存",
+        "报错"
+      ],
+      "answer": 2,
+      "explanation": "别硬砍。"
+    },
+    {
+      "stem": "Biome 与 ESLint 共存的关键是？",
+      "options": [
+        "都跑全部",
+        "职责切分防互相改同一行",
+        "关一个",
+        "随机"
+      ],
+      "answer": 1,
+      "explanation": "各管一段不打架。"
+    },
+    {
+      "stem": "全接管后不需要清理的是？",
+      "options": [
+        "prettier 依赖",
+        ".prettierrc",
+        "编辑器的 Prettier 默认格式化设置",
+        "README 图片"
+      ],
+      "answer": 3,
+      "explanation": "前三项都要清。"
+    },
+    {
+      "stem": "迁移收尾的验收标准是？",
+      "options": [
+        "migrate 跑完就行",
+        "针对产物的测试/构建全绿",
+        "删了 ESLint",
+        "星数"
+      ],
+      "answer": 1,
+      "explanation": "绿了才算迁完。"
+    },
+    {
+      "stem": "monorepo 大仓推荐哪种节奏？",
+      "options": [
+        "一次性全切",
+        "渐进：先一个包验证再推广",
+        "不迁",
+        "只迁测试"
+      ],
+      "answer": 1,
+      "explanation": "降风险、让团队适应。"
+    },
+    {
+      "stem": "把 biome formatter 对齐旧 Prettier 风格的目的是？",
+      "options": [
+        "最小化迁移带来的排版 diff",
+        "追求更不同",
+        "随机排版",
+        "加速"
+      ],
+      "answer": 0,
+      "explanation": "减少无谓改动噪声。"
+    },
+    {
+      "stem": "典型迁移的真实终态多为？",
+      "options": [
+        "彻底删净 ESLint",
+        "Biome 管主干 + ESLint 保少数插件",
+        "回到 Prettier",
+        "关掉 lint"
+      ],
+      "answer": 1,
+      "explanation": "清醒认知非全删。"
+    }
+  ]
+}

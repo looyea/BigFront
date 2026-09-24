@@ -1,0 +1,115 @@
+{
+  "lessonId": "biome-ci",
+  "questions": [
+    {
+      "stem": "面向 CI 的子命令是？",
+      "options": [
+        "biome check",
+        "biome ci",
+        "biome format",
+        "biome init"
+      ],
+      "answer": 1,
+      "explanation": "非交互、输出便于机器消费。"
+    },
+    {
+      "stem": "让 warning 也挡 PR 加？",
+      "options": [
+        "--strict",
+        "--error-on-warnings",
+        "--no-warn",
+        "--fail"
+      ],
+      "answer": 1,
+      "explanation": "收紧退出码。"
+    },
+    {
+      "stem": "CI 里应不应该带 --write？",
+      "options": [
+        "应该",
+        "不应该，CI 只校验不改仓库",
+        "看心情",
+        "必须"
+      ],
+      "answer": 1,
+      "explanation": "改仓库交给本地/提交前。"
+    },
+    {
+      "stem": "提交前只检改动文件常用组合？",
+      "options": [
+        "cron",
+        "docker",
+        "k8s",
+        "husky + lint-staged"
+      ],
+      "answer": 3,
+      "explanation": "pre-commit 跑聚焦改动。"
+    },
+    {
+      "stem": "大仓只检相对基线分支改动用？",
+      "options": [
+        "--changed --since=main",
+        "--all",
+        "--watch",
+        "--write"
+      ],
+      "answer": 0,
+      "explanation": "增量、反馈更聚焦。"
+    },
+    {
+      "stem": "流水线判断成败的可靠信号是？",
+      "options": [
+        "日志文本",
+        "耗时",
+        "退出码",
+        "文件数"
+      ],
+      "answer": 2,
+      "explanation": "别去 parse 日志。"
+    },
+    {
+      "stem": "Biome 通常还需额外缓存层吗？",
+      "options": [
+        "必须",
+        "本身极快、通常不必",
+        "一定",
+        "禁用"
+      ],
+      "answer": 1,
+      "explanation": "单二进制快是前提。"
+    },
+    {
+      "stem": "vcs.useIgnoreFile 在 CI 的价值？",
+      "options": [
+        "无用",
+        "复用 .gitignore 一处声明划范围",
+        "加速构建",
+        "改端口"
+      ],
+      "answer": 1,
+      "explanation": "与本地/全工具共享。"
+    },
+    {
+      "stem": "PR 评论模式的作用是？",
+      "options": [
+        "挡合并",
+        "把诊断贴成 comment 帮 review",
+        "关 lint",
+        "自动合并"
+      ],
+      "answer": 1,
+      "explanation": "让开发者看到该修什么。"
+    },
+    {
+      "stem": "lint-staged 里配 Biome 常带 --write 因为？",
+      "options": [
+        "纯演示",
+        "提交前 safe fix 落盘并暂存改动",
+        "删文件",
+        "跳过检查"
+      ],
+      "answer": 1,
+      "explanation": "自动修再暂存。"
+    }
+  ]
+}

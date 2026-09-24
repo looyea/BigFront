@@ -1,0 +1,115 @@
+{
+  "lessonId": "vitest-setup",
+  "questions": [
+    {
+      "stem": "package.json 里跑一次退出的命令是？",
+      "options": [
+        "vitest",
+        "vitest run",
+        "vitest --ui",
+        "vitest watch"
+      ],
+      "answer": 1,
+      "explanation": "run 单次、给退出码。"
+    },
+    {
+      "stem": "浏览器界面模式用哪个 flag？",
+      "options": [
+        "--watch",
+        "--coverage",
+        "--ui",
+        "--run"
+      ],
+      "answer": 2,
+      "explanation": "vitest --ui。"
+    },
+    {
+      "stem": "默认测试 environment 是？",
+      "options": [
+        "jsdom",
+        "happy-dom",
+        "node",
+        "browser"
+      ],
+      "answer": 2,
+      "explanation": "默认 node、无 DOM。"
+    },
+    {
+      "stem": "按单文件切换环境的写法是？",
+      "options": [
+        "配置文件",
+        "// @vitest-environment jsdom",
+        "package.json",
+        "命令行不能覆盖"
+      ],
+      "answer": 1,
+      "explanation": "文件顶部注解。"
+    },
+    {
+      "stem": "测试文件默认匹配规则是？",
+      "options": [
+        "*.ts",
+        "**/*.{test,spec}.?(c|m)[jt]s?(x)",
+        "*.vue",
+        "所有文件"
+      ],
+      "answer": 1,
+      "explanation": "收窄收集范围。"
+    },
+    {
+      "stem": "用全局 describe/it 免 import 需配？",
+      "options": [
+        "globals:true + tsconfig types",
+        "装 Babel",
+        "改文件名",
+        "无需配置"
+      ],
+      "answer": 0,
+      "explanation": "两者都要。"
+    },
+    {
+      "stem": "vitest.config.ts 与 vite.config 里 test 字段？",
+      "options": [
+        "完全不同结构",
+        "结构一致、前者专用优先",
+        "不能共存",
+        "后者废弃"
+      ],
+      "answer": 1,
+      "explanation": "同构、二选一姿势。"
+    },
+    {
+      "stem": "测 DOM/组件需要什么？",
+      "options": [
+        "纯 node",
+        "Mongo",
+        "Redis",
+        "jsdom 或 happy-dom 环境"
+      ],
+      "answer": 3,
+      "explanation": "L4 细讲。"
+    },
+    {
+      "stem": "CI 里通常用哪条？",
+      "options": [
+        "vitest --ui",
+        "vitest（watch）",
+        "vitest run",
+        "npm start"
+      ],
+      "answer": 2,
+      "explanation": "单次 + 退出码挡 PR。"
+    },
+    {
+      "stem": "include/exclude 的作用是？",
+      "options": [
+        "控制断言",
+        "划定被收集的文件范围",
+        "装依赖",
+        "格式化"
+      ],
+      "answer": 1,
+      "explanation": "glob 控范围保速度。"
+    }
+  ]
+}
