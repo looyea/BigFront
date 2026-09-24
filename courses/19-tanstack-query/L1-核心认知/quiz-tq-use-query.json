@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-use-query",
+  "questions": [
+    {
+      "stem": "useQuery 的两个必填要素是？",
+      "options": [
+        "url + method",
+        "queryKey + queryFn",
+        "staleTime + gcTime",
+        "enabled + retry"
+      ],
+      "answer": 1,
+      "explanation": "声明身份与取法。"
+    },
+    {
+      "stem": "v5 中 isLoading 的准确定义是？",
+      "options": [
+        "isPending",
+        "isFetching",
+        "isPending && isFetching",
+        "!data"
+      ],
+      "answer": 2,
+      "explanation": "首取无数据才算 loading；后台刷新时 loading 为 false。"
+    },
+    {
+      "stem": "queryFn 的 context 里用于取消请求的是？",
+      "options": [
+        "signal",
+        "queryKey",
+        "meta",
+        "client"
+      ],
+      "answer": 0,
+      "explanation": "AbortSignal，透传给 fetch 即获取消能力。"
+    },
+    {
+      "stem": "数据存在且后台正在重取时，哪个标志为 true？",
+      "options": [
+        "isPending",
+        "isLoading",
+        "isFetching",
+        "isInitialLoading"
+      ],
+      "answer": 2,
+      "explanation": "isFetching 涵盖一切进行中请求。"
+    },
+    {
+      "stem": "v5 传入选项的形态是？",
+      "options": [
+        "位置参数 (key, fn, opts)",
+        "数组",
+        "链式调用",
+        "单一对象 {queryKey, queryFn, ...}"
+      ],
+      "answer": 3,
+      "explanation": "v5 废除多参重载统一对象。"
+    },
+    {
+      "stem": "默认 retry 策略是？",
+      "options": [
+        "不重试",
+        "重试 3 次指数退避",
+        "重试 1 次",
+        "无限重试"
+      ],
+      "answer": 1,
+      "explanation": "失败重试 3 次，可按状态码自定义。"
+    },
+    {
+      "stem": "refetchOnWindowFocus 默认值？",
+      "options": [
+        "true",
+        "false",
+        "仅开发",
+        "看 staleTime"
+      ],
+      "answer": 0,
+      "explanation": "默认开——数据可能过期，回来刷新。"
+    },
+    {
+      "stem": "TS 下 success 分支里 data 的类型体验是？",
+      "options": [
+        "永远 any",
+        "isSuccess 判窄后可直接当非空用",
+        "要手动断言",
+        "必须包 Result"
+      ],
+      "answer": 1,
+      "explanation": "状态判别配合泛型自动收窄。"
+    },
+    {
+      "stem": "status 与 fetchStatus 分别描述？",
+      "options": [
+        "请求/数据",
+        "数据/请求",
+        "缓存/网络",
+        "成功/失败"
+      ],
+      "answer": 1,
+      "explanation": "两维矩阵组合出全部 UI 态。"
+    },
+    {
+      "stem": "默认 refetchOnMount 配 staleTime:0 的效果？",
+      "options": [
+        "挂载即发请求",
+        "永不重取",
+        "仅缓存过期才取",
+        "仅聚焦时取"
+      ],
+      "answer": 0,
+      "explanation": "两默认叠加=挂载必取，生产常调 staleTime。"
+    }
+  ]
+}

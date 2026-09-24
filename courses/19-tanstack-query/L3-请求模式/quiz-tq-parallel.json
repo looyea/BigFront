@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-parallel",
+  "questions": [
+    {
+      "stem": "两个 useQuery 并排挂载，默认行为是？",
+      "options": [
+        "串行（B 等 A）",
+        "并行各发",
+        "只发第一个",
+        "自动合并"
+      ],
+      "answer": 1,
+      "explanation": "并行是默认，瀑布才是需要治理的。"
+    },
+    {
+      "stem": "request-waterfalls 指南的处方不含？",
+      "options": [
+        "尽早声明依赖",
+        "用 prefetch 提前",
+        "把 await 挪进渲染路径",
+        "拆掉伪依赖"
+      ],
+      "answer": 2,
+      "explanation": "await 进渲染=制造瀑布的反面。"
+    },
+    {
+      "stem": "动态 N 个资源一次取，用？",
+      "options": [
+        "一个 queryFn 打包",
+        "useQueries 数组",
+        "refetchInterval",
+        "invalidate"
+      ],
+      "answer": 1,
+      "explanation": "每子查询独立 key 独立状态。"
+    },
+    {
+      "stem": "prefetch 进来的数据遵守什么规则？",
+      "options": [
+        "永久驻留",
+        "正常缓存规则（staleTime/gcTime）",
+        "只存一次",
+        "跳过序列化"
+      ],
+      "answer": 1,
+      "explanation": "预取即入册，消费按常理。"
+    },
+    {
+      "stem": "hover 预取详情后点击秒出，前提是？",
+      "options": [
+        "网络快",
+        "prefetch 配了可用 staleTime 且 key 匹配",
+        "同组件",
+        "开了 GC"
+      ],
+      "answer": 1,
+      "explanation": "stale 预取数据挂载照样重取。"
+    },
+    {
+      "stem": "useQueries 结果的形态是？",
+      "options": [
+        "合并对象",
+        "与入参等长的状态数组",
+        "Map",
+        "Promise"
+      ],
+      "answer": 1,
+      "explanation": "按下标对齐，各自 isPending。"
+    },
+    {
+      "stem": "「invalidate 只标脏+后台静默刷」的组合参数？",
+      "options": [
+        "refetchType:none 配 prefetch",
+        "exact:true",
+        "cancelRefetch",
+        "force"
+      ],
+      "answer": 0,
+      "explanation": "预失效高级拳。"
+    },
+    {
+      "stem": "大列表 useQueries 要防的是？",
+      "options": [
+        "内存碎片",
+        "类型丢失",
+        "缓存串号",
+        "一次几百并发打爆网关"
+      ],
+      "answer": 3,
+      "explanation": "限量/分页，别把 map 当无限。"
+    },
+    {
+      "stem": "组件内预取用哪个 hook？",
+      "options": [
+        "usePrefetchQuery",
+        "useQuery.prefetch",
+        "useMutation",
+        "useGC"
+      ],
+      "answer": 0,
+      "explanation": "v5 提供 usePrefetch(Infinite)Query。"
+    },
+    {
+      "stem": "一个 queryFn 打包十个资源的坏处？",
+      "options": [
+        "TS 更复杂",
+        "一处变化整包重取",
+        "并发太高",
+        "缓存变大"
+      ],
+      "answer": 1,
+      "explanation": "key 粒度=失效粒度，拆开！"
+    }
+  ]
+}

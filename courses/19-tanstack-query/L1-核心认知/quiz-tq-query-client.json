@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-query-client",
+  "questions": [
+    {
+      "stem": "一个 QueryClient 携带的两大缓存是？",
+      "options": [
+        "QueryCache 与 MutationCache",
+        "Map 与 WeakMap",
+        "localStorage 与 sessionStorage",
+        "store 与 atom"
+      ],
+      "answer": 0,
+      "explanation": "查询与变更各一本账。"
+    },
+    {
+      "stem": "全站默认取数策略配置在哪？",
+      "options": [
+        "queryFn 内",
+        "defaultOptions.queries",
+        "QueryCache 类",
+        "devtools"
+      ],
+      "answer": 1,
+      "explanation": "staleTime/retry 等全局兜底处。"
+    },
+    {
+      "stem": "组件树访问 client 的 hook 是？",
+      "options": [
+        "useClient",
+        "useCache",
+        "getQC",
+        "useQueryClient"
+      ],
+      "answer": 3,
+      "explanation": "useQueryClient() 取 Provider 注入的实例。"
+    },
+    {
+      "stem": "组件渲染里每次 new QueryClient 的后果？",
+      "options": [
+        "性能略降",
+        "报错",
+        "缓存永远为空且状态丢失",
+        "无影响"
+      ],
+      "answer": 2,
+      "explanation": "新实例=新空缓存，必须稳定引用。"
+    },
+    {
+      "stem": "SSR 场景 client 的正确姿势是？",
+      "options": [
+        "每请求新建一个",
+        "全局单例",
+        "每组件一个",
+        "不用 client"
+      ],
+      "answer": 0,
+      "explanation": "单例=跨请求缓存泄漏事故。"
+    },
+    {
+      "stem": "client.fetchQuery 的语义是？",
+      "options": [
+        "只读缓存",
+        "删除查询",
+        "预失效",
+        "缓存可用则返回，否则发请求并等结果"
+      ],
+      "answer": 3,
+      "explanation": "命令式「确保拿到数据」。"
+    },
+    {
+      "stem": "多租户缓存隔离的首选方案？",
+      "options": [
+        "多个 QueryClient",
+        "queryKey 前缀切命名空间",
+        "多 Provider 嵌套",
+        "localStorage 分 key"
+      ],
+      "answer": 1,
+      "explanation": "绝大多数场景 key 前缀就够。"
+    },
+    {
+      "stem": "client.setQueryData 常用于？",
+      "options": [
+        "预取",
+        "重试",
+        "乐观更新/直接改缓存",
+        "去重"
+      ],
+      "answer": 2,
+      "explanation": "tq-optimistic 的主力 API。"
+    },
+    {
+      "stem": "Query 强制 Provider 注入换来的能力是？",
+      "options": [
+        "更快渲染",
+        "SSR/测试等可交换缓存实例",
+        "类型推导",
+        "自动重试"
+      ],
+      "answer": 1,
+      "explanation": "所有权显式=隔离能力（jo-store 同理）。"
+    },
+    {
+      "stem": "invalidateQueries 挂在哪个对象上？",
+      "options": [
+        "组件",
+        "queryFn",
+        "DOM",
+        "QueryClient"
+      ],
+      "answer": 3,
+      "explanation": "client 方法，任意位置可调。"
+    }
+  ]
+}

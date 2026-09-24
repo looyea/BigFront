@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-division",
+  "questions": [
+    {
+      "stem": "判断状态归属的第一判据？",
+      "options": [
+        "大小",
+        "数据是谁的（拥有权）",
+        "变化频率",
+        "组件层级"
+      ],
+      "answer": 1,
+      "explanation": "服务器/浏览器/草稿/可分享四分法。"
+    },
+    {
+      "stem": "列表页码与筛选值最该放哪？",
+      "options": [
+        "Zustand",
+        "组件 state",
+        "Query 缓存",
+        "URL"
+      ],
+      "answer": 3,
+      "explanation": "可分享可回退的事实升格进 URL。"
+    },
+    {
+      "stem": "useEffect 里把接口数据 set 进全局 store 是？",
+      "options": [
+        "标准姿势",
+        "反模式：双份真相手动同步",
+        "性能优化",
+        "仅 Vue 可行"
+      ],
+      "answer": 1,
+      "explanation": "开篇痛点变体，缓存语义全丢。"
+    },
+    {
+      "stem": "表单值的本质是？",
+      "options": [
+        "UI 态",
+        "服务器数据",
+        "未提交的 server state 草稿",
+        "URL 态"
+      ],
+      "answer": 2,
+      "explanation": "RHF 管住它，提交交给 mutation。"
+    },
+    {
+      "stem": "modal 开关塞进 useQuery 的问题？",
+      "options": [
+        "没任何问题",
+        "工具错配，假查询污染面板",
+        "会 404",
+        "自动重取"
+      ],
+      "answer": 1,
+      "explanation": "Query 只代理服务器拥有的数据。"
+    },
+    {
+      "stem": "Query 与状态库的依赖关系？",
+      "options": [
+        "零耦合可同栈",
+        "强耦合",
+        "互斥",
+        "需中间层"
+      ],
+      "answer": 0,
+      "explanation": "不同 npm 宇宙，红线是别互相持有数据副本。"
+    },
+    {
+      "stem": "URL 层与 Query 层的接口点？",
+      "options": [
+        "无接口",
+        "URL 参数作为 queryKey 的取材",
+        "URL 当 queryFn",
+        "互相缓存"
+      ],
+      "answer": 1,
+      "explanation": "条件依赖键的源头常在 URL。"
+    },
+    {
+      "stem": "跨页共享的服务器数据读权限归？",
+      "options": [
+        "状态库",
+        "表单层",
+        "Query 缓存",
+        "组件 state"
+      ],
+      "answer": 2,
+      "explanation": "只读+失效联动全权代理。"
+    },
+    {
+      "stem": "全局主题偏好该住哪？",
+      "options": [
+        "Query",
+        "URL",
+        "状态库（可配 persist）",
+        "localStorage 裸奔"
+      ],
+      "answer": 2,
+      "explanation": "只有浏览器拥有的数据。"
+    },
+    {
+      "stem": "反模式「表单值进全局 store」的直接代价？",
+      "options": [
+        "SEO 差",
+        "每键全站重渲染",
+        "缓存失效",
+        "水合失败"
+      ],
+      "answer": 1,
+      "explanation": "受控过度的经典账。"
+    }
+  ]
+}

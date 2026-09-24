@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-refetch",
+  "questions": [
+    {
+      "stem": "变更成功后最推荐的缓存同步方式是？",
+      "options": [
+        "window.location.reload()",
+        "invalidateQueries 标脏",
+        "setQueryData 手改",
+        "removeQueries 全删"
+      ],
+      "answer": 1,
+      "explanation": "让订阅者按策略各自重取。"
+    },
+    {
+      "stem": "refetchType 默认值 active 的含义？",
+      "options": [
+        "全部立即重取",
+        "仅无人订阅的不取",
+        "仅当前有订阅者的重取",
+        "都不重取"
+      ],
+      "answer": 2,
+      "explanation": "active=in-flight 订阅者优先，其余标 stale。"
+    },
+    {
+      "stem": "invalidate 与 remove 的关键差别？",
+      "options": [
+        "没有差别",
+        "remove 保数据、invalidate 丢数据",
+        "invalidate 保数据静待重取、remove 连数据丢",
+        "remove 更快"
+      ],
+      "answer": 2,
+      "explanation": "remove 后 UI 立刻空。"
+    },
+    {
+      "stem": "refetchOnWindowFocus 默认？",
+      "options": [
+        "关闭",
+        "仅生产",
+        "跟随 staleTime",
+        "开启"
+      ],
+      "answer": 3,
+      "explanation": "产品直觉：回来保新鲜。"
+    },
+    {
+      "stem": "fetchStatus 为 paused 出现在？",
+      "options": [
+        "重试等待中",
+        "断网且 networkMode:online",
+        "预取完成",
+        "缓存新鲜"
+      ],
+      "answer": 1,
+      "explanation": "离线暂停，恢复自动续。"
+    },
+    {
+      "stem": "offlineFirst 的典型用途？",
+      "options": [
+        "离线排队 mutation 重放",
+        "预取",
+        "取消",
+        "轮询"
+      ],
+      "answer": 0,
+      "explanation": "RN/弱网场景标配。"
+    },
+    {
+      "stem": "后台刷新时正确的 UI 表达？",
+      "options": [
+        "整页骨架屏",
+        "清掉旧数据显示空白",
+        "角标小转圈保留旧数据",
+        "禁用页面"
+      ],
+      "answer": 2,
+      "explanation": "陈旧-而-有效要有「新鲜中」提示。"
+    },
+    {
+      "stem": "cancelRefetch:true 的效果？",
+      "options": [
+        "取消所有重试",
+        "正在进行的同名请求先 abort 再重取",
+        "禁用轮询",
+        "跳过缓存"
+      ],
+      "answer": 1,
+      "explanation": "立刻拿新数据的强硬选项。"
+    },
+    {
+      "stem": "轮询间隔想随数据变化，用？",
+      "options": [
+        "setInterval",
+        "pollingInterval 全局配置",
+        "禁用轮询",
+        "refetchInterval 函数形式"
+      ],
+      "answer": 3,
+      "explanation": "(query)=>间隔 可按状态给。"
+    },
+    {
+      "stem": "登出清场的稳妥 API？",
+      "options": [
+        "逐个 refetch",
+        "client.clear() / removeQueries",
+        "invalidateQueries()",
+        "gcTime=0"
+      ],
+      "answer": 1,
+      "explanation": "把缓存连数据一起丢。"
+    }
+  ]
+}

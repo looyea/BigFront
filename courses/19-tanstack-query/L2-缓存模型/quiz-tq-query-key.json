@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-query-key",
+  "questions": [
+    {
+      "stem": "Query 缓存靠什么寻址？",
+      "options": [
+        "queryKey 序列化后的 hash",
+        "queryFn 源码",
+        "URL 字符串",
+        "组件名"
+      ],
+      "answer": 0,
+      "explanation": "key 即身份。"
+    },
+    {
+      "stem": "hashKey 对对象 key 的处理是？",
+      "options": [
+        "保留插入顺序",
+        "按字母排序后序列化",
+        "忽略对象",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "{a,b} 与 {b,a} 同缓存。"
+    },
+    {
+      "stem": "[tag,[a,b]] 与 [tag,[b,a]] 两个 key 是？",
+      "options": [
+        "同一缓存",
+        "两条缓存",
+        "报错",
+        "取决于 staleTime"
+      ],
+      "answer": 1,
+      "explanation": "数组顺序有意义。"
+    },
+    {
+      "stem": "invalidateQueries 传前缀 key（非 exact）默认命中？",
+      "options": [
+        "仅完全等于该 key 的",
+        "以该 key 为前缀的全部",
+        "全部查询",
+        "无命中"
+      ],
+      "answer": 1,
+      "explanation": "默认 partial 匹配。"
+    },
+    {
+      "stem": "queryKey 里放 Date.now() 的后果？",
+      "options": [
+        "自动去重",
+        "无影响",
+        "永不再命中缓存",
+        "缓存更精确"
+      ],
+      "answer": 2,
+      "explanation": "每次 key 都不同=永远 cache miss。"
+    },
+    {
+      "stem": "key 工厂的核心价值是？",
+      "options": [
+        "加速请求",
+        "自动重试",
+        "减少 token",
+        "字面量单点定义可重构"
+      ],
+      "answer": 3,
+      "explanation": "重命名安全、IDE 可跳转。"
+    },
+    {
+      "stem": "两段 key 相同但 queryFn 不同，谁生效？",
+      "options": [
+        "后注册的",
+        "报错",
+        "首次注册该 key 的",
+        "随机"
+      ],
+      "answer": 2,
+      "explanation": "身份归先注册者，后来函数被忽略。"
+    },
+    {
+      "stem": "exact:true 的作用是？",
+      "options": [
+        "前缀匹配",
+        "只匹配完全等于的 key",
+        "区分大小写",
+        "不缓存"
+      ],
+      "answer": 1,
+      "explanation": "关掉默认 partial。"
+    },
+    {
+      "stem": "树形 key（列表/详情/子资源）主要服务于？",
+      "options": [
+        "前缀失效一片缓存",
+        "打包体积",
+        "TS 推导",
+        "并发"
+      ],
+      "answer": 0,
+      "explanation": "改一条数据精确失效一 subtree。"
+    },
+    {
+      "stem": "predicate 参数的用途是？",
+      "options": [
+        "缓存加密",
+        "重试判定",
+        "排序",
+        "自定义函数筛选目标查询"
+      ],
+      "answer": 3,
+      "explanation": "匹配兜底的全能位。"
+    }
+  ]
+}

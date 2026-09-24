@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-mutation",
+  "questions": [
+    {
+      "stem": "mutation 结果默认会被缓存吗？",
+      "options": [
+        "会，按 mutationKey",
+        "不会，写操作每次真发",
+        "按 queryKey 缓存",
+        "看 gcTime"
+      ],
+      "answer": 1,
+      "explanation": "不缓存是 useMutation 与 useQuery 的根本差异。"
+    },
+    {
+      "stem": "invalidate 放哪个回调最稳？",
+      "options": [
+        "onMutate",
+        "onSuccess",
+        "onError",
+        "onSettled"
+      ],
+      "answer": 3,
+      "explanation": "成败都要跟服务器对齐。"
+    },
+    {
+      "stem": "onMutate 的返回值去哪了？",
+      "options": [
+        "作为响应",
+        "作为 context 传给 onSuccess/onError/onSettled",
+        "被忽略",
+        "进缓存"
+      ],
+      "answer": 1,
+      "explanation": "乐观更新的接力棒（tq-optimistic）。"
+    },
+    {
+      "stem": "跨组件读「该 mutation 提交中」用？",
+      "options": [
+        "useQuery 兜底",
+        "isFetching",
+        "useMutationState 配 mutationKey",
+        "refetchInterval"
+      ],
+      "answer": 2,
+      "explanation": "pending 实例状态外置。"
+    },
+    {
+      "stem": "mutateAsync 与 mutate 的差？",
+      "options": [
+        "速度",
+        "前者返回 promise 可 await/需自捕获",
+        "后者更可靠",
+        "同一函数"
+      ],
+      "answer": 1,
+      "explanation": "命令式流程配 try/catch。"
+    },
+    {
+      "stem": "响应已含完整新实体时，比 invalidate 更省的是？",
+      "options": [
+        "setQueriesData 精确打补丁",
+        "removeQueries",
+        "clear",
+        "再发一次 GET"
+      ],
+      "answer": 0,
+      "explanation": "updates-from-mutation-responses 的省法。"
+    },
+    {
+      "stem": "全局「401 统一处理」写在？",
+      "options": [
+        "每个 mutationFn",
+        "MutationCache/defaultOptions.mutations",
+        "组件 useEffect",
+        "queryKey"
+      ],
+      "answer": 1,
+      "explanation": "变更层的中间件位。"
+    },
+    {
+      "stem": "mutationFn 收到的参数是？",
+      "options": [
+        "缓存旧值",
+        "mutate(variables) 传入的变量",
+        "error 对象",
+        "context"
+      ],
+      "answer": 1,
+      "explanation": "一次调用的输入。"
+    },
+    {
+      "stem": "为什么不建议总用 setQueryData 手改代替 invalidate？",
+      "options": [
+        "性能更差",
+        "容易与服务器口径漂移，失效让真相回流",
+        "触发不了",
+        "会死循环"
+      ],
+      "answer": 1,
+      "explanation": "手改留给响应完整的确定场景。"
+    },
+    {
+      "stem": "isPending 属于哪个粒度？",
+      "options": [
+        "全局",
+        "每个 useMutation 实例",
+        "每个 queryKey",
+        "每个 cache"
+      ],
+      "answer": 1,
+      "explanation": "所以跨组件要靠 useMutationState。"
+    }
+  ]
+}

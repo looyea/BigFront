@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-infinite",
+  "questions": [
+    {
+      "stem": "useInfiniteQuery 的 data 结构是？",
+      "options": [
+        "数组",
+        "对象 {pages, pageParams}",
+        "Map",
+        "链表"
+      ],
+      "answer": 1,
+      "explanation": "一个 key 下堆多页。"
+    },
+    {
+      "stem": "「有没有下一页」由谁决定？",
+      "options": [
+        "fetchNextPage",
+        "isFetching",
+        "getNextPageParam 返回 undefined 即没有",
+        "服务器 header"
+      ],
+      "answer": 2,
+      "explanation": "契约终点在 getNextPageParam。"
+    },
+    {
+      "stem": "initialPageParam 的作用是？",
+      "options": [
+        "第一页入参",
+        "最大页数",
+        "重试次数",
+        "缓存大小"
+      ],
+      "answer": 0,
+      "explanation": "游标起点（0/null/初始 token）。"
+    },
+    {
+      "stem": "底部骨架应盯哪个标志？",
+      "options": [
+        "isFetching",
+        "isLoading",
+        "isPlaceholderData",
+        "isFetchingNextPage"
+      ],
+      "answer": 3,
+      "explanation": "区别于整体取数，专指追加下一批。"
+    },
+    {
+      "stem": "切换筛选致列表闪空，解药是？",
+      "options": [
+        "gcTime 调大",
+        "placeholderData: keepPreviousData",
+        "retry",
+        "prefetch"
+      ],
+      "answer": 1,
+      "explanation": "无限查询同样适用占位。"
+    },
+    {
+      "stem": "「跳到第 7 页」的页码条需求应选？",
+      "options": [
+        "普通 useQuery，key 带 page",
+        "useInfiniteQuery",
+        "useQueries",
+        "轮询"
+      ],
+      "answer": 0,
+      "explanation": "随机寻址别用串行游标硬塞。"
+    },
+    {
+      "stem": "invalidate 一个 infinite 查询会？",
+      "options": [
+        "只重取第一页",
+        "丢缓存不重取",
+        "按已加载页逐页重放",
+        "永不重取"
+      ],
+      "answer": 2,
+      "explanation": "用原 pageParams 重放已加载页。"
+    },
+    {
+      "stem": "data.pages 渲染前通常要？",
+      "options": [
+        "JSON.parse",
+        "flat()/map 拼接",
+        "reverse",
+        "去重排序必做"
+      ],
+      "answer": 1,
+      "explanation": "分页数组展平成列表。"
+    },
+    {
+      "stem": "IM 聊天记录向上加载需要？",
+      "options": [
+        "refetchInterval",
+        "staleTime",
+        "getPreviousPageParam + fetchPreviousPage",
+        "enabled"
+      ],
+      "answer": 2,
+      "explanation": "反向游标契约。"
+    },
+    {
+      "stem": "infinite 缓存条目数是？",
+      "options": [
+        "每页一条",
+        "整个查询一条",
+        "两条",
+        "动态"
+      ],
+      "answer": 1,
+      "explanation": "一 key 管全部 pages，失效代价在这里。"
+    }
+  ]
+}

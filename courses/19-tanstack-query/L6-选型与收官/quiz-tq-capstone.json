@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-capstone",
+  "questions": [
+    {
+      "stem": "毕业项目里首屏列表的取数方案是？",
+      "options": [
+        "CSR 转圈",
+        "轮询",
+        "手动挡",
+        "SSR prefetch + 水合"
+      ],
+      "answer": 3,
+      "explanation": "L5 三板斧首秀。"
+    },
+    {
+      "stem": "无限滚动与页码条混用时的原则？",
+      "options": [
+        "全用 infinite",
+        "全用 useQuery",
+        "瀑布流 infinite、可跳页独立 key",
+        "二选其一"
+      ],
+      "answer": 2,
+      "explanation": "串行游标与随机寻址分开。"
+    },
+    {
+      "stem": "搜索请求防「半个词就打接口」靠？",
+      "options": [
+        "retry",
+        "防抖后进 key + enabled 挡空串",
+        "prefetch",
+        "gcTime"
+      ],
+      "answer": 1,
+      "explanation": "L3 条件查询原样上岗。"
+    },
+    {
+      "stem": "点卡片进详情秒出的两连招？",
+      "options": [
+        "staleTime+gcTime",
+        "hover prefetch + 列表字段当 initialData",
+        "轮询+聚焦",
+        "broadcast+persist"
+      ],
+      "answer": 1,
+      "explanation": "预热加传值，骨架都不闪。"
+    },
+    {
+      "stem": "收藏乐观更新的回滚半径应是？",
+      "options": [
+        "整个列表快照",
+        "只撤销自己那笔",
+        "全站",
+        "不回滚"
+      ],
+      "answer": 1,
+      "explanation": "L4 回滚表思想。"
+    },
+    {
+      "stem": "多标签收藏同步的正确组合？",
+      "options": [
+        "只用 persist",
+        "broadcast（+persist 穿刷新）",
+        "只用 broadcast",
+        "localStorage 手写事件"
+      ],
+      "answer": 1,
+      "explanation": "穿标签靠总线，穿刷新靠持久。"
+    },
+    {
+      "stem": "测试该断言收藏失败路径的什么？",
+      "options": [
+        "请求次数",
+        "日志条数",
+        "先变心后碎回 + 最终对齐服务器",
+        "组件重渲染数"
+      ],
+      "answer": 2,
+      "explanation": "乐观的回滚才是必测项。"
+    },
+    {
+      "stem": "key 工厂在毕业项目里的价值？",
+      "options": [
+        "失效与预取按前缀一行命中",
+        "加速请求",
+        "省内存",
+        "免写 queryFn"
+      ],
+      "answer": 0,
+      "explanation": "L2 地基在这里显威。"
+    },
+    {
+      "stem": "毕业后延伸方向之一 TanStack Router 接的是哪层？",
+      "options": [
+        "表单层",
+        "缓存层",
+        "URL state 层与路由级 preload",
+        "持久层"
+      ],
+      "answer": 2,
+      "explanation": "四层分工第四层的专业件。"
+    },
+    {
+      "stem": "四包终极检验问题？",
+      "options": [
+        "哪个最快",
+        "哪个最小",
+        "这份数据到底归谁",
+        "哪个星多"
+      ],
+      "answer": 2,
+      "explanation": "拥有权判据贯穿始终。"
+    }
+  ]
+}

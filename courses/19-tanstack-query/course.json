@@ -1,0 +1,71 @@
+{
+  "id": "19-tanstack-query",
+  "title": "TanStack Query 实战：React 服务器状态管理",
+  "order": 19,
+  "tier": "铂金 · 状态管理专题",
+  "tagline": "TanStack Query 把「服务器状态」从手写 fetch + useState 的泥潭中解放出来：缓存键、生命周期、失效重取、乐观更新、SSR 水合全自动。与 Pinia/Zustand/Jotai 管理的客户端状态分工互补。六阶段十八关，以简明为主，从核心认知到选型收官。",
+  "icon": "📡",
+  "color": "#f97316",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "核心认知",
+      "subtitle": "服务器状态 / useQuery / QueryClient",
+      "lessons": [
+        { "id": "tq-server-state", "title": "服务器状态：为什么手写 fetch 不够用", "goal": "server state vs client state 的提法与差异（只读、会过期、跨页共享）；手写 fetch+useState 的七大痛（去重/缓存/竞态/后台刷新…）；Query 的定位不是替代状态库而是分工；与 za-layers、jo-race 分工表呼应" },
+        { "id": "tq-use-query", "title": "useQuery 初体验", "goal": "queryKey + queryFn 两要素；status/isPending/isLoading/isFetching 的 v5 语义；isLoading = isPending && isFetching 的坑；返回值对象速览；第一个能跑的取数（呼应 sig-async）" },
+        { "id": "tq-query-client", "title": "QueryClient 与 Provider", "goal": "QueryClient 是缓存容器与全局配置中心；defaultOptions 设 staleTime/retry；QueryClientProvider 作用域；useQueryClient 命令式访问；一应用一 client 默认，多 client 场景（呼应 za-store-api）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "缓存模型",
+      "subtitle": "queryKey / 生命周期 / 失效",
+      "lessons": [
+        { "id": "tq-query-key", "title": "queryKey：缓存键即身份", "goal": "数组结构与被序列化（hashKey）；对象属性顺序无关性；层级化 key 设计 ['users'] / ['users', id]；前缀匹配失效；key 工厂模式（呼应 za-normalize）" },
+        { "id": "tq-lifecycle", "title": "数据生命周期：staleTime 与 gcTime", "goal": "fresh→stale→garbage collected 状态机；staleTime:0 默认与 refetchOnMount 的关系；gcTime 5 分钟回收订阅归零缓存；important-defaults 精读；何时该调两个时间（呼应 za-subscribe）" },
+        { "id": "tq-refetch", "title": "失效与后台重取", "goal": "invalidateQueries 前缀/精确匹配；refetchOnWindowFocus/reconnect 的产品动机；networkMode；background fetching indicators；手动 refetch 与 removeQueries（呼应 pinia-async）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "请求模式",
+      "subtitle": "条件 / 并行 / 变更",
+      "lessons": [
+        { "id": "tq-conditional", "title": "条件与依赖请求", "goal": "enabled 暂停请求；dependent queries（拿 A 的 id 再取 B）；placeholderData 与 initialData 的差别；skip 场景的 isLoading 修正（呼应 jo-dependencies）" },
+        { "id": "tq-parallel", "title": "并行请求与预取", "goal": "useQueries 批量并行；顶层 Promise.all 会瀑布流的坑；prefetchQuery / usePrefetchQuery 路由预取；预失效 prefetch 组合拳（呼应 kit-load-universal）" },
+        { "id": "tq-mutation", "title": "useMutation 与缓存更新", "goal": "mutation 生命周期回调 onMutate/onSuccess/onError/onSettled；成功后 invalidateQueries；从响应取数 setQueryData；useMutationState 读 pending 态（呼应 za-actions）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "进阶专题",
+      "subtitle": "分页 / 取消 / 乐观更新",
+      "lessons": [
+        { "id": "tq-infinite", "title": "无限与分页查询", "goal": "useInfiniteQuery 的 pageParam 契约；fetchNextPage/hasNextPage/isFetchingNextPage；InfiniteData.pages 结构；翻页 placeholderData 保留旧页；偏移分页 vs 游标无限（react-window 双排）" },
+        { "id": "tq-cancel", "title": "请求取消与竞态", "goal": "v5 signal: AbortSignal 内置；依赖变化/失效触发 abort；CancelledError 不再算错误；与 jo-race、pinia-async 竞态三家对比；retry 策略与取消交互（呼应 sig-async）" },
+        { "id": "tq-optimistic", "title": "乐观更新与回滚", "goal": "onMutate 快照 + cancelQueries + setQueryData 三件套；onError 回滚 / onSettled 失效；乐观更新的适用边界与 UX 风险；与 za-crud、jo-capstone 乐观回滚的镜像对照" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "框架与工程",
+      "subtitle": "SSR / 持久化 / 测试",
+      "lessons": [
+        { "id": "tq-ssr", "title": "SSR 与水合：服务端先把数据备好", "goal": "每请求一 client；dehydrate + HydrationBoundary 传服务端结果；advanced-ssr 的 streaming 与 usePrefetchQuery；Next App Router 骨架；与 za-next、jo-ssr 同题三家解法" },
+        { "id": "tq-persist", "title": "持久化与跨标签同步", "goal": "persistQueryClient 插件；createSyncStoragePersister/createAsyncStoragePersister；broadcastQueryClient 跨 tab 同步；与 zustand persist、atomWithStorage 的粒度对比（呼应 za-persist-deep、jo-storage）" },
+        { "id": "tq-devtools", "title": "Devtools 与测试", "goal": "React Query Devtools 面板读写缓存；测试中 retry:false/timer 处理；queryClient 手动 setQueryData 造数据；组件测 useQuery 的 mock 边界（呼应 za-testing-deep、jo-perf-test）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "选型与收官",
+      "subtitle": "对比 / 分工 / 毕业项目",
+      "lessons": [
+        { "id": "tq-vs-swr", "title": "Query vs SWR vs RTK Query", "goal": "官方 comparison 表精读；SWR 极简双 API 路线；RTK Query 与 Redux 一体化；选择判据：缓存控制力 vs 上手速度；SWRV/Vue Query 等跨框架生态（呼应 za-compare、jo-compare）" },
+        { "id": "tq-division", "title": "异步状态三层分工总决算", "goal": "服务端缓存(Query) / 客户端状态(Zustand·Jotai·Pinia) / 表单局部(RHF·VeeValidate) 的边界与反模式；URL 态归路由；把四包知识串成一张架构图（呼应 za-layers、jo-race、pinia-overview）" },
+        { "id": "tq-capstone", "title": "毕业项目：影视浏览应用数据层", "goal": "列表+详情+搜索防抖+无限滚动+收藏乐观变更+路由预取+SSR 水合全链路；与 Zustand/Jotai 版对照的毕业清单；后续路径（Query v5 生态、Router/Table）（呼应 za-crud、jo-capstone）" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-conditional",
+  "questions": [
+    {
+      "stem": "enabled:false 的查询处于什么状态？",
+      "options": [
+        "立即报错",
+        "fetchStatus 为 paused 不发请求",
+        "取消重试",
+        "直接进 error"
+      ],
+      "answer": 1,
+      "explanation": "装死等开关。"
+    },
+    {
+      "stem": "dependent queries 的推荐串联方式是？",
+      "options": [
+        "enabled 等前序 + key 带依赖值",
+        "queryFn 里 await 前序",
+        "setTimeout 错峰",
+        "prefetch 串行"
+      ],
+      "answer": 0,
+      "explanation": "声明式串联，依赖变即重取。"
+    },
+    {
+      "stem": "v5 让翻页不闪骨架的选项是？",
+      "options": [
+        "initialData: true",
+        "gcTime: Infinity",
+        "placeholderData: keepPreviousData",
+        "enabled 反向"
+      ],
+      "answer": 2,
+      "explanation": "旧页顶着，新页后台取。"
+    },
+    {
+      "stem": "isPlaceholderData 为何要单独消费？",
+      "options": [
+        "决定缓存淘汰",
+        "UI 应标识/禁用占位数据",
+        "控制重试",
+        "触发重取"
+      ],
+      "answer": 1,
+      "explanation": "占位不是真相，操作前要想清楚。"
+    },
+    {
+      "stem": "initialData 与 placeholderData 的本质差？",
+      "options": [
+        "没有差别",
+        "前者是异步版后者同步",
+        "initialData 属于本查询首帧即真，placeholder 借别处数据占位",
+        "后者会进缓存"
+      ],
+      "answer": 2,
+      "explanation": "一个「出生就有」，一个「先顶着」。"
+    },
+    {
+      "stem": "有 placeholder 时 isLoading 的值？",
+      "options": [
+        "永远 false",
+        "取决于 isPending 为 false",
+        "永远 true",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "isPending=false 令 isLoading 不再为 true。"
+    },
+    {
+      "stem": "skipToken 应赋给哪个字段？",
+      "options": [
+        "queryFn",
+        "enabled",
+        "queryKey",
+        "placeholderData"
+      ],
+      "answer": 0,
+      "explanation": "v5 哨兵：queryFn 传 skipToken 即诚实跳过。"
+    },
+    {
+      "stem": "登录态守卫（无 token 不取）最简写法？",
+      "options": [
+        "retry: 0",
+        "staleTime: 0",
+        "key 设空",
+        "enabled: !!token"
+      ],
+      "answer": 3,
+      "explanation": "一行开关全局通用。"
+    },
+    {
+      "stem": "keepPreviousData 在 v5 的形态是？",
+      "options": [
+        "内置行为无需配置",
+        "官方 hook 辅助函数",
+        "废弃",
+        "字符串选项"
+      ],
+      "answer": 1,
+      "explanation": "(prev)=>prev 的具名版。"
+    },
+    {
+      "stem": "依赖 user 的 projects 查询，key 里带 user?.teamId 的收益？",
+      "options": [
+        "提速",
+        "换 team 自动重取",
+        "省 token",
+        "去重"
+      ],
+      "answer": 1,
+      "explanation": "key 变化=身份变化=重新取数。"
+    }
+  ]
+}

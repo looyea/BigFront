@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-devtools",
+  "questions": [
+    {
+      "stem": "devtools 面板每条查询能看到什么？",
+      "options": [
+        "仅 key",
+        "key/状态/data/重试等实时全景",
+        "源码",
+        "SQL"
+      ],
+      "answer": 1,
+      "explanation": "缓存的 X 光机。"
+    },
+    {
+      "stem": "验证「前缀失效命中几条」最快的办法？",
+      "options": [
+        "加日志",
+        "面板里手动点 invalidate 观察",
+        "断点调试",
+        "重构建"
+      ],
+      "answer": 1,
+      "explanation": "面板是第一现场。"
+    },
+    {
+      "stem": "生产环境应该带 devtools 面板吗？",
+      "options": [
+        "不应该，构建时摇掉",
+        "应该，方便排查",
+        "看 gcTime",
+        "只带只读版"
+      ],
+      "answer": 0,
+      "explanation": "体积与信息安全都不划算。"
+    },
+    {
+      "stem": "测试里 retry:false 的收益？",
+      "options": [
+        "更接近生产",
+        "失败断言秒回不等退避",
+        "省内存",
+        "免 Provider"
+      ],
+      "answer": 1,
+      "explanation": "退避等待能把测试拖到地老天荒。"
+    },
+    {
+      "stem": "测试间缓存零串扰靠哪个配置？",
+      "options": [
+        "staleTime:0",
+        "gcTime:0",
+        "retry:0",
+        "enabled:false"
+      ],
+      "answer": 1,
+      "explanation": "每个测试新 client+用完即弃。"
+    },
+    {
+      "stem": "MSW mock 的层次是？",
+      "options": [
+        "axios 模块",
+        "网络层（拦 fetch/XHR）",
+        "组件层",
+        "queryFn 层"
+      ],
+      "answer": 1,
+      "explanation": "真发请求假服务器，链路保真。"
+    },
+    {
+      "stem": "测 error UI 的注入办法？",
+      "options": [
+        "throw 在组件里",
+        "断网",
+        "handler 返回 500",
+        "关面板"
+      ],
+      "answer": 2,
+      "explanation": "mock 失败响应最简单。"
+    },
+    {
+      "stem": "测 mutation 最重要的两个断言？",
+      "options": [
+        "渲染次数与快照",
+        "请求体正确与缓存联动",
+        "内存与耗时",
+        "key 排序与 hash"
+      ],
+      "answer": 1,
+      "explanation": "variables 送达+invalidate 生效。"
+    },
+    {
+      "stem": "乐观更新测试的必测路径？",
+      "options": [
+        "成功路径",
+        "失败注入看先变后滚回",
+        "并发路径",
+        "序列化路径"
+      ],
+      "answer": 1,
+      "explanation": "回滚才是乐观的阿喀琉斯之踵。"
+    },
+    {
+      "stem": "官方测试三件套不含下列哪项？",
+      "options": [
+        "每测试新 QueryClient",
+        "关重试",
+        "MSW 网络拦截",
+        "快照测试缓存"
+      ],
+      "answer": 3,
+      "explanation": "快照不是推荐项。"
+    }
+  ]
+}

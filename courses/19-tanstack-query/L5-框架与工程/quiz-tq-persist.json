@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-persist",
+  "questions": [
+    {
+      "stem": "persistQueryClient 持久的是什么？",
+      "options": [
+        "整个应用 state",
+        "已完成的查询缓存",
+        "mutation 队列",
+        "组件树"
+      ],
+      "answer": 1,
+      "explanation": "查询级缓存出院。"
+    },
+    {
+      "stem": "同步存储（localStorage）配哪个 persister？",
+      "options": [
+        "createAsyncStoragePersister",
+        "createSyncStoragePersister",
+        "原生 JSON",
+        "IDBFactory"
+      ],
+      "answer": 1,
+      "explanation": "介质同步异步各一把钥匙。"
+    },
+    {
+      "stem": "哪些查询值得持久化由谁决定？",
+      "options": [
+        "shouldDehydrateQuery 钩子",
+        "gcTime",
+        "maxAge",
+        "Devtools"
+      ],
+      "answer": 0,
+      "explanation": "白名单精挑，别整库搬。"
+    },
+    {
+      "stem": "maxAge 的作用是？",
+      "options": [
+        "请求超时",
+        "重试上限",
+        "标签数上限",
+        "持久数据的保质期，过期灌回即弃"
+      ],
+      "answer": 3,
+      "explanation": "给磁盘层再设一道新鲜度。"
+    },
+    {
+      "stem": "broadcastQueryClient 依赖的浏览器机制？",
+      "options": [
+        "WebSocket",
+        "Service Worker",
+        "BroadcastChannel",
+        "SSE"
+      ],
+      "answer": 2,
+      "explanation": "同源标签页总线。"
+    },
+    {
+      "stem": "persist 与 broadcast 的关系？",
+      "options": [
+        "二选一",
+        "正交：一个穿刷新，一个穿标签页",
+        "broadcast 内含 persist",
+        "都是实验特性"
+      ],
+      "answer": 1,
+      "explanation": "管的时间维度不同。"
+    },
+    {
+      "stem": "服务端为什么不能跑 persist？",
+      "options": [
+        "性能差",
+        "无 window 且多用户共享存储会串数据",
+        "不支持异步",
+        "会死循环"
+      ],
+      "answer": 1,
+      "explanation": "安全+环境双重否决。"
+    },
+    {
+      "stem": "改版后 queryKey 语义变化要警惕？",
+      "options": [
+        "请求变慢",
+        "旧持久条目顶着老数据出现在新 UI",
+        "内存暴涨",
+        "重试风暴"
+      ],
+      "answer": 1,
+      "explanation": "大变更升 key 或清 store。"
+    },
+    {
+      "stem": "mutation 默认会被持久化吗？",
+      "options": [
+        "会",
+        "不会，写操作不可重放",
+        "看配置必开",
+        "只持久 pending"
+      ],
+      "answer": 1,
+      "explanation": "读缓存出院≠写操作排队。"
+    },
+    {
+      "stem": "离线写排队重放属于哪套 API 的领地？",
+      "options": [
+        "persistQueryClient 默认行为",
+        "createPersister + offline 示例",
+        "broadcastQueryClient",
+        "refetchOnReconnect"
+      ],
+      "answer": 1,
+      "explanation": "v5 新 persister 的进阶玩法。"
+    }
+  ]
+}

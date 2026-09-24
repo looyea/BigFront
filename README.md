@@ -105,7 +105,7 @@ npm.cmd start
 ```bash
 git init                 # 若尚未初始化
 git add -A
-git commit -m "feat: 大前端学院学习平台（框架 + 18 个满配课程包）"
+git commit -m "feat: 大前端学院学习平台（框架 + 19 个满配课程包）"
 git branch -M main
 git remote add origin https://github.com/<你的用户名>/<仓库名>.git
 git push -u origin main
@@ -137,7 +137,7 @@ BigFront/
 │     ├─ router.js           # /p/:pkg、/l/:pkg/:lessonId（+/quiz、/interview）
 │     ├─ api.js              # 接口封装 + 进度 + 时长打点
 │     └─ styles/theme.css    # 暗色主题
-├─ courses/                  # 18 个课程包（内容层），全部已统一为扁平布局：
+├─ courses/                  # 19 个课程包（内容层），全部已统一为扁平布局：
 │  └─ <包>/                  #   包根 = course.json + 每个阶段一个文件夹（如 L1-变量与作用域）
 │     ├─ lesson-<id>.md          # 课文正文
 │     ├─ quiz-<id>.json          # 小测（≥6成及格即自动通关）
@@ -154,7 +154,7 @@ BigFront/
 
 ## 九、内容完成度说明
 
-> 截至本次更新：平台已扫描到 **18 个课程包**，且 **18 个已全部满配**；累计已产出 **439 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。既有 10 个满配包已完成一轮**内容缺口审计**：探针逐包扫描关键词覆盖，真空知识点酌情补建 **10 个新关**（三件套 + 所属阶段作业齐备），已足量内容一律不重复制品。`12-sveltekit`（SvelteKit）9 阶段 27 关、`13-solid`（SolidJS，含 SolidStart）9 阶段 27 关、`14-signals`（响应式状态管理实战：TC39 Signals / RxJS / MobX / Zustand）9 阶段 27 关、`15-angular`（Angular 实战：企业级框架的主流姿势）9 阶段 27 关均已交付；本轮又新增三个**状态管理专项包**——`16-pinia`（Vue 官方状态管理，5 阶段 15 关）、`17-zustand`（React 轻量 store，7 阶段 21 关）、`18-jotai`（原子化状态，6 阶段 18 关），共 +54 关；后端完整性自检 **18 包全零告警**。
+> 截至本次更新：平台已扫描到 **19 个课程包**，且 **19 个已全部满配**；累计已产出 **457 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。既有 10 个满配包已完成一轮**内容缺口审计**：探针逐包扫描关键词覆盖，真空知识点酌情补建 **10 个新关**（三件套 + 所属阶段作业齐备），已足量内容一律不重复制品。`12-sveltekit`（SvelteKit）9 阶段 27 关、`13-solid`（SolidJS，含 SolidStart）9 阶段 27 关、`14-signals`（响应式状态管理实战：TC39 Signals / RxJS / MobX / Zustand）9 阶段 27 关、`15-angular`（Angular 实战：企业级框架的主流姿势）9 阶段 27 关均已交付；本轮又新增三个**状态管理专项包**——`16-pinia`（Vue 官方状态管理，5 阶段 15 关）、`17-zustand`（React 轻量 store，7 阶段 21 关）、`18-jotai`（原子化状态，6 阶段 18 关），共 +54 关；本轮再新增**服务端状态专项包** `19-tanstack-query`（React 生态事实标准的数据缓存层，6 阶段 18 关，+18 关）；后端完整性自检 **19 包全零告警**。
 
 - ✅ **已满配**（课文 + 小测 + 作业 + 面试题；可运行示例 `examples/` 为首批两包附带）：
 
@@ -169,6 +169,7 @@ BigFront/
 | `13-solid`（SolidJS） | 9 | 27 |   | `14-signals`（状态管理四强） | 9 | 27 |
 | `15-angular`（Angular v22） | 9 | 27 |   | `16-pinia`（Pinia） | 5 | 15 |
 | `17-zustand`（Zustand） | 7 | 21 |   | `18-jotai`（Jotai） | 6 | 18 |
+| `19-tanstack-query`（TanStack Query） | 6 | 18 |   |   |   |   |
 
 <details>
 <summary>缺口审计本轮补建的 10 关（点开展开）</summary>
@@ -191,8 +192,9 @@ BigFront/
 </details>
 
  🎓 **四大框架全部收官**：`15-angular`（Angular 实战：企业级框架的主流姿势，9 阶段 27 关：L1 导论与全景 + L2 组件与模板 + L3 依赖注入与服务 + L4 响应式 signals 与 RxJS 交接 + L5 表单与 HTTP + L6 路由 + L7 状态管理与大型架构 + L8 生态与工程 + L9 收官与选型）**已全部交付**，以 v22 为事实底（standalone 默认、zoneless 默认、Signal Forms GA），主流应用为尺、不挖编译器源码，与 04/05/11/13/14 五包知识点两两对照。`14-signals`（响应式状态管理实战，9 阶段 27 关：L1 导论全景 + L2-L5 TC39 Signals/RxJS/MobX/Zustand 四强各自实战 + L6 横向对比 + L7 体积/调试/性能工程实践 + L8 服务端状态/迁移共存/登录态四实现 + L9 手写 mini-signal 内核·四实现对照终战选型·进阶路线）**已全部交付**，主流应用定位为尺、不深挖源码，口诀链（海关/两税/五碗）贯穿。`12-sveltekit`（SvelteKit，9 阶段 27 关）与 `13-solid`（SolidJS，9 阶段 27 关：L1–L6 响应式内核与组件/事件/异步/性能，L7–L8 SolidStart 文件路由、query+createAsync、服务端函数与部署测试，L9 内核收官 + React 迁移方法论 + 毕业项目）**已全部交付**，两包内容均基于官方文档全文精读做事实底（SolidStart 以 v2 文档为轴）。`11-svelte` 十阶段 30 关**已全部交付**（L8 编译架构/SvelteKit 引桥/部署 + L9 特殊元素/错误边界/Effect 深水区 + L10 Web Components/纯 Svelte SSR/4→5 迁移），对既有 10 个满配包的内容缺口审计**已完成**（见上方表格与明细，+10 关）。
- 🎓 **状态管理三强专项收官**：在 `14-signals` 横向综述（其 L5 已带 Zustand 入门）基础上，本轮为三大主流库各立专包、按内容密度差异化分阶（非固定阶段数）：`16-pinia`（5 阶段 15 关：L1 入门与核心 + L2 Getters 与异步 Actions + L3 组合与插件 + L4 实战与 SSR + L5 测试·迁移·选型），以 Vue 官方 Store 为事实底（Setup Store、storeToRefs、$patch/$subscribe、Vuex→Pinia 迁移、Nuxt SSR 水合）；`17-zustand`（7 阶段 21 关：核心回顾与深化 → 中间件链 → 状态切片与组织 → 订阅与并发渲染 → Next.js 与 SSR 全链路 → 实战专题 → 对比·测试·终战），深度专讲 v5 create、useShallow、useSyncExternalStore、中间件链顺序、slices/factory、startTransition/useOptimistic、Next per-request + skipHydration；`18-jotai`（6 阶段 18 关：原子核心 → 派生与写 → 异步与 Suspense → 工具原子库 → 架构与性能 → 选型收官），以原子范式为轴（atom/useAtom、derived/write-only、async + Suspense、loadable/unwrap、atomWithStorage/Family/focus/split、createStore + Provider 隔离、dehydrate/hydrateAtoms）。三包均遵循「主流应用为尺、不挖源码」，与 14-signals、各框架包知识点两两对照。**累计关卡已达 439 关**。
- 🎓 **面试题**：上述 **439 关**均一一配有 `interview-<lessonId>.md`（面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前十八包**零告警**）。
+ 🎓 **状态管理三强专项收官**：在 `14-signals` 横向综述（其 L5 已带 Zustand 入门）基础上，本轮为三大主流库各立专包、按内容密度差异化分阶（非固定阶段数）：`16-pinia`（5 阶段 15 关：L1 入门与核心 + L2 Getters 与异步 Actions + L3 组合与插件 + L4 实战与 SSR + L5 测试·迁移·选型），以 Vue 官方 Store 为事实底（Setup Store、storeToRefs、$patch/$subscribe、Vuex→Pinia 迁移、Nuxt SSR 水合）；`17-zustand`（7 阶段 21 关：核心回顾与深化 → 中间件链 → 状态切片与组织 → 订阅与并发渲染 → Next.js 与 SSR 全链路 → 实战专题 → 对比·测试·终战），深度专讲 v5 create、useShallow、useSyncExternalStore、中间件链顺序、slices/factory、startTransition/useOptimistic、Next per-request + skipHydration；`18-jotai`（6 阶段 18 关：原子核心 → 派生与写 → 异步与 Suspense → 工具原子库 → 架构与性能 → 选型收官），以原子范式为轴（atom/useAtom、derived/write-only、async + Suspense、loadable/unwrap、atomWithStorage/Family/focus/split、createStore + Provider 隔离、dehydrate/hydrateAtoms）。三包均遵循「主流应用为尺、不挖源码」，与 14-signals、各框架包知识点两两对照。
+ 🎓 **服务端状态专题收官**：状态管理四包的另一半拼图——`19-tanstack-query`（TanStack Query v5，6 阶段 18 关：L1 核心认知（server state 之痛/useQuery/QueryClient）+ L2 缓存模型（queryKey 工厂/staleTime·gcTime 双时钟/失效与后台重取）+ L3 请求模式（条件依赖/并行预取/useMutation）+ L4 进阶专题（无限分页/取消竞态/乐观回滚）+ L5 框架与工程（SSR 水合/持久化多标签/Devtools 与测试）+ L6 选型与收官（vs SWR·RTK Query/异步状态四层分工总决算/毕业项目影视数据层）**已全部交付**，以官方 v5 文档（llms.txt 全索引 294 篇）为事实底，内容以简明为主；与 16/17/18 三包在竞态、分层、SSR、持久化等知识点上处处对映——「服务器数据归 Query、浏览器数据归状态库」的分工总决算在此合龙。**累计关卡已达 457 关**。
+ 🎓 **面试题**：上述 **457 关**均一一配有 `interview-<lessonId>.md`（面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前十九包**零告警**）。
 
 > 技术事实若不确定版本演进，请一律以各框架**官方文档 / MDN / TC39** 为准——本课程反复提醒：
 > 警惕过时教程与 AI 幻觉。

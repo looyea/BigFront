@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-optimistic",
+  "questions": [
+    {
+      "stem": "onMutate 第一拍通常做什么？",
+      "options": [
+        "直接改缓存",
+        "弹提示",
+        "await cancelQueries 停在飞重取",
+        "失效全部"
+      ],
+      "answer": 2,
+      "explanation": "防旧数据落地盖掉乐观态。"
+    },
+    {
+      "stem": "回滚快照放在哪传给 onError？",
+      "options": [
+        "variables",
+        "闭包变量",
+        "全局 state",
+        "onMutate 返回的 context"
+      ],
+      "answer": 3,
+      "explanation": "四拍靠 context 接力。"
+    },
+    {
+      "stem": "最终一致性由哪一拍兜底？",
+      "options": [
+        "onMutate",
+        "onSettled 里 invalidate",
+        "onSuccess",
+        "retry"
+      ],
+      "answer": 1,
+      "explanation": "成败都跟服务器对齐。"
+    },
+    {
+      "stem": "下列哪个最适合乐观更新？",
+      "options": [
+        "支付扣款",
+        "点赞",
+        "库存扣减",
+        "开户"
+      ],
+      "answer": 1,
+      "explanation": "高频低风险可回滚。"
+    },
+    {
+      "stem": "连点 赞/取消/赞 的防护思路？",
+      "options": [
+        "禁网",
+        "回滚表按笔撤销/版本号比对",
+        "加大 gcTime",
+        "prefetch"
+      ],
+      "answer": 1,
+      "explanation": "撤销只撤自己那笔。"
+    },
+    {
+      "stem": "「同步中」横幅的数据来源？",
+      "options": [
+        "isFetching 全体",
+        "loading 计数器",
+        "useMutationState 捞 pending variables",
+        "轮询"
+      ],
+      "answer": 2,
+      "explanation": "全局 pending 变更集合。"
+    },
+    {
+      "stem": "乐观更新与 invalidate 的关系？",
+      "options": [
+        "二选一",
+        "乐观是 UX、失效仍是必需",
+        "乐观可替代失效",
+        "互斥"
+      ],
+      "answer": 1,
+      "explanation": "假账必须真数冲正。"
+    },
+    {
+      "stem": "不写 cancelQueries 的典型事故？",
+      "options": [
+        "重复提交",
+        "缓存爆炸",
+        "后台旧数据落地盖掉乐观结果",
+        "类型变宽"
+      ],
+      "answer": 2,
+      "explanation": "第一拍的存在理由。"
+    },
+    {
+      "stem": "三家（Query/Zustand/Jotai）乐观骨架的共同四步？",
+      "options": [
+        "快照-先爽-回滚-对齐",
+        "读写派生订阅",
+        "缓存-去重-竞态-回收",
+        "无共性"
+      ],
+      "answer": 0,
+      "explanation": "模式同构，只是 API 皮不同。"
+    },
+    {
+      "stem": "支付类操作的正确反馈？",
+      "options": [
+        "乐观先爽",
+        "静默重试",
+        "老实 pending 转圈+禁用按钮",
+        "回滚表"
+      ],
+      "answer": 2,
+      "explanation": "回滚代价大于体验收益的场景不乐观。"
+    }
+  ]
+}

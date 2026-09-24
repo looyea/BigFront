@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-lifecycle",
+  "questions": [
+    {
+      "stem": "staleTime 控制的是？",
+      "options": [
+        "缓存多久被丢出内存",
+        "数据多久变陈旧",
+        "请求超时",
+        "重试间隔"
+      ],
+      "answer": 1,
+      "explanation": "新鲜度时钟；内存是 gcTime 的事。"
+    },
+    {
+      "stem": "staleTime 默认值？",
+      "options": [
+        "0",
+        "5 分钟",
+        "30 秒",
+        "Infinity"
+      ],
+      "answer": 0,
+      "explanation": "出生即 stale，挂载即重取。"
+    },
+    {
+      "stem": "gcTime 默认值？",
+      "options": [
+        "0",
+        "1 分钟",
+        "5 分钟",
+        "永不回收"
+      ],
+      "answer": 2,
+      "explanation": "v4 时代叫 cacheTime。"
+    },
+    {
+      "stem": "数据变 stale 后会立刻重取吗？",
+      "options": [
+        "会",
+        "不会，要等触发时机",
+        "5 分钟后",
+        "取决于 retry"
+      ],
+      "answer": 1,
+      "explanation": "挂载/聚焦/失效等时机兑现。"
+    },
+    {
+      "stem": "第二次进详情页仍白屏等请求，优先调？",
+      "options": [
+        "gcTime",
+        "staleTime",
+        "retry",
+        "signal"
+      ],
+      "answer": 1,
+      "explanation": "一直 stale 导致的必重取，与内存无关。"
+    },
+    {
+      "stem": "永不变化类数据的 staleTime 建议？",
+      "options": [
+        "0",
+        "5s",
+        "1min",
+        "Infinity"
+      ],
+      "answer": 3,
+      "explanation": "配 initialData 一劳永逸。"
+    },
+    {
+      "stem": "触发后台重取的时机不含？",
+      "options": [
+        "窗口聚焦",
+        "网络恢复",
+        "组件卸载",
+        "手动 refetch"
+      ],
+      "answer": 2,
+      "explanation": "卸载只会减订阅走向 GC。"
+    },
+    {
+      "stem": "gcTime 的倒计时从何时开始？",
+      "options": [
+        "数据创建",
+        "订阅数归零",
+        "变 stale",
+        "上次请求失败"
+      ],
+      "answer": 1,
+      "explanation": "无人订阅才计时。"
+    },
+    {
+      "stem": "被 GC 后再挂载该查询会？",
+      "options": [
+        "报错",
+        "当作全新查询重取",
+        "读到旧缓存",
+        "自动 prefetch"
+      ],
+      "answer": 1,
+      "explanation": "缓存已不存在。"
+    },
+    {
+      "stem": "「fresh/stale/GC」三态观察工具用？",
+      "options": [
+        "React DevTools",
+        "Performance 面板",
+        "React Query Devtools",
+        "console.table"
+      ],
+      "answer": 2,
+      "explanation": "面板 status 列实时可见。"
+    }
+  ]
+}

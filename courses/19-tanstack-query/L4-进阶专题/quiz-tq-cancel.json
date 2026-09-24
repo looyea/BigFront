@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-cancel",
+  "questions": [
+    {
+      "stem": "v5 取消信号从哪来？",
+      "options": [
+        "自己 new AbortController",
+        "queryFn context 的 signal",
+        "全局事件",
+        "不存在"
+      ],
+      "answer": 1,
+      "explanation": "白送到手一行接入。"
+    },
+    {
+      "stem": "竞态正确性与请求取消的关系？",
+      "options": [
+        "同一件事",
+        "前者内建保结果、后者接 signal 省资源",
+        "后者包含前者",
+        "都不支持"
+      ],
+      "answer": 1,
+      "explanation": "两层分开理解才不糊涂。"
+    },
+    {
+      "stem": "被取消的执行在 v5 里？",
+      "options": [
+        "置为 error",
+        "触发重试",
+        "retry 加倍",
+        "CancelledError 不算错误不重试"
+      ],
+      "answer": 3,
+      "explanation": "取消降级为事件。"
+    },
+    {
+      "stem": "同一 mutation 再次 mutate，旧请求？",
+      "options": [
+        "自动 abort",
+        "不自动取消（可能已落库）",
+        "被回滚",
+        "进队列等待"
+      ],
+      "answer": 1,
+      "explanation": "防重复靠 isPending+幂等键。"
+    },
+    {
+      "stem": "key 变化后旧在飞请求的结果？",
+      "options": [
+        "被忽略（正确性内建）",
+        "写入新缓存",
+        "通知全部组件",
+        "报错"
+      ],
+      "answer": 0,
+      "explanation": "执行槽按依赖值各归各位。"
+    },
+    {
+      "stem": "统计取消事件在哪判断？",
+      "options": [
+        "onError",
+        "isCancelledError(err) 于 catch 后 rethrow",
+        "status 变化",
+        "devtools 唯一"
+      ],
+      "answer": 1,
+      "explanation": "别把取消写进错误通道。"
+    },
+    {
+      "stem": "下列哪个会触发 Query 主动 abort？",
+      "options": [
+        "组件 setState",
+        "invalidate 挤掉在飞请求",
+        "staleTime 到期",
+        "gcTime 调大"
+      ],
+      "answer": 1,
+      "explanation": "新执行接管时挤掉旧请求。"
+    },
+    {
+      "stem": "4xx 的正确重试策略？",
+      "options": [
+        "默认重试 3 次",
+        "永远重试",
+        "retry 判定里对 4xx 返回 0",
+        "靠 refetchOnFocus"
+      ],
+      "answer": 2,
+      "explanation": "client error 重试无意义。"
+    },
+    {
+      "stem": "不接 signal 的后果是？",
+      "options": [
+        "结果错误",
+        "结果仍正确但旧请求继续烧流量",
+        "无法缓存",
+        "不能失效"
+      ],
+      "answer": 1,
+      "explanation": "正确性与资源层分离的直接证明。"
+    },
+    {
+      "stem": "重试等待中被 invalidate 会？",
+      "options": [
+        "旧重试链作废新执行接管",
+        "继续原退避计划",
+        "永久 paused",
+        "报错"
+      ],
+      "answer": 0,
+      "explanation": "新触发全权接管。"
+    }
+  ]
+}

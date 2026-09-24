@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-server-state",
+  "questions": [
+    {
+      "stem": "服务器状态（server state）的本质是？",
+      "options": [
+        "服务器数据在本地的只读镜像",
+        "本地可写状态",
+        "组件局部状态",
+        "表单草稿"
+      ],
+      "answer": 0,
+      "explanation": "存在服务器上、会过期、多方共享。"
+    },
+    {
+      "stem": "下列哪项不是手写 fetch+useState 的典型痛点？",
+      "options": [
+        "请求去重",
+        "竞态处理",
+        "CSS 作用域",
+        "缓存过期与回收"
+      ],
+      "answer": 2,
+      "explanation": "CSS 与数据层无关，其余全是轮子债。"
+    },
+    {
+      "stem": "useQuery 里充当缓存身份的是？",
+      "options": [
+        "queryFn",
+        "staleTime",
+        "retry 策略",
+        "queryKey"
+      ],
+      "answer": 3,
+      "explanation": "queryKey 序列化后作缓存主键。"
+    },
+    {
+      "stem": "Query 与 Zustand/Jotai 的关系是？",
+      "options": [
+        "替代关系",
+        "分工关系：Query 管服务器态，它们管客户端态",
+        "同义产品",
+        "互不兼容"
+      ],
+      "answer": 1,
+      "explanation": "三层分工是这门课的主线。"
+    },
+    {
+      "stem": "同 key 的 useQuery 在两个组件同时挂载，默认发几次请求？",
+      "options": [
+        "一次（自动去重）",
+        "两次",
+        "三次",
+        "看 gcTime"
+      ],
+      "answer": 0,
+      "explanation": "in-flight 请求自动去重。"
+    },
+    {
+      "stem": "React 绑定包的 npm 包名是？",
+      "options": [
+        "@tanstack/store",
+        "@tanstack/react-query",
+        "swr",
+        "redux-toolkit"
+      ],
+      "answer": 1,
+      "explanation": "安装 i @tanstack/react-query。"
+    },
+    {
+      "stem": "「返回上一页白屏等请求」缺的是？",
+      "options": [
+        "错误边界",
+        "预加载提示",
+        "骨架屏",
+        "缓存命中"
+      ],
+      "answer": 3,
+      "explanation": "有缓存则秒出，这是 Query 的基本盘。"
+    },
+    {
+      "stem": "后台自动刷新（窗口聚焦重取）解决的本质问题是？",
+      "options": [
+        "数据新鲜度漂移",
+        "视觉抖动",
+        "内存泄漏",
+        "重复渲染"
+      ],
+      "answer": 0,
+      "explanation": "镜像会过期，回来看一眼保新鲜。"
+    },
+    {
+      "stem": "竞态（后发先至）在 Query 里如何处理？",
+      "options": [
+        "自动加锁",
+        "需手动 AbortController",
+        "以最新依赖值的执行为准，旧结果忽略",
+        "不会发生"
+      ],
+      "answer": 2,
+      "explanation": "内建竞态处理；底层请求取消是另一层（tq-cancel）。"
+    },
+    {
+      "stem": "无人订阅的缓存多久被回收由哪个参数控制？",
+      "options": [
+        "staleTime",
+        "retry",
+        "refetchOnMount",
+        "gcTime"
+      ],
+      "answer": 3,
+      "explanation": "默认 5 分钟后丢出内存。"
+    }
+  ]
+}

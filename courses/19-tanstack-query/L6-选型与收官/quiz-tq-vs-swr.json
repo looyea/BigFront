@@ -1,0 +1,115 @@
+{
+  "lessonId": "tq-vs-swr",
+  "questions": [
+    {
+      "stem": "官方 comparison 视角下两库的核心差异？",
+      "options": [
+        "语言不同",
+        "缓存控制权与 API 面积",
+        "是否支持 TS",
+        "包管理器"
+      ],
+      "answer": 1,
+      "explanation": "同题不同卷，卷面差在控制力。"
+    },
+    {
+      "stem": "SWR 的名字含义？",
+      "options": [
+        "服务器永久渲染",
+        "渐进水合",
+        "stale-while-revalidate 策略即名字",
+        "无缓存"
+      ],
+      "answer": 2,
+      "explanation": "策略写进名字，极简路线宣言。"
+    },
+    {
+      "stem": "需要按前缀失效一片缓存、乐观回滚四拍，选？",
+      "options": [
+        "SWR",
+        "手写",
+        "RTK Query 不可",
+        "TanStack Query"
+      ],
+      "answer": 3,
+      "explanation": "硬需求清单直接指向全能者。"
+    },
+    {
+      "stem": "RTK Query 的定位是？",
+      "options": [
+        "独立缓存库",
+        "Redux 体系内的取数件",
+        "SWR fork",
+        "状态机库"
+      ],
+      "answer": 1,
+      "explanation": "tag 失效体系长在 store 里。"
+    },
+    {
+      "stem": "小项目只要「GET 缓存+聚焦重取」，选 SWR 的理由？",
+      "options": [
+        "更流行",
+        "学习成本与包体是实打实省的",
+        "性能更强",
+        "功能更多"
+      ],
+      "answer": 1,
+      "explanation": "简单本身是能力。"
+    },
+    {
+      "stem": "失效粒度上 Query 的三级匹配指？",
+      "options": [
+        "前缀/exact/predicate",
+        "本地/会话/永久",
+        "读/写/删",
+        "同步/异步/离线"
+      ],
+      "answer": 0,
+      "explanation": "L2 匹配规则的总称。"
+    },
+    {
+      "stem": "非 React 栈要 Query 能力，可行的有？",
+      "options": [
+        "没可能",
+        "Vue 有官方版等跨框架生态",
+        "只能自研",
+        "用 jQuery"
+      ],
+      "answer": 1,
+      "explanation": "Solid/Svelte/Vue 皆有。"
+    },
+    {
+      "stem": "RTK Query 接入成本主要花在哪？",
+      "options": [
+        "学 GraphQL",
+        "Redux Toolkit 本身",
+        "Service Worker",
+        "Sass"
+      ],
+      "answer": 1,
+      "explanation": "先掂量全家桶重量。"
+    },
+    {
+      "stem": "三家共享的底层理论是？",
+      "options": [
+        "都依赖 class",
+        "server state 独立、key 寻址、带新鲜度生命周期",
+        "都要 Redux",
+        "都用 WebSocket"
+      ],
+      "answer": 1,
+      "explanation": "选型题底层是概念题。"
+    },
+    {
+      "stem": "SWR 相对 Query 的显著优势是？",
+      "options": [
+        "更多 hook",
+        "更强 TS",
+        "API 面小、上手十分钟",
+        "内置 devtools"
+      ],
+      "answer": 2,
+      "explanation": "心智面积是它的货币。"
+    }
+  ]
+}
