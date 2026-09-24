@@ -1,0 +1,136 @@
+{
+  "title": "ng-version-map 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "v17（2023.11）的核心变化不包括下列哪项？",
+      "options": [
+        "@if/@for/@switch 新控制流语法",
+        "provideRouter() 路由新写法",
+        "zoneless 成为新工程默认变更检测",
+        "新 CLI 默认生成 standalone 工程"
+      ],
+      "answer": 2,
+      "explanation": "zoneless 成为默认是 v21（2025.11）的事；v17 时 signals 只是实验、zone.js 仍是默认——A/B/D 都是 v17 的核心改动。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "v19 的『组件默认 standalone』意味着什么？",
+      "options": [
+        "新组件可以省略 standalone: true 这一行，它默认就是 standalone",
+        "所有老 NgModule 项目被自动转换成 standalone",
+        "NgModule 被删除、不再合法",
+        "必须手动加 standalone: false 才能用 NgModule"
+      ],
+      "answer": 0,
+      "explanation": "v19 起新脚手架不再生成 standalone: true（因为默认即真）；NgModule 标记为维护态但不删除，存量工程仍合法运行。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "看到一份代码用 HttpClientModule 注册 HTTP 客户端——它大概来自哪个年代？",
+      "options": [
+        "v20+（HttpClientModule 是 v20 重新引入的）",
+        "v17-19 过渡期（两种混用）",
+        "无法判断，HttpClientModule 一直没变",
+        "v17 之前（provideHttpClient 从 v17 起取代它）"
+      ],
+      "answer": 3,
+      "explanation": "HttpClientModule 是 NgModule 时代的注册方式；v17+ 改用 provideHttpClient() 函数式写法——它是五枚探针之一，出现即标记旧教程。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "v20 在构建工具方面的重大变化是？",
+      "options": [
+        "引入了 Webpack 5 的 Module Federation",
+        "@angular/build（Vite 内核）成为默认 builder",
+        "用 Rollup 替代 Webpack",
+        "取消构建步骤，运行时 JIT 编译"
+      ],
+      "answer": 1,
+      "explanation": "v20 的 @angular/build 基于 Vite/esbuild，Webpack 降级为兼容层——冷启动和 HMR 体验因此大幅提升。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "v21 的两个『默认位交接』分别是什么？",
+      "options": [
+        "Material Design 3 成默认主题 + Tailwind 内置",
+        "JSX 替代 HTML 模板 + signals 替代 Zone.js",
+        "zoneless 成变更检测默认 + Vitest 替换 Karma 成 ng test 默认",
+        "NgModule 回归为默认 + Jasmine 替换 Jest"
+      ],
+      "answer": 2,
+      "explanation": "v21 新工程 app.config 里不再写 zone provider（zoneless 默认）；ng test 走 Vitest 不再用 Karma+Jasmine——两个默认位同时翻转。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "v22（本包事实底）的标志性转正事件是？",
+      "options": [
+        "Signal Forms（form()/formField()）标记 stable",
+        "Angular 完全废弃 RxJS",
+        "组件改用函数式（去掉 class）",
+        "模板语法全面切换为 JSX"
+      ],
+      "answer": 0,
+      "explanation": "v22 的 Signal Forms 转正（v21 预览→v22 stable）是表单领域的里程碑；RxJS 仍在 HttpClient/路由事件等场景存在，未被废弃。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "按本关的『版本探针表』，模板里出现 *ngIf 和 @if 混用说明什么？",
+      "options": [
+        "代码有 bug，不能混用",
+        "这是 v22 的最新推荐写法",
+        "这是 AngularJS（1.x）的代码",
+        "这是 v17-v20 过渡期工程，旧模板未跑 codemod"
+      ],
+      "answer": 3,
+      "explanation": "v17 引入 @if 但不强制废 *ngIf；过渡期工程混用正常；v21+ 新 CLI 生成的模板只有 @if——混用=过渡期标志。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "ng update 为什么只能逐级升级不能跳级？",
+      "options": [
+        "npm 不允许跨大版本更新",
+        "每个大版本有独立 schematics 迁移集，后一步依赖前一步的产物",
+        "Angular 的 semver 版本号格式不支持跳级",
+        "跳级会导致 Angular 服务器拒绝验证许可证"
+      ],
+      "answer": 1,
+      "explanation": "v17 做 control-flow codemod、v19 做 standalone 翻转、v21 做 zoneless 切默认——每步的 codemod 假设工程已处于上一步完成态；跳级=假设不成立。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "input()/output()/model() 函数式组件 API 从预览到 stable 的时间线是？",
+      "options": [
+        "v17 引入 → v19 stable",
+        "v16 引入 → v20 stable",
+        "v18 预览 → v19-20 逐步转正 → 当前 v22 已是默认推荐写法",
+        "v21 引入 → v22 stable"
+      ],
+      "answer": 2,
+      "explanation": "v18 引入 signal-based input()/output()/model() 为预览，v19-20 期间逐步转正；到 v22 已是文档推荐写法，旧 @Input/@Output 仍合法但不再是首选。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "本关说『唯一可靠事实底』是什么？",
+      "options": [
+        "angular.dev 官方文档站 + 各版本 CHANGELOG + RFC 仓库",
+        "任何 Medium/掘金上的 Angular 中文教程",
+        "2022 年出版的 Angular 入门书第三版",
+        "ChatGPT 对 Angular API 的回答"
+      ],
+      "answer": 0,
+      "explanation": "Angular 版本节奏快（每年两版）导致第三方内容『发布即过时』——官方文档站 angular.dev + CHANGELOG + RFC 仓库是唯一不过期的事实底。"
+    }
+  ]
+}

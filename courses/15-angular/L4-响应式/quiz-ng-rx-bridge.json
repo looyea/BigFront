@@ -1,0 +1,136 @@
+{
+  "title": "ng-rx-bridge 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "toSignal() 在什么时候自动取消对 Observable 的订阅？",
+      "options": [
+        "Observable complete 时",
+        "下一次 signal 被写入时",
+        "永远不自动取消",
+        "当前注入上下文（组件/指令）销毁时"
+      ],
+      "answer": 3,
+      "explanation": "toSignal 内部注册 DestroyRef.onDestroy→组件销毁时自动 unsubscribe——不需要手写 ngOnDestroy。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "以下哪个场景更适合保留 RxJS 而非换成 signal？",
+      "options": [
+        "点击按钮切换主题色",
+        "HTTP 获取用户列表存为组件状态",
+        "搜索框 300ms 去抖 + switchMap 取消过期请求",
+        "表单值变化驱动验证错误提示"
+      ],
+      "answer": 2,
+      "explanation": "debounceTime+switchMap 是时间轴上的流变换——signal 无等价原语；其余三个都是简单状态容器用 signal 更轻。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "toObservable(searchQuery) 的作用是？",
+      "options": [
+        "把 Observable 转成 Signal",
+        "创建一个全新的独立 Observable 与 signal 无关",
+        "把 signal 值变化转为 Observable 发射，使其可进 RxJS 操作符链",
+        "替代 AsyncPipe"
+      ],
+      "answer": 2,
+      "explanation": "toObservable 让 signal 世界的数据可以流入 RxJS 管道（debounce/switchMap 等）——双向桥的反向。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "AsyncPipe 在 zoneless 项目里的现状是？",
+      "options": [
+        "被废弃不再合法",
+        "仍是唯一能在模板里消费 Observable 的方式",
+        "合法但不再是默认推荐——toSignal 是首选桥",
+        "只能在 NgModule 组件中使用"
+      ],
+      "answer": 2,
+      "explanation": "AsyncPipe 没被删仍可用，但新文档/脚手架推荐 toSignal+signal 直接读取——AsyncPipe 从正统退为兼容工具。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "在 providedIn:'root' 的 service 里调 toSignal(obs$) 有什么风险？",
+      "options": [
+        "性能下降",
+        "类型推断失败",
+        "service 永不销毁→流永不退订→内存泄漏",
+        "signal 无法读取"
+      ],
+      "answer": 2,
+      "explanation": "toSignal 跟随注入上下文销毁来 unsubscribe——root service 与应用同寿命所以订阅永远在。推荐只在组件/指令里用。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "toSignal(route.params, { initialValue: {} }) 中 initialValue 的作用？",
+      "options": [
+        "设置 Observable 的发射频率",
+        "在流首次发出值之前 signal 的返回值",
+        "流报错时的默认值",
+        "强制流只发射一次"
+      ],
+      "answer": 1,
+      "explanation": "不填 initialValue 时 toSignal 返回的 signal 初始为 undefined——填了就用该值兜底避免模板空引用。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "以下旧写法 `this.data$ = http.get('/api').pipe(map(d=>d.items))` + 模板 `data$ | async`，signal 时代最简洁替代是？",
+      "options": [
+        "data = toSignal(http.get('/api').pipe(map(d=>d.items)))",
+        "data = signal(http.get('/api'))",
+        "data = computed(() => http.get('/api'))",
+        "data = http.get('/api') | async"
+      ],
+      "answer": 0,
+      "explanation": "保留 RxJS 管道处理 map 转换→用 toSignal 桥转 signal——模板直接 data() 即可。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Angular HttpClient 在 v20+ 底层可以用 fetch 代替 XMLHttpRequest，对外接口返回什么？",
+      "options": [
+        "Promise<Response>",
+        "Signal<T>",
+        "仍是 Observable<T>",
+        "AsyncIterable<T>"
+      ],
+      "answer": 2,
+      "explanation": "withFetch() 只换内部传输层、对外仍返回 Observable——兼容现有管道代码；signal-based HttpClient 是远期讨论。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "signal 时代 BehaviorSubject 的等价迁移中，.next(val) 对应？",
+      "options": [
+        "signal.subscribe(val)",
+        "signal.set(val) 或 signal.update(fn)",
+        "computed.set(val)",
+        "effect(() => val)"
+      ],
+      "answer": 1,
+      "explanation": "BehaviorSubject.next = 写新值并通知订阅者；signal 等价是 .set()（覆盖）或 .update()（基于旧值变换）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "takeUntilDestroyed(destroyRef) 操作符解决的是什么问题？",
+      "options": [
+        "让 Observable 变成 Signal",
+        "在手动 subscribe 时绑定组件生命周期自动退订",
+        "取消所有 pending 的 HTTP 请求",
+        "停止 signal 的传播"
+      ],
+      "answer": 1,
+      "explanation": "手动 subscribe 不像 toSignal 有自动清理——takeUntilDestroyed 作为管道操作符在 DestroyRef 触发时 complete 流。"
+    }
+  ]
+}

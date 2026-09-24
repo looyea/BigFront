@@ -1,0 +1,136 @@
+{
+  "title": "ng-landscape 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "§一说四家框架各有一个暗赌注，Angular 赌的是？",
+      "options": [
+        "生态——谁插件多谁赢",
+        "编译——产物越小越快谁赢",
+        "约束——全家桶+强约定+固定版本节奏，赌『五年后还有人接手』",
+        "渐进——学习曲线最缓谁赢"
+      ],
+      "answer": 2,
+      "explanation": "React 赌生态、Vue 赌渐进、Svelte 赌编译、Angular 赌约束；银行/电信/大型 B 端『人员流水账式轮换』场景里，一个供应商负责到底的模式是硬需求。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "v17（2023.11）那次『默认栈革命』不包括下列哪项？",
+      "options": [
+        "新项目默认 standalone、@if/@for 控制流进模板、路由新语法",
+        "从 AngularJS 到 Angular 2 的 TypeScript 重写",
+        "它让『Angular 慢而啰嗦』的刻板印象建立在旧时代",
+        "NgModule 从『必须』降为『可选』"
+      ],
+      "answer": 1,
+      "explanation": "『从 AngularJS 到 Angular 2 的 TS 重写』是 2016 年那次大改版；A/C/D 都是 v17 时代或其后果；四次大改版的时间归属是版本地图关的主课，这里先预考。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "standalone 组件 API 的『引入→默认推荐→标记 stable』时间线正确的是？",
+      "options": [
+        "v9 引入 → v14 stable → v17 默认",
+        "v16 引入 → v18 stable → v20 默认",
+        "v17 引入 → v19 默认 → v21 stable",
+        "v14 引入 → v17 成为新项目默认 → v19 标记 stable"
+      ],
+      "answer": 3,
+      "explanation": "一个 API 的『存在』与『成为默认』与『转正』是三个时点——识别教程年代的关键判据之一；把 standalone 记成 v17 发明的是常见口误（v14 就有了，只是当时是实验）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "v21（2025.11）的两个『默认位交接』是？",
+      "options": [
+        "NgModule 默认化 + Jasmine 默认化",
+        "zoneless 成为变更检测默认 + Vitest 替换 Karma 成测试默认",
+        "Signal Forms 成为唯一表单 API + Ivy 二代编译器",
+        "Webpack 回归 + 装饰器语法冻结"
+      ],
+      "answer": 1,
+      "explanation": "『预览→默认』是 Angular 改版的固定舞步：zoneless v18 预览 v21 默认；同场测试器换代——注意『Karma 替换为 Vitest』说的是测试运行器，与框架 API 无关但同样进版本地图。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "§四『怎么选三轴』不包括哪一条？",
+      "options": [
+        "招聘市场轴",
+        "团队偏好轴（官方给答案是减负还是枷锁）",
+        "包体积最小轴",
+        "项目寿命轴"
+      ],
+      "answer": 2,
+      "explanation": "三轴=招聘/寿命/偏好，全是工程与现实约束；体积是 14 包 sig-size 量过的账，但在『选不选 Angular』这个决策层级，全家桶的体积本来就不是第一变量。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "『四家里唯一把架构级概念做成框架内置正字』指的是？",
+      "options": [
+        "依赖注入 injector 树 / 路由守卫 / 变更检测策略这些概念",
+        "虚拟 DOM 和 diff 算法",
+        "热更新与摇树",
+        "JSX 与模板编译"
+      ],
+      "answer": 0,
+      "explanation": "React 的 DI 靠 Context 手搓（14 包 sig-auth 的痛）、守卫靠各家路由库自定 API；Angular 把这三样做成框架正字——学完再看同类问题的视角差，是本包第二重收益。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "§三末尾拿 Solid 做对照，『两条路线对讲机里听见对面』指的是？",
+      "options": [
+        "两家都放弃了 RxJS",
+        "两家包体积终于相同",
+        "Solid 补全家桶、Angular 换血 signals——两家向对方腹地靠拢，14 包『合流趋势』的又一例证",
+        "两家都改用编译时方案"
+      ],
+      "answer": 2,
+      "explanation": "Solid 把细粒度做到极致后发现 DI/表单/SSR 要自己配；Angular 全家桶配齐后花五个版本把响应层换成 signals——路线收敛是 2024-2026 前端的大趋势句。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "学完本课，判断『手头 Angular 教程年代』的下列依据哪个最不可靠？",
+      "options": [
+        "满屏 declarations/imports/NgModule 组织",
+        "模板写 *ngIf/*ngFor 而非 @if/@for",
+        "拦截器还是 class HttpInterceptor 写法",
+        "代码用了 TypeScript 严格模式"
+      ],
+      "answer": 3,
+      "explanation": "TS 严格模式不是年代标志——各年代教程都可能有；前三条分别命中 v17 前（NgModule/星号指令）与 v15 前后（class 拦截器→函数式），都是『默认栈断代』的有效探针。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "§一说的『第二重收益』是？",
+      "options": [
+        "Angular 薪资普遍高于其它框架",
+        "Angular 生态小、库少所以学得轻松",
+        "框架内置概念（DI/守卫/变更检测）学完可反哺其它三家的同类问题视角",
+        "学会 Angular 就学会 NgRx"
+      ],
+      "answer": 2,
+      "explanation": "14 包 sig-auth 手写四种登录态实现的那类活，在 Angular 里是『框架正字+一条 API』；概念在哪家都要学，但把概念做成正字的只有它——这重收益迁移性最强。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "部署预告说『默认值即版本号』，意思是？",
+      "options": [
+        "ng new 不再需要任何手工选项——它的新项目默认值（standalone？测试器？zoneless？）本身就是当前版本的指纹，对照下一关版本地图即可自证教程年代",
+        "版本号写死在 tsconfig 里",
+        "所有默认值都可以在 tsconfig 修改",
+        "默认值从 v17 起再也没有变过"
+      ],
+      "answer": 0,
+      "explanation": "『同一个命令、不同年代、产物不同』是 Angular 大改版史留给使用者的直觉：先观察默认值再对照版本表，判断比看教程发布日期可靠——下一关 ng-version-map 把这张表正式发给你。"
+    }
+  ]
+}

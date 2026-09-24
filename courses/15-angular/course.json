@@ -1,0 +1,101 @@
+{
+  "id": "15-angular",
+  "title": "Angular 实战：企业级框架的主流姿势",
+  "order": 15,
+  "tier": "钻石 · 四大框架收官",
+  "tagline": "四大框架的最后一块拼图。Angular 在 v17 大改版之后已经不是你认识的那个 Angular：standalone 默认、模板新控制流、signals + zoneless、v21 起 zoneless 成默认、v22 的 Signal Forms 转正——它是把『全家桶 + 强约定』路线走到黑的企业级选手。这一包按 2026 主流应用姿势学：不挖编译器源码，把组件、DI、响应式、表单、路由、状态、SSR 与工程化一次走完，并与 04/05/11/13 四个框架包两两对照收官。",
+  "icon": "🛡️",
+  "color": "#dd0031",
+  "levels": [
+    {
+      "id": "L1",
+      "title": "导论与全景",
+      "subtitle": "简史 / 第一个应用 / 版本地图",
+      "lessons": [
+        { "id": "ng-landscape", "title": "为什么 2026 还要学 Angular：企业级定位与四次大改版", "goal": "从 AngularJS 的 $digest 到 Ivy 再到 v17 默认栈 overhaul 的时间线，理解每次改版解决什么问题；Angular 的『全家桶+强约定』路线与 React 库组合、Vue 渐进、Svelte 编译路线的本质分歧；它的真实主场（企业大型 SPA、长期维护项目）（呼应 sig-map、svelte-overview）" },
+        { "id": "ng-first-app", "title": "第一个应用：ng new 之后每一层是什么", "goal": "跑通 ng new/ng serve；读懂新项目骨架：bootstrapApplication 的 standalone 启动、app.config.ts 的 provideRouter/provideHttpClient 提供者树、组件即入口不再有 NgModule；构建产物与 CLI 命令面板（呼应 ng-version-map、kit-project-structure）" },
+        { "id": "ng-version-map", "title": "版本演进地图：17→22 该信哪份教程", "goal": "一张表钉住 v17（standalone/控制流/defineStub 路由）v18（signal 稳定/inject 上下文）v19（增量 hydration/test bed 换代）v20（signals 稳定收尾/Webpack 退居）v21（zoneless 默认/Karma→Vitest）v22（Signal Forms 转正）各自改了什么；识别旧教程信号（NgModule/HttpClientModule/*ngIf），本包以 v22 为事实底（呼应 ng-templates、svelte-migration-legacy 的版本甄别经验）" }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "组件与模板",
+      "subtitle": "模板语法 / 组件 API / 指令",
+      "lessons": [
+        { "id": "ng-templates", "title": "模板与绑定：插值、属性、事件、双向与新控制流", "goal": "四种绑定（插值/[prop]/(event)/[(ngModel)]）+ @if/@for/@switch/@defer 新控制流语法与旧 *ngIf/*ngFor 的对照与迁移理由；#模板引用变量、@let 模板变量；content projection 的 select 与 slot 心智（呼应 vue-template-syntax、react-jsx、svelte-template）" },
+        { "id": "ng-comp-signals", "title": "组件 API 的 signals 时代：input()/output()/model()/viewChild()", "goal": "函数式 input()/output()/model() 取代 @Input/@Output 装饰器的写法与收益（类型推断、required、默认值、model() 双向）；viewChild()/contentChild() 查询信号；ChangeDetectionStrategy.OnPush 在 zoneless 下还剩什么职责；组件生命周期钩子与 DestroyRef（呼应 ng-signals、za-core）" },
+        { "id": "ng-directives", "title": "自定义指令：Angular 的『无组件复用』原语", "goal": "@Directive 的 host 绑定（监听事件/加类/改属性）、inject(TemplateRef/ViewContainerRef) 造结构指令、指令继承与 composition API；@for 的 track 为什么是性能命门；何时用指令何时用组件（呼应 vue-directives-teleport、svelte-actions）" }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "依赖注入与服务",
+      "subtitle": "DI 体系 / 服务分层 / 注入上下文",
+      "lessons": [
+        { "id": "ng-di-core", "title": "DI 体系：注入器树、provider 与 token", "goal": "provider 四种 useValue/useClass/useFactory/useExisting 与何时用哪种；injector 层级（root/平台/组件/路由）决定单例归属的机制（应用层）；InjectionToken 与配置型 provider；standalone 时代 providers 写在 component/app.config 的分布图——这是 React 没有的框架能力，对照 Context 手工组装（呼应 sig-auth、react-context）" },
+        { "id": "ng-services", "title": "服务与业务分层：Angular 的『状态就是服务』", "goal": "Service 作为业务逻辑与共享状态的默认容器：@Injectable({providedIn:'root'}) 单例、signal 封装私有状态对外只读暴露；从 BehaviorSubject 时代到 signal 时代的迁移姿势；服务拆分粒度与循环依赖处理（forwardRef 避法）（呼应 ng-state-services、za-patterns）" },
+        { "id": "ng-inject", "title": "注入上下文：inject() 的边界与构造器注定的黄昏", "goal": "inject() 只能在注入上下文调用的规则与报错读法；runInInjectionContext/NodeInjector 的补救口；为什么 constructor DI 在新代码里退役（与 TS 参数属性、测试替身有关）；provider 与手动 import 的取舍——依赖关系可见性讨论（呼应 ng-di-core、vite-deps-perf 的显式依赖观）" }
+      ]
+    },
+    {
+      "id": "L4",
+      "title": "响应式：signals 与 RxJS 的交接",
+      "subtitle": "Angular signals / 桥接 / zoneless",
+      "lessons": [
+        { "id": "ng-signals", "title": "Angular signals：与 TC39 提案同语义的独立实现", "goal": "signal()/computed()/effect()/untracked()/patch() 全 API 与写保护模型；与提案版、Solid 版的三处关键差异（未标提案阶段即用、writable 分离、effect 调度）；官方『何时该用 signal 何时普通属性』判据（呼应 tc39-core、solid-signals、sig-landscape）" },
+        { "id": "ng-rx-bridge", "title": "RxJS 在 Angular 的现在与未来：toSignal 桥与 AsyncPipe 的退场", "goal": "HttpClient/路由事件等 API 仍是 Observable 的现实；toSignal()/toObservable() 双向桥的用法与订阅清理（DestroyRef）；AsyncPipe 在新项目的地位下滑；哪些场景值得留 RxJS（复杂异步编排）、哪些该换 signals（呼应 rx-basics、sig-vs-streams、sig-server）" },
+        { "id": "ng-zoneless", "title": "变更检测与 zoneless：zone.js 到底替你做了什么", "goal": "application layer 视角：zone.js 拦截异步→触发变更检测→遍历组件树的工作原理图示（不挖源码）；v21 起 zoneless 默认后 signal 精确通知如何取代脏检查；provideZonelessChangeDetection/手动 markForCheck 的兜底角色；effect 与 afterNextRender 的调度时机；性能与调试的实际变化（呼应 solid-internals 轻触、sig-perf）" }
+      ]
+    },
+    {
+      "id": "L5",
+      "title": "表单与 HTTP",
+      "subtitle": "Reactive Forms / Signal Forms / HttpClient",
+      "lessons": [
+        { "id": "ng-forms", "title": "Reactive Forms：存量项目的正统", "goal": "FormBuilder 类型化表单、同步/异步校验器、valueChanges 流、patch 与脏检查状态；FormArray 动态行；模板驱动表单（ngModel）何时才用；存量表单代码的读法——v22 之前它仍是企业默认（呼应 react-forms 对照、kit-form-validation）" },
+        { "id": "ng-signal-forms", "title": "Signal Forms：v22 转正的新官配", "goal": "signalInput()/form() API 的表单建模：字段级错误/脏/禁用状态直接是 signal；与 Reactive Forms 的样板对比（无 valueChanges 订阅、无 formGroup 树操作）；迁移判断：新表单用不用、存量要不要搬；仍处快速演进期的 API 风险标注（官方文档为唯一事实底）（呼应 ng-forms、sig-mutability）" },
+        { "id": "ng-http", "title": "HttpClient 实战：函数式拦截器与类型化请求", "goal": "provideHttpClient(withInterceptors([...])) 函数式拦截器取代 HttpInterceptor 类的写法与链式执行；强类型响应<T> 与错误处理（HttpErrorResponse 判别）；与 RxJS 操作符协作（retry/timeout）；fetch 化趋势与 fetchBackend provider（呼应 ng-rx-bridge、sig-server 的 Query 分工讨论）" }
+      ]
+    },
+    {
+      "id": "L6",
+      "title": "路由：全家桶的那条腿",
+      "subtitle": "路由配置 / 守卫 / 数据流",
+      "lessons": [
+        { "id": "ng-router-core", "title": "路由核心：嵌套、懒加载与 standalone 化", "goal": "Routes 配置树与 RouterOutlet 渲染链；loadComponent/loadChildren 懒加载分包原理（对照 next/nuxt 的路由级 code splitting）；routerLinkActive、重定向、通配 404；withRouterConfig 默认值与 URL 策略（呼应 kit-routing-basics、next-routing、vue-router-basics）" },
+        { "id": "ng-router-guards", "title": "函数式守卫与登录态：CanMatch/CanActivate 实战", "goal": "FunctionalGuard（CanMatchFn/CanActivateFn/CanDeactivateFn）与旧类守卫差异；注入 service 判断登录态、返回 boolean|UrlTree 的跳转语义；守卫可返回 Observable/Promise 的异步判断与 RxJS 收敛；把 14 包 sig-auth 的『登录态+守卫+登出清场』需求在此用 Angular 实现一遍（呼应 sig-auth、mp-login）" },
+        { "id": "ng-router-data", "title": "路由数据流：resolve、component input binding 与 SSR", "goal": "withComponentInputBinding 让路由参数直达 input()；ResolveFn 预取数据（仍是 Observable）与 SSR 时的 server 端执行点；data/static 路由元数据与 title 策略；scrollPositionRestoration/锚点滚动；Route Recognizer 与预编译路由的边角（呼应 ng-http、kit-load-universal、sig-server SSR）" }
+      ]
+    },
+    {
+      "id": "L7",
+      "title": "状态管理与大型架构",
+      "subtitle": "Service+Signals / NgRx / 库分层",
+      "lessons": [
+        { "id": "ng-state-services", "title": "state 就是 service：signal store 模式", "goal": "私有 writable signal + 公开 asReadonly + action 方法的标准封装；派生 computed 放 store 的纪律；跨路由共享/持久化（sessionStorage 拦截）；何时一个 service 够何时要状态库——对照 14 包 Zustand 的『对象三用法』心智迁移（呼应 za-core、ng-services、sig-scenarios）" },
+        { "id": "ng-ngrx", "title": "NgRx 正统与信号派：企业剧本的现在", "goal": "Store/Action/Reducer/Effect/Selector 五件套一图流与 DevTools 时间旅行（对照 redux 家族）；NgRx SignalStore/ComponentStore 新派与 nx 生态；选型判据：Angular 官方『多数应用不需要 NgRx』的立场与团队偏好；本包定位主流够用即止（呼应 za-middleware、sig-migrate、mobx-stores）" },
+        { "id": "ng-arch", "title": "大型项目架构：库分层与边界纪律", "goal": "core/shared/features 三层库与 barrel 禁令的官方风格指南依据；延迟 feature 边界（路由处才 import）；monorepo（nx）在 Angular 圈的常见形态；模块边界的依赖图纪律与 lint 规则（@angular-eslint）；对照 12/13 包的架构章节收企业级架构一课（呼应 nuxt-directory 目录分层、nuxt-architect）" }
+      ]
+    },
+    {
+      "id": "L8",
+      "title": "生态与工程",
+      "subtitle": "SSR / 测试 / 组件库",
+      "lessons": [
+        { "id": "ng-ssr", "title": "SSR 与 hydration：全家桶的服务端拼图", "goal": "ng add @angular/ssr 后 server.ts 引擎与 Angular 的 SSR 编译（增量 hydration v17+ 非破坏式）；@defer 与 SSR 的配合、STATE_KEY 服务端预取防双请求（provideClientHydration with fetch caching）；SSR 下的 DI 每请求隔离（对照 14 包 sig-server 模块单例债的 Angular 答案）；prerender 站点生成（呼应 sig-server、kit-load-universal、nuxt-render-modes）" },
+        { "id": "ng-testing", "title": "测试：Vitest 默认时代的应用层测试地图", "goal": "v21 起 Karma→Vitest/ng test 新默认；TestBed 的 configureTestingModule 写法、standalone 组件测试免 NgModule 的便利；service（signal store）纯单测、HttpClient 测试 provideHttpClientTesting；快照的慎用与 E2E 留给 Playwright 的分工——为 17 测试专题包打个薄基座（呼应 vite-vitest、solid 测试经验）" },
+        { "id": "ng-lib-ui", "title": "UI 生态：Material、CDK 与第三方集成", "goal": "Angular Material（含 v22 MDC 原生控件新线）与 CDK 的 headless 能力（a11y/overlay/拖拽）；样式封装四档 ViewEncapsulation 与主题 CSS 变量；集成无框架绑定的第三方组件（headlessui/shoelade/webcomponents 出口）；对照各框架组件库生态的锁定度差异（呼应 kit-overview 组件生态、nuxt-modules）" }
+      ]
+    },
+    {
+      "id": "L9",
+      "title": "收官与选型",
+      "subtitle": "性能 / 四框架合龙 / 毕业项目",
+      "lessons": [
+        { "id": "ng-perf", "title": "性能实战：bundle 预算、@defer 与渲染诊断", "goal": "angular.json budgets 预算门禁；@defer 按需加载块（on viewport/idle/prefetch 触发器）与路由级懒加载的配合；zoneless+signal 的默认性能面与剩余热点（@for track/OnPush/不可变数据）；DevTools 与 ng inspect 的渲染取证；包体积量级对照 sig-size 的账（呼应 sig-size、sig-perf、vite-ci-perf）" },
+        { "id": "ng-compare", "title": "用四框架合龙：Angular 在哪、其他三家在哪", "goal": "04/05/11/13/15 五包知识点逐一对照表：响应式（signals 各家采纳）、组件模型（装饰器 vs 宏 vs 编译 vs hooks）、依赖注入（Angular 独家框架级）、模板（控制流趋同现象）、全家桶 vs 拼装；企业选型、招聘市场、遗留栈（NgModule 存量）三轴给结论——四强收官判词（呼应 sig-map、solid-overview、svelte-overview、vue-reactivity-theory）" },
+        { "id": "ng-capstone", "title": "毕业项目与进阶路线：全栈后台一次走完", "goal": "用本包技术栈独立实现带登录守卫、CRUD、表单、状态、SSR 的管理后台（对照 14 包 sig-capstone 的记分卡纪律做四框架版终战）；自查清单 27 关；进阶方向：NgRx 深水区、编译器/internals（13 包式深挖）、17 测试专题包与 18 网络专题包的衔接点预告（呼应 ng-capstone 定位、sig-roadmap）" }
+      ]
+    }
+  ]
+}

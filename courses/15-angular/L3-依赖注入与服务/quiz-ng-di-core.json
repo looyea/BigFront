@@ -1,0 +1,136 @@
+{
+  "title": "ng-di-core 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "@Injectable({providedIn:'root'}) 的服务实例注册在哪一级注入器？",
+      "options": [
+        "Root Injector（应用级，全局单例）",
+        "Route Injector（路由级）",
+        "Platform Injector（平台级）",
+        "Element Injector（组件级）"
+      ],
+      "answer": 0,
+      "explanation": "providedIn:'root' 把服务注册到 Root Injector（app.config 创建的那一级）——全应用唯一实例。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "inject(X) 查找 provider 的方向是？",
+      "options": [
+        "从 Root Injector 向下遍历子注入器",
+        "只在当前 Element Injector 查找",
+        "从当前注入器向上冒泡到 Platform，找到即返回",
+        "全局 Map 直接哈希查找"
+      ],
+      "answer": 2,
+      "explanation": "DI 查找是从当前组件/指令的 Element Injector 沿父链向上冒泡——谁注册了 token X 谁返回值；全找不到抛 NullInjectorError。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "{ provide: Logger, useExisting: ConsoleLogger } 的效果是？",
+      "options": [
+        "new 一个 Logger 实例和一个 ConsoleLogger 实例",
+        "inject(Logger) 和 inject(ConsoleLogger) 拿到完全同一个实例",
+        "Logger 是 ConsoleLogger 的父类",
+        "ConsoleLogger 被删除、只有 Logger 可用"
+      ],
+      "answer": 1,
+      "explanation": "useExisting 是别名——两个 token 指向同一实例不重复 new；与 useClass 的区别是 useClass 会创建新实例。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "InjectionToken 解决的是什么场景？",
+      "options": [
+        "注入一个 HTTP 请求头 token",
+        "给非 class 类型（值/接口/函数）提供 DI key",
+        "替代 NgModule 的 imports 数组",
+        "创建组件间的共享信号"
+      ],
+      "answer": 1,
+      "explanation": "DI key 默认是 class 类型；要注入配置对象/string/function 等没有 class 实体的值时用 InjectionToken<T> 做类型安全的 key。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "@Component({providers:[DashboardState]}) 的作用域是？",
+      "options": [
+        "全应用单例",
+        "只在当前路由内共享",
+        "当前组件及其子组件树内单例、组件销毁时一起销毁",
+        "Platform 级"
+      ],
+      "answer": 2,
+      "explanation": "组件级 providers 注册在 Element Injector——该组件子树共享一个实例、组件销毁则实例销毁。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下哪种 provider 写法可以懒创建且组合其他 provider？",
+      "options": [
+        "useValue",
+        "useClass",
+        "useExisting",
+        "useFactory"
+      ],
+      "answer": 3,
+      "explanation": "useFactory 接收工厂函数，只在首次 inject 时执行（懒）、函数内部可 inject 其他 provider 做组合。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "找不到 provider 时 Angular 抛什么错误？",
+      "options": [
+        "TypeError: undefined is not a constructor",
+        "ReferenceError: X is not defined",
+        "NullInjectorError: No provider for X!",
+        "InjectionError: Token not found"
+      ],
+      "answer": 2,
+      "explanation": "DI 冒泡到 NullInjector（根之上）仍找不到就抛 NullInjectorError——排查：确认 token 拼写、注册层级是否在使用方作用域链上。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Angular DI 与 React Context 的根本结构差异是？",
+      "options": [
+        "React Context 性能更好",
+        "Angular DI 独立于渲染树、React Context 必须挂在 JSX Provider 组件上",
+        "两者完全等价",
+        "Angular DI 不支持嵌套作用域"
+      ],
+      "answer": 1,
+      "explanation": "DI 的注册与消费两端通过 token 解耦、不需要在 JSX/template 里包 Provider 标签；React Context 的 Provider 是一个渲染树节点。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "standalone 服务最常用的注册方式是？",
+      "options": [
+        "写在 AppModule 的 providers 里",
+        "在 app.config.ts 里逐个列出所有业务服务",
+        "@Injectable({providedIn:'root'}) 自注册",
+        "main.ts 里 new 一个实例挂 window 上"
+      ],
+      "answer": 2,
+      "explanation": "standalone 时代服务用 providedIn:'root' 在自己文件里自注册到 Root Injector——不占 app.config 行、支持 tree-shaking。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "测试里替换一个 providedIn:'root' 的服务，正确做法是？",
+      "options": [
+        "删掉 @Injectable 装饰器",
+        "TestBed providers: [{provide: TheService, useValue: mockObj}]",
+        "覆盖 global.TheService",
+        "在 beforeEach 里 new 一个真实例"
+      ],
+      "answer": 1,
+      "explanation": "TestBed.configureTestingModule 的 providers 数组用 useValue/useClass 覆盖同 token——注入器查找时测试 provider 优先于 root。"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "title": "ng-services 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Angular 的『状态就是服务』模式里，外部获取状态的正确入口是？",
+      "options": [
+        "service.count（asReadonly 暴露的只读 signal）",
+        "直接访问 service._count()",
+        "通过 AsyncPipe 订阅",
+        "getCount() 方法返回普通值"
+      ],
+      "answer": 0,
+      "explanation": "私有 _count 用 asReadonly() 暴露为只读 signal——外部能 .() 读但无法 .set()；写操作通过 action 方法。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "BehaviorSubject.asObservable() 在 signal 时代的等价物是？",
+      "options": [
+        "signal.subscribe()",
+        "computed()",
+        "writableSignal.asReadonly()",
+        "toObservable()"
+      ],
+      "answer": 2,
+      "explanation": "asReadonly() 与 asObservable() 语义一致：内部可写、外部只读——但 signal 不需要 pipe/subscribe。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "服务拆分粒度的判断标准不包括？",
+      "options": [
+        "这块状态有独立 action 语义吗",
+        "有超过一个组件读它吗",
+        "它的代码行数超过 200 行了吗",
+        "它的生命周期和谁一致"
+      ],
+      "answer": 2,
+      "explanation": "行数不是拆分标准（可能内聚高就是对的）；语义独立性、消费面广度、生命周期对齐才是三条核心判据。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "两个 Service 互相 inject 导致循环依赖，首选解法是？",
+      "options": [
+        "加 forwardRef",
+        "拆第三个服务或改用事件/signal 通信解耦",
+        "改成 providedIn: 'platform'",
+        "合并为一个巨型服务"
+      ],
+      "answer": 1,
+      "explanation": "forwardRef 是旧逃生口且被标为弃用方向；首选是拆 C 让 A→C←B 变 DAG 或用 signal/effect 做事件总线。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "zoneless 下组件消费 service 的 signal，模板写法是？",
+      "options": [
+        "{{ svc.data$ | async }}",
+        "svc.data.subscribe(v => ...)",
+        "{{ svc.data() }}",
+        "{{ svc.getData() }}"
+      ],
+      "answer": 2,
+      "explanation": "signal 在模板里直接调用 .() 取值——绑定本身就是订阅者，signal 变→模板自动重算。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "跟路由生命周期一致的 service 应注册在？",
+      "options": [
+        "@Injectable({providedIn:'root'})",
+        "app.config.ts providers 数组",
+        "路由配置 { path:'dash', providers: [DashService] }",
+        "main.ts 手动 new"
+      ],
+      "answer": 2,
+      "explanation": "路由级 providers 让服务随路由激活创建、离开销毁——页面级状态最合适。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Service 内部 _items 是 writable signal，fetchAll() 完成后正确的更新写法是？",
+      "options": [
+        "this._items.next(data)",
+        "this._items.value = data",
+        "this._items = data",
+        "this._items.set(data)"
+      ],
+      "answer": 3,
+      "explanation": "signal 用 .set() 整体替换或 .update() 增量；.next() 是 RxJS、直接赋值会断 signal 引用。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "与 14 包 Zustand 对比，Angular Service + signal 模式的独有能力是？",
+      "options": [
+        "更小体积",
+        "不需要 Provider 包裹就能全局共享（DI 层级隔离）",
+        "自动持久化到 localStorage",
+        "内置虚拟列表"
+      ],
+      "answer": 1,
+      "explanation": "Zustand 靠模块单例全局共享、React 组件树无作用域；Angular DI 给 root/route/element 三级隔离——同一服务在不同层级可多实例。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "signal 时代服务里的派生状态（如 totalPrice = qty × price）应写成？",
+      "options": [
+        "getter 方法每次重算",
+        "computed signal",
+        "在 action 里手动赋值",
+        "BehaviorSubject + combineLatest"
+      ],
+      "answer": 1,
+      "explanation": "computed 自动追踪源 signal 变化、惰性求值、memo 化——比 getter 有缓存、比手动维护不易漏。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "@Injectable({providedIn:'root'}) 的服务在 SSR 场景下有什么问题？",
+      "options": [
+        "没有，root 服务在 SSR 完全隔离",
+        "SSR 每请求必须共享同一个 root 实例",
+        "SSR 需要每请求独立实例——root 单例可能导致跨请求数据泄漏",
+        "SSR 不支持 signal"
+      ],
+      "answer": 2,
+      "explanation": "SSR Node 进程处理多个并发请求——如果 root service 有可变状态，两请求间会串数据；解法：组件级/请求级 provider 或 TransferState（L8 ng-ssr）。"
+    }
+  ]
+}

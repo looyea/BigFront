@@ -1,0 +1,136 @@
+{
+  "title": "ng-first-app 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "§二骨架四层中，app.config.ts 属于哪一层？",
+      "options": [
+        "启动层——它被 main.ts import",
+        "应用层——providers 总装配线",
+        "组件层——里面引用了 App 组件",
+        "工程层——它是 CLI 生成的配置文件"
+      ],
+      "answer": 1,
+      "explanation": "app.config.ts 导出 ApplicationConfig 的 providers 数组（路由/HTTP/变更检测策略），是应用层『装配全局能力』的注册处；main.ts 才是启动层。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "v21+ 新工程的 app.config.ts 里关于 zone 的 provider 写法是？",
+      "options": [
+        "provideZoneChangeDetection({ eventCoalescing: true })",
+        "import {.zone} from 'zone.js' 在 main.ts 顶部",
+        "providers 数组里必须写 providers: [provideZonelessChangeDetection()]",
+        "什么都不写——zoneless 已是默认行为"
+      ],
+      "answer": 3,
+      "explanation": "v21 起 zoneless 是新建工程的默认行为，app.config 不再出现 zone 相关 provider；v18-20 之间才需要手动 provideZonelessChangeDetection() 或残留 provideZoneChangeDetection()。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "bootstrapApplication(App, appConfig) 的旧世界对应写法是？",
+      "options": [
+        "platformBrowserDynamic().bootstrapModule(AppModule)",
+        "createRoot(document.getElementById('root')).render(<App/>)",
+        "createApp(App).mount('#app')",
+        "SvelteApp({ target: document.body })"
+      ],
+      "answer": 0,
+      "explanation": "platformBrowserDynamic().bootstrapModule(AppModule) 是 v17 前的 NgModule 启动方式；识别这一行就能判断教程年代在 v17 之前——版本探针。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "§五 angular.json 的 budgets 配置的作用是？",
+      "options": [
+        "限制 API 请求并发数",
+        "配置开发/生产端口号",
+        "设定 bundle 体积预算，超标时 build 报警或失败",
+        "控制 TypeScript 编译的内存上限"
+      ],
+      "answer": 2,
+      "explanation": "budgets 给 initial/anyComponentStyle 设体积阈值（默认 4MB/1000kB 量级），超了 ng build 直接红——框架内置的 size-limit 门禁。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "v20+ 新工程的 tsconfig 默认开启 strictTemplates 意味着什么？",
+      "options": [
+        "只有 .ts 文件过严格检查，HTML 模板不管",
+        "模板里的表达式也过类型检查——属性名拼错 build 阶段就报错",
+        "所有组件必须写 templateUrl 外链",
+        "禁止在模板中使用管道"
+      ],
+      "answer": 1,
+      "explanation": "strictTemplates 让 {{ user.naem }} 这种拼写错误在 ng build 阶段报错而不是运行时 undefined——模板不再是类型盲区，强约定的红利。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "v19 起新建 standalone 组件的 @Component 装饰器里 standalone: true 这一行？",
+      "options": [
+        "必须写，否则编译失败",
+        "要改成 standalone: false 才走 NgModule 模式",
+        "已被废弃不再合法",
+        "可省略——组件默认就是 standalone"
+      ],
+      "answer": 3,
+      "explanation": "v19 起组件默认 standalone，新代码可省该 flag；v14 引入时是实验、v17 成默认推荐、v19 起标记 stable 并省略 flag 即生效。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "v20 起 ng build/ng serve 底层使用的默认构建工具是？",
+      "options": [
+        "@angular/build（基于 Vite）",
+        "Webpack 5",
+        "esbuild 独立调用（无包装层）",
+        "Rollup + @rollup/plugin-angular"
+      ],
+      "answer": 0,
+      "explanation": "v20 起 @angular/build（Vite 内核）成为默认 builder；Webpack 退居兼容位——ng serve 的热更因此从秒级降到毫秒级。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "ng generate component pages/home 在 v20+ 会生成什么？",
+      "options": [
+        "只生成 .ts 文件，模板和样式需手动添加",
+        "生成 NgModule + 组件 + 路由四件套",
+        "standalone 组件四件套（ts/html/spec/css），并自动 import 到使用方",
+        "一个 .tsx 文件（因为 v20 默认改用 JSX）"
+      ],
+      "answer": 2,
+      "explanation": "v20 的 CLI 默认生成 standalone 组件四件套并自动把它 import 进使用方的 imports 数组——--standalone flag 已退役因为默认即真。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "根组件类名在 v20 新 CLI 里默认是？",
+      "options": [
+        "RootComponent",
+        "App（不带 .component 后缀）",
+        "AppComponent",
+        "NgApp"
+      ],
+      "answer": 1,
+      "explanation": "v20 起简化命名：类叫 App 而不是 AppComponent——旧教程都会写 AppComponent，这也是一枚版本探针。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "v21+ 新工程默认使用的测试运行器是？",
+      "options": [
+        "Jasmine + Karma",
+        "Mocha + Chai",
+        "Jest + ts-jest",
+        "Vitest（ng test 走 Vitest 通道）"
+      ],
+      "answer": 3,
+      "explanation": "v21 起 Vitest 替换 Karma 成为 ng test 的默认运行器；旧教程里的 Karma/Jasmine 组合是识别 v20- 工程的探针。"
+    }
+  ]
+}

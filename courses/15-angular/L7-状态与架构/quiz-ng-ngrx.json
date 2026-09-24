@@ -1,0 +1,136 @@
+{
+  "title": "ng-ngrx 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "NgRx 五件套中负责异步副作用（HTTP 请求等）的是？",
+      "options": [
+        "Reducer",
+        "Selector",
+        "Effect",
+        "Action"
+      ],
+      "answer": 2,
+      "explanation": "Effect 监听特定 Action → 执行异步操作 → dispatch 成功/失败的 Action；Reducer 是纯函数不能有副作用。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "NgRx Reducer 的核心约束是？",
+      "options": [
+        "必须是纯函数：相同输入相同输出、不发 HTTP、不改参数",
+        "必须返回 Observable",
+        "必须用 class 写法",
+        "只能在 Store 外部定义"
+      ],
+      "answer": 0,
+      "explanation": "Reducer 是 (state, action) => newState 的纯函数——不可变、无副作用——DevTools 时间旅行要求可预测回放。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "@ngrx/signals（v17.1+）与经典 NgRx Store 的最大区别是？",
+      "options": [
+        "@ngrx/signals 不支持 TypeScript",
+        "去掉了 Action/Reducer/Effect 四件套——只有 state + computed + methods",
+        "只能在 NgModule 项目中使用",
+        "必须配合 Nx 才能运行"
+      ],
+      "answer": 1,
+      "explanation": "@ngrx/signals 用 signalStore + withState/withComputed/withMethods——心智模型回到 signal store 级别，不再需要 Redux 样板。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "ComponentStore 的作用域是？",
+      "options": [
+        "全局唯一（providedIn:'root'）",
+        "模块级（NgModule providers）",
+        "组件级——随组件创建和销毁",
+        "路由级——切换路由才销毁"
+      ],
+      "answer": 2,
+      "explanation": "ComponentStore 写在组件的 providers 里 → 组件销毁时 store 自动销毁——适合一页一 store 的局部状态。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "NgRx DevTools 时间旅行功能依赖的前提是？",
+      "options": [
+        "使用 Zone.js",
+        "所有状态存在 localStorage",
+        "Reducer 是纯函数 + Action 是可序列化的纯对象",
+        "必须用 class-based 写法"
+      ],
+      "answer": 2,
+      "explanation": "时间旅行需要回放 action 列表得到任意时刻 state——只有纯 reducer + 序列化 action 才能确定性重现。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Angular 官方对 NgRx 的态度是？",
+      "options": [
+        "Angular 内置了 NgRx 必须使用",
+        "所有项目都应使用 NgRx",
+        "NgRx 已被宣布废弃",
+        "大多数应用用 service+signal 即可，复杂度上来再考虑 NgRx"
+      ],
+      "answer": 3,
+      "explanation": "官方文档原话是 start with services + signals——NgRx 适合团队大/状态流复杂场景。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "createSelector 相比 store.select(state => state.x.y) 的优势是？",
+      "options": [
+        "语法更短",
+        "自动 memoize——依赖 state 不变时不重算",
+        "不需要 import Store",
+        "可以在 Reducer 中使用"
+      ],
+      "answer": 1,
+      "explanation": "createSelector 缓存结果——只有输入 selector 返回新引用时才重算派生值；直接 select 每次 state 变都执行。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "以下哪种场景不适合用 NgRx 而适合用 signal store？",
+      "options": [
+        "多人协作编辑需时间旅行回溯",
+        "复杂 optimistic update + rollback",
+        "主题色切换存 localStorage",
+        "跨 20 个 feature module 共享实体缓存"
+      ],
+      "answer": 2,
+      "explanation": "主题切换是简单全局布尔/字符串——一个 providedIn:'root' signal service 足够，不需要整个 Redux 架构。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Nx 与 NgRx 的关系是？",
+      "options": [
+        "Nx 是 NgRx 的前身",
+        "完全无关只是名字像",
+        "同属 nx 公司——Nx 是 monorepo 工具，NgRx 是状态管理库，常配合使用",
+        "NgRx 已并入 Nx 不再独立发布"
+      ],
+      "answer": 2,
+      "explanation": "Nx 提供 @nx/angular:ngrx generator 和企业 monorepo 脚手架；NgRx 仍是独立 @ngrx/* npm 包。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "NgRx Effect 中 switchMap 的语义是？",
+      "options": [
+        "新 action 来时取消前一个未完成的内部 Observable 并切换到最新",
+        "并行发出所有请求",
+        "把 Observable 转成 Promise",
+        "过滤掉不匹配的 action"
+      ],
+      "answer": 0,
+      "explanation": "switchMap 是 RxJS 操作符——新值到来时 unsubscribe 旧的 inner Observable。适合搜索等只关心最新结果的场景。"
+    }
+  ]
+}

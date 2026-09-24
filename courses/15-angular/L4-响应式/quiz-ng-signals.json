@@ -1,0 +1,136 @@
+{
+  "title": "ng-signals 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Angular signal 读值的语法是？",
+      "options": [
+        "s.value",
+        "s.read()",
+        "s.get()",
+        "s()"
+      ],
+      "answer": 3,
+      "explanation": "Angular signal 用调用式读：count()；与 TC39 提案的 .get() 和 Solid 的 s() 对比——Angular 选了最简洁的函数调用语法。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "computed() 的执行时机是？",
+      "options": [
+        "每次依赖变化时立即同步执行",
+        "第一次被读取时执行（惰性），之后依赖变才重算",
+        "构造函数中预计算",
+        "每个微任务自动执行一次"
+      ],
+      "answer": 1,
+      "explanation": "computed 是 lazy+memo：首次 .() 求值缓存、之后依赖 signal 标脏→再读才重算——没人读就不算。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "asReadonly() 返回的类型不具备哪个方法？",
+      "options": [
+        "()（调用读取）",
+        "set()",
+        "toString()",
+        "valueOf()"
+      ],
+      "answer": 1,
+      "explanation": "ReadonlySignal 类型没有 set/update/patch——只保留 .() 读能力；写操作只能通过原始 WritableSignal 或 action。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "patch() 解决了什么问题？",
+      "options": [
+        "让 signal 支持 mutable 对象直接改内部属性就能触发通知",
+        "替代 computed",
+        "给 signal 加 event bus",
+        "让 signal 支持多个值"
+      ],
+      "answer": 0,
+      "explanation": "signal 用 === 判变化——直接改对象属性不触发通知；patch 自动深合并产生新引用——免去手写 spread 嵌套。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "untracked(() => b()) 的效果是？",
+      "options": [
+        "b 被删除",
+        "在 computed/effect 里读 b 但不建立依赖——b 变了不触发外层重算",
+        "强制 b 重新计算",
+        "阻塞 b 的所有订阅者"
+      ],
+      "answer": 1,
+      "explanation": "untracked 屏蔽读取——常用于 effect 里只想因部分 signal 变化重跑、其他 signal 只取最新值不建依赖。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Angular signals 与 TC39 提案的关系是？",
+      "options": [
+        "Angular 直接用了提案 polyfill 代码",
+        "同名同语义的独立实现，从未采用提案代码本体",
+        "Angular signals 就是提案的参考实现",
+        "两者 API 完全不同只是概念类似"
+      ],
+      "answer": 1,
+      "explanation": "Angular 在提案 Stage 1 时就自己写完了——signal/computed/effect 概念对齐但 API 形态独立（s() vs s.get()）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "官方判据中，以下哪种情况不需要用 signal？",
+      "options": [
+        "HTTP 请求结果驱动模板渲染",
+        "路由参数变化驱动视图更新",
+        "组件内部私有计数器且从未进模板",
+        "computed 派生值"
+      ],
+      "answer": 2,
+      "explanation": "不进模板、不被 computed/effect 读的私有值用普通属性即可——signal 为『参与响应式流』的值服务。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "effect() 的 onCleanup 回调什么时候执行？",
+      "options": [
+        "只在组件销毁时",
+        "每次 effect 重跑前 + effect 所属上下文销毁时",
+        "只在 set 同一 signal 时",
+        "onCleanup 不存在于 Angular 中"
+      ],
+      "answer": 1,
+      "explanation": "effect 依赖变化需重跑时先执行上次的 onCleanup 再跑新回调；上下文销毁时也执行——与 Solid createEffect 的 onCleanup 同语义。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "与 Solid signals 相比，Angular signals 粒度上的传统差异是？",
+      "options": [
+        "Angular 更细（每个 DOM 属性一个 signal）",
+        "Solid 更粗（组件级重渲染）",
+        "传统上 Angular 组件级（signal 变→该组件所有相关绑定重算），Solid 表达式级",
+        "两者粒度完全一致"
+      ],
+      "answer": 2,
+      "explanation": "Solid 细到每个 createMemo/DOM text node；Angular zoneless 后也在趋向精确（模板绑定是独立订阅者）但传统描述为组件级。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "signal.update(c => c + 1) 与 signal.set(signal() + 1) 的区别是？",
+      "options": [
+        "功能完全相同没有区别",
+        "update 接收前值做增量计算、set 直接覆盖——update 更函数式",
+        "set 性能比 update 差",
+        "update 会触发两次通知"
+      ],
+      "answer": 1,
+      "explanation": "update 传函数拿旧值算新值（避免外部先读再写的竞态窗口）；set 直接覆盖。效果等价但 update 意图更清晰。"
+    }
+  ]
+}

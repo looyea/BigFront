@@ -1,0 +1,136 @@
+{
+  "title": "ng-perf 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "angular.json 的 budgets 中 initial 类型限制的是什么？",
+      "options": [
+        "主包 JS + CSS 总大小",
+        "页面首次可见时间（LCP）",
+        "HTTP 请求数量",
+        "组件数量上限"
+      ],
+      "answer": 0,
+      "explanation": "initial 限制首次加载需要的所有 JS/CSS 体积总和——超过 error 阈值构建失败。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "@defer (on viewport) 的加载时机是？",
+      "options": [
+        "应用启动时立即下载",
+        "用户点击时才下载",
+        "该块滚动到浏览器可见区域时才加载对应 chunk",
+        "永远不加载"
+      ],
+      "answer": 2,
+      "explanation": "on viewport 用 IntersectionObserver 检测元素进入视口时触发 import()。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "zoneless + signal 模式下 OnPush 策略的地位变化是？",
+      "options": [
+        "必须手动配 OnPush 才有性能",
+        "OnPush 被废弃不再合法",
+        "zoneless 下所有组件都是 push-based——OnPush 不再是需要特别配置的优化",
+        "OnPush 变成默认 false"
+      ],
+      "answer": 2,
+      "explanation": "zoneless 去掉了全局脏检查遍历——signal 精确通知 → 所有组件天然 push 行为。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "@for 大列表 track by $index 的性能问题是？",
+      "options": [
+        "内存占用翻倍",
+        "编译报错",
+        "中间删除一行导致后续所有 DOM 销毁重建",
+        "无法绑定事件"
+      ],
+      "answer": 2,
+      "explanation": "track $index 时数据中间删一行→后续行 index 全变→框架认为是全新列表→销毁重建全部 DOM。track id 只删那一个。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "untracked(() => ...) 在 effect/computed 内的作用是？",
+      "options": [
+        "阻止 signal 被写入",
+        "读取 signal 值但不建立依赖——该 signal 变化不触发外层重执行",
+        "创建新的 signal",
+        "延迟执行"
+      ],
+      "answer": 1,
+      "explanation": "untracked 是选择性脱离依赖追踪——只在需要读取当前值但不想因为它变化而重算时使用。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Angular v22 zoneless 最小应用的 gzip 体积约为？",
+      "options": [
+        "~15KB",
+        "~150KB",
+        "~300KB",
+        "~75KB"
+      ],
+      "answer": 3,
+      "explanation": "Angular 全家桶（Router+Forms+HTTP+DI）基础 ~75KB——比 React/Vue 略大但 zoneless 省了 zone.js ~15KB。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "afterNextRender 的用途是？",
+      "options": [
+        "在 SSR 端执行",
+        "替代 ngOnInit",
+        "仅在浏览器端 hydration 后执行——SSR 时跳过",
+        "强制触发变更检测"
+      ],
+      "answer": 2,
+      "explanation": "afterNextRender 是浏览器专用——操作第三方 DOM 库/初始化 canvas 等不能在 SSR 跑的逻辑。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "ng inspect CLI 命令能提供什么信息？",
+      "options": [
+        "生产环境监控",
+        "列出组件选择器/懒加载边界/检测未使用依赖",
+        "自动修复性能问题",
+        "生成 E2E 测试"
+      ],
+      "answer": 1,
+      "explanation": "ng inspect 分析编译后的依赖图——帮助发现重复/未使用代码和懒加载边界。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "computed 的惰性（lazy）特性意味着什么？",
+      "options": [
+        "每次 signal 变化都立即重算",
+        "只在首次加载时计算一次",
+        "只有被读取时且依赖变了才执行计算",
+        "永远在后台线程计算"
+      ],
+      "answer": 2,
+      "explanation": "computed 是 lazy + memoized：不被读取 → 从不执行；依赖未变 → 返回缓存。这保证 store 里多余的 computed 无性能开销。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "large list 局部更新时 signal 用 patch 代替 spread 的好处是？",
+      "options": [
+        "patch 可以 undo",
+        "spread 创建整个新数组 O(N)；patch 只修改目标索引——大列表性能更好",
+        "signal 不支持 patch",
+        "两者完全等价"
+      ],
+      "answer": 1,
+      "explanation": "10K 元素列表改一项：[...arr, newItem] 分配 10K 新数组；patch(arr => { arr[5].done = true }) 只改一处（需手动标脏）。"
+    }
+  ]
+}

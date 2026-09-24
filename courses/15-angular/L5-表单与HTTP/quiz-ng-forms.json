@@ -1,0 +1,136 @@
+{
+  "title": "ng-forms 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Reactive Forms 中 FormBuilder.group() 的每个 control 三元组格式是？",
+      "options": [
+        "[defaultValue, syncValidators?, asyncValidators?]",
+        "[type, validators, template]",
+        "{value, errors, status}",
+        "[name, rules, component]"
+      ],
+      "answer": 0,
+      "explanation": "fb.group({ field: ['初始值', [同步校验], [异步校验]] })——三位置数组是 FormBuilder 的声明式语法。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "跨字段校验（如密码确认匹配）的 validator 挂在哪里？",
+      "options": [
+        "挂在两个 FormControl 各自的 validators 数组里",
+        "挂在 FormArray 上",
+        "写在模板里用指令",
+        "挂在父 FormGroup 的 validators 选项上"
+      ],
+      "answer": 3,
+      "explanation": "跨字段需要同时看多个 control 的值——validator 接收整个 FormGroup 作为参数，挂在 group 级。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "valueChanges 返回的是什么类型？",
+      "options": [
+        "Signal<Partial<T>>",
+        "Promise<T>",
+        "Observable<Partial<T>>",
+        "EventEmitter<T>"
+      ],
+      "answer": 2,
+      "explanation": "valueChanges 是 Observable——这是 Reactive Forms 里 RxJS 的保留主场（debounce/switchMap 做异步联动）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "setValue 与 patchValue 的核心区别是？",
+      "options": [
+        "setValue 更慢",
+        "setValue 要求所有字段都传否则抛错、patchValue 只更新传入字段",
+        "patchValue 会清空未传字段",
+        "两者完全等价"
+      ],
+      "answer": 1,
+      "explanation": "setValue 必须传完整表单值（部分缺失报 form group errors）；patchValue 宽松——只 set 你传的字段。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "异步 validator 返回什么类型？",
+      "options": [
+        "boolean",
+        "Promise<ValidationErrors>",
+        "Observable<ValidationErrors | null>",
+        "void（异步不返回值）"
+      ],
+      "answer": 2,
+      "explanation": "Angular 异步校验器返回 Observable<Pick<ValidationErrors,string> | null>——框架自动订阅并设 control.status='PENDING'。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "form.pending 状态什么时候为 true？",
+      "options": [
+        "用户正在输入时",
+        "异步校验器正在执行、结果未返回",
+        "表单被 disabled 时",
+        "页面加载时"
+      ],
+      "answer": 1,
+      "explanation": "异步校验触发后 control 进入 PENDING 状态——直到 Observable complete 才切 VALID/INVALID——模板可用 @if (form.pending) 显示加载。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "FormArray 动态添加一行的正确方法是？",
+      "options": [
+        "this.form.push(newRow)",
+        "this.form.get('items').push(newRow)",
+        "(this.form.get('items') as FormArray).push(this.fb.group({...}))",
+        "this.form.items.push(newRow)"
+      ],
+      "answer": 2,
+      "explanation": "先 get 拿 FormArray 再 push——form 本身是 FormGroup 没有 push；需要类型断言或 v14+ 强类型 API。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "control.touched 什么时候变 true？",
+      "options": [
+        "值改变时",
+        "用户聚焦后离开（blur）时",
+        "表单提交时",
+        "校验失败时"
+      ],
+      "answer": 1,
+      "explanation": "touched = 用户曾经聚焦过（focus 后 blur）——用于『先不报错、用户离开才显示』的 UX 模式。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "模板驱动表单需要导入哪个模块？",
+      "options": [
+        "ReactiveFormsModule",
+        "CommonModule",
+        "FormsModule",
+        "HttpClientModule"
+      ],
+      "answer": 2,
+      "explanation": "FormsModule 提供 ngModel 双向绑定、模板驱动表单校验指令；standalone 组件在 imports 里加 FormsModule。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Reactive Forms 适合的场景不包括？",
+      "options": [
+        "多步向导表单",
+        "动态增删行的订单",
+        "简单的只有一个 input 的搜索框",
+        "跨字段校验的注册表单"
+      ],
+      "answer": 2,
+      "explanation": "搜索框一个字段用 signal 或 ngModel 最快——Reactive Forms 的 FormGroup/Validator 样板对单输入来说过重。"
+    }
+  ]
+}

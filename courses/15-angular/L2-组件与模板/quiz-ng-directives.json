@@ -1,0 +1,136 @@
+{
+  "title": "ng-directives 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "@Directive 与 @Component 的关系是？",
+      "options": [
+        "完全不同的两套系统，互不相关",
+        "Component extends Directive——组件是带 template 的指令子类",
+        "Directive 是 Component 的子类",
+        "v17 后 Directive 已被 Component 取代"
+      ],
+      "answer": 1,
+      "explanation": "Angular 源码里 class Component extends Directive——指令是基类（无视图），组件加 template 就是子类；所以指令能用组件的 DI/input/host 全套能力。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "结构型指令的核心机制是什么？",
+      "options": [
+        "修改宿主元素的 CSS display",
+        "注入 Renderer2 创建新 DOM 节点",
+        "通过 @HostBinding 改变元素属性",
+        "注入 TemplateRef + ViewContainerRef 条件创建/销毁嵌入视图"
+      ],
+      "answer": 3,
+      "explanation": "结构指令不改变宿主外观，而是控制视图的创建/销毁——TemplateRef 是内容模板、ViewContainerRef 是操作容器。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "@for 的 track 表达式写错（用 index 而非 id）在列表中间插入一行时的后果是？",
+      "options": [
+        "只有被插入的那一行被新建",
+        "编译器报错不允许运行",
+        "index 全部错位导致 diff 认为所有项都变了→全量销毁重建",
+        "新行被添加到末尾而非中间"
+      ],
+      "answer": 2,
+      "explanation": "track 用 index 时任何插入/删除都使后续 index 全变→Angular 无法匹配新旧→500 项列表变 500 次 createEmbeddedView + 500 次 destroy。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "一个元素同时挂两个属性指令时，它们的执行关系是？",
+      "options": [
+        "后一个会覆盖前一个",
+        "各自独立注入 ElementRef、各自监听事件、互不干扰",
+        "必须声明 priority 字段决定顺序",
+        "Angular 禁止同一元素多指令"
+      ],
+      "answer": 1,
+      "explanation": "属性指令共宿主是合法且常见的——各指令有独立实例与注入器，互不影响；只有结构指令共同一 ViewContainerRef 时才需要协调。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "@HostBinding('[class.active]') 的作用是？",
+      "options": [
+        "监听子元素的 active 类变化",
+        "把宿主元素的 class 绑定到组件 CSS",
+        "根据表达式结果动态给宿主加/去 active 类",
+        "声明一个 CSS 变量"
+      ],
+      "answer": 2,
+      "explanation": "@HostBinding 把指令/组件的状态映射到宿主 DOM 属性——'[class.active]' 表示当表达式为 true 时加 active 类、false 时移除。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "v17+ @if/@for 内建控制流后，用户还能自定义结构指令吗？",
+      "options": [
+        "可以——TemplateRef+ViewContainerRef 机制仍开放，@if 只是内置版不需要用户写指令",
+        "不能——所有结构指令都被编译器接管了",
+        "只能在 NgModule 里用，standalone 组件不支持",
+        "可以但必须用 ng-template 而非星号语法"
+      ],
+      "answer": 0,
+      "explanation": "@if/@for 是编译器内建（不再是用户可写的指令），但结构指令 API 仍公开——你可以写 [appUnless]/[appVirtualScroll] 等自定义结构指令。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "指令中需要 SSR 安全地操作 DOM 时，应使用？",
+      "options": [
+        "document.querySelector",
+        "Renderer2",
+        "ElementRef.nativeElement 直接调用",
+        "zone.js 的 scheduleTask"
+      ],
+      "answer": 1,
+      "explanation": "Renderer2 是 Angular 的 DOM 抽象层——SSR 下切换到 server renderer、不直接碰浏览器 API；ElementRef.nativeElement 在 SSR 阶段无 DOM 会报错。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Svelte action 与 Angular Directive 最本质的差异是？",
+      "options": [
+        "Svelte action 不能接收参数",
+        "Angular 指令不能监听事件",
+        "Svelte action 是纯函数、无 DI/无 signal 集成；Angular 指令是 class + inject + input() 全套 DI 能力",
+        "两者完全等价只是语法不同"
+      ],
+      "answer": 2,
+      "explanation": "Svelte action 就是一个函数(node, params)→{update, destroy}；Angular 指令是完整 class 可 inject service/用 input signal/走变更检测——能力重但集成深。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "@Directive 的 host: {} 对象字面量写法等价于什么？",
+      "options": [
+        "template 中嵌套的 <host> 标签",
+        "一组 @HostBinding 与 @HostListener 装饰器的合并简写",
+        "CSS 选择器中的 :host 伪类",
+        "NgModule 的 bootstrap 字段"
+      ],
+      "answer": 1,
+      "explanation": "host: { '(click)': 'onClick()', '[class.x]': 'isX()' } 等价于在方法/属性上分别加 @HostListener 和 @HostBinding——语法更紧凑。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "以下哪个场景该用组件而不是指令？",
+      "options": [
+        "给任意元素加 click-outside 检测",
+        "给 input 加自定义校验视觉反馈",
+        "渲染一个带面板动画、定位与内部状态的下拉菜单",
+        "给滚动容器加无限加载触发"
+      ],
+      "answer": 2,
+      "explanation": "下拉菜单有『新 UI 结构』——面板 DOM + 动画 + 内部状态机——需要自己的模板→用组件；其余三个都是『附着到已有元素的行为增强』→指令。"
+    }
+  ]
+}

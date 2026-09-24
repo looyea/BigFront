@@ -1,0 +1,136 @@
+{
+  "title": "ng-templates 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Angular 模板中属性绑定 [prop] 的数据流方向是？",
+      "options": [
+        "DOM → 组件",
+        "双向",
+        "组件 → DOM（单向写属性）",
+        "父组件 → 子组件（跨组件）"
+      ],
+      "answer": 2,
+      "explanation": "[prop] 把组件侧表达式结果写入 DOM 元素的 property——单向出；(event) 才是 DOM→组件。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "@for 中 track 表达式的作用是？",
+      "options": [
+        "指定排序规则",
+        "声明过滤条件",
+        "限制循环次数",
+        "告诉 Angular 如何识别同一项以复用 DOM（类似 React key）"
+      ],
+      "answer": 3,
+      "explanation": "track 是 @for 的必填项，用于 diff 算法识别身份——等价 React 的 key、Vue 的 :key；不写 track 编译器直接报错。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "@defer 块的默认触发条件（不写 on 子句时）是什么？",
+      "options": [
+        "on idle——浏览器空闲时加载",
+        "触发条件必须手动指定，没有默认值",
+        "on viewport——进入可视区域时加载",
+        "on timer——固定延时后加载"
+      ],
+      "answer": 0,
+      "explanation": "不写 on 子句时 @defer 默认触发条件是 on idle（浏览器空闲）；on viewport/on interaction/on timer 都是显式可选触发器。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "以下哪种是 Angular 的『双向绑定』语法？",
+      "options": [
+        "<input [ngModel]=\"name\">",
+        "<input (ngModel)=\"name\">",
+        "<input bind:ngModel=\"name\">",
+        "<input [(ngModel)]=\"name\">"
+      ],
+      "answer": 3,
+      "explanation": "[(ngModel)] 是双香蕉语法（banana-in-a-box）表示双向；[ngModel] 只有输入、(ngModel) 只有输出；bind: 是 Svelte 语法。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "@if 新控制流与旧 *ngIf 的核心优势不包括？",
+      "options": [
+        "不需要导入 CommonModule 即可使用",
+        "编译器可针对内建语法做专门优化",
+        "自动实现虚拟列表（只渲染可见行）",
+        "模板可读性提升、消除 ng-template else 样板"
+      ],
+      "answer": 2,
+      "explanation": "@if 不提供虚拟列表——那是 @for 的性能优化（track 帮助 DOM 复用）或第三方库（CDK Scrolling）的职责；A/B/D 都是新控制流的真实优势。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "<ng-content select=\".header\"> 在组件模板中的作用是？",
+      "options": [
+        "声明一个只有 .header 类元素才能进入的投影槽（content projection）",
+        "渲染外部 HTTP 内容",
+        "创建一个条件插槽",
+        "定义组件的 CSS 作用域"
+      ],
+      "answer": 0,
+      "explanation": "ng-content select 定义内容投影口——使用方带 .header 类的子节点会被投进这个槽；等价 Web Components 的 <slot name> 概念。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "@let 模板变量的作用域是？",
+      "options": [
+        "全局 window 对象上",
+        "所在组件的 TypeScript 类中",
+        "模板局部——不进 class、每次迭代/分支重新求值",
+        "只能在 @for 内部使用"
+      ],
+      "answer": 2,
+      "explanation": "@let 是纯模板作用域的局部派生值（v18.1+），不影响组件类、不需要 signal——在 @if/@for 分支内可用、出了模板就不可见。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Angular pipe 与 React 函数调用格式化相比，独有的能力是？",
+      "options": [
+        "可以异步执行",
+        "可以在模板里用 | 链式组合且 strictTemplates 检查类型",
+        "不需要 import 就能自动全局可用",
+        "可以修改传入的数据源（非纯函数）"
+      ],
+      "answer": 1,
+      "explanation": "pipe 的链式语法 `| a | b` 是模板一等公民；strictTemplates 检查 pipe 参数类型；A/C 错——pipe 要声明/导入且同步纯函数；D 错——pipe 必须是纯函数。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "迁移旧模板 *ngIf → @if 的官方命令是？",
+      "options": [
+        "ng update @angular/core --migrate=templates",
+        "ng lint --fix-control-flow",
+        "ng generate @angular/core:control-flow",
+        "手动全文替换（没有自动工具）"
+      ],
+      "answer": 2,
+      "explanation": "ng generate @angular/core:control-flow 是官方 codemod——自动把 *ngIf/*ngFor/ngSwitch 转为 @if/@for/@switch，不需要手动改。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "本关说四家模板控制流的趋同现象指的是？",
+      "options": [
+        "四家都废弃了各自的模板语法改用 JSX",
+        "四家都取消了条件渲染",
+        "Angular @if 与 Svelte {#if} 形态趋同、Vue v-if 与 React 三元/&& 逻辑等价——声明式控制流收敛",
+        "四家都改用了 virtual DOM diff"
+      ],
+      "answer": 2,
+      "explanation": "趋同≠相同——各家实现方式不同（编译 vs 运行时）但表面语法/语义在 2024-2026 明显靠拢；这就是 14 包合流趋势在模板层的体现。"
+    }
+  ]
+}

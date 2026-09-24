@@ -1,0 +1,136 @@
+{
+  "title": "ng-testing 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "v21+ ng new 默认生成的测试框架是？",
+      "options": [
+        "Karma + Jasmine",
+        "Mocha + Chai",
+        "Vitest",
+        "Jest + ts-jest"
+      ],
+      "answer": 2,
+      "explanation": "v21(2025.11)起默认从 Karma 切到 Vitest——与 Vite 构建管道共享 transform。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "standalone 组件测试时 TestBed 如何引入该组件？",
+      "options": [
+        "放在 imports 数组中（与 NgModule 的 imports 字段同名）",
+        "放在 declarations 数组中",
+        "放在 providers 中",
+        "需要额外的 TestModule 包裹"
+      ],
+      "answer": 0,
+      "explanation": "standalone 组件在 TestBed.configureTestingModule({ imports: [MyComponent] }) 即可——不需要 declarations 和 NgModule。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "signal store（不依赖 inject）的纯单测最简方式是？",
+      "options": [
+        "必须用 TestBed.configureTestingModule",
+        "直接 new StoreClass() 测试方法",
+        "必须用 ComponentFixture",
+        "需要 provideHttpClientTesting"
+      ],
+      "answer": 1,
+      "explanation": "如果 service 内部没有 inject() 调用，直接 new 即可——signal/computed 独立于 Angular 运行时。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "HttpTestingController.verify() 在 afterEach 里的作用是？",
+      "options": [
+        "重置所有 mock 返回值为默认",
+        "确保所有预期请求都已被 flush/error 处理——无遗漏 pending 请求",
+        "关闭 HttpClient 连接",
+        "清除 localStorage"
+      ],
+      "answer": 1,
+      "explanation": "verify() 断言没有未被 expectOne/expectNone 匹配的悬空请求——防止漏测。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Angular 组件测试中设置 signal-based input 的正确方式是？",
+      "options": [
+        "fixture.componentInstance.myInput = value",
+        "fixture.componentRef.setInput('myInput', value)",
+        "直接修改 protected 变量",
+        "通过 EventEmitter emit"
+      ],
+      "answer": 1,
+      "explanation": "signal input 通过 componentRef.setInput API 写入——保证 signal 更新链正确触发。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "关于快照测试在 Angular 组件中的建议是？",
+      "options": [
+        "所有组件都应该写快照测试",
+        "Angular 不支持快照",
+        "快照可以完全替代断言",
+        "只用于纯展示组件，有 signal/异步的组件慎用"
+      ],
+      "answer": 3,
+      "explanation": "快照依赖渲染时机——signal/CD 不稳定时快照结果不确定；有逻辑的组件推荐显式断言更可维护。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "E2E 测试在 Angular 项目中推荐的分工是？",
+      "options": [
+        "用 TestBed 做 E2E",
+        "ng test 里跑 Playwright",
+        "单元/集成用 Vitest + TestBed；E2E 独立用 Playwright",
+        "Karma 跑端到端"
+      ],
+      "answer": 2,
+      "explanation": "Vitest 跑单元和组件集成（快、不需要浏览器）；Playwright 跑完整用户流程（启浏览器、操作 DOM）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "zoneless 项目下测试需要注意什么配置？",
+      "options": [
+        "必须切回 zone.js 才能测试",
+        "在 TestBed providers 里加 provideZonelessChangeDetection()",
+        "不需要任何特殊配置",
+        "只能测试 service 不能测组件"
+      ],
+      "answer": 1,
+      "explanation": "zoneless 项目测试也需要对应配置——否则变更检测行为不匹配，signal 更新在测试里不会正确反映到 DOM。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "测试路由守卫时 runInInjectionContext 的目的是？",
+      "options": [
+        "创建新的 Router 实例",
+        "为守卫函数提供注入上下文使 inject() 可用",
+        "触发导航",
+        "模拟 HTTP 请求"
+      ],
+      "answer": 1,
+      "explanation": "守卫函数内用 inject()——测试时手动调用守卫需要提供注入上下文，否则报 NullInjectorError。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "fixture.detectChanges() 在 zoneless signal 测试中的作用是？",
+      "options": [
+        "手动触发一次变更检测让模板反映最新 signal 值",
+        "触发垃圾回收",
+        "销毁 fixture",
+        "等待所有 Observable 完成"
+      ],
+      "answer": 0,
+      "explanation": "zoneless 下没有 zone 自动触发 CD——测试中 signal 更新后需 detectChanges() 让 DOM 反映新值。"
+    }
+  ]
+}

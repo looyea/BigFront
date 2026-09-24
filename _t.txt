@@ -1,0 +1,2 @@
+non-id tokens (allowlist-check):
+angular-eslint

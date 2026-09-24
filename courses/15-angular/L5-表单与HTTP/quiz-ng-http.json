@@ -1,0 +1,136 @@
+{
+  "title": "ng-http 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "v17+ 注册 HttpClient 的正确方式是？",
+      "options": [
+        "provideHttpClient() 在 app.config providers 里",
+        "imports: [HttpClientModule] 在 AppModule",
+        "main.ts 里 new HttpClient()",
+        "@Injectable({providedIn:'root'}) 自动注册"
+      ],
+      "answer": 0,
+      "explanation": "standalone 时代用 provideHttpClient(withFetch(), withInterceptors([...])) 注册在 app.config——HttpClientModule 已废弃。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "函数式拦截器 HttpInterceptorFn 的两个参数是？",
+      "options": [
+        "(request, response)",
+        "(control, form)",
+        "(event, observer)",
+        "(req: HttpRequest, next: HttpHandlerFn)"
+      ],
+      "answer": 3,
+      "explanation": "req 是入站请求、next 是调用链下一环（最终到后端）——返回 Observable<HttpEvent>。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "withFetch() 的作用是？",
+      "options": [
+        "只允许 GET 请求用 fetch",
+        "让 HttpClient 底层用 fetch 替代 XMLHttpRequest",
+        "启用 HTTP/2 多路复用",
+        "禁用缓存"
+      ],
+      "answer": 1,
+      "explanation": "withFetch() 切换传输层为 fetch API——SSR 更顺、支持 AbortSignal 取消；对外仍返回 Observable。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "req.clone({ setHeaders: { Authorization: '...' } }) 的作用是？",
+      "options": [
+        "直接修改原请求对象（mutation）",
+        "创建带新 header 的请求副本传给 next",
+        "记录日志",
+        "发起第二个并行请求"
+      ],
+      "answer": 1,
+      "explanation": "HttpRequest 不可变——clone 创建新请求加入 header；拦截器把新请求传给 next 继续链。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "多个拦截器的执行顺序是？",
+      "options": [
+        "注册顺序的反向",
+        "随机",
+        "洋葱模型：先注册先处理请求、后注册先处理响应",
+        "按字母序"
+      ],
+      "answer": 2,
+      "explanation": "withInterceptors([A, B])：请求 A→B→后端，响应 B→A→组件——典型洋葱。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "http.get<User>(url) 泛型参数 User 的作用是？",
+      "options": [
+        "限制 URL 格式",
+        "让 Observable 响应类型推断为 User（编译期类型安全）",
+        "自动序列化为 User class 实例",
+        "只影响文档不影响代码"
+      ],
+      "answer": 1,
+      "explanation": "泛型只给 TS 编译器做类型标注——JSON 解析结果被断言为 User；运行时不做 instanceof 检查。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "HttpErrorResponse.status === 0 通常意味着？",
+      "options": [
+        "服务器返回 0",
+        "网络不可达或 CORS 被拒绝",
+        "请求超时",
+        "缓存命中"
+      ],
+      "answer": 1,
+      "explanation": "status=0 是浏览器 fetch/XHR 网络层错误（无 HTTP 响应）——常见原因：断网、CORS、DNS 失败。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "retry({count:3, delay:1000}) 的效果是？",
+      "options": [
+        "3 秒后重试一次",
+        "失败后重试最多 3 次、每次间隔 1 秒",
+        "重试 1000 次",
+        "请求成功 3 次后停止"
+      ],
+      "answer": 1,
+      "explanation": "count 最大重试次数、delay 每次等待时间——失败→等 1s→重发→再失败→等→重发（最多 3 次）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "函数式拦截器里用 inject() 合法吗？",
+      "options": [
+        "不合法——拦截器不是组件",
+        "合法——拦截器执行在注入上下文中",
+        "只在 v14 前合法",
+        "需要 @Injectable 装饰才合法"
+      ],
+      "answer": 1,
+      "explanation": "HttpInterceptorFn 在 Angular 的注入上下文里执行——inject(AuthService) 合法取服务。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "旧写法 { provide: HTTP_INTERCEPTORS, useClass: X, multi: true } 在 v22 新工程里的状态是？",
+      "options": [
+        "仍是推荐写法",
+        "已废弃——用 withInterceptors 替代",
+        "只能在 NgModule 组件中用",
+        "与函数式完全等价"
+      ],
+      "answer": 1,
+      "explanation": "class-based 拦截器标记 deprecated——v15+ 函数式（withInterceptors）是正统路径；新工程不用旧写法。"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "title": "ng-zoneless 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "zone.js 在 Angular 里的核心职责是？",
+      "options": [
+        "拦截所有异步 API 完成并通知 Angular 触发变更检测",
+        "管理 DOM 虚拟树",
+        "提供信号通知机制",
+        "负责组件模板编译"
+      ],
+      "answer": 0,
+      "explanation": "zone.js monkey-patch setTimeout/Promise/fetch 等，异步完成时通知 ApplicationRef.tick() 启动全树脏检查——这就是变更检测的触发来源。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "zoneless 模式下 signal.set() 后视图更新的机制是？",
+      "options": [
+        "触发全局脏检查遍历整棵组件树",
+        "等下一次 setTimeout 才更新",
+        "需要手动 markForCheck 才生效",
+        "signal 写→标记订阅了该 signal 的绑定→精确重算这些绑定对应的 DOM"
+      ],
+      "answer": 3,
+      "explanation": "zoneless 的变更检测完全由 signal 写驱动——谁读了这个 signal 谁被通知，不需要全树遍历。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "v21+ 新工程的 app.config.ts 里 zone 相关 provider 是？",
+      "options": [
+        "provideZoneChangeDetection({ eventCoalescing: true })",
+        "provideZonelessChangeDetection()",
+        "什么都不写（zoneless 是默认）",
+        "import 'zone.js' in polyfills"
+      ],
+      "answer": 2,
+      "explanation": "v21 起 zoneless 是新工程默认行为——app.config 不出现任何 zone provider。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "非 signal 的普通属性突变在 zoneless 下会导致什么？",
+      "options": [
+        "视图正常更新",
+        "Angular 抛运行时错误",
+        "视图不更新——需要 markForCheck 或改用 signal",
+        "自动触发 effect 重跑"
+      ],
+      "answer": 2,
+      "explanation": "zoneless 不认识非 signal 变化——this.x = 新值不触发通知；要么把 x 改成 signal、要么手动 cdr.markForCheck()。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "effect() 的首次执行时机是？",
+      "options": [
+        "注册时的同一调用栈内",
+        "下一个微任务 drain 时",
+        "ngOnInit 钩子里",
+        "组件销毁前"
+      ],
+      "answer": 1,
+      "explanation": "effect 是异步调度——注册后在当前调用栈结束后、下一个微任务 checkpoint 时首次执行（批处理多个 set 只跑一次）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "afterNextRender 在 SSR 阶段的行为是？",
+      "options": [
+        "正常执行（服务端也有 DOM）",
+        "自动 skip——只在 browser 平台执行",
+        "抛异常",
+        "延迟到客户端 hydrate 后执行"
+      ],
+      "answer": 1,
+      "explanation": "afterNextRender 设计上就是浏览器专属（做 DOM 操作/初始化第三方图表）——SSR 阶段无 DOM 所以被 skip。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "zoneless 相比 zone.js 模式的性能提升主要来自？",
+      "options": [
+        "编译更快",
+        "HTTP 请求更快",
+        "变更检测从全树遍历变为 signal 精确通知",
+        "打包体积增大但运行时更快"
+      ],
+      "answer": 2,
+      "explanation": "千组件应用全树扫描 5-15ms → 单个 signal 变只更新相关绑定 <1ms——这是 zoneless 的核心性能收益。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "OnPush 策略在 zoneless 下还剩什么价值？",
+      "options": [
+        "完全没有价值，应全部删除",
+        "对非 signal 突变场景（第三方回调/HostListener 改普通属性）仍是兜底",
+        "变成强制要求",
+        "等价于 Default 策略"
+      ],
+      "answer": 1,
+      "explanation": "signal 驱动的更新不需要 OnPush 帮忙限制范围；但非 signal 路径（如第三方库回调改普通属性）仍需 markForCheck/OnPush 兜底。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "切换到 zoneless 时，测试里原来的 fixture.detectChanges() 应替换为？",
+      "options": [
+        "fixture.autoDetectChanges()",
+        "await fixture.whenStable()（等微任务+effect drain）",
+        "不需要任何等待",
+        "TestBed.resetTestingModule()"
+      ],
+      "answer": 1,
+      "explanation": "zoneless 下 effect/信号传播是异步微任务——detectChanges 不再触发全量 CD，要 await whenStable() 让微任务跑完再断言。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "本关说 zoneless 的调试改善具体指什么？",
+      "options": [
+        "不需要 debugger 了",
+        "Chrome DevTools 调用栈不再被 zone 切断、可读性提升",
+        "signal 自动打 console.log",
+        "zone.js 的 error handler 能捕获所有错误"
+      ],
+      "answer": 1,
+      "explanation": "zone.js 的异步 fork 导致 call trace 被切成多段难以追踪；zoneless 用普通 JS 异步——栈帧连续、谁调用谁一目了然。"
+    }
+  ]
+}

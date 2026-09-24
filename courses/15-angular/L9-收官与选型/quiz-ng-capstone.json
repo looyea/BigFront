@@ -1,0 +1,136 @@
+{
+  "title": "ng-capstone 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "毕业项目中 JWT token 注入到每个 HTTP 请求应该用什么机制？",
+      "options": [
+        "每个 HttpClient.get 手动加 header",
+        "函数式 HttpInterceptorFn 统一注入 Authorization header",
+        "写在组件构造函数里",
+        "在 index.html 里配 meta 标签"
+      ],
+      "answer": 1,
+      "explanation": "provideHttpClient(withInterceptors([authInterceptor]))——拦截器统一加 Bearer token。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "毕业项目的权限守卫要求：非 admin 不下载 admin chunk——应该用什么守卫？",
+      "options": [
+        "canActivate",
+        "canMatch",
+        "canDeactivate",
+        "resolve"
+      ],
+      "answer": 1,
+      "explanation": "CanMatchFn 在懒加载前执行——返回 false 则整个 feature chunk 不会被下载。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "毕业项目 SSR 配置中防止服务端 signal store 跨请求泄漏需要？",
+      "options": [
+        "手动每个 handler reset",
+        "provideServerRendering()（每请求独立 Injector）",
+        "不用 SSR",
+        "所有 store 改用 sessionStorage"
+      ],
+      "answer": 1,
+      "explanation": "provideServerRendering() 保证每 HTTP 请求创建新的 root injector——service 实例不跨请求共享。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "毕业项目 budgets 门禁配置 500KB initial 的目的是？",
+      "options": [
+        "确保主包体积可控防止无限膨胀",
+        "限制后端 API 调用次数",
+        "限制测试覆盖率",
+        "限制组件数量"
+      ],
+      "answer": 0,
+      "explanation": "budgets 是 CI 级性能纪律——构建产物超阈值直接失败——迫使团队保持懒加载和按需拆分。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "毕业项目中图表组件用 @defer (on idle) 的原因是？",
+      "options": [
+        "图表不需要显示",
+        "非首屏关键内容延迟加载——不阻塞 LCP 和交互",
+        "图表只能 idle 时渲染",
+        "SSR 不支持图表"
+      ],
+      "answer": 1,
+      "explanation": "图表通常是 Dashboard 次要内容——on idle 让主线程先处理关键数据/表单，空闲时才加载 echarts 等重库。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "毕业项目三层架构中 authGuard 应放在哪一层？",
+      "options": [
+        "features/auth/ 里",
+        "core/auth/ 里（跨 feature 使用的全局守卫）",
+        "shared/components/ 里",
+        "app.component.ts 里"
+      ],
+      "answer": 1,
+      "explanation": "authGuard 被所有需保护的 feature 路由使用——属于全局基础设施 → core 层。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "毕业项目 E2E 测试应覆盖哪些主流程？",
+      "options": [
+        "所有组件的渲染快照",
+        "登录→导航→CRUD→登出的用户旅程",
+        "所有 service 方法的输入输出",
+        "CSS 样式正确性"
+      ],
+      "answer": 1,
+      "explanation": "E2E 测完整用户旅程（跨页面、跨组件、含路由和后端交互）；单元/集成测 service 和组件。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "毕业项目表单用 Signal Forms 还是 Reactive Forms 的判断依据是？",
+      "options": [
+        "Signal Forms 太新不能用",
+        "随意选没区别",
+        "只能用 Reactive Forms",
+        "全新简单表单 → Signal Forms；复杂异步/跨字段校验 → Reactive Forms"
+      ],
+      "answer": 3,
+      "explanation": "Signal Forms(v22 GA)样板少适合简单表单；Reactive Forms 生态成熟适合复杂 validator/FormArray。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "毕业项目里 signal store 与 NgRx 的选择结论是？",
+      "options": [
+        "必须用 NgRx 才算企业级",
+        "要求无 NgRx 验证 signal store 能否覆盖需求",
+        "两者都不需要——全部写在组件里",
+        "用 Redux"
+      ],
+      "answer": 1,
+      "explanation": "毕业项目明确要求用 signal store 实践——证明 80% 场景不需要 NgRx 的复杂度。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "毕业记分卡中代码质量占多少分？",
+      "options": [
+        "15%",
+        "50%",
+        "30%",
+        "10%"
+      ],
+      "answer": 2,
+      "explanation": "功能40%+代码质量30%+性能15%+测试15%——代码质量(架构/命名/lint通过)占 30%。"
+    }
+  ]
+}

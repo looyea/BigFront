@@ -1,0 +1,136 @@
+{
+  "title": "ng-ssr 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "v17+ Angular SSR 的增量 hydration 相比旧方式的核心改进是？",
+      "options": [
+        "客户端保留 SSR DOM 只附着事件监听器，不再销毁重建",
+        "不再需要服务端渲染",
+        "hydration 后自动重新发所有 API 请求",
+        "只能用于 prerender 场景"
+      ],
+      "answer": 0,
+      "explanation": "增量 hydration 不破坏服务端 DOM——只 attach 逻辑 → 零闪烁、更快交互。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "TransferState 在 SSR 中的作用是？",
+      "options": [
+        "在组件间传递 @Input 数据",
+        "把服务端预取数据序列化到 HTML → 客户端不重复请求",
+        "管理路由状态",
+        "保存表单值跨页面"
+      ],
+      "answer": 1,
+      "explanation": "服务端 Resolver 取数据 → TransferState.set → 序列化进 <script id=ng-state> → 客户端读取避免双请求。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Angular SSR 下如何避免 signal store 跨请求数据泄漏？",
+      "options": [
+        "手动在每个 handler 里 reset store",
+        "用 sessionStorage 替代 signal",
+        "provideServerRendering() 确保每请求创建独立 Injector 树",
+        "Angular 不支持 SSR 所以不存在这个问题"
+      ],
+      "answer": 2,
+      "explanation": "provideServerRendering 让每个 HTTP 请求有独立 root injector → providedIn:'root' service 天然每请求新建 → 不泄漏。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "@defer 块在 SSR 渲染时的行为是？",
+      "options": [
+        "服务端也完整渲染 deferred 内容",
+        "只渲染 placeholder，deferred 内容客户端按需加载",
+        "报错因为 SSR 不支持 @defer",
+        "自动转为 prerender"
+      ],
+      "answer": 1,
+      "explanation": "@defer 块服务端不渲染（减小 HTML 体积）→ 客户端 hydration 后按触发条件加载。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "prerender (SSG) 与运行时 SSR 的区别是？",
+      "options": [
+        "prerender 不需要 Angular",
+        "prerender 构建时生成静态 HTML；SSR 每次请求动态渲染",
+        "SSR 只能用于首页",
+        "两者完全等价只是名字不同"
+      ],
+      "answer": 1,
+      "explanation": "prerender = 构建时生成 HTML 文件（纯静态托管）；SSR = Node 服务器每请求动态渲染（适合个性化内容）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "SSR 环境下 service 构造函数里 `document.getElementById(...)` 会？",
+      "options": [
+        "抛 ReferenceError 因为 Node 环境没有 document",
+        "正常工作因为 Angular polyfill 了 document",
+        "返回 null",
+        "自动降级为 noop"
+      ],
+      "answer": 0,
+      "explanation": "SSR 运行在 Node.js/Deno——无 DOM API。必须用 isPlatformBrowser 守卫或 afterNextRender 延后。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "provideClientHydration(withEventReplay()) 中 withEventReplay 解决什么问题？",
+      "options": [
+        "防止 HTTP 缓存污染",
+        "hydration 完成前缓冲用户交互事件防止点击丢失",
+        "自动重试失败的 API 请求",
+        "回放路由历史"
+      ],
+      "answer": 1,
+      "explanation": "SSR HTML 已可见但事件监听器还没 attach（hydration 进行中）→ 用户此时点击 → event replay 缓冲并在 hydration 后回放。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Angular SSR 与 Next.js App Router 在「每请求状态隔离」上的差异是？",
+      "options": [
+        "Angular 需要手动 AsyncLocalStorage；Next.js 天然隔离",
+        "两者都不存在泄漏问题因为是单线程",
+        "两者都需要手动处理",
+        "Next.js 需要手动隔离；Angular 通过 DI 层级天然每请求新 injector"
+      ],
+      "answer": 3,
+      "explanation": "Angular DI 的 provideServerRendering 天然为每请求创建 injector 树；React/Next 没有框架级 DI → 需要 AsyncLocalStorage 或 per-request 手动 reset。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "遇到 Hydration mismatch 警告，以下哪种原因最不可能？",
+      "options": [
+        "服务端 Date.now() 与客户端不同",
+        "模板里用了随机 ID（如 Math.random()）",
+        "使用了 provideClientHydration()",
+        "条件渲染依赖只在浏览器存在的 API"
+      ],
+      "answer": 2,
+      "explanation": "provideClientHydration() 正是解决 mismatch 的配置——不写它才有问题。Date.now/随机数/DOM API 差异才是 mismatch 根因。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "angular.json 中 prerender.discoverRoutes: true 的效果是？",
+      "options": [
+        "自动发现 SSR 服务器上的所有路由并 cache",
+        "构建时从 Router 配置树提取所有无参数路由并 prerender 为静态 HTML",
+        "运行时动态发现新路由",
+        "自动生成 sitemap.xml"
+      ],
+      "answer": 1,
+      "explanation": "discoverRoutes 遍历 Routes 配置中所有不含 :param 的路由路径 → 构建时逐条 SSR → 输出静态 HTML 文件。"
+    }
+  ]
+}

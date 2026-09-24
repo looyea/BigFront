@@ -1,0 +1,136 @@
+{
+  "title": "ng-router-core 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "standalone 项目中注册路由的正确方式是？",
+      "options": [
+        "在 app.config.ts 的 providers 中写 provideRouter(routes)",
+        "在 AppModule 里写 RouterModule.forRoot(routes)",
+        "在 main.ts 里调 router.bootstrap(routes)",
+        "在 angular.json 的 routes 字段配置"
+      ],
+      "answer": 0,
+      "explanation": "v17+ standalone 项目用 provideRouter() 在 app.config.ts 注册路由，RouterModule.forRoot 是 NgModule 时代的写法。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "loadComponent 与直接写 component 的核心区别是？",
+      "options": [
+        "语法糖，编译后完全等价",
+        "component 字段已废弃只能用 loadComponent",
+        "loadComponent 让组件被打成独立 chunk，访问该路由时才网络加载",
+        "loadComponent 只能加载 NgModule"
+      ],
+      "answer": 2,
+      "explanation": "loadComponent 利用动态 import() 实现 code splitting——构建工具把该组件单独打 chunk，Router 在导航时才触发下载。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "嵌套子路由的组件渲染在哪里？",
+      "options": [
+        "始终在 app 根组件的 <router-outlet> 中",
+        "在父组件模板内声明的 <router-outlet> 中",
+        "在 document.body 末尾动态插入",
+        "在 Angular CDK Overlay 容器里"
+      ],
+      "answer": 1,
+      "explanation": "children 路由匹配后组件渲染到父组件模板的 <router-outlet> 插槽——这是 Angular 嵌套布局的核心机制。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "路由配置中 path: '**' 的正确使用方式是？",
+      "options": [
+        "放在数组首位优先匹配",
+        "配合 pathMatch: 'full' 使用",
+        "匹配路径中包含 * 特殊字符的 URL",
+        "作为 catch-all 兜底放数组末尾，匹配所有未命中路由"
+      ],
+      "answer": 3,
+      "explanation": "** 是 catch-all 通配路由，放最后兜底渲染 404 页面；Router 按数组顺序匹配，所以它必须放末尾。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "withRouterConfig({ paramsInheritanceStrategy: 'always' }) 解决什么痛点？",
+      "options": [
+        "让路由参数自动持久化到 localStorage",
+        "子路由 ActivatedRoute 自动继承所有父级 params，不需要 .parent.parent 爬树",
+        "让 params 变为 signal 类型",
+        "自动将 params 绑定到组件 input()"
+      ],
+      "answer": 1,
+      "explanation": "默认 emptyOnly 只在父路由为空路径时继承；改为 always 后深层子路由可直接读任意祖先 params。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "routerLinkActive=\"active\" 的默认匹配模式是？",
+      "options": [
+        "精确匹配（exact）",
+        "正则匹配",
+        "前缀匹配——/users/123 也会让 routerLink='/users' 的元素加 active",
+        "只匹配完全相同的 query params"
+      ],
+      "answer": 2,
+      "explanation": "默认是前缀匹配，要精确匹配需加 [routerLinkActiveOptions]=\"{ exact: true }\"。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Angular 路由的懒加载机制与 Next.js App Router 的最大差异是？",
+      "options": [
+        "Angular 不支持懒加载",
+        "Next.js 需手写 webpack config，Angular 自动分包",
+        "两者完全一样都是自动的",
+        "Angular 需显式写 loadComponent/loadChildren，Next.js 按文件夹自动路由级分包"
+      ],
+      "answer": 3,
+      "explanation": "Next.js App Router 每个文件夹/页面天然就是独立 chunk；Angular 路由配置与文件系统解耦，必须显式写 loadComponent 才触发 split。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "以下路由配置会导致什么问题？`{ path: '', redirectTo: 'home' }`（无 pathMatch）",
+      "options": [
+        "编译报错拒绝构建",
+        "所有 URL 先匹配到空路径→无限重定向",
+        "只有根路径生效无副作用",
+        "Angular 自动补 pathMatch: 'full'"
+      ],
+      "answer": 1,
+      "explanation": "redirectTo 需要 pathMatch: 'full'——否则默认 prefix 模式下空前缀匹配所有路径→死循环重定向。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "loadChildren 的 v17+ 正确写法是？",
+      "options": [
+        "loadChildren: './users/users.module#UsersModule'",
+        "loadChildren: require('./users').routes",
+        "loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES)",
+        "loadChildren: [UsersRoutes]"
+      ],
+      "answer": 2,
+      "explanation": "v17+ 使用动态 import 返回 Routes 数组（字符串路径写法在 v9 已废弃）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "导航守卫执行的正确顺序是？",
+      "options": [
+        "CanActivate → CanDeactivate → CanMatch → Resolve",
+        "Resolve → CanActivate → CanMatch → 懒加载",
+        "所有守卫并行执行无序",
+        "CanDeactivate（离开页）→ CanMatch → 懒加载 → CanActivate → Resolve"
+      ],
+      "answer": 3,
+      "explanation": "Router 先问离开组件 CanDeactivate → 新路径 CanMatch → 触发懒加载 → 加载完成后 CanActivate → Resolve 预取数据 → 渲染。"
+    }
+  ]
+}

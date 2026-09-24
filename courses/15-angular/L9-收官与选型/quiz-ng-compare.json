@@ -1,0 +1,136 @@
+{
+  "title": "ng-compare 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "四框架中哪家独家内置了层级依赖注入（DI）容器？",
+      "options": [
+        "React",
+        "Vue",
+        "Svelte",
+        "Angular"
+      ],
+      "answer": 3,
+      "explanation": "只有 Angular 有完整的框架级层级 DI（root/module/component injector）——其他需要 Context 或第三方库。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "TC39 Signals 提案的核心推动者是哪些框架团队？",
+      "options": [
+        "Meta + Google",
+        "Angular + Solid + RxJS",
+        "Svelte + Angular",
+        "React + Vue"
+      ],
+      "answer": 1,
+      "explanation": "Angular(Signal API)、Solid(createSignal)、RxJS(Interop) 三方联合推动 TC39 Signals 提案。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下哪家框架在模板控制流上不采用原生 @if/@for 语法而使用 JSX 表达式？",
+      "options": [
+        "Vue",
+        "Svelte",
+        "Angular",
+        "React"
+      ],
+      "answer": 3,
+      "explanation": "React 用 JSX（{x && <div>} / list.map()）——其他三家都有模板原生控制流指令。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "20 人团队 10 年长期维护的企业项目，Angular 的哪些特性最核心？",
+      "options": [
+        "小 bundle 体积",
+        "编译时优化和零 runtime",
+        "全家桶 + 强约定 + ng update 逐级迁移 + 向后兼容承诺",
+        "灵活的第三方库选择"
+      ],
+      "answer": 2,
+      "explanation": "长期项目核心需求：稳定的 API 升级路径(ng update)、统一规范(风格指南)、开箱能力(全家桶)——正是 Angular 哲学。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Svelte 和 Solid 响应式的共同核心优势是？",
+      "options": [
+        "虚拟 DOM diff",
+        "编译时/细粒度更新——无 VDOM 开销达到极致性能",
+        "全家桶内置路由和表单",
+        "层级 DI 容器"
+      ],
+      "answer": 1,
+      "explanation": "Svelte 编译时精确 DOM 操作、Solid 细粒度 signal 只更新变化节点——两者最小 runtime 最快更新。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Vue 3 Composition API 与 Angular signal store 最接近的类比是？",
+      "options": [
+        "Vue 的 Options API",
+        "ref/computed 对应 signal/computed；setup 函数对应 service",
+        "Vuex/Pinia 对应 Angular 组件",
+        "Vue 没有响应式"
+      ],
+      "answer": 1,
+      "explanation": "ref() ≈ signal(), computed() ≈ computed(), Pinia store ≈ providedIn:'root' service + signals。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "四家框架中哪家全家桶程度最高？",
+      "options": [
+        "React",
+        "Vue",
+        "Svelte",
+        "Angular"
+      ],
+      "answer": 3,
+      "explanation": "Angular 内置 Router + Forms + HTTP + DI + SSR + Test——开箱即有完整能力；React 什么都需要第三方。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "以下关于 NgModule 存量项目的说法正确的是？",
+      "options": [
+        "Angular 已停止支持 NgModule 项目",
+        "NgModule 项目无法升级到 v17+",
+        "有官方 ng update 自动迁移脚本可渐进 standalone 化",
+        "必须一次性全部重写为 standalone"
+      ],
+      "answer": 2,
+      "explanation": "v17+ 提供 `ng generate @angular/core:standalone` 自动迁移——可渐进(bootstrap→组件→删模块)不要求一次重写。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "快速 MVP 验证产品时，最推荐哪个框架起步？",
+      "options": [
+        "Angular——全家桶最完善",
+        "React/Vue——库组合灵活起步最快学习曲线最平",
+        "Svelte——因为性能最好",
+        "必须用企业级框架"
+      ],
+      "answer": 1,
+      "explanation": "MVP 要快、灵活、少约束——React/Vue 无强制架构起步更快。Angular 约定多适合长期不适合验证期。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "四框架在 SSR 方案上的对应关系正确的是？",
+      "options": [
+        "Angular=@angular/ssr, React=Next.js, Vue=Nuxt, Svelte=SvelteKit",
+        "Angular=Nuxt, React=SvelteKit, Vue=Next",
+        "全部用 Next.js",
+        "只有 React 支持 SSR"
+      ],
+      "answer": 0,
+      "explanation": "每家官方/社区全栈方案：Angular SSR、Next.js(React)、Nuxt(Vue)、SvelteKit(Svelte)。"
+    }
+  ]
+}

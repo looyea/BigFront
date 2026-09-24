@@ -1,0 +1,136 @@
+{
+  "title": "ng-router-guards 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "函数式守卫 CanActivateFn 相比旧 class 守卫的核心优势是？",
+      "options": [
+        "不需要 @Injectable 装饰和 providers 注册，内部直接 inject()",
+        "可以处理更复杂的逻辑",
+        "执行速度更快因为不经过 DI",
+        "只有函数式守卫支持异步返回值"
+      ],
+      "answer": 0,
+      "explanation": "函数式守卫自动拥有注入上下文，无需额外声明 provider；旧写法必须 @Injectable 类 + providers 注册。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "CanMatch 守卫返回 false 时 Router 的行为是？",
+      "options": [
+        "阻止导航并显示 404 页面",
+        "抛出错误中断所有导航",
+        "跳过该路由配置项，尝试匹配 Routes 数组中的下一条",
+        "触发 CanDeactivate 留在当前页"
+      ],
+      "answer": 2,
+      "explanation": "CanMatch=false 意味着该路由不匹配当前 URL → Router 视它不存在继续往下找（可能命中 ** 通配 404）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "authGuard 返回 router.createUrlTree(['/login']) 的效果是？",
+      "options": [
+        "当前导航被取消页面留在原地",
+        "等同于 return false",
+        "当前导航中止并立即导航到 /login",
+        "仅记录日志不实际跳转"
+      ],
+      "answer": 2,
+      "explanation": "守卫返回 UrlTree 表示中止当前导航 + 重定向到 UrlTree 指定的路径——是带跳转的拒绝。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "CanDeactivate 守卫的独特之处是？",
+      "options": [
+        "只能返回 true 或 false",
+        "接收当前组件实例作为第一个参数，可调用其方法判断脏状态",
+        "在懒加载完成后执行",
+        "不能访问 ActivatedRouteSnapshot"
+      ],
+      "answer": 1,
+      "explanation": "CanDeactivateFn<T> 第一参数是正在离开的组件实例——可以读它的状态（如表单 dirty）决定能否离开。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "守卫返回 Observable<boolean> 时 Router 怎么处理？",
+      "options": [
+        "不合法会编译报错",
+        "订阅并等待 Observable complete 后才继续导航",
+        "取第一个发射值立即放行",
+        "忽略 Observable 当作 true"
+      ],
+      "answer": 1,
+      "explanation": "Router 内部用 firstValueFrom 或 subscribe 等 Observable/Promise resolve 后才决定是否放行。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "为什么 admin 路由的权限检查推荐用 CanMatch 而不是 CanActivate？",
+      "options": [
+        "CanMatch 更安全无法被绕过",
+        "CanActivate 不支持注入 service",
+        "CanMatch 在懒加载前执行——返回 false 时 admin chunk 根本不会被下载",
+        "CanMatch 可以返回 Observable"
+      ],
+      "answer": 2,
+      "explanation": "CanMatch 在加载组件 JS 之前——非管理员时省带宽和加载时间；CanActivate 是加载完了再拦。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "一个路由同时有 canMatch、canActivate、resolve——正确的执行顺序是？",
+      "options": [
+        "canMatch → 懒加载 → canActivate → resolve",
+        "canActivate → canMatch → resolve",
+        "resolve → canMatch → canActivate",
+        "canMatch → canActivate → 懒加载 → resolve"
+      ],
+      "answer": 0,
+      "explanation": "canMatch 最先（决定是否匹配/是否加载）→ 然后懒加载组件 → 加载完 canActivate 检查权限 → resolve 预取数据。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "在守卫中 inject(AuthService) 报 NullInjectorError，最可能的原因是？",
+      "options": [
+        "AuthService 没有 export",
+        "Angular 版本太旧不支持 inject()",
+        "守卫函数在注入上下文之外被手动调用",
+        "AuthService 有循环依赖"
+      ],
+      "answer": 2,
+      "explanation": "inject() 必须在注入上下文——守卫由 Router 在正确上下文调用；在守卫外手动调用或 async callback 丢了上下文就报错。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "只在父路由配了 canActivate，用户直接输入子路由 URL 访问——结果是？",
+      "options": [
+        "父路由的 canActivate 自动保护所有子路由",
+        "子路由不受保护——需要 canActivateChild 才能批量限制子路由",
+        "子路由也受 canActivate 控制因为 Router 先检查父级",
+        "Angular 编译时报错要求你加 canActivateChild"
+      ],
+      "answer": 1,
+      "explanation": "canActivate 只守护自身路由节点；保护子路由用 canActivateChild（或每个子路由各自挂 canActivate）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "Angular 函数式守卫与 Next.js middleware 的本质区别是？",
+      "options": [
+        "两者完全等价只是 API 名称不同",
+        "Angular 守卫不能做鉴权",
+        "Next middleware 粒度更细可以到组件级",
+        "Next middleware 在服务端执行；Angular 守卫在客户端导航时执行"
+      ],
+      "answer": 3,
+      "explanation": "Next middleware 是 Edge Runtime 拦截 HTTP 请求（服务端）；Angular 守卫是客户端路由事件链中的 JS 函数——CSR/SSR 都可跑但设计出发点是客户端。"
+    }
+  ]
+}

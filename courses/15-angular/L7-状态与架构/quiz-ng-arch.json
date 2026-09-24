@@ -1,0 +1,136 @@
+{
+  "title": "ng-arch 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Angular 三层架构中 features/A 能否直接 import features/B 的内容？",
+      "options": [
+        "禁止——feature 之间不允许横向依赖",
+        "可以，只要用 barrel index.ts",
+        "可以，但只能在 NgModule 里 imports",
+        "只有使用了 Nx 才禁止"
+      ],
+      "answer": 0,
+      "explanation": "官方风格指南铁律：features 之间禁止直接 import——共享内容应提升到 core 或 shared。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "core 层的依赖规则是？",
+      "options": [
+        "core 可以 import features 以获取业务类型",
+        "core 只可以 import shared",
+        "core 不依赖任何 feature——只能被 feature 依赖",
+        "core 和 features 之间允许双向 import"
+      ],
+      "answer": 2,
+      "explanation": "core 是底层基础设施——如果反向依赖 feature 就形成循环——依赖方向只能从 feature → core。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "官方推荐避免 feature 内用 barrel(index.ts) 的原因是？",
+      "options": [
+        "barrel 文件执行速度太慢",
+        "barrel 破坏 tree-shaking——import 一个组件会把整个 feature 拉入 bundle",
+        "TypeScript 不支持 barrel",
+        "barrel 会导致运行时 DI 错误"
+      ],
+      "answer": 1,
+      "explanation": "build tool 无法从 barrel 里精确 tree-shake 未使用的导出——直接 import 路径让 bundler 只打包用到的。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Nx monorepo 中 enforce-module-boundaries lint 规则的作用是？",
+      "options": [
+        "自动拆分懒加载 chunk",
+        "限制 project tags 之间的 import 方向——违规时编译报错",
+        "强制每个 lib 都有独立 tsconfig",
+        "自动生成 barrel 文件"
+      ],
+      "answer": 1,
+      "explanation": "该规则通过 depConstraints 配置 tag 约束——如 type:feature 不能 import 另一个 scope 的 feature——违规直接 ESLint error。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "大型 Angular 项目主包（initial bundle）应该包含什么？",
+      "options": [
+        "所有 feature 的组件代码",
+        "只有 core + shared + bootstrap 逻辑——feature 全在懒加载 chunk",
+        "所有 service 和所有 model",
+        "完整的 NgRx store 初始化"
+      ],
+      "answer": 1,
+      "explanation": "延迟 feature 边界：只在 loadChildren 触发时才 import feature 代码——主包保持精简。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "两个 feature 都需要同一个 User model——正确做法是？",
+      "options": [
+        "各自 feature 里复制一份",
+        "feature A export → feature B import",
+        "放在 app.component.ts 里 export",
+        "提升到 shared/models/ 或 core/models/"
+      ],
+      "answer": 3,
+      "explanation": "跨 feature 共享 model → 提升到 shared 或 core——避免横向依赖同时保持单一真相源。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Angular 与 Nuxt/SvelteKit 在架构约束方式上的核心差异是？",
+      "options": [
+        "Angular 靠文件系统强制、Nuxt 靠 lint",
+        "完全一样都是约定优于配置",
+        "Angular 靠约定 + lint 规则；Nuxt/SvelteKit 靠目录约定自动绑定",
+        "Nuxt/SvelteKit 不能做模块隔离"
+      ],
+      "answer": 2,
+      "explanation": "Angular 的 core/shared/features 划分靠人工约定 + eslint 保障；Nuxt/SvelteKit 的 pages/components 有框架级目录约定。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "循环依赖的最常见原因是？",
+      "options": [
+        "Angular DI 框架 bug",
+        "两个 feature 互相 import 或 barrel 导致间接循环",
+        "懒加载路由配置写错",
+        "signal 的 computed 互相引用"
+      ],
+      "answer": 1,
+      "explanation": "循环 import 多因 barrel 或直接跨 feature import——standalone 少 barrel 后概率降低但 model 共享仍需提升到 shared。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "standalone 组件时代 shared 层可复用组件如何提供给 feature 使用？",
+      "options": [
+        "feature 组件在 imports 数组里直接 import 目标 standalone 组件",
+        "必须在 SharedModule 的 NgModule 里声明并 exports",
+        "通过 Angular CDK 中转",
+        "需要在 app.config providers 里注册组件"
+      ],
+      "answer": 0,
+      "explanation": "v19+ 组件默认 standalone——feature 里 import { DataTableComponent } from 'shared/...' 写进组件 imports 即可——无需 NgModule。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "关于 feature 私有 service 的正确放置位置是？",
+      "options": [
+        "全部放 core/ 因为 providedIn:'root' 更方便",
+        "放在自己的 features/xxx/ 目录里——不提升到 core",
+        "放在 shared/services/ 下",
+        "放在 app.component.ts 同目录"
+      ],
+      "answer": 1,
+      "explanation": "只有跨 feature 共享的 service 才提升到 core；feature 私有的留在自己目录——减少主包体积和耦合。"
+    }
+  ]
+}

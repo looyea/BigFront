@@ -1,0 +1,136 @@
+{
+  "title": "ng-signal-forms 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Signal Forms 在哪个版本正式转正为 stable？",
+      "options": [
+        "v22",
+        "v21",
+        "v20",
+        "v19"
+      ],
+      "answer": 0,
+      "explanation": "v21 预览、v22（2026.06）Signal Forms 标记 stable 转正——本包以 v22 为事实底。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "Signal Forms 与 Reactive Forms 的核心架构差异是？",
+      "options": [
+        "Signal Forms 不支持校验",
+        "不支持嵌套表单",
+        "必须用模板驱动方式",
+        "表单状态是 signal（自动响应 zoneless 变更检测）而非 BehaviorSubject"
+      ],
+      "answer": 3,
+      "explanation": "Signal Forms 把 value/errors/dirty/touched 全做成 signal——zoneless 下模板自动追踪、无需 AsyncPipe/markForCheck。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "Signal Forms 中重置表单的正确方式是？",
+      "options": [
+        "form.reset()",
+        "form.patchValue({})",
+        "重置数据源 signal（model.set({...})）——表单自动同步",
+        "this.formGroup = this.fb.group({...})"
+      ],
+      "answer": 2,
+      "explanation": "Signal Forms 从 model signal 派生——改 model 即改表单状态，不需要单独的 reset API（表单是 model 的校验视图）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "Signal Forms 的自定义 validator 接收什么参数？",
+      "options": [
+        "AbstractControl",
+        "FormControl",
+        "Signal<T>（当前字段值的 signal）",
+        "FormGroup"
+      ],
+      "answer": 2,
+      "explanation": "接收字段 Signal——用 field() 拿值做判断返回 boolean/ValidationErrors——更纯粹不暴露控件内部 API。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "以下哪种场景 Signal Forms 目前还建议用 Reactive Forms？",
+      "options": [
+        "简单登录表单",
+        "注册三字段表单",
+        "依赖 ngx-formly 配置式动态表单且库尚未适配 Signal Forms",
+        "新建 v22 standalone 工程的搜索页"
+      ],
+      "answer": 2,
+      "explanation": "第三方渲染库（ngx-formly）若未适配 Signal Forms 后端，短期仍需 Reactive Forms——等库升级或自建渲染层。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Signal Forms 模板里读取字段值的方式是？",
+      "options": [
+        "form.get('name').value",
+        "form.name().value()",
+        "form.controls.name.value",
+        "name | async"
+      ],
+      "answer": 1,
+      "explanation": "form.name() 取字段 signal、.value() 取当前值——两层 signal 调用：field 是 signal、field 内的 value 也是 signal。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "Signal Forms 出现的最主要驱动力是？",
+      "options": [
+        "减小打包体积",
+        "配合 zoneless 让表单区域不再需要手动 markForCheck/AsyncPipe",
+        "废弃 RxJS",
+        "替代 HTML 表单标签"
+      ],
+      "answer": 1,
+      "explanation": "Reactive Forms 用 BehaviorSubject——zoneless 不拦截其变化→表单值变但视图不动。Signal Forms 用 signal→天然通知视图。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Signal Forms 对异步校验的处理是？",
+      "options": [
+        "不支持异步校验",
+        "asyncValidators 接收 field signal、返回 Promise<boolean>",
+        "用 valueChanges.subscribe 手动设错误",
+        "只能用同步 validator"
+      ],
+      "answer": 1,
+      "explanation": "async validator 是 async(field) => boolean/ValidationErrors——框架自动管 PENDING 状态（也是 signal）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "本关标注 Signal Forms 的风险是？",
+      "options": [
+        "已废弃不再维护",
+        "仅支持 Angular v17 以下",
+        "虽 v22 stable 但官方声明仍在快速演进期——API 名/行为可能微调",
+        "与 standalone 组件不兼容"
+      ],
+      "answer": 2,
+      "explanation": "官方标注此包仍在快速演进——使用前必查最新 CHANGELOG；本关代码基于 v22 GA，若 API 有变以 angular.dev 为准。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "以下哪个包路径包含 Signal Forms 的 API？",
+      "options": [
+        "@angular/forms/reactive",
+        "@angular/forms/signals",
+        "@angular/core/forms",
+        "@angular/forms/legacy"
+      ],
+      "answer": 1,
+      "explanation": "form()/field()/signalInput() 等 Signal Forms API 从 @angular/forms/signals 导出——与 Reactive Forms 的 @angular/forms 入口分开。"
+    }
+  ]
+}

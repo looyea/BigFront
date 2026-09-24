@@ -1,0 +1,136 @@
+{
+  "title": "ng-state-services 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Angular 中共享跨路由状态的默认容器是什么？",
+      "options": [
+        "@Injectable({providedIn:'root'}) 的 Service",
+        "Redux Store",
+        "Context Provider",
+        "全局 window 变量"
+      ],
+      "answer": 0,
+      "explanation": "Angular DI 体系的天然单例 Service 就是跨组件共享状态的默认容器——无需额外库。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "signal store 封装中 .asReadonly() 的作用是？",
+      "options": [
+        "提升读取性能",
+        "让 signal 变成不可变的常量",
+        "暴露只读视图防止外部调用 .set()/.update() 写入",
+        "自动将值持久化到 localStorage"
+      ],
+      "answer": 2,
+      "explanation": "asReadonly() 返回一个只有读取能力的 Signal<T>——TS 类型上不含 set/update 方法，外部只能读不能写。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "以下 store 代码有什么问题？`computed(() => { this._log.update(n=>n+1); return this._todos(); })`",
+      "options": [
+        "语法错误",
+        "computed 内做了副作用（写另一个 signal）——违反 purity 规则",
+        "computed 不能返回数组",
+        "没有问题"
+      ],
+      "answer": 1,
+      "explanation": "computed 必须是纯派生——内部不能写其他 signal（可能触发循环）。副作用应放 effect()。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "对照 Zustand，Angular signal store 里的 computed 等价于 Zustand 的什么？",
+      "options": [
+        "create 里的 state 字段",
+        "set 函数",
+        "subscribe 回调",
+        "Zustand 没有原生等价——需外部 useMemo 或 shallow selector"
+      ],
+      "answer": 3,
+      "explanation": "Zustand 没有内置派生状态原语——需要组件里 useMemo 或第三方中间件；Angular computed 是一等公民。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "在 providedIn:'root' 的 service 构造函数里写 effect(() => localStorage.setItem(...)) 的目的是？",
+      "options": [
+        "监听组件变化",
+        "触发变更检测",
+        "订阅 HTTP 流",
+        "实现 signal 值变化时自动持久化到 localStorage"
+      ],
+      "answer": 3,
+      "explanation": "effect 在 signal 依赖变化时执行副作用——这里把 theme signal 的值变化同步到 localStorage。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Angular 官方对 NgRx 的推荐立场是？",
+      "options": [
+        "所有项目都应该用 NgRx",
+        "大多数应用不需要 NgRx——signal store 覆盖 80% 场景",
+        "NgRx 已被废弃",
+        "只在 SSR 项目中允许 NgRx"
+      ],
+      "answer": 1,
+      "explanation": "官方文档明确表示大部分应用用 service+signals 即可——NgRx 适合大型团队/复杂状态流。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "SSR 环境下在 service 里直接访问 localStorage 会怎样？",
+      "options": [
+        "正常工作因为 Angular polyfill 了",
+        "抛出 ReferenceError（server 端无 localStorage）",
+        "返回空字符串",
+        "Angular 自动降级到 sessionStorage"
+      ],
+      "answer": 1,
+      "explanation": "Node.js/Deno SSR 环境无浏览器 API——需要 isPlatformBrowser 守卫才能安全访问。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "store 拆分粒度的正确原则是？",
+      "options": [
+        "每个组件一个 store",
+        "整个应用一个巨型 store",
+        "按路由页面拆分",
+        "一个 store 对应一个业务域（domain）"
+      ],
+      "answer": 3,
+      "explanation": "按业务域（用户、购物车、产品）拆——太细导致依赖网、太粗导致巨型对象难维护。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "以下哪种场景最应该引入 NgRx 而非继续用 signal store？",
+      "options": [
+        "需要乐观更新 + 撤销 + DevTools 时间旅行的协作白板",
+        "一个计数器组件",
+        "购物车增删改查",
+        "主题色切换"
+      ],
+      "answer": 0,
+      "explanation": "NgRx 核心价值：中间件（乐观/撤销）+ DevTools + 团队规范——简单共享状态不需要它。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "signal store 中 action 里用 spread `[...todos, newItem]` 而非 push 的原因是？",
+      "options": [
+        "push 性能太差",
+        "TypeScript 不允许 push",
+        "signal 用 Object.is 检测变化——mutate 同一引用不触发下游更新",
+        "两者完全等价只是风格偏好"
+      ],
+      "answer": 2,
+      "explanation": "signal 用 Object.is 检测变化——同一数组引用 mutate(push)后引用不变→不触发下游 computed/模板更新。spread 产生新引用。"
+    }
+  ]
+}

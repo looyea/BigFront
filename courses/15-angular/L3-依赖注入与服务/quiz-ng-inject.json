@@ -1,0 +1,136 @@
+{
+  "title": "ng-inject 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "inject() 在以下哪个位置调用会报 NG0203 错误？",
+      "options": [
+        "ngOnInit 生命周期钩子中",
+        "useFactory 工厂函数体内（v14+）",
+        "class 的 field initializer 中",
+        "constructor 参数（旧写法）"
+      ],
+      "answer": 0,
+      "explanation": "生命周期钩子执行时注入上下文已丢失——inject() 只在构造上下文（field init/工厂/显式 runInInjectionContext）中合法。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "constructor DI 逐步退役的三条理由不包括？",
+      "options": [
+        "删依赖只需删一行 field、不动 constructor 签名",
+        "constructor 参数顺序敏感导致测试手动 new 时容易错",
+        "field initializer 与 signal/class 声明风格一致",
+        "constructor DI 的性能比 inject() 差 10 倍"
+      ],
+      "answer": 3,
+      "explanation": "constructor DI 与 inject() 性能几乎无差异——退役理由是重构安全/测试友好/风格一致，不是性能。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "runInInjectionContext 的用途是？",
+      "options": [
+        "创建一个新组件",
+        "在非构造时机手动提供注入上下文给 inject() 使用",
+        "强制重新渲染组件树",
+        "把服务注册到 Platform Injector"
+      ],
+      "answer": 1,
+      "explanation": "runInInjectionContext(injector, () => inject(X)) 让回调里的 inject 有合法上下文——用于点击时动态拿服务等场景。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "有状态/生命周期的依赖（HttpClient/业务 Service）应该用哪种方式获取？",
+      "options": [
+        "直接 import 模块",
+        "全局变量",
+        "DI provider + inject()",
+        "EventBus 发布订阅"
+      ],
+      "answer": 2,
+      "explanation": "有状态依赖需要作用域/生命周期/可替换性→DI；纯函数/常量直接 import。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "v14+ useFactory 里可以直接调 inject() 的前提是？",
+      "options": [
+        "工厂函数必须是 async",
+        "Angular 在工厂执行时自动包裹了 runInInjectionContext",
+        "工厂返回的实例必须是单例",
+        "deps 数组必须为空"
+      ],
+      "answer": 1,
+      "explanation": "v14 起框架在工厂执行前把上下文设好（内部调了 runInInjectionContext），所以工厂体内 inject() 合法——无需 deps 数组。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "在 effect 回调里调用 inject() 会怎样？",
+      "options": [
+        "正常工作",
+        "抛 NG0203（effect 不是注入上下文）",
+        "返回 undefined 静默",
+        "只在首次运行有效"
+      ],
+      "answer": 1,
+      "explanation": "effect 回调执行时注入上下文丢失——需要提前在 field 里 inject 好、effect 闭包捕获。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "inject(Injector) 拿到的是什么？",
+      "options": [
+        "全局单例 injector",
+        "当前组件/指令所属的 Injector 实例（可向上查找或手动 runInInjectionContext）",
+        "Platform 级 injector",
+        "新建一个独立 injector"
+      ],
+      "answer": 1,
+      "explanation": "inject(Injector) 返回当前上下文的 injector 引用——传给 runInInjectionContext 使用或 .get(token) 手动查找。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "Angular 的 inject() 与 Vue 的 inject() 的最大区别是？",
+      "options": [
+        "没有区别",
+        "Vue inject 在 setup 阶段、Angular inject 在构造上下文；Angular 独立于渲染树、Vue 沿组件嵌套链",
+        "Angular inject 只能注入 class、Vue 可注入任意值",
+        "Vue inject 支持作用域隔离、Angular 不支持"
+      ],
+      "answer": 1,
+      "explanation": "两者名称巧合——机制差异大：Angular 有 root/route/element 层级且与渲染解耦；Vue 沿组件树 provide→inject 一一对应。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "Injector.create({providers:[...]}) 的典型场景是？",
+      "options": [
+        "创建业务 service 单例",
+        "纯单元测试/脚本式环境里脱离组件树手动组装一个独立注入器",
+        "替代 app.config.ts",
+        "创建 SSR 引擎"
+      ],
+      "answer": 1,
+      "explanation": "Injector.create 是底层 API——日常业务用 providedIn/装饰器；它主要出现在测试工具或动态创建场景里。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "inject() 写法的 tree-shaking 优势是？",
+      "options": [
+        "完全没有 tree-shaking 差异",
+        "field initializer 里的 inject 在 class 未被实例化时不触发导入链——配合 providedIn:'root' 的服务文件可被摇掉",
+        "inject() 会编译成 import 语句所以自动 tree-shake",
+        "inject() 比 constructor DI 产物大"
+      ],
+      "answer": 1,
+      "explanation": "如果组件没被用到→class 不实例化→field 不执行→服务文件不被拉入 bundle；providedIn:'root' 让服务自注册但只有 inject 才创建——两端协同实现精确摇树。"
+    }
+  ]
+}

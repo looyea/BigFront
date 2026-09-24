@@ -1,0 +1,136 @@
+{
+  "title": "ng-lib-ui 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Angular CDK 的核心定位是？",
+      "options": [
+        "无 UI 的 headless 能力层（overlay/drag-drop/a11y/table）",
+        "Material Design 样式的组件库",
+        "状态管理工具",
+        "构建优化工具"
+      ],
+      "answer": 0,
+      "explanation": "CDK = Component Dev Kit，提供浮层定位、拖放、无障碍、表格数据源等骨架能力——不含任何 Material 视觉。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "ViewEncapsulation.Emulated（默认）的样式隔离原理是？",
+      "options": [
+        "使用浏览器原生 Shadow DOM",
+        "编译时给选择器添加 _ngcontent_xxx 属性限定作用域",
+        "把 CSS 内联到 style 标签",
+        "使用 CSS Modules hash 类名"
+      ],
+      "answer": 1,
+      "explanation": "Emulated 模式由 Angular 编译器在 CSS 选择器后加 [_ngcontent-xxx-c1] 属性选择器实现模拟 scoped。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "standalone 组件使用 Material 按钮需要怎么引入？",
+      "options": [
+        "在 AppModule 里 imports: [MatButtonModule]",
+        "在组件的 imports: [MatButtonModule] 里声明",
+        "全局 provideMaterial() 一行搞定",
+        "不需要引入自动 tree-shake"
+      ],
+      "answer": 1,
+      "explanation": "standalone 组件自行声明依赖——在 @Component({ imports: [MatButtonModule] }) 里加入。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "集成 Web Components 库（如 Shoelace）到 Angular 的正确方式是？",
+      "options": [
+        "包装成 Angular Directive",
+        "使用 CUSTOM_ELEMENTS_SCHEMA 后直接在模板里用自定义元素标签",
+        "必须等该库出 Angular 版本",
+        "只能通过 iframe 嵌入"
+      ],
+      "answer": 1,
+      "explanation": "在 @Component({ schemas: [CUSTOM_ELEMENTS_SCHEMA] }) 后模板可直接写 <sl-button> 等自定义元素。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "Material 3 主题定制推荐的机制是？",
+      "options": [
+        "覆写 SCSS 变量 + 重新编译 Material",
+        "只能通过 Angular.json 配置主题",
+        "修改 node_modules 里的 CSS 文件",
+        "使用 CSS 自定义属性 --mat-sys-*"
+      ],
+      "answer": 3,
+      "explanation": "Material 3 全面迁移到 CSS custom properties——运行时可动态切主题无需重新编译。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "以下哪个是 CDK 的 Overlay 模块解决的典型问题？",
+      "options": [
+        "组件间数据传递",
+        "浮层（dropdown/dialog/tooltip）的定位与 z-index 管理",
+        "HTTP 请求拦截",
+        "路由懒加载"
+      ],
+      "answer": 1,
+      "explanation": "Overlay 处理动态创建浮层、连接到任意 DOM 位置、智能定位（碰撞检测）和 z-index 层叠。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "与其他框架对比，Angular 组件库生态的锁定度如何？",
+      "options": [
+        "完全开放没有任何官方库",
+        "锁定度最高因为 Material 是唯一选择",
+        "中等——Material 最顺滑但 CDK 支持完全自建 UI",
+        "只能使用第三方库不能用官方组件"
+      ],
+      "answer": 2,
+      "explanation": "Material 是全家桶一部分体验最好，但 CDK 允许不用 Material 样式纯造自定义 UI——不是强绑定。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "在 ShadowDom 封装模式下，全局 CSS 变量会怎样？",
+      "options": [
+        "自定义属性可以穿透 Shadow DOM 边界，但全局 class 选择器不生效",
+        "完全生效因为 Shadow DOM 不隔离 CSS",
+        "所有样式都失效",
+        "自动 fallback 到 Emulated 模式"
+      ],
+      "answer": 0,
+      "explanation": "CSS Custom Properties 是唯一能穿透 Shadow DOM 边界的样式机制——但外部选择器（如 .btn）无法命中内部元素。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "v22 的 Material Native Controls 新线相比传统 MDC-based 的优势是？",
+      "options": [
+        "支持更多浏览器",
+        "利用 HTML 原生控件（如 input[type=date]）+ CDK 行为——更轻量、更好的 a11y 和移动端体验",
+        "不再需要 import 任何模块",
+        "完全不需要 CSS"
+      ],
+      "answer": 1,
+      "explanation": "native controls 不模拟 Material 视觉——用原生浏览器控件 + CDK 无障碍/键盘增强 → bundle 更小 + 自动跟随浏览器更新。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "::ng-deep 的现状是？",
+      "options": [
+        "推荐用于穿透子组件样式",
+        "Angular v22 已正式废弃——替代方案是 ViewEncapsulation.None 或 CSS 变量",
+        "只能用在 SCSS 中",
+        "与 ShadowDom 配合使用"
+      ],
+      "answer": 1,
+      "explanation": "::ng-deep 是临时 escape hatch——官方标注 deprecated 不再推荐；替代：CSS custom properties 或封装=None。"
+    }
+  ]
+}
