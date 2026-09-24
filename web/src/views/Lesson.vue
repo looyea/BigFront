@@ -89,7 +89,7 @@ async function copyText(t) {
       </div>
       <template v-if="openExample.content">
         <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px">
-          <b style="font-size:12px;font-family:var(--mono)">{{ openExample.file }}</b>
+          <b style="font-size:14px;font-family:var(--mono)">{{ openExample.file }}</b>
           <button class="btn ghost sm" @click="openExample = { file: '', content: '' }">关闭</button>
         </div>
         <pre class="code-view"><code class="language-js">{{ openExample.content }}</code></pre>

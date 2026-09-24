@@ -548,8 +548,10 @@ app.get('/api/packages/:pkgId/lessons/:lessonId', async (req, res) => {
     };
   }
   const interviewMd = await readTextIfExists(meta.ivFile);
+  // mdFile/quizFile/ivFile 是服务端绝对路径，不下发（泄露文件系统结构且前端无用）
+  const { mdFile, quizFile, ivFile, ...metaOut } = meta;
   res.json({
-    pkgId: req.params.pkgId, ...meta, markdown, quiz,
+    pkgId: req.params.pkgId, ...metaOut, markdown, quiz,
     interviews: interviewMd || '',
     progress: progress.lessons[lessonKey(req.params.pkgId, req.params.lessonId)] ?? null,
   });
@@ -597,7 +599,10 @@ app.get('/api/packages/:pkgId/examples/:lessonId/:file', async (req, res) => {
   if (!meta || !isSafeSegment(lessonId) || !isSafeSegment(rel)) {
     return res.status(400).json({ error: '非法路径' });
   }
-  const { base } = getExamplesLayout(entry.pkgDir, meta.levelDir, meta.lessonNo, meta.id);
+  // 只允许读 example-<lessonId>- 前缀的示例文件：阶段目录里同时放着 quiz-*.json（含答案），
+  // 不加前缀校验就能从示例接口直接拖走小测答案，绕过判分泄题。
+  const { base, prefix } = getExamplesLayout(entry.pkgDir, meta.levelDir, meta.lessonNo, meta.id);
+  if (prefix && !rel.startsWith(prefix)) return res.status(403).json({ error: '只能访问本关的示例文件' });
   const target = safeJoin(base, rel);
   if (!target || !(await withinBase(target, base))) return res.status(400).json({ error: '非法路径' });
   const content = await readTextIfExists(target);
@@ -618,9 +623,10 @@ app.post('/api/progress/ping', async (req, res) => {
   const elapsed = prev ? now - prev : 0;
   lastPingAt.set(key, now);
   // 距上次不足 5s 视为脚本连发，忽略；单次累计不超过 min(上报值, 60s, 墙钟+2s)
+  // 服务重启后该 key 的首个 ping 没有 prev：信任客户端累计值（仍受 60s 上限），否则白丢一段时长
   if (prev && elapsed < 5000) return res.json({ ok: true, ignored: true });
   const reported = Math.max(Number(ms) || 0, 0);
-  const delta = Math.min(reported, 60_000, elapsed + 2000);
+  const delta = Math.min(reported, 60_000, prev ? elapsed + 2000 : 60_000);
   progress.totalMs += delta;
   progress.days[todayKey()] = (progress.days[todayKey()] ?? 0) + delta;
   const iso = new Date().toISOString();

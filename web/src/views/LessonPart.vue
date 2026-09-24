@@ -1,6 +1,6 @@
 <script setup>
-// 关卡资料独立视图：小测 / 面试题 二选一，点进去只看对应内容
-// 本关进度、小测进度仅在小测页展示；作业不再提供 UI；通关由小测及格自动触发
+// 关卡资料独立视图：小测 / 面试题 / 作业 三选一，点进去只看对应内容
+// 作业是阶段级内容（homework-<阶段id>.md），仍从关卡页进入；勾选完成仅作记录，通关仍由小测及格自动触发
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { marked } from 'marked';
@@ -11,10 +11,12 @@ const route = useRoute();
 const router = useRouter();
 
 // 由路由名判定当前是哪一块资料
-const part = computed(() => (route.name === 'lesson-quiz' ? 'quiz' : 'interview'));
+const PART_BY_ROUTE = { 'lesson-quiz': 'quiz', 'lesson-homework': 'homework' };
+const part = computed(() => PART_BY_ROUTE[route.name] || 'interview');
 const PART_META = {
   quiz: { icon: '🧪', name: '本关小测' },
   interview: { icon: '🎓', name: '本关面试题' },
+  homework: { icon: '📝', name: '本阶段作业' },
 };
 
 const lesson = ref(null);
@@ -23,6 +25,9 @@ const loading = ref(true);
 const error = ref('');
 const quizPassed = ref(false);
 const completed = ref(false);
+const homeworkMd = ref('');
+const homeworkDone = ref(false);
+const homeworkMissing = ref(false);
 
 async function loadAll() {
   loading.value = true;
@@ -37,6 +42,18 @@ async function loadAll() {
     quizPassed.value =
       data.quiz && p.quizTotal > 0 && p.quizBest / p.quizTotal >= 0.6;
     completed.value = p.completed ?? false;
+    homeworkDone.value = p.homeworkDone ?? false;
+    // 作业是阶段级文件，只在作业页拉取
+    if (part.value === 'homework') {
+      try {
+        const hw = await api.homework(pkgId, data.levelId);
+        homeworkMd.value = hw.markdown;
+        homeworkMissing.value = false;
+      } catch {
+        homeworkMd.value = '';
+        homeworkMissing.value = true;
+      }
+    }
     startTracking(pkgId, lessonId);
   } catch (e) {
     error.value = e.message;
@@ -47,6 +64,18 @@ async function loadAll() {
 onMounted(loadAll);
 watch(() => [route.params.pkgId, route.params.lessonId, route.name], loadAll);
 onBeforeUnmount(() => stopTracking());
+
+// 勾选/取消本阶段作业完成（仅记录，不影响通关判定）
+async function toggleHomework() {
+  const { pkgId, lessonId } = route.params;
+  homeworkDone.value = !homeworkDone.value;
+  try {
+    await api.setHomework(pkgId, lessonId, homeworkDone.value);
+    await refreshProgress();
+  } catch {
+    homeworkDone.value = !homeworkDone.value; // 失败回滚
+  }
+}
 
 // 小测及格：后端已自动通关，这里刷新本地进度并同步展示通关状态
 async function onQuizPassed() {
@@ -104,6 +133,18 @@ async function onQuizPassed() {
       </section>
     </template>
 
+    <!-- 作业：阶段级 markdown + 完成勾选（仅记录，通关仍由小测及格触发） -->
+    <section v-else-if="part === 'homework'" class="card">
+      <div v-if="homeworkMd" class="prose" style="border:none;padding:0;background:transparent"
+           v-html="marked.parse(homeworkMd)"></div>
+      <p v-else-if="homeworkMissing" class="hint">本阶段作业文件待补充。</p>
+      <label class="quiz-opt" style="margin-top:12px;display:flex;align-items:center;gap:8px;cursor:pointer"
+             @click="toggleHomework">
+        <input type="checkbox" :checked="homeworkDone" @click.stop="toggleHomework" />
+        我已完成本阶段作业{{ homeworkDone ? ' ✅' : '' }}
+      </label>
+    </section>
+
     <!-- 面试题 -->
     <section v-else class="card">
       <div v-if="lesson.interviews" class="prose" style="border:none;padding:0;background:transparent"
@@ -122,9 +163,9 @@ async function onQuizPassed() {
   padding: 6px 0; border-bottom: 1px dashed var(--border);
 }
 .progress-card .prog-rows > div:last-child { border-bottom: none; }
-.progress-card .k { color: var(--text-dim); font-size: 13px; }
-.progress-card .v { font-size: 14px; }
-.progress-card .v em { font-style: normal; margin-left: 8px; font-size: 12px; }
+.progress-card .k { color: var(--text-dim); font-size: 15px; }
+.progress-card .v { font-size: 16px; }
+.progress-card .v em { font-style: normal; margin-left: 8px; font-size: 14px; }
 .progress-card .v em.ok { color: var(--ok); }
 .progress-card .v em.todo { color: var(--warn); }
 </style>

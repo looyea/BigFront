@@ -58,7 +58,7 @@ function gradedOf(qid) {
 <template>
   <div>
     <div v-if="!result" class="quiz-form">
-      <p class="hint" style="margin:0 0 12px;color:var(--text-dim);font-size:13px">{{ quiz.passRule }}</p>
+      <p class="hint" style="margin:0 0 12px;color:var(--text-dim);font-size:15px">{{ quiz.passRule }}</p>
       <div v-for="(q, qi) in quiz.questions" :key="q.id" class="quiz-q">
         <div class="q-title">{{ qi + 1 }}. {{ q.prompt }}</div>
         <label
@@ -75,7 +75,7 @@ function gradedOf(qid) {
       <button class="btn block" :disabled="!allAnswered() || submitting" @click="submit">
         {{ submitting ? '判分中…' : '提交小测' }}
       </button>
-      <p v-if="!allAnswered()" class="hint" style="margin-top:8px">请回答全部题目后再提交。</p>
+      <p v-if="!allAnswered()" class="hint" style="margin-top:8px;font-size:15px">请回答全部题目后再提交。</p>
     </div>
 
     <div v-else>

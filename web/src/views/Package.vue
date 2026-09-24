@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api, refreshProgress, store, fmtDuration } from '../api.js';
+import { api } from '../api.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -37,10 +37,11 @@ function open(lesson, levelId, part) {
   if (!isLevelUnlocked(levelId)) return;
   router.push(`/l/${pkg.value.id}/${lesson.id}${part ? '/' + part : ''}`);
 }
-// 课文之外的两块独立视图：小测 / 面试题（作业不再提供入口）
+// 课文之外的三块独立视图：小测 / 面试题 / 作业
 const parts = [
   { slug: 'quiz', icon: '🧪', name: '小测', title: '只做本关小测' },
   { slug: 'interview', icon: '🎓', name: '面试题', title: '只看本关面试题' },
+  { slug: 'homework', icon: '📝', name: '作业', title: '只看本阶段作业' },
 ];
 </script>
 

@@ -12,15 +12,17 @@ const tree = ref(null);       // 全部课程树缓存
 
 async function ensureTree() {
   if (tree.value) return;
-  const pkgs = await api.packages();
-  const details = await Promise.all(pkgs.map((p) => api.pkg(p.id)));
-  tree.value = details.map((d, i) => ({
-    id: d.id, title: d.title, icon: d.icon, color: pkgs[i].color,
-    levels: d.levels.map((lv) => ({
-      id: lv.id, title: lv.title,
-      lessons: lv.lessons.map((l) => ({ id: l.id, title: l.title })),
-    })),
-  }));
+  try {
+    const pkgs = await api.packages();
+    const details = await Promise.all(pkgs.map((p) => api.pkg(p.id)));
+    tree.value = details.map((d, i) => ({
+      id: d.id, title: d.title, icon: d.icon, color: pkgs[i].color,
+      levels: d.levels.map((lv) => ({
+        id: lv.id, title: lv.title,
+        lessons: lv.lessons.map((l) => ({ id: l.id, title: l.title })),
+      })),
+    }));
+  } catch { /* 后端未启动：保持 tree=null，面板继续显示“加载课程树…” */ }
 }
 
 function openPanel(t) {

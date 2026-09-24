@@ -67,9 +67,8 @@ let last = 0;
 let timer = null;
 
 function flush(useBeacon = false) {
-  if (!active || accMs < 1000) {
-    if (!useBeacon) return;
-  }
+  if (!active) return;                 // 未在学习页：没东西可上报（beacon 同样需要 active）
+  if (accMs < 1000 && !useBeacon) return; // 普通定时器刷新门槛 1s；beacon 兜底时多少都发
   const ms = accMs;
   accMs = 0;
   if (ms <= 0) return;
