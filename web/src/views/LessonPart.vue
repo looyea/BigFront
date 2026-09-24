@@ -155,7 +155,8 @@ async function onQuizPassed() {
 </template>
 
 <style scoped>
-.part-wrap { max-width: 860px; margin: 0 auto; }
+/* 与课文页同理：小测/作业/面试题页也左对齐面包屑、宽度铺满页面 */
+.part-wrap { max-width: none; margin: 0; }
 .part-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .part-head .page-title { margin: 0; }
 .progress-card .prog-rows > div {

@@ -100,5 +100,6 @@ async function copyText(t) {
 </template>
 
 <style scoped>
-.lesson-single { max-width: 900px; margin: 0 auto; }
+/* 正文与面包屑左缘对齐、宽度铺满页面（不再居中限宽，避免相对面包屑右移） */
+.lesson-single { max-width: none; margin: 0; }
 </style>
