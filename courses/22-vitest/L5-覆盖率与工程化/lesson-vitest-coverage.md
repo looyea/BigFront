@@ -3,6 +3,7 @@
 ## 一、开覆盖率：装 provider
 
 ```bash
+# 目的：装覆盖率 provider（v8 引擎原生、通常更快），之后用 vitest run --coverage 出报告
 npm i -D @vitest/coverage-v8
 ```
 
@@ -20,6 +21,25 @@ npm i -D @vitest/coverage-v8
 ## 三、阈值挡 CI
 
 `coverage.thresholds: { lines: 80, functions: 80, branches: 70, perFile: true }`——低于阈值直接非零退出，CI 挡下。`perFile` 防「一个巨高覆盖文件拉平整体」。阈值是**下限护栏**，不是目标。
+
+```ts
+// 目的：coverage 三区——provider 选型 / 统计范围(all+include) / 阈值挡 CI
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: 'v8',                        // ✅ 多数项目选 v8（引擎原生、快）
+      reporter: ['text', 'html', 'lcov'],    // text 总览 / html 逐行 / lcov 传 CI 平台
+      all: true,                             // ✅ 未被测试碰的源文件也按 0% 计入分母
+      include: ['src/**'],                    // 统计范围：算哪些源文件（≠ test.include）
+      exclude: ['src/**/*.d.ts', 'dist/**'],  // 排除类型/产物，让数字反映真实逻辑
+      thresholds: { lines: 80, branches: 70, perFile: true },  // ✅ 低于则非零退出挡 CI
+      // ❌ 不设 all:true → 只有被 import 的文件进分母，制造「只测一个就 100%」假象
+      // ❌ 漏 perFile → 一个超高文件拉平整体、漏测文件照样过线
+    },
+  },
+});
+```
 
 ## 四、读报告
 

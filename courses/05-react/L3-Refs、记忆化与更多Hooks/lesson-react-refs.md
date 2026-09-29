@@ -7,15 +7,17 @@
 ## 一、useRef 是什么
 
 ```jsx
+// 目的：useRef 拿真实 DOM 节点做命令式操作（聚焦/测量/集成三方库）
 import { useRef } from 'react';
 
 function Form() {
   const inputRef = useRef(null);           // { current: null }，跨渲染保持同一对象
   const submit = () => {
-    inputRef.current.focus();              // 拿到真实 DOM 节点，命令式操作
+    inputRef.current.focus();              // ✅ 拿到真实 DOM 节点，命令式聚焦
   };
   return <><input ref={inputRef} /><button onClick={submit}>聚焦</button></>;
 }
+// ❌ 在 render 阶段读 inputRef.current 尺寸→首帧为 null，报 Cannot read properties of null
 ```
 - `useRef(initial)` 返回一个**可变对象** `{ current }`，组件整个生命周期是**同一个引用**；
 - 把 `ref` 挂到 JSX 上，React 在 DOM 创建后把节点塞进 `ref.current`（**挂载后**才可用，呼应 vue 模板 ref 时机、react-render-model commit）。
@@ -36,10 +38,12 @@ function Form() {
 ## 三、子组件 ref 与 forwardRef → React 19 变化
 
 ```jsx
+// 目的：把父传的 ref 转发到内部 DOM——≤18 需 forwardRef，19 直接把 ref 当普通 prop
 // 旧（React ≤18）：函数组件默认收不到 ref，要用 forwardRef 转发
 const FancyInput = forwardRef((props, ref) => <input ref={ref} .../>);
 // 新（React 19）：ref 作为普通 prop 直接可用，forwardRef 基本退场
 const FancyInput = ({ ref, ...props }) => <input ref={ref} {...props} />;
+// ❌ 在 ≤18 里直接 ({ref})=>… 不包 forwardRef → ref 收不到，父拿不到 DOM（警告 “Function components cannot be given refs”）
 ```
 拿到子组件 DOM 后常 `useImperativeHandle(ref, () => ({ focus(){...} }))` **只暴露想开放的方法**，而非整个 DOM/实例——对应 Vue 的 `defineExpose`（呼应 vue-refs-expose、vue-sfc-compiler-macros）。
 
@@ -50,7 +54,8 @@ const FancyInput = ({ ref, ...props }) => <input ref={ref} {...props} />;
 除了对象 ref，还可传函数（每次挂载/卸载被调用，参数为节点或 null）：
 
 ```jsx
-<div ref={node => { if (node) elRef.current = node; }} />
+// 目的：回调 ref——每次挂载/卸载被调用，参数是节点或 null
+<div ref={node => { if (node) elRef.current = node; }} />   // ✅ 动态把节点存起来（❌ 内联函数每次渲染新建→detach 调 null、attach 再调，频繁触发要抽稳定引用）
 ```
 用途：条件动态绑定、把节点存进 Map、或触发 `ResizeObserver`。测量尺寸/位置的时机要在**渲染之后**（effect/layout effect）读（呼应 react-effect-patterns 第四节、vue-onMounted）。
 

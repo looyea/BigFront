@@ -18,6 +18,7 @@
 ## 二、五种最常见的高阶模式
 
 ```js
+// 目的：五种最常见高阶函数模式（接收/返回函数）的骨架写法
 // 1. 变换集合
 [1,2,3].map(x => x * 2).filter(x => x > 2);
 
@@ -60,6 +61,11 @@ function compose(middlewares) {
     return dispatch(0);
   };
 }
+
+// ✅ 应用：once 让昂贵操作只跑一次
+const loadConfig = once(() => { console.log('真正读取'); return { ok: true }; });
+loadConfig(); // 首次 → 打印“真正读取”，返回 { ok: true }
+loadConfig(); // 二次 → 不打印，直接返回缓存的同一个 { ok: true }
 ```
 
 **框架里的高阶函数俯拾皆是**：Redux `applyMiddleware`、React `forwardRef`、Vue `defineComponent`、Express 中间件链、Koa `compose`、`useMemo(fn, deps)`。
@@ -71,12 +77,14 @@ function compose(middlewares) {
 **定义**：**柯里化**（currying）是把多参数函数转换成一系列「一次只吃一个参数、返回下一个函数」的过程。术语来自 Haskell Curry。
 
 ```js
+// 目的：手写柯里化——每个箭头只吃一个参，逐层返回新函数
 const add = (a) => (b) => (c) => a + b + c;
-add(1)(2)(3); // 6
+add(1)(2)(3); // 6（a=1,b=2,c=3 逐层带入）
 ```
 
 **为什么要柯里化**：**延迟决策 + 复用部分参数**。
 ```js
+// 目的：柯里化的真实价值——部分应用后得到可复用的专用函数
 const log = (level) => (msg) => console.log(`[${level}]`, msg);
 const info = log('INFO');
 const err  = log('ERROR');
@@ -88,12 +96,21 @@ info('start');  err('boom');
 ## 四、手写通用 curry（**面试高频**）
 
 ```js
+// 目的：通用 curry——用 fn.length 判断参数是否凑齐
 function curry(fn) {
   return function curried(...args) {
-    if (args.length >= fn.length) return fn.apply(this, args);
-    return (...more) => curried.apply(this, args.concat(more));
+    if (args.length >= fn.length) return fn.apply(this, args);   // 凑齐→真正调用
+    return (...more) => curried.apply(this, args.concat(more));   // 未凑齐→闭包留住已传参，返回新函数
   };
 }
+
+// ✅ 应用：任意分次喂参都能算
+const add = curry((a, b, c) => a + b + c);
+add(1)(2)(3);   // 6
+add(1, 2)(3);   // 6（一次传两个也可以）
+// ❌ 反面：原函数用 rest，fn.length === 0 → 第一次调用就“凑齐”，不再等待
+const broken = curry((...xs) => xs.reduce((a, b) => a + b, 0));
+broken(1);      // 1（立即执行，而非继续等待凑齐——依赖 fn.length 的经典陷阱）
 ```
 
 **三条要点**：
@@ -112,6 +129,7 @@ function curry(fn) {
 **pipe（左到右）**：`pipe(f, g, h)(x) === h(g(f(x)))`
 
 ```js
+// 目的：pipe/compose——把一元函数串成数据流水线
 const pipe = (...fns) => (x) => fns.reduce((acc, f) => f(acc), x);
 const compose = (...fns) => pipe(...fns.reverse());
 
@@ -133,9 +151,12 @@ calc(3); // ((3+10)*2)^2 = 676
 - **部分应用**：`f(a,b,c)` → `g(b,c)`，**可以一次固定任意数量的参数**。
 
 ```js
+// 目的：部分应用——一次固定任意数量参数（区别于柯里化只能一个一个）
 const multiply = (a, b) => a * b;
 const double = multiply.bind(null, 2); // 部分应用：固定第一个
+const triple = multiply.bind(null, 3); // 固定第一个为 3
 double(5); // 10
+triple(5); // 15
 ```
 
 工程里 **bind / 默认参数 / 箭头包装**都能实现部分应用；柯里化则更强调**通用工具**。
@@ -155,11 +176,16 @@ double(5); // 10
 ## 八、`tap` / `thunce`？——高阶工具家族
 
 ```js
+// 目的：高阶工具家族——都是“返回函数的函数”，用于拼声明式流水线
 const tap = (fn) => (x) => { fn(x); return x; };       // 副作用插入
 const when = (pred, f) => (x) => pred(x) ? f(x) : x;   // 条件
 const unless = (pred, f) => when((x) => !pred(x), f);
 const always = (x) => () => x;                          // 常量函数
 const identity = (x) => x;                              // 单位元
+
+// ✅ 应用：tap 在流水线里插入副作用而不改变数据流
+const step = pipe(add10, tap((v) => console.log('中途值', v)), square); // 仍可用第五节的 add10/square
+step(3); // 控制台打印“中途值 16”，最终返回 256（tap 不改值，只并带日志）
 ```
 
 Ramda / lodash/fp 里这些是标配。写起来像 DSL，读起来很顺。

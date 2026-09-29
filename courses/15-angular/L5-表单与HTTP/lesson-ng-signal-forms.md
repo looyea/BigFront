@@ -11,6 +11,7 @@
 ## 二、最小表单：form() + signalInput()
 
 ```ts
+// 目的：最小 Signal Forms——form(model, config) 建 signal 表单树，字段状态即 signal
 import { Component, signal } from '@angular/core';
 import { form, field } from '@angular/forms/signals';
 
@@ -35,18 +36,20 @@ import { form, field } from '@angular/forms/signals';
   `,
 })
 export class Login {
-  email = signal('');
+  email = signal('');       // 数据源 model：底层就是一个 signal
   password = signal('');
 
-  loginForm = form(this.email, {
+  loginForm = form(this.email, {   // 以 email model 为基建表单树（示例：email/password 两字段）
     email: { validators: { required: required() } },
     password: { validators: { required: required(), minlength: minlength(6) } },
   });
 
   onSubmit() {
-    if (this.loginForm.valid()) { /* ... */ }
+    if (this.loginForm.valid()) { /* ... */ }   // 表单级 valid() 为 signal，一处判全局
   }
 }
+// ✅ 表单即 signal 树：value()/invalid()/touched() 都是只读 signal，模板直接调用即自动追踪
+// ❌ 拿 loginForm 当 FormGroup 用 .get('email')/.valueChanges→Signal Forms 无这套 API，全是 undefined
 ```
 
 核心观察：**没有 FormGroup、没有 formControlName、没有 valueChanges**——表单是一棵 signal 树，字段状态是 readonly signal。
@@ -68,29 +71,35 @@ Signal Forms 的优势：**与 zoneless 变更检测天然对齐**——表单�
 ## 四、校验器：声明式与自定义
 
 ```ts
+// 目的：声明式校验器——内置 + 自定义（自定义收 field signal，返 true=有效）
 import { required, minLength, email, pattern } from '@angular/forms/signals';
 
 const loginForm = form(model, {
-  email: { validators: { email: email(), required: required() } },
+  email: { validators: { email: email(), required: required() } },     // 内置校验以名字为 key
   password: { validators: { minLength: minLength(8) } },
-  age: { validators: { custom: (field) => {
+  age: { validators: { custom: (field) => {   // 自定义：收当前字段值的 signal
     return field() > 0 && field() < 150;  // true=有效
   } } },
 });
+// ✅ 自定义校验器收 Signal<T>（只读值），语义比 Reactive Forms 的 AbstractControl 更纯粹
+// ❌ 以为返错误对象才无效——这里返 true 才是有效（与 Reactive Forms 的 null=有效方向相反），搞反全乱
 ```
 
 异步校验：
 ```ts
+// 目的：异步校验器——asyncValidators 返回 Promise，await firstValueFrom 把 Observable 拍平
 username: {
   asyncValidators: {
     unique: async (field) => {
-      const exists = await firstValueFrom(
-        http.get(`/api/user-exists?n=${field()}`)
+      const exists = await firstValueFrom(   // 将一次性 Observable 转成 Promise
+        http.get(`/api/user-exists?n=${field()}`)   // field() 读当前字段值
       );
-      return !exists;
+      return !exists;   // 未被占用→true=有效
     },
   },
 }
+// ✅ asyncValidator 返 Promise，框自动把校验结果接进 signal 状态（pending→有效/无效）
+// ❌ 在 async validator 里直接 .subscribe 而不 await/返 Promise→校验永远拿不到结果→状态卡 pending
 ```
 
 与 Reactive Forms 的 validator 函数对比：Signal Forms 接收 `Signal<T>`（当前字段值的 signal）而非 AbstractControl——更纯粹（只读值不读状态）。
@@ -98,14 +107,17 @@ username: {
 ## 五、表单复用与跨字段
 
 ```ts
+// 目的：跨字段校验（密码匹配）——group 级 validator 的 field() 拿到整个 group 值对象
 // 跨字段（密码匹配）：validator 访问兄弟字段
 passwordGroup: {
   validators: {
     match: (field) => {
-      return field().password === field().confirm;
+      return field().password === field().confirm;   // field() 返回整组值，比较两个子字段
     },
   },
 }
+// ✅ 要读多个子字段的校验必须挂 group，field() 才能拿到整组值对象
+// ❌ 在子字段 validator 里想读兄弟 confirm→field() 只有当前字段值，读不到→跨字段校验失效
 ```
 
 `field()` 返回整个 group 的值对象——可以比较多个子字段。

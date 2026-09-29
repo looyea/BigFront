@@ -22,17 +22,19 @@ state 写入 → 标记脏 →（微任务边界）flush：
 
 ```svelte
 <script>
+  // 目的：$effect.pre 站在 DOM 变更“前”—重排前抢救当前滚动锚点
   let items = $state([]);
   let listEl = $state(null);
   let anchor = $state(0);
 
   $effect.pre(() => {
-    items.length;                       // 显式声明：内容变化前抢救锚点
-    anchor = listEl?.scrollTop ?? 0;
+    items.length;                       // ✅ 显式声明依赖：内容变化前抢跑这段
+    anchor = listEl?.scrollTop ?? 0;    // ✅ 此时 DOM 还是旧布局，量到的 scrollTop 才是“用户正在看的位置”
   });
+  // ❌ 用普通 $effect 做同件事 → 跑到时 DOM 已按新数据重排，量晚一步，锚点错位
 </script>
 
-<ul bind:this={listEl}>{#each items as it (it.id)}<li>{it.text}</li>{/each}</ul>
+<ul bind:this={listEl}>{#each items as it (it.id)}<li>{it.text}</li>{/each}</ul>   {/* ✅ bind:this 拿真节点供 .pre 里测量 */}
 ```
 
 普通 `$effect` 在这就晚了一步（DOM 已按新数据重排）。使用戒律：`.pre` 里**只读 DOM/抢救状态**，别做视觉计算——此刻你看到的画面和用户即将看到的不是同一帧。
@@ -55,10 +57,14 @@ state 写入 → 标记脏 →（微任务边界）flush：
 ## 五、DOM 时序双闸：`tick()` 与 `flushSync()`
 
 ```ts
+// 目的：DOM 时序双闸—tick 异步等 flush 完成，flushSync 同步强制走完更新
 import { tick, flushSync } from 'svelte';
 
-await tick();                 // 等本轮 DOM 全部更新完，再测量/聚焦
-flushSync(() => { count++; }); // 同步跑完更新，回调返回时 DOM 已是新值
+// ✅ 事件处理器里（帧外时机）：
+await tick();                 // ✅ 等本轮 DOM 全部更新完，再测量/聚焦
+flushSync(() => { count++; }); // ✅ 同步跑完更新，回调返回时 DOM 已是新值
+// ❌ 在 $effect/渲染中调 flushSync → 直接报错（effect_update_argument / 渲染期同步更新被禁止）
+// ❌ 把 flushSync 当日常习惯包裹每次写 → 一次变更拆成 N 次同步 flush，自废微任务合并的收益
 ```
 
 `flushSync` 的三个硬规矩：**只能在事件处理器等"帧外"时机调**（effect 内/渲染中调会直接报错）；会**打断批处理**（能用是能力，常用是病——把一次变更拆成 N 次同步 flush 等于自废微任务合并的收益）；主战场是"改完立刻要 DOM 几何"的第三方库喂参（呼应 svelte-actions 里库实例更新的时机问题）。测试环境里它就是 L7 那题"fake timers 后要 flush 微任务"的正解之一。

@@ -5,10 +5,13 @@
 `atom` 是 Jotai 的最小状态单元——一个「可读可写的值」。
 
 ```ts
+// 目的：atom 工厂——同一个 atom()，传「值」得可写原子、传「getter」得只读派生原子，参数形状定身份
 import { atom } from 'jotai';
-const countAtom = atom(0);          // 可写原子（含初值）
-const textAtom = atom('hello');
-const readonlyAtom = atom((get) => get(countAtom) * 2); // 只读派生
+const countAtom = atom(0);          // 可写原子，初值 0，UI 里 set 它
+const textAtom = atom('hello');     // 可写原子，初值字符串
+const readonlyAtom = atom((get) => get(countAtom) * 2); // 传 getter → 只读派生，自动订阅 countAtom
+// ✅ 用 updater 写永远读最新值：set(countAtom, (c) => c + 1) 连点两次得 +2
+// ❌ 对只读派生原子直接 set(readonlyAtom, 5)→它没有 write 逻辑，运行时 no-op/报错，派生值只能由源原子驱动
 ```
 
 注意第三行的形态差异：传「值」得到可写原子，传「getter 函数」得到只读派生原子——同一个 `atom()` 工厂，参数形状决定原子身份（详见 jo-derived）。
@@ -34,10 +37,13 @@ npm i jotai
 Jotai v2 无需 Provider 即可用「全局默认 store」，import 一个 atom 就直接可读写（呼应 jo-global）。
 
 ```tsx
+// 目的：Counter 组件——useAtom 读写 countAtom，点击用 updater 形式递增
 function Counter() {
-  const [count, setCount] = useAtom(countAtom);
-  return <button onClick={() => setCount((c) => c + 1)}>{count}</button>;
+  const [count, setCount] = useAtom(countAtom);                          // 读+写，订阅 countAtom
+  return <button onClick={() => setCount((c) => c + 1)}>{count}</button>; // updater 取最新 c，+1 后回写并广播订阅者
 }
+// ✅ setCount(c=>c+1) 永远基于最新值，连点不丢（闭包旧值陷阱在此不存在）
+// ❌ 写 setCount(count + 1) 且同帧连点两次→都读到同一个旧 count，只 +1，丢一次更新
 ```
 
 ## 五、原子是不可变值 + setter 语义

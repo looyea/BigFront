@@ -27,6 +27,7 @@
 
 **⚠️ 稀疏数组坑**：
 ```js
+// 目的：稀疏数组——forEach/map 跳过 empty slot，for-of 把它当 undefined
 const arr = [1, , 3];       // length=3, index 1 是 empty slot
 arr.forEach(x => console.log('F', x));   // 只打印 1 和 3
 for (const x of arr) console.log('O', x); // 打印 1 undefined 3
@@ -41,6 +42,7 @@ arr.map(x => x + 1);        // [2, empty, 4]（保留洞！）
 ## 三、查找与判断
 
 ```js
+// 目的：查找/判断类方法一览（每个都注明语义与返回值）
 arr.includes(v)         // ES2016：值存在？支持 NaN（=== 不支持）
 arr.indexOf(v)          // 不支持 NaN（===）；找不到返回 -1
 arr.find(fn)            // 返回**第一个满足的元素**或 undefined
@@ -66,6 +68,7 @@ arr.every(fn)           // 全部？短路版「且」
 
 **4 种经典用法**：
 ```js
+// 目的：reduce 四种经典形态——都带初始值，避免空数组抛错
 // 1. 求和/积
 [1,2,3].reduce((a,b) => a+b, 0);          // 6
 
@@ -91,6 +94,7 @@ fns.reduce((acc, f) => f(acc), init);
 
 ### `filter` 陷阱
 ```js
+// 目的：filter(Boolean) 去 falsy，但稀疏位会被跳过、不进回调
 [1,2,3].filter(Boolean);   // ✅ 去 falsy（含 0、''、null、undefined、NaN、false）
 [1,,3].filter(Boolean);    // 结果 [1, 3]（empty 被跳过，不会被传进回调）
 ```
@@ -100,6 +104,7 @@ fns.reduce((acc, f) => f(acc), init);
 ## 五、扁平化：flat / flatMap（ES2019）
 
 ```js
+// 目的：flat(depth)/flatMap 扁平化——注意默认只展一层、且丢 empty slot
 [1, [2, [3, [4]]]].flat();          // [1, 2, [3, [4]]]（默认深度 1）
 [1, [2, [3, [4]]]].flat(Infinity);  // [1, 2, 3, 4]
 [1, [2, [3]]].flat(2);              // [1, 2, 3]
@@ -117,6 +122,7 @@ fns.reduce((acc, f) => f(acc), init);
 ## 六、切片与拼接
 
 ```js
+// 目的：slice 非变更 vs splice 变更原数组并返回被删元素
 arr.slice(start, end)       // 不修改；负数从尾；end 不含
 arr.splice(start, deleteN, ...insert)   // **修改**！返回**被删的元素**数组
 arr.concat(...)             // ES6 之后不推荐（不处理 Symbol.isConcatSpreadable）
@@ -125,6 +131,7 @@ arr.concat(...)             // ES6 之后不推荐（不处理 Symbol.isConcatSp
 
 **splice 是双刃剑**：既删又插又返回被删数组——**面试高频**：
 ```js
+// 目的：splice 一把梭（又删又插又返回被删数组）
 const a = [1,2,3,4,5];
 const removed = a.splice(1, 2, 'x');  // a = [1,'x',4,5], removed = [2,3]
 ```
@@ -134,6 +141,7 @@ const removed = a.splice(1, 2, 'x');  // a = [1,'x',4,5], removed = [2,3]
 ## 七、排序
 
 ```js
+// 目的：sort 默认按字符串排（陷阱）——数值排序必须传比较函数
 [10, 1, 5].sort();                              // ⚠️ [1, 10, 5]（默认字符串排序）
 [10, 1, 5].sort((a, b) => a - b);              // ✅ [1, 5, 10]
 users.sort((a, b) => a.age - b.age);           // 按字段
@@ -149,6 +157,7 @@ users.sort((a, b) => a.name.localeCompare(b.name, 'zh'));   // 中文按拼音
 ## 八、`Array.from` 与 `of`
 
 ```js
+// 目的：Array.from（类数组/可迭代→数组，带映射）vs Array.of（规避单数字构造坑）
 Array.from('abc');                    // ['a','b','c']（可迭代或类数组）
 Array.from({ length: 3 }, (_, i) => i * i);   // [0,1,4]
 Array.from(new Set([1,2,3]));          // [1,2,3]
@@ -164,6 +173,7 @@ new Array(1, 2, 3);                   // [1,2,3]
 ## 九、`fill` / `copyWithin`
 
 ```js
+// 目的：fill 归一化稀疏数组、copyWithin 原地搬移片段
 new Array(5).fill(0);              // [0,0,0,0,0]（**归一化**稀疏数组的常用套路）
 [1,2,3,4,5].fill('x', 1, 3);       // [1,'x','x',4,5]
 [1,2,3,4,5].copyWithin(0, 3);      // [4,5,3,4,5]（把 index 3 起拷到 index 0）
@@ -171,10 +181,12 @@ new Array(5).fill(0);              // [0,0,0,0,0]（**归一化**稀疏数组的
 
 **fill 的陷阱**：填充对象引用会**共享同一对象**：
 ```js
+// 目的：❌ fill 的坑——填充对象时所有槽共享同一引用
 const m = new Array(3).fill({});
 m[0].x = 1;
 console.log(m);   // [{x:1}, {x:1}, {x:1}] ❌ 同一引用
-// 正确：Array.from({length:3}, () => ({}))
+// ✅ 正确：每个槽要独立对象，用 Array.from 的映射逐项新建
+Array.from({ length: 3 }, () => ({})); // [{}, {}, {}] 三个互不相同的对象
 ```
 
 ---

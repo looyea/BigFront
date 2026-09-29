@@ -13,13 +13,15 @@ layouts 里直接写 `useRoute()` 不用 import、组件模板里 `<BaseButton>`
 组件自动注册同理（扫描 components/ 生成 `components.d.ts`，模板里的标签编译期解析成异步组件）。关键认知：**自动导入是编译期代码补写，不是运行时的全局变量**——浏览器里跑的代码 import 一条不少，包体积与显式写法完全一致。
 
 ```ts
+// 目的：写一个 composable——放 app/composables/useCounter.ts，导出名自动进清单，组件零 import 直接用
 // 你写的 app/composables/useCounter.ts
 export const useCounter = () => {
-  const count = ref(0);            // ref 本身也被自动导入（vue 核心 API 内置清单）
+  const count = ref(0);            // ✅ ref 也被自动导入（vue 核心 API 内置清单），无需 import { ref }
   const inc = () => count.value++;
   return { count, inc };
 };
-// 任意组件里直接用 useCounter()/ref()，零 import
+// ✅ 任意组件里直接用 useCounter()/ref()，零 import（编译期逐符号补写 import）
+// ❌ 文件名/导出名不以 use 开头的放 composables 目录、或两个包都导出 useUser() 同名 → 自动导入只留一条、后者静默覆盖（“undefined is not a function”难定位）
 ```
 
 ## 2. 边界清单：哪些东西不会自动来

@@ -8,15 +8,17 @@
 
 ```svelte
 <script lang="ts">
+  // 目的：入口只有一个 lang="ts"—props 用接口声明，runes 类型全靠推导不靠标注
   interface Props { title: string; count?: number; ondone?: (n: number) => void }
-  let { title, count = 0, ondone }: Props = $props();
+  let { title, count = 0, ondone }: Props = $props();   // ✅ count 有默认值 → 类型里推成必有值 number
 
-  let value = $state(count);            // number,自动推
-  let doubled = $derived(value * 2);    // number,自动推
+  let value = $state(count);            // ✅ 自动推为 number，无需写 $state<number>
+  let doubled = $derived(value * 2);    // ✅ 自动推为 number
 </script>
 
 <h1>{title}</h1>
-<button onclick={() => ondone?.(value)}>+1</button>
+<button onclick={() => ondone?.(value)}>+1</button>   {/* ✅ 可选回调用 ?. 调用，不判空直接 ondone(...) 编译报错 */}
+<!-- ❌ 模板里没有类型标注位—想给事件处理器标类型要写回 script：const submit = (e: SubmitEvent) => … -->
 ```
 
 三条地基规则：
@@ -51,10 +53,12 @@ children/带参 snippet 的类型是 L3 组合模式的类型化收口：`Snippe
 ```svelte
 <!-- List.svelte -->
 <script lang="ts" generics="T extends { id: string }">
+  // 目的：泛型组件—T 从调用端 items 反推，row snippet 类型锁定为 Snippet<[T]>
   import type { Snippet } from 'svelte';
-  let { items, row }: { items: T[]; row: Snippet<[T]> } = $props();
+  let { items, row }: { items: T[]; row: Snippet<[T]> } = $props();   // ✅ 父传什么数组，item 就是什么型
 </script>
-{#each items as item (item.id)}{@render row(item)}{/each}
+{#each items as item (item.id)}{@render row(item)}{/each}   {/* ✅ row 参数 r 推为 T，字段名补全直接生效 */}
+<!-- ❌ 不用 generics 属性而把 T 写成 unknown → 调用端失去反推，item 字段全报不存在 -->
 ```
 
 - `generics="…"` 属性（svelte5 起支持）让组件对 props 类型参数化；调用端从 `items` **反推** `T`。
@@ -67,15 +71,16 @@ L4 全局态模块的 TS 形态（呼应 svelte-global-state）：
 
 ```ts
 // counter.svelte.ts
-export function createCounter(initial = 0) {
-  let count = $state(initial);
+// 目的：.svelte.ts 共享模块—getter 暴露只读信号，类型与封装双赢
+export function createCounter(initial = 0) {   // ✅ initial 默认 0，参数推为 number
+  let count = $state(initial);   // ✅ .svelte.ts 后缀让编译器放行 runes（普通 .ts 里 $state 直接报错）
   return {
-    get count() { return count; },
-    get double() { return count * 2; },
+    get count() { return count; },           // ✅ 外部拿到只读 number，杜绝 counter.count = 5 的越权写
+    get double() { return count * 2; },      // ✅ 派生同理，getter 每次读都拉最新
     inc() { count++; }
   };
 }
-export type Counter = ReturnType<typeof createCounter>;
+export type Counter = ReturnType<typeof createCounter>;   // ✅ 把返回值形状导出成类型，供别处标注
 ```
 
 - 编译器对 `.svelte.js/.ts` 开放 runes，TS 侧要保证 **tsconfig 的 include 覆盖它们**，并在 `svelte.config.js` 配 `preprocess: vitePreprocess()`（svelte-check 随之启用 `parser: "svelte-ts"`）才认得这些文件里的 `$state`。

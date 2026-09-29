@@ -16,6 +16,7 @@
 ## 二、createBrowserRouter + RouterProvider
 
 ```jsx
+// 目的：用配置数组建 Data Router，loader 进路由前取数、errorElement 接报错
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 const router = createBrowserRouter([
@@ -23,12 +24,13 @@ const router = createBrowserRouter([
   {
     path: '/user/:id',
     element: <User />,
-    loader: ({ params }) => fetchUser(params.id),   // 取数
-    errorElement: <ErrorBoundaryPage />,            // 该路由错误兜底
+    loader: ({ params }) => fetchUser(params.id),   // ✅ 取数，返回值经 useLoaderData 给组件
+    errorElement: <ErrorBoundaryPage />,            // 该路由错误的 fallback 页（loader/action 抛错落这里）
   },
 ]);
 
 function App() { return <RouterProvider router={router} />; }
+// ❌ 用了 createBrowserRouter 却仍在外层包 <BrowserRouter> → 路由不生效（RouterProvider 自带，不需再包）
 ```
 - 用**配置数组**建 router（此时又回到声明式的镜像：数据相关能力用配置表达），再用 `<RouterProvider>` 挂上；
 - `loader` 收到 `{ params, request, context }`，返回值给组件；
@@ -39,10 +41,11 @@ function App() { return <RouterProvider router={router} />; }
 ## 三、useLoaderData / useFetcher：消费数据
 
 ```jsx
+// 目的：useLoaderData 同步拿 loader 结果，进页即就绪，无需 useEffect 与 loading 空壳
 function User() {
   const user = useLoaderData();        // 直接拿到 loader 的返回，已就绪
   if (!user) return <Empty />;
-  return <h1>{user.name}</h1>;         // 无需 useEffect、无 loading 空壳
+  return <h1>{user.name}</h1>;         // ✅ 数据已由 loader 取好，组件只负责渲染
 }
 ```
 - `useLoaderData()` 同步返回本路由（及父路由合并）loader 的结果；进入即数据就绪；
@@ -55,20 +58,21 @@ function User() {
 ## 四、action + Form + 重取
 
 ```jsx
+// 目的：<Form method=post> 触发 action，写成功后 redirect 并自动重跑相关 loader
 {
   path: '/new',
   element: <NewPost />,
   action: async ({ request }) => {
     const form = await request.formData();      // 直接拿 FormData
     const id = await createPost(Object.fromEntries(form));
-    return redirect(`/post/${id}`);             // 提交成功后跳转
+    return redirect(`/post/${id}`);             // ✅ 提交成功后跳转（action 完→受影响路由 loader 自动重跑）
   },
 }
 
 function NewPost() {
-  const submitting = useNavigation().state === 'submitting';
+  const submitting = useNavigation().state === 'submitting';   // 提交中可禁用按钮
   return (
-    <Form method="post">                        {/* 走 action，不整页刷新 */}
+    <Form method="post">                        {/* 走 action，不整页刷新（❌ 用原生 <form> 会整页刷新） */}
       <input name="title" />
       <button disabled={submitting}>提交</button>
     </Form>
@@ -84,11 +88,13 @@ function NewPost() {
 ## 五、loader 里做鉴权/重定向
 
 ```jsx
+// 目的：在 loader 里 throw redirect 做路由级鉴权——比组件里判断更早拦下
 loader: async ({ request, context }) => {
   const user = await getUserFromSession(request);
-  if (!user) throw redirect('/login');        // throw 一个 Response 做重定向/抛错
+  if (!user) throw redirect('/login');        // ✅ throw 一个 Response 即中断并跳转
   return data({ user });
 }
+// ⚠️ throw 只能抛 Response/错误给 errorElement 接，普通 throw new Error 不会触发 redirect
 ```
 - loader/action 里 `throw redirect(...)` / `throw new Response(..., {status:403})` 可提前中断并跳转/报错，等价路由级守卫；
 - 比组件里判断再 `<Navigate>` 更早（数据都没取就挡下），呼应 react-router-basics 第 10 题、vue-router-guard-lazy。

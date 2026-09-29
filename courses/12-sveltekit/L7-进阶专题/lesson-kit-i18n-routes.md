@@ -32,12 +32,14 @@ src/routes/
 
 ```js
 // src/params/lang.js
-const valid = new Set(['en', 'zh', 'fr']);
+// 目的：param matcher—把裸 [[lang]] 收紧成"只认受支持语言码"，非法前缀不参与匹配
+const valid = new Set(['en', 'zh', 'fr']);   // ✅ 与 $lib/i18n/config 的 locales 同源，别多处硬编码
 
 /** @type {import('@sveltejs/kit').ParamMatcher} */
 export function match(param) {
-  return valid.has(param);
+  return valid.has(param);   // ✅ true 才放行 /en/about；/hello/about 判 false→该路由不匹配，去试别的或 404
 }
+// ❌ matcher 里读全局状态/发请求 → server 判进、browser 判 404 的分裂行为（它两端都跑）
 ```
 
 路由里写 `[[lang=lang]]`（`[名=matcher名]`）。要点：
@@ -55,13 +57,17 @@ export function match(param) {
 
 ```js
 // src/hooks.js（两端都跑）或 hooks.server.js
+// 目的：reroute 静默重写—在 URL 与路由匹配前换个路径，用户地址栏仍显示 /about
 export function reroute({ url }) {
   const segments = url.pathname.split('/').filter(Boolean);
-  if (!locales.includes(segments[0])) {
-    const lang = negotiate(url) || defaultLocale; // cookie / Accept-Language
-    return `/${lang}${url.pathname}`;
+  if (!locales.includes(segments[0])) {   // ✅ 首段不是语言码 → 需要补前缀
+    const lang = negotiate(url) || defaultLocale; // ✅ cookie / Accept-Language 协商出目标语言
+    return `/${lang}${url.pathname}`;   // ✅ 返回新路径即"偷梁换柱"，地址栏不变、无重定向往返
   }
+  // ✅ 首段已是合法语言码 → 不返回（undefined）表示不改写，按原 URL 匹配
 }
+// ❌ reroute 里再 redirect、或与 trailingSlash/前缀规则打架 → 重定向环
+// ❌ 命中语言码时也硬拼前缀（漏了上面的 if 判断）→ /en/en/about 双前缀
 ```
 
 **路线 B —— `handle` + `redirect`（URL 变，302/307）。** 在 `handle` 里协商出语言，若不是规范形式就 `redirect(307, '/' + lang + path)`，把用户**显式**送到带前缀的 URL。
@@ -85,24 +91,29 @@ export function reroute({ url }) {
 
 ```js
 // src/routes/[[lang=lang]]/+layout.server.js
+// 目的：从 params.lang 决定语言并下发—lang 不在受支持集合就回落默认
 export function load({ params }) {
+  // ✅ 双保险：即便 matcher 漏网，这里再校验一次 params.lang
   const lang = locales.includes(params.lang) ? params.lang : defaultLocale;
-  return { lang };
+  return { lang };   // ✅ 进 data.lang，供子 layout/page 与 setContext 使用
 }
+// ❌ 直接 return { lang: params.lang } 不校验 → 可选段缺省时 lang 为 undefined，下游文案表取空
 ```
 
 **② `+layout.svelte` 用 `setContext` 把翻译函数往下发**（context 是"往下传、SSR 安全"的正道，见 L3/本包状态关）：
 
 ```svelte
 <script>
+  // 目的：用 setContext 把翻译函数往下发—传函数/对象而非快照，保持跨边界响应式
   import { setContext } from 'svelte';
   import { getMessages, t } from '$lib/i18n/runtime';
   let { data, children } = $props();
-  const messages = getMessages(data.lang);
-  // 传"函数/对象"而非快照，保持跨边界响应式
-  setContext('i18n', { lang: data.lang, t: (key, vars) => t(messages, key, vars) });
+  const messages = getMessages(data.lang);   // ✅ 按当前语言取文案表
+  setContext('i18n', { lang: data.lang, t: (key, vars) => t(messages, key, vars) });   // ✅ 子组件 getContext('i18n') 即得 $t
+  // ❌ 把 setContext 写进 <script module> → 它每模块只跑一次不按实例跑，context 发不下去
 </script>
-{@render children()}
+{@render children()}   {/* ✅ 子路由出口，其内组件才收得到 i18n context */}
+<!-- ❌ 漏 {@render children()} → 整棵子树不渲染，context 也就没人能 get -->
 ```
 
 子组件 `const { t } = getContext('i18n')` 即可 `{$t('nav.home')}`。文案字典按需 `import`（`$lib/i18n/en.json` 等）或用轻量运行时；切换语言就是导航到带新前缀的 URL，让 load 重跑换 `lang`——**不要**在服务端模块顶层存"当前语言"这种共享状态（L5 状态纪律：服务端跨请求共享变量会串用户）。
@@ -114,14 +125,17 @@ export function load({ params }) {
 多语言的 SEO 三件套，写在 `+layout.svelte` 的 `<svelte:head>` 里：
 
 ```svelte
+<!-- 目的：多语言 SEO 三件套—canonical 收敛重复、hreflang 逐语言声明、x-default 兜底 -->
 <svelte:head>
-  <!-- 当前页的规范地址（避免重写的重复内容） -->
+  <!-- ✅ canonical：把"无前缀+带前缀都能开"的重复内容收敛到一个规范 URL（new URL 补 origin 成绝对地址） -->
   <link rel="canonical" href={new URL(page.url.pathname, origin)} />
-  <!-- 每个语言一条 alternate，含无前缀的默认语言 x-default 惯例 -->
+  <!-- ✅ 每个语言一条 alternate，hreflang 值要与实际可达 URL 一一对应，否则收录到 404 -->
   {#each locales as loc}
     <link rel="alternate" hreflang={loc} href={urlFor(loc)} />
   {/each}
+  <!-- ✅ x-default 惯例：指向语言选择页或默认语言，给搜索引擎一个"无匹配时的落点" -->
   <link rel="alternate" hreflang="x-default" href={urlFor(defaultLocale)} />
+  <!-- ❌ urlFor(defaultLocale) 生成不出无前缀 URL → x-default 落到 /en 而漏了 /(默认语言无前缀)那条 -->
 </svelte:head>
 ```
 

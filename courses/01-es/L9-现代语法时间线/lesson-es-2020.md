@@ -24,6 +24,7 @@
 **语义**：如果左侧为 `null` 或 `undefined`，**短路**整个表达式返回 `undefined`。
 
 ```js
+// 目的：可选链—任一层为 null/undefined 就短路返回 undefined，不抛错
 const city = user?.profile?.address?.city;
 //  任一层为 null/undefined → 整表达式 → undefined，不抛错
 
@@ -39,6 +40,7 @@ const deep = obj?.['a']?.['b']?.[1];
 
 **⚠️ 短路是**整个链**：
 ```js
+// 目的：短路是"整个链"——y 为 nullish 时连 x++ 都不执行
 let x = 0;
 const y = null;
 y?.foo(x++);   // x 不会 ++（短路整个调用表达式）
@@ -57,6 +59,7 @@ y?.foo(x++);   // x 不会 ++（短路整个调用表达式）
 **语义**：左侧是 `null` 或 `undefined` 才取右侧——**不吞 0 / '' / false / NaN**。
 
 ```js
+// 目的：?? 只在左侧为 null/undefined 才取右——不吞 0/''/false/NaN
 const port = config.port ?? 3000;
 //  config.port = 0  → 0（|| 会给 3000，这是老 bug）
 //  config.port = '' → ''
@@ -76,12 +79,14 @@ const port = config.port ?? 3000;
 
 **⚠️ 与 `||` / `&&` 混用** 需**加括号**（防歧义）：
 ```js
+// 目的：?? 与 ||/&& 混用必须加括号，否则 SyntaxError（防歧义）
 a || b ?? c     // ❌ SyntaxError
 (a || b) ?? c   // ✅
 ```
 
 ### 逻辑赋值三兄弟（ES2021 但常一起讲）
 ```js
+// 目的：逻辑赋值三兄弟（ES2021）——短路赋值的简写
 a ??= b;    // a = a ?? b
 a ||= b;    // a = a || b
 a &&= b;    // a = a && b
@@ -92,6 +97,7 @@ a &&= b;    // a = a && b
 ## 四、`?.` + `??` 黄金组合
 
 ```js
+// 目的：深层可选 + 空值兜底——一行代替旧的一长串 (x||{}).y||{}
 const street = user?.profile?.address?.street ?? '未知';
 ```
 —— **深层可选 + 空值兜底**，替代以前 `((user || {}).profile || {}).address || {}` 一长串。
@@ -101,6 +107,7 @@ const street = user?.profile?.address?.street ?? '未知';
 ## 五、`Promise.allSettled`
 
 ```js
+// 目的：allSettled 汇总每个 Promise 的 outcome，部分失败也拿得到其它结果
 const results = await Promise.allSettled([p1, p2, p3]);
 // [
 //   { status: 'fulfilled', value: v1 },
@@ -132,6 +139,7 @@ globalThis.mySingleton ??= {};
 
 **任意精度整数**——超过 `Number.MAX_SAFE_INTEGER`（2^53-1）的整数：
 ```js
+// 目的：BigInt 任意精度整数—不能与 Number 混算，JSON.stringify 不支持
 const big = 9007199254740993n;   // 后缀 n
 const another = BigInt('123456789012345678901234567890');
 big + 1n;                          // 9007199254740994n
@@ -148,7 +156,7 @@ Number(big);                       // 精度丢失（除非小）
 ## 八、动态 `import()`（提前进入 L7 详讲）
 
 ```js
-// 表达式，不是声明——可用变量、条件、函数体
+// 目的：动态 import() 是表达式——可用变量/条件/函数体
 if (feature) {
   const { doWork } = await import('./heavy.js');
   doWork();
@@ -178,6 +186,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 **遍历所有正则匹配**——`exec` + `lastIndex` 手动循环的解药：
 ```js
+// 目的：matchAll 迭代所有匹配（正则必须带 g），不改动 lastIndex
 const re = /(?<key>\w+)=(?<val>\w+)/g;
 for (const m of 'a=1 b=2 c=3'.matchAll(re)) {
   console.log(m.groups.key, m.groups.val);
@@ -190,6 +199,7 @@ for (const m of 'a=1 b=2 c=3'.matchAll(re)) {
 ## 十一、`Intl.*` 全家桶
 
 ```js
+// 目的：Intl.* 全家桶—数字/日期/排序/列表/相对时间的本地化
 new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(1234.5);
 // '¥1,234.50'
 

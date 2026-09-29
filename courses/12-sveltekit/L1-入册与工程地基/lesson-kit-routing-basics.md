@@ -25,11 +25,13 @@
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script>
+  // 目的：布局收两样—data（本层及祖先 load 合并值）与 children（子路由出口 snippet）
   let { data, children } = $props();
 </script>
-<nav>首页 · {data.user.name}</nav>
-{@render children()}
+<nav>首页 · {data.user.name}</nav>   {/* ✅ data 是逐 key 遮蔽合并：子层同名 key 优先，父层其余 key 保留 */}
+{@render children()}   {/* ✅ 子路由渲染口子，页面内容在这里落位 */}
 <footer/>
+<!-- ❌ 漏写 {@render children()} → 所有子页面集体消失只剩空壳（Next 里同款事故：忘渲 children） -->
 ```
 
 - 布局层级**镜像目录层级**：根 layout → `(app)` group layout → `blog` layout → `blog/[slug]` page，层层包裹；

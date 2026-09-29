@@ -7,16 +7,18 @@
 ## 一、express.static 基础
 
 ```bash
-# Express 5 内置，无需单独安装（serve-static 已提升）
+# 目的：确认依赖——Express 5 内置静态服务，无需单独安装（serve-static 已提升）
 ```
 
 ```js
+// 目的：把 public/ 目录作为静态资源根，自动带 Content-Type/ETag/Last-Modified
 import path from 'path';
 import { fileURLToPath } from 'url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));   // ✅ ESM 下还原 __dirname（直接写会报 __dirname is not defined）
 
 // 服务 public/ 目录
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));   // ✅ GET /images/logo.png → public/images/logo.png
+// ❌ 路径不拼 __dirname 而写相对 'public' → 取决于启动时的 cwd，换目录启动就 404
 ```
 
 请求 `GET /images/logo.png` → 自动映射到 `public/images/logo.png` 并返回（带正确 Content-Type、ETag、Last-Modified）。放在路由**前面**（先尝试静态，命中即短路，不进后续 handler）。
@@ -24,10 +26,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 ### 1.1 多个静态目录
 
 ```js
-// 顺序查找，命中即返回
-app.use(express.static('public'));
-app.use(express.static('uploads'));
-app.use('/downloads', express.static('files'));   // 挂载到指定路径前缀
+// 目的：多个静态目录按注册顺序查找，命中即返回
+app.use(express.static('public'));      // ✅ 先找 public
+app.use(express.static('uploads'));      // ✅ 再找 uploads
+app.use('/downloads', express.static('files'));   // ✅ 挂到指定 URL 前缀 /downloads
+// ❌ 两个目录都写死到根路径且顺序敏感 → 同名文件永远第一个目录赢，排查“为何取不到新文件”易忽略优先级
 ```
 
 ---
@@ -35,20 +38,22 @@ app.use('/downloads', express.static('files'));   // 挂载到指定路径前缀
 ## 二、核心配置项
 
 ```js
+// 目的：static 核心配置一览（各项作用见右侧注释）
 app.use(express.static('public', {
-  maxAge: '7d',              // 强缓存时长 → Cache-Control: public, max-age=604800
-  etag: true,                // 生成 ETag（默认开）
-  lastModified: true,        // 设置 Last-Modified（默认开）
-  index: false,             // 不提供 index.html（API 服务常关）
-  redirect: true,            // 目录请求 301 到带斜杠路径
-  extensions: ['html'],      // /about 可匹配 about.html
-  immutable: true,           // 配合 maxAge → Cache-Control immutable
-  setHeaders: (res, path) => {   // 自定义响应头
-    if (path.endsWith('.woff2')) res.setHeader('Cache-Control', 'public, max-age=31536000');
+  maxAge: '7d',              // ✅ 强缓存 → Cache-Control: public, max-age=604800
+  etag: true,                // ✅ 生成 ETag（默认开），支持 304 协商
+  lastModified: true,        // ✅ 设置 Last-Modified（默认开）
+  index: false,             // ✅ 不提供 index.html（API 服务常关，防目录页暴露）
+  redirect: true,            // ✅ 目录请求 301 到带斜杠路径
+  extensions: ['html'],      // ✅ /about 可匹配 about.html（免后缀访问）
+  immutable: true,           // ✅ 配合 maxAge → Cache-Control immutable（仅对带 hash 资源用）
+  setHeaders: (res, path) => {   // ✅ 自定义响应头钩子
+    if (path.endsWith('.woff2')) res.setHeader('Cache-Control', 'public, max-age=31536000');  // 字体单独长缓存
     res.setHeader('X-Served-By', 'static');
   },
-  fallthrough: true,         // 未找到时 next() 继续（false 则直接 404）
+  fallthrough: true,         // ✅ 未找到时 next() 继续（false 则直接 404）
 }));
+// ❌ 对 index.html 这类会变的文件也开 immutable → 内容更新后浏览器仍拒发验证请求，新版本永不下发
 ```
 
 ---
@@ -117,17 +122,18 @@ assets/logo.a2c3d4.png            → max-age=31536000, immutable
 正确：
 
 ```js
-// HTML 用协商缓存，保证发版即时生效
+// 目的：入口 HTML 用协商缓存，保证发版即时生效（切勿长缓存 index.html）
 app.get('/*.html', (req, res, next) => {
-  res.set('Cache-Control', 'no-cache');   // 每次验证 → 变更即拉新
+  res.set('Cache-Control', 'no-cache');   // ✅ 每次都验证 → 变更即拉新
   next();
 });
 // 或者：
-app.use(express.static('dist', { maxAge: '1y', index: false }));  // 带 hash 的资源
+app.use(express.static('dist', { maxAge: '1y', index: false }));  // ✅ 带 hash 的资源长缓存（index:false 不让它自动发 index）
 app.get('/', (req, res) => {
-  res.set('Cache-Control', 'no-cache');
+  res.set('Cache-Control', 'no-cache');                             // ✅ 入口单独 no-cache
   res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
+// ❌ 若 index.html 也被 maxAge:'1y' 强缓存 → 发版后用户拿到旧 index 引用旧 hash 文件（已删）→ 白屏
 ```
 
 `no-cache` ≠ 不缓存：它仍缓存内容，但每次用前发条件请求验证（304 则复用）→ 既省带宽又保证最新。
@@ -137,13 +143,14 @@ app.get('/', (req, res) => {
 ## 七、下载与文件服务
 
 ```js
-// 强制下载（Content-Disposition: attachment）
+// 目的：强制下载 + 大文件服务
 app.get('/export', (req, res) => {
-  res.download(path.join(__dirname, 'report.pdf'), '月度报表.pdf');
+  res.download(path.join(__dirname, 'report.pdf'), '月度报表.pdf');   // ✅ 自动 Content-Disposition: attachment，展示名可自定义
 });
 
-// 带 Range 的视频/大文件（断点续传，见 L3）
-res.sendFile(file, { root: dir, maxAge: '1h' });
+// ✅ 带 Range 的视频/大文件（断点续传，见 L3）
+res.sendFile(file, { root: dir, maxAge: '1h' });   // ✅ root 锁目录防路径穿越
+// ❌ res.download 不传展示名时用原文件名，中文名/空格可能乱码，建议显式给第二参
 ```
 
 > 生产建议：静态资源尽量交给 **Nginx/CDN** 直接服务，Express 只做 API——让 Node 处理文件 IO 是浪费（单线程 + 占连接）。`express.static` 适合小规模或开发。
@@ -155,10 +162,12 @@ res.sendFile(file, { root: dir, maxAge: '1h' });
 字体文件（woff2）常被跨域 CDN 引用，需 CORS 头：
 
 ```js
+// 目的：字体常被跨域 CDN 引用，需显式加 CORS 头
 app.use('/fonts', express.static('fonts', {
   maxAge: '1y',
-  setHeaders: (res) => res.setHeader('Access-Control-Allow-Origin', '*'),
+  setHeaders: (res) => res.setHeader('Access-Control-Allow-Origin', '*'),   // ✅ 允许任意源加载字体
 }));
+// ❌ 字体走跨域但不加 ACAO 头 → @font-face 跨域加载被浏览器拦（字体属 CORS 受控请求）
 ```
 
 否则 `@font-face` 跨域加载字体失败。

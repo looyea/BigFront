@@ -6,23 +6,25 @@ Nuxt 数据获取的全部魔法都建立在一个朴素的 fetch 增强上，�
 
 ```vue
 <script setup>
+// 目的：三件套分工——① 声明式 SSR 取数 ② 万能异步收集 ③ 命令式调用（不进 payload）
 // ① useFetch：首屏 SSR 跑一次→数据进 payload→水合复用；SPA 导航再来一次
 const { data, pending, error, refresh } = await useFetch('/api/articles', {
-  pick: ['data', 'total'],              // payload 瘦身首选（呼应 nuxt-hydration C1）
-  // watch: [page]                      // 默认已监听 route 参数变化
+  pick: ['data', 'total'],              // ✅ 只把这两字段进 payload，瘦身首选（呼应 nuxt-hydration C1）
+  // watch: [page]                      // ✅ 默认已监听 route 参数变化
 });
 
-// ② useAsyncData：任意异步逻辑的 SSR 收集器（不 fetch 也行）
+// ② useAsyncData：任意异步逻辑的 SSR 收集器（不 fetch 也行），'geo' 是缓存 key
 const { data: geo } = await useAsyncData('geo', async () => {
   const cfg = useRuntimeConfig();
-  return serverSideOnlyLookup(cfg);      // 直接调函数/DB，不发 HTTP
+  return serverSideOnlyLookup(cfg);      // ✅ 直接调函数/DB 也 SSR 安全、结果照样进 payload
 });
 
-// ③ $fetch：命令式，不参与 SSR/payload——事件里用
+// ③ $fetch：命令式，不参与 SSR/payload——只在事件处理里用
 async function like(id) {
-  await $fetch(`/api/articles/${id}/like`, { method: 'POST' });
-  refresh();                              // 手动让 useFetch 重取
+  await $fetch(`/api/articles/${id}/like`, { method: 'POST' });  // ✅ 用户点一下才发，不发就不占首屏
+  refresh();                              // ✅ 点赞后手动让上面的 useFetch 重取
 }
+// ❌ 拿 $fetch 做首屏取数 → 不参与 SSR、不进 payload，服务端渲染时 data 空、水合后闪一下
 </script>
 ```
 
@@ -39,14 +41,16 @@ useAsyncData(url, handler) 的结果按 **key** 缓存进 Nuxt 应用的 payload
 ## 3. 响应式三兄弟：URL / watch / lazy
 
 ```ts
+// 目的：响应式取数的三种触发——URL 函数 / watch 依赖 / lazy 不阻塞
 // URL 可以是函数（响应式源自动重取）——动态路由页正解（呼应 nuxt-dynamic B2）
-const { data } = await useFetch(() => `/api/posts/${route.params.id}`);
+const { data } = await useFetch(() => `/api/posts/${route.params.id}`);   // ✅ id 变→URL 变→自动重取
 
 // watch 指定依赖源重取
-const { data } = await useFetch('/api/search', { watch: [keyword] });
+const { data } = await useFetch('/api/search', { watch: [keyword] });      // ✅ keyword 变→重跑请求
 
 // lazy: true —— 不阻塞导航/渲染，页面先出、数据后补（客户端水合期语义不同，慎用 SSR 首屏）
-const { data } = await useFetch('/api/heavy', { lazy: true });
+const { data } = await useFetch('/api/heavy', { lazy: true });             // ✅ 慢接口不卡渲染，data 先 undefined 后回填
+// ❌ 传静态字符串 URL 却指望参数变了自动刷新 → 不会重取，页面停在旧数据（要么写函数 URL、要么配 watch、要么换 key）
 ```
 
 `await useFetch` 会挂起渲染（Suspense 机制）——这是"SSR 烘数据"的代价与收益同源；不 await 则变"客户端取数+骨架先行"，对照 Next 的 Suspense 流式取舍（呼应 next-context-streaming 第 4 节骨架屏三标准）。
@@ -54,13 +58,15 @@ const { data } = await useFetch('/api/heavy', { lazy: true });
 ## 4. 错误与重试：数据通道的容错设计
 
 ```ts
+// 目的：数据通道容错——重试、错误上报、会话信号统一处置
 const { data, error, status } = await useFetch('/api/maybe-fail', {
-  server: true,
-  retry: 2,                       // ofetch 内建：仅客户端层重试
-  onRequestError({ error }) { report('req-fail', error); },
-  onResponseError({ response }) { if (response.status === 401) navigateTo('/login'); },
-  // 服务端 SSR 里 handler 抛错 → error 是 Ref<AppError>，页面渲染错误分支
+  server: true,                   // ✅ SSR 期也发这个请求（默认 true）
+  retry: 2,                       // ✅ ofetch 内建：仅客户端层重试 2 次，SSR 不重（重试是性能自杀）
+  onRequestError({ error }) { report('req-fail', error); },                       // ✅ 请求发出即失败时上报
+  onResponseError({ response }) { if (response.status === 401) navigateTo('/login'); }, // ✅ 401 统一跳登录
+  // ✅ 服务端 SSR 里 handler 抛错 → error 是 Ref<AppError>，页面渲染错误分支，整页不 500
 });
+// ❌ 不处理 error 直接 data.value.map(...) → SSR 失败时 data 为 undefined，报 "Cannot read properties of undefined"
 ```
 
 三个要点：① SSR 期 useFetch 失败**不会**让整页 500（除非你 throw createError）——data undefined + error 有值，页面要处理"无数据态"；② 401/403 这类会话信号用 onResponseError 统一处置（鉴权关回收，呼应 nuxt-middleware-auth）；③ retry 只对客户端请求生效——SSR 请求失败重试是性能自杀，Nuxt 默认不重（这层设计值得点赞）。

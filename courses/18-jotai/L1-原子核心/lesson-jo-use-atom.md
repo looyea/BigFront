@@ -3,9 +3,12 @@
 ## 一、三个 hook
 
 ```tsx
-const [count, setCount] = useAtom(countAtom);   // 读 + 写
-const count = useAtomValue(countAtom);           // 只读（组件不因写该 atom 而重渲多余）
-const setCount = useSetAtom(countAtom);          // 只写，返回稳定 setter
+// 目的：三 hook 分工——按“要不要读”精确声明订阅，hook 选型即订阅声明
+const [count, setCount] = useAtom(countAtom);   // 读+写：订阅值，该 atom 变化会重渲本组件
+const count = useAtomValue(countAtom);           // 只读：订阅值，不引入 setter
+const setCount = useSetAtom(countAtom);          // 只写：不订阅值，拿永远稳定的 setter，atom 变化不重渲本组件
+// ✅ 只要写的组件用 useSetAtom→它不订阅值，该 atom 再变也不重渲，重渲归零
+// ❌ 只需 dispatch 的“提交按钮”却用 useAtom(formAtom)→每次输入都惊动它重渲，白订阅了根本不读的 value
 ```
 
 三者都建立「本组件对该 atom 的订阅」：useSetAtom **不订阅值**——组件不因该 atom 变化而重渲，只拿一个永远稳定的写入口。
@@ -22,7 +25,10 @@ const setCount = useSetAtom(countAtom);          // 只写，返回稳定 setter
 只读派生 atom 直接用 useAtomValue(derivedAtom)，Jotai 自动追踪其依赖（呼应 jo-derived）。
 
 ```tsx
-const fullName = useAtomValue(fullAtom); // 源 atom 任一变则更新，组件只订阅这一个
+// 目的：派生读——只读派生 atom 直接 useAtomValue，Jotai 自动追踪其依赖并“传染”订阅
+const fullName = useAtomValue(fullAtom); // 源 atom（firstName/lastName）任一变则更新，组件只订阅这一个
+// ✅ 订阅 fullAtom 等于订阅它的全部上游依赖，派生链自动重算，粒度精确
+// ❌ 想拿派生值却在组件里手算 useAtomValue(firstName)+useAtomValue(lastName)→绕开派生原子，依赖簿记散回组件，失去 memo 复用
 ```
 
 派生原子的依赖变化会「传染」到订阅者：组件订阅 fullAtom，firstName 变它也重渲——精确且不多（对比 Context value 一变全子树遭殃，呼应 jo-global）。

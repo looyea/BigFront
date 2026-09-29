@@ -21,14 +21,16 @@
 事件循环单线程（呼应 L1）。任何**同步 CPU 密集**或**同步阻塞 API**都会卡住整个进程，让所有请求排队：
 
 ```js
+// 目的：避免阻塞事件循环—同步重活会卡住整个进程，所有请求排队
 // ❌ 反例：同步阻塞，一个大请求拖垮全站
-const data = fs.readFileSync(hugeFile);
-for (let i = 0; i < 1e10; i++) {}      // 密集计算
-crypto.pbkdf2Sync(pw, salt, 100000, 64, 'sha512');
+const data = fs.readFileSync(hugeFile);              // ❌ 同步读大文件期间 event loop 完全卡死，其余请求排队
+for (let i = 0; i < 1e10; i++) {}                    // ❌ 密集计算占满单线程
+crypto.pbkdf2Sync(pw, salt, 100000, 64, 'sha512');   // ❌ 同步慢哈希：并发登录时整站卡死
 
 // ✅ 用异步 / worker_threads 卸载 CPU 密集任务
 import { Worker } from 'node:worker_threads';
-const data = await fs.promises.readFile(file);
+const data = await fs.promises.readFile(file);       // ✅ 异步读：等待期间循环照转其他请求
+// ✅ CPU 密集重活 new Worker('./heavy.worker.js') 丢给工线程，不堵主循环
 ```
 
 - I/O 用异步（天然非阻塞）；
@@ -46,16 +48,19 @@ const data = await fs.promises.readFile(file);
 每次请求新建 TCP+TLS 握手代价高。开启 keep-alive 复用连接：
 
 ```js
+// 目的：服务端开启 keep-alive—复用 TCP 连接，省每请求握手代价
 import http from 'node:http';
 // Node 19+ 默认对 server 启用 keep-alive
-const server = http.createServer({ keepAlive: true }, app);
+const server = http.createServer({ keepAlive: true }, app);   // ✅ 复用连接，高并发下显著降延迟
 ```
 
 出网调用（axios/undici）**复用 agent/连接池**，别每次新建：
 
 ```js
+// 目的：出网调用复用连接池—别每次新建 Agent，否则握手风暴
 import { Agent } from 'undici';
-const client = new Agent({ connections: 100, keepAliveTimeout: 10_000 });  // 池化
+const client = new Agent({ connections: 100, keepAliveTimeout: 10_000 });  // ✅ 池化，最多 100 并发复用
+// ❌ 每请求 new Agent() → 频繁 TCP+TLS 握手，高并发下 CPU 和端口都被打爆
 ```
 
 ### 3.2 keep-alive 超时链（易踩坑）
@@ -63,8 +68,10 @@ const client = new Agent({ connections: 100, keepAliveTimeout: 10_000 });  // �
 原则：**上游 keep-alive 空闲超时 > 下游**。若 Node 比 Nginx/LB 更早关连接，代理复用一条已被后端关闭的连接 → 偶发 `502`。
 
 ```js
-server.keepAliveTimeout = 65_000;   // 略大于 LB/Nginx 的空闲超时(如 60s)
-server.headersTimeout = 66_000;     // > keepAliveTimeout
+// 目的：keep-alive 超时链—Node 空闲超时必略大于上游代理，否则代理复用已死连接报 502
+server.keepAliveTimeout = 65_000;   // ✅ 略大于 LB/Nginx 的空闲超时(如 60s)
+server.headersTimeout = 66_000;     // ✅ 必 > keepAliveTimeout
+// ❌ Node 比 Nginx 更早关连接 → Nginx 复用一条已被后端 RST 的连接，偶发 502 难以复现
 ```
 
 ### 3.3 反代到后端也复用
@@ -78,12 +85,14 @@ Nginx `upstream { keepalive 64; }` + `proxy_http_version 1.1`（见 L8 部署）
 **每条 SQL 现建连接 = 灾难**（握手/认证开销 + 连接数爆炸）。用池复用：
 
 ```js
+// 目的：数据库连接池—借→用→自动还，避免每 SQL 现建连接
 // pg
-const pool = new pg.Pool({ max: 20, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5_000 });
-const { rows } = await pool.query('SELECT ... WHERE id=$1', [id]);   // 借→用→自动还
+const pool = new pg.Pool({ max: 20, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 5_000 });   // ✅ 上限 20，获连接最多等 5s
+const { rows } = await pool.query('SELECT ... WHERE id=$1', [id]);   // ✅ 从池借连接，查完自动归还
 
 // mongoose：本身是连接池，设合理 maxPoolSize
 mongoose.connect(url, { maxPoolSize: 50 });
+// ❌ 手动 const client = await pool.connect() 后不 release → 连接泄漏耗尽池，后续请求全挂在 connectionTimeout
 ```
 
 - `max` 不是越大越好：连接数 ≈ `(核数 × 2) + 磁盘数` 量级，过大反而 DB 端上下文切换/锁竞争加剧；
@@ -97,8 +106,10 @@ mongoose.connect(url, { maxPoolSize: 50 });
 响应体大时 gzip/brotli 省带宽（CPU 换网络）。用 `compression`：
 
 ```js
+// 目的：响应压缩—用 CPU 换带宽，小体不值得压
 import compression from 'compression';
-app.use(compression({ level: 6, threshold: 1024 }));  // <1KB 不值得压
+app.use(compression({ level: 6, threshold: 1024 }));  // ✅ <1KB 跳过（压缩可省不了几个字节反耗 CPU）
+// ❌ 把 compression 装在 res.sendFile/流式 SSE 前 → 已压内容/逐块推送被缓冲，SSE 直接失效
 ```
 
 注意：
@@ -119,14 +130,16 @@ app.use(compression({ level: 6, threshold: 1024 }));  // <1KB 不值得压
 - **应用/分布式缓存**：热点查询结果、渲染片段放 Redis（`cache-aside`：先查缓存，miss 再查库并回填，设 TTL）：
 
 ```js
+// 目的：cache-aside 缓存—先查 Redis，miss 再查库并回填带 TTL
 async function getProfile(id) {
   const key = `profile:${id}`;
   const hit = await redis.get(key);
-  if (hit) return JSON.parse(hit);
+  if (hit) return JSON.parse(hit);                     // ✅ 命中缓存，不碰 DB
   const row = await db.users.findById(id);
-  await redis.set(key, JSON.stringify(row), 'EX', 60);   // TTL 60s
+  await redis.set(key, JSON.stringify(row), 'EX', 60);   // ✅ 回填并设 TTL 60s
   return row;
 }
+// ❌ TTL 不加随机抖动→大量 key 同时过期（雪崩）；不缓存空值→恶意 id 频繁穿透直打 DB
 ```
 
 - 缓存三患：**穿透**（查不存在的 key，用空值/布隆过滤器）、**雪崩**（同时过期，TTL 加随机抖动）、**击穿**（热 key 过期瞬间打爆 DB，用互斥锁/逻辑过期）；
@@ -157,9 +170,10 @@ Node 内存持续爬升不回落 → OOM/被 `max_memory_restart` 反复重启�
 排查：
 
 ```bash
-node --inspect server.js       # Chrome DevTools 连 Memory 打堆快照
-npx clinic heap -- node server.js
-process.memoryUsage().heapUsed  # 打点监控
+# 目的：堆快照与内存监控，定位只增不减的泄漏
+node --inspect server.js       # ✅ Chrome DevTools 连 Memory 打堆快照
+npx clinic heap -- node server.js   # ✅ 自动采样堆增长
+process.memoryUsage().heapUsed  # ✅ 打点监控（可定期写日志看趋势）
 ```
 
 打法：拍两次堆快照对比（take heap snapshot），看持续增长的对象；用 WeakMap/WeakRef、给缓存设 `max`+TTL（如 `lru-cache`）、用完即 `clearInterval`/`removeListener`。
@@ -171,11 +185,13 @@ process.memoryUsage().heapUsed  # 打点监控
 ### 9.1 微基准（单函数）
 
 ```js
+// 目的：微基准—相对比较两种写法快慢（不信绝对值）
 import { Bench } from 'tinybench';
 const b = new Bench();
-b.add('map', () => arr.map(f)).add('for', () => { const r=[]; for(const x of arr) r.push(f(x)); return r; });
-await b.run();
-console.table(b.results);
+b.add('map', () => arr.map(f)).add('for', () => { const r=[]; for(const x of arr) r.push(f(x)); return r; });   // ✅ 同一任务两个候选实现
+await b.run();                     // ✅ 跑足时长让 JIT 预热
+console.table(b.results);          // ✅ 输出 ops/sec 对比
+// ❌ JIT 预热/GC 抖动使微基准绝对值不可靠，只作相对比较，别拿单次数值下结论
 ```
 
 > JS 微基准坑多（JIT 预热、内联缓存、GC 抖动），只作相对比较，别过度解读绝对值。
@@ -183,8 +199,9 @@ console.table(b.results);
 ### 9.2 端到端压测（看系统容量）
 
 ```bash
+# 目的：端到端压测—探系统容量拐点
 # autocannon / artillery / wrk
-autocannon -c 100 -d 30 http://localhost:3000/api/products
+autocannon -c 100 -d 30 http://localhost:3000/api/products   # ✅ 100 并发压 30s，看 p99/RPS/错误率
 ```
 
 关注 `p99 latency`、`requests/sec`、错误率；找拐点（加压到延迟飙升/错误出现的吞吐即容量上限），据此定实例数与限流阈值。

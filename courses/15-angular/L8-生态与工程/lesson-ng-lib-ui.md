@@ -5,7 +5,10 @@
 ## 一、Angular Material：官方组件库
 
 ```bash
-ng add @angular/material
+# 目的：安装 Angular Material（ng add 比手动 npm i 多做配置）
+ng add @angular/material   # 自动写 angular.json 加主题/预置 CSS、建 scaffold
+# ✅ ng add 一键配好主题与全局样式，开箱即用
+# ❌ 只手动 npm i @angular/material→缺主题配置与预置样式，组件裸样无观感
 ```
 
 v22 提供两套线：
@@ -13,6 +16,7 @@ v22 提供两套线：
 - **Native controls**（新）：用 HTML 原生 `<input type=date>` + CDK 行为——更轻量、无障碍更好
 
 ```ts
+// 目的：standalone 按需 import Material 模块，模板里用 mat-* 组件
 // standalone 使用
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -20,7 +24,7 @@ import { MatInputModule } from '@angular/material/input';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [MatFormFieldModule, MatInputModule, MatButtonModule],   // 用到的模块必须列进来
   template: `
     <mat-form-field appearance="outline">
       <mat-label>邮箱</mat-label>
@@ -29,6 +33,8 @@ import { MatInputModule } from '@angular/material/input';
     <button mat-raised-button color="primary">登录</button>
   `,
 })
+// ✅ 在组件 imports 里声明 Material 模块，mat-form-field/matInput 才被识别
+// ❌ 忘 imports MatButtonModule 就用 <button mat-button>→编译报 "mat-button is not a known element"
 ```
 
 ## 二、CDK：Headless 能力层
@@ -44,9 +50,11 @@ CDK (Component Dev Kit) 提供**无 UI 骨架能力**：
 | @angular/cdk/portal | 动态挂载组件到任意 DOM 位置 | Modal body |
 
 ```ts
-// 用 CDK 造自定义 dropdown（无 Material 样式）
-import { CdkOverlayOrigin, OverlayModule } from '@angular/cdk/overlay';
-import { A11yModule } from '@angular/cdk/a11y';  // listKeyManager
+// 目的：CDK 造自定义 dropdown（无 Material 样式）——只用 headless 能力层
+import { CdkOverlayOrigin, OverlayModule } from '@angular/cdk/overlay';   // 浮层定位
+import { A11yModule } from '@angular/cdk/a11y';  // listKeyManager 键盘导航
+// ✅ OverlayModule 提供弹层定位、A11yModule 提供键盘管理——自己控样式
+// ❌ 只用 CDK 却发现没有视觉样式→CDK 本就 headless 无样式，要外观得自写或上 Material
 ```
 
 CDK 是 Angular 独有能力——React 有 Radix、Vue 有 Headless UI，但 CDK 覆盖面最广。
@@ -54,6 +62,7 @@ CDK 是 Angular 独有能力——React 有 Radix、Vue 有 Headless UI，但 CD
 ## 三、样式封装：ViewEncapsulation 四档
 
 ```ts
+// 目的：ViewEncapsulation——控制组件样式的隔离级别
 @Component({
   encapsulation: ViewEncapsulation.None,  // 全局样式（不隔离）
   // 或
@@ -61,6 +70,8 @@ CDK 是 Angular 独有能力——React 有 Radix、Vue 有 Headless UI，但 CD
   // 或（默认）
   encapsulation: ViewEncapsulation.Emulated,  // 模拟 scoped（加 _ngcontent_xxx 属性选择器）
 })
+// ✅ 默认 Emulated 模拟 scoped，绝大多数场景无需改动
+// ❌ 选 None→组件 CSS 泄进全局污染其他组件（除非真是全局 reset/主题变量）
 ```
 
 | 模式 | 效果 | 适用 |
@@ -72,10 +83,13 @@ CDK 是 Angular 独有能力——React 有 Radix、Vue 有 Headless UI，但 CD
 
 主题定制推荐 CSS 自定义属性（Material 3 已走这条路）：
 ```css
+/* 目的：Material 3 主题走 CSS 自定义属性——:root 定义 design token */
 :root {
-  --mat-sys-primary: #1976d2;
-  --mat-sys-surface: #fafafa;
+  --mat-sys-primary: #1976d2;   /* 主色 token，改它即全局换主色 */
+  --mat-sys-surface: #fafafa;   /* 表面色 token */
 }
+/* ✅ 主题定制只改 --mat-sys-* 变量，不碰组件源码 */
+/* ❌ 想切暗色只改局部组件样式而不改 --mat-sys-* 变量→大面积不生效 */
 ```
 
 ## 四、第三方无框架组件集成
@@ -84,17 +98,24 @@ Angular 集成非 Angular 绑定组件库的三种出口：
 
 1. **Web Components 出口**：shoelace / stencil 组件——Angular 直接当自定义元素用：
 ```ts
+// 目的：Web Components 出口——声明 schema 让 Angular 放行自定义元素标签
 // 声明为 CUSTOM_ELEMENTS_SCHEMA
-@Component({ schemas: [CUSTOM_ELEMENTS_SCHEMA], template: `<sl-button>Hi</sl-button>` })
+@Component({ schemas: [CUSTOM_ELEMENTS_SCHEMA], template: `<sl-button>Hi</sl-button>` })   // <sl-button> 是 shoelace 自定义元素
+// ✅ schemas:[CUSTOM_ELEMENTS_SCHEMA] 后任意未知标签不再编译报错
+// ❌ 不声明 schema 直接用 <sl-button>→模板编译报 "sl-button is not a known element"
 ```
 
 2. **无框架核心 + Angular wrapper**：headlessui 思路——核心 JS + 各框架薄壳：
 ```ts
+// 目的：无框架核心 + Angular wrapper——纯 JS 库外面套一层组件壳
 // 自己包 @headlessui/react 的等价物（如果是纯 JS lib）
 @Component({ selector: 'app-menu', template: `...` })
 export class MenuComponent implements OnInit, OnDestroy {
-  private headlessMenu = createMenu({ /* 纯 JS 配置 */ });
+  private headlessMenu = createMenu({ /* 纯 JS 配置 */ });   // 在组件生命周期里创建第三方实例
+  // ngOnDestroy() { this.headlessMenu.destroy(); }          // 必须对应销毁
 }
+// ✅ 用 Angular 生命周期 create/destroy 桥接纯 JS 库，受管且可测
+// ❌ OnDestroy 里不销毁 headlessMenu→第三方实例泄漏、DOM 残留
 ```
 
 3. **CDK 自建**：不用外部库——用 CDK overlay + a11y 自己写（Angular 官方推荐路线）。

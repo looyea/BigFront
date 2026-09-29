@@ -3,8 +3,9 @@
 ## 1. build 产物：`.output` 才是交付物
 
 ```bash
-nuxt build     # 产物在 .output/
-node .output/server/index.mjs     # 直接就能跑，不需要 nuxt 命令、不需要全量 node_modules
+# 目的：build 出 .output 产物并直接运行——交付物是产物而非源码
+nuxt build     # ✅ 产物落在 .output/（server+public 合一，自带依赖闭包）
+node .output/server/index.mjs     # ✅ 直接能跑，不需 nuxt 命令、不需全量 node_modules
 ```
 
 `.output/` 结构（Nitro 打包的一切）：
@@ -37,11 +38,13 @@ node .output/server/index.mjs     # 直接就能跑，不需要 nuxt 命令、�
 这是 Nuxt 相对 Next 最舒服的地方（呼应 nuxt-runtime-config 第 5 节）：`runtimeConfig`（含 public 栏）在**服务端启动时**读取，改值重启即可，不必重新构建。
 
 ```bash
+# 目的：环境变量运行期注入——改值重启即生效，不必重新构建（密钥绝不烧进产物/镜像）
 # 生产（容器/系统服务）注入，不写 .env 进镜像
-NUXT_PUBLIC_SITE_URL=https://site.com \
-NUXT_DATABASE_URL=postgres://... \
-PORT=3000 HOSTNAME=0.0.0.0 \
+NUXT_PUBLIC_SITE_URL=https://site.com \   # ✅ NUXT_ 前缀 + 声明字段才覆盖 runtimeConfig
+NUXT_DATABASE_URL=postgres://... \        # ✅ 私密栏只在服务端读到，不进前端 payload
+PORT=3000 HOSTNAME=0.0.0.0 \             # ✅ 容器必设 0.0.0.0，否则只听 127.0.0.1
 node .output/server/index.mjs
+# ❌ 忘设 HOSTNAME=0.0.0.0 → server 只听本地回环，“本机 curl 通、外部/反代连不上”（容器第一排查项）
 ```
 
 三条纪律：①密钥只在运行期注入、绝不进 `.env` 提交/镜像（`NUXT_` 前缀 + 声明字段才生效，呼应 nuxt-runtime-config 第 3 节）；②`.env` 只用于本地；③构建环境与生产环境分离——CI 构建机拿不到生产密钥（呼应 nuxt-modules 面试第 12 题、node-deploy-perf）。`HOSTNAME=0.0.0.0` 是容器里"本机通、外部不通"的第一排查项（和 next-deploy 第 4 节同一个坑）。
@@ -49,22 +52,25 @@ node .output/server/index.mjs
 ## 4. 容器化（自托管主力）
 
 ```dockerfile
+# 目的：多阶段构建——构建层装全量依赖出 .output，运行层只带产物（几十 MB），非 root 跑
 # ---- 构建阶段（可用较高 Node）----
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci            # ✅ 按 lockfile 精确安装，构建可复现
 COPY . .
-RUN npm run build
+RUN npm run build     # ✅ 产出 .output/
 
 # ---- 运行阶段（只带产物，瘦身）----
 FROM node:22-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
-COPY --from=build /app/.output ./output
+ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000   # ✅ 关 dev 行为 + 容器必听的 0.0.0.0
+COPY --from=build /app/.output ./output   # ✅ 只拷产物，不带 node_modules/源码
 EXPOSE 3000
-USER node
+USER node             # ✅ 非 root 运行，降权限
 CMD ["node", "output/index.mjs"]
+# ❌ 用 alpine(musl) 构建却带 glibc 编译的原生依赖（sharp/bcrypt）→ 运行时 "module not found / GLIBC_x not found"
+# ❌ 漏 USER node → 容器以 root 跑，逃逸时权限过大
 ```
 
 要点：多阶段构建只把 `.output` 带进运行镜像（几十 MB 级，呼应 node-deploy-perf 的镜像瘦身）；运行用户非 root；`NODE_ENV=production` 关闭 dev 行为；健康检查打一个轻量端点（`/api/health`，呼应 nuxt-modules 第 6 题）。原生依赖（sharp、bcrypt 等）要保证构建与运行基座一致（musl vs glibc，呼应 node-deploy-perf）。
@@ -74,24 +80,26 @@ CMD ["node", "output/index.mjs"]
 SSR 应用应把静态资源尽量从 Node 卸载到 Nginx/CDN：
 
 ```nginx
+# 目的：反代卸载静态长缓存 + 透传转发头——静态走 immutable、SSR/API 交 Node
 server {
   listen 443 ssl http2;
   server_name site.com;
 
-  # 带构建哈希的产物：一年不可变缓存（呼应 next-deploy 第 5 节）
+  # ✅ 带构建哈希的产物：一年不可变缓存（呼应 next-deploy 第 5 节）
   location /_nuxt/ {
     proxy_pass http://127.0.0.1:3000;   # 或直接 alias .output/public/_nuxt/
     proxy_cache_bypass 0;
-    add_header Cache-Control "public, max-age=31536000, immutable";
+    add_header Cache-Control "public, max-age=31536000, immutable";   # ✅ 文件名含哈希，改内容即换名，可放心长缓存
   }
-  # 其余交给 Node（SSR + /api）
+  # ✅ 其余交给 Node（SSR + /api）
   location / {
     proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;                                        # ✅ 服务端才知道真实域名（生成 canonical 用）
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;        # ✅ 透传真实客户端 IP（限流/日志）
+    proxy_set_header X-Forwarded-Proto $scheme;                         # ✅ 透传 https，否则 secure cookie 判定失败
   }
 }
+# ❌ 漏配 X-Forwarded-Proto → 服务端以为请求是 http，secure cookie/重定向判断出错，甚至 http↔https 死循环
 ```
 
 `X-Forwarded-*` 必须透传，否则服务端拿到的请求协议/客户端 IP/域名会错（影响 secure cookie 判定、canonical 生成、限流、日志，呼应 node-http）。多实例时 `defineCachedEventHandler`/session 的缓存要放 Redis 等共享存储，内存缓存不跨实例（呼应 nuxt-server-routes、nuxt-perf 面试第 12 题）。

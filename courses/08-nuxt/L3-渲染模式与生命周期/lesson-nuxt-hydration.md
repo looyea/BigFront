@@ -15,8 +15,10 @@ SSR 的浪漫是"秒出 HTML"，残酷在于同一棵组件树要在浏览器**�
 ## 2. 编译期分流：import.meta.client / server
 
 ```ts
-if (import.meta.client) { /* 只有这分支的代码进浏览器包，SSR 构建时被静态消除 */ }
-const ua = import.meta.server ? useRequestHeaders()['user-agent'] : navigator.userAgent;
+// 目的：编译期按端分流——import.meta 是 Vite define 注入的常量，用不到的分支整段被 tree-shake
+if (import.meta.client) { /* ✅ 只有这分支进浏览器包，SSR 构建时被静态消除 */ }
+const ua = import.meta.server ? useRequestHeaders()['user-agent'] : navigator.userAgent; // ✅ 服务端读请求头、客户端读 navigator，各取本端合法来源
+// ❌ 改用运行时 typeof window 嗅探、且让 window.xxx 进 SSR 渲染分支 → 服务端 window undefined 抛 ReferenceError / 两端渲染不一致触发 mismatch
 ```
 
 这是 Nuxt 的**编译期常量**（Vite define 注入，呼应 vite-build 的常量替换）：条件块整段被 tree-shake，不依赖运行时判断。与"运行时嗅探 typeof window"的区别：前者构建期定生死、代码不进另一端产物；后者两端都在、只是取值时机不同——同构代码风格首选 import.meta 族。
@@ -26,9 +28,11 @@ const ua = import.meta.server ? useRequestHeaders()['user-agent'] : navigator.us
 ## 3. ClientOnly 与 lazy 的正确姿势
 
 ```vue
-<ClientOnly fallback="<RecorderPlaceholder />">
-  <AudioRecorder />   <!-- 内部可放心用 MediaDevices/window -->
+<!-- 目的：跳过服务端渲染、用 fallback 占位保 CLS，专治只能浏览器跑的组件 -->
+<ClientOnly fallback="<RecorderPlaceholder />"><!-- ✅ 服务端先渲染这占位，宽高留好防塌陷 -->
+  <AudioRecorder /><!-- ✅ 内部可放心用 MediaDevices/window，这些代码不会在服务端执行 -->
 </ClientOnly>
+<!-- ❌ 把 LCP 主元素（首屏大标题/主图）放进 ClientOnly → 服务端无输出、白屏等 JS，LCP 直接劣化 -->
 ```
 
 ClientOnly=跳过服务端渲染 + 用 fallback 占位保 CLS（骨架屏三标准的框架内建版，呼应 next-context-streaming 第 4 节）。两个克制原则：① 别拿它当"mismatch 止痛药"——包起来的根因若是第 2 节的渲染期时间戳，说明数据模型错了，改模型比包壳健康；② LCP 元素禁入 ClientOnly（服务端没输出、白屏等 JS，LCP 直接劣化，呼应 next-perf 第 2 节 ssr:false 副作用同源）。

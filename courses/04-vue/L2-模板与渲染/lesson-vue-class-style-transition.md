@@ -7,11 +7,12 @@
 ## 一、`:class` 绑定：对象、数组、混合
 
 ```vue
+<!-- 目的：:class 的三种写法——对象（值为布尔）/数组（并列）/混合 -->
 <!-- 对象语法：值是布尔表达式 -->
-<div :class="{ active: isActive, disabled: isDisabled }"></div>
+<div :class="{ active: isActive, disabled: isDisabled }"></div>   <!-- isActive 真→加 active 类 -->
 
 <!-- 数组语法：并列多个（含三元/变量） -->
-<div :class="[baseClass, isActive ? 'active' : '', errorCls]"></div>
+<div :class="[baseClass, isActive ? 'active' : '', errorCls]"></div>   <!-- 数组里的 ''/null/undefined 会被忽略 -->
 
 <!-- 对象 + 数组混合 -->
 <div :class="[cls1, { active: isActive, 'text-danger': hasError }]"></div>
@@ -20,7 +21,8 @@
 <div :class="classObj"></div>
 ```
 ```js
-const classObj = computed(() => ({ active: props.active, large: size.value > 20 })); // 呼应 vue-reactivity 第四节
+// 目的：把 class 逻辑下沉到 computed，模板只读一个结果
+const classObj = computed(() => ({ active: props.active, large: size.value > 20 })); // ✅ 依赖变化自动重算类集合（呼应 vue-reactivity 第四节）
 ```
 
 **合并规则**：组件根元素上，**外部传入的 class 会与组件自身 class 自动合并**（fallthrough，见 L3 vue-component-basics），数组里的 `false`/`null`/`undefined`/`''` 会被忽略。
@@ -30,17 +32,16 @@ const classObj = computed(() => ({ active: props.active, large: size.value > 20 
 ## 二、`:style` 绑定
 
 ```vue
-<div :style="{ color: color, fontSize: size + 'px' }"></div>   <!-- 驼峰键 -->
-<div :style="[{ display: 'flex' }, styleObj]"></div>           <!-- 数组 -->
-<div :style="{ transform: 'rotate(45deg)' }"></div>            <!-- 无需写 -webkit- -->
+<!-- 目的：:style 用驼峰键、数组并列、自动厂商前缀，还能驱动 CSS 变量 -->
+<div :style="{ color: color, fontSize: size + 'px' }"></div>   <!-- 驼峰键 fontSize（也可写 'font-size'） -->
+<div :style="[{ display: 'flex' }, styleObj]"></div>           <!-- 数组：多个样式对象合并 -->
+<div :style="{ transform: 'rotate(45deg)' }"></div>            <!-- 无需写 -webkit-，Vue 自动补前缀 -->
+<!-- ❌ :style="{ color: null }" → 该声明被跳过（不输出 color）；要给值才能生效 -->
 ```
-
-- 键用**驼峰**（`fontSize`）或连字符加引号（`'font-size'`）皆可；
-- **自动厂商前缀**：写 `transform`/`user-select`，Vue 会补 `-webkit-` 等；
-- `:style` 里的**值为 `null`/`false` 会跳过**该声明；
-- **绑定 CSS 变量（custom property）**：用方括号键 `[--main-color]`：
+绑定 CSS 变量（主题切换实用）：
 ```vue
 <div :style="{ '--main-color': themeColor, color: 'var(--main-color)' }"></div>
+<!-- ✅ 应用：改 themeColor 就实时驱动 --main-color，进而改变所有引用它的 color -->
 ```
 这让 JS 状态能直接驱动 CSS 变量，主题切换尤其实用。
 
@@ -51,14 +52,17 @@ const classObj = computed(() => ({ active: props.active, large: size.value > 20 
 包一个**单元素/组件**，在其**插入/删除（v-if/v-show/动态组件切换）**时自动加过渡类：
 
 ```vue
+<!-- 目的：<Transition> 在单元素 v-if/v-show 切换时自动加六个过渡类 -->
 <Transition name="fade">
-  <p v-if="show">hello</p>
+  <p v-if="show">hello</p>          <!-- name="fade" → 生成 .fade-enter-from 等类 -->
 </Transition>
+<!-- ❌ <Transition> 里放多个直接子节点会告警：它只能观测单节点的进出场 -->
 ```
 ```css
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-.fade-enter-to,   .fade-leave-from { opacity: 1; }
-.fade-enter-active, .fade-leave-active { transition: opacity .3s; }
+/* 目的：六个过渡类——enter-from→enter-active→enter-to，leave 同理 */
+.fade-enter-from, .fade-leave-to { opacity: 0; }          /* 起始/终止态：全透明 */
+.fade-enter-to,   .fade-leave-from { opacity: 1; }        /* 终态/起始态：不透明 */
+.fade-enter-active, .fade-leave-active { transition: opacity .3s; }  /* 贯穿动画期：0.3s 淡入淡出 */
 ```
 
 **六个类**：`enter-from → enter-active → enter-to`，`leave-from → leave-active → leave-to`。`enter-from`/`leave-to` 是起止态，`*-active` 贯穿动画期，`*-to` 是终态。动画结束 Vue 自动清理这些类。
@@ -75,12 +79,14 @@ const classObj = computed(() => ({ active: props.active, large: size.value > 20 
 ## 四、JS 钩子（做无法用 CSS 表达的动画）
 
 ```vue
+<!-- 目的：JS 钩子做 CSS 无法表达的动画，必须调 done 通知 Vue 动画结束时机 -->
 <Transition
   @before-enter="onBeforeEnter"
-  @enter="(el, done) => { gsap.to(el, {...onComplete: done}) }"   <!-- 用 done 通知完成 -->
+  @enter="(el, done) => { gsap.to(el, {...onComplete: done}) }"   /* 用 done 通知完成，否则 Vue 不知何时结束 */
   @leave="(el, done) => { gsap.to(el, {...onComplete: done}) }"
   enter-active-class=""
 >…</Transition>
+<!-- ❌ 忘记调 done：Vue 会一直等，过渡不结束（或靠 transitionend 误判提前结束） -->
 ```
 需要"控制结束时机"的 JS 动画，钩子里调用 `done()`（或用 `@enter-cancelled` 等）。这解决了 CSS 过渡"Vue 靠 transitionend/animationend 猜结束"不可靠的情况（呼应 vue-testing、动画库集成）。
 
@@ -89,8 +95,9 @@ const classObj = computed(() => ({ active: props.active, large: size.value > 20 
 ## 五、`<TransitionGroup>`：列表进出场与 FLIP
 
 ```vue
+<!-- 目的：给 v-for 列表的增删/移动加动画；每个子项必须有唯一 key -->
 <TransitionGroup name="list" tag="ul">
-  <li v-for="item in items" :key="item.id">{{ item.text }}</li>
+  <li v-for="item in items" :key="item.id">{{ item.text }}</li>   /* :key 是 FLIP 能准确跟踪换位的前提 */
 </TransitionGroup>
 ```
 
@@ -103,12 +110,13 @@ const classObj = computed(() => ({ active: props.active, large: size.value > 20 
 ## 六、`<Transition>` + 动态组件 / 路由
 
 ```vue
+<!-- 目的：动态组件/路由切换的淡入淡出，mode="out-in" 避免新旧重叠 -->
 <Transition name="fade" mode="out-in">
-  <component :is="CurrentComp" />
+  <component :is="CurrentComp" />          <!-- 切换 CurrentComp 时先出场后进场 -->
 </Transition>
 
 <RouterView v-slot="{ Component }">
-  <Transition name="page" mode="out-in"><component :is="Component" /></Transition>
+  <Transition name="page" mode="out-in"><component :is="Component" /></Transition>  /* 路由级页面过渡 */
 </RouterView>
 ```
 这是"页面切换淡入淡出"的标准做法（呼应 vue-router L5）。注意 `<Transition>` 只包**单个直接子节点**，多根会告警。

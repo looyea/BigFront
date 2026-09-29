@@ -15,13 +15,14 @@
 **第 2 段：双写桥**。迁移单位是 feature slice，切一个搬一个，搬完的不许回头写旧家。过渡期两块阵地要同步，标准装置是**单向双写**：
 
 ```js
-// 旧→新：Redux 是唯一写入口时，订一份广播
+// 目的：单向双写桥—旧 Redux 为唯一写入口时，订一份广播把值单向同步进新 store
 const unsub = reduxStore.subscribe(() => {
   const next = reduxStore.getState().articles;
-  if (next !== useArticleStore.getState().raw)   // 引用比较挡全量广播
+  if (next !== useArticleStore.getState().raw)   // ✅ 引用比较挡掉全量广播：articles 没换引用就不写
     useArticleStore.setState({ raw: next });
 });
 // 新组件只读 useArticleStore；旧组件照读写 reduxStore
+// ❌ 再来一条"新→旧"的反向桥造成双向同步→ setState 触发 subscribe 触发 setState，死循环
 ```
 
 双写桥的三条纪律：① **方向单一**（旧→新，或新功能新→旧广播，二选一，双向同步=死循环预约）；② 桥只过值不过行为（za-middleware 存储边界第三分册——别把 dispatch 包成 action 往对门塞）；③ 每座桥配**拆桥日期**，双写状态进 tech-debt 看板，无期限双写=永久双事实源。

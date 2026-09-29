@@ -22,10 +22,12 @@
 事件流分两站：**捕获（capture，从根往下）→ bubbling（冒泡，从目标往根）**。
 
 ```wxml
+<!-- 目的：bind 监听并继续冒泡，catch 监听且截断（声明式替代 stopPropagation） -->
 <view bindtap="onParentTap">
-  <view bindtap="onChildTap">子</view>        <!-- 点子：onChildTap → onParentTap（冒泡） -->
-  <view catchtap="onChildStop">子(拦截)</view> <!-- 点它：只跑自己，冒泡到此为止 -->
+  <view bindtap="onChildTap">子</view>        <!-- ✅ 点子：onChildTap → onParentTap（冒泡） -->
+  <view catchtap="onChildStop">子(拦截)</view> <!-- ✅ 点它：只跑自己，冒泡到此为止 -->
 </view>
+<!-- ❌ 想阻冒泡写 e.stopPropagation() → 不存在该 API（小程序无此方法，只能模板里换 catch） -->
 ```
 
 | | bind | catch | capture-bind | capture-catch |
@@ -66,10 +68,13 @@ WXML 里不能写 `bindtap="onEdit(item.id)"`（**不能传参、不能是表达
 ```
 
 ```js
+// 目的：模板不能传参，用 data-* 携带身份，处理函数从 dataset 取
 onTap(e) {
   const { id, role } = e.target.dataset;  // data-id → dataset.id
   // data-user-name → dataset.userName（连字符转小驼峰）
 }
+// ✅ 应用：列表每行 data-id="{{item.id}}"，容器绑一次 bindtap，处理函数里查 dataset.id（事件委托）
+// ❌ e.target vs e.currentTarget 混用：点落在子节点时 target=触发源、currentTarget=绑 handler 的节点，dataset 挂谁取谁，取错拿不到 id
 ```
 
 三个高频坑：
@@ -85,14 +90,16 @@ onTap(e) {
 ## 五、事件对象解剖
 
 ```js
+// 目的：事件对象 e 是跨线程序列化的普通对象——"谁触发"看 target、"谁绑定"看 currentTarget、"带什么数据"看 detail/dataset
 onTap(e) {
   e.type            // 'tap'
   e.timeStamp
   e.target          // 触发源头节点：id/dataset/offsetLeft...
   e.currentTarget   // 绑定 handler 的节点
-  e.detail          // 附加值：tap 的{x,y}坐标；input 的{value}；change 的{value,...}
+  e.detail          // ✅ 附加值：tap 的{x,y}坐标；input 的{value}；change 的{value,...}
   e.changedTouches  // 触摸信息
 }
+// ❌ 拿 e.target.style / 调 DOM 方法 → undefined（e 不是浏览器 Event，无 DOM 能力）
 ```
 
 记忆主线：**"谁触发"看 target，"谁绑定"看 currentTarget，"携带什么数据"看 detail 和 dataset**。`e.stopPropagation()` 不存在——要拦冒泡请在模板里换 `catch`（声明式，这是与 DOM/Vue 命令式的最大差异）。

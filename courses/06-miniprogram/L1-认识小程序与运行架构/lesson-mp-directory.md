@@ -27,10 +27,13 @@ project/
 ## 二、app.js：App 构造器与 globalData
 
 ```js
+// 目的：全局唯入口——注册 App 实例、挂全局生命周期与 globalData
 App({
-  onLaunch() { /* 小程序初始化，全局只跑一次 */ },
-  globalData: { userInfo: null },   // 全局共享数据（同逻辑线程）
+  onLaunch() { /* 小程序初始化，冷启动全局只跑一次 */ },
+  globalData: { userInfo: null },   // 全局共享内存（因逻辑层单线程，跨页可读）
 })
+// ❌ 在 app.js 里写 getApp() → 报未定义/拿到 undefined（本文件正是定义处，应用 getCurrentPages/导出方式拿）
+// ❌ 在 App.onLaunch 里 getApp() 自己 → 实例尚未注册完成，拿到 undefined
 ```
 - 一个小程序**有且仅有一个** `App()`，在 `app.js` 顶层调用；
 - `globalData` 是跨页面共享内存（因逻辑层单线程，呼应 mp-overview 第四节、mp-communication）；
@@ -43,9 +46,10 @@ App({
 ## 三、app.json：全局配置核心
 
 ```json
+// 目的：全局"总装配清单"——注册页面路由表 + 导航栏外观（pages 第一项即首页）
 {
   "pages": [
-    "pages/index/index",     // 第一项 = 启动首页
+    "pages/index/index",     // ✅ 第一项 = 冷启动首页（路径不写扩展名，需真实存在四件套）
     "pages/logs/logs"
   ],
   "window": {
@@ -55,6 +59,8 @@ App({
   },
   "tabBar": { /* 见 mp-tabbar */ }
 }
+// ❌ pages 登记了却无对应四件套文件 → 编译报 "未找到 *** 对应的文件"
+// ❌ navigateTo 到未写进 pages 的路径 → 跳转失败（路由表未注册）
 ```
 - **`pages`**：路由表（数组），**每一项是页面路径（不写扩展名）**，必须真实存在四件套；第一项是冷启动首页；未注册的路径 `navigateTo` 会失败（呼应 mp-route）；
 - **`window`**：全局外观（导航栏标题/颜色、下拉背景、是否透明…），**只对非 tabBar 生效的默认**；

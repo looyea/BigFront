@@ -5,8 +5,11 @@
 变更成功后第一件事不是改缓存，是**宣告过期**：
 
 ```ts
-await createTodo(todo);
-queryClient.invalidateQueries({ queryKey: ['todos'] });
+// 目的：变更成功后“宣告过期”而非手改缓存——让在看的组件各自重取拿权威数据
+await createTodo(todo);                                        // 先落库
+queryClient.invalidateQueries({ queryKey: ['todos'] });         // 再把 todos 标 stale，触发在看的重取
+// ✅ 交给服务端权威：invalidate 后 refetchType 默认 active，只重取有人看的、省请求
+// ❌ 变更成功后手动 setQueryData 拼新数据→客户端“猜”的与服务端返回不一致，字段/排序悄悄跑偏
 ```
 
 三个高价值参数：`refetchType: 'active' | 'inactive' | 'all' | 'none'`（默认 active——只重取有人看的，没人看的标 stale 下次再说）；`cancelRefetch: true`（正在取的先掐再重取）；`exact`/前缀匹配（上一关）。invalidate 与 removeQueries 的区别：前者保数据静待重取（UI 不断流），后者连数据一起丢（UI 立刻空）。
@@ -14,11 +17,14 @@ queryClient.invalidateQueries({ queryKey: ['todos'] });
 ## 二、被动三连：聚焦 / 重连 / 轮询
 
 ```tsx
+// 目的：被动刷新三连——聚焦/重连/轮询，都是“用户可能看到陈旧数据”的兜底时机
 useQuery({ ...opts,
-  refetchOnWindowFocus: true,   // 默认开：切回来保新鲜
+  refetchOnWindowFocus: true,   // 默认开：切回标签页保新鲜
   refetchOnReconnect: true,     // 断网恢复自动补取
-  refetchInterval: 5_000,       // 轮询；可函数 (state)=> 根据数据决定间隔
+  refetchInterval: 5_000,       // 轮询 5s；可传函数 (state)=> 按数据动态定间隔
 });
+// ✅ 常规业务保留默认（聚焦/重连开），轮询只在实时性不够时兜底
+// ❌ 高频接口叠过短 refetchInterval + 不设 staleTime→请求风暴、后端压力大，能用失效就别轮询
 ```
 
 聚焦/重连是「用户可能看到陈旧数据了」的产品直觉；轮询是实时性不够时的兜底，实时要求高再上 WebSocket 写缓存（setQueryData 配合）。三档全开等于默认值，**关掉它们的理由应该比开着的理由更充分**。
@@ -26,7 +32,10 @@ useQuery({ ...opts,
 ## 三、networkMode：离线不是断点
 
 ```tsx
-useQuery({ ...opts, networkMode: 'offlineFirst' });
+// 目的：networkMode 离线策略——默认 online 断网暂停查询，offlineFirst 让变更离线排队上线重放
+useQuery({ ...opts, networkMode: 'offlineFirst' });   // 断网时不 paused，先排队，联网后自动续跑
+// ✅ 弱网/RN 场景 mutation 用 offlineFirst：离线提交不丢，恢复后重放
+// ❌ 默认 online 断网时误读 isInitialLoading=true 当“取数中”→其实是 fetchStatus:'paused'，该给离线角标而非无限转圈
 ```
 
 默认 `online`：断网时查询进 `fetchStatus:'paused'`（UI 可显「离线」角标），恢复自动续。mutation 用 `offlineFirst` 可离线排队、上线重放（React Native 场景标配）。paused 时 loading 语义要小心——isInitialLoading 仍 true，UI 该给离线提示而不是无限转圈。

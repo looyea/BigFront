@@ -20,19 +20,20 @@
 ## 二、核心 API 速查
 
 ```js
+// 目的：反馈类交互都走 wx.* 原生 API（Native 渲染、不走 setData），按打断强度选型
 // 轻提示：icon: success | error | none（none 才能长文案）
 wx.showToast({ title: '保存成功', icon: 'success', duration: 1500 });
 
 // 加载中：必须成对，防"转圈永不停"
 wx.showLoading({ title: '提交中', mask: true });   // mask 防误触
 await submit();
-wx.hideLoading();                                   // 放 finally！
+wx.hideLoading();                                   // ✅ 放 finally！异常也要收
 
 // 决策框：回调里看 res.confirm / res.cancel
 wx.showModal({
   title: '删除草稿', content: '删除后不可恢复',
   confirmText: '删除', confirmColor: '#fa5151',
-  success(res) { if (res.confirm) doDelete(); },
+  success(res) { if (res.confirm) doDelete(); },   // ✅ 只有用户点确认才执行
 });
 
 // 操作列表：itemList ≤6 项，点击回 res.tapIndex
@@ -40,6 +41,8 @@ wx.showActionSheet({
   itemList: ['转发', '收藏', '举报'],
   success: (res) => actions[res.tapIndex](),
 });
+// ❌ submit 报错时 hideLoading 不在 finally → loading 永不消失卡死（应放 finally）
+// ❌ showLoading 未 hide 直接 showToast → 两 API 共用一个浮层会互相顶掉
 ```
 
 三个易错点：
@@ -53,11 +56,12 @@ wx.showActionSheet({
 ## 三、过程反馈的"页面级"API
 
 ```js
+// 目的：页面过程态（下拉刷新）收尾必须调配套 stop API，否则圈永不停
 // 下拉刷新收尾（在 onPullDownRefresh 里，呼应 mp-lifecycle 第五节）
 Page({
   async onPullDownRefresh() {
     try { await this.fetchList(); }
-    finally { wx.stopPullDownRefresh(); }   // 忘了收 = 转圈永不停
+    finally { wx.stopPullDownRefresh(); }   // ✅ 收圈放 finally，失败也收
   },
 });
 
@@ -66,6 +70,7 @@ wx.showShareMenu({ withShareTicket: true });
 // 视觉反馈类
 wx.vibrateShort({ type: 'light' });  // 轻震动：敏感操作确认手感
 wx.setBackgroundColor({ backgroundColorTop: '#fff' });  // 下拉露出的底色
+// ❌ 忘了 stopPullDownRefresh → 下拉小圈一直转（即使数据已回来）
 ```
 
 选择器要点：**页面过程态（刷新/触底）用页面钩子+配套 stop API；瞬时反馈用全局 wx API；强业务交互（评论面板）才值得自定义组件**——三级成本递增。
@@ -77,13 +82,14 @@ wx.setBackgroundColor({ backgroundColorTop: '#fff' });  // 下拉露出的底色
 裸调 wx API 的三大痛：回调地狱、loading 泄漏、文案散落。封装成 Promise 化的 utils（对标 **09-express** 的错误处理中间件思路：反馈出口唯一）：
 
 ```js
+// 目的：把裸 wx API 封装为 Promise 化、幂等、出口统一的 utils（治回调地狱/loading 泄漏/文案散落）
 // utils/feedback.js
 export const toast = (title, icon = 'none', duration = 2000) =>
-  new Promise((r) => wx.showToast({ title, icon, duration, success: r, fail: r }));
+  new Promise((r) => wx.showToast({ title, icon, duration, success: r, fail: r }));   // ✅ 成功/失败都 resolve，await 不挂
 
 export const loading = {
   _on: false,
-  show(title = '加载中') { if (!this._on) { this._on = true; wx.showLoading({ title, mask: true }); } },
+  show(title = '加载中') { if (!this._on) { this._on = true; wx.showLoading({ title, mask: true }); } },   // 幂等：防重复 show
   hide() { if (this._on) { this._on = false; wx.hideLoading(); } },
 };
 
@@ -92,9 +98,10 @@ export const confirm = (content, title = '提示') =>
     wx.showModal({ title, content, success: (res) => resolve(!!res.confirm), fail: () => resolve(false) })
   );
 
-// 业务侧：
+// ✅ 业务侧：
 // if (await confirm('删除后不可恢复')) { ... }
 // 所有请求拦截器里 loading.show()/finally hide()（呼应 mp-network）
+// ❌ loading 不做幂等计数 → 并发多个请求共用，先回来的 hide 把还在跑的也关了（应用计数/布尔守卫）
 ```
 
 封装三原则：**① Promise 化（await 一条链）；② 幂等（loading 计数/布尔防重复 show）；③ 出口唯一（错误文案在拦截器统一映射，页面不写死）**（呼应 node-async-errors 的"错误路径单点"）。

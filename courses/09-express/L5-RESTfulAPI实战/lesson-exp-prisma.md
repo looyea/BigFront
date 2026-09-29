@@ -20,24 +20,25 @@ Prisma 的杀手锏：`schema.prisma` 声明一次，`prisma generate` 生成的
 ## 二、schema.prisma：建模即文档
 
 ```prisma
+// 目的：单一事实源建模—声明一次，prisma generate 就能推出带完整 TS 类型的 PrismaClient
 // prisma/schema.prisma
-generator client { provider = "prisma-client-js" }
-datasource db    { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client { provider = "prisma-client-js" }                       // ✅ 生成器
+datasource db    { provider = "postgresql"; url = env("DATABASE_URL") }   // ✅ 连接串走 env，密码不进仓库
 
 model User {
-  id    String @id @default(cuid())
-  email String @unique
-  name  String?            // 可选列：类型直接是 string | null
-  posts Post[]             // 一对多的"多"端
+  id    String @id @default(cuid())          // ✅ cuid 主键，无需自增
+  email String @unique                         // ✅ 唯一约束
+  name  String?                                 // ✅ 可选列：类型直接是 string | null
+  posts Post[]                                  // ✅ 一对多的"多"端（数组）
 }
 
 model Post {
   id       String  @id @default(cuid())
   title    String
   published Boolean @default(false)
-  author   User    @relation(fields: [authorId], references: [id])  // 必填关系
-  authorId String
-  tags     Tag[]              // 多对多：Prisma 自动建中间表
+  author   User    @relation(fields: [authorId], references: [id])  // ✅ fields 放外键（谁持有外键一目了然）
+  authorId String                                  // ✅ 外键列需显式声明
+  tags     Tag[]                                    // ✅ 多对多：Prisma 自动建中间表
 }
 
 model Tag {
@@ -45,6 +46,7 @@ model Tag {
   name  String @unique
   posts Post[]
 }
+// ❌ @relation 里只写一侧或 fields/references 不对应 → prisma validate/migrate 直接报错
 ```
 
 读关系三句口诀：**数组端=多、单对象端=一；`@relation(fields:)` 里放外键、谁持有外键一目了然**；多对多两侧都给数组，中间表 Prisma 托管（显式中间 model 可做"关系带属性"，如 OrderItem 带数量单价）。
@@ -52,10 +54,12 @@ model Tag {
 ## 三、迁移：migrate dev 与 db push 的分工
 
 ```bash
-npx prisma migrate dev --name add_post_tags   # 开发：生成 SQL 迁移文件 + 应用 + 重新 generate
-npx prisma migrate deploy                     # 生产/CI：只按迁移目录顺序重放，不生成
-npx prisma db push                            # 原型/个人项目：schema 直推数据库，无迁移历史
-npx prisma studio                             # 浏览器里看数据的官方 GUI
+# 目的：区分四种命令的使用场合
+npx prisma migrate dev --name add_post_tags   # ✅ 开发：生成 SQL 迁移文件 + 应用 + 重新 generate
+npx prisma migrate deploy                     # ✅ 生产/CI：只按迁移目录顺序重放，不生成
+npx prisma db push                            # ⚠️ 原型/个人项目：schema 直推数据库，无迁移历史
+npx prisma studio                             # ✅ 浏览器里看数据的官方 GUI
+# ❌ 生产用 db push → 无迁移历史 = 无法回滚、无法审计
 ```
 
 迁移哲学：**迁移文件是代码，必须进 git**。`migrate dev` 生成的 `prisma/migrations/xxx/migration.sql` 让人工 review 得到"这次改动到底对表做了什么"；生产上永远 `deploy`，绝不 `db push`（无历史=无法回滚无法审计）。团队协作撞迁移：先 pull 再 `migrate dev --create-only` 手改（呼应 node-config 的环境变量纪律——`DATABASE_URL` 走 env，密码永不进仓库）。
@@ -63,22 +67,24 @@ npx prisma studio                             # 浏览器里看数据的官方 G
 ## 四、CRUD：类型安全与关系读写
 
 ```js
+// 目的：类型安全 CRUD—整个应用共用一个 PrismaClient（连接池内建于它），嵌套写/读关系
 import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()          // 整个应用一个实例（连接池内建于它）
+const prisma = new PrismaClient()          // ✅ 全局单例，切勿每个请求 new 一个（会耗尽连接池）
 
-// 创建：关系可以"嵌套写"
+// ✅ 创建：关系可以"嵌套写"
 const post = await prisma.post.create({
-  data: { title: 'Hello', author: { connect: { id: userId } },   // 或 create: {...} 连作者一起建
+  data: { title: 'Hello', author: { connect: { id: userId } },   // ✅ connect 关联已有作者（或 create: {...} 连作者一起建）
           tags: { create: [{ name: 'node' }] } },
 })
 
-// 查询：include 拉关系（子查询）、select 裁列（永远优先）
+// ✅ 查询：include 拉关系（子查询）、select 裁列（永远优先）
 const list = await prisma.post.findMany({
-  where: { published: true, author: { email: { endsWith: '@dev.io' } } },
-  include: { author: { select: { name: true } }, tags: true },     // 嵌套过滤/选列都可以
+  where: { published: true, author: { email: { endsWith: '@dev.io' } } },   // ✅ 嵌套条件过滤
+  include: { author: { select: { name: true } }, tags: true },              // ⚠️ 嵌套选列可缩列，但 include 会发子查询
   orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
-  take: 20, skip: 0,                                               // offset 分页两行搞定
+  take: 20, skip: 0,                                                        // ✅ offset 分页两行搞定
 })
+// ❌ 列表接口用 include 拉全部关系 → N+1（此例实发多条 SQL），应改 select 只取所需列
 ```
 
 游标分页（exp-pagination 推荐的大表方案）在 Prisma 里是 `cursor: { id: lastId } + take: 20`，配合按 id 排序天然稳定。**N+1 警报**：`include: { author: true }` 对 20 条帖子实际发 21 条 SQL——Prisma 的 include 不是 JOIN，列表接口务必用 `select` 只取所需列，宽表关系考虑 `$queryRaw` 手写 JOIN 或分两步 `findMany({ where: { id: { in: ids } } })` 拼装。
@@ -86,19 +92,21 @@ const list = await prisma.post.findMany({
 ## 五、事务：$transaction 两形态
 
 ```js
-// 形态一：数组批量——顺序执行、任一失败全部回滚（无相互依赖的写操作）
+// 目的：$transaction 两形态—数组批量（无依赖）vs 交互式（先读后写有依赖）
+// ✅ 形态一：数组批量——顺序执行、任一失败全部回滚（无相互依赖的写操作）
 await prisma.$transaction([
   prisma.post.delete({ where: { id } }),
   prisma.user.update({ where: { id: userId }, data: { postCount: { decrement: 1 } } }),
 ])
 
-// 形态二：交互式——先读后写有依赖（转账模板），失败自动回滚、可配超时
+// ✅ 形态二：交互式——先读后写有依赖（转账模板），失败自动回滚、可配超时
 await prisma.$transaction(async (tx) => {
-  const acc = await tx.account.findUniqueOrThrow({ where: { id: fromId } })
-  if (acc.balance < amount) throw new Error('余额不足')     // throw = 回滚整段
+  const acc = await tx.account.findUniqueOrThrow({ where: { id: fromId } })   // ✅ 必须用 tx 客户端
+  if (acc.balance < amount) throw new Error('余额不足')                        // ✅ throw = 回滚整段
   await tx.account.update({ where: { id: fromId }, data: { balance: { decrement: amount } } })
   await tx.account.update({ where: { id: toId },   data: { balance: { increment: amount } } })
 })
+// ❌ 交互式回调里用外层 prisma 而非 tx → 操作脱离事务“裸奔”，回滚保不住它（最常见的假事务 bug）
 ```
 
 要点：交互式回调里**必须用 tx 客户端**（用外层 prisma 等于事务外裸奔，最常见的假事务 bug）；默认超时 5s，大批量要调 `timeout/maxWait`；高并发扣减再加乐观锁版本号 `where: { id, version: acc.version }`——事务不是万金油，隔离级别与竞态（09-express 幂等、node-queues-jobs 消费端幂等同源）各自有各自的解。

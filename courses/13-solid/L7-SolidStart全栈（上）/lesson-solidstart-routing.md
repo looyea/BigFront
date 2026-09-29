@@ -26,11 +26,14 @@
 | `docs/[...slug].tsx` | `/docs/*slug`（任意多段） | `params.slug` 是**剩余段拼成的斜杠字符串**（`foo/baz`） |
 
 ```tsx
+// 目的：动态段取值—[id].tsx 里用 useParams() 拿住 URL 上的参数
 import { useParams } from "@solidjs/router";
-export default function UserPage() {
+export default function UserPage() {   // ✅ default export 一个组件才能成页面
   const params = useParams();
-  return <h1>User {params.id}</h1>;
+  return <h1>User {params.id}</h1>;   // ✅ /users/42 → params.id === "42"（总是字符串）
 }
+// ❌ 忘了 default export 只写具名函数 → FileRoutes 收不到，该路径 404
+// ⚠️ [[id]] 可选段下 params.id 可能 undefined，直接用前要先判空
 ```
 
 ## 三、嵌套布局：与目录同名的 .tsx
@@ -60,10 +63,12 @@ routes/
 
 路由文件除了 default export UI，还能导出 `route` 对象挂**路由级行为**（v2 文档重点）：
 ```ts
+// 目的：路由文件可额外导出 route 对象挂路由级行为（如 preload 提前热数据）
 import { type RouteDefinition } from "@solidjs/router";
 export const route = {
-  preload() { /* 进路由前先热一切 */ },
-} satisfies RouteDefinition;
+  preload() { /* ✅ 进路由前先发数据请求/热加载，与组件渲染并行 */ },
+} satisfies RouteDefinition;   // ✅ satisfies 既校类型又保留具体形状
+// ❌ preload 里直接访问 window/DOM → 它在服务端预渲染阶段也会跑，无 window 会报错
 ```
 `preload` 最典型的用法是把本页数据查询提前发出去（下一关 data 见完整例子）。
 

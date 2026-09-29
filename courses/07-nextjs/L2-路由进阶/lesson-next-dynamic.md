@@ -16,10 +16,12 @@ app/[[...opt]]/page.tsx         →  / 和 /x/y 都命中   可选 catch-all
 服务端组件直接接 props，**params 是 Promise**（Next 15 起统一异步）：
 
 ```tsx
+// 目的：服务端组件直接接 props 拿动态段——Next 15 起 params 是 Promise，必须 await
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;            // ← await 一下，别当普通对象用
+  const { slug } = await params;            // ✅ await 一下拿到 { slug: 'hello' }
   return <Article slug={slug} />;
 }
+// ❌ 当普通对象直接用 params.slug → Next 15 下 params 是 Promise，得到 undefined（且会报错不能同步访问）
 ```
 
 客户端组件用 `useParams()` 钩子。对照记忆：Vue Router 的 `route.params.slug`、React Router 的 `useParams()`——Next 的特色是**参数即 props，服务端组件不用任何钩子**（呼应 vue-router-nested-dynamic 第 3 节）。
@@ -31,12 +33,14 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 动态页要走 SSG/ISR，得先知道"有哪些页"：
 
 ```tsx
+// 目的：告知构建器“动态页要预生成哪几种”，才能走 SSG/ISR
 // app/blog/[slug]/page.tsx
 export async function generateStaticParams() {
-  const posts = await getPostSlugs();       // 构建时执行：生成这 500 个详情页
-  return posts.map(slug => ({ slug }));
+  const posts = await getPostSlugs();       // ✅ 构建时执行：返回要预生成的 slug 列表（这 500 个详情页）
+  return posts.map(slug => ({ slug }));     // ✅ 每一项对应一个预渲染页
 }
-export const dynamicParams = false;         // 白名单外直接 404（默认 true：现渲）
+export const dynamicParams = false;         // ✅ 白名单外的 slug 直接 404（默认 true：访问时现渲）
+// ❌ 设了 dynamicParams:false 却没列出某 slug → 用户访问该页直接 404，而非回退到现渲
 ```
 
 - 不写此函数 → 该页默认动态渲染（访问时才定 slug 值）；写了 → 列出的预生成、其余按需（`dynamicParams:false` 则拒绝）；
@@ -59,12 +63,14 @@ app/dashboard/
 ```
 
 ```tsx
+// 目的：并行路由——一个布局开多个插槽，各槽独立加载/报错（@slot 目录不影响 URL）
 // app/dashboard/layout.tsx
 export default function Layout({ children, analytics, team }: {
   children: React.ReactNode; analytics: React.ReactNode; team: React.ReactNode;
 }) {
-  return <div>{children}{analytics}{team}</div>;
+  return <div>{children}{analytics}{team}</div>;   // ✅ 三个插槽并排渲染；analytics/team 来自 @analytics/@team 目录
 }
+// ❌ 某个槽（如 @modal）未匹配又没写 default.tsx → 报错 "route ... has a missing default.tsx"，整个布局渲染失败
 ```
 
 `@slot` 目录**不影响 URL**，只是把渲染树"开洞"多传一个插槽 prop——等价于 Vue 命名视图 `<RouterView name="analytics">` 但无需 URL 里体现（呼应 vue-router-nested-dynamic 命名视图一节）。典型用途：仪表盘多源数据独立加载（每个槽自带 loading/error 边界）。

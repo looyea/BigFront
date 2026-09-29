@@ -13,8 +13,10 @@ SPA 构建产物是 `dist/`（HTML + contenthash 的 JS/CSS + assets）。三种
 - **自托管 Nginx**（呼应 Express L8）：`root dist;` + 缓存头 + SPA fallback。
 
 ```bash
-vite build          # 产物在 dist/
-vite preview        # 本地预览构建结果（不是 dev server！用于上线前自检）
+# 目的：构建与发布前自检—build 产出 dist，preview 用真实产物起服务验 base/缓存/路由
+vite build          # ✅ 产物在 dist/
+vite preview        # ✅ 本地预览构建结果（不是 dev server！用于上线前自检）
+# ❌ 拿 vite dev 当验收环境 → dev 未降级/未换 base，上线才发现资源 404
 ```
 
 > `preview` 用**真实构建产物**起服务，验证 base/缓存/路由是否正常，是发布前最后一道自检。
@@ -26,12 +28,14 @@ vite preview        # 本地预览构建结果（不是 dev server！用于上�
 资源引用前缀由 `base` 决定。默认 `/`。不同场景要改：
 
 ```js
+// 目的：base—资源引用前缀，需匹配真实部署路径
 export default {
-  base: '/',               // 域名根部署
-  // base: '/my-app/',     // 部署在子路径
-  // base: './',          // 相对路径（双击打开/不确定部署路径）
-  // base: 'https://cdn.example.com/v1/',  // 资源走 CDN
+  base: '/',               // ✅ 域名根部署
+  // base: '/my-app/',     // ✅ 部署在子路径
+  // base: './',          // ✅ 相对路径（双击打开/不确定部署路径）
+  // base: 'https://cdn.example.com/v1/',  // ✅ 资源走 CDN
 };
+// ❌ 子目录部署忘设 base → index.html 里 <script src="/assets/..."> 指向根而全部 404 白屏
 ```
 
 **"白屏/资源 404" 的头号原因就是 base 不对**：部署在子路径却用默认 `/`，`index.html` 里 `<script src="/assets/...">` 指向根而 404。相对 `./` 能扛大部分路径不确定性，但不利于 SPA 深层路由的相对解析——子路径 + history 路由最好显式写 `/my-app/`。可在代码里用 `import.meta.env.BASE_URL` 读当前 base 拼路径。
@@ -43,20 +47,22 @@ export default {
 history 模式下 `/about` 刷新会打到服务器——静态服务器要知道"未知路径都返回 index.html"：
 
 ```nginx
+# 目的：SPA fallback + 分级缓存—未知路径回 index.html，hashed 资源长缓存、HTML 协商缓存
 server {
   root /usr/share/nginx/html;
   location / {
-    try_files $uri $uri/ /index.html;   # SPA fallback
+    try_files $uri $uri/ /index.html;   # ✅ SPA fallback：刷新 /about 也能回 index.html
   }
-  # 带 contenthash 的构建资源：永久强缓存（呼应 L4 缓存 / Express L4）
+  # ✅ 带 contenthash 的构建资源：永久强缓存（呼应 L4 缓存 / Express L4）
   location /assets/ {
     add_header Cache-Control "public, max-age=31536000, immutable";
   }
-  # 入口 HTML 绝不强缓存，保证发版能拿到新引用
+  # ✅ 入口 HTML 绝不强缓存，保证发版能拿到新引用
   location = /index.html {
     add_header Cache-Control "no-cache";
   }
 }
+# ❌ 给 index.html 也上 immutable 长缓存 → 发版后浏览器仍拿旧 HTML、引用旧 hash 资源，新上线看不到
 ```
 
 要点：**`index.html` 用 `no-cache`（协商），hashed 资源用 `immutable` 长缓存**——发版只换 HTML，资源命中缓存或按新 hash 拉取。Netlify/Vercel 用 `_redirects`/配置实现 SPA fallback。
@@ -66,17 +72,19 @@ server {
 ## 四、Docker 化静态站点
 
 ```dockerfile
+# 目的：多阶段构建—Node 只在构建阶段用，运行阶段是纯 Nginx（镜像小、攻击面小）
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci                    # ✅ 按 lock 精确安装，可重现
 COPY . .
-RUN npm run build                 # 产出 dist/
+RUN npm run build                 # ✅ 产出 dist/
 
 FROM nginx:alpine AS runtime
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html   # ✅ 只拷产物，不带 node_modules
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
+# ❌ 单阶段直接拿 node 镜像跑 nginx → 镜像携带整个构建环境，体积暴增且带多余依赖风险
 ```
 
 多阶段：Node 只在构建阶段用，运行阶段是纯 Nginx（呼应 Express L8 反代/静态）。SSR 站点则运行阶段用 `node` 跑 server 产物（见 vite-ssr）。
@@ -89,7 +97,8 @@ EXPOSE 80
 
 ```jsonc
 // pnpm-workspace.yaml
-packages: ['packages/*', 'apps/*']
+// 目的：声明 workspace 包裹范围—这些目录下的包互相可用软链引用
+packages: ['packages/*', 'apps/*']   // ✅ packages 与 apps 下的每个目录成为一个 workspace 包
 ```
 
 典型结构：
@@ -104,10 +113,12 @@ packages: ['packages/*', 'apps/*']
 - **源码直用（推荐内部包）**：让 `@acme/ui` 的 `exports`/`main` 指向 `src/index.ts`，Vite 直接把 workspace 依赖当源码编译 → **改组件库源码即时 HMR、无需先 build**。要配 `optimizeDeps.exclude` / `preserveSymlinks` 相关，让 Vite 追踪到真实路径：
 
 ```js
+// 目的：包间源码直用—让 Vite 把 workspace 依赖当源码编译，改组件库即时 HMR
 export default {
-  resolve: { preserveSymlinks: false },     // Vite 默认解析真实路径
-  optimizeDeps: { exclude: ['@acme/ui'] },  // 不预打包，按需编译源码
+  resolve: { preserveSymlinks: false },     // ✅ Vite 默认解析真实路径
+  optimizeDeps: { exclude: ['@acme/ui'] },  // ✅ 不预打包，按需编译源码
 };
+// ❌ 忘了 exclude @acme/ui → 它被当第三方预打包，改库源码不即时生效，需重启才看到变化
 ```
 
 - **产物消费（对外发布包）**：库先 `build` 出 dist，app 依赖其构建产物——隔离清晰但要"先建库再建 app"的构建顺序（用 task runner 如 turbo 编排）。
@@ -122,21 +133,23 @@ Vite 专为"发布组件库/工具库"提供库模式：
 
 ```js
 // vite.config.js
+// 目的：library mode—把组件/工具库打成多格式 npm 包，框架/peerDep 不打进包
 export default {
   build: {
     lib: {
       entry: 'src/index.ts',
-      name: 'AcmeUi',                 // UMD 全局名
-      formats: ['es', 'cjs', 'umd'],  // 多格式产出
+      name: 'AcmeUi',                 // ✅ UMD 全局名
+      formats: ['es', 'cjs', 'umd'],  // ✅ 多格式产出
       fileName: (f) => `acme-ui.${f}.js`,
     },
     rollupOptions: {
-      external: ['vue'],              // peerDep 不打进包
+      external: ['vue'],              // ✅ peerDep 不打进包
       output: { globals: { vue: 'Vue' } },
     },
   },
   plugins: [vue()],
 };
+// ❌ 忘写 external:['vue'] → 把 vue 打进库，与宿主形成双实例、体积爆炸，inject 响应式失效
 ```
 
 要点：
@@ -155,16 +168,18 @@ export default {
 一个项目多个独立 HTML 入口（如 `/home.html`、`/admin.html` 各自 SPA 或传统多页）：
 
 ```js
+// 目的：MPA 多入口—把多个独立 HTML 各配为 input，各自加载自己的 JS
 export default {
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        admin: resolve(__dirname, 'admin/index.html'),
+        main: resolve(__dirname, 'index.html'),        // ✅ 首页入口
+        admin: resolve(__dirname, 'admin/index.html'), // ✅ 后台入口
       },
     },
   },
 };
+// ❌ 多页只写默认 index.html 一个 input → admin/index.html 不被构建，上线访问 404
 ```
 
 每个 HTML 是独立入口、各自加载自己的 JS。相对 SSR/单页更简单、页面间跳转是整页导航。适合营销多页 + 后台并存的站点。

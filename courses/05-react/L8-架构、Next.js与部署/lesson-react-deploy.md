@@ -20,9 +20,11 @@ npm run build          # Vite：输出到 dist/（index.html + /assets/*.hash.js
 用 BrowserRouter（history 模式，呼应 react-router-basics 第一节）时，刷新 `/user/1` 这种**非根路径**，服务器上没有这个真实文件 → **404**。必须把未知路径**回退到 index.html**，交给前端路由：
 
 ```nginx
+# 目的：SPA history 回退——非根路径刷新时回退到 index.html 交前端路由，避免 404
 location / {
-  try_files $uri $uri/ /index.html;   # nginx：找不到文件就返回 index.html
+  try_files $uri $uri/ /index.html;   # ✅ 先找真实文件/目录，都没有则返回 index.html
 }
+# ❌ 不配回退直接刷 /user/1 → nginx 找不到该真实文件 → 404（浏览器地址栏与 SPA 内部导航不同源）
 ```
 - 静态托管（Netlify `_redirects: /* /index.html 200`、Vercel rewrites、Vercel/Cloudflare Pages）都有对应 SPA 回退开关；
 - 或改用 HashRouter 免回退（代价：URL 带 `#`，呼应 react-router-basics 第 2 题）；
@@ -47,11 +49,13 @@ location / {
 ## 四、环境变量：只暴露该暴露的
 
 ```bash
+# 目的：只有带特定前缀的变量才会内联进客户端包（安全边界：前缀=公开）
 # Vite：只有 VITE_ 前缀会注入客户端
-VITE_API_URL=https://api.x.com
+VITE_API_URL=https://api.x.com        # ✅ 可在浏览器读到（只能放公开的接口地址）
 # Next：只有 NEXT_PUBLIC_ 前缀进浏览器
 NEXT_PUBLIC_API_URL=https://api.x.com
 DATABASE_URL=...        # 无前缀 → 仅服务端可读，不会进包
+# ❌ 把密钥写成 VITE_SECRET_KEY=xxx / NEXT_PUBLIC_TOKEN=xxx → 会被内联进 JS 供任何人查看源码拿到（机密绝不含前缀）
 ```
 - 构建时内联进 JS → **任何"前缀暴露"的变量都能被用户看到**，密钥/DB 连接串绝不能加前缀、绝不能进客户端；
 - 变量在**构建期**固化（非运行时读），改值要重新构建（Next 自托管也支持运行时 env 用于 server 侧）；

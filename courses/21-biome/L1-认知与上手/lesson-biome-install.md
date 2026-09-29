@@ -3,8 +3,11 @@
 ## 一、装 + 初始化
 
 ```bash
-npm i -D @biomejs/biome     # 或 pnpm add -D / yarn add -D
-npx biome init              # 生成最小 biome.json（带 $schema）
+# 目的：装 Biome 单二进制并 init——生成带 $schema 的最小 biome.json
+npm i -D @biomejs/biome     # 或 pnpm add -D / yarn add -D；按平台分发预编译二进制
+npx biome init              # 在项目根生成最小 biome.json（含 $schema 供编辑器补全/校验）
+# ✅ 装完即 npx biome 可用，无需插件加载器——Rust 原生二进制无 Node 冷启动
+# ❌ 跨机器锁文件没带全平台二进制（同 20-swc optionalDependencies 坑）→ CI 报找不到对应 @biomejs/cli-*
 ```
 
 Biome 是单个二进制，npm 包按平台分发（和 20-swc 的 optionalDependencies 思路一致），装完即可用 `npx biome`。
@@ -14,8 +17,11 @@ Biome 是单个二进制，npm 包按平台分发（和 20-swc 的 optionalDepen
 `biome check` 是**聚合命令**，一趟跑三件事：**format 检查 + lint + organize imports**。
 
 ```bash
-npx biome check ./src        # 只报告，不改
-npx biome check --write ./src   # 把能自动修的（格式化/import 整理/部分 fix）落盘
+# 目的：biome check 聚合命令——一趟跑 format 检查 + lint + organize imports
+npx biome check ./src              # 只报告不改（CI 里常配 --error-on-warnings）
+npx biome check --write ./src      # 落盘“安全修复”：格式化/import 整理/明确的 lint autofix
+# ✅ 日常本地与 CI 一个 check 就够；退出码 0 无问题、1 有诊断，能直接挡住 PR
+# ❌ 指望 --write 修掉一切→破坏性 lint 修复默认不做，须显式 --unsafe，否则防改坏的那类仍留着
 ```
 
 记住三命令边界：

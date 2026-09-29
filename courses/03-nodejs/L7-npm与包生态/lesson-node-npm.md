@@ -7,9 +7,10 @@
 ## 一、package.json 骨架与关键字段
 
 ```jsonc
+// 目的：一份"能发包 + 能跑 CLI + 能双入口"的 package.json 骨架，逐字段标注它管什么
 {
-  "name": "my-app",                 // 发包时全局唯一（npm registry）
-  "version": "1.2.3",               // semver，见第三节
+  "name": "my-app",                 // 发包时全局唯一（npm registry）；作用域包形如 "@acme/my-app"
+  "version": "1.2.3",               // semver，见第三节；发包时不可与已发布版本重复
   "type": "module",                 // "module"→.js 按 ESM 解析；"commonjs"→按 CJS（呼应 node-esm-cjs）
   "main": "./dist/index.cjs",       // CJS/老解析器入口（发包时见 node-publish）
   "exports": { "." : {...} },       // 现代条件导出入口（优先于 main）
@@ -21,6 +22,9 @@
 }
 ```
 
+> ✅ 应用：`npm pkg get name version type` 会打印这三个字段的值（读 package.json 无需手写 JSON.parse）。
+> ❌ 错误用例：把 `"type": "module"` 删掉后，同目录 `.js` 里写的 `import` 会报 `SyntaxError: Cannot use import statement outside a module`（回落 CJS 解析）。
+
 - **`type`** 决定 `.js` 按 ESM 还是 CJS 解析（呼应 node-esm-cjs 的 `.mjs`/`.cjs` 覆盖规则）；
 - **`engines`** 只"提示"，要真正强制需 CI 里校验或 `.nvmrc`/`corepack` 配合。
 
@@ -29,13 +33,14 @@
 ## 二、scripts：项目的统一命令入口
 
 ```jsonc
+// 目的：把项目所有操作收敛成 npm run <name> 统一入口，避免各自手敲长命令
 "scripts": {
   "start": "node src/index.js",
-  "dev": "node --watch src/index.js",       // Node 18+ 内置 watch（呼应 node-cli）
-  "build": "esbuild src/index.ts --bundle", // 呼应 10-vite/esbuild
+  "dev": "node --watch src/index.js",       // Node 18+ 内置 watch：文件改动自动重启（呼应 node-cli）
+  "build": "esbuild src/index.ts --bundle", // 打包（呼应 10-vite/esbuild）
   "test": "node --test",                    // 内置 test runner（见 node-testing）
-  "lint": "eslint .",
-  "prepublishOnly": "npm run build"         // 发布前自动跑（见 node-publish）
+  "lint": "eslint .",                       // 直接用本地 node_modules/.bin 里的 eslint，无需全局装
+  "prepublishOnly": "npm run build"         // 发布前自动跑 build（pre 钩子，见 node-publish）
 }
 ```
 
@@ -119,15 +124,19 @@ Node 16.9+ 内置 **corepack**：`packageManager` 字段（如 `"pnpm@9.1.0"`）
 ## 九、常用命令速查
 
 ```bash
+# 目的：日常最高频的包管理命令，逐条标注它到底做什么
 npm init -y                 # 生成默认 package.json
-npm i                       # 按 lockfile/区间安装
-npm ci                      # CI：严格按 lockfile -clean 安装
+npm i                       # 按 package.json 区间 + lockfile 安装（会解析并可能更新 lockfile）
+npm ci                      # CI 专用：严格按 lockfile 安装、先清空 node_modules、不修改 lockfile
 npm i pkg -D                # 装为 devDependency
-npm ls                      # 看依赖树 / 找冲突
-npm outdated                # 看可升级项
-npm view pkg versions       # 查某包所有版本
-npm run pkg-scripts -- --flag
+npm ls                      # 看依赖树 / 找冲突（unmet peer 等）
+npm outdated                # 看可升级项（对照区间给出 desired vs latest）
+npm view pkg versions       # 查某包所有已发布版本
+npm run pkg-scripts -- --flag   # -- 之后的参数透传给脚本本体
 ```
+
+> ✅ 应用：CI 里写 `npm ci --omit=dev` → 只装生产依赖，镜像更小、安装更快（呼应 node-deploy-perf）。
+> ❌ 错误用例：lockfile 与 package.json 不一致时 `npm ci` 会直接失败并报 `npm ci can only install with an existing package-lock.json ... that matches package.json`——这是它"严格"的体现，此时应本地 `npm install` 重新生成 lockfile 再提交。
 
 ---
 

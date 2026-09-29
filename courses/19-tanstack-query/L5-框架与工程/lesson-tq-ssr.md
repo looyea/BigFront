@@ -9,10 +9,13 @@
 水合的本质是把服务端缓存「复印」进浏览器。复印就要原件：
 
 ```tsx
+// 目的：SSR 每请求 new 一个 QueryClient——水合是把服务端缓存“复印”进浏览器，需原件
 // server.tsx —— 每次请求 new 一个，绝不模块级共享！
-const queryClient = new QueryClient();
-await queryClient.prefetchQuery({ queryKey: ['posts'], queryFn: fetchPosts });
-const dehydratedState = dehydrate(queryClient);   // 缓存 → 可序列化 JSON
+const queryClient = new QueryClient();                                        // 请求级作用域，隔离用户
+await queryClient.prefetchQuery({ queryKey: ['posts'], queryFn: fetchPosts });   // 渲染前取好（必须 await，否则没完成就被复印=白做）
+const dehydratedState = dehydrate(queryClient);   // 缓存 → 可序列化 JSON，随 HTML 下发
+// ✅ 客户端 HydrationBoundary state={dehydratedState} 灌回，首帧 useQuery 直接命中不再发二次请求
+// ❌ 模块级单例 client 在服务端=全局缓存，用户 A 的请求带着用户 B 的数据（经典安全事故）
 ```
 
 模块级单例会的服务端全局缓存——用户 A 的请求带着用户 B 的数据，经典安全事故。客户端侧 `QueryClientProvider` 接一个 Provider 包 `HydrationBoundary state={dehydratedState}`，hydrate() 把 JSON 灌回内存缓存，首帧 useQuery 直接命中——**不再发第二次请求**。
@@ -22,13 +25,16 @@ const dehydratedState = dehydrate(queryClient);   // 缓存 → 可序列化 JSO
 advanced-ssr 的进阶形态：外壳先 flush，慢数据用 Suspense 边界占位，好了再流式补进页面：
 
 ```tsx
+// 目的：streaming SSR——外壳先 flush，慢数据用 Suspense 占位，好了再流式补进
 // 服务端： prefetch 不 await，把 promise 塞进边界
-const postsPromise = queryClient.prefetchQuery({ queryKey: ['posts'], queryFn });
+const postsPromise = queryClient.prefetchQuery({ queryKey: ['posts'], queryFn });   // 故意不 await：先出外壳
 <HydrationBoundary state={dehydrate(queryClient)}>
   <Suspense fallback={<Skeleton />}>
-    <Posts promise={postsPromise} />   {/* 内部 useSuspenseQuery */}
+    <Posts promise={postsPromise} />   {/* 内部 useSuspenseQuery：数据没好就 suspend，error 走 ErrorBoundary */}
   </Suspense>
 </HydrationBoundary>
+// ✅ TTFB 从“最慢接口”降为“框架外壳”——Next App Router 'use client' 组件标准玩法
+// ❌ 这里又 await postsPromise 再 dehydrate→退回阻塞式 SSR，streaming 意义尽失
 ```
 
 TTFB 由「最慢接口」降为「框架外壳」，配合 useSuspenseQuery（数据没好就 suspend，error 走 ErrorBoundary）就是 Next.js App Router 里 'use client' 组件的标准玩法。

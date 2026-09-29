@@ -16,19 +16,21 @@
 
 ```vue
 <script setup>
+// 目的：ref 包装任意值——<script> 里靠 .value 读写，模板里自动解包
 import { ref } from "vue";
-const count = ref(0);            // Ref<number>
+const count = ref(0);            // Ref<number>，初始值 0
 const user = ref({ name: "Amy" }); // 对象的每个属性也会被深层代理
 
 function inc() {
-  count.value++;                 // ⚠️ 在 <script> 里必须写 .value
-  user.value.name = "Bob";       // 改嵌套也要 .value
+  count.value++;                 // ⚠️ 在 <script> 里必须写 .value：0 → 1
+  user.value.name = "Bob";       // 改嵌套也要先 .value 再取属性
 }
+// ❌ 写成 count++ 会报 ReferenceError/NaN：count 是 Ref 对象不是数字，不能自增
 </script>
 
 <template>
-  <p>{{ count }}</p>             <!-- 模板里自动解包，不写 .value -->
-  <p>{{ user.name }}</p>
+  <p>{{ count }}</p>             <!-- 模板里自动解包，显示当前数字（不写 .value） -->
+  <p>{{ user.name }}</p>          <!-- 显示 "Amy"，inc() 后变 "Bob" -->
 </template>
 ```
 
@@ -44,10 +46,11 @@ function inc() {
 
 ```vue
 <script setup>
+// 目的：reactive 对一组相关状态做深度代理，直接读写、无 .value
 import { reactive } from "vue";
 const state = reactive({ count: 0, list: [] });
-state.count++;                   // 直接读写，无 .value
-state.list.push(1);
+state.count++;                   // 直接读写，无 .value：0 → 1
+state.list.push(1);              // 嵌套数组也被代理，push 触发更新
 </script>
 ```
 
@@ -56,8 +59,9 @@ state.list.push(1);
 1. **解构会丢失响应性**：
 
 ```js
-const { count } = state;         // ❌ count 只是普通 number 快照，不再联动
-const { count } = toRefs(state); // ✅ 转成 ref 保持响应
+// 目的：演示 reactive 的解构陷阱——直接解构拿到的是普通快照，脱离代理
+const { count } = state;         // ❌ count 只是普通 number 快照（此刻值），之后不再联动
+const { count: c2 } = toRefs(state); // ✅ 转成 ref 保持响应，c2.value 才随 state 变化
 ```
 
 2. **不能整体替换**：`state = reactive({...})` 会切断原代理的引用（呼应 vue-reactivity-theory 的 toRef）。要重置用 `Object.assign(state, {...})`。
@@ -70,10 +74,12 @@ const { count } = toRefs(state); // ✅ 转成 ref 保持响应
 
 ```vue
 <script setup>
+// 目的：computed 产出有缓存的派生值——只在依赖变化后、再次读取时才重算
 import { ref, computed } from "vue";
 const items = ref([{ price: 10, qty: 2 }, { price: 5, qty: 1 }]);
 const total = computed(() => items.value.reduce((s, i) => s + i.price * i.qty, 0));
-// 读 total.value；只有依赖(items)变化时才重新计算，否则用缓存
+// ✅ 应用：读 total.value → 首次算得 25；items 不变时再读直接命中缓存返回 25
+// ❌ 若漏了 items.value 的 .value：reduce 读不到数组，抛 TypeError: reduce of undefined
 </script>
 ```
 
@@ -96,14 +102,15 @@ const total = computed(() => items.value.reduce((s, i) => s + i.price * i.qty, 0
 
 ```vue
 <script setup>
+// 目的：把 ref + computed 串成"改数据→派生重算→视图更新"的最小完整链路
 import { ref, computed } from "vue";
 const n = ref(0);
-const even = computed(() => n.value % 2 === 0);
+const even = computed(() => n.value % 2 === 0);   // 依赖 n 的派生值
 </script>
 
 <template>
-  <button @click="n++">+1</button>
-  <p>计数：{{ n }}（{{ even ? "偶数" : "奇数" }}）</p>
+  <button @click="n++">+1</button>                 <!-- 点击：n 0→1，模板自动解包 -->
+  <p>计数：{{ n }}（{{ even ? "偶数" : "奇数" }}）</p>  <!-- n=1 时显示"计数：1（奇数）" -->
 </template>
 ```
 

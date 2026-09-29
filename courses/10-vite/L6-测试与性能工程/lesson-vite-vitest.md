@@ -10,15 +10,17 @@
 
 ```ts
 // vite.config.ts —— alias、插件、define 在测试里原样生效
+// 目的：测试跑在 Vite 的世界里—复用同一套解析/transform 管道，TS/JSX/SFC 零额外配置直接测
 export default defineConfig({
-  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },   // ✅ 测试里 import '@/x' 与源码一致解析
   test: {
-    globals: true,                 // describe/it/expect 免 import（配 tsconfig types 补类型）
-    environment: 'jsdom',          // 默认 node；组件测试要 DOM
+    globals: true,                 // ✅ describe/it/expect 免 import（配 tsconfig types 补类型）
+    environment: 'jsdom',          // ✅ 默认 node；组件测试要 DOM
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    coverage: { provider: 'v8', reporter: ['text', 'lcov'], thresholds: { lines: 80 } },
+    coverage: { provider: 'v8', reporter: ['text', 'lcov'], thresholds: { lines: 80 } },   // ✅ 80% 行覆盖门禁
   },
 })
+// ❌ 测组件却留 environment:'node'（默认）→ document is not defined，render 直接报错
 ```
 
 `import.meta.env.VITE_*`、`?raw` 导入、路径别名——webpack 时代要"测试配置和构建配置两套对齐"的痛苦在此消失。`vitest --run`（CI）与默认 watch 两种形态；`npx vitest related --run` 只跑"受影响文件"（pre-commit 神器）。
@@ -26,20 +28,22 @@ export default defineConfig({
 ## 二、写测试：expect 断言族与 vi mock 家族
 
 ```ts
+// 目的：expect 断言族 + vi mock 家族—异步断言、假定时器、模块/函数/局部窥探
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 test('异步与断言扩展', async () => {
   const data = await fetchUser(1)
-  expect(data).toMatchObject({ id: 1 })          // 子集断言（快照的克制版）
-  await expect(badCall()).rejects.toThrow('403') // 异步异常
-  vi.useFakeTimers(); vi.advanceTimersByTime(1500)  // 假定时器：防抖测试不用真等
+  expect(data).toMatchObject({ id: 1 })          // ✅ 子集断言（快照的克制版）
+  await expect(badCall()).rejects.toThrow('403') // ✅ 异步异常
+  vi.useFakeTimers(); vi.advanceTimersByTime(1500)  // ✅ 假定时器：防抖测试不用真等
   vi.useRealTimers()
 })
 
 // mock 三件套
-vi.mock('@/api', () => ({ fetchUser: vi.fn().mockResolvedValue({ id: 1 }) }))  // 模块 mock（提升 hoist）
-const cb = vi.fn()          // 函数 mock：cb.mock.calls / cb.mock.calls[0][0] 查调用
-const obj = vi.spyOn(utils, 'format').mockReturnValue('stubbed')  // 局部窥探不拆全家
+vi.mock('@/api', () => ({ fetchUser: vi.fn().mockResolvedValue({ id: 1 }) }))  // ✅ 模块 mock（提升 hoist）
+const cb = vi.fn()          // ✅ 函数 mock：cb.mock.calls / cb.mock.calls[0][0] 查调用
+const obj = vi.spyOn(utils, 'format').mockReturnValue('stubbed')  // ✅ 局部窥探不拆全家
+// ❌ 不在 beforeEach 里 vi.resetAllMocks() → mock 状态跨测试泄漏，“单独跑绿、一起跑红”
 ```
 
 纪律两条：`beforeEach` 里 `vi.resetAllMocks()`（mock 状态跨测试泄漏是"单独跑绿、一起跑红"的头号成因）；模块 mock 的工厂函数**不会自动继承真模块**，部分替换用 `importOriginal`。并发/隔离心智：Vitest 默认**文件间并行、文件内串行**，每个测试文件是独立 worker 环境（与 node:test 的进程模型不同，呼应 node-event-loop）。
@@ -48,19 +52,23 @@ const obj = vi.spyOn(utils, 'format').mockReturnValue('stubbed')  // 局部窥�
 
 ```ts
 // 路线 A：jsdom/happy-dom + @testing-library（04/05/11 包学的 API 原封搬来）
+// 目的：轻量 DOM 模拟—快、CI 省，能跑 90% 逻辑断言
 // vitest.config: environment: 'happy-dom'（比 jsdom 快，覆盖面略窄）
 import { render, screen } from '@testing-library/vue'
 test('计数按钮', async () => {
   render(Counter)
-  await userEvent.click(screen.getByRole('button'))
+  await userEvent.click(screen.getByRole('button'))   // ✅ 拟用户交互，验可访问性角色
   expect(screen.getByText('1')).toBeInTheDocument()
 })
+// ❌ 以为 happy-dom 测试绿就万事大吉→它缺的观察器 API 静默不报，真实浏览器滚动/布局问题被漏
 ```
 
 ```ts
 // 路线 B：Browser Mode——真浏览器（Playwright 驱动）里跑
+// 目的：真实渲染图形/滚动/截图回归才测得到，代价是 CI 镜像与启动更重
 // vitest.config: test: { browser: { enabled: true, name: 'chromium', provider: 'playwright' } }
-// 组件、截图比对、真实布局（ResizeObserver/IntersectionObserver/滚动）才测得到
+// ✅ ResizeObserver/IntersectionObserver/滚动等真 DOM 行为可验
+// ❌ 所有单测都上 Browser Mode → 启动成本白白拖慢 CI，简单逻辑断言应用 jsdom 路线
 ```
 
 选择轴：**快与 CI 省 → jsdom 够跑 90% 逻辑断言；涉及真实渲染/图形/滚动/截图回归 → Browser Mode**。happy-dom 的坑位：缺的观察器 API 静默不报——测试通过≠浏览器能过（呼应 vue-testing、svelte-testing 的 render 契约各表）。

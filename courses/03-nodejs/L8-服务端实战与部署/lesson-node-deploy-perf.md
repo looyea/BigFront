@@ -7,12 +7,13 @@
 ## 一、Dockerfile：多阶段 + 依赖缓存 + 非 root
 
 ```dockerfile
+# 目的：多阶段构建——构建阶段含 devDependencies，运行阶段只带生产依赖与产物
 # ---- 构建阶段：装全依赖(dev)、编译/打包 ----
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package*.json ./
+COPY package*.json ./            # 先只 COPY 清单：依赖层可缓存，改源码不重装依赖
 RUN npm ci                       # 装全部依赖含 dev（用于 build）
-COPY . .
+COPY . .                         # 再拷源码（频繁变化的层放后面）
 RUN npm run build                # tsup/esbuild 产出 dist（呼应 node-publish）
 
 # ---- 运行阶段：只带生产依赖与产物 ----
@@ -21,12 +22,14 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force   # 只装运行依赖（呼应 node-npm 第五节）
-COPY --from=build /app/dist ./dist
+COPY --from=build /app/dist ./dist                 # 只取上一阶段的产物，不带 dev/编译器
 USER node                        # 别用 root 跑（缩小逃逸面，呼应 node-config 最小权限）
 EXPOSE 3000
 # 用 tini 作为 PID1 正确转发信号/回收僵尸（见第三节）
 ENTRYPOINT ["node", "dist/server.js"]
 ```
+
+> ❌ 反面：把 `COPY . .` 写在 `npm ci` 之前 → 每改一行业码缓存失效、下次构建重装全部依赖（慢）；不加 `.dockerignore` 会把 `node_modules`/`.env`/`.git` 一并拷进镜像（又大又泄密钥）。
 
 要点：**先 COPY `package*.json`+`npm ci` 再 COPY 源码**——依赖层可缓存，改代码不重装依赖；多阶段让运行镜像不含 devDependencies/编译器；`NODE_ENV=production`、非 root、`.dockerignore` 掉 `node_modules`/`.env`/`.git`（呼应 node-config 第五节）。
 
@@ -37,9 +40,10 @@ ENTRYPOINT ["node", "dist/server.js"]
 生产更新/缩容时，进程收到终止信号，必须**先处理完在途请求再退出**，否则用户 502/半截响应：
 
 ```js
+// 目的：收到终止信号后先停接单、等在途请求 drain 完、再关资源、超时兜底强退
 import http from "node:http";
 const server = http.createServer(app);
-let shuttingDown = false;
+let shuttingDown = false;   // 幂等保护：信号可能连来（SIGTERM 后又来 SIGINT）
 
 function shutdown(signal) {
   if (shuttingDown) return;
@@ -48,15 +52,17 @@ function shutdown(signal) {
   server.close(() => finish());           // 停止接受新连接，等在途请求 drain 完（呼应 node-cluster 第六节）
   // 兜底：超时仍有连接没走完就强退，避免永久挂起
   const timer = setTimeout(() => { console.error("强制退出"); process.exit(1); }, 10_000);
-  timer.unref();
+  timer.unref();                          // unref：不因这个兜底定时器本身让进程不退出
 }
 ["SIGTERM", "SIGINT"].forEach((s) => process.on(s, () => shutdown(s)));
 
 async function finish() {
   await closeDb(); await closeCache();    // 关 DB/连接池/worker/临时文件句柄
-  process.exit(0);
+  process.exit(0);                        // 资源收干净后以 0 正常退出
 }
 ```
+
+> ❌ 错误用例：只写 `process.on("SIGTERM", () => process.exit(0))` → 在途请求直接被砍、客户端收到半截响应/502；且 SIGKILL（`-9`）无法被捕获，任何收尾逻辑都救不了它。
 
 - **SIGTERM**（容器/pm2 优雅停）先 close→drain→关资源→exit；**SIGKILL（-9）不可捕获**，别指望收尾；
 - 若用 cluster/多副本，还要**先从负载均衡摘除**（K8s preStop / readiness 转 failing）再退，避免"已 close 但 LB 还在发新连接"；

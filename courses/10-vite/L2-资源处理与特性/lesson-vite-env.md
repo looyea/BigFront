@@ -12,7 +12,9 @@ Vite 有两个内置模式：
 
 自定义模式通过 `--mode` 指定：
 ```bash
-vite build --mode staging   # → mode='staging' → 加载 .env.staging
+# 目的：自定义模式—--mode 决定加载哪个 .env.[mode] 及 import.meta.env.MODE 的值
+vite build --mode staging   # ✅ mode='staging' → 加载 .env.staging（而非默认 .env.production）
+# ❌ 建了 .env.staging 却忘了 --mode staging → build 默认 production，只读 .env.production，staging 变量全不生效
 ```
 
 mode 影响：加载哪个 `.env.[mode]` 文件 + `import.meta.env.MODE` 的值。
@@ -33,11 +35,13 @@ mode 影响：加载哪个 `.env.[mode]` 文件 + `import.meta.env.MODE` 的值�
 ### 2.2 变量暴露规则
 
 ```bash
+# 目的：变量暴露规则—只有 VITE_ 前缀才静态替换进客户端代码
 # .env
-VITE_API_URL=https://api.example.com   ← 前端可读（VITE_ 前缀）
-VITE_APP_TITLE=My App                  ← 前端可读
-DATABASE_URL=postgres://...            ← 仅 vite.config.ts 内可读
-SECRET_KEY=abc                         ← 仅 Node.js 进程可读
+VITE_API_URL=https://api.example.com   # ✅ 前端可读（VITE_ 前缀）
+VITE_APP_TITLE=My App                  # ✅ 前端可读
+DATABASE_URL=postgres://...            # ✅ 无前缀→仅 vite.config.ts/插件内可读，不进 bundle
+SECRET_KEY=abc                         # ✅ 仅 Node.js 进程可读
+# ❌ 把密钥写成 VITE_SECRET_KEY → 被编译进客户端 bundle，攻击者直接从 JS 里拿到
 ```
 
 **只有 `VITE_` 前缀的变量**才被静态替换进客户端代码。无前缀的只暴露在 `process.env`（vite.config / 插件内部使用）。
@@ -53,13 +57,15 @@ SECRET_KEY=abc                         ← 仅 Node.js 进程可读
 ## 三、import.meta.env API
 
 ```js
+// 目的：import.meta.env 内置变量一览—均为构建时静态替换，非运行时对象查找
 // 内置变量
-import.meta.env.MODE         // 'development' | 'production' | 'staging'
-import.meta.env.DEV          // boolean (mode !== 'production')
-import.meta.env.PROD         // boolean (mode === 'production')
-import.meta.env.BASE_URL     // 配置的 base
+import.meta.env.MODE         // ✅ 'development' | 'production' | 'staging'
+import.meta.env.DEV          // ✅ boolean（mode !== 'production'）
+import.meta.env.PROD         // ✅ boolean（mode === 'production'）
+import.meta.env.BASE_URL     // ✅ 配置的 base
 // 自定义
-import.meta.env.VITE_API_URL // .env 里定义的
+import.meta.env.VITE_API_URL // ✅ .env 里定义的 VITE_ 变量
+// ❌ 想动态拼键 import.meta.env[`VITE_${name}`] → 静态替换不支持动态访问，得到 undefined
 ```
 
 ### 3.1 编译时静态替换
@@ -67,10 +73,12 @@ import.meta.env.VITE_API_URL // .env 里定义的
 `import.meta.env.VITE_API_URL` → 构建时直接替换成 `"https://api.example.com"` 文本。不是运行时对象查找——Rollup 能做 Tree Shake：
 
 ```js
+// 目的：编译时静态替换—import.meta.env.DEV 被换成字面量，使 if(false) 整块被 Tree Shake 删除
 if (import.meta.env.DEV) {
-  // 生产构建时 if(false) → 整块代码被删除
+  // ✅ 生产构建时 → if(false) → 整块代码被删除，devtools 不打包
   enableVueDevtools();
 }
+// ❌ 将 DEV 存进变量再判断 const d=import.meta.env.DEV; if(d){...} → Rollup 难以静态判定，死代码删不掉
 ```
 
 ---
@@ -89,17 +97,21 @@ if (import.meta.env.DEV) {
 ### 4.2 用法
 
 ```ts
+// 目的：define—静态替换任意标识符（无 VITE_ 前缀限制），值必须 JSON.stringify 成字面量
 export default defineConfig({
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
-    __ENABLE_DEVTOOLS__: JSON.stringify(true),
-    'process.env.NODE_ENV': JSON.stringify('production'),  // 兼容老代码
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),   // ✅ 字符串必须 stringify
+    __ENABLE_DEVTOOLS__: JSON.stringify(true),                          // ✅ 布尔也 stringify
+    'process.env.NODE_ENV': JSON.stringify('production'),  // ✅ 兼容依赖 process.env 的老代码
   }
 })
+// ❌ __APP_VERSION__: process.env.npm_package_version（不 stringify）→ 被当代码表达式插入，报 ReferenceError/undefined
 ```
 
 ```js
-console.log(__APP_VERSION__);  // '1.2.0'（编译后直接变字面量）
+// 目的：使用 define 常量—编译后标识符直接变字面量（无运行时变量存在）
+console.log(__APP_VERSION__);  // ✅ '1.2.0'（编译后 __APP_VERSION__ 就地替换为字面量）
+// ❌ 在浏览器 DevTools 里想看 __APP_VERSION__ 变量→找不到，它不是真变量只是文本替换
 ```
 
 **注意**：define 的值必须是字符串（`JSON.stringify`），否则被当代码表达式。
@@ -121,28 +133,32 @@ console.log(__APP_VERSION__);  // '1.2.0'（编译后直接变字面量）
 ### 5.2 scripts
 
 ```json
+// 目的：多环境脚本—用 --mode 为 staging 单独出一条构建命令
 "scripts": {
-  "dev": "vite",
-  "build:staging": "vite build --mode staging",
-  "build": "vite build",
+  "dev": "vite",                                          // ✅ development 模式
+  "build:staging": "vite build --mode staging",            // ✅ 加载 .env.staging
+  "build": "vite build",                                  // ✅ 默认 production
   "preview": "vite preview"
 }
+// ❌ 把 --mode staging 写成 staging build（参数位错）→ vite 把 staging 当 root 目录，构建失败
 ```
 
 ### 5.3 TypeScript 类型
 
 ```ts
 // vite-env.d.ts
-/// <reference types="vite/client" />
+// 目的：给 import.meta.env 声明类型—补全 + 编译期拦截拼写错误
+/// <reference types="vite/client" />   // ✅ 引入 Vite 客户端类型
 
 interface ImportMetaEnv {
-  readonly VITE_API_BASE: string;
+  readonly VITE_API_BASE: string;        // ✅ 声明后访问此键有自动补全
   readonly VITE_APP_TITLE: string;
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv;
+  readonly env: ImportMetaEnv;           // ✅ 把 env 收窄为上面接口
 }
+// ❌ 不声明就 import.meta.env.VITE_API_BSE（拼错）→ TS 不报错也不补全，运行期静默 undefined
 ```
 
 自动补全 + 编译时类型检查。
@@ -152,21 +168,23 @@ interface ImportMeta {
 ## 六、在 vite.config 中读取 mode
 
 ```ts
+// 目的：在 vite.config 里读 mode—用 loadEnv 手动加载全量变量（含无前缀密钥），按模式条件装配
 export default defineConfig(({ mode, command }) => {
-  const env = loadEnv(mode, process.cwd(), '');  // 加载所有变量（含无 VITE_ 前缀）
+  const env = loadEnv(mode, process.cwd(), '');  // ✅ prefix='' 加载所有变量（含无 VITE_ 前缀）
 
   return {
     plugins: [
-      mode === 'production' && visualizerPlugin(),
+      mode === 'production' && visualizerPlugin(),   // ✅ 仅生产启用分析插件
     ],
     define: {
-      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),   // ✅ 注入构建时刻
     },
     server: {
-      proxy: command === 'serve' ? { '/api': env.VITE_API_TARGET } : undefined,
+      proxy: command === 'serve' ? { '/api': env.VITE_API_TARGET } : undefined,   // ✅ 只 dev 配代理
     },
   };
 });
+// ❌ 把 loadEnv 读到的无 VITE_ 前缀密钥再写进 define → 密钥被静态替换进客户端 bundle（泄露）
 ```
 
 `loadEnv(mode, cwd, prefix)` 手动加载 .env → prefix='' 加载全部（含密钥）。

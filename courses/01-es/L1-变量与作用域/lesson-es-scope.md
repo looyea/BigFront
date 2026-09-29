@@ -23,10 +23,16 @@
 3. **提升到函数/全局顶部**：给读代码带来「先使用后声明」的隐蔽 bug（详见 es-hoisting 关）。
 
 ```js
+// 目的：演示 var 没有块作用域——声明泄漏到最近的函数/全局作用域
 if (true) {
   var legacy = 'old';
 }
-console.log(legacy); // 'old' —— var 不属于块，属于最近函数/全局
+console.log(legacy); // 'old' —— ❌ var 不属于块，穿透到了外层
+// ✅ 修正：改用 let 就被块关住
+if (true) {
+  let modern = 'new';
+}
+// console.log(modern); // ❌ ReferenceError: modern is not defined
 ```
 
 **唯一还值得写 var 的场景**：需要「函数外不可见、函数内共享」的老代码维护。新代码请一律 `let/const`。
@@ -36,11 +42,12 @@ console.log(legacy); // 'old' —— var 不属于块，属于最近函数/全�
 ## 三、let / const 的块作用域
 
 ```js
+// 目的：let/const 拥有真正的块作用域，块外不可见
 {
   let a = 1;
   const b = 2;
 }
-console.log(a, b); // ❌ ReferenceError: a is not defined
+console.log(a, b); // ❌ ReferenceError: a is not defined（块结束即销毁）
 ```
 
 `const` 与 `let` 的作用域规则**完全相同**；差别只在「绑定不可重新赋值」这一条。
@@ -48,10 +55,13 @@ console.log(a, b); // ❌ ReferenceError: a is not defined
 ### 3.1 `const` 不等于不可变
 
 ```js
+// 目的：区分「const 绑定不可变」与「对象内容不可变」两层含义
 const user = { name: 'Ann' };
-user.name = 'Bob';         // ✅ 允许：改的是对象内部
-user = {};                  // ❌ TypeError: Assignment to constant variable.
+user.name = 'Bob';         // ✅ 允许：改的是对象内部，绑定没变
+user = {};                  // ❌ TypeError: Assignment to constant variable.（重新赋值绑定才违规）
 Object.freeze(user);        // 浅冻结，让属性也不可改（数组仍可 push）
+// ❌ 后果演示：冻结后再写属性
+user.name = 'Cindy';        // 严格模式(含 ESM)→ TypeError；非严格模式→ 静默失败，name 仍是 'Bob'
 ```
 
 记住三层：**绑定不变 → 值可以变；要值也不变用 Object.freeze；要深度不变需要递归 freeze 或 Immutable.js**。
@@ -59,7 +69,10 @@ Object.freeze(user);        // 浅冻结，让属性也不可改（数组仍可 
 ### 3.2 for 循环的 per-iteration binding
 
 ```js
-for (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 0 1 2
+// 目的：for + let 每轮迭代新建独立绑定，异步回调各自捕获当轮的 i
+for (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // ✅ 0 1 2
+// ❌ 对比：换成 var 只有一个函数作用域的 i，回调全部共享它
+for (var j = 0; j < 3; j++) setTimeout(() => console.log(j)); // 3 3 3（回调执行时循环已结束，j 已是 3）
 ```
 
 规范在每次迭代**新建**一个 i 绑定，把上一轮的值 copy 进去，然后再进入循环体。这不是常规块作用域的行为，是 for+let 的**特例**（`for..in` / `for..of` 同理）。
@@ -76,6 +89,7 @@ for (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 0 1 2
 4. 还没有：读操作 → `ReferenceError`；写操作（非严格模式）→ 悄悄在全局创建一个。
 
 ```js
+// 目的：演示作用域链——bar 能沿 [[Environment]] 向上看到 inner 与 outer（词法作用域，与调用位置无关）
 const outer = 1;
 function foo() {
   const inner = 2;
@@ -97,6 +111,7 @@ foo();
 内层的 `let x` 会让外层同名 x **在块内暂时不可见**。
 
 ```js
+// 目的：内层同名 let/const 会遮蔽（shadow）外层变量，仅在本块内接管
 const x = 'global';
 function f() {
   const x = 'func';
@@ -117,6 +132,7 @@ console.log(x);          // 'global'
 ## 六、块内函数声明：唯一还在被问到的历史遗留
 
 ```js
+// 目的：块内函数声明的作用域存在历史歧义（严格模式 vs Annex B）——别这么写
 if (false) {
   function foo() {}      // 现代规范：foo 只在块内可见
 }
@@ -132,9 +148,10 @@ typeof foo;              // 严格模式 'undefined'；sloppy 模式因 Annex B 
 一个 `.mjs` / `type:module` 的 `.js` 文件的**顶层就是块作用域**：
 
 ```js
+// 目的：ESM 模块顶层即模块作用域——未 export 的变量天然私有
 // a.mjs
-const secret = 'top secret';
-export const pub = 'public';
+const secret = 'top secret';   // 外部 import 拿不到，无需 IIFE
+export const pub = 'public';    // 只有显式 export 的名字才可被外部导入
 ```
 
 外部 `import` 只能拿到显式 export 的名字；未 export 的顶层变量**天然私有**——不再需要 IIFE。

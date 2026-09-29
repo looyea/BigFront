@@ -7,16 +7,18 @@
 `<Suspense fallback={...}>` 包裹子树：当子树里**读到**一个"被 Suspense 追踪的异步依赖"（典型是 `createResource` 尚在 pending、或 `createAsync` 的 `read()`）且它未完成时，Suspense 就渲染 `fallback`，直到该异步 resolve 再换成真实内容。
 
 ```jsx
+// 目的：<Suspense> 集中兜底—子树读到未完成的被追踪异步依赖就显示 fallback，resolve 后换真内容
 import { Suspense, createResource } from "solid-js";
 
 function AsyncMessage() {
   const [message] = createResource(fetchMessage);
-  return <p>{message()}</p>;               // 读到 pending 的 resource → 触发外层 Suspense
+  return <p>{message()}</p>;               // ✅ 读到 pending 的 resource → 触发外层 Suspense 显示 fallback
 }
 
 <Suspense fallback={<p>加载中…</p>}>
   <AsyncMessage />
 </Suspense>
+// ❌ 不给 fallback 就直接读 pending resource → 挂起无处兜底，整棵上层白屏
 ```
 
 这消除了"每个组件自己写 loading 分支"——**加载态交给边界统一兜**，组件只写"成功长什么样"（配合 solid-resource 的 Switch 手写风格，二者择一，Suspense 更省心）。
@@ -26,6 +28,7 @@ function AsyncMessage() {
 1. **非阻塞**：*"the subtree can continue running and create reactive owners before the boundary reveals the resolved content in the DOM。"* —— 挂起不冻结整个应用，子树照常执行建节点，只是**内容暂不落 DOM**、由 fallback 顶着。
 2. **就近边界**：嵌套 Suspense 时，异步依赖由**最近的祖先边界**处理——只那一层切 fallback，外层不受牵连。可任意嵌套：
    ```jsx
+   // 目的：嵌套 Suspense—孙组件读到 pending 只让最近祖先边界切 fallback，外层不受牵连
    <Suspense fallback={<div>整页…</div>}>
      <Title />
      <Suspense fallback={<div>详情…</div>}><Details /></Suspense>
@@ -40,6 +43,7 @@ function AsyncMessage() {
 一页里几个独立 `<Suspense>` 各自好了就跳出来，会显得凌乱。`<SuspenseList>` 把兄弟边界**按序**揭示：
 
 ```jsx
+// 目的：<SuspenseList> 把多个兄弟 Suspense 按序揭示，避免各自好了就乱跳
 import { SuspenseList } from "solid-js";
 
 <SuspenseList revealOrder="forwards" tail="collapsed">
@@ -47,6 +51,8 @@ import { SuspenseList } from "solid-js";
   <Suspense fallback={<p>二…</p>}><B/></Suspense>
   <Suspense fallback={<p>三…</p>}><C/></Suspense>
 </SuspenseList>
+// ✅ revealOrder=forwards：按书写顺序从上往下依次揭示；tail=collapsed：未到的折叠不占位
+// ❌ 被包的不是直接子 <Suspense> 而是普通组件 → 无法登记 inFallback，退化成各自乱序弹出
 ```
 
 - `revealOrder`：`forwards` / `backwards` / `together`（一起出）。
@@ -58,17 +64,21 @@ import { SuspenseList } from "solid-js";
 痛点：点"下一用户"→ `setUserId(2)` → resource 进入 pending → 若直接是 `unresolved`，Suspense 会**闪一下 fallback**、旧数据消失。`useTransition` 把这次更新标为"过渡"：**保留旧界面、后台取新，取完再原子替换**。
 
 ```jsx
+// 目的：useTransition—把 setUserId 标为“过渡”，新数据未回前保留旧界面、取完再原子替换（不闪 fallback）
 import { useTransition, Suspense, createResource, createSignal } from "solid-js";
 
 const [userId, setUserId] = createSignal(1);
 const [user] = createResource(userId, fetchUser);
-const [pending, start] = useTransition();
+const [pending, start] = useTransition();     // ✅ pending() 报是否过渡中，start(fn) 把 fn 里的更新标为过渡
 
 <button onClick={async () => { await start(() => setUserId(2)); }}>下一个</button>
 <div>{pending() ? "切换中…" : "就绪"}</div>
 <Suspense fallback={<p>加载用户…</p>}>
   <pre>{JSON.stringify(user(), null, 2)}</pre>
 </Suspense>
+// ✅ 用 start(()=>setUserId(2)) 而非直接 setUserId(2)：旧 user() 保留到新值就绪，不闪屏
+// ❌ 直接 setUserId(2) 不包 start → resource 转 pending、旧值清空，Suspense 闪一下 fallback
+// ❌ 把 start(() => setTimeout(...)) 里的真异步放微任务外→start 只治同步调度那一瞬，盖不住定时器里的更新
 ```
 
 要点（官方行为）：

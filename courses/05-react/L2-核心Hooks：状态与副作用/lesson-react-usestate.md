@@ -7,11 +7,13 @@
 ## 一、useState 基础
 
 ```jsx
+// 目的：useState 返回 [当前值, 更新函数]，一个组件可多块独立状态
 import { useState } from 'react';
 
 function Counter() {
   const [count, setCount] = useState(0);   // [当前值, 更新函数]
-  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;   // ✅ 点击→setCount 请求下次渲染用 count+1
+  // ❌ 写成 setCount(count.value++) 或直改 count → 不触发重渲染（React 不像 Vue 能就地改）
 }
 ```
 - `useState(初始值)` 返回 `[state, setState]` 数组（解构成任意名字，约定 `xxx`/`setXxx`）；
@@ -27,16 +29,18 @@ function Counter() {
 React 用 `Object.is(next, prev)` 判断要不要重渲染。你直接改原对象，引用没变 → React 认为"没变" → 不更新（且破坏了可预测性）。所以：
 
 ```jsx
+// 目的：不可变更新——每次造新引用，React 靠 Object.is 判新引!=旧引才重渲染
 // 对象
 const [user, setUser] = useState({ name: 'A', age: 1 });
 setUser({ ...user, age: user.age + 1 });        // ✅ 新对象 + 覆盖要改的字段
-// setUser(user); setUser.age = 2;              // ❌ 同引用，不重渲染
+// setUser(user); setUser.age = 2;              // ❌ 同引用，Object.is 相等→不重渲染
 
 // 数组
 const [list, setList] = useState([]);
-setList([...list, item]);                        // 追加
-setList(list.map(x => x.id === id ? { ...x, done: true } : x));   // 改某项
+setList([...list, item]);                        // 追加（✅ 新数组）
+setList(list.map(x => x.id === id ? { ...x, done: true } : x));   // 改某项（被改项也是新对象）
 setList(list.filter(x => x.id !== id));          // 删除
+// ❌ list.push(item) 后 setList(list) → 引用未变，视图不更新
 ```
 这就是"不可变更新(immutable update)"——每次造新引用（呼应 vue-state-patterns 的 single source、react-forms）。深层嵌套可用 immer 简化。
 
@@ -47,11 +51,12 @@ setList(list.filter(x => x.id !== id));          // 删除
 连续多次更新、或新值依赖旧值时，传函数 `prev => next`，避免读到陈旧快照：
 
 ```jsx
+// 目的：新值依赖旧值时传 prev=>next，避免读到本帧旧快照
 setCount(prev => prev + 1);     // 永远基于最新值
 // 对比错误：连续两次 setCount(count + 1) 因 count 是本帧旧值 → 只 +1
 const [n, setN] = useState(0);
-setN(n + 1); setN(n + 1);        // 结果 1，不是 2（都是基于同一旧 n）
-setN(p => p + 1); setN(p => p + 1);   // 结果 2 ✅
+setN(n + 1); setN(n + 1);        // ❌ 结果 1，不是 2（都是基于同一旧 n）
+setN(p => p + 1); setN(p => p + 1);   // ✅ 结果 2（函数式排队基于最新值）
 ```
 事件处理器、`setInterval`、异步回调里尤其要用函数式（呼应 react-useeffect 闭包陈旧值、react-render-model homework L1 第9题）。
 
@@ -60,6 +65,7 @@ setN(p => p + 1); setN(p => p + 1);   // 结果 2 ✅
 ## 四、惰性初始化：初始值要算的时候
 
 ```jsx
+// 目的：初始值需计算时用惰性初始化，仅首帧算一次
 useState(JSON.parse(localStorage.getItem('k')));        // ❌ 每次渲染都 parse（浪费）
 useState(() => JSON.parse(localStorage.getItem('k')));  // ✅ 传函数，仅首渲染算一次
 ```
@@ -70,8 +76,9 @@ useState(() => JSON.parse(localStorage.getItem('k')));  // ✅ 传函数，仅�
 ## 五、state 是异步的、本帧读到的是快照
 
 ```jsx
+// 目的：setXxx 只是"请求下次渲染"，本帧作用域里的 count 不变
 setCount(5);
-console.log(count);      // 仍是旧值！count 是本次渲染的常量快照
+console.log(count);      // ❌ 仍是旧值！count 是本次渲染的常量快照（要到下次渲染才读到 5）
 ```
 `setXxx` 只是"请求下次渲染用新值"，当前函数作用域里的 `count` 不变。要在**更新后**做事，用 `useEffect` 监听该 state，而不是紧跟在 set 后面读（呼应 react-render-model 第六节、react-useeffect）。
 

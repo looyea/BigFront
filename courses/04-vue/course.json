@@ -10,8 +10,10 @@
     {
       "id": "L1",
       "title": "响应式基础",
-      "subtitle": "ref-reactive-computed / watch / Proxy 原理",
+      "subtitle": "起步·工程创建 / <script setup> 语法糖 / ref-reactive-computed / watch / Proxy 原理",
       "lessons": [
+        { "id": "vue-hello-world", "title": "Vue 起步：创建工程、Hello World 与项目结构", "goal": "零基础第一步：用 create-vue / Vite 脚手架创建一个能跑的 Vue 工程，写出并跑通 Hello World；认识一个 Vue 项目的目录结构（index.html、src/main.js、App.vue、components、vite.config、package.json）；理解单文件组件 SFC 的 template/script/style 三段式；给出一套「哪些是天天必写的核心、哪些是次要、哪些可暂缓」的重要性分层，让人知道该往哪儿使劲（呼应 10-vite 脚手架、本项目 frontend 外壳即 Vue3+Vite）" },
+        { "id": "vue-script-setup", "title": "<script setup> 语法糖：现代 Vue 组件的默认写法", "goal": "后续每一课都在用 <script setup>，本课先讲透它：从 Options API → setup() → <script setup> 的来龙去脉；顶层绑定自动暴露给模板、import 组件即自动注册；defineProps/withDefaults/defineEmits/defineExpose/defineOptions 编译器宏的基本用法与 defineModel；它编译成什么、为什么更快、有哪些边界与坑（为 L7 vue-sfc-compiler-macros 的编译产物深挖埋伏笔）" },
         { "id": "vue-reactivity", "title": "响应式核心：ref、reactive 与 computed", "goal": "理解 ref 与 reactive 的区别与 .value 心智、为什么需要响应式、computed 的缓存与惰性求值、可选链解构丢失响应性（呼应 ES 包的 getter/Proxy）" },
         { "id": "vue-watch", "title": "侦听器：watch 与 watchEffect", "goal": "watch 的源(单值/多值/getter/reactive)、immediate/deep/flush、onCleanup 处理竞态、watchEffect 自动收集依赖、何时用 computed 何时用 watch" },
         { "id": "vue-reactivity-theory", "title": "响应式原理：Proxy、effect 与依赖收集", "goal": "Proxy/Reflect 如何实现响应式、effect 与 depsMap(WeakMap)、get 收集 set 触发、shallowRef/shallowReactive/toRef/toRefs、markRaw、为什么 Vue3 抛弃 Object.defineProperty（呼应 ES 包 Proxy/WeakMap）" }

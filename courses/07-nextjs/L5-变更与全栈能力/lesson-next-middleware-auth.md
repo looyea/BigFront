@@ -7,24 +7,26 @@
 ## 一、形态与时机
 
 ```ts
+// 目的：请求进入渲染/接口前的第一道闸口（跑在 Edge，只能改道不能接管）
 // middleware.ts（根目录，或 src/ 同级）
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(req: NextRequest) {
-  const sid = req.cookies.get('sid')?.value;
+  const sid = req.cookies.get('sid')?.value;   // ✅ 读 cookie：只判“带没带会话”，不查库
   if (!sid && req.nextUrl.pathname.startsWith('/admin')) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('from', req.nextUrl.pathname);
-    return NextResponse.redirect(url);          // 3xx：到此为止
+    return NextResponse.redirect(url);          // ✅ 3xx：到此为止
   }
-  const res = NextResponse.next();              // 放行：继续正常管线
-  res.headers.set('x-user-anon', sid ? '0' : '1');   // 可加头/改头
+  const res = NextResponse.next();              // ✅ 放行：继续正常管线
+  res.headers.set('x-user-anon', sid ? '0' : '1');   // ✅ 可加头/改头
   return res;
 }
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],  // 排除静态与接口（正则负向断言）
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],  // ✅ 排除静态与接口（正则负向断言）
 };
+// ❌ matcher 写成 ['/.*'] 全匹 → 每个图标/静态请求都进函数（Edge 毫秒预算，账单与延迟都涨）
 ```
 
 要点三条：
@@ -51,13 +53,15 @@ export const config = {
 ## 三、NextAuth/Auth.js：框架级方案的委托模型
 
 ```ts
+// 目的：委托给 Auth.js——middleware 侧只验 session JWT 的签名与过期，不查库
 // middleware 侧：只验证 session JWT 的签名与过期，不查库
-import { auth } from '@/auth';                 // Auth.js v5 的 edge 安全封装
+import { auth } from '@/auth';                 // ✅ Auth.js v5 的 edge 安全封装
 export default auth((req) => {
   if (!req.auth && req.nextUrl.pathname !== '/login') {
-    return NextResponse.redirect(new URL('/login', req.url));
+    return NextResponse.redirect(new URL('/login', req.url));   // ✅ 无 session 统一拦到登录页
   }
 });
+// ❌ 以为 middleware 拦了 /admin 里面就安全 → 攻击者绕过 UI 直接打 Action 端点，数据层 owner 校验才是最终防线
 ```
 
 Auth.js 的架构=**把三层拆包**：provider 适配（OAuth/凭证）在 Node 侧回调交换、session 用 JWT（edge 可无库验签）或 database session（需适配器）、回调里做**权限映射**（token 回调把 role 塞进 session）。选型判断：中小团队标准登录=直接用；强定制权限体系=拿它的 provider 生态、自建 session 层（呼应 exp-auth 手搓 JWT 那课——你已懂它内部发生什么）。

@@ -9,6 +9,7 @@
 JSX 最终变成 `createElement(Comp, props)`，React 组件本质是**函数**，所以 TS 能推得非常好——你要做的是把 props/事件/ref 的类型标对。
 
 ```tsx
+// 目的：React 组件本质是函数——看 props/事件/泛型如何标类型，让 JSX 获得端到端推断
 // 1) Props：优先 interface / type 都行；用可辨识联合表达互斥 props（呼应 ts-union）
 type ButtonProps =
   | { variant: "primary"; onClick: () => void }
@@ -38,6 +39,7 @@ Vue 的类型魔法发生在**编译器**：宏（`defineProps` 等）不是普�
 
 ```vue
 <script setup lang="ts">
+// 目的：Vue 的类型魔法发生在编译器——宏要传泛型实参，编译期展开为运行时声明
 // 1) 基于类型的 props —— 传泛型实参（编译期展开，运行时无此调用）
 interface Props { title: string; count?: number }
 const props = withDefaults(defineProps<Props>(), { count: 0 });   // 可选/默认值靠类型 + withDefaults
@@ -66,6 +68,7 @@ emit("change", "ok");               // 写错载荷类型直接报错
 Nest 重度依赖**老式装饰器 + `emitDecoratorMetadata`**（呼应 ts-decorators）。它的类型体验有甜有坑：
 
 ```ts
+// 目的：Nest 靠装饰器+元数据做 DI——类型只帮编辑器补全，运行时真相靠校验管道
 @Injectable()                                   // 装饰器需要 experimentalDecorators/emitDecoratorMetadata
 class UsersService {
   constructor(
@@ -100,10 +103,11 @@ create(@Body() dto: CreateUserDto) { /* dto 是编译期形状，运行时校验
 框架项目里给"类型本身"写测试，防止重构悄悄退化公共类型：
 
 ```ts
+// 目的：给"类型本身"写测试，防止重构悄悄退化公共组件签名
 import { expectTypeOf } from "expect";                 // 或 vitest 的 expectTypeOf / tsd
-expectTypeOf(Button).parameter(0).toMatchTypeOf<ButtonProps>();
-// @ts-expect-error —— 断言"这里就应该报错"（呼应 ts-strict 第 9 题）
-<List items={[1]} render={(s: string) => <i />} />
+expectTypeOf(Button).parameter(0).toMatchTypeOf<ButtonProps>();   // ✓ 断言第一参符合 ButtonProps
+// @ts-expect-error —— 断言"这里就应该报错"（items 是 number[] 却把 render 参标为 string）
+<List items={[1]} render={(s: string) => <i />} />         // ✓ 下方会报错，ts-expect-error 吃掉它
 ```
 
 Vitest/Jest 配 `@types/node` 与全局 API（`describe`/`it`）时记得 tsconfig `types` 加 `"vitest/globals"`（呼应 ts-project 的 `types`/`typeRoots`）。

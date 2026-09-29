@@ -23,6 +23,7 @@
 一个模块的对外接口就是 `module.exports` 这个对象。`exports` 只是 `module.exports` 的**引用别名**：
 
 ```js
+// 目的：展示 exports 与 module.exports 的引用关系（这是下面陷阱的根源）
 // 等价关系（Node 内部）
 var module = { exports: {} };
 var exports = module.exports;   // 初始时两者指向同一对象
@@ -31,14 +32,15 @@ var exports = module.exports;   // 初始时两者指向同一对象
 因此：
 
 ```js
+// 目的：三种导出写法——前两种生效、第三种是经典陷阱（导出为空）
 // ✓ 正确：往 exports 上加属性（还是 module.exports 那个对象）
-exports.add = (a, b) => a + b;
+exports.add = (a, b) => a + b;   // 消费方 require 能拿到 add
 
 // ✓ 正确：整体替换 exports 对象
 module.exports = { add(a, b) { return a + b; } };
 
 // ✗ 经典陷阱：给 exports 重新赋值！
-exports = { add() {} };   // 只是让局部变量 exports 指向新对象，module.exports 没变 → 导出为空！
+exports = { add() {} };   // 只是让局部变量 exports 指向新对象，module.exports 没变 → 消费方 require 得到 {}
 ```
 
 **铁律**：要"整体替换导出"必须写 `module.exports = ...`，不能写 `exports = ...`。这是 CJS 面试第一大坑（呼应下一节 quiz）。
@@ -70,10 +72,11 @@ exports = { add() {} };   // 只是让局部变量 exports 指向新对象，mod
 ### 缓存：同一模块只执行一次
 
 ```js
+// 目的：验证 require 的缓存——同一模块只执行一次，两次 require 拿到同一引用
 const a = require('./counter');
 const b = require('./counter');
-a === b;                 // true —— 同一个 module.exports 引用
-a.inc(); console.log(a.count); // 1（第二次 require 不会重新初始化）
+a === b;                 // true —— 同一个 module.exports 引用（命中缓存，不再重新执行）
+a.inc(); console.log(a.count); // 1（b 也指向同一对象，b.count 同为 1）
 ```
 
 缓存解释了两件事：① 模块顶层代码（副作用、单例初始化）只跑一次——所以 CJS 模块常被当**单例**用；② 想"重置一个模块的状态"在测试里要用 `delete require.cache[require.resolve('./counter')]`（呼应 node-testing 的 mock）。
@@ -103,12 +106,13 @@ A require B、B 又 require A 时，Node **不会死锁**，而是：先开始�
 
 ```js
 // a.js
+// 目的：演示循环依赖——b 拿到的是 A "尚未执行完"的半成品快照
 exports.done = false;
 require('./b');            // 去执行 b
 exports.done = true;       // 回来才补上
 // b.js
 const a = require('./a');
-console.log('b 看到 a.done =', a.done);   // false —— 拿到的是半成品 A！
+console.log('b 看到 a.done =', a.done);   // false —— 拿到的是半成品 A（done 还未被置 true）
 ```
 
 启示：**不要在模块顶层依赖"另一个循环模块的完整导出"**；要么打破环（提取公共模块），要么把使用推迟到函数调用时（那时 A 已加载完）。ESM 的循环依赖处理不同（live binding，见下一关）。

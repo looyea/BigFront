@@ -2,6 +2,20 @@
 
 > 目标：建立 Solid 的两条支柱心智——**signal 细粒度响应式**（更新只精准命中真正依赖它的那一个订阅者，而非重跑组件）与**编译期把 JSX 拆成命令式 DOM 操作**（组件挂载时执行一次、之后默认不再执行）；把这套与 React 的"重执行整函数 + diff"、Svelte 的"编译器消灭 runtime"三方对照清楚，说清何时该选 Solid、何时不该（呼应 svelte-overview、react-render-model、solid-signals）
 
+## 〇、先把 Solid 跑起来
+
+Solid 需要一个支持其 JSX 编译的工程才能跑（裸浏览器看不懂 JSX，也享受不到它的编译期拆 DOM）。最省事的是 Vite 的 Solid 社区模板（完整起项目与全栈在 SolidStart，见 L7）：
+
+```bash
+# 目的：三分钟起一个能跑 Hello World 的 Solid 工程
+npm create vite@latest my-solid-app -- --template solid-ts   # Solid 社区维护的 Vite 模板；纯 JS 用 solid
+cd my-solid-app
+npm install
+npm run dev        # http://localhost:5173
+```
+
+它靠 `vite-plugin-solid` 把 JSX 编译成“只建一次、精确更新”的 DOM 命令（正是支柱二的落地）。本课代码片段默认发生在 `src/App.tsx` 的组件函数里；入口 `src/index.tsx` 用 `render(() => <App />)` 挂载（≈ Vue 的 `createApp().mount`、React 的 `createRoot().render`，细节后讲）。
+
 ## 一、一句话抓住 Solid
 
 Solid 常被称为"长得像 React 的 Svelte"，但这话只对一半。更准的说法是：**Solid = 保留 JSX 写作体验 + 细粒度响应式内核 + 编译期把视图拆成一次性 DOM 命令**。它同时借了两家的东西——API 形态像 React（`createSignal` 而非 `$state`、JSX 而非模板），运行时理念像 Svelte（编译优化、没有虚拟 DOM 常驻 diff）。

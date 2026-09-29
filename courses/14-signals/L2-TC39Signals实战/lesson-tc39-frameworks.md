@@ -21,12 +21,14 @@
 Angular 17 引入 signals、19 之后把它推成默认心智（signals-first）。API 形状：
 
 ```ts
+// 目的：Angular signals—读是函数调用 count()、写是方法 set/update
 import { signal, computed, effect } from '@angular/core';
 
 const count = signal(0);
-count.set(5);            // 方法式写
-count.update((c) => c + 1);
-const double = computed(() => count() * 2);   // 读是函数调用
+count.set(5);            // ✅ 方法式写，直接置 5
+count.update((c) => c + 1);   // ✅ 基于旧值 +1→6，精确标记依赖它的组件脏
+const double = computed(() => count() * 2);   // ✅ 读是函数调用，惰性得 12
+// ❌ 把 count 当普通变量写 count * 2→ 漏了括号读不出值；Angular signal 是类实例不是 getter
 ```
 
 三个要点：
@@ -38,13 +40,15 @@ const double = computed(() => count() * 2);   // 读是函数调用
 ## 三、Preact：@preact/signals，同形派的日常
 
 ```jsx
+// 目的：@preact/signals—.value 读写，组件里直接放 signal 由绑定层自动解包+订阅
 import { signal, computed, effect } from '@preact/signals';
 
 const count = signal(0);
-count.value++;                       // .value 读写
-const double = computed(() => count.value * 2);
+count.value++;                       // ✅ .value 读写，现 count.value=1
+const double = computed(() => count.value * 2);   // ✅ 依赖自动追踪，得 2
 
-function P() { return <p>{double}</p>; }  // 组件里直接放 signal，绑定层自动解包+订阅
+function P() { return <p>{double}</p>; }  // ✅ 直接放 signal，绑定层解包并订阅，count 变则重渲染
+// ❌ const { value } = count 解构→ 拷走了当时快照，后续 count.value++ 不会更新这个 value（丢响应）
 ```
 
 要点：`@preact/signals-core` 是**框架无关**的纯 signal 实现（约 4KB），浏览器、Node、React（经 @preact/signals-react）都能用；它对提案的贡献是证明了"同形 API 可以脱离任何框架活着"。风险面：signals-react 因绕过 React 渲染模型（在编译器配合下直接改 DOM 文本节点）曾与 React 团队公开争论——**绑定层怎么"骗过"宿主框架的 diff，是 signal 落地 React 世界最大的工程争议**（呼应 13 包 solid-signals 的细粒度更新）。
@@ -53,10 +57,13 @@ function P() { return <p>{double}</p>; }  // 组件里直接放 signal，绑定�
 
 ```svelte
 <script>
-  let count = $state(0);           // 看起来是普通变量
-  let double = $derived(count * 2);
-  $effect(() => document.title = String(count));
+  // 目的：runes—看起来是普通变量，实为编译器翻译为底层 signal 调用
+  let count = $state(0);           // ✅ 响应式状态，编译后是一个 signal
+  let double = $derived(count * 2);   // ✅ 声明式派生，count 变则重算
+  $effect(() => document.title = String(count));   // ✅ 副作用，读 count 自动订阅
+  // ❌ $derived/$effect 只能在顶层/组件作用域用，放进普通回调里会失去编译期跟踪
 </script>
+<!-- ✅ 直接写 count、自增 count++ 都不需 .value 或 getter 括号，都是编译器代打 -->
 <button onclick={() => count++}>{count}</button>
 ```
 

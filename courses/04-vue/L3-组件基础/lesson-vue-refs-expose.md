@@ -8,9 +8,11 @@
 
 ```vue
 <script setup>
+// 目的：模板 ref 变量名与 ref="xxx" 匹配，拿到 DOM 元素后命令式操作
 import { ref, onMounted } from 'vue';
-const inputEl = ref(null);           // 指向 DOM 元素
-onMounted(() => inputEl.value.focus());  // ✅ 挂载后才有实例
+const inputEl = ref(null);           // 初始 null，挂载后指向 DOM 元素
+onMounted(() => inputEl.value.focus());  // ✅ 挂载后才有实例，聚焦输入框
+// ❌ 在 setup 顶层就 inputEl.value.focus() → 此时为 null，报 Cannot read focus of null
 </script>
 <template>
   <input ref="inputEl" />            <!-- ref 名要和 setup 里的变量对应 -->
@@ -29,9 +31,10 @@ onMounted(() => inputEl.value.focus());  // ✅ 挂载后才有实例
 
 ```vue
 <script setup>
+// 目的：useTemplateRef 显式取模板引用，与同名普通变量不混、TS 自动推元素类型
 import { useTemplateRef, onMounted } from 'vue';
-const el = useTemplateRef('input');   // 明确"拿模板里 ref=\"input\" 的对象"
-onMounted(() => el.value?.focus());
+const el = useTemplateRef('input');   // 明确"拿模板里 ref=\"input\" 的对象"，类型为 Ref<HTMLInputElement|null>
+onMounted(() => el.value?.focus());   // ?. 容错：未挂载时是 null
 </script>
 <template><input ref="input" /></template>
 ```
@@ -42,8 +45,9 @@ onMounted(() => el.value?.focus());
 ## 三、v-for 里的 ref、函数 ref、动态 ref 名
 
 ```vue
+<!-- 目的：函数 ref ——元素挂载时以 el 调用、卸载时以 null 调用，正好做第三方实例 init/dispose -->
 <!-- 数组 ref：Vue 把每个元素塞进数组（3.5 起自动，需给 :ref 用同一函数或数组 ref） -->
-<input v-for="n in 3" :key="n" :ref="els => (inputs[n] = els)" />
+<input v-for="n in 3" :key="n" :ref="els => (inputs[n] = els)" />   <!-- els 为该 DOM 元素，卸载时回调收到 null -->
 
 <!-- 函数 ref：完全掌控拿到/释放元素的时机 -->
 <div :ref="(el) => { if (el) mountWidget(el); else unmountWidget(); }"></div>
@@ -59,10 +63,12 @@ onMounted(() => el.value?.focus());
 ```vue
 <!-- Child.vue -->
 <script setup>
+// 目的：默认封闭，子组件显式 defineExpose 后，父才能通过组件 ref 调其方法
 import { ref } from 'vue';
 const count = ref(0);
 function reset() { count.value = 0; }
 defineExpose({ reset, count });   // 显式开放给父
+// ❌ 不写 defineExpose：父里 child.value.reset 是 undefined（保护封装）
 </script>
 
 <!-- Parent.vue -->

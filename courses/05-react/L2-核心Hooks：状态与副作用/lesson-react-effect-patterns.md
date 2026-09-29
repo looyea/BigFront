@@ -7,16 +7,18 @@
 ## 一、数据获取 effect 的标准骨架
 
 ```jsx
+// 目的：数据获取 effect 标准骨架——两把锁防竞态与对已卸载组件 setState
 useEffect(() => {
   const ctrl = new AbortController();
   let ignore = false;                 // 防对已卸载组件 setState
   setLoading(true); setError(null);
   fetch(`/api/user/${id}`, { signal: ctrl.signal })
     .then(r => r.json())
-    .then(d => { if (!ignore) { setData(d); setLoading(false); } })
+    .then(d => { if (!ignore) { setData(d); setLoading(false); } })   // ✅ 只有未过期才写 state
     .catch(e => { if (!ignore && e.name !== 'AbortError') { setError(e); setLoading(false); } });
   return () => { ignore = true; ctrl.abort(); };   // 卸载/重跑：取消 + 标记忽略
 }, [id]);
+// ❌ 不做两把锁：id 1→2 快速切换时旧请求后回→把 2 的结果覆盖成 1（旧数据闪现）
 ```
 两把锁缺一不可：
 - **`AbortController`**：真正取消在途请求，省流量、避免慢覆盖快；
@@ -33,11 +35,13 @@ useEffect(() => {
 ## 三、订阅 / 事件 / 外部 store
 
 ```jsx
+// 目的：订阅全局事件——add 与 remove 必须成对，否则重复绑定/泄漏
 useEffect(() => {
   const onResize = () => setW(window.innerWidth);
   window.addEventListener('resize', onResize);
-  return () => window.removeEventListener('resize', onResize);   // 必须对称移除
+  return () => window.removeEventListener('resize', onResize);   // ✅ 对称移除
 }, []);
+// ❌ onResize 每次渲染新建、却把它写进依赖→反复解绑重绑；或者根本忘 remove→泄漏
 ```
 要点：**add 与 remove 成对**（呼应 node-events 泄漏、vue-events off）。集成非 React 库（图表/地图）：在 effect 里 `new Lib(el)`、cleanup 里 `lib.dispose()`。高频外部 store 的订阅 React 提供专用 `useSyncExternalStore`（呼应 react-advanced-hooks）。
 
@@ -48,11 +52,13 @@ useEffect(() => {
 当你要"读 DOM 尺寸/位置后立即再改 DOM，且不想让用户看到中间闪烁"：
 
 ```jsx
+// 目的：DOM 变更后、绘制前同步读布局再改，避免用户看到中间闪烁
 const ref = useRef(null);
 useLayoutEffect(() => {
-  const h = ref.current.offsetHeight;   // 测量
+  const h = ref.current.offsetHeight;   // 测量（✅ 此时 DOM 已更新但未 paint）
   // 同步调整，避免 paint 后跳动
 }, [data]);
+// ⚠️ SSR 下 useLayoutEffect 会告警（服务端无 DOM），要守卫或改 useEffect
 ```
 - 它在 **DOM 变更后、绘制前同步**跑（阻塞绘制），普通 effect 在绘制后异步跑；
 - **SSR 会告警**（服务端无 DOM），要么 `import.meta.client` 守卫、要么优先 useEffect（呼应 react-useeffect 第四节、08-nuxt/SSR）。
@@ -80,10 +86,12 @@ useLayoutEffect(() => {
 
 effect 回调不能是 async（返回值会被当 cleanup），要内部定义 async 函数：
 ```jsx
+// 目的：effect 回调不能直接是 async（返回值会被误当 cleanup），内部包一个 async IIFE
 useEffect(() => {
   (async () => { try { const d = await load(); if(!ignore) setData(d); }
                  catch(e){ if(!ignore) setError(e); } })();
 }, [id]);
+// ❌ useEffect(async () => {...}, []) → async 函数返回 Promise，React 报 “destroy function returned from a effect must be a function”
 ```
 别吞异常——要么 setState 成错误态让 UI 呈现，要么冒泡到 ErrorBoundary（呼应 react-render-control、node-async-errors、exp 错误中间件分层兜底哲学）。
 

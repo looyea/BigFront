@@ -33,6 +33,7 @@
 **箭头函数不参与上述任何一条**。它的 this 就是**定义时外层最近一个普通函数的 this**，一路向上，最外层是模块的 `undefined`（ESM）或 `globalThis`（脚本）。
 
 ```js
+// 目的：对比对象里“普通方法拿 obj” vs “直接写箭头方法拿不到 obj”
 const obj = {
   name: 'Ann',
   normal() { return this?.name; },
@@ -44,6 +45,7 @@ obj.arrow();   // undefined（this 走模块外层）
 
 想让箭头函数拿到 obj？只能在**普通函数里定义它**：
 ```js
+// 目的：想让箭头拿到 obj，必须在普通函数内定义它（this 沿词法链向外找最近普通函数的 this）
 const obj = {
   name: 'Ann',
   get() {
@@ -61,6 +63,7 @@ obj.get(); // 'Ann'
 ## 三、箭头函数没有 prototype、不能被 new
 
 ```js
+// 目的：证明箭头函数无 prototype、不能 new（对比 class）
 const A = () => {};
 A.prototype;         // undefined
 new A();             // TypeError: A is not a constructor
@@ -83,8 +86,9 @@ new B();             // ✅
 
 **正确替代**：rest 参数。
 ```js
+// 目的：用 rest 参数代替箭头函数里不可用的 arguments
 const sum = (...nums) => nums.reduce((a, b) => a + b, 0);
-sum(1, 2, 3); // 6
+sum(1, 2, 3); // 6（rest 将三个实参收集成真数组 [1,2,3] 后求和）
 ```
 
 rest 参数是**真数组**，arguments 是**类数组**——rest 更实用。
@@ -116,6 +120,7 @@ rest 参数是**真数组**，arguments 是**类数组**——rest 更实用。
 ## 六、this 场景矩阵（**默写到能 3 秒反应**）
 
 ```js
+// 目的：this 场景矩阵——逐行写出不同调用方式下 this 的实际值
 function foo() { return this; }
 const obj = { foo, bar: () => foo() };
 
@@ -143,8 +148,9 @@ const lostA = c.a; lostA();  // c（箭头的 this 定死，不会丢）
 ## 七、隐式返回 & 对象字面量的坑
 
 ```js
-const bad = () => { a: 1 };        // 返回 undefined！{} 被解析成块，a: 是标签语句
-const good = () => ({ a: 1 });    // 加括号才返回对象
+// 目的：箭头隐式返回对象字面量时必须加括号，否则 {} 被当代码块
+const bad = () => { a: 1 };        // ❌ 返回 undefined！{} 被解析成块，a: 是标签语句
+const good = () => ({ a: 1 });    // ✅ 加括号才返回对象 { a: 1 }
 ```
 
 单参数可省括号：`x => x * 2`；无参或多参必须写 `()`：`() => 1`、`(a, b) => a + b`。

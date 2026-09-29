@@ -5,13 +5,15 @@
 Nuxt/Nitro 全栈用同一个 `createError` 表达"这是一次可识别的失败"：
 
 ```ts
+// 目的：统一错误契约——可预期的失败用 createError 带状态码表达，前后端据此分支
 // server/api/articles/[id].get.ts
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
   const a = await db.article(id);
-  if (!a) throw createError({ statusCode: 404, statusMessage: '文章不存在' });
+  if (!a) throw createError({ statusCode: 404, statusMessage: '文章不存在' });  // ✅ Nitro 转 404 JSON，客户端 error.statusCode 可分支
   return a;
 });
+// ❌ 用 throw new Error('not found') → 无 statusCode，落到 500，前端无法区分“没找到”与“服务器坏了”
 ```
 
 `createError({ statusCode, statusMessage, message, data, fatal, error })` 的关键字段：
@@ -28,11 +30,13 @@ export default defineEventHandler(async (event) => {
 
 ```vue
 <script setup>
+// 目的：局部可恢复错误就地处理——读 useFetch 的 error ref，别动辄升级到全局错误页
 const { data, error, refresh } = await useFetch('/api/articles/1');
 if (error.value) {
-  // error.value 是被序列化的 CreateError：有 statusCode/statusMessage/data
-  const code = error.value.statusCode;   // 404 → 显示"未找到"，401 → 跳登录
+  // ✅ error.value 是被序列化的 createError：有 statusCode/statusMessage/data（生产不含 message/stack）
+  const code = error.value.statusCode;   // ✅ 404 → 原地显示“未找到”，401 → navigateTo 登录，可重试就调 refresh()
 }
+// ❌ 每个 error 都 showError(err) → 小失败也弹整页 error.vue，用户动不动白屏
 </script>
 ```
 
@@ -50,16 +54,18 @@ if (error.value) {
 
 ```vue
 <!-- app/error.vue -->
+<!-- 目的：应用级兜底页——fatal 错误时独立渲染一棵最小应用，自包含、不依赖全局 store/布局 -->
 <script setup>
-const props = defineProps({ error: Object });
-const is404 = computed(() => props.error?.statusCode === 404);
-function goHome() { clearError({ redirect: '/' }); }
+const props = defineProps({ error: Object });                 // ✅ Nuxt 把 error 作为 prop 传入
+const is404 = computed(() => props.error?.statusCode === 404); // ✅ 只按 statusCode 分支
+function goHome() { clearError({ redirect: '/' }); }           // ✅ 清全局错误态并跳首页
 </script>
 <template>
   <main class="err">
-    <h1>{{ props.error?.statusCode || 500 }}</h1>
-    <p>{{ is404 ? '页面不存在' : '出了点问题，请稍后再试' }}</p>
+    <h1>{{ props.error?.statusCode || 500 }}</h1>              <!-- ✅ 展示状态码 -->
+    <p>{{ is404 ? '页面不存在' : '出了点问题，请稍后再试' }}</p><!-- ✅ 通用文案，不外露内部信息 -->
     <button @click="goHome">回首页</button>
+    <!-- ❌ 在这里渲染 error.message / error.stack → 生产也可能泄露 SQL/密钥/内部路径（安全红线） -->
   </main>
 </template>
 ```

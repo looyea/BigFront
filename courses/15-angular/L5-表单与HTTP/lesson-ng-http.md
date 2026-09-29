@@ -5,15 +5,18 @@
 ## 一、注册：provideHttpClient 与 withFetch
 
 ```ts
+// 目的：provideHttpClient 注册——withFetch 走 fetch 底层、withInterceptors 数组顺=洋葱包裹序
 // app.config.ts
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 
 providers: [
   provideHttpClient(
     withFetch(),                    // v17+ 用 fetch 底层（支持 SSR 更顺）
-    withInterceptors([authInterceptor, loggingInterceptor]),
+    withInterceptors([authInterceptor, loggingInterceptor]),   // 先注册先包裹
   ),
 ],
+// ✅ 函数式拦截器集中注册，顺序即洋葱模型
+// ❌ 继续用已废弃的 HttpClientModule + HTTP_INTERCEPTORS multi provider→v17 前旧世界，standalone 工程不该出现
 ```
 
 旧写法（已废弃）：`HttpClientModule` + `HTTP_INTERCEPTORS` multi provider——v17 后不再用。
@@ -21,45 +24,51 @@ providers: [
 ## 二、类型化请求
 
 ```ts
+// 目的：类型化请求——泛型定响应、responseType 定载体、observe 定拿多少
 interface User { id: number; name: string; email: string; }
 
 // GET 带泛型
 getUser(id: number): Observable<User> {
-  return this.http.get<User>(`/api/users/${id}`);
+  return this.http.get<User>(`/api/users/${id}`);   // 响应自动推断为 User
 }
 
 // POST 带请求体与响应类型
 createUser(data: Omit<User,'id'>): Observable<User> {
-  return this.http.post<User>('/api/users', data);
+  return this.http.post<User>('/api/users', data);   // 第二参为请求体
 }
 
 // 带 params + headers + responseType
 downloadReport(type: string): Observable<Blob> {
   return this.http.get('/api/reports', {
-    params: { type },
-    responseType: 'blob',
+    params: { type },          // 自动拼成 ?type=...
+    responseType: 'blob',      // 声明响应为二进制，返回 Observable<Blob>
   });
 }
 
 // observe: 'response' 拿完整 HttpResponse（含 headers/status）
-this.http.get<User>('/api/me', { observe: 'response' })
-  .subscribe(res => console.log(res.headers.get('X-Total')));
+this.http.get<User>('/api/me', { observe: 'response' })   // 默认 observe:'body' 只要 body，改成 response 拿全部
+  .subscribe(res => console.log(res.headers.get('X-Total')));   // 能读自定义响应头
+// ✅ 泛型给响应类型、responseType:'blob' 下载、observe:'response' 拿 headers/status
+// ❌ 声明 get<Blob> 却不设 responseType:'blob'→实际拿到的是解析后的文本而非 Blob
 ```
 
 ## 三、函数式拦截器（v15+ 正统）
 
 ```ts
+// 目的：函数式拦截器（v15+ 正统）——给请求注入 Authorization 头
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = inject(AuthService).token();  // inject 合法（在拦截器上下文中）
-  if (!token) return next(req);
+  if (!token) return next(req);              // 无 token→原样放行
 
-  const cloned = req.clone({
+  const cloned = req.clone({                 // req 不可变，必须 clone 再改
     setHeaders: { Authorization: `Bearer ${token}` },
   });
-  return next(cloned);
+  return next(cloned);                        // 往下传，否则请求中断
 };
+// ✅ clone 设 header + return next()：拦截器只增强请求不阻断链
+// ❌ 忘了 return next(...)→拦截器没往下传→请求根本不发出
 ```
 
 执行链：请求 → authInterceptor → loggingInterceptor → 后端 → loggingInterceptor → authInterceptor → 组件。**注册顺序 = 洋葱模型**（先注册先包裹）。
@@ -67,15 +76,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 与旧 class 写法对比：
 ```ts
 // ❌ 旧（v15 前的 HttpInterceptor class + HTTP_INTERCEPTORS multi provider）
+// 目的：旧 class 拦截器——仅供读存量代码识别，新工程改用上面的函数式
 @Injectable()
-export class AuthInterceptor implements HttpInterceptor { ... }
-// 注册：{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+export class AuthInterceptor implements HttpInterceptor { ... }   // 要 implements 接口、写 intercept 方法
+// 注册：{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }   // multi 三件套样板
 ```
 函数式更轻（无 class/DI）、可 tree-shake、与 standalone 天然兼容。
 
 ## 四、错误处理：HttpErrorResponse 判别
 
 ```ts
+// 目的：错误处理——HttpErrorResponse 三分支判别
 import { HttpErrorResponse } from '@angular/common/http';
 
 this.http.get('/api/data').pipe(
@@ -89,14 +100,17 @@ this.http.get('/api/data').pipe(
       // 服务端错误（4xx/5xx）
       console.error(`Server error: ${err.status} - ${err.error?.message}`);
     }
-    return throwError(() => err);  // 或 of(fallback) 降级
+    return throwError(() => err);  // 或 of(fallback) 降级——必须返回一个 Observable
   }),
 ).subscribe(...);
+// ✅ 按 ErrorEvent/status 0/其余 区分三类错，回一个 Observable 保持流不断
+// ❌ catchError 里既不前 throwError 也不返 of()→返回 undefined→下游崩或流静默死掉
 ```
 
 ## 五、retry / timeout 操作符
 
 ```ts
+// 目的：retry / timeout 操作符——超时与退避重试
 import { retry, timeout } from 'rxjs/operators';
 
 this.http.get('/api/critical')
@@ -105,26 +119,31 @@ this.http.get('/api/critical')
     retry({ count: 3, delay: 1000 }),  // 失败重试 3 次、每次等 1s
   )
   .subscribe(...);
+// ✅ timeout 包在 retry 里→单次超时会触发重试，适合瞬时拖动不稳定的接口
+// ❌ 对 400/401 这类确定性错也盲目 retry→每次必失败仍重试 3 次→拖慢且徒增负载
 ```
 
 ## 六、拦截器里的异步：token 刷新场景
 
 ```ts
+// 目的：拦截器里的异步——401 时刷新 token 并重试原请求
 export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
-      if (err.status === 401 && !req.url.includes('/login')) {
+      if (err.status === 401 && !req.url.includes('/login')) {   // 只对业务请求的 401 响应，登录/刷新本身除外
         return auth.refreshToken$().pipe(
-          switchMap(() => next(req.clone({
+          switchMap(() => next(req.clone({                     // 刷新成功→用新 token 重发原请求
             setHeaders: { Authorization: `Bearer ${auth.token()}` },
           }))),
         );
       }
-      return throwError(() => err);
+      return throwError(() => err);   // 非 401 →原样抛出
     }),
   );
 };
+// ✅ 用 URL 白名单排除 /login、/refresh 本身，避免刷新请求再触发刷新
+// ❌ 不判断请求 URL→刷新 token 请求自身也 401→又触发刷新→无限递归刷新风暴
 ```
 
 ## 七、withFetch 与 fetchBackend

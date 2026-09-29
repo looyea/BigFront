@@ -14,16 +14,18 @@ React 有 mount/update/unmount 三段是因为组件会反复重执行。**Solid
 ## 二、onMount：DOM 就绪后、只此一次
 
 ```js
+// 目的：onMount—DOM 就绪后只跑一次；SSR 期不执行，碰 document/第三方的初始化必须放这
 import { onMount } from "solid-js";
 
 function Chart() {
-  let el;                       // 用 ref 拿 DOM（L4）
+  let el;                       // ✅ 用 ref 拿 DOM 引用（L4 详述）
   onMount(() => {
-    const chart = new ThirdPartyChart(el);          // 首次渲染后、DOM 已挂载
-    onCleanup(() => chart.destroy());               // 卸载时回收
+    const chart = new ThirdPartyChart(el);          // ✅ 初始渲染后 DOM 已挂载，第三方库能拿到真节点
+    onCleanup(() => chart.destroy());               // ✅ 注册回收：作用域销毁时 destroy，不留悬挂实例
   });
   return <div ref={el} />;
 }
+// ❌ 把 new ThirdPartyChart(el) 写在组件顶层（onMount 外）→ SSR 期无 DOM/window，服务端直接 ReferenceError、构建/水合即崩
 ```
 
 要点：
@@ -37,10 +39,12 @@ function Chart() {
 `onCleanup(fn)` 把 `fn` 注册到**当前响应式作用域**上，作用域被**销毁(dispose)或刷新(refresh)**时调用 `fn`。官方关键句：**`onCleanup` 依据的是响应式 ownership 树，而不是 DOM 是否被移除**——只要建立它的那个 owner（组件/root/effect 作用域）被释放，就会触发。
 
 ```js
+// 目的：onCleanup 按 Owner 作用域回收—effect 重跑前 + 作用域销毁时都会调上一次注册的 cleanup
 createEffect(() => {
   const id = setInterval(() => tick(), 1000);
-  onCleanup(() => clearInterval(id));   // 每次 effect 重跑前 & 作用域销毁时，先清掉上一个 interval
+  onCleanup(() => clearInterval(id));   // ✅ 每次 effect 重跑前先清掉上一个 interval，定时器不叠加
 });
+// ❌ 省掉 onCleanup → 路由切走后 setInterval 仍在跑（闭包还引用已卸载节点），典型内存泄漏
 ```
 
 注意这里的双重语义：effect **每次因依赖变化重跑**，Solid 会在重跑前调用上一次注册的 cleanup——所以"定时器不会叠加"。忘了 `onCleanup`，就是经典的"路由切走后轮询还在跑/内存泄漏"（L1 手写 5 埋的点）。
@@ -60,17 +64,19 @@ createEffect(() => {
 默认所有东西随组件 Owner 一起 dispose。但有时你要一个**跨组件生命周期**、或**在回调里新建但不想被外层 memo/effect 重算牵连**的作用域。`createRoot(fn)` 建立一个新的、**不会随父级自动释放**的非追踪 Owner 作用域，把 `dispose` 作为第二个参数交给你：
 
 ```js
+// 目的：createRoot—建一个不随父级自动释放的独立作用域，把 dispose 交给你手动回收
 import { createRoot } from "solid-js";
 
 const dispose = createRoot((dispose) => {
-  createEffect(() => console.log("running", someSignal()));   // 不挂在当前组件下
+  createEffect(() => console.log("running", someSignal()));   // ✅ 这个 effect 不挂在当前组件 Owner 下，组件卸载它也不随之释放
   // 需要时手动释放：
   // dispose();
   return dispose;
 });
 
-// 用完显式回收：
+// ✅ 用完显式回收：由你负责，没人替你 dispose
 dispose();
+// ❌ 开了 createRoot 却从不调 dispose → 里面所有 signal/effect 永久存活，正是"outside createRoot 永不回收"的泄漏翻版
 ```
 
 典型用途：① 在 memo/effect 内部起一段"不该随本次重算被销毁"的长期订阅；② 命令式地创建一块生命周期独立于周围组件的响应式逻辑，再手动 `dispose()`。原则：**能用组件自带 Owner 就别开 root**，`createRoot` 是为"故意脱离自动回收"准备的，用了就得自己负责 dispose，否则正是上面那个泄漏。

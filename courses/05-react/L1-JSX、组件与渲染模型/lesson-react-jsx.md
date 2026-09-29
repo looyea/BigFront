@@ -4,10 +4,30 @@
 
 ---
 
+## 〇、先把 React 跑起来（本课的代码写在哪）
+
+React 不像 Vue 那样有个开箱即用的“起步工程”讲——它需要一个工程把 JSX 编译、把依赖打包。起步最省事的姿势是用 Vite 的 React 模板（完整的创建与部署留到后面的关，这里只求“有个能跑的地方”）：
+
+```bash
+# 目的：三分钟起一个能跑 Hello World 的 React 工程（React 官方推荐用构建工具，不推荐裸 CDN）
+npm create vite@latest my-react-app -- --template react-ts   # 想纯 JS 用 react（社区模板）
+cd my-react-app
+npm install        # 装依赖，生成 node_modules
+npm run dev        # 起开发服务器，终端打印 http://localhost:5173
+```
+
+打开地址会看到 Vite+React 的欢迎页。之后本课所有 JSX 片段都写在 `src/App.jsx`（或 `.tsx`）里——那是根组件。它与 Vue 工程的对应关系：`main.jsx` ≈ `main.js`（里面 `createRoot(document.getElementById('root')).render(<App />)` 就是 React 的“挂载”）、`App.jsx` ≈ `App.vue`。挂载入口与 Vue 的 `createApp().mount('#app')` 不同，细节到 react-component / react-render-model 再讲。
+
+> 概念课为讲清原理，下面的 JSX 代码块常写成脱离工程的片段——它们默认都发生在 `App.jsx` 的组件函数体内；改完回工程 `npm run dev` 会热更新（HMR，同 Vue 那关讲的机制）。
+
+---
+
 ## 一、JSX 到底是什么
 
 ```jsx
+// 目的：一行 JSX——看着像 HTML，实为 JS 表达式（name 是当前作用域变量）
 const el = <h1 className="title">Hello {name}</h1>;
+// ❌ 写 class="title" →  React 警告且样式可失效（class 是 JS 保留字，须 className）
 ```
 它**不是** HTML 字符串，而是 JS 表达式，编译后是函数调用（旧写法）：
 ```js
@@ -38,11 +58,14 @@ const el = jsx('h1', { className: 'title', children: ['Hello ', name] });
 ## 三、`{}` 插值：是表达式不是语句
 
 ```jsx
-<p>结果：{a + b}</p>            {/* 表达式 */}
+// 目的：{} 里只能放表达式（有返回值的），不能放 if/for/var 语句
+<p>结果：{a + b}</p>            {/* ✅ 表达式 */}
 <p>{isLoggedIn ? 'Hi' : '登录'}</p>
 <p>{list.length}</p>
 <p>{user.name}</p>              {/* 点取值 */}
 <p>{data?.count ?? 0}</p>       {/* 可选链 + 空值合并（呼应 ES 包）*/}
+{/* ❌ <p>{if (x) 'a'}</p> → 编译报错（if 是语句无返回值，要逻辑就用三元/&&/.map()）*/}
+{/* ⚠️ {count && <X/>} 当 count=0 会渲染出 "0"（false/null/undefined 才渲染为空，0 会显）*/}
 ```
 - `{}` 里放**表达式**，不能放 `if`/`for`/`var` 等**语句**（语句无返回值）；要逻辑就三元、`&&`、`.map()`；
 - 值渲染规则：`false`/`null`/`undefined` 渲染为**空**（这就是 `{ok && <X/>}` 条件渲染的原理），但 **`0` 会被渲染出来**（`{count && ...}` 当 count=0 会显示 0 的经典坑）。
@@ -52,12 +75,14 @@ const el = jsx('h1', { className: 'title', children: ['Hello ', name] });
 ## 四、children 与数组渲染
 
 ```jsx
+// 目的：标签之间的内容成为 props.children；数组自动展开，每个元素必须给 key
 <Card>
   <p>两个标签之间的内容成为 props.children</p>
 </Card>
 
 <ul>
-  {items.map(item => <li key={item.id}>{item.name}</li>)}
+  {items.map(item => <li key={item.id}>{item.name}</li>)}   // ✅ 稳定唯一 id 作 key
+  {/* ❌ 不写 key → 控制台警告 "Each child in a list should have a unique key"，列表重排会错乱复用 */}
 </ul>
 ```
 - 标签之间的东西是 `props.children`（呼应 react-component）；
@@ -70,7 +95,9 @@ const el = jsx('h1', { className: 'title', children: ['Hello ', name] });
 
 JSX 里 `{}` 插入的字符串会被 React **自动转义**，天然防注入：
 ```jsx
-<p>{userInput}</p>   {/* "<script>" 会被转成文本，不执行 */}
+// 目的：{} 插入的字符串被 React 自动转义，天然防注入
+<p>{userInput}</p>   {/* ✅ "<script>" 会被转成文本，不执行 */}
+{/* ❌ 直接 dangerouslySetInnerHTML={{ __html: userInput }} 且未清洗 → XSS */}
 ```
 要渲染可信 HTML 富文本才用 `dangerouslySetInnerHTML={{ __html: clean }}`——**这是逃生舱**，未经清洗的用户内容绝对不能进（否则 XSS，呼应 vue-template-syntax 的 v-html XSS、exp-security/OWASP）。
 

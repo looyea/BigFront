@@ -42,6 +42,7 @@ onPush 策略在 zoneless 下：不写任何变更检测配置（默认就是精
 ## 三、provideZonelessChangeDetection 与迁移路径
 
 ```ts
+// 目的：provideZonelessChangeDetection——v18-20 手动 opt-in 开 zoneless（v21+ 默认无需写）
 // app.config.ts（v18-20 手动 opt-in）
 import { provideZonelessChangeDetection } from '@angular/core';
 
@@ -51,6 +52,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
   ],
 };
+// ✅ v21+ 新工程默认 zoneless——app.config 里没有 zone provider 就对了
+// ❌ v18-20 工程只加了 provider 却没把状态迁到 signal→非 signal 改动 zoneless 感知不到→视图不更新
 ```
 
 v18-v20 工程切 zoneless 的 checklist：① 所有状态迁移到 signal（不用 signal 管的值 zoneless 不知道变）；② 第三方库评估（RxJS Observable 用 toSignal 桥）；③ setTimeout 等非 signal 回调里手动写 signal（不写就不更新）；④ 测试切 `fixture.detectChanges()` → `await fixture.whenStable()`。**v21+ 新工程默认 zoneless 零配置**——你看到 ng new 产物 app.config 没有 zone provider 就对了。
@@ -63,12 +66,15 @@ zoneless 下仍有『值不是 signal 但视图需要更新』的场景：
 
 兜底：
 ```ts
+// 目的：非 signal 驱动的兜底——普通属性改了手动 markForCheck
 private cdr = inject(ChangeDetectorRef);
 
 onThirdPartyEvent(data: any) {
   this.result = data;           // 普通属性——zoneless 不知道它变了
-  this.cdr.markForCheck();      // 手动标脏→下一轮调度检查本组件
+  this.cdr.markForCheck();      // 手动标脏→下一轮只增量检查本组件
 }
+// ✅ 兜底：无法改成 signal 时（第三方回调），markForCheck 只标脏本组件而非全树
+// ❌ 到处 markForCheck 而不迁 signal→退化成手动脏检查、失去精确性；正解是消灭非 signal 突变路径
 ```
 
 markForCheck 在 zoneless 下的语义：标记当前组件需要检查→ApplicationRef 调度一次增量 CD（只查标脏路径）。性能比旧时代好——不再遍历全树。最佳实践：**消灭非 signal 突变路径**（改成 signal 写）而非到处 markForCheck。
@@ -86,15 +92,18 @@ markForCheck 在 zoneless 下的语义：标记当前组件需要检查→Applic
 - SSR 阶段自动 skip（afterRender 只在 browser 执行）。
 
 ```ts
+// 目的：afterNextRender——组件渲染到 DOM 后执行一次的真实 DOM 操作（替代旧 ngAfterViewInit）
 import { afterNextRender } from '@angular/core';
 
 constructor() {
   afterNextRender({
-    write: () => { this.chart = new Chart(this.el().nativeElement); },
-    read: () => { /* 读布局尺寸 */ },
-    mixedRead: () => { /* 先读后写 */ },
+    write: () => { this.chart = new Chart(this.el().nativeElement); },   // 此时才真在 DOM 里，能拿到节点
+    read: () => { /* 读布局尺寸 */ },                                     // 纯读阶段
+    mixedRead: () => { /* 先读后写 */ },                                 // 控制与其他 afterRender 的执行顺序
   });
 }
+// ✅ afterNextRender 渲到 DOM 后才跑、SSR 阶段自动 skip，适合图表/量尺寸
+// ❌ 把 new Chart(...) 直接写在 constructor→此时还没渲到 DOM，this.el() 拿不到节点→报错
 ```
 
 ## 六、性能与调试的实际变化

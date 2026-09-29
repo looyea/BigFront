@@ -13,6 +13,7 @@ JS 前 6 种原始类型（string / number / bigint / boolean / undefined / null
 ES6 引入 **Symbol**：**每次 `Symbol()` 都返回一个全宇宙唯一的原始值**，天然适合做「不撞车的属性键」。
 
 ```js
+// 目的：每次 Symbol() 都产全局唯一值——描述文字只供调试，不影响相等
 const a = Symbol('id');
 const b = Symbol('id');
 a === b;             // false —— 描述文字只是调试用
@@ -26,6 +27,7 @@ a.description;        // 'id'（ES2019）
 ## 二、Symbol 作属性：唯一键与半私有
 
 ```js
+// 目的：Symbol 键"半私有"——Object.keys/for-in/JSON 都忽略它，需专门 API 才能拿到
 const ID = Symbol('id');
 const user = { [ID]: 42, name: 'Ann' };
 
@@ -45,6 +47,7 @@ Reflect.ownKeys(user);                // ['name', Symbol(id)]  ← 全量
 ## 三、`Symbol()` vs `Symbol.for()`：注册表机制
 
 ```js
+// 目的：Symbol() 每次都新；Symbol.for() 走全局注册表，同 key 拿同一个
 const a = Symbol('x');
 const b = Symbol('x');
 a === b;                          // false
@@ -87,6 +90,7 @@ Symbol.keyFor(a);                  // undefined（a 不在注册表）
 上一关 es-coercion 提过：`+x` / `x == y` 触发 ToPrimitive，规则是 `hint: 'default'|'number'|'string'`。**在 valueOf / toString 之前，引擎先看 `Symbol.toPrimitive`**：
 
 ```js
+// 目的：toPrimitive 接管隐式转原始值，根据 hint 返回不同形状（优先于 valueOf/toString）
 const price = {
   amount: 100,
   currency: 'CNY',
@@ -109,6 +113,7 @@ price == '100 CNY'; // true              hint=default
 ## 六、`Symbol.toStringTag`：让 `[object Object]` 变好看
 
 ```js
+// 目的：toStringTag 自定义 Object.prototype.toString.call 输出的 [object XXX]
 class Vec {
   get [Symbol.toStringTag]() { return 'Vec'; }
 }
@@ -129,6 +134,7 @@ String(mapLike);                              // '[object MapLike]'
 ## 七、`Symbol.hasInstance`：**类**决定谁 `instanceof` 我
 
 ```js
+// 目的：hasInstance 把 instanceof 的判定权交给类自己（鸭子类型/跨 realm）
 class ArrayLike {
   static [Symbol.hasInstance](x) {
     return Array.isArray(x) || ArrayBuffer.isView(x);
@@ -148,6 +154,7 @@ new Uint8Array() instanceof ArrayLike; // true
 `Array.prototype.map` 内部会「new 一个和 this 相同构造器的新数组」——但**子类想改**这个行为：
 
 ```js
+// 目的：species 控制子类派生方法（map/filter）返回哪个构造器
 class MyArr extends Array {
   static get [Symbol.species]() { return Array; }   // map/filter 返回普通 Array 而不是 MyArr
 }
@@ -163,6 +170,7 @@ m.map(x => x * 2) instanceof Array;   // true
 ## 九、`Symbol.isConcatSpreadable`
 
 ```js
+// 目的：isConcatSpreadable 决定一个类数组对象在 concat 时是否被摊平
 const pseudoArr = {
   [Symbol.isConcatSpreadable]: true,
   length: 2, 0: 'a', 1: 'b',

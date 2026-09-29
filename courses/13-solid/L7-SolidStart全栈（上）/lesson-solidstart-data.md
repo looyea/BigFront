@@ -9,18 +9,21 @@ SolidStart v2 的数据加载围绕 **Solid Router 的 `query` API + `createAsyn
 - **`createAsync(() => fn())`**：在路由组件里**读取结果**，返回可响应的访问器，解析完成前为 undefined 语义。
 
 ```tsx
+// 目的：query 定义带缓存的取数 + createAsync 在组件里订阅结果—两者分工“怎么拿”/“怎么读”
 import { For } from "solid-js";
 import { createAsync, query } from "@solidjs/router";
 
 const getPosts = query(async () => {
   const res = await fetch("https://example.com/api/posts");
   return res.json() as Promise<Array<{ id: number; title: string }>>;
-}, "posts");
+}, "posts");   // ✅ 第二参“posts”是缓存键：同一查询跨组件/导航去重
 
 export default function PostsPage() {
-  const posts = createAsync(() => getPosts());
+  const posts = createAsync(() => getPosts());   // ✅ 返回可响应访问器，就绪前为 undefined
   return <For each={posts()}>{(post) => <li>{post.title}</li>}</For>;
 }
+// ❌ 不包 Suspense/不判空就直接 posts().map → 未解析时 posts() 为 undefined，读报错
+// ❌ 同一取数不命名缓存键、各组件各 fetch → 重复拉数据，失去 query 去重价值
 ```
 分工记牢：**query 管"怎么拿 + 缓存到哪个键"，createAsync 管"在组件里订阅结果"**。缓存失效与高级 query 行为由 Solid Router 负责（官方原话：需要更底层的缓存语义去查 Solid Router 参考）。
 
@@ -36,17 +39,19 @@ L5 的 `createResource` 是 **Solid 运行时原语**：组件内把异步包成
 
 查询要用**只在服务端存在的东西**（环境变量、数据库、会话）时，在函数体首行加 `"use server"` 指令——编译后**客户端只得到"调用入口"，函数体只在服务端需要时运行**：
 ```tsx
+// 目的："use server" 把函数体钉在服务端—客户端只拿到调用入口，密钥/DB/session 不下发
 import { query } from "@solidjs/router";
 import { useSession } from "@solidjs/start/http";
 
 const getCurrentUser = query(async () => {
-  "use server";
+  "use server";   // ✅ 首行指令：函数体只在服务端跑，SESSION_SECRET 不进客户端包
   const session = await useSession<{ userId?: string }>({
     password: process.env.SESSION_SECRET as string,
     name: "session",
   });
   return { userId: session.data.userId ?? null };
 }, "currentUser");
+// ❌ 漏写 "use server" 就摸 process.env/session → 按普通代码在调用侧（浏览器）执行，无服务端资源且密钥泄漏
 ```
 若不加指令，query 体就按普通代码走（在调用侧执行）——**"能不能直接摸服务端资源"的分水岭就是这一行**。（同一条 `"use server"` 指令也是 L8 服务端函数的地基。）
 
@@ -54,6 +59,7 @@ const getCurrentUser = query(async () => {
 
 想让用户**指针还没点进去、数据已在路上**？在路由文件导出 `route.preload`，把本页的 query 提前发出去：
 ```tsx
+// 目的：route.preload 在导航前就发出本页 query—与组件渲染并行，命中同一缓存键
 import { query, type RouteDefinition } from "@solidjs/router";
 
 const getPost = query(async (id: string) => {
@@ -63,8 +69,9 @@ const getPost = query(async (id: string) => {
 }, "post");
 
 export const route = {
-  preload: ({ params }) => getPost(params.id),
+  preload: ({ params }) => getPost(params.id),   // ✅ 用 params.id 热好数据，组件里 createAsync 直接接果
 } satisfies RouteDefinition;
+// ⚠️ preload 与消费方必须用同一 query+同参数才享缓存；键/参数对不上就白热一次
 ```
 预加载命中的是**同一个缓存键**，组件里 `createAsync(() => getPost(props.params.id))` 直接接果，不必等挂载。
 

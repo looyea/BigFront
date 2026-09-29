@@ -9,18 +9,21 @@
 ## 二、StateCreator 定义切片
 
 ```ts
+// 目的：StateCreator 定义切片——一块状态+它的 action 内聚一文件，类型指向整体 AppState
 // features/cart/cartSlice.ts
 import { StateCreator } from 'zustand';
 export interface CartSlice {
-  items: Item[];
-  addItem: (i: Item) => void;
+  items: Item[];                    // 本 slice 的 state 形状
+  addItem: (i: Item) => void;       // 本 slice 的 action
 }
 export const createCartSlice: StateCreator<
-  AppState, [], [], CartSlice
+  AppState, [], [], CartSlice       // 四泛型：整体 State、middlewares、自定义 Set、本切片形状
 > = (set) => ({
   items: [],
-  addItem: (i) => set((s) => ({ items: [...s.items, i] })),
+  addItem: (i) => set((s) => ({ items: [...s.items, i] })),   // 浅合并回新数组，不 mutate
 });
+// ✅ 首泛型给整体 AppState，slice 内 get() 能看到全量 state（跨 slice 调用的类型基础）
+// ❌ 把首泛型写成 CartSlice→get() 只能看本切片，跨 slice 调用类型不通过
 ```
 四个泛型依次是：整体 State、middlewares、自定义 Set、本切片形状。
 
@@ -29,11 +32,14 @@ export const createCartSlice: StateCreator<
 ## 三、组合成完整 store
 
 ```ts
-export interface AppState extends CartSlice, UserSlice {}
-export const useAppStore = create<AppState>()((...a) => ({
-  ...createCartSlice(...a),
-  ...createUserSlice(...a),
+// 目的：组合切片成一个 store——curried create + 三元组原样透传给每个 slice 工厂
+export interface AppState extends CartSlice, UserSlice {}   // 整体类型 = 各切片并起来
+export const useAppStore = create<AppState>()((...a) => ({  // 带中间件/显式泛型时必须 ()() curried 形式
+  ...createCartSlice(...a),      // a 是 [set, get, store]，原样传给 cart 工厂
+  ...createUserSlice(...a),      // 同一套 set/get → 两 slice 共用一个 store
 }));
+// ✅ 每个 slice 拿到同一套 set/get，天然能跨 slice 协作；一个 hook 订阅全域
+// ❌ 写成 create<AppState>(chain) 缺那对空括号→TS 报“期望 0 个类型参数”，curried 形式才是正解
 ```
 每个 slice 拿到同一套 set/get，所以能跨 slice 调用。
 
@@ -42,8 +48,11 @@ export const useAppStore = create<AppState>()((...a) => ({
 ## 四、跨 slice 调用
 
 ```ts
+// 目的：跨 slice 协作——用 get() 调另一个 slice 暴露的 action，不直写它的字段
 // userSlice 里想清购物车
-logout: () => { set({ user: null }); get().clearCart?.(); }
+logout: () => { set({ user: null }); get().clearCart?.(); }   // 调 cart 的 action，?. 防未注册
+// ✅ 只经对方 action 协作：归属清晰、DevTools 能看到 clearCart 这次命名 set
+// ❌ 在 userSlice 里直接 set({ items: [] })→越界写 cart 的字段，域边界破坏，是坏味道
 ```
 用 `get()` 访问另一个 slice 暴露的 action —— 这是 slices 模式的核心协作方式。
 
@@ -54,7 +63,11 @@ logout: () => { set({ user: null }); get().clearCart?.(); }
 slice 文件里再导出细粒度 selector，组件只 import selector，不直接依赖 store 结构：
 
 ```ts
-export const selectCartCount = (s: AppState) => s.items.length;
+// 目的：导出细粒度 selector 做黑盒封装——组件只依赖 selector，不碰 store 内部结构
+export const selectCartCount = (s: AppState) => s.items.length;   // 取数收口在 slice 文件内
+// 组件里：const n = useAppStore(selectCartCount);   // 只 import 这个 selector
+// ✅ 字段改名/重构造时只改 slice 文件内部，组件零改动
+// ❌ 组件直接 useAppStore(s => s.items.length) 遍地写死内部路径→重构时全仓改组件
 ```
 
 组件用法：`const n = useAppStore(selectCartCount)`。字段改名时改动收口在 slice 文件内部——selector 就是 store 的 public API。

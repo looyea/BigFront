@@ -17,6 +17,7 @@ tc39-core 立过宪法：函数体里读到谁，就订阅谁。它换来零依�
 `watch`（提案讨论中的语义，Preact/Solid 各有近亲实现）解决场景一：**"我只关心'它变了'这个事件，不关心'它变成了什么的全家当'"**。
 
 ```js
+// 目的：watch 姿态—只订阅“容器被整体替换”这事件，不深入追踪内部字段
 import { signal, effect } from 'signal-polyfill';
 // 各家近亲：Solid 的 untracked 读 + on(f) / Vue 的 watch(src, cb, {flush}) /
 // Preact 里手写：用一个普通订阅回调替代 effect 追踪
@@ -25,9 +26,10 @@ const user = signal({ name: 'ann', loginAt: Date.now() });
 
 // 需求：只在 user 被"整体替换"时打埋点，不想因追踪 user.name 的读取而多订阅
 effect(() => {
-  const u = user.get;          // 只读容器本身这一层
-  analytics.track('user-swapped', u.name);  // 内部字段不再深入追踪
+  const u = user.get;          // ✅ 只读容器本身这一层，订阅粒度落在“user 被 set”
+  analytics.track('user-swapped', u.name);  // ✅ u.name 是普通对象属性、非 signal 读取，不再深入建依赖
 });
+// ❌ 若把 user 做成嵌套 signal 并在 effect 里读 user.name.get→ 就变回细粒度追踪，loginAt 不变、name 一变就重跑
 ```
 
 关键区分三种读取姿态：
@@ -43,16 +45,18 @@ effect(() => {
 `untrack(fn)` 执行 fn，期间所有 signal 读取**不登记为依赖**：
 
 ```js
+// 目的：untrack(fn)—执行期间所有 signal 读取都不登记为依赖（“这次读取别记账”）
 import { signal, computed, untrack } from 'signal-polyfill';
 
 const items = signal([3, 1, 2]);
 const showBanner = signal(false);
 
 const text = computed(() => {
-  const sorted = [...items.get].sort((a, b) => a - b);
+  const sorted = [...items.get].sort((a, b) => a - b);   // ✅ items 是真依赖
   // 横幅开关只影响文案拼装，不该让"切横幅"触发排序重算
-  return untrack(() => showBanner.get) ? `置顶! ${sorted}` : `${sorted}`;
+  return untrack(() => showBanner.get) ? `置顶! ${sorted}` : `${sorted}`;   // ✅ showBanner 不入依赖集，切它不重算排序
 });
+// ❌ 滥用 untrack 把本该依赖的也屏蔽了→ 回到手写 useMemo 心智，自动追踪红利清零，且易漏更新产生 bug
 ```
 
 没有 untrack 的世界：切一下 `showBanner`，整条排序管道重跑。有了它，`showBanner` 的变化只惊动真正订阅它的 effect，computed 依赖图保持干净。
@@ -70,19 +74,22 @@ const text = computed(() => {
 默认判定是 `Object.is`——NaN 等于 NaN、+0 不等于 -0、对象比引用。这让每次"内容不变的新对象写入"都变成一次全图风暴：
 
 ```js
+// 目的：默认 Object.is 按引用判等—内容不变的新对象写入会惊动下游
 const pos = signal({ x: 0, y: 0 });
-pos.set = { ...pos.get };        // 内容没变，Object.is 说不一样 → 下游全体重跑
+pos.set = { ...pos.get };        // ❌ 内容没变，Object.is 说不一样 → 下游全体重跑（误触发）
 ```
 
 提案与各家实现允许**自定义相等函数**（polyfill 语境下 `signal(value, { [SIG_EQUALS]: fn })` 形态在演进，Solid/Preact/Vue 均已内建同款）：
 
 ```js
+// 目的：自定义 equality—逐字段判等，相同则不通知，消除“新对象同内容”风暴
 // Solid: createSignal(init, { equals: deepEq })
 // Vue:   watch(src, cb, { deep: true }) 或 customRef 自控触发
 // 自定义思路：
 const pos = signal({ x: 0, y: 0 }, {
-  equals: (a, b) => a.x === b.x && a.y === b.y,   // 逐字段判等，相同则不通知
+  equals: (a, b) => a.x === b.x && a.y === b.y,   // ✅ 写回同坐标时 equals 判真→ 不通知下游
 });
+// ❌ 对大对象上 deep equal→ 判等函数每次写都遍历子树，可能比“直接重渲”还贵
 ```
 
 **equality 的成本账**：判等函数每次写入都跑。浅比较近似免费；深比较 O(子树) 可能比"直接重渲"还贵——大对象慎上 deep equal，这是 MobX 社区用血泪验证过的老账（L4 mobx-core 会再遇到它）。折中方案：结构性共享（不可变更新保证"没改到的字段引用不变"，浅比较即可命中，呼应 za-middleware 的 Immer 讨论）。
@@ -90,18 +97,21 @@ const pos = signal({ x: 0, y: 0 }, {
 ## 五、三阀合奏：一次搜索框的完整治理
 
 ```js
+// 目的：三阀合奏—真依赖最小（query）、旁路读取走 untrack（pageId）、写入避免回环
 const query = signal('');
 const results = signal([]);
 
+const pageId = signal(1);
 effect(() => {
-  const q = query.get;                 // 真依赖：词变了才该搜
+  const q = query.get;                 // ✅ 真依赖：词变了才该搜
   if (!q) return;
   fetchResults(q).then((r) => {
     // 回填时不追踪 results：避免写→读→写的回环
-    results.set = r;
+    results.set = r;                   // ✅ 在异步回调里写，此刻无追踪作用域，不自订阅
   });
-  analytics.track(untrack(() => pageId.get));  // 埋点顺带读取，不建依赖
+  analytics.track(untrack(() => pageId.get));  // ✅ 埋点顺带读取，走 untrack 不建依赖
 });
+// ❌ 若把 results.get 也在 effect 里读又不 untrack→ 写 results 触发本 effect 重跑，形成死循环
 ```
 
 三件事同框：真依赖保持最小（query）、旁路读取走 untrack（pageId）、写入端将来再配 equality（列表按版本对象替换）。**"读即订阅"的自由与"订阅控制"的纪律是一体两面**——这也是提案 API 演进中反复拉锯的焦点（watch 系语义至今仍在讨论，正合 L1 所说"提案先统一语义"）。

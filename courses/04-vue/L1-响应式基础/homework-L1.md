@@ -1,6 +1,22 @@
-# L1 课后作业：响应式基础
+# L1 课后作业：起步与响应式基础
 
-> 覆盖 **vue-reactivity / vue-watch / vue-reactivity-theory** 三关。先读代码找 bug，再动手写，最后场景与简答。环境：Vue 3 + `<script setup>`。
+> 覆盖 **vue-hello-world / vue-script-setup / vue-reactivity / vue-watch / vue-reactivity-theory** 五关。第 0 部分先走一遍"从零建工程 + Hello World + `<script setup>`"，再读代码找 bug，动手写，最后场景与简答。环境：Vue 3 + `<script setup>`。
+
+---
+
+## 零、起步实操（必做，对应 vue-hello-world / vue-script-setup）
+
+**0-A.** 用脚手架从零建一个 Vue 工程并跑起来：分别用 `npm create vue@latest` 与 `npm create vite@latest -- --template vue` 各建一次，说出两条路线生成的目录差异。启动开发服务器的命令是什么？它跑在哪个端口？（呼应 vue-hello-world 第二、四节）
+
+**0-B.** 把 `src/App.vue` 改成一个最小 Hello World：`<script setup>` 里 `const msg = "Hello Vue!"`，模板用 `{{ msg }}` 显示。然后回答：
+- (a) `index.html` 里的 `<div id="app">` 与 `src/main.js` 里的 `mount("#app")` 是怎么配合的？
+- (b) 改文件后浏览器为什么自动更新？这个能力和"Vue 响应式"是一回事吗？（呼应 vue-hello-world 第三、四节、interview 第 8 题）
+
+**0-C.** 在 `components/` 下新建 `Greeting.vue`，用 `<script setup>` + `defineProps` 接收 `name`，父组件 `import` 它并在模板当标签使用、传 `:name`。**不使用任何 `components:{}` 注册**。解释为什么 import 就能用。（呼应 vue-script-setup 第二、三节）
+
+**0-D.** 给 `Greeting.vue` 加一个 `emits`：点击按钮 `emit("hi", 1)`，父组件 `@hi` 接收。再用 `defineModel` 把 `name` 改成父子双向绑定，对比手写的 `modelValue` + `update:modelValue` 写法少了什么。（呼应 vue-script-setup 第三、五节）
+
+**0-E.** 概念自测：用一句话说清 `<script setup>` 是什么（编译期还是运行期）？`defineProps/defineEmits/defineExpose` 要不要 `import`？`defineExpose` 解决什么问题？（呼应 vue-script-setup 第一、二、四节）
 
 ---
 

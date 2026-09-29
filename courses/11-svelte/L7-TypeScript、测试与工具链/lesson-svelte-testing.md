@@ -16,17 +16,19 @@ npm i -D vitest jsdom @testing-library/svelte @testing-library/jest-dom @testing
 ## 二、render 的契约：挂载、返回值、cleanup
 
 ```js
+// 目的：render 契约—第二参必须是 { props }，交互后断言渲染结果
 import { render, screen, fireEvent, cleanup } from '@testing-library/svelte';
 import Counter from './Counter.svelte';
 
-afterEach(cleanup);   // 多数配置下 auto-cleanup 已开，写出来保平安
+afterEach(cleanup);   // ✅ 多数配置下 auto-cleanup 已开，写出来保平安（防定时器幽灵跨用例串门）
 
 test('点击加一', async () => {
-  render(Counter, { props: { initial: 5 } });
-  const btn = screen.getByRole('button');
-  await fireEvent.click(btn);
-  expect(screen.getByText('6')).toBeInTheDocument();
+  render(Counter, { props: { initial: 5 } });   // ✅ 包一层 props，v4 的顶层散落写法已废
+  const btn = screen.getByRole('button');        // ✅ 可访问性语义查询优先
+  await fireEvent.click(btn);                    // ✅ await 覆盖一个微任务轮次，effect flush 完
+  expect(screen.getByText('6')).toBeInTheDocument();   // ✅ 5+1 后文本渲染为 6
 });
+// ❌ 写成 render(Counter, { initial: 5 }) → 组件拿到的 props 是整包 {initial:5} 当 "$props() 未拆"，initial 读不到
 ```
 
 Svelte 5 的三个契约点：
@@ -40,9 +42,12 @@ Svelte 5 的三个契约点：
 组件里有 fetch/`await tick()` 时，`fireEvent` 的 await 只覆盖一个微任务轮次，**不等 Promise 链**。正解二选一：
 
 ```js
+// 目的：等 DOM 追上状态—fireEvent 的 await 不等 Promise 链，用 waitFor 轮询到渲染完成
 import { waitFor } from '@testing-library/svelte';
 await fireEvent.click(loadBtn);
+// ✅ waitFor 每轮微任务重试断言，直到出现“已加载”或超时（默认 1s）
 await waitFor(() => expect(screen.getByText(/已加载/)).toBeInTheDocument());
+// ❌ 只 await fireEvent 就直接断言异步 fetch 结果 → Promise 链未完，getByText 报 Found a empty result
 ```
 
 - `waitFor` 轮询到超时（默认 1s）；配合 `userEvent.setup()` 模拟真实键入/点击序列（逐字符、带 focus），比 fireEvent 更贴用户。
@@ -53,9 +58,11 @@ await waitFor(() => expect(screen.getByText(/已加载/)).toBeInTheDocument());
 `.svelte.js/ts` 模块是**单例**——测试间状态串味是头号坑：
 
 ```js
+// 目的：单例全局态模块—测试间串味是头号坑，模块必须导出重置入口
 import { resetUser } from './store.svelte.js';
 
-beforeEach(() => resetUser());        // 模块必须导出重置入口（L4 就立的规矩）
+beforeEach(() => resetUser());        // ✅ 每个用例前把单例拍回初始态，用例互不污染
+// ❌ 不 reset → 上一个用例登录的 user 泄露到下一个用例，断言时绿时红顺序敏感
 ```
 
 - 工厂形态（`createCounter()`）直接 new 新的测；单例形态必须有 `reset`/`init` 钩子暴露给测试。

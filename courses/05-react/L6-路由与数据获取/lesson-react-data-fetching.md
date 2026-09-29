@@ -13,18 +13,20 @@
 ## 二、useQuery：声明式数据源
 
 ```jsx
+// 目的：useQuery 声明一个数据源——自动缓存/去重/三态，无需手写 effect
 import { useQuery } from '@tanstack/react-query';
 
 function User({ id }) {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['user', id],                 // 缓存键（含参数）
-    queryFn: () => fetch(`/api/user/${id}`).then(r => r.json()),
-    staleTime: 60_000,                       // 60s 内视为新鲜，不重取
+    queryKey: ['user', id],                 // 缓存键（含参数→换 id 自动新缓存并重取）
+    queryFn: () => fetch(`/api/user/${id}`).then(r => r.json()),   // 返 Promise，Query 自动跟踪 pending/success/error
+    staleTime: 60_000,                       // ✅ 60s 内视为新鲜，不重取
   });
   if (isLoading) return <Spinner />;
-  if (error) return <Err msg={error.message} onRetry={refetch} />;
+  if (error) return <Err msg={error.message} onRetry={refetch} />;   // ✅ 错误态带重试
   return <Profile user={data} />;
 }
+// ❌ 忘了在祖先包 <QueryClientProvider client={qc}> → 报 "No QueryClient set, use QueryClientProvider to set one"
 ```
 - `queryKey` 是**缓存与去重的地址**：同 key 的组件共享一份数据、只发一次请求（数组便于含参数 → 换 id 自动新缓存并重取，呼应 react-router-data 参数变化）；
 - 返回 `data/isLoading/error/refetch` 等，三态齐全、无需手写 effect；
@@ -44,15 +46,17 @@ function User({ id }) {
 ## 四、useMutation：写操作
 
 ```jsx
+// 目的：useMutation 管"发起写 + pending/success/error"，成功后 invalidate 让列表重取
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 function AddTodo() {
   const qc = useQueryClient();
   const m = useMutation({
     mutationFn: (todo) => fetch('/api/todos', { method: 'POST', body: JSON.stringify(todo) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['todos'] }),   // 写成功后让列表重取
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['todos'] }),   // ✅ 写成功后让列表重取
   });
   return <button onClick={() => m.mutate({ text: '新任务' })} disabled={m.isPending}>添加</button>;
+  // ❌ 忘 onSuccess invalidate → 后端数据变了但前端列表仍显旧缓存
 }
 ```
 - mutation 管"发起写 + pending/success/error 态"，**不自动去重**（写本就该每次执行）；

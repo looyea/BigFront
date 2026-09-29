@@ -30,8 +30,10 @@ app/pages/user/[id]/
 
 ```vue
 <template>
+  <!-- 目的：父页做壳，子路由（posts.vue）渲染进这个出口 -->
   <header>用户 {{ $route.params.id }}</header>
-  <NuxtPage />   <!-- 子路由出口：对应 posts.vue 渲染进来 -->
+  <NuxtPage /><!-- ✅ 子路由出口：/user/1/posts 的 posts.vue 在此渲染 -->
+  <!-- ❌ 忘放 <NuxtPage/> → 子页永远不显示，只剩父页头部 -->
 </template>
 ```
 
@@ -42,15 +44,17 @@ app/pages/user/[id]/
 同名路由参数变化（/blog/1 → /blog/2）时 Nuxt 默认**复用组件实例**（不重新挂载）：setup 不重跑、useFetch 不重发！这是本页头号大坑。三种对策：
 
 ```ts
+// 目的：解决“参数变化页面不刷新”——Nuxt 默认复用同名路由实例，setup 不重跑、useFetch 不重发
 // ① 让参数变化产生新 key（推荐：强制整页重建）
-definePageMeta({ key: route => route.fullPath });
+definePageMeta({ key: route => route.fullPath });   // ✅ /blog/1→/blog/2 fullPath 变→整页重新挂载
 
 // ② watch params 手动刷新数据
 const { data, refresh } = await useFetch(`/api/posts/${id}`);
-watch(() => route.params.id, () => refresh());
+watch(() => route.params.id, () => refresh());      // ✅ 参数变→主动 refresh 重发请求
 
 // ③ useFetch 的 URL 写成响应式源，自动重取（下一关细讲）
-const { data } = await useFetch(() => `/api/posts/${route.params.id}`);
+const { data } = await useFetch(() => `/api/posts/${route.params.id}`); // ✅ 传函数→依赖变化自动重取，最省心
+// ❌ 什么都不做：/blog/1→/blog/2 组件复用、setup 不重跑 → 页面仍显示文章 1 的数据（本页头号大坑）
 ```
 
 对照 Next：App Router 每个 segment 默认按 key 重建的倾向相反——两个框架"参数变了要不要重挂载"给出相反默认值，迁移时必须重拧这颗螺丝。

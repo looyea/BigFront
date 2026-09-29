@@ -3,9 +3,12 @@
 ## 一、只读派生
 
 ```ts
+// 目的：只读派生——传 getter 得到派生原子，get 即“拉值+登记依赖”，源变则订阅者自动更新
 const firstNameAtom = atom('Ada');
 const lastNameAtom = atom('Lovelace');
-const fullAtom = atom((get) => get(firstNameAtom) + ' ' + get(lastNameAtom));
+const fullAtom = atom((get) => get(firstNameAtom) + ' ' + get(lastNameAtom));   // 无初值只 getter → 只读
+// ✅ 组件 useAtomValue(fullAtom) 即订阅两个源，改任一名都驱动 full 重算并更新该组件
+// ❌ 想直接 set(fullAtom, 'x')→它是只读派生、没有 write，Jotai 报警/no-op，派生值只能由 firstName/lastName 驱动
 ```
 fullAtom 无初值、只有 getter → 只读。任何源 atom 变化，读取 fullAtom 的组件自动更新。
 
@@ -20,11 +23,14 @@ getter 里的 `get` 是「拉取 + 登记依赖」二合一：没 get 的 atom �
 getter 里可 get 另一个派生 atom，构成依赖图/DAG。循环依赖会抛错。
 
 ```ts
+// 目的：派生可再派生（DAG）——getter 里 get 另一个派生，源变沿图向下游各重算一次
 const priceAtom = atom(100);
 const qtyAtom = atom(2);
-const subtotalAtom = atom((get) => get(priceAtom) * get(qtyAtom));
-const taxAtom = atom((get) => get(subtotalAtom) * 0.1);      // 二级派生
-const totalAtom = atom((get) => get(subtotalAtom) + get(taxAtom));
+const subtotalAtom = atom((get) => get(priceAtom) * get(qtyAtom));            // 一级：小计
+const taxAtom = atom((get) => get(subtotalAtom) * 0.1);      // 二级：税，依赖 subtotal
+const totalAtom = atom((get) => get(subtotalAtom) + get(taxAtom));            // 三级：总价，汇 subtotal+tax
+// ✅ 改 price 一次 → subtotal→tax→total 下游各重算一次，同帧合并成一次渲染
+// ❌ 写出 a 依赖 b、b 又依赖 a 的环 → Jotai 抛“circular dependency”错，图无法建
 ```
 
 改 price 一次：subtotal → tax → total 沿图向下游各重算一次，同帧合并成一次渲染（见 jo-dependencies）。链条越长越要警惕「末端一动、全链重算」的成本（jo-perf-test 有治理清单）。
@@ -40,11 +46,14 @@ const totalAtom = atom((get) => get(subtotalAtom) + get(taxAtom));
 atom(getter, setter) 可同时读依赖并写回源（见 jo-write-only），实现 v-model 式双向。
 
 ```ts
-const celsiusAtom = atom((get) => ((get(fahrenheitAtom) - 32) * 5) / 9);
+// 目的：可写派生（get+set 双函数）——读是换算、写是换算回源，UI 无需知道底层存储格式
+const celsiusAtom = atom((get) => ((get(fahrenheitAtom) - 32) * 5) / 9);   // 纯读派生：华氏→摄氏
 const tempAtom = atom(
-  (get) => get(celsiusAtom),
-  (get, set, next: number) => set(fahrenheitAtom, (next * 9) / 5 + 32
-));
+  (get) => get(celsiusAtom),                                               // 读：给 UI 摄氏值
+  (get, set, next: number) => set(fahrenheitAtom, (next * 9) / 5 + 32)     // 写：把摄氏换算回华氏源
+);
+// ✅ 组件 set(tempAtom, 20) 传摄氏，底层华氏自动算成 68 写入——双向映射对调用方透明
+// ❌ 只给第一个 getter 参数、漏写第二参→tempAtom 退化成只读，dispatch(set) 时报错/不生效
 ```
 
 读是派生、写是换算回源——「受控表单字段映射到不同存储格式」的标准解法，UI 层完全无需知道底层存的是华氏。

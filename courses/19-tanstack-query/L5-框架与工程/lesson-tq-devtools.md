@@ -3,11 +3,14 @@
 ## 一、面板：缓存的 X 光机
 
 ```tsx
+// 目的：挂 ReactQueryDevtools 面板——缓存的 X 光机，实时看 key/状态/data/重试
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 <QueryClientProvider client={qc}>
   <App />
-  <ReactQueryDevtools initialIsOpen={false} />
+  <ReactQueryDevtools initialIsOpen={false} />   {/* 默认收起，右下角按钮唤起；生产整包摇掉 */}
 </QueryClientProvider>
+// ✅ 面板里手动 invalidate 任意条目验证“失效半径”、数重试第几次——L2 双时钟/前缀失效实验主场
+// ❌ 把 devtools 打进生产 bundle：白增体积 + 暴露缓存数据，安全隐患
 ```
 
 面板里每一条缓存查询实时显示：queryKey、状态（fresh/stale/fetching/inactive）、data 原文、fetcher 计数。三个高频动作：**手动 invalidate** 任意条目（验证失效半径）、**改 refetch 交互按钮**（refetch / remove / reset）、**观察时序**（哪条先飞、重试第几次）。L2 双时钟实验、key 前缀失效实验，主场都在这块面板——不会用它，等于闭眼调缓存。
@@ -19,12 +22,15 @@ devtools 是开发依赖，构建时整包摇掉；线云上想要「缓存可�
 ## 三、测试第一课：关掉重试和定时器
 
 ```tsx
+// 目的：测试专用 client——retry:false、gcTime:0、staleTime:Infinity，快且零串扰
 const testClient = () => new QueryClient({
   defaultOptions: {
-    queries: { retry: false, gcTime: 0, staleTime: Infinity },  // 快、干净
+    queries: { retry: false, gcTime: 0, staleTime: Infinity },  // 失败秒回断言、测间不残留、防聚焦重取抖数据
   },
 });
-render(<QueryClientProvider client={testClient()}><App /></QueryClientProvider>);
+render(<QueryClientProvider client={testClient()}><App /></QueryClientProvider>);   // 每个测试新建，缓存互不污染
+// ✅ 包一层 renderWithProviders 复用，别每处手搓 Provider
+// ❌ 沿用默认 retry:3：失败断言要等指数退避 30s+ 才落 error，测试慢且易超时
 ```
 
 retry:0 让失败断言秒回（否则退避等 30s 起步）；gcTime:0 测试间零串扰；staleTime:Infinity 防聚焦重取抖数据。组件库包一层 renderWithProviders，别每处手搓 Provider。
@@ -32,9 +38,12 @@ retry:0 让失败断言秒回（否则退避等 30s 起步）；gcTime:0 测试�
 ## 四、mock 网络：MSW 是官方推荐
 
 ```ts
+// 目的：MSW 在网络层拦 fetch（而非 mock 模块）——queryFn 真 fetch 照跑，测整条链
 // msw handlers：拦 fetch 而不是 mock 模块——Query 怎么发都测得到
-server.use(http.get('/api/todos', () => HttpResponse.json([{ id: 1 }])));
-await waitFor(() => expect(screen.getByText('task-1')).toBeInTheDocument());
+server.use(http.get('/api/todos', () => HttpResponse.json([{ id: 1 }])));   // 注册一条 GET mock 响应
+await waitFor(() => expect(screen.getByText('task-1')).toBeInTheDocument());   // 异步渲染完成后断言
+// ✅ 失败路径 handler 返 500 断错误 UI、慢路径 await delay(500) 断骨架——比 jest.mock(axios) 保真
+// ❌ 不同步断言：fetch 是异步的，render 后立刻 getByText 拿不到，必须 waitFor
 ```
 
 Mock Service Worker 在网络层拦截，queryFn 里的真 fetch 照常跑——测的是「组件+Query+网络层」的整条链，比 jest.mock(axios) 保真。失败路径：handler 返回 500，断言 error UI；慢路径：resolver 里 await delay(500)，断言骨架。testing 官方指南的三件套（关重试 / MSW / 每测试新 client）就是标准模板。

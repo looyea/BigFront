@@ -66,6 +66,10 @@ interface Pair<A, B> { first: A; second: B }
 // 泛型类型别名
 type Handler<T> = (payload: T) => void;
 type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
+// ✅ 应用：E 默认 Error，只写一个参也能用
+const ok: Result<number> = { ok: true, value: 1 };
+const fail: Result<number> = { ok: false, error: new Error("boom") }; // E 缺省为 Error
+// const bad: Result<number> = { ok: true, value: "x" };  // ❌ value 应为 number
 ```
 
 标准库到处是泛型接口：`Array<T>`、`Promise<T>`、`Record<K, V>`、`Map<K, V>`——用它们时你其实一直在消费泛型。
@@ -117,8 +121,14 @@ const user: Response<{ id: number }> = { data: { id: 1 }, status: 200 };
 ## 六、泛型 vs any：一句话分清
 
 ```ts
+// 目的：对比 any 丢信息 vs 泛型保留“进什么出什么”的关联
 function echoAny(x: any): any { return x; }     // 调用后信息全丢
 function echo<T>(x: T): T { return x; }          // 进什么类型出什么类型，信息保留
+const a = echoAny("hi");   // a: any——无补全、无保护
+const b = echo("hi");       // b: string——保留具体类型
+// a.toUpperCase();         // ✓ 能过但全程失去检查
+b.toUpperCase();            // ✓ 类型安全
+// echo("hi").toFixed();    // ❌ string 上没有 toFixed（泛型帮你抱住了类型）
 ```
 
 `any` 是"放弃类型"，泛型是"**用变量代表类型、把关系保留下来**"。凡是你想用 `any` 做"多种类型都能传"的复用场景，第一反应应该是"能不能改成泛型"。

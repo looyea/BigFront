@@ -29,9 +29,11 @@ node --watch app.js  # 文件改动自动重启（18+，开发利器）
 浏览器顶层 `var` 挂到 `window`；Node 里**每个文件都是一个独立模块**，顶层 `var`/`const` 不污染全局（呼应 node-modules）。真正的全局挂在 `globalThis`：
 
 ```js
+// 目的：验证 Node 的全局语境——没有 DOM、真正的全局挂 globalThis
 console.log(typeof window);       // undefined —— Node 没有 window
-console.log(process.platform);    // 'win32' | 'linux' | 'darwin'
-globalThis.myShared = 42;         // 真要跨模块共享才挂全局（少用）
+console.log(process.platform);    // 'win32' | 'linux' | 'darwin'（取决于运行系统）
+globalThis.myShared = 42;         // 真要跨模块共享才挂全局（少用，易造成隐式耦合）
+// console.log(document.title);   // ✗ ReferenceError: document is not defined（Node 无 DOM）
 ```
 
 `console.log / error / warn / table / time` 都在，但输出到的是**进程的 stdout/stderr**，不是浏览器控制台（下一节）。
@@ -55,8 +57,10 @@ process.pid         // 进程号
 
 ```js
 // node cli.js --name tom
+// 目的：拿到"用户参数"必须跳过前两项（node 路径、脚本路径）
 process.argv;  // ['C:\\...\\node', 'E:\\...\\cli.js', '--name', 'tom']
-const args = process.argv.slice(2);   // ★ 跳过前两个，才是"用户参数"
+const args = process.argv.slice(2);   // ★ 跳过前两个，得到 ['--name', 'tom'] 才是"用户参数"
+// ❌ 直接取 process.argv[2] 当第一个用户参数 → 拿到的是 'E:\\...\\cli.js'（脚本路径），错位
 ```
 
 `process.exit()` 会**截断尚未 flush 的 stdout**——`console.log` 后立刻 `exit` 可能丢输出。正确姿势是让事件循环自然结束（不活跃任务时进程自动退出），或先写完再退（呼应 node-cli 的 exit code）。
@@ -76,10 +80,12 @@ __filename   // 'E:/Projects/demo/src/app.js'
 ⚠️ 在 **ESM（`.mjs` 或 `type:module`）里没有 `__dirname`**，要自己造：
 
 ```js
+// 目的：ESM 没有 __dirname，用 import.meta.url 手工还原出目录与文件名
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-const __filename = fileURLToPath(import.meta.url);   // import.meta.url 是当前模块的 file:// URL
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);   // import.meta.url 是当前模块的 file:// URL → 转成系统路径
+const __dirname = path.dirname(__filename);          // 再取其所在目录
+// __dirname 结果等价于 CommonJS 的同名值（如 'E:/Projects/demo/src'）
 ```
 
 `process.cwd()`（你在哪运行）和 `__dirname`（脚本在哪）**经常不同**——读写项目内文件几乎总该基于 `__dirname` 拼路径，否则"换个目录运行就找不到文件"（呼应 node-path-url）。
@@ -109,8 +115,9 @@ Node 的 JS 执行是**单线程**的，但它靠**事件循环 + libuv 异步 I
 
 ```js
 // hello.js
-const name = process.argv[2] ?? "world";
-console.log(`hello, ${name}`);
+// 目的：读命令行第一个用户参数（argv[2]），缺省回退 'world'，拼成问候语打印
+const name = process.argv[2] ?? "world";   // 不传参时 argv[2] 为 undefined → ?? 回退 'world'
+console.log(`hello, ${name}`);    // ✅ node hello.js 大前端 → 输出 hello, 大前端
 ```
 
 ```bash

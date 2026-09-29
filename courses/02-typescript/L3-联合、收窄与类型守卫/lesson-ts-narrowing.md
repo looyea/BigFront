@@ -9,6 +9,7 @@
 一个变量的**声明类型**可能很宽（联合、`unknown`），但 TS 会**顺着控制流**（if/switch/循环/异常）分析，在每个点上把它的**当前类型缩小**到更精确的版本。收窄是自动的、局部的、可逆的（离开分支回到原类型）。
 
 ```ts
+// 目的：typeof 把联合按分支自动缩窄
 function len(x: string | number) {
   // 这里 x: string | number
   if (typeof x === "string") {
@@ -16,6 +17,8 @@ function len(x: string | number) {
   }
   return x.toFixed();     // 余下分支 x 收窄为 number ✓
 }
+len("abcd");   // => 4（走 string 分支）
+len(3.14159);  // => "3.14"（走 number 分支，toFixed() 默认 0 位 → "3"）
 ```
 
 ---
@@ -73,6 +76,7 @@ if (name !== undefined) { /* string | null */ }
 `"prop" in obj` 判断属性存在，可把联合对象缩到"含该属性"的那支：
 
 ```ts
+// 目的："prop" in obj 把联合对象缩到含该属性的那一支
 type Cat = { meow: () => void };
 type Dog = { bark: () => void };
 
@@ -83,6 +87,9 @@ function speak(a: Cat | Dog) {
     a.bark();          // 收窄为 Dog
   }
 }
+speak({ meow: () => console.log("喵") });   // ✓ 传 Cat，走 meow
+speak({ bark: () => console.log("汪") });   // ✓ 传 Dog，走 bark
+// speak({ purr(){} });   // ❌ 既非 Cat 也非 Dog，不匹配 Cat | Dog
 ```
 
 `in` 对**可选属性判别**尤其有用，也可用在可辨识联合之外的"形状探测"场景（呼应 ts-object-types）。
@@ -116,16 +123,20 @@ try { /* ... */ } catch (err) {
 与字面量的相等比较、`switch` 都能收窄：
 
 ```ts
+// 目的：可辨识联合 + switch 按判别字段收窄
 type Action =
   | { type: "inc"; by: number }
   | { type: "reset" };
 
 function reduce(s: number, a: Action): number {
   switch (a.type) {
-    case "inc":  return s + a.by;     // 收窄到 inc 支
+    case "inc":  return s + a.by;     // 收窄到 inc 支，可访问 a.by
     case "reset": return 0;
   }
 }
+reduce(1, { type: "inc", by: 5 });   // => 6
+reduce(1, { type: "reset" });         // => 0
+// reduce(1, { type: "inc" });        // ❌ inc 缺 by 字段
 
 // 与字面量比较
 function f(x: string | number, kind: "a" | "b") {
@@ -142,6 +153,7 @@ function f(x: string | number, kind: "a" | "b") {
 TS 能把收窄结果**存进变量或作为函数返回**后再用（TS 4.4+ 的 aliased discriminants / CFA of readonly 属性）：
 
 ```ts
+declare const x: unknown;          // 待收窄的变量
 const isStr = typeof x === "string";
 if (isStr) { /* x 收窄为 string —— 因为 isStr 是 const 且直接来自 typeof */ }
 ```

@@ -7,19 +7,21 @@
 ## 一、@nuxtjs/i18n：五分钟的 Next 一小时
 
 ```ts
+// 目的：@nuxtjs/i18n 配置——一个 modules 数组项，换来 Next 里 middleware+alternates 手工拼的全套
 // nuxt.config.ts
 export default defineNuxtConfig({
   modules: ['@nuxtjs/i18n'],
   i18n: {
     locales: [
-      { code: 'zh', language: 'zh-CN', file: 'zh.json', name: '简体中文' },
+      { code: 'zh', language: 'zh-CN', file: 'zh.json', name: '简体中文' },   // ✅ file 指向 i18n/locales/ 下字典
       { code: 'en', language: 'en-US', file: 'en.json', name: 'English' },
     ],
-    defaultLocale: 'zh',
-    strategy: 'prefix_and_default',     // 五种形态见下
-    baseUrl: 'https://demo.dev',         // hreflang 绝对地址的来源
+    defaultLocale: 'zh',                  // ✅ 默认语言，/about 命中中文、/en/about 命中英文
+    strategy: 'prefix_and_default',       // ✅ 五种 URL 形态之一（见下）
+    baseUrl: 'https://demo.dev',          // ✅ hreflang/规范链接绝对地址来源
   },
 })
+// ❌ 字典缺键直接渲染 → 页面显示原始 key（如 articles.title）；纪律：整句翻译、错键不错文，兜底 fallbackLocale
 ```
 
 `i18n/locales/zh.json` 放字典，页面里 `const { t } = useI18n()`（vue-i18n 的组合式 API 原班人马，vue-use-i18n 所学直接复用）。**strategy 五档**是面试点：`no_prefix` / `prefix` / `prefix_except_default`（/about 与 /en/about）/ `prefix_and_default` / `no_prefix`+domains 子域模式（每语言一个域名）。模块自动办妥的事清单：**语言前缀路由重定向（Accept-Language 协商）、hreflang 标签注入、`vue-i18n` 依赖装配、路由本地化（每语言一条 route 记录）**——next-i18n 里 middleware+alternates 手工拼的全套，这里一个 modules 数组项。
@@ -29,26 +31,30 @@ export default defineNuxtConfig({
 ## 二、@nuxt/content v3：文件即数据库
 
 ```ts
+// 目的：@nuxt/content v3 定义集合——schema + 来源目录，markdown/YAML 编译成可查询数据
 // content.config.ts —— 集合 = schema + 来源目录
 import { defineContentConfig, defineCollection, z } from '@nuxt/content'
 export default defineContentConfig({
   collections: {
     docs: defineCollection({
-      type: 'page',                       // page（有 slug 可路由）或 data（纯数据）
-      source: 'docs/**',                  // content/ 下 glob
-      schema: z.object({ title: z.string(), tag: z.enum(['guide', 'api']) }),
+      type: 'page',                       // ✅ page（有 slug 可路由）；纯数据用 data
+      source: 'docs/**',                  // ✅ content/ 下的 glob
+      schema: z.object({ title: z.string(), tag: z.enum(['guide', 'api']) }),  // ✅ zod 校验 frontmatter
     }),
   },
 })
+// ❌ markdown 的 frontmatter 写了 tag: tutorial（不在 enum）→ schema 校验不过，该条不进集合
 ```
 
 ```vue
 <script setup>
-const { data: posts } = await queryCollection('docs')
-  .where('tag', '=', 'guide').order('date', 'desc').limit(5).all()
+// 目的：queryCollection 链式查询——列表取最近 5 篇 guide，SSR 安全、server route 里也能用
+const { data: posts } = await queryCollection('docs')            // ✅ 'docs' 是 content.config 里定义的集合名
+  .where('tag', '=', 'guide').order('date', 'desc').limit(5).all()   // ✅ 过滤+排序+限数，返回数组
 </script>
 <template>
-  <ContentRenderer v-for="p of posts" :key="p.id" :value="p" />   <!-- Markdown → Prose 组件渲染 -->
+  <ContentRenderer v-for="p of posts" :key="p.id" :value="p" /><!-- ✅ 把每篇 Markdown 渲染成 Prose 组件 -->
+  <!-- ❌ 沿用 v2 老写法 queryCollection({ collection: 'docs' }) 复数参数 → v3 API 已改单数链式，取不到数据 -->
 </template>
 ```
 

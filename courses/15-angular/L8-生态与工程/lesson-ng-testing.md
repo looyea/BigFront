@@ -10,17 +10,20 @@ v21（2025.11）起 `ng new` 默认生成 Vitest 配置替代 Karma+Jasmine：
 - 与 Vite 共享 transform 管道 → 构建与测试同一套 TS/模板编译
 
 ```ts
+// 目的：v21+ 默认测试配置——Vitest 与 Vite 共享 transform，模板/TS 同一套编译
 // vitest.config.ts（自动生成）
 import { defineConfig } from 'vitest/config';
 import angular from '@analogjs/vite-plugin-angular';
 
 export default defineConfig({
-  plugins: [angular()],
+  plugins: [angular()],          // 编译 Angular 模板/TS，ng test 走 Vitest 而非 Karma
   test: {
-    globals: true,
-    environment: 'jsdom',
+    globals: true,               // describe/it/expect 免 import 全局可用
+    environment: 'jsdom',        // 组件测试需 DOM 环境
   },
 });
+// ✅ ng test 直接拉起 Vitest，与构建共用缓存、启动快
+// ❌ 新旧配置混用又残留 karma.conf→两套跑器冲突，ng test 行为混乱
 ```
 
 ## 二、组件测试：TestBed 的 standalone 简化
@@ -28,6 +31,7 @@ export default defineConfig({
 standalone 组件测试**不再需要声明 imports 里的 NgModule**——直接在 TestBed 配 component：
 
 ```ts
+// 目的：standalone 组件测试——不需 declaration/SharedModule，组件直接放 imports
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserCardComponent } from './user-card.component';
 
@@ -36,18 +40,20 @@ describe('UserCardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [UserCardComponent],  // standalone 组件直接放 imports
+      imports: [UserCardComponent],  // standalone 组件直接放 imports（无需 declarations）
     }).compileComponents();
 
     fixture = TestBed.createComponent(UserCardComponent);
   });
 
   it('should display user name', () => {
-    fixture.componentRef.setInput('user', { name: 'Alice', age: 30 });
-    fixture.detectChanges();
+    fixture.componentRef.setInput('user', { name: 'Alice', age: 30 });   // 用 setInput 写 input()
+    fixture.detectChanges();                        // 触发变更检测，模板才反映新值
     expect(fixture.nativeElement.querySelector('.name').textContent).toBe('Alice');
   });
 });
+// ✅ setInput 后必调 detectChanges，断言才能拿到更新后的 DOM
+// ❌ 忘 detectChanges→模板还是初始值，textContent 拿到空串、断言失败
 ```
 
 对比旧（NgModule 组件）：需要 `declarations: [UserCardComponent]` + 导入整个 SharedModule。
@@ -57,6 +63,7 @@ describe('UserCardComponent', () => {
 service（signal store）是纯 class + signal——**不需要 TestBed**：
 
 ```ts
+// 目的：signal store 单测——纯 class+signal，不 inject 东西就直接 new，最轻一层
 import { TodoStore } from './todo.store';
 import { signal, computed } from '@angular/core';
 import { TestBed, runInInjectionContext } from '@angular/core/testing';
@@ -65,7 +72,7 @@ describe('TodoStore', () => {
   let store: TodoStore;
 
   beforeEach(() => {
-    // 如果用 inject() 在 store 里 → 需要 TestBed
+    // 只有 store 内部用了 inject() 才需包在注入上下文里创建
     TestBed.runInInjectionContext(() => {
       store = new TodoStore();
     });
@@ -73,16 +80,18 @@ describe('TodoStore', () => {
 
   it('should add todo', () => {
     store.add('Buy milk');
-    expect(store.todos().length).toBe(1);
+    expect(store.todos().length).toBe(1);              // 读 signal 用函数调用 todos()
     expect(store.todos()[0].title).toBe('Buy milk');
   });
 
   it('should compute remaining', () => {
     store.add('A'); store.add('B');
     store.toggle(0); // A done
-    expect(store.remaining()).toBe(1);
+    expect(store.remaining()).toBe(1);                 // computed 自动重算未完成数
   });
 });
+// ✅ store 无依赖时直接 new TodoStore() 即可，比 TestBed 更快
+// ❌ store 里用了 inject() 却直接 new→NG0203 错误，须包 runInInjectionContext
 ```
 
 如果 store 不 inject 任何东西 → 直接 `new TodoStore()` 即可。
@@ -90,6 +99,7 @@ describe('TodoStore', () => {
 ## 四、HttpClient 测试：provideHttpClientTesting
 
 ```ts
+// 目的：HttpClient 测试——用 provideHttpClientTesting 拦截请求，不发真实网络
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -101,25 +111,27 @@ describe('UserService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
+        provideHttpClient(),          // 真实 HttpClient provider
+        provideHttpClientTesting(),   // 测试拦截器接管它
       ],
     });
     service = TestBed.inject(UserService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => httpMock.verify());  // 确保无遗漏请求
+  afterEach(() => httpMock.verify());  // 确保无遗漏请求（未 expectOne 的残留会报错）
 
   it('should fetch user by id', () => {
     service.getUser(1).subscribe(user => {
       expect(user.name).toBe('Alice');
     });
-    const req = httpMock.expectOne('/api/users/1');
+    const req = httpMock.expectOne('/api/users/1');   // 断言确实发出了这个请求
     expect(req.request.method).toBe('GET');
-    req.flush({ id: 1, name: 'Alice' });
+    req.flush({ id: 1, name: 'Alice' });              // 手动喂回假响应
   });
 });
+// ✅ expectOne 捕获请求 + flush 返回模拟数据，全程无真实网络
+// ❌ 忘 afterEach verify→测试发出却未断言的“漏网请求”被静悄悄吞掉，生产才暴雷
 ```
 
 `provideHttpClientTesting()` 拦截所有 HttpClient 请求 → 手动 expect/flush → 不发真实网络。
@@ -127,19 +139,24 @@ describe('UserService', () => {
 ## 五、路由守卫测试
 
 ```ts
+// 目的：路由守卫测试——用假 AuthService + runInInjectionContext 直接调守卫函数
 describe('authGuard', () => {
   it('should return true when logged in', () => {
     TestBed.configureTestingModule({
       providers: [
+        // 用 useValue 桩一个登录态为 true 的假服务，避免真实依赖
         { provide: AuthService, useValue: { isLoggedIn: () => true } },
       ],
     });
+    // 守卫内部用 inject()，须包在注入上下文里才能拿到 provider
     const result = TestBed.runInInjectionContext(() =>
       authGuard({} as any, {} as any)
     );
     expect(result).toBeTrue();
   });
 });
+// ✅ useValue 桩住依赖 + runInInjectionContext 创建注入环境，守卫可单独测
+// ❌ 裸调 authGuard(...) 不进注入上下文→守卫里 inject() 报 NG0203
 ```
 
 ## 六、快照测试：慎用

@@ -9,29 +9,31 @@
 ### 1.1 所有 HTTP 方法
 
 ```js
-app.get('/users', handler);        // 查
-app.post('/users', handler);       // 增
-app.put('/users/:id', handler);    // 全量改
-app.patch('/users/:id', handler);  // 部分改
-app.delete('/users/:id', handler); // 删
-app.all('/legacy', handler);       // 匹配任意方法
-app.options('/cors', handler);     // CORS 预检
+// 目的：按 HTTP 动词注册路由——方法+路径共同决定命中
+app.get('/users', handler);        // ✅ 查
+app.post('/users', handler);       // ✅ 增
+app.put('/users/:id', handler);    // ✅ 全量改
+app.patch('/users/:id', handler);  // ✅ 部分改
+app.delete('/users/:id', handler); // ✅ 删（Express5 无 app.del，旧写法直接报 not a function）
+app.all('/legacy', handler);       // ✅ 任意方法都命中
+app.options('/cors', handler);     // ✅ CORS 预检
 ```
 
 ### 1.2 多 handler 链（Express 5 数组）
 
 ```js
-// 依次执行直到 res 结束或 next() 跳出
+// 目的：一路由挂多个 handler——依次执行，直到 res 结束或某步不调 next 而跳出
 app.get('/protected',
-  requireAuth,           // 中间件 1
-  validateQuery,         // 中间件 2
-  async (req, res) => {  // 最终 handler
+  requireAuth,           // ✅ 中间件1：鉴权失败直接 res.end，不再往下
+  validateQuery,         // ✅ 中间件2：校验通过调 next() 继续
+  async (req, res) => {  // ✅ 最终 handler
     res.json({ user: req.user });
   }
 );
 
-// Express 5 也支持数组写法
+// ✅ Express 5 也支持数组写法，语义与逗号并列一致
 app.post('/orders', [validate, auth, createOrder]);
+// ❌ 中间件里既不 res 也不 next() → 请求永久挂起
 ```
 
 ---
@@ -41,46 +43,48 @@ app.post('/orders', [validate, auth, createOrder]);
 ### 2.1 命名参数
 
 ```js
+// 目的：命名参数——冒号段捕获为字符串
 app.get('/users/:id', (req, res) => {
-  req.params.id;  // '42'
+  req.params.id;  // ✅ '42'（始终是字符串，需数字要自己 Number 转换）
 });
 ```
 
 ### 2.2 多段通配 `{*name}`
 
 ```js
-// 匹配 /files/a/b/c.txt → params.name = 'a/b/c.txt'
+// 目的：{*name} 匹配剩余多段——Express5 取代旧的 ':name*'/'​:name+'
 app.get('/files/{*filepath}', (req, res) => {
-  req.params.filepath;
+  req.params.filepath;  // ✅ /files/a/b/c.txt → 'a/b/c.txt'（含斜杠的整段）
 });
+// ❌ 沿用 Express4 的 '/files/:filepath*' → path-to-regexp v8 抛 TypeError 拒绝注册
 ```
 
 ### 2.3 可选参数 `{:name}?`
 
 ```js
-// 匹配 /posts 和 /posts/page/2
+// 目的：{:name}? 可选参数——带不带该段都命中
 app.get('/posts/{:page}?', (req, res) => {
-  req.params.page;  // undefined 或 '2'
+  req.params.page;  // ✅ /posts → undefined；/posts/page/2 → '2'（用前先判 undefined）
 });
 ```
 
 ### 2.4 正则约束 `{:name(pattern)}`
 
 ```js
-// id 只匹配数字
+// 目的：{:name(正则)} 约束参数——不匹配则整条路由不命中（自动回落 404，省掉手写校验）
 app.get('/users/{:id(\\d+)}', (req, res) => {
-  req.params.id;  // 保证全是数字
+  req.params.id;  // ✅ 只会是纯数字串，/users/abc 根本进不来
 });
-// 匹配 /search/hello 但不匹配 /search/123
-app.get('/search/{:keyword([a-z]+)}', handler);
+app.get('/search/{:keyword([a-z]+)}', handler);  // ✅ 匹配 /search/hello，不匹配 /search/123
 ```
 
 ### 2.5 命名路由 + `.name`
 
 ```js
+// 目的：给路由命名，便于反向生成 URL（如模板/重定向引用）
 const userRoute = app.get('/users/:id', handler);
-userRoute.name = 'getUser';
-// req.url 生成（配合 res.locals）
+userRoute.name = 'getUser';   // ✅ 之后可用 app.route('getUser', {id:5}) 生成 '/users/5'
+// ❌ name 只是标签，不影响匹配行为；拼错名字反向生成时会找不到路由
 ```
 
 ---
@@ -90,23 +94,24 @@ userRoute.name = 'getUser';
 ### 3.1 创建 & 挂载
 
 ```js
-// routes/orders.js
+// 目的：orders 子路由——mergeParams:true 才能读到父级挂载路径里的 :userId
 import { Router } from 'express';
-const router = Router({ mergeParams: true });  // 保留父级 params
+const router = Router({ mergeParams: true });  // ✅ 保留父级 params
 
-router.get('/', listOrders);
-router.get('/:orderId', getOrder);
+router.get('/', listOrders);                    // ✅ /api/users/:userId/orders
+router.get('/:orderId', getOrder);              // ✅ .../orders/:orderId
 router.post('/', createOrder);
-router.put('/:orderId/status', updateStatus);
+router.put('/:orderId/status', updateStatus);   // ✅ .../orders/:orderId/status
 
 export default router;
+// ❌ 漏 mergeParams:true → 子 router 里 req.params.userId 为 undefined，只剩自己的 orderId
 ```
 
 ```js
-// app.js
+// 目的：把子路由挂到带参数的父路径——两级 params 合并
 import orderRoutes from './routes/orders.js';
 app.use('/api/users/:userId/orders', orderRoutes);
-// → /api/users/1/orders/2/status  →  params: { userId: '1', orderId: '2' }
+// ✅ /api/users/1/orders/2/status → params: { userId: '1', orderId: '2' }（靠 mergeParams 才能同时拿到）
 ```
 
 **`mergeParams: true`**：把父路由的参数合并进子 router 的 `req.params`。
@@ -114,26 +119,28 @@ app.use('/api/users/:userId/orders', orderRoutes);
 ### 3.2 路由级中间件
 
 ```js
+// 目的：路由级中间件——只对本 router 内所有请求生效
 router.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
+  next();   // ✅ 必须调，否则该 router 下所有路由都挂起
 });
 ```
 
 ### 3.3 参数中间件 `router.param()`
 
 ```js
-// 加载 user 到 req.user —— 所有含 :userId 的路由自动执行
+// 目的：参数中间件——凡路径含 :userId 都先跑它，把 user 预加载进 req（去重样板代码）
 router.param('userId', async (req, res, next, id) => {
   const user = await User.findById(id);
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  req.user = user;
+  if (!user) return res.status(404).json({ error: 'User not found' });  // ✅ 找不到就短路，不进 handler
+  req.user = user;   // ✅ 挂到 req 供下游直接用
   next();
 });
 
 router.get('/users/:userId/posts', (req, res) => {
-  res.json(req.user.posts);  // req.user 已由 param middleware 注入
+  res.json(req.user.posts);  // ✅ req.user 已由 param 中间件注入，无需再查
 });
+// ❌ 参数名要与路径里的 :userId 完全一致，写成 'id' 则该中间件永不触发
 ```
 
 ---
@@ -143,15 +150,17 @@ router.get('/users/:userId/posts', (req, res) => {
 Express **自上而下**匹配——**第一个匹配的 handler 处理请求**（除非调 `next()`）。
 
 ```js
-app.get('/users/:id', getUser);       // 也匹配 /users/new
-app.get('/users/new', getNewForm);    // 永远到不了这里！
+// 目的：反例——自上而下首个命中即处理，参数路由在前会截胡精确路径
+app.get('/users/:id', getUser);       // ❌ '/users/new' 也命中它，id='new'
+app.get('/users/new', getNewForm);    // ❌ 永远到不了这里！
 ```
 
 **修复**：精确路径放前面。
 
 ```js
+// 目的：正例——把静态段排在参数段之前，保证 /users/new 不被 :id 吞掉
 app.get('/users/new', getNewForm);    // ✅ 精确优先
-app.get('/users/:id', getUser);
+app.get('/users/:id', getUser);       // ✅ 剩下的 id 才走参数路由
 ```
 
 ---
@@ -159,12 +168,14 @@ app.get('/users/:id', getUser);
 ## 五、查询字符串
 
 ```js
+// 目的：读查询串——Express5 默认 qs，嵌套/数组开箱可用
 // GET /products?page=2&sort=price&filters[brand]=nike&filters[brand]=adi
 app.get('/products', (req, res) => {
-  req.query.page;     // '2'
-  req.query.sort;     // 'price'
-  req.query.filters;  // { brand: ['nike', 'adi'] }  ← qs 解析
+  req.query.page;     // ✅ '2'（仍是字符串，分页要 Number）
+  req.query.sort;     // ✅ 'price'
+  req.query.filters;  // ✅ { brand: ['nike', 'adi'] }  ← qs 解析成数组
 });
+// ❌ 直接拿 req.query.page 参与算术比较（如 page>10）→ 字符串隐式转换易出 bug，务必显式转数字
 ```
 
 Express 5 默认用 **qs** → 嵌套对象/数组开箱可用。
@@ -222,32 +233,36 @@ Express 5 默认用 **qs** → 嵌套对象/数组开箱可用。
 ### 8.1 路由内 throw → 全局 catch
 
 ```js
+// 目的：路由内直接 throw——Express5 自动捕获并转给错误中间件，无需 try/catch
 app.get('/boom', async (req, res) => {
-  throw new Error('kaboom');  // Express 5 自动捕获
+  throw new Error('kaboom');  // ✅ Express5 检测 thenable，reject 自动 .catch(next)
 });
 
-// 最后注册
+// ✅ 错误中间件必须最后注册，且是四参数签名
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
+    error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,  // ✅ 生产不外泄内部信息
   });
 });
+// ❌ 若错误中间件写成三参数 (err, req, res) → 被当普通中间件，err 永远到不了这里
 ```
 
 ### 8.2 next(err) 手动传递
 
 ```js
+// 目的：同步校验失败时手动 next(err)——跳过后续 handler 直达错误中间件
 app.get('/users/:id', async (req, res, next) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
     const err = new Error('Invalid ID');
-    err.status = 400;
-    return next(err);  // 跳过后续 handler → 进 error middleware
+    err.status = 400;                       // ✅ 自定义状态码供错误中间件读取
+    return next(err);                       // ✅ 带 err 调 next → 跳过 handler 进 error middleware
   }
   const user = await db.users.findById(id);
   res.json(user);
 });
+// ❌ 写成 next() 不带 err → 被视为正常放行，继续往下跑，错误被吞掉
 ```
 
 ---
@@ -257,19 +272,23 @@ app.get('/users/:id', async (req, res, next) => {
 ### 9.1 URL 前缀
 
 ```js
-app.use('/api/v1', v1Router);
-app.use('/api/v2', v2Router);
+// 目的：URL 前缀版本化——不同大版本各挂一套 router，互不干扰
+app.use('/api/v1', v1Router);   // ✅ /api/v1/* → v1 实现
+app.use('/api/v2', v2Router);   // ✅ /api/v2/* → v2 实现
+// ❌ v1/v2 共用同一 URL 前缀 → 后注册的 router 永远命中不到
 ```
 
 ### 9.2 Header 版本（Accept / X-API-Version）
 
 ```js
+// 目的：Header 版本化——从请求头读版本挂到 req，供下游 router/handler 分流
 function versioned(req, res, next) {
-  const v = req.get('X-API-Version') || '1';
-  req.apiVersion = v;
-  next();
+  const v = req.get('X-API-Version') || '1';  // ✅ 缺省当作 v1
+  req.apiVersion = v;                           // ✅ 挂到 req 供后续判断
+  next();                                       // ✅ 放行
 }
-app.use('/api', versioned, apiRouter);
+app.use('/api', versioned, apiRouter);          // ✅ 进 apiRouter 前每个请求都先跑 versioned
+// ❌ 忘 next() → 请求卡在 versioned 里，永远到不了 apiRouter
 ```
 
 ---

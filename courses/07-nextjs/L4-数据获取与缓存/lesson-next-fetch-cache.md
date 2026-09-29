@@ -7,18 +7,20 @@
 ## 一、取数即渲染：async 组件的姿势
 
 ```tsx
+// 目的：库层统一取数出口——顺带缓存选项与错误处理，日志/超时/重试集中可复用
 // 库层：统一出口，方便加日志/超时/重试（lib/api.ts）
 export async function getPosts() {
-  const res = await fetch(`${process.env.API_BASE}/posts`, { next: { revalidate: 60, tags: ['posts'] } });
-  if (!res.ok) throw new Error(`posts ${res.status}`);   // ← 非 2xx 必须自己处理（fetch 不自动 throw！）
+  const res = await fetch(`${process.env.API_BASE}/posts`, { next: { revalidate: 60, tags: ['posts'] } });   // ✅ 60s 新鲜期 + 贴 posts 标签
+  if (!res.ok) throw new Error(`posts ${res.status}`);   // ✅ 非 2xx 必须自己处理（fetch 不自动 throw！）
   return res.json();
 }
+// ❌ 删掉 if (!res.ok) 那行 → 500/404 的错误响应会被当正常数据 res.json()，页面拿到垃圾数据而非进 error 边界
 ```
 
 ```tsx
-// 组件层：谁需要数据，谁 await（lib 层函数）
+// 目的：组件层—谁需要数据谁 await（调 lib 层函数，命中缓存则毫秒返回）
 export default async function Blog() {
-  const posts = await getPosts();       // 命中缓存则毫秒返回
+  const posts = await getPosts();       // ✅ 命中 Data Cache 则毫秒返回，不发真实请求
   return <List posts={posts} />;
 }
 ```
@@ -32,10 +34,12 @@ export default async function Blog() {
 原生 fetch 的 `cache` 字段被 Next 接管扩展：
 
 ```tsx
-fetch(url, { cache: 'no-store' })                    // 每次请求都回源（动态）
-fetch(url, { next: { revalidate: 3600 } })           // 1 小时新鲜期 → Data Cache + 到期 ISR 式回源
-fetch(url, { next: { tags: ['posts', 'post-42'] } }) // 贴标签 → 精确主动失效（revalidateTag 用）
-fetch(url)                                           // 默认：GET 且未标动态时 = 缓存(构建期/无限期*)
+// 目的：fetch 第三参数改变缓存命运——四种写法语义各异
+fetch(url, { cache: 'no-store' })                    // ✅ 每次请求都回源（动态）
+fetch(url, { next: { revalidate: 3600 } })           // ✅ 1 小时新鲜期 → Data Cache + 到期 ISR 式回源
+fetch(url, { next: { tags: ['posts', 'post-42'] } }) // ✅ 贴标签 → 精确主动失效（revalidateTag 用）
+fetch(url)                                           // ⚠️ 默认：GET 且未标动态时 = 缓存(构建期/无限期*)
+// ❌ 把含用户 cookie 的接口不配 no-store 就进缓存 → 同 URL 同选项即同缓存条目，A 用户响应喂给 B（串号/信息泄漏）
 ```
 
 \* 默认行为在 14/15 间反复调整（缓存默认开关之争），**团队必须锁死一种写法**：要么显式 `cache`，要么在 config 里定 `fetchCache` 策略——"隐式默认"是事故温床（对照 ts-strict 反 any 的立场）。
@@ -80,12 +84,14 @@ Data Cache        服务端：fetch 结果（跨请求、按 URL+tag 键）
 3. 承认它动态：把 DB 页设计成 SSR/no-store，缓存交给 CDN 层或 DB 连接池。
 
 ```ts
+// 目的：非 fetch 数据源（ORM/直连 DB）没有免费缓存，用 unstable_cache 给它套上 Data Cache 语义
 import { unstable_cache } from 'next/cache';
 export const getUserOrders = unstable_cache(
-  async (uid: string) => db.order.findMany({ where: { uid } }),
-  ['orders'],                       // 键前缀，uid 自动拼接
-  { revalidate: 30, tags: [(uid) => `orders-${uid}`] }   // 按人失效
+  async (uid: string) => db.order.findMany({ where: { uid } }),   // ✅ 被缓存的异步函数
+  ['orders'],                       // ✅ 键前缀，uid 自动拼接
+  { revalidate: 30, tags: [(uid) => `orders-${uid}`] }   // ✅ 按人失效
 );
+// ❌ 手键忘含 uid（写死 ['orders']）→ 不同用户的订单复用同一缓存项，甲看到乙的订单（串号）
 ```
 
 注意第 2、3 条的教训同样适用于 Redis/内存 Map 手搓缓存——**手搓要自备失效**，unstable_cache 只是把 fetch 的模型推广了一下（呼应 mp-storage 的 TTL 信封设计）。

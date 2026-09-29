@@ -8,9 +8,11 @@
 
 ```svelte
 <style>
-  button { background: #ff3e00; }
+  /* 目的：<style> 默认作用域—编译期给选择器加唯一哈希类，零运行时隔离 */
+  button { background: #ff3e00; }   /* ✅ 编译后变 button.svelte-a1b2c3，只命中本组件 */
 </style>
 <button>点我</button>
+<!-- ❌ 以为这段 button 规则会影响全页所有按钮→不会，未引用本样式的其它组件不受影响（除非 :global） -->
 ```
 
 编译后，选择器被改写成带**唯一哈希类**的形式（如 `button.svelte-a1b2c3`），并给本组件真实 DOM 节点加上该 `class`。效果：
@@ -27,11 +29,13 @@
 
 ```svelte
 <style>
-  /* 只让当前组件下的 .dark 生效于全局选择器 */
+  /* 目的：:global() 逃逸—该选择器不加哈希，按原样输出，用于影响第三方/全局 */
+  /* ✅ 只让当前组件下的 .dark 生效于全局选择器 */
   .card :global(.third-party-widget) { border-color: red; }
 
-  /* 整块全局 */
+  /* ✅ 整块全局 */
   :global(body) { margin: 0; }
+  /* ❌ 不包 :global 直接写 body{margin:0} → 选择器被加哈希，命中不到真正的 body，规则失效 */
 </style>
 ```
 
@@ -46,14 +50,15 @@
 
 ```svelte
 <script>
-  let hue = $state(200);
+  // 目的：从 JS 向 CSS 传值—把组件状态喂给 CSS 自定义属性，数据驱动样式
+  let hue = $state(200);   // ✅ hue 变，下方背景色自动重算
 </script>
 
 <!-- style:--hue 把 JS 值变成 CSS 自定义属性 -->
-<div style:--hue={hue}>颜色随 hue 变</div>
+<div style:--hue={hue}>颜色随 hue 变</div>   {/* ✅ 无需内联字符串拼接 */}
 
 <style>
-  div { background: hsl(var(--hue) 70% 55%); }
+  div { background: hsl(var(--hue) 70% 55%); }   /* ✅ 读 --hue，继承给子组件 */
 </style>
 ```
 
@@ -68,7 +73,8 @@
 
 ```svelte
 <style>
-  @keyframes pop { from { transform: scale(.8);} to { transform: scale(1);} }
+  /* 目的：<style> 里的 @keyframes 同样被作用域化，配合 transition:/animate: */
+  @keyframes pop { from { transform: scale(.8);} to { transform: scale(1);} }   /* ✅ 名字也被哈希，不与他组件冲突 */
   .box { animation: pop .2s ease; }
 </style>
 ```
@@ -81,15 +87,17 @@ Svelte 5 里，给元素加**条件类**用普通 `class` 表达式；曾经的 
 
 ```svelte
 <script>
-  let { active = false } = $props();   // 组件：直接接收 class 相关 prop
+  // 目的：条件类—元素用 class:x 或 class={}，组件不再用 class: 指令而改普通 prop
+  let { active = false } = $props();   // ✅ 组件：直接接收 class 相关 prop
   let on = $state(false);
 </script>
 
 <!-- 元素条件类：推荐用三元或 class: 皆可 -->
-<div class={on ? 'on' : ''}>A</div>
-<div class:on>B</div>            <!-- class: 简写，on 为真则加 .on -->
+<div class={on ? 'on' : ''}>A</div>   {/* ✅ 三元表达式控制 */}
+<div class:on>B</div>            {/* ✅ class: 简写，on 为真则加 .on */}
 
 <!-- 合并外部传入的 class：用 $$restProps 或接收 children/class prop -->
+<!-- ❌ 在组件上写 <Child class:active={on}> → Svelte 5 组件不再支持 class: 指令，应改成传普通 prop -->
 ```
 
 > 要点：**元素**用 `class:x` 或 `class={...}`；**组件**不再用 `class:` 指令，改成把 class 当普通 prop 传（呼应 svelte-spread-rest）。
@@ -101,8 +109,9 @@ Svelte 5 里，给元素加**条件类**用普通 `class` 表达式；曾经的 
 组件可把自己需要的 `<style>`/`<link>`/`<title>` 注入文档 head，SSR 时会一并渲染：
 
 ```svelte
+<!-- 目的：<svelte:head> 注入 head 样式/元信息—SSR 时会一并渲染进文档头部 -->
 <svelte:head>
-  <title>我的页面</title>
+  <title>我的页面</title>   {/* ✅ SEO 标题，服务端输出时就就位 */}
   <link rel="stylesheet" href="/x.css" />
 </svelte:head>
 ```

@@ -7,16 +7,17 @@
 ## 一、两条 import 规则，一条作用域警告
 
 ```tsx
+// 目的：两条 import 规则——全局 CSS 处处可 import，Module CSS 只能客户端组件
 // app/globals.css —— 全局样式
-import './globals.css';          // 惯例：根 layout import
-// 但 RSC 时代规则变了：任何 服务端/客户端 组件文件都能 import 全局 CSS，
-// Next 会把它们提取合并进首屏文档（不再要求"只能 _app"）。
+import './globals.css';          // ✅ 惯例：根 layout import
+// ✅ RSC 时代规则变了：任何 服务端/客户端 组件文件都能 import 全局 CSS，Next 提取合并进首屏文档
 
 // 模块 CSS：只有客户端组件能 import *.module.css
 // components/badge.tsx
 'use client';
-import styles from './badge.module.css';
+import styles from './badge.module.css';   // ✅ 前面必须有 'use client'
 export default function Badge() { return <span className={styles.root}>…</span>; }
+// ❌ 在服务端组件里 import badge.module.css → 报错 "CSS Modules are not supported in Server Components"（无 'use client'）
 ```
 
 - **全局 CSS 无级联作用域**：多个组件各 import 一个全局文件，**最终顺序不保证稳定**——"后写覆盖"的特权战争是样式错乱的万源，方案是**只用全局 CSS 定义 tokens/重置/动画关键帧**，布局细节一律 module/utility（同 vue 时代 scoped 存在的理由，呼应 vue-class-style-transition）；
@@ -45,14 +46,15 @@ npx create-next-app@latest --tailwind     # 自动：tailwind v4 + postcss 预�
 ```
 
 ```tsx
-// 组合范式：clsx 判真假 + 冲突消解
-import { cn } from '@/lib/utils';          // shadcn 约定：twMerge(clsx(...))
+// 目的：组合范式——clsx 判真假 + tailwind-merge 消解冲突，调用方可覆盖
+import { cn } from '@/lib/utils';          // ✅ shadcn 约定：twMerge(clsx(...))
 
 function Btn({ variant = 'primary', className }: BtnProps) {
   return <button className={cn('px-4 py-2 rounded-lg font-medium',
-    variant === 'primary' ? 'bg-black text-white' : 'border',
-    className)} />;                         // ← 调用方可覆盖，冲突由 merge 裁决
+    variant === 'primary' ? 'bg-black text-white' : 'border',   // ✅ 字面量三元安全（purge 能扫到）
+    className)} />;                         // ✅ 调用方可覆盖，冲突由 merge 裁决
 }
+// ❌ 拼接式 class（`text-${size}`）会被 purge 清掉 → 只有本地生效、上线样式丢失
 ```
 
 四条工程经验：

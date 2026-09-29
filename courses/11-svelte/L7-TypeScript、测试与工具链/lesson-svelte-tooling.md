@@ -9,9 +9,11 @@
 Svelte 工程体系重组后（`create-svelte`/`svelte-migrate` 等并入单一 CLI），核心命令：
 
 ```bash
-npx sv create my-app      # 脚手架：选/不选 TS、SvelteKit、linter/formatter、测试
-npx sv add tailwind       #  integrations：给已有项目接库（tailwind/mdx/vitest/Playwright…）
-npx sv check              # 类型与模板诊断（内部即 svelte-check）
+# 目的：sv 是唯一官方 CLI—创建、集成、检查三件事全覆盖
+npx sv create my-app      # ✅ 脚手架：选/不选 TS、SvelteKit、linter/formatter、测试
+npx sv add tailwind       # ✅ integrations：给已有项目接库（tailwind/mdx/vitest/Playwright…）
+npx sv check              # ✅ 类型与模板诊断（内部即 svelte-check，CI 可直接用退出码卡门禁）
+# ❌ 还在用 npx degit sveltejs/template / create-svelte → 已退役，建出来是 Svelte 4 旧工程
 ```
 
 - 老教程里的 `npx degit sveltejs/template`、`create-svelte` 已退役——**见到就是过时信号**（内容生产反复强调的"版本嗅觉"，呼应 README 技术事实守则）。
@@ -21,8 +23,10 @@ npx sv check              # 类型与模板诊断（内部即 svelte-check）
 
 ```js
 // vite.config.js
-import { sveltekit } from '@sveltejs/kit/vite';   // 纯 Svelte 则: import { svelte } from '@sveltejs/vite-plugin-svelte'
-export default { plugins: [sveltekit()] };
+// 目的：plugin-svelte 把 .svelte 接进 Vite 管线—编译/预处理/HMR 都靠它
+import { sveltekit } from '@sveltejs/kit/vite';   // ✅ 纯 Svelte 则: import { svelte } from '@sveltejs/vite-plugin-svelte'
+export default { plugins: [sveltekit()] };   // ✅ 插件存在时 vite dev/build 才能 import .svelte 文件
+// ❌ 忘挂插件只装依赖 → 导入时报 "Unexpected token '<'"，Vite 把 .svelte 当未知格式直接原样加载
 ```
 
 职责链：Vite 管模块图/Dev Server/HMR 协议，**plugin-svelte 把 `.svelte` 接进管线**——调用编译器、拆 `<script>/<style>` 给 preprocessor、HMR 时保留组件状态（runes 组件热更新不重置 `$state` 是其拿手活，呼应 svelte-global-state 的 HMR 话题）。定制点：
@@ -35,16 +39,19 @@ export default { plugins: [sveltekit()] };
 ## 三、svelte.config.js：编译器的事、打包器不管的事都在这里
 
 ```js
+// svelte.config.js
+// 目的：编译器的事、打包器不管的事都集中在这—runes 开关是 4→5 混跑的唯一旋钮
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 export default {
-  preprocess: vitePreprocess(),
-  kit: { /* 仅 SvelteKit 读:adapter、alias、prerender… */ },
+  preprocess: vitePreprocess(),       // ✅ TS/SCSS 预处理一行接入，不然 <script lang="ts"> 原样进编译器报错
+  kit: { /* ✅ 仅 SvelteKit 读：adapter、alias、prerender… */ },
   compilerOptions: {
-    runes: true,               // 全项目强制 runes 模式
-    customElement: false,      // L10 Web Components 开关
+    runes: true,               // ✅ 全项目强制 runes 模式（新项目推荐钉死）
+    customElement: false,      // ✅ L10 Web Components 开关
   },
   extensions: ['.svelte'],
 };
+// ❌ 存量 legacy 工程误钉 runes: true → store/$: 等旧 API 直接编译报错，整仓红
 ```
 
 关键认知：**`compilerOptions.runes` 是 4→5 混跑的唯一旋钮**——

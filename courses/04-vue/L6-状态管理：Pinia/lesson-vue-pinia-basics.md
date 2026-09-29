@@ -11,6 +11,7 @@ npm i pinia
 ```
 ```js
 // main.js
+// 目的：先装 Pinia 实例，之后任何组件才能调 useXxxStore（❌ 没 app.use 就 useStore → “getActivePinia was called with no active Pinia”）
 import { createPinia } from 'pinia';
 app.use(createPinia());
 ```
@@ -18,9 +19,10 @@ app.use(createPinia());
 Pinia 提供**两种写法**，选其一：
 
 ```js
+// 目的：定义同一份共享状态——选项式（A）与 setup 式（B）二选一，二者导出都是 useXxx 工厂
 // A) 选项式（options）
 export const useCounter = defineStore('counter', {
-  state: () => ({ count: 0 }),
+  state: () => ({ count: 0 }),                 // state 必须是工厂函数（返回全新对象，避免多实例/SSR 串数据）
   getters: { double: (s) => s.count * 2 },
   actions: { inc() { this.count++; } },
 });
@@ -30,8 +32,9 @@ export const useCounter = defineStore('counter', () => {
   const count = ref(0);
   const double = computed(() => count.value * 2);
   function inc() { count.value++; }
-  return { count, double, inc };
+  return { count, double, inc };               // 返回的 ref/computed/函数都会成为 store 的成员
 });
+// ❌ state 写成 `state: { count: 0 }`（非函数）→ 所有组件共享同一对象、SSR 跨请求污染
 ```
 setup 式能用 `ref`/`computed`/`watch`，组合与类型推导更自然（呼应 vue-composables）。
 
@@ -41,6 +44,7 @@ setup 式能用 `ref`/`computed`/`watch`，组合与类型推导更自然（呼�
 
 ```vue
 <script setup>
+// 目的：组件里直接调 store——action/属性都可随叫随到，模板自动跟响应
 import { storeToRefs } from 'pinia';
 import { useCounter } from '@/stores/counter';
 const counter = useCounter();
@@ -53,8 +57,9 @@ console.log(counter.count);    // ✅ 响应式读取
 
 **要解构时必须用 `storeToRefs`**：
 ```js
+// 目的：解构 state/getter 必须过 storeToRefs，action 可直接解构
 const { count, double } = storeToRefs(counter);  // ✅ 仍是 ref、保持响应
-const { count } = counter;                        // ❌ 拿到的是断开的普通值
+const { count } = counter;                        // ❌ 拿到的是断开的普通值（store 是 reactive，解构丢响应）
 const { inc } = counter;                          // ✅ action 可安全解构（自动绑 this）
 ```
 store 本质是 reactive 对象，直接解构 state/getter 会丢响应（与 vue-reactivity "reactive 解构丢响应"同一个坑），而 **action 解构安全**（呼应 vue-reactivity-theory 第六节 toRefs）。
@@ -64,9 +69,10 @@ store 本质是 reactive 对象，直接解构 state/getter 会丢响应（与 v
 ## 三、getters：store 里的 computed
 
 ```js
+// 目的：getters = store 里的 computed，基于 state 缓存；返回函数形式可按参过滤
 getters: {
   double: (s) => s.count * 2,
-  byStatus: (s) => (status) => s.todos.filter(t => t.status === status), // 返回函数
+  byStatus: (s) => (status) => s.todos.filter(t => t.status === status), // 返回函数（❌ 这种入参形式不缓存，频繁调用会重复过滤）
   named() { return `${this.count} items`; },   // 用 this 访问其它 getter/state
 }
 ```
@@ -80,6 +86,7 @@ getters: {
 Vuex 的 `mutation`（同步改 state）/`action`（异步）二分被 Pinia 合并成**只有 actions**——直接 `this.xxx = …` 改 state 即可，同步异步都写在一个 action：
 
 ```js
+// 目的：没有 mutations，同步/异步都写在一个 action里，直接 this.xxx= 改 state
 actions: {
   async fetchTodos() {
     this.loading = true;
@@ -100,6 +107,7 @@ actions: {
 
 按**领域/功能**拆多个 store：`useUserStore`、`useCartStore`、`useUIStore`，别造"全局大 store"。store 之间可互相调用组合：
 ```js
+// 目的：一个 store 一件事，跨 store 组合——在 action 里直接调用另一个 useXxx()
 export const useCart = defineStore('cart', {
   actions: { async checkout() {
     const user = useUser();                 // 跨 store
@@ -108,7 +116,7 @@ export const useCart = defineStore('cart', {
   }},
 });
 ```
-每个 store 有唯一 `id`（第一个参数），供 devtools 与 SSR 水合识别（呼应 vue-project-architecture 目录组织）。
+每个 store 有唯一 `id`（第一个参数），供 devtools 与 SSR 水合识别（呼应 vue-project-architecture 目录组织）。❌ 两个 store 用同名 id 会互相覆盖同一份 state。
 
 ---
 

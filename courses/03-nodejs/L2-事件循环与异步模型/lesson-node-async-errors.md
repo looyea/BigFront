@@ -7,9 +7,10 @@
 ## 一、为什么 try/catch 抓不住异步错误
 
 ```js
+// 目的：证明同步 try/catch 抓不到异步回调里的抛错（回调在全新调用栈里执行）
 try {
-  setTimeout(() => { throw new Error("boom"); }, 0);   // ✗ 抓不到！
-} catch (e) { console.log("catch", e); }               // 永远不执行
+  setTimeout(() => { throw new Error("boom"); }, 0);   // ✗ 抓不到！setTimeout 同步返回，try 栈已弹出
+} catch (e) { console.log("catch", e); }               // 永远不执行；boom 会变成未捕获异常直接崩溃进程
 ```
 
 因为 `setTimeout` **同步返回**、try 块随即结束、调用栈早已弹出；等回调真正在**下一轮事件循环**里抛错时，那个 `try` 栈早没了（每个 timer/IO 回调都是全新调用栈，呼应 node-event-loop 第一节）。`async` 函数里 `await` 后的同步 `throw` 能被抓，是因为 `try` 块跨越了 `await` 挂起点、栈还在：
@@ -29,9 +30,10 @@ try {
 Node 传统 API 的签名是 `callback(err, result)`——**第一个参数是错误**，没有错误时为 `null`：
 
 ```js
+// 目的：error-first 约定——回调第一个参数是错误，第一件事永远先查 err
 fs.readFile("a.txt", (err, data) => {
-  if (err) return handleError(err);   // ★ 每次回调第一件事：检查 err
-  use(data);
+  if (err) return handleError(err);   // ★ 文件不存在时 err 为 ENOENT，不先检查就会直接 use(undefined)
+  use(data);                          // ✓ 无错时 err 为 null，才用 data
 });
 ```
 
@@ -62,9 +64,9 @@ doA().then(doB).then(doC)
 
 ```js
 // ✗ 危险：fire-and-forget 不 catch
-void asyncOperation();     // reject 了没人管 → unhandledRejection
+void asyncOperation();     // reject 了没人管 → unhandledRejection（Node 15+ 默认直接崩溃进程）
 // ✓ 至少兜一层
-asyncOperation().catch(report);
+asyncOperation().catch(report);   // reject 被 report 接住，不会升级成未处理拒绝
 ```
 
 ---
@@ -74,14 +76,15 @@ asyncOperation().catch(report);
 当错误逃过所有 catch，Node 提供两个**最后防线**事件（在 `process` 上监听，呼应 node-events）：
 
 ```js
+// 目的：进程级最后防线——错误逃过所有 catch 时的兑底（成对注册）
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error("未处理的 Promise rejection", reason);
-  // 现代 Node：默认会让进程崩溃；这里至少能记录/上报
+  logger.error("未处理的 Promise rejection", reason);   // 至少能记录/上报
+  // 现代 Node：默认会让进程崩溃
 });
 process.on("uncaughtException", (err) => {
   logger.error("未捕获异常", err);
   // ⚠️ 进程状态已不可靠：清理后应尽快退出，由守护进程重启
-  process.exit(1);
+  process.exit(1);   // 不退出则可能带着损坏的内存/连接状态继续跑（危险）
 });
 ```
 

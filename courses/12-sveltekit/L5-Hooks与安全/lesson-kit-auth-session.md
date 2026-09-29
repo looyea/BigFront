@@ -23,22 +23,34 @@
 L5 前两关合流的经典三件套：
 
 ```ts
-// src/hooks.server.js —— 每条请求把 cookie 换成 user 挂上 locals
+// src/hooks.server.js
+// 目的：每条请求把 cookie 换成 user 挂上 locals—鉴权机器的第一环（服务端真相重建点）
 export const handle = async ({ event, resolve }) => {
-  const sessionid = event.cookies.get('sessionid');
-  event.locals.user = sessionid ? await getUserFromSession(sessionid) : null;
-  return resolve(event);
+  const sessionid = event.cookies.get('sessionid');                       // ✅ 只有 httpOnly cookie 能被服务端读到，XSS 偷不走
+  event.locals.user = sessionid ? await getUserFromSession(sessionid) : null;   // ✅ 有令牌→查会话得 user；无→null（后续 load/action 据此裁决）
+  return resolve(event);   // ✅ locals 已就位，交给路由；此后所有 server load/action 都读得到 event.locals.user
 };
+// ❌ 这里就 error/redirect 拦人→handle 只该"认人"不该"准入"；拦在 resolve 外抛错是致命的（路由拿不到机会，只回 JSON 错误或 fallback）
 ```
 ```ts
-// src/routes/+layout.server.js —— 全站登录态一次性下发给所有页面
-export const load = ({ locals }) => ({ user: locals.user ? { id: locals.user.id, name: locals.user.name } : null });
+// src/routes/+layout.server.js
+// 目的：全站登录态一次性下发给所有子页面—广播身份，不逐页重查
+export const load = ({ locals }) => ({
+  // ✅ 只挑公开字段裁剪下发：data 会被序列化进 HTML，塞 passwordHash 等于把哈希贴公网
+  user: locals.user ? { id: locals.user.id, name: locals.user.name } : null,
+});
+// ❌ return { user: locals.user } 整对象透传→User 上的 passwordHash/token 一起进 HTML 源码
+// ❌ 把这里当唯一守卫：/admin/a→/admin/b params 没变，layout load 不重跑，过期 session 被缓存复用漏判
 ```
 ```ts
-// src/app.d.ts —— 给 locals 与页面数据上类型
+// src/app.d.ts
+// 目的：给 locals 上类型—handle 里赋的 user 才能在下游拿到 User | null 而非 any
 declare global {
-  namespace App { interface Locals { user: import('$lib/server/types').User | null } }
+  namespace App {
+    interface Locals { user: import('$lib/server/types').User | null }   // ✅ 声明后 event.locals.user 全站带类型，漏判 null 编译期即红
+  }
 }
+// ❌ 改了 handle 塞新字段却不更新此声明→下游读 event.locals.cart 报"Locals 上不存在属性 cart"
 ```
 
 为什么是这套：handle 保证**每条请求、每个动作之前**都重建 locals（服务端真相），layout load 把 user **向整个子树广播**（L3 的"layout 数据向所有子 layout/page 可见"）——组件里直接 `data.user` 用，无需每个页面各查一次。⚠️ 但 layout 下发的是**裁剪后的公开字段**（别把 passwordHash 塞进 data，它会被序列化进 HTML）。

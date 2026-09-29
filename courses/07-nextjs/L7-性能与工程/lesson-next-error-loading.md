@@ -18,8 +18,9 @@
 ## 2. error.js 怎么写
 
 ```tsx
+// 目的：一个 error.js = 该段及子树的错误边界，接住子树渲染抛出的错
 // app/dashboard/error.tsx
-'use client';  // error 组件必须客户端渲染——它要在"React 都炸了"时工作
+'use client';  // ✅ error 组件必须客户端渲染——它要在“React 都炸了”时工作
 
 export default function Error({
   error, reset, digests,
@@ -27,11 +28,12 @@ export default function Error({
   return (
     <div>
       <h2>出错了：{error.message}</h2>
-      <p>错误编号：{error.digest}</p>
-      <button onClick={() => reset()}>重试</button>
+      <p>错误编号：{error.digest}</p>   {/* ✅ 展示 digest，日志系统按它检索真实堆栈（堆栈不下发防泄漏） */}
+      <button onClick={() => reset()}>重试</button>   {/* ✅ reset() 清该段错误态重渲子树，不是刷新整页 */}
     </div>
   );
 }
+// ❌ 忘写 'use client' → 报错 "error boundary must be a Client Component"，框架自动兜一个默认边界，你的自定义 UI 失效
 ```
 
 三个必须知道的点：
@@ -47,17 +49,19 @@ export default function Error({
 服务端代码里不再"抛字符串自己接"，框架给了三个语义化信号：
 
 ```tsx
+// 目的：声明式中断信号——notFound/forbidden/redirect 都靠 throw 中断执行
 // app/articles/[slug]/page.tsx
 import { notFound, forbidden, redirect } from 'next/navigation';
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPost(slug);
-  if (!post) notFound();          // 渲染就近的 not-found.js，响应码 404
-  if (!post.visible) forbidden(); // 403，渲染 forbidden.js
-  if (post.movedTo) redirect(`/articles/${post.movedTo}`); // 307 跳转（呼应 next-link-router 第 3 节）
+  if (!post) notFound();          // ✅ 渲染就近的 not-found.js，响应码 404
+  if (!post.visible) forbidden(); // ✅ 403，渲染 forbidden.js
+  if (post.movedTo) redirect(`/articles/${post.movedTo}`); // ✅ 307 跳转
   return <Article post={post} />;
 }
+// ❌ 把 notFound()/redirect() 包进 try/catch → 它们抛的特殊信号被吞，页面既不 404 也不跳转（静默 bug）
 ```
 
 注意三者都靠 throw 中断执行，**不要包在 try/catch 里**，否则信号被吞（和 next-forms-mutations 里 redirect 进 Action 的坑同源）。not-found.js 页面记得给返回首页的出口，并在 metadata 里配 robots 不允许索引 404（呼应 next-metadata 第 3 节）。
@@ -70,9 +74,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 - **异常上报**：接入 Sentry 等 SDK，Next 官方模板就是 `instrumentation.ts` + onRequestError / 客户端 onError 双通道。`instrumentation.ts` 是 v14+ 的框架级启动钩子，服务端/Edge 运行时各执行一次：
 
 ```ts
+// 目的：框架级启动钩子——服务端/Edge 运行时各执行一次，注册错误上报
 // instrumentation.ts（app/ 同级）
 export async function register() {
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {   // ✅ 按运行时分支，Edge 不跑 node-only 代码
     const { onRequestError } = await import('./sentry');
     // 注册全局错误钩子
   }

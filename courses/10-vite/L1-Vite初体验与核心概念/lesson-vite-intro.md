@@ -78,12 +78,15 @@ Build 过程：入口 HTML → 解析依赖图 → Tree Shake → Code Split →
 ### 6.1 手动创建
 
 ```bash
-npm create vite@latest my-app -- --template vue-ts
+# 目的：脚手架创建项目—一条命令搭好指定模板的开发/构建/预览三脚本
+npm create vite@latest my-app -- --template vue-ts   # ✅ 生成 vue+TS 模板工程
+
 cd my-app
-npm install
-npm run dev       # 开发 → http://localhost:5173
-npm run build     # 生产 → dist/
-npm run preview   # 预览构建产物
+npm install                                          # ✅ 装依赖
+npm run dev       # ✅ 开发 → http://localhost:5173（no-bundle 秒启动）
+npm run build     # ✅ 生产 → dist/（Rollup 全量打包）
+npm run preview   # ✅ 本地预览构建产物（非 dev server）
+# ❌ 直接 npm run dev 未先 npm install → vite: command not found
 ```
 
 可用模板：`vue` / `vue-ts` / `react` / `react-ts` / `svelte` / `preact` / `vanilla` / `vanilla-ts` 等。
@@ -91,11 +94,13 @@ npm run preview   # 预览构建产物
 ### 6.2 已有项目迁移
 
 ```bash
+# 目的：已有项目接入 Vite—只装 devDep 并加三条脚本，根目录放 index.html 当入口
 npm i -D vite
 # package.json scripts:
 # "dev": "vite"
 # "build": "vite build"
 # "preview": "vite preview"
+# ❌ 忘了把 index.html 放项目根 → Vite 报 failed to locate index.html for rendering HTML
 ```
 
 添加 `index.html` 到项目根 → Vite 入口不再是 JS 文件而是 **HTML 文件**。
@@ -106,25 +111,27 @@ npm i -D vite
 
 ```js
 // vite.config.js (支持 TS: vite.config.ts)
+// 目的：一份最小可用配置—注册框架插件 + 别名 + 开发代理 + 构建产出
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue()],                 // ✅ 让 Vite 能编译 .vue SFC
   resolve: {
-    alias: { '@': '/src' }
+    alias: { '@': '/src' }          // ✅ import '@/x' → /src/x，免相对路径爬层
   },
   server: {
-    port: 3000,
+    port: 3000,                      // ✅ 固定开发端口
     proxy: {
-      '/api': 'http://localhost:8080'
+      '/api': 'http://localhost:8080' // ✅ 前端请求 /api 转发后端，绕开浏览器跨域
     }
   },
   build: {
-    outDir: 'dist',
-    sourcemap: true
+    outDir: 'dist',                  // ✅ 产物目录
+    sourcemap: true                  // ✅ 生成映射，线上报错可定位源码
   }
 });
+// ❌ 用了 .vue 却忘了 plugins:[vue()] → 浏览器拿到原始 SFC 报 SyntaxError: Unexpected token <
 ```
 
 `defineConfig` 提供 TypeScript 类型提示。
@@ -171,8 +178,9 @@ export default defineConfig({
 
 Vite 部署极简：
 ```bash
-npm run build   # → dist/
-npx serve dist  # 本地预览
+# 目的：构建并托管静态产物—build 出 dist，preview 本地验收
+npm run build   # ✅ → dist/
+npx serve dist  # ✅ 本地预览
 # 生产：把 dist/ 丢到任意静态托管（Netlify/Vercel/Nginx/S3/CF Pages）
 ```
 HTML 里自动注入 contenthash 文件名 + 预加载标签。下一关 `vite-setup` 详解项目配置。

@@ -21,16 +21,18 @@ Zustand devtools 中间件与 Redux 共用同一个浏览器扩展（za-middlewa
 流的问题（乱序、该吞没吞、退订时机）在运行时面板里是瞬时烟花，**RxJS 的答案是把时间搬进测试**：
 
 ```ts
+// 目的：marble 测试—把时间装进断言，虚拟时钟秒测 debounce 的时序语义
 import { TestScheduler } from 'rxjs/testing';
 
 it('debounce 吞掉连击只留最后一个', () => {
   new TestScheduler((actual, expected) => {
-    expect(actual).deepEqual(expected);
+    expect(actual).deepEqual(expected);            // ✅ 逐刻度比对实际与预期 marble 图
   }).run(({ cold, expectObservable }) => {
-    const src = cold('abcd----|');                // 连击 a-d：彼此间隔均小于去抖窗
-    expectObservable(src.pipe(debounceTime(30))).toBe('------d--|');
+    const src = cold('abcd----|');                 // ✅ 连击 a-d：彼此间隔均小于去抖窗
+    expectObservable(src.pipe(debounceTime(30))).toBe('------d--|');   // ✅ 30 tick 后只放行最后到达的 d
   });
 });
+// ❌ 用真 setTimeout 测 debounce→ 测试要真等时间、且时序抖动易 flaky；TestScheduler 用虚拟时钟避免
 ```
 
 marble 图（`'a--b--c'`）即用例文档——debounce/throttle/switch/concat 的语义分歧用一行图各判各的；`TestScheduler` 虚拟时钟让『10 分钟轮询』秒测。面板侧配 Redux DevTools 的 RxJS 观测扩展（rx-devtools 系）看运行时，但**主力是测试层**：流的 bug 多数是时序 bug，复现一次不如断言永久。这与信号系的哲学一致——computed 图同样『不弹面板』，靠纯函数单测推导链（MobX/solid 通用）。

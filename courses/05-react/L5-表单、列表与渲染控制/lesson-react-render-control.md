@@ -7,15 +7,17 @@
 ## 一、三种条件渲染写法
 
 ```jsx
+// 目的：三种条件渲染——都用表达式（{} 里不能写 if/for 语句）
 // 1) 三元：二选一
-{isLoggedIn ? <Dashboard /> : <Login />}
+{isLoggedIn ? <Dashboard /> : <Login />}          // ✅ 登录显 Dashboard，否则 Login
 
 // 2) 逻辑与：满足才渲染，否则 false（不渲染）
 {showBanner && <Banner />}
+// ⚠️ count && <X/> 当 count===0 会渲染出字符 "0"→先写 count > 0 && 或 !!count &&
 
 // 3) early return：整块组件级别的分支
 function Profile({ user }) {
-  if (!user) return <LoadingSkeleton />;
+  if (!user) return <LoadingSkeleton />;   // ✅ 未就绪直接退出，避免深层嵌套三元
   return <div>{user.name}</div>;
 }
 ```
@@ -28,10 +30,12 @@ function Profile({ user }) {
 ## 二、渲染 Nothing 与隐藏
 
 ```jsx
+// 目的：返回 null 完全不渲染（对应 v-if），靠 CSS display 则保留 DOM/状态（对应 v-show）
 function Row({ hidden, children }) {
-  if (hidden) return null;          // 完全不渲染，不占 DOM
+  if (hidden) return null;          // 完全不渲染，不占 DOM（❌ 位置的内容会卸载，内部 state 丢弃）
   return <li>{children}</li>;
 }
+// ✅ 想"保留状态只不显示"：return <li style={{ display: hidden ? 'none' : '' }}>{children}</li>
 ```
 - 组件返回 `null` → 这个位置什么都不渲染（**卸载**，内部 state 丢弃、DOM 移除）；
 - 想要"保留 DOM/状态、只是不显示"（类似 Vue `v-show`），React 没有内置指令，靠 **CSS**：`style={{ display: hidden ? 'none' : '' }}` 或 className 切换——因为组件仍被渲染，state 与副作用都保留；
@@ -44,16 +48,18 @@ function Row({ hidden, children }) {
 React **没有**函数式 ErrorBoundary Hook，它必须是**类组件**，实现 `static getDerivedStateFromError` 或 `componentDidCatch`：
 
 ```jsx
+// 目的：类组件边界，捕获子树"渲染期间"抛的错误并降级 UI
 class ErrorBoundary extends React.Component {
   state = { error: null };
   static getDerivedStateFromError(error) { return { error }; } // 渲染降级 UI
   componentDidCatch(error, info) { /* 上报日志 */ }
   render() {
     if (this.state.error) return <Fallback onRetry={() => this.setState({ error: null })} />;
-    return this.props.children;
+    return this.props.children;   // ✅ 无错时正常渲染被包的子树
   }
 }
 // <ErrorBoundary><Risky/></ErrorBoundary>
+// ❌ 捕获不到事件处理器里的错/异步(setTimeout/promise)/SSR——那些要 try/catch 或全局处理
 ```
 - 捕获的是**子树在渲染期间**抛出的错误（render、生命周期、构造）；
 - **捕获不到**：事件处理器里的错误、异步（setTimeout/promise）、服务端渲染、以及 Boundary 自身抛的错——这些用 try/catch 或全局处理；
@@ -65,14 +71,16 @@ class ErrorBoundary extends React.Component {
 ## 四、Suspense：声明式"等待中"
 
 ```jsx
+// 目的：lazy 拆 chunk，Suspense 在子树未就绪时显 fallback，就绪后自动替换
 const Heavy = lazy(() => import('./Heavy'));   // 代码分割（呼应 10-vite 动态 import）
 function App() {
   return (
     <Suspense fallback={<Spinner />}>
-      <Heavy />
+      <Heavy />   // ✅ chunk 未到先显 Spinner，到了换成 Heavy
     </Suspense>
   );
 }
+// ❌ lazy 组件不在任何 <Suspense> 内会被渲染→报 "A component suspended while responding to synchronous input"
 ```
 - 子树在"还没准备好"（懒加载 chunk 未到、数据流 pending）时，React 渲染 `fallback`，就绪后自动替换；
 - `lazy` + `Suspense` 是路由/大组件按需加载的标准组合（呼应 react-router-data）；

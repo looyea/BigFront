@@ -29,15 +29,16 @@ NgRx = **N**g**R**eactive **X**tensions——把 Redux 单向数据流（Action 
 ## 二、最小 NgRx 代码示例
 
 ```ts
+// 目的：最小 NgRx 代码——Action/Reducer/Effect/Selector 四件套串起来
 // actions
-export const loadUsers = createAction('[Users Page] Load Users');
-export const loadUsersSuccess = createAction('[Users API] Load Users Success', props<{ users: User[] }>());
+export const loadUsers = createAction('[Users Page] Load Users');   // 纯对象：描述「发生了什么」
+export const loadUsersSuccess = createAction('[Users API] Load Users Success', props<{ users: User[] }>());   // 带 payload
 export const loadUsersFailure = createAction('[Users API] Load Users Failure', props<{ error: string }>());
 
 // reducer
 const usersReducer = createReducer(
-  initialState,
-  on(loadUsers, state => ({ ...state, loading: true })),
+  initialState,                                                        // 初始态
+  on(loadUsers, state => ({ ...state, loading: true })),               // 纯函数：返回新对象
   on(loadUsersSuccess, (state, { users }) => ({ ...state, users, loading: false })),
   on(loadUsersFailure, (state, { error }) => ({ ...state, error, loading: false })),
 );
@@ -46,26 +47,28 @@ const usersReducer = createReducer(
 @Injectable()
 export class UsersEffects {
   loadUsers$ = createEffect(() => {
-    const actions$ = inject(Actions);
+    const actions$ = inject(Actions);                                 // 监听已 dispatch 的 action 流
     return actions$.pipe(
-      ofType(UsersPageActions.loadUsers),
-      switchMap(() => inject(HttpClient).get<User[]>('/api/users').pipe(
-        map(users => UsersApiActions.loadUsersSuccess({ users })),
-        catchError(err => of(UsersApiActions.loadUsersFailure({ error: err.message }))),
+      ofType(UsersPageActions.loadUsers),                             // 只响应该 action
+      switchMap(() => inject(HttpClient).get<User[]>('/api/users').pipe(   // 副作用（HTTP）在此，不在 reducer
+        map(users => UsersApiActions.loadUsersSuccess({ users })),   // 成功→dispatch Success
+        catchError(err => of(UsersApiActions.loadUsersFailure({ error: err.message }))),   // 失败→dispatch Failure
       )),
     );
-  }, { functional: true });
+  }, { functional: true });   // v15+ 函数式 effect
 }
 
 // selector
 export const selectActiveUsers = createSelector(
   selectUsersFeature,
-  (state) => state.users.filter(u => u.active),
+  (state) => state.users.filter(u => u.active),   // createSelector 自动 memoize，源不变不重算
 );
 
 // 组件
-users$ = this.store.select(selectActiveUsers);
-ngOnInit() { this.store.dispatch(loadUsers()); }
+users$ = this.store.select(selectActiveUsers);    // 订阅派生流
+ngOnInit() { this.store.dispatch(loadUsers()); }  // 触发 action→effect 跑 HTTP
+// ✅ 分工：action 纯对象、reducer 纯函数产新 state、effect 做 HTTP、selector 缓存派生
+// ❌ reducer 里直接 state.users.push(...) mutate→违反不可变→DevTools 时间旅行/引用比较失效
 ```
 
 ## 三、Redux DevTools 时间旅行
@@ -83,16 +86,17 @@ NgRx 最大卖之一是 **@ngrx/store-devtools**：
 v17.1 起 `@ngrx/signals` 提供 **signal-based store**——更轻量：
 
 ```ts
+// 目的：NgRx Signals 新派——signalStore 用 state/computed/methods 替掉四件套
 import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
 
 const UsersStore = signalStore(
-  withState<{ users: User[]; loading: boolean }>({ users: [], loading: false }),
-  withComputed((store) => ({
+  withState<{ users: User[]; loading: boolean }>({ users: [], loading: false }),   // 声明 state
+  withComputed((store) => ({                                                       // 声明派生
     activeUsers: computed(() => store.users().filter(u => u.active)),
   })),
-  withMethods((store, http = inject(HttpClient)) => ({
+  withMethods((store, http = inject(HttpClient)) => ({                             // 声明 action（可注入依赖）
     load() {
-      patchState(store, { loading: true });
+      patchState(store, { loading: true });                                        // patchState 局部不可变更新
       http.get<User[]>('/api/users').subscribe(users => patchState(store, { users, loading: false }));
     },
   })),
@@ -101,6 +105,8 @@ const UsersStore = signalStore(
 // 组件中
 private store = inject(UsersStore);
 // store.users() / store.activeUsers() / store.load()
+// ✅ 只有 state + computed + methods，心智从 Redux 回到 signal store，样板骤减
+// ❌ 直接 store.users = [...] 赋值绕过 patchState→破坏只读/不可变→应 patchState(store, {users})
 ```
 
 对比经典 NgRx：没有 Action/Reducer/Effect/Selector 四件套——只有 **state + computed + methods**。心智模型从 Redux 回到 signal store。
@@ -110,23 +116,26 @@ private store = inject(UsersStore);
 `@ngrx/component-store`——**不是全局 store**，作用域绑定到一个组件（或子树）：
 
 ```ts
+// 目的：ComponentStore——组件级局部状态，作用域绑定到一个组件/子树
 @Injectable()
-export class UserDetailStore extends ComponentStore<UserDetailState> {
+export class UserDetailStore extends ComponentStore<UserDetailState> {   // 继承 ComponentStore、传状态类型
   readonly vm$ = this.select(
-    this.state$,
+    this.state$,                                                          // 从 state$ 派生视图模型
     (state) => ({ user: state.user, loading: state.loading }),
   );
-  readonly loadUser$ = this.effect<string>((userId$) =>
+  readonly loadUser$ = this.effect<string>((userId$) =>   // effect：接参数流、自动随组件销毁退订
     userId$.pipe(
       switchMap(id => inject(HttpClient).get<User>(`/api/users/${id}`)),
       tapResponse(
-        user => this.patchState({ user, loading: false }),
-        error => this.patchState({ error, loading: false }),
+        user => this.patchState({ user, loading: false }),   // 成功：patchState
+        error => this.patchState({ error, loading: false }), // 失败：也 patchState
       ),
     ),
   );
 }
 // 组件 providers: [UserDetailStore] → 组件销毁 → store 销毁
+// ✅ this.effect 自带退订 + tapResponse 分管成败，比 NgRx Store 轻、比裸 signal 多管道
+// ❌ 把 ComponentStore 注册成 providedIn:'root'→变全局单例，失去「组件销毁即销」→应放组件 providers
 ```
 
 适合「一页一 store」的局部状态管理——比 NgRx Store 轻、比裸 signal 多了 effect 管道。

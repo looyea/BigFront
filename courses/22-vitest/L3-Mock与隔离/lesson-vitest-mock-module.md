@@ -3,8 +3,10 @@
 ## 一、vi.mock 与它的自动提升
 
 ```ts
-vi.mock('./api', () => ({ getUser: vi.fn() }));
-import { getUser } from './api';
+// 目的：vi.mock 被 hoist 到文件顶、先于 import 执行——mock 声明「语义上永远在最前」
+vi.mock('./api', () => ({ getUser: vi.fn() }));  // 工厂：把 ./api 整个换成替身
+import { getUser } from './api';                 // ✅ 拿到的已是 mock 后的 getUser
+// ❌ 工厂里直接引用下方 const x：提升后 x 尚未初始化 → undefined（改用 vi.hoisted，见第三节）
 ```
 
 `vi.mock` 会被 **hoist（提升到文件顶部、先于 import 执行）**——所以你写在 import 之后的 `vi.mock` 其实先生效。这是 ESM 测试里最常见的困惑源头：记住「mock 声明在语义上永远在最前面」。
@@ -14,10 +16,12 @@ import { getUser } from './api';
 第二参工厂返回替换后的模块形状。**只改几个导出、其余保留真实**，用 `importOriginal`：
 
 ```ts
+// 目的：部分 mock——importOriginal 拿真实模块、只替换昂贵的那一个导出
 vi.mock('./utils', async (orig) => {
-  const real = await orig<typeof import('./utils')>();
-  return { ...real, expensive: vi.fn() };
+  const real = await orig<typeof import('./utils')>();  // 取未被 mock 的真实模块
+  return { ...real, expensive: vi.fn() };               // ✅ 保留其余真实、只把 expensive 换成替身
 });
+// ❌ 想要「大部分真实」却不 importOriginal、直接返回 { expensive: vi.fn() } → 其它导出全丢失、下游 import undefined
 ```
 
 不传工厂则是**自动 mock**（Vitest 猜测形状、函数都变空 vi.fn），一般不推荐——显式工厂更可控。
@@ -27,8 +31,10 @@ vi.mock('./utils', async (orig) => {
 工厂被提升到 import 前，**不能引用文件里后声明的变量**。用 `vi.hoisted` 把需要共享的东西也提到最前：
 
 ```ts
-const { mockFn } = vi.hoisted(() => ({ mockFn: vi.fn() }));
-vi.mock('./dep', () => ({ dep: mockFn }));
+// 目的：vi.hoisted 把「要被子提升的工厂引用的变量」也提到最前，解决引用后声明变量报错
+const { mockFn } = vi.hoisted(() => ({ mockFn: vi.fn() }));  // 与 vi.mock 一起被提升
+vi.mock('./dep', () => ({ dep: mockFn }));                    // ✅ 工厂此时能安全拿到 mockFn
+// ❌ 不用 hoisted、写成 const mockFn = vi.fn()（在 vi.mock 之后）再在工厂里引用 → 提升期 mockFn 为 undefined
 ```
 
 ## 四、mock 配置、环境、网络

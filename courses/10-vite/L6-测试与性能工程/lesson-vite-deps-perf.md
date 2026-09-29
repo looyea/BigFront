@@ -27,14 +27,16 @@ SSR 侧有独立的 deps 缓存目录（与客户端分开预构建），规则�
 ## 三、参数实战手册
 
 ```ts
+// 目的：optimizeDeps 三参数实战—控制预构建的范围与跳过，消除“反复 reload”
 export default defineConfig({
   optimizeDeps: {
-    include: ['lodash-es', 'some-cjs-lib > internal/deep'],  // 扫描盲区/传递 CJS 手动点名（> 语法引子包）
-    exclude: ['heavy-esm-only-lib', '@acme/ui'],             // 已是高效 ESM/工作区链接包，跳过省时间
-    entries: ['src/**/*.html', 'src/main.tsx'],              // 依赖发现范围
+    include: ['lodash-es', 'some-cjs-lib > internal/deep'],  // ✅ 扫描盲区/传递 CJS 手动点名（> 语法引子包）
+    exclude: ['heavy-esm-only-lib', '@acme/ui'],             // ✅ 已是高效 ESM/工作区链接包，跳过省时间
+    entries: ['src/**/*.html', 'src/main.tsx'],              // ✅ 依赖发现范围，把动态/多页入口声明全
   },
-  server: { warmup: { './src/**': {} } },                    // Vite 6 环境 API：启动即预 transform 热点文件
+  server: { warmup: { './src/**': {} } },                    // ✅ Vite 6 环境 API：启动即预 transform 热点文件
 })
+// ❌ workspace 链包 @acme/ui 不 exclude → 被当依赖预构建，改库源码 dev 不生效/反复失效 reload
 ```
 
 判断该 include 还是 exclude 的口诀：**"页面一打开就用到但没在首屏 import 链上" → include；"本身是打包良好的 ESM 或要改源码的 workspace 包" → exclude**。改完配置别玄学重启——`rm -rf node_modules/.vite` 强制干净重建排除缓存干扰（排查三板斧第一板）。

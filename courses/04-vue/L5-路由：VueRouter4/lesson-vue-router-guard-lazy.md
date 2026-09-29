@@ -7,9 +7,10 @@
 ## 一、守卫的三种作用域
 
 ```js
+// 目的：守卫的三种作用域——全局(每次导航)、路由独享(某条记录)、组件内(被路由的组件)
 // 1) 全局守卫（作用于每次导航）
 router.beforeEach((to, from) => { /* ... */ });      // 进入前
-router.afterEach((to, from) => { /* 埋点、关进度条 */ }); // 已确认、渲染后
+router.afterEach((to, from) => { /* 埋点、关进度条 */ }); // 已确认、渲染后（✅ afterEach 不能取消导航，只适合副作用）
 
 // 2) 路由独享守卫（写在某条路由记录上）
 { path: '/admin', component: Admin, beforeEnter: (to, from) => { /* ... */ } }
@@ -17,7 +18,7 @@ router.afterEach((to, from) => { /* 埋点、关进度条 */ }); // 已确认、
 // 3) 组件内守卫（写在被路由的组件里）
 // <script setup> 用带守卫的组合式 API：
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
-onBeforeRouteLeave((to, from) => { if (!saved) return confirm('放弃编辑?'); });
+onBeforeRouteLeave((to, from) => { if (!saved) return confirm('放弃编辑?'); });   // ✅ 返回 false 就阻止离开
 ```
 - **全局 beforeEach** 最常用：统一鉴权、白名单、进度条；
 - **beforeEnter** 只针对某路由；
@@ -30,6 +31,7 @@ onBeforeRouteLeave((to, from) => { if (!saved) return confirm('放弃编辑?'); 
 守卫可用**第三个参数 `next`**，或**直接返回**来影响导航，**别混用**：
 
 ```js
+// 目的：影响导航二选一——返回值风格（推荐）或 next 风格，同一个守卫里别混用
 // 返回值风格（推荐，Vue Router 4）
 router.beforeEach((to) => {
   if (to.meta.requiresAuth && !isLogin()) return { name: 'login' }; // 重定向
@@ -42,6 +44,7 @@ router.beforeEach((to, from, next) => {
   if (ok) next();                 // 放行
   else next({ name: 'login' });   // 重定向
   // next(false) 取消；next(err) 中断并抛错
+  // ❌ 既 return 又调 next 会冲突；既不调 next 又不 return 则导航永久挂起
 });
 ```
 异步：守卫可 `async`，`await` 校验结果再决定返回（如校验 token）。**每个 beforeEach 必须最终产生一个决定**（放行/取消/重定向），否则导航会挂起（呼应 node-async-errors）。
@@ -69,6 +72,7 @@ router.beforeEach((to, from, next) => {
 ## 四、用 meta + 全局守卫做鉴权（最主流范式）
 
 ```js
+// 目的：meta 标记“需要登录/需要角色”，全局 beforeEach 统一拦截并记住原目标回跳
 const routes = [
   { path: '/login', name: 'login', component: Login },
   { path: '/profile', component: Profile, meta: { requiresAuth: true } },
@@ -78,7 +82,7 @@ const routes = [
 router.beforeEach((to) => {
   const authed = useAuthStore().isLoggedIn;    // 见 vue-pinia
   if (to.meta.requiresAuth && !authed) {
-    return { name: 'login', query: { redirect: to.fullPath } }; // 记住原目标
+    return { name: 'login', query: { redirect: to.fullPath } }; // ✅ 记住原目标，登录后 replace 回原页
   }
   if (to.meta.roles && !hasRole(to.meta.roles)) return { name: '403' };
 });
@@ -92,6 +96,7 @@ router.beforeEach((to) => {
 ## 五、滚动行为 & 路由懒加载分包
 
 ```js
+// 目的：scrollBehavior 控制每次导航后的滚动位置（后退回原位/锚点平滑/默认置顶）
 createRouter({
   history: createWebHistory(),
   routes,

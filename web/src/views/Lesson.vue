@@ -96,10 +96,17 @@ async function copyText(t) {
       </template>
     </section>
 
+    <!-- 底部返回：课文与动手示例读完，一键回课程目录选下一节 -->
+    <div class="lesson-foot">
+      <router-link class="btn" :to="`/p/${lesson.pkgId}`">📚 返回课程目录 · 选下一节</router-link>
+    </div>
+
   </div>
 </template>
 
 <style scoped>
 /* 正文与面包屑左缘对齐、宽度铺满页面（不再居中限宽，避免相对面包屑右移） */
 .lesson-single { max-width: none; margin: 0; }
+/* 底部返回条：右对齐、上边距拉开 */
+.lesson-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); }
 </style>

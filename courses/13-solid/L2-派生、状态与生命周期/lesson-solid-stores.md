@@ -7,15 +7,17 @@
 官方一句话点题：signal "track a single value and trigger a full re-render when updated"（相对粗），而 store "maintain fine-grained reactivity by updating only the properties that change"。用 JS 的 **Proxy**，store 的响应性穿透到**嵌套属性与数组元素**，形成"一棵反应式数据树"。
 
 ```js
+// 目的：store 用 Proxy 建一棵响应式数据树—深层对象/数组按具体路径细粒度订阅，非整体重渲
 import { createStore } from "solid-js/store";
 
-const [store, setStore] = createStore({
+const [store, setStore] = createStore({   // ✅ 同样返回 [读, 写] 二元组，但 store 直接属性访问、无需 ()
   userCount: 3,
   users: [
     { id: 0, username: "felix909", loggedIn: false },
     { id: 1, username: "tracy634", loggedIn: true },
   ],
 });
+// ❌ 把 store 解构 const { userCount } = store → 拿到定格快照，之后改了不响应（读要走 store.userCount）
 ```
 
 选型：**标量/整体替换 → signal；深层嵌套对象/数组、要按字段局部更新 → store**（呼应 solid-signals 的相等短路那节）。
@@ -27,8 +29,10 @@ store 取值**不用函数调用**，直接 `store.userCount`、`store.users[0].
 关键点：**创建 store 时并不立刻为每个属性建 signal**，signal 是**惰性**的——只有当你在某追踪作用域（JSX return、computed、`createEffect`）里读到那个路径时，才建立对应的订阅。
 
 ```js
-console.log(store.users.at(-1));                 // ❌ 不在追踪作用域，不建依赖、不会更新
-createEffect(() => console.log(store.users.at(-1)));   // ✅ 建依赖
+// 目的：signal 懒建—只有在追踪作用域里读到某路径才建订阅
+console.log(store.users.at(-1));                 // ❌ 不在追踪作用域，不建依赖、之后改了也不会更新
+createEffect(() => console.log(store.users.at(-1)));   // ✅ 在 effect 里读，登记对"末元素路径"的订阅
+// 这解释了 store 很多"改了不更新"：不过是读没发生在追踪作用域里
 ```
 
 这解释了 store 的很多"改了不更新"：**读没发生在追踪作用域里**而已。
@@ -38,20 +42,22 @@ createEffect(() => console.log(store.users.at(-1)));   // ✅ 建依赖
 `setStore(key, newValue)` 是最基础形态。真正强的是**路径语法**：前几个参数描述"到目标值的路径"，最后一个给新值（或函数）。
 
 ```js
-// 追加（用 length 当索引，直接改原数组、只通知 length/新索引相关订阅）
+// 目的：setter 路径语法—前面参数描述"到目标值的路径"，最后一个给新值（或函数）
+// ✅ 追加：用 length 当索引，直接改原数组、只通知 length/新索引相关订阅（比 spread 省）
 setStore("users", store.users.length, { id: 2, username: "new", loggedIn: false });
-// 改某个字段
+// ✅ 改某个字段：路径一路点到 username
 setStore("users", 0, "username", "felix_updated");
-// 一次改多个属性（对象值 → 浅合并）
+// ✅ 一次改多个属性：值是对象 → 与该对象浅合并（不用手写 spread 保留其余字段）
 setStore("users", 1, { location: "USA", loggedIn: false });
-// 多个索引一起改
+// ✅ 多个索引一起改：索引给数组
 setStore("users", [0, 2], "loggedIn", false);
-// 范围改：from/to 含端点，可加 by 步长
+// ✅ 范围改：from/to 含端点，可加 by 步长
 setStore("users", { from: 1, to: store.users.length - 1, by: 2 }, "loggedIn", false);
-// 过滤函数：按条件命中
+// ✅ 过滤函数：按条件命中哪些项就改哪些
 setStore("users", (u) => u.location === "Canada", "loggedIn", false);
-// 动态赋值：函数收旧值算新值
+// ✅ 动态赋值：末参给函数，收旧值算新值
 setStore("users", 3, "loggedIn", (prev) => !prev);
+// ❌ setStore("users", 1, { loggedIn: false }) 误以为整体替换 → 它是浅合并，location 等旧字段仍在
 ```
 
 一个重要细节：**一次 setter 调用会自动包进 `batch`**——批量里所有元素一起更新完，才触发下游 effect，避免中间态反复通知。
@@ -61,10 +67,12 @@ setStore("users", 3, "loggedIn", (prev) => !prev);
 同样"往数组加一项"，两种写法的**失效范围**不同：
 
 ```js
+// 目的：同样"加一项"，spread 与路径两种写法的失效范围不同
 // A) spread：造新数组整体替换 → 依赖整个数组/其属性的 effect 全部失效
 setStore("users", (cur) => [...cur, newItem]);
-// B) 路径：直接给 length 位置赋值 → 只通知依赖"新索引/length"的订阅，更省
+// B) 路径：直接给 length 位置赋值 → 只通知依赖"新索引/length"的订阅，更细粒度、更省
 setStore("users", store.users.length, newItem);
+// ✅ 对象修改也浅合并：setStore("users", 0, { id: 109 }) 等价于 (cur)=>({...cur, id:109})，省掉手写 spread
 ```
 
 **对象修改会浅合并**：`setStore("users", 0, { id: 109 })` 等价于 `setStore("users", 0, u => ({ ...u, id: 109 }))`——你不用手动 spread 旧字段。这两点是 store 相比"整体替换的 signal"更细粒度的直接收益。
@@ -72,17 +80,21 @@ setStore("users", store.users.length, newItem);
 ## 五、三件工具：produce / reconcile / unwrap
 
 ```js
+// 目的：三件工具各管一种写法—produce 草稿可变、reconcile 吸收外部整份做差量、unwrap 取裸对象出追踪
 import { produce, reconcile, unwrap } from "solid-js/store";
 ```
 
 - **produce**：把某段以"可变草稿"方式写，内部改多个字段、结束产出新版本，省掉一长串路径 setter。
   ```js
-  setStore("users", 0, produce((u) => { u.username = "x"; u.loggedIn = true; }));
+  // 目的：produce 以可变草稿方式改多个字段，结束产出新版本（免一长串路径 setter）
+  setStore("users", 0, produce((u) => { u.username = "x"; u.loggedIn = true; }));   // ✅ 像直接改对象那样写
+  // ❌ 对 Set/Map 用 produce → 不兼容，produce 只支持数组和普通对象
   ```
   注意：**produce 只支持数组和普通对象**，`Set`/`Map` 不兼容。
 - **reconcile**：把"服务端/外部返回的一整份新数据"和现有 store **做 diff**，只更新真正变了的部分。典型：整表刷新但只有一行变了 → 只那一行触发更新。
   ```js
-  setData("animals", reconcile(newData));   // 只有新增的 'koala' 触发更新
+  // 目的：reconcile 把服务端一整份新数据与现有 store 做 diff，只更新真变的部分
+  setData("animals", reconcile(newData));   // ✅ 整表刷新但只新增的 'koala' 变了 → 只那一行触发更新
   ```
 - **unwrap**：拿 store 背后的**裸对象**——用于传给"期待普通 JS 对象"的第三方库、或做非响应式快照、或出追踪作用域避免开销。
 
@@ -91,8 +103,10 @@ import { produce, reconcile, unwrap } from "solid-js/store";
 官方强调：store 把**读能力与写能力分开**（`store` 只读、`setStore` 才能写），便于追踪/管控"谁在改这个值"。还有个进阶技巧——对某分支单独建 store：
 
 ```js
-const [users, setUsers] = createStore(store.users);   // 派生 store
-setUsers((cur) => [...cur, newUser]);                  // 改动会回流到 store.users，读也同步
+// 目的：对某分支单独派生 store—有独立 setter，但共享同一底层数据，改动回流
+const [users, setUsers] = createStore(store.users);   // ✅ 以 store.users 为初值建新 store（须已被设置过）
+setUsers((cur) => [...cur, newUser]);                  // ✅ 改动会回流到 store.users，读也同步
+// ❌ 以为派生 store 是深拷贝 → 它共享底层数据，别指望两边互不干扰
 ```
 
 （依赖 `store.users` 已被设置过。）这让局部操作有独立 setter，但共享同一底层数据。

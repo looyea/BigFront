@@ -16,18 +16,22 @@ Hooks 是**应用级**、你在特定事件上让 Kit 回调的函数。三个�
 
 ```ts
 // src/hooks.server.js
+// 目的：handle 洋葱—resolve 前织入请求侧逻辑，resolve 后给响应加皮
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
   // —— resolve 之前：请求前织入（鉴权、日志计时、塞 locals）——
   const start = Date.now();
-  event.locals.user = await getUser(event.cookies.get('sessionid'));
+  event.locals.user = await getUser(event.cookies.get('sessionid'));   // ✅ locals 是总线：后续 server load/端点/action 都读得到
 
-  const response = await resolve(event);   // ← 交给 SvelteKit 渲染路由
+  const response = await resolve(event);   // ← 交给 SvelteKit 渲染路由；它永不抛错，总返回带正确状态码的 Response
 
   // —— resolve 之后：响应后织入（加头、改写）——
-  response.headers.set('x-response-time', `${Date.now() - start}ms`);
+  response.headers.set('x-response-time', `${Date.now() - start}ms`);   // ✅ 计时头到此已含渲染全程
   return response;
 }
+// ❌ resolve 之外的代码（如 getUser）抛错是致命的：路由拿不到机会，Kit 只按 Accept 回 JSON 错误或 fallback 页
+// ❌ 对 Response.redirect() 等产物直接 headers.set → 它的 headers 不可变，报 TypeError: immutable
+//    需 response = response.clone() 后再改
 ```
 
 关键认知逐条钉死：

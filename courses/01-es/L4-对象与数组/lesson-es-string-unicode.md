@@ -15,6 +15,7 @@
 **关键事实**：JS 字符串**不是「字符」数组，是「UTF-16 码元」数组**。这是很多 emoji / 中文生僻字翻车的根源。
 
 ```js
+// 目的：字符串是码元数组——length 数的是 UTF-16 码元，不是“字”
 'hi'.length;         // 2
 '中文'.length;         // 2（BMP 内，每字 1 码元）
 '😀'.length;          // 2（U+1F600 需要代理对 surrogate pair）
@@ -31,6 +32,7 @@ BMP（U+0000 - U+FFFF）之外的字符在 UTF-16 里编码为**两个码元**�
 - **低代理**（Low surrogate）：`U+DC00 - U+DFFF`
 
 ```js
+// 目的：代理对——一个 emoji 占两个码元，charCodeAt 拿到的是碎片，codePointAt 才是真码点
 '😀'.charCodeAt(0);  // 55357 = 0xD83D（高代理）
 '😀'.charCodeAt(1);  // 56832 = 0xDE00（低代理）
 '😀'.codePointAt(0); // 128512 = 0x1F600（真正的码点）
@@ -43,6 +45,7 @@ BMP（U+0000 - U+FFFF）之外的字符在 UTF-16 里编码为**两个码元**�
 ## 三、正确的遍历：`for-of` 走迭代器
 
 ```js
+// 目的：❗遍历含 emoji 的串用 for-of/展开（按码点），不要用 str[i]（按码元会拆碎）
 for (const ch of 'a😀b') console.log(ch);   // 'a' '😀' 'b'   ✅ 按码点
 for (let i = 0; i < 'a😀b'.length; i++) console.log('a😀b'[i]);  // 'a' '' 'b'    ❌ 按码元
 [...'a😀b'];   // ['a', '😀', 'b']  ✅ 走迭代器
@@ -55,6 +58,7 @@ for (let i = 0; i < 'a😀b'.length; i++) console.log('a😀b'[i]);  // 'a' '' '
 ## 四、`at` / `codePointAt` / `fromCodePoint`
 
 ```js
+// 目的：at 支持负下标；fromCodePoint 能造 BMP 外字符（fromCharCode 不能）
 'hello'.at(0);      // 'h'
 'hello'.at(-1);     // 'o'    （ES2022，支持负下标）
 'abc'.codePointAt(0); // 97
@@ -69,6 +73,7 @@ String.fromCharCode(0xD83D, 0xDE00); // '😀'（老写法，要自己拆代理�
 ## 五、字素簇：`Intl.Segmenter`（**处理 emoji / 泰文 / 韩文**）
 
 ```js
+// 目的：字素簇——length、按码点展开都数错，只有 Intl.Segmenter 能给出“一个字符”
 const family = '👨‍👩‍👧‍👦';
 family.length;               // 11
 [...family].length;           // 7（按码点拆，仍不对）
@@ -89,6 +94,7 @@ const seg = new Intl.Segmenter('zh', { granularity: 'grapheme' });
 ## 六、大小写与本地化：`localeCompare` 与 `toLocaleLowerCase`
 
 ```js
+// 目的：多语言大小写/排序必须传 locale，默认 toLowerCase/sort 会错乱
 'i'.toLocaleLowerCase('tr');   // 'ı'（土耳其小写 i 无点）
 'i'.toLowerCase();              // 'i'（默认英文）
 
@@ -105,6 +111,7 @@ const seg = new Intl.Segmenter('zh', { granularity: 'grapheme' });
 同样「看起来一样」的两个字符串，可能**码点不同**：
 
 ```js
+// 目的：看起来相同的串可能码点不同（预组 vs 组合）——比较前先 normalize
 const a = 'á';                        // 单码点 U+00E1
 const b = 'á';                        // a + 组合重音 U+0301
 a === b;                              // false
@@ -134,6 +141,7 @@ a.normalize('NFC') === b.normalize('NFC'); // true ✅
 | `Intl.Segmenter` | ES2022 | 字素簇 / 词 / 句分割 |
 
 ```js
+// 目的：现代字符串 API 实操（padStart/matchAll/replaceAll）
 // padStart：格式化
 String(7).padStart(3, '0');   // '007'
 
@@ -142,7 +150,7 @@ const re = /(\w+)=(\w+)/g;
 [...'a=1 b=2'.matchAll(re)].map(m => [m[1], m[2]]);  // [['a','1'], ['b','2']]
 
 // replaceAll 回调
-'foo bar foo'.replaceAll(/(\w)/g, (m, p1, idx) => `[${idx}]`);
+'foo bar foo'.replaceAll(/(\w)/g, (m, p1, idx) => `[${idx}]`); // 每个 \w 字符都替换成 [它在串中的下标]
 ```
 
 **⚠️ `replace` 只替换第一次**（除非传 `/g` 正则）——这是社区公认的老 API 缺陷，ES2021 补上 `replaceAll`。
@@ -152,6 +160,7 @@ const re = /(\w+)=(\w+)/g;
 ## 九、`String.raw` 与模板字符串
 
 ```js
+// 目的：String.raw 保留反斜杠原义（适合正则/Windows 路径/LaTeX）
 const path = String.raw`C:\new\test.txt`;   // 'C:\\new\\test.txt'（原始反斜杠）
 const t = (s, ...vals) => s.raw.join('|');
 t`a\nb`;   // 'a\\nb'

@@ -18,10 +18,13 @@ transient 的具体形态：滚动位置原子不 useAtomValue，而是 `store.s
 ## 四、测试：store 隔离直测
 
 ```ts
+// 目的：store 隔离直测——createStore 起独立 store，纯逻辑读写，无需 render
 import { createStore } from 'jotai/vanilla';
-const store = createStore();
-store.set(countAtom, 5);
-expect(store.get(doubleAtom)).toBe(10);
+const store = createStore();                 // 本用例专属 store，零跨用例污染
+store.set(countAtom, 5);                      // 直写源原子，不经组件
+expect(store.get(doubleAtom)).toBe(10);       // 直读派生，get 即按需算出 5×2=10
+// ✅ 业务规则用 store 直读直写测，毫秒级、无 DOM，正是“逻辑与组件解耦”的兑现
+// ❌ 用模块级全局 store 测→用例间共享值，前一测 set 的脏数据漏进后一测，断言随机翻车
 ```
 纯逻辑无需 render；组件层用新 Provider + Suspense（async）集成测。
 

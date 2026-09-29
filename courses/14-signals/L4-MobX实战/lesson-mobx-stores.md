@@ -7,18 +7,20 @@
 Redux/Zustand 的 store 是一张**扁平 JSON 快照**：`{ usersById: {...}, postsById: {...}, commentsById: {...} }`，实体间只有 id 引用（范式化，数据库思维）。MobX 允许你建**对象图**：
 
 ```js
+// 目的：MobX 建对象图—实体是一等公民、关系是派生 getter（对比 Redux 扁平 id join）
 class Store {
-  userStore = new UserStore(this);
+  userStore = new UserStore(this);   // ✅ 子 store 持 Root 引用，通过它拿兄弟
   postStore = new PostStore(this);
   constructor() { makeAutoObservable(this); }
 }
 
-class User {                              // 实体是一等公民
+class User {                              // ✅ 实体是一等公民
   constructor(store, data) { this.store = store; Object.assign(this, data); }
-  get posts() {                           // 关系是派生，不是 join 表
+  get posts() {                           // ✅ 关系是派生，不是 join 表
     return this.store.postStore.list.filter((p) => p.authorId === this.id);
   }
 }
+// ❌ 让 UserStore 直接 import PostStore 单例互引→ import 循环 + 测试无法隔离；一律经 RootStore(this) 拿兄弟
 ```
 
 `store.userStore.currentUser.posts[0].author === store.userStore.currentUser` ——**循环引用在对象图里是常态，在扁平快照里是要避免的事故**。选型坐标：
@@ -47,19 +49,21 @@ class User {                              // 实体是一等公民
 对象图逃不开两个现实：**存进 localStorage/发给后端**（得是 JSON）、**多端同步/撤销**（得知道变了什么）。MobX 核心库自带一组边界工具：
 
 ```js
+// 目的：可变世界的边界协议—toJS 出境签证、onSnapshot 拍照、onPatch 流水账
 import { toJS, onSnapshot, onPatch, compareStructural } from 'mobx';
 
-const json = toJS(store.userStore.list);        // observable 图 → 纯 JSON（单向，断引用）
+const json = toJS(store.userStore.list);        // ✅ observable 图 → 纯 JSON（单向，断引用）
 // 注水方向：由你的类构造器收 JSON（new UserStore(JSON.parse(raw))）
 
 const stop = onSnapshot(
   store.settings,
-  (snap) => localStorage.setItem('settings', JSON.stringify(snap)),
-  { equals: compareStructural },                 // 结构比较版：真没变才不落盘
+  (snap) => localStorage.setItem('settings', JSON.stringify(snap)),   // ✅ 每次变更后拿整体快照落盘
+  { equals: compareStructural },                 // ✅ 结构比较版：真没变才不落盘
 );
 
-const stop2 = onPatch(store.todos, (patch) => ws.send(patch)); // 字段级流水账
+const stop2 = onPatch(store.todos, (patch) => ws.send(patch)); // ✅ 字段级流水账（撤销/同步素材）
 // patch 形如 { op: 'replace', path: '/2/done', value: true }（JSON Patch 家族）
+// ❌ 把 store 对象直接 JSON.stringify 落盘→ 代理/循环引用会爆炸或丢派生；必先 toJS
 ```
 
 三个工具的分工说人话：`toJS` 是出境签证（observable→纯数据，别把代理漏出边界）；`onSnapshot` 是定时拍照（整体快照落盘，简单粗暴但大对象拍照贵）；`onPatch` 是流水账（字段级变更日志，网络传输与审计友好、撤销栈素材）。**可变 store 的时间旅行/协作同步，全部建立在这条边界协议上**——这也是它比不可变路线多出来的一层运维成本（呼应 mobx-core 的『结果账 vs 事件账』）。
@@ -67,6 +71,7 @@ const stop2 = onPatch(store.todos, (patch) => ws.send(patch)); // 字段级流�
 ## 四、disposer 收纳：store 级副作用的生命周期
 
 ```js
+// 目的：store 级副作用收纳—start/stop 成对、disposers 数组一键灭灶
 class SyncStore {
   disposers = [];
   start() {
@@ -74,10 +79,11 @@ class SyncStore {
       reaction(() => this.queue.length, flush),
       onSnapshot(this.settings, persist),
       onPatch(this.doc, sendPatch),
-    );
+    );                                        // ✅ 把每个返回 disposer 的订阅都存进数组
   }
-  stop() { this.disposers.forEach((d) => d()); this.disposers = []; }  // 一键灭灶
+  stop() { this.disposers.forEach((d) => d()); this.disposers = []; }  // ✅ 一键灭灶
 }
+// ❌ store 销毁时不调 stop()→ store 级 reaction 比组件级更隐蔽地泄漏（组件卸载有框架兜，store 销毁没人管）
 ```
 
 store 级 reaction 的泄漏比组件级更隐蔽（组件卸载框架帮你兜，store 销毁没人管）——**start/stop 成对、disposers 数组收纳**是 MobX 中大型项目的标配模式。React 侧对应：RootStore 挂 Provider 生命周期，SSR 每请求新建（mobx-react 关讲过的纪律）。

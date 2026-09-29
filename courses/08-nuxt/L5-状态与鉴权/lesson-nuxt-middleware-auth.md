@@ -22,20 +22,24 @@
 ## 2. route middleware 的写法与执行时机
 
 ```ts
+// 目的：route middleware 体验层——未登录就跳登录页，带上回跳地址（文件名=中间件名，自动导入）
 // middleware/auth.ts（文件名 = 中间件名，自动导入，呼应 nuxt-auto-imports）
 export default defineNuxtRouteMiddleware((to, from) => {
-  const { logged } = useAuthSession();       // 内部 useCookie/useFetch
+  const { logged } = useAuthSession();       // ✅ 内部 useCookie/useFetch，SSR 首屏也能读到身份
   if (!logged.value) {
-    return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
+    return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`);  // ✅ return 跳转即中断导航
   }
+  // ❌ redirect 不校验就 navigateTo → ?redirect=//evil.com 成开放重定向漏洞，只允许站内相对路径
 });
 ```
 
 ```vue
 <!-- pages/dashboard.vue -->
 <script setup>
-definePageMeta({ middleware: 'auth' });      // 编译宏，呼应 nuxt-dynamic
+// 目的：给单页认领 auth 中间件（编译宏，只能写静态名）
+definePageMeta({ middleware: 'auth' });      // ✅ 进本页前先跑 middleware/auth.ts；也可传数组串多个
 </script>
+<!-- ❌ middleware: 传运行时变量（如动态角色名）→ 宏只认静态值，被忽略导致守卫形同虚设 -->
 ```
 
 时机链路（把 nuxt-lifecycle 的图接上）：
@@ -55,33 +59,38 @@ resolve route → 全局 middleware（按文件名排序） → per-route middle
 ## 3. 服务端的事实层：server middleware + handler 二次校验
 
 ```ts
+// 目的：server middleware 只解析身份挂到 context，不做拦截（拦截交 handler，放行路径才列得全）
 // server/middleware/session.ts —— 只解析身份，不做拦截（呼应 nuxt-server-routes 第 5 节）
 export default defineEventHandler(async (event) => {
-  const sid = getCookie(event, 'sid');
-  event.context.user = sid ? await readSession(sid) : null;   // 查不到就是 null
+  const sid = getCookie(event, 'sid');          // ✅ 读 httpOnly 会话 cookie
+  event.context.user = sid ? await readSession(sid) : null;   // ✅ 查不到就是 null，下游自行判断
 });
+// ❌ 在这里直接 throw 401 拦截 → 登录页/健康检查/静态资源全被误杀，“放行清单永远列不全”老坑
 ```
 
 ```ts
+// 目的：server/utils 自动导入的守卫——handler 里一行调用完成“能不能干这件事”的判断
 // server/utils/guards.ts
 export function requireUser(event: H3Event) {
-  const u = event.context.user;
-  if (!u) throw createError({ statusCode: 401, message: '未登录' });
+  const u = event.context.user;                              // ✅ 取 server middleware 已解析好的身份
+  if (!u) throw createError({ statusCode: 401, message: '未登录' });  // ✅ 抛 H3Error → Nitro 转 JSON 401
   return u;
 }
 export function requireRole(event: H3Event, role: string) {
-  const u = requireUser(event);
-  if (!u.roles?.includes(role)) throw createError({ statusCode: 403, message: '无权访问' });
+  const u = requireUser(event);                              // ✅ 先保证已登录
+  if (!u.roles?.includes(role)) throw createError({ statusCode: 403, message: '无权访问' });  // ✅ 角色不符抛 403
   return u;
 }
 ```
 
 ```ts
+// 目的：事实层落点——每个敏感 handler 首行就校验权限，绕过前端也绕不过这里
 // server/api/admin/users.get.ts
 export default defineEventHandler((event) => {
-  requireRole(event, 'admin');      // ← 真正的门禁在这里
+  requireRole(event, 'admin');      // ✅ 真正的门禁在这里：非 admin 直接 403，前端如何伪装都无效
   return db.users.list();
 });
+// ❌ 删掉这行只靠前端隐藏按钮 → 任何人 curl /api/admin/users 即拿到全量用户（把 URL 当权限）
 ```
 
 分工写清楚：**server middleware 负责"你是谁"（解析并挂到 event.context），handler 负责"你能不能干这件事"（抛 401/403）**。反过来用 middleware 做拦截会撞上"放行路径清单永远列不全"的老坑（登录、健康检查、静态资源、内部 API 短路都会被误杀）。
@@ -108,14 +117,15 @@ export default defineEventHandler((event) => {
 ## 5. 首屏身份的正确取法：一次请求，两侧可用
 
 ```ts
+// 目的：一次请求两侧可用——SSR 带 cookie 调内部 /api/me、结果进 payload，水合后直接复用
 // composables/useAuthSession.ts
 export const useAuthSession = () => {
-  const user = useState<User | null>('auth-user', () => null);
+  const user = useState<User | null>('auth-user', () => null);  // ✅ 请求级共享态，跨组件同一份
   async function refresh() {
-    const { data } = await useFetch<User | null>('/api/me', { key: 'me', credentials: 'include' });
+    const { data } = await useFetch<User | null>('/api/me', { key: 'me', credentials: 'include' }); // ✅ key='me' 去重、带 cookie
     user.value = data.value;
   }
-  return { user, logged: computed(() => !!user.value), refresh };
+  return { user, logged: computed(() => !!user.value), refresh };  // ✅ logged 派生，middleware 与组件读同一份、两侧一致
 };
 ```
 

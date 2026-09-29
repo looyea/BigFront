@@ -14,6 +14,7 @@ JavaScript 引擎（V8、SpiderMonkey、JSC）跑一段代码前会经历两步�
 「提升（Hoisting）」这个词说的就是：**编译阶段，声明被提前登记了；而赋值发生在执行阶段。** 于是当你看到：
 
 ```js
+// 目的：var 只提升声明不提升赋值——声明提前登记、初始化为 undefined
 console.log(a); // undefined，不是 ReferenceError
 var a = 1;
 ```
@@ -21,6 +22,7 @@ var a = 1;
 实际发生的心智模型是：
 
 ```js
+// 目的：把上一段拆成「编译阶段 vs 执行阶段」的等价心智模型
 var a;            // 编译阶段：a 这个槽位提前存在，初值 undefined
 console.log(a);   // 执行阶段
 a = 1;            // 执行阶段
@@ -48,12 +50,14 @@ a = 1;            // 执行阶段
 **函数声明 > var 声明 > let/const 声明**。经典题：
 
 ```js
+// 目的：函数声明全量提升且优先于 var——同名时 typeof 先看到函数
 console.log(typeof foo); // function
 var foo;                 // 与同名函数声明合并；不重置
 function foo() {}
 ```
 
 ```js
+// 目的：函数声明全量提升、会覆盖同名 var；但赋值语句执行时又会把函数重新覆盖
 foo();            // ❌ TypeError: foo is not a function
 var foo = 1;
 function foo() { console.log('decl'); }
@@ -67,6 +71,7 @@ function foo() { console.log('decl'); }
 上面这个例子，如果 `foo()` 写在 `var foo = 1;` 之后，就会得到 TypeError，因为 `foo` 已经是 1。
 
 ```js
+// 目的：let 与同名函数声明不能共存——编译期直接报错，不是运行时
 let foo = 1;
 function foo() {} // ❌ SyntaxError: Identifier 'foo' has already been declared
 ```
@@ -80,6 +85,7 @@ function foo() {} // ❌ SyntaxError: Identifier 'foo' has already been declared
 **定义**：块作用域内，从块的开始到 `let/const/class` 声明那一行之前，该变量处于 **temporal dead zone**。访问它抛 `ReferenceError`。
 
 ```js
+// 目的：TDZ 核心演示——let 声明前访问抛 ReferenceError（不同于 var 的 undefined）
 {
   console.log(x); // ❌ ReferenceError: Cannot access 'x' before initialization
   let x = 10;
@@ -91,6 +97,7 @@ function foo() {} // ❌ SyntaxError: Identifier 'foo' has already been declared
 ### 4.1 遮蔽了外部同名变量
 
 ```js
+// 目的：高频坑 1——内层声明遮蔽了外层同名变量，读的是内层（尚未初始化）
 var name = 'global';
 function greet() {
   console.log(name); // ❌ ReferenceError，不是 'global'！
@@ -100,6 +107,7 @@ function greet() {
 
 把 `var` 换成 `let`：
 ```js
+// 目的：同上但用 let——console.log(name) 落入内层 name 的 TDZ，直接报错
 function greet() {
   console.log(name); // ❌ ReferenceError（TDZ）
   let name = 'local';
@@ -109,6 +117,7 @@ function greet() {
 ### 4.2 参数默认值引用后位参数
 
 ```js
+// 目的：高频坑 2——参数默认值只能引用已初始化的前位参数
 function f(a = b, b = 1) {}   // ❌ ReferenceError（b 在 TDZ）
 function g(a = 1, b = a) {}   // ✅ OK（a 已初始化）
 ```
@@ -116,6 +125,7 @@ function g(a = 1, b = a) {}   // ✅ OK（a 已初始化）
 ### 4.3 循环体内 `let` 的 per-iteration binding
 
 ```js
+// 目的：for + let 每轮新建绑定，异步回调拿到当轮快照
 for (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 0 1 2
 ```
 
@@ -126,6 +136,7 @@ for (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 0 1 2
 ## 五、函数提升的三档
 
 ```js
+// 目的：函数提升三档对比——声明全量提升 / 表达式只提升名 / 箭头+let 连名都进 TDZ
 hoist1(); // ✅ function declaration 全量提升
 function hoist1() { console.log('decl'); }
 
@@ -145,6 +156,7 @@ let hoist3 = () => console.log('arrow');
 ## 六、块、函数、module 里的作用域差异
 
 ```js
+// 目的：块内函数声明——sloppy mode 因 Annex B 侥幸可用，但别这么写
 if (true) {
   function inner() { return 1; }
 }

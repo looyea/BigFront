@@ -8,12 +8,13 @@
 
 ```vue
 <script setup>
+// 目的：把重组件拆成独立 chunk，只在渲染到时才下载（工厂函数返回 Promise<组件>）
 import { defineAsyncComponent } from 'vue';
 // 最简：返回 import() Promise 的工厂
-const HeavyChart = defineAsyncComponent(() => import('./HeavyChart.vue'));
+const HeavyChart = defineAsyncComponent(() => import('./HeavyChart.vue'));   // Vite 会拆成单独 chunk
 </script>
 <template>
-  <HeavyChart v-if="show" />   <!-- 只有渲染到时才去下载对应 chunk -->
+  <HeavyChart v-if="show" />   <!-- ✅ 只有 show 为真才去请求对应 chunk -->
 </template>
 ```
 
@@ -23,14 +24,15 @@ const HeavyChart = defineAsyncComponent(() => import('./HeavyChart.vue'));
 ### 完整配置项
 
 ```js
+// 目的：完整配置——加 loading/error 组件、delay 防闪、timeout、重试策略
 const AsyncComp = defineAsyncComponent({
   loader: () => import('./X.vue'),
   loadingComponent: Spinner,      // 加载中显示的组件
   errorComponent: ErrorMsg,       // 加载/渲染失败显示
-  delay: 200,                     // 超过 200ms 才显示 loading（防闪一下）
-  timeout: 10000,                 // 超时视为失败（可选）
+  delay: 200,                     // 超过 200ms 才显示 loading（防网络快时闪一下）
+  timeout: 10000,                 // ❌ 超时视为失败→显 errorComponent（若不设、chunk 拉不到会永远卡在 loading）
   suspensible: false,             // 是否交给 <Suspense> 控制（见第三节）
-  onError(error, retry, fail, attempts) { /* 重试策略 */ }
+  onError(error, retry, fail, attempts) { /* 例：attempts<=3 则 retry()，否则 fail() */ }
 });
 ```
 `delay` 很关键：网络快时组件瞬间就绪，若不设 delay，loading 会**闪一下**反而更丑。`onError` 里 `retry()` 可实现"仅线上环境重试 N 次"（呼应 node-deploy-perf 重试、exp 请求重试）。
@@ -41,13 +43,14 @@ const AsyncComp = defineAsyncComponent({
 
 ```vue
 <script setup>
+// 目的：多个低频面板各自异步，切 tab 才加载对应块（配 KeepAlive 可加载一次后缓存）
 import { computed, defineAsyncComponent, ref } from 'vue';
 const tab = ref('chart');
 const tabs = {
   chart: defineAsyncComponent(() => import('./ChartTab.vue')),
   table: defineAsyncComponent(() => import('./TableTab.vue')),
 };
-const Current = computed(() => tabs[tab.value]);
+const Current = computed(() => tabs[tab.value]);   // tab 变 → Current 变 → 动态组件切换
 </script>
 <template>
   <component :is="Current" />     <!-- 切 tab 才加载对应块（呼应 vue-component-basics 动态组件） -->
@@ -62,12 +65,13 @@ const Current = computed(() => tabs[tab.value]);
 一个组件（或其子树）里有**顶层 await 的异步 setup**、或异步组件尚未就绪时，`<Suspense>` 先渲染 `fallback`，全部就绪后切到 `default`：
 
 ```vue
+<!-- 目的：异步依赖未就绪时先显 fallback，全部就绪后切到 default -->
 <Suspense>
   <template #default>
-    <AsyncDashboard />           <!-- 内含异步依赖 -->
+    <AsyncDashboard />           <!-- 内含异步依赖（顶层 await / 异步组件） -->
   </template>
   <template #fallback>
-    <SkeletonDashboard />        <!-- 加载中骨架 -->
+    <SkeletonDashboard />        <!-- 加载中的骨架 -->
   </template>
 </Suspense>
 ```
@@ -76,6 +80,7 @@ const Current = computed(() => tabs[tab.value]);
 <!-- AsyncDashboard.vue：setup 里顶层 await（需 <script setup> + 编译器支持 / 或 async setup） -->
 <script setup>
 const data = await fetchData();   // 挂起直到 resolve，期间由父 Suspense 显示 fallback
+<!-- ❌ 若无祖先 <Suspense> 包裹，含顶层 await 的组件无法挂起，需 defineAsyncComponent 包一层 -->
 </script>
 ```
 
@@ -90,8 +95,9 @@ const data = await fetchData();   // 挂起直到 resolve，期间由父 Suspens
 组件级异步常用于页面级拆分，但**路由懒加载**是更常见的落地方式：
 
 ```js
+// 目的：路由懒加载——进该路由才下载对应页面 chunk（底层就是异步组件机制）
 const routes = [
-  { path: '/dash', component: () => import('@/views/Dashboard.vue') } // 进该路由才下载
+  { path: '/dash', component: () => import('@/views/Dashboard.vue') } // ✅ 首页只下首页 chunk，其余按需
 ];
 ```
 `component: () => import(...)` 底层用的就是异步组件机制，配合打包器把每个路由拆成一个 chunk（呼应 vue-router-guard-lazy L5、10-vite 分包）。首页只下首页 chunk，其余按需——这是 SPA 首屏提速的主力手段。

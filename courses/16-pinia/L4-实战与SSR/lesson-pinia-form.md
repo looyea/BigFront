@@ -5,22 +5,25 @@
 **判据**：跨步骤保留 / 草稿自动保存 / 多组件协同 → 进 store。单页面内一次性表单 → 组件局部 ref。
 
 ```ts
+// 目的：多步向导 store——跨步骤状态保留，isDirty 供离开拦截，reset 一键清场
 // stores/onboarding.ts（多步向导）
 export const useOnboardingStore = defineStore('onboarding', () => {
-  const step = ref(0);
-  const profile = ref({ name: '', email: '' });
-  const preferences = ref({ theme: 'dark', lang: 'zh' });
+  const step = ref(0);                                          // 当前步骤
+  const profile = ref({ name: '', email: '' });                 // 步骤一数据
+  const preferences = ref({ theme: 'dark', lang: 'zh' });       // 步骤二数据
 
-  const isDirty = computed(() =>
+  const isDirty = computed(() =>                               // 是否已改动（供 beforeunload/守卫）
     profile.value.name !== '' || profile.value.email !== ''
   );
 
-  function next() { step.value++; }
+  function next() { step.value++; }        // 前进一步，字段因在同一 store 不丢
   function prev() { step.value--; }
-  function reset() { step.value = 0; profile.value = { name: '', email: '' }; }
+  function reset() { step.value = 0; profile.value = { name: '', email: '' }; }   // 提交成功后清场
 
   return { step, profile, preferences, isDirty, next, prev, reset };
 });
+// ✅ 切步骤时 profile/preferences 活在 store，回看不丢数据；DevTools 全程可追
+// ❌ reset() 漏清 preferences→下次进入向导残留上一个用户的偏好
 ```
 
 进 store 的向导还白得两样：DevTools 里 step/字段变化全程可追踪（比组件 ref 好调试一个量级）；`reset()` 语义与 $reset 对齐，提交成功一键清场。
@@ -40,12 +43,15 @@ vee-validate 管"表单内部"（实时校验、字段联动）；Pinia 管"表�
 ## 草稿自动保存
 
 ```ts
+// 目的：草稿防抖自动保存——profile 一变，500ms 后写 localStorage（deep 监听嵌套对象）
 // 在 store 或组件里
-const debouncedSave = useDebounceFn(() => {
+const debouncedSave = useDebounceFn(() => {   // 防抖：连续输入只存最后一次
   localStorage.setItem('draft', JSON.stringify(store.profile));
 }, 500);
 
-watch(() => store.profile, debouncedSave, { deep: true });
+watch(() => store.profile, debouncedSave, { deep: true });   // 嵌套字段改动也要捕获
+// ✅ 防抖避免每击键都写盘；deep:true 才能感知 profile.name 这类内层变化
+// ❌ 不加 deep→watch 只比对象引用，改 profile.name 不触发，草稿不自动存
 ```
 
 也可以把持久化收进 store 本身（pinia-plugin-persistedstate 给向导 store 开 sessionStorage 持久化），watch 手写版记得三件事：deep 监听开销、组件卸载时 flush 最后一次、草稿带版本号防结构变更后的脏数据回填失败。
@@ -53,11 +59,14 @@ watch(() => store.profile, debouncedSave, { deep: true });
 ## beforeunload 脏检测
 
 ```ts
+// 目的：beforeunload 脏检测——有未保存改动时拦下浏览器关标签/刷新
 onBeforeMount(() => {
   window.addEventListener('beforeunload', (e) => {
-    if (store.isDirty) { e.preventDefault(); e.returnValue = ''; }
+    if (store.isDirty) { e.preventDefault(); e.returnValue = ''; }   // 置两行才能触发浏览器原生确认弹框
   });
 });
+// ✅ isDirty 为真时关闭页面会弹“确定要离开？”，避免草稿丢
+// ❌ 只 addEventListener 不在卸载时 removeEventListener→监听器累积，之后每跳页都弹得烦人/内存泄漏
 ```
 
 SPA 内部切页不走 beforeunload——路由级守卫要另补一刀：`router.beforeEach` 里 `if (store.isDirty && !confirm('放弃编辑？')) return false`（呼应 pinia-vueuse 的 useRouteChangeEvents）。两道闸各司其职：浏览器关标签归 beforeunload，应用内跳路归守卫。

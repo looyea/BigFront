@@ -11,12 +11,15 @@
 App Router 是 RSC，客户端 store 放 `'use client'` 组件里：
 
 ```tsx
-'use client';
+// 目的：per-request/per-session store——用 useRef 惰性建，避免进程级单例跨请求串号
+'use client';                                                    // store 只能活在客户端组件里（RSC 不能订阅 hook）
 export function StoreProvider({ children }) {
-  const storeRef = useRef();
-  if (!storeRef.current) storeRef.current = createStore(initialState);
-  return <Ctx.Provider value={storeRef.current}>{children}</Ctx.Provider>;
+  const storeRef = useRef();                                     // 用 ref 承载 store，保证只建一次
+  if (!storeRef.current) storeRef.current = createStore(initialState);   // 惰性建：每个 Provider 实例各一份 store
+  return <Ctx.Provider value={storeRef.current}>{children}</Ctx.Provider>;   // 把独立 store 注入子树
 }
+// ✅ 配合 useStore(useContext(Ctx)) 订阅，每个水合实例独立，prod 常驻进程下也不再串号
+// ❌ 组件外模块级 createStore(initialState) 复用同一实例→Node 进程级单例，A 用户 token 泄漏给 B 用户
 ```
 配合 useStore(useContext(Ctx))，保证每个浏览器会话/水合实例独立（呼应 za-factory）。
 

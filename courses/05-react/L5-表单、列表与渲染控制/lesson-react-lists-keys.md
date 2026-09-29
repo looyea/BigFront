@@ -7,13 +7,15 @@
 ## 一、用 map 渲染列表
 
 ```jsx
+// 目的：用原生 map 返回元素数组渲染列表，每个兄弟带稳定 key
 const items = [{ id: 1, name: '苹果' }, { id: 2, name: '香蕉' }];
 // JSX 里：
 <ul>
   {items.map(item => (
-    <li key={item.id}>{item.name}</li>
+    <li key={item.id}>{item.name}</li>   // ✅ key 用数据自带唯一 id
   ))}
 </ul>
+// ❌ 不写 key → 控制台告警 "Each child in a list should have a unique key prop"，增删时复用错乱
 ```
 - `{}` 里放表达式（呼应 react-jsx 第二节），`map` 返回**元素数组**，React 会展开渲染；
 - 每个兄弟元素必须带 `key`，否则控制台告警且可能复用错乱；
@@ -34,7 +36,10 @@ const items = [{ id: 1, name: '苹果' }, { id: 2, name: '香蕉' }];
 ## 三、为什么别用数组 index 当 key
 
 ```jsx
+// 目的：index 当 key 的反面教材——列表会增删/重排时 index 整体错位
 {items.map((item, i) => <li key={i}>{item.name}</li>)}   // ✗ 危险
+// 头部插入一项→原第0项变第1项，key=0 现在指向新插入项，React 误认为同一节点→复用错元素（输入框/勾选"跟着位置跑"）
+// ✅ 改用数据里稳定唯一 id：{items.map(item => <li key={item.id}>…</li>)}
 ```
 当列表会**增删或重排**时，index 会整体错位：
 - 在**头部插入**一项 → 原来的第 0 项变成第 1 项，key=0 现在指向了"新插入的项"，React 认为这是同一个节点，于是**复用错元素**；
@@ -59,10 +64,12 @@ const items = [{ id: 1, name: '苹果' }, { id: 2, name: '香蕉' }];
 ## 五、派生列表：filter / sort 不改原数组
 
 ```jsx
+// 目的：派生列表用不突变原 state 的方法，昂贵时 useMemo 缓存
 const visible = useMemo(
   () => items.filter(i => i.done).sort((a, b) => a.title.localeCompare(b.title)),
   [items]
 );
+// ❌ 直接 items.sort() 会原地突变 state 本体且引用未变→不触发更新（应 [...items].sort()）
 ```
 - `filter`/`map`/`slice` 返回**新数组**（不突变原 state，呼应 react-usestate 不可变）；
 - `sort` **会原地突变**数组——若直接 `state.sort()` 会改到 state 本体且不触发更新，应先 `[...items].sort()`；

@@ -17,11 +17,13 @@ TC39 有一个信号（signal）提案 `proposal-signals`（仓库 signaljs/prop
 ### signal()：一个带通知功能的容器
 
 ```js
+// 目的：signal()—一个带通知功能的“当下值”容器（读拿快照、写触发通知）
 import { signal } from 'signal-polyfill';
 
 const count = signal(0);
-count.get;        // 读：0（注意 polyfill 用 .get 属性，提案讨论中也有 count() 调用形态）
-count.set = 1;    // 写：1
+count.get;        // ✅ 读：0（polyfill 用 .get 属性，提案讨论中也有 count() 调用形态）
+count.set = 1;    // ✅ 写：1，任何读过它的 computed/effect 被通知
+// ❌ 换成 let count = 0; count = 1—值也变了，但“别人”永远不知道（无订阅名单，UI 不更新）
 ```
 
 signal 就是一个"当下值"容器：任何时刻它代表且只代表一个值，读它拿快照，写它触发通知。对比 `let count = 0` 的差别只有一件事——**别人能知道它变了**。（L1 sig-paradigms 里的"寄存器"比喻在这里落地：寄存器永远存着当前值，而不是回放历史。）
@@ -29,16 +31,18 @@ signal 就是一个"当下值"容器：任何时刻它代表且只代表一个�
 ### computed()：惰性推导，无人读则不算
 
 ```js
+// 目的：computed()—惰性推导，推标记、拉计算，无人读则不重算
 import { signal, computed } from 'signal-polyfill';
 
 const a = signal(1);
 const b = signal(2);
-const sum = computed(() => a.get + b.get);
+const sum = computed(() => a.get + b.get);   // ✅ 不立即执行，依赖图在首次读时才建立
 
-sum.get;          // 第一次读：执行函数，得 3，并登记依赖 a、b
-a.set = 10;       // 只把 sum 标脏，不执行任何函数
-a.set = 11;       // 再标一次脏，仍然不执行
-sum.get;          // 有人读了：重算一次，得 13
+sum.get;          // ✅ 第一次读：执行函数得 3，并登记依赖 a、b
+a.set = 10;       // ✅ 只把 sum 标脏，不执行任何函数
+a.set = 11;       // ✅ 再标一次脏，仍然不执行（惰性）
+sum.get;          // ✅ 有人读了：只重算一次，得 13
+// ❌ 误以为 set 会立即重算 sum→ 其实写只推脏标记；若始终无人读 sum，函数一次都不跑（惰性）
 ```
 
 三个必须刻进肌肉记忆的点：
@@ -50,16 +54,18 @@ sum.get;          // 有人读了：重算一次，得 13
 ### effect()：把响应式世界接到命令式世界
 
 ```js
+// 目的：effect()—把响应式世界接到命令式世界：读到谁就订阅谁，谁变了就重跑
 import { signal, computed, effect } from 'signal-polyfill';
 
 const name = signal('world');
 const greeting = computed(() => `hello ${name.get}`);
 
 const stop = effect(() => {
-  console.log(greeting.get);   // 立即执行一次打印 hello world，并订阅 greeting
+  console.log(greeting.get);   // ✅ 立即执行一次打印 hello world，并订阅 greeting
 });
-name.set = 'signals';          // 自动打印 hello signals
-stop();                        // 手动退订，之后不再打印
+name.set = 'signals';          // ✅ 自动重跑 effect，打印 hello signals
+stop();                        // ✅ 手动退订，之后不再打印
+// ❌ effect 不接收返回值就丢了清理→ 异步/定时器副作用不会回收（应 return () => …）
 ```
 
 effect 是响应式系统与"会副作用的外部世界"（DOM、日志、网络）之间的唯一出口：**effect 里读到谁，就订阅谁；谁变了就重跑**。注意 effect 里的读取是真订阅，computed 里的读取是建依赖图——两者机制相同但下游行为不同（一个重算值，一个跑代码）。
@@ -81,13 +87,16 @@ effect 是响应式系统与"会副作用的外部世界"（DOM、日志、网�
 提案语义的最小骨架其实只有这么多（L9 sig-internals 会完整写一遍，今天先感受）：
 
 ```js
+// 目的：60 行玩具实现—signal 内核 60% 就是“读到登记、写到广播”
+let cur = null;                 // 全局“当前正在跑的 observer”
 function miniSignal(v) {
   const subs = new Set();
   return {
-    get: () => { if (cur) subs.add(cur); return v; },
-    set: (nv) => { v = nv; subs.forEach((f) => f()); },
+    get: () => { if (cur) subs.add(cur); return v; },        // ✅ 读时把当前 observer 加入订阅集
+    set: (nv) => { v = nv; subs.forEach((f) => f()); },      // ✅ 写时遍历广播（未做 Object.is 短路）
   };
 }
+// ❌ 这个玩具版无惰性/无脏标记/glitch-free→ computed 套 computed 时会重复计算、可能读到半更新中间态
 ```
 
 读到登记、写到广播——signal 的内核 60% 就是这个，剩下的 40%（惰性、脏标记、glitch-free）全是为了处理"computed 套 computed 的图"而生的调度层。

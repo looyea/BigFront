@@ -11,7 +11,7 @@
 **Iterator（迭代器）**：一个**状态机**对象，有 `next()` 方法，每次返回 `{ value, done }`。
 
 ```js
-// Iterable：能拿到 Iterator
+// 目的：一个 Iterable 每次调 [Symbol.iterator] 生产一个一次性 Iterator，逐步 next 到 done
 const arr = [1, 2];
 const it = arr[Symbol.iterator]();   // it 是 Iterator
 
@@ -28,6 +28,7 @@ it.next();  // 永远 { value: undefined, done: true }（幂等）
 ## 二、`for-of` 的展开伪代码
 
 ```js
+// 目的：for-of 本质就是下面的手写循环——拿 iterator、循环 next、done 则 break
 for (const x of iterable) { body }
 // 大致等价：
 const it = iterable[Symbol.iterator]();
@@ -70,12 +71,16 @@ const range = {
 
 **风格 2：用生成器（推荐，简洁）**
 ```js
+// 目的：生成器版本——* 方法自动满_iterator，代码更短（与风格1行为一致）
 const range = {
   from: 1, to: 5,
   *[Symbol.iterator]() {
     for (let i = this.from; i <= this.to; i++) yield i;
   },
 };
+// ✅ 应用：同样能被 for-of / 展开 / Array.from 消费
+[...range];               // [1,2,3,4,5]
+Array.from(range);         // [1,2,3,4,5]（range 已是 Iterable）
 ```
 
 **风格 3：只可迭代一次 vs 多次**——上例每次 `[Symbol.iterator]()` 都新状态，可多次遍历；如果把状态挂 `this` 上就只可一次（危险）。
@@ -87,24 +92,26 @@ const range = {
 **核心机制**：`function*` 的调用不执行函数体，而是返回一个 **Generator 对象**（既是 Iterator 又是 Iterable）。每次 `.next()` **执行到下一个 yield 暂停**，把值传出；`.next(v)` 又能把 v **注回**到函数内部（`yield` 表达式的求值结果）。
 
 ```js
+// 目的：可中断函数——每次 next(v) 把 v 注回上一个 yield 表达式，然后跑至下一个 yield
 function* counter() {
   let n = 0;
   while (true) {
-    const reset = yield n++;    // 暂停；next(reset) 会拿到值
+    const reset = yield n++;    // 暂停；下一次 next(v) 的 v 就是 reset
     if (reset) n = 0;
   }
 }
 const c = counter();
-c.next().value;   // 0
-c.next().value;   // 1
-c.next(true).value; // 1（reset=true，n 归零，然后 ++）
-c.next().value;   // 2  (等等——先归零 → n=0，然后 n++ 返回 0)
+c.next().value;      // 0  （首跑至 yield，n++ 后置返回 0，n 变 1）
+c.next().value;      // 1  （reset=undefined，不重置；yield n++ 返回 1，n 变 2）
+c.next(true).value;  // 0  （注入 true→reset=true→n 归 0→yield n++ 返回 0，n 变 1）
+c.next().value;      // 1  （n=1 返回后变 2）
 ```
 
-**（追问）**：`yield n++` 的求值顺序是 `yield(0)` → 暂停 → 恢复时 `n++` 已发生 —— 所以 reset 走完后 `n=1` 而不是 0。**这就是生成器最容易搞混的地方**。
+**（追问）**：`next(true)` 那一轮先把 `reset` 接为 true、`n` 归零，**然后才**执行下一句 `yield n++`——因后置自增，返回的是归零后的 **0**（而不是旧值 1）。输出序列为 `0, 1, 0, 1`。**这就是生成器最容易搞混的地方**。
 
 **Generator 是 Iterable**：
 ```js
+// 目的：Generator 对象自身也是 Iterable（[Symbol.iterator] 返回自己），能直接展开
 function* gen() { yield 1; yield 2; }
 const g = gen();
 g[Symbol.iterator]();   // 返回自己
@@ -116,6 +123,7 @@ g[Symbol.iterator]();   // 返回自己
 ## 五、`yield*`：**委托**给另一个可迭代对象
 
 ```js
+// 目的：yield* 把输出委托给另一个可迭代/生成器，逐个转发
 function* a() { yield 1; yield 2; }
 function* b() { yield 0; yield* a(); yield 3; }
 [...b()];   // [0, 1, 2, 3]
@@ -130,6 +138,7 @@ function* b() { yield 0; yield* a(); yield 3; }
 生成器天生**惰性**——不 next 就不执行：
 
 ```js
+// 目的：惰性求值管道——naturals 无限、map/take 按需消费，不 next 不执行
 function* naturals() { let n = 0; while (true) yield n++; }
 function* take(n, it) { for (const x of it) { if (n-- <= 0) return; yield x; } }
 function* map(f, it)   { for (const x of it) yield f(x); }
@@ -146,6 +155,7 @@ const s = take(10, map(x => x * x, naturals()));
 ## 七、`Iterator` 的 return / throw：**协议完整面**
 
 ```js
+// 目的：Iterator 协议的完整形状——return/throw 可选，供提前退出时清理资源
 const it = {
   next() { /* ... */ },
   return(v) { console.log('cleanup'); return { value: v, done: true }; },   // 可选
@@ -159,6 +169,7 @@ const it = {
 
 生成器里对应 `finally { ... }`：
 ```js
+// 目的：for-of 里 break 会触发迭代器的 return，生成器里的 finally 负责清理
 function* files() {
   try {
     yield 'a'; yield 'b'; yield 'c';
@@ -177,6 +188,7 @@ for (const f of files()) { if (f === 'b') break; }
 异步版协议：`[Symbol.asyncIterator]()` 返回的对象，`next()` **返回 Promise**：
 
 ```js
+// 目的：异步版迭代——[Symbol.asyncIterator] 的 next 返回 Promise，for-await 串行拉取
 async function* fetchPages() {
   for (let i = 1; i <= 3; i++) {
     yield await fetch(`/api/page/${i}`).then(r => r.text());
@@ -192,6 +204,7 @@ for await (const page of fetchPages()) { console.log(page.length); }
 ## 九、`Array.from` 与 `mapFn`：为什么需要它
 
 ```js
+// 目的：Array.from 同时吃类数组与可迭代，第二个参数 mapFn 边转边映射
 Array.from({ length: 3 }, (_, i) => i * i);   // [0, 1, 4]
 Array.from('abc');                              // ['a','b','c']
 Array.from(new Set([1,2,3]));                   // [1,2,3]

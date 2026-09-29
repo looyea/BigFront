@@ -7,11 +7,12 @@
 ## 一、没有流式的世界：一个慢查询拖死整页
 
 ```tsx
+// 目的：重现没有流式的世界——顶层 await 串行，一个慢查询拖死整页
 // app/dash/page.tsx
 export default async function Dash() {
   const fast = await getSummary();      // 50ms
-  const slow = await getReport();       // 3000ms ← 全页为它陪葬
-  return <><Summary data={fast} /><Report data={slow} /></>;
+  const slow = await getReport();       // 3000ms ← 全页为它陪葬，TTFB = 最慢数据源
+  return <><Summary data={fast} /><Report data={slow} /></>;   // ❌ 两个都要等 slow 完成才能吐出第一个字节
 }
 ```
 
@@ -22,20 +23,22 @@ export default async function Dash() {
 ## 二、Suspense：给慢件一个"申报边界"
 
 ```tsx
+// 目的：用 Suspense 给慢件“申报边界”——把取数下推到子组件内，快件先到、慢件占位后补
 import { Suspense } from 'react';
 import ReportPanel from './report-panel';   // 'use client' 或 Server 皆可
 
 export default async function Dash() {
-  const fast = await getSummary();
+  const fast = await getSummary();   // ✅ 边界之上的快数据：先渲染 Summary
   return (
     <>
       <Summary data={fast} />
-      <Suspense fallback={<ReportSkeleton />}>   {/* ← 申报：这里可能慢 */}
-        <ReportPanel />                           {/* ReportPanel 内部 await getReport() */}
+      <Suspense fallback={<ReportSkeleton />}>   {/* ✅ 申报：这里可能慢，先占位 */}
+        <ReportPanel />                           {/* ✅ ReportPanel 内部才 await getReport()，不阻塞外层 */}
       </Suspense>
     </>
   );
 }
+// ❌ 把 await getReport() 提到这个 Dash 顶层再传下去 → 边界之上的 await 仍阻塞整页，Suspense 形同虚设
 ```
 
 要点三条：
@@ -55,10 +58,12 @@ app/dashboard/
 ```
 
 ```tsx
+// 目的：loading.tsx 是路由级的“自动 Suspense”，不用手写就拿到页面级骨架
 // app/dashboard/loading.tsx
 export default function Loading() {
-  return <DashSkeleton />;   // 骨架屏，别放 spinner 了事
+  return <DashSkeleton />;   // ✅ 骨架屏（与真实内容等高防 CLS），别放 spinner 了事
 }
+// ❌ 骨架与真实内容尺寸不一致 → 内容就绪时布局跳动（CLS 飙升，伤 LCP/体验指标）
 ```
 
 与手写 Suspense 的分工：**loading.tsx 管页面级粗粒度**（整段未就绪时的路由骨架），**页内 Suspense 管细粒度**（哪个面板慢占哪个位）。两者都到齐时，页内边界优先；loading.tsx 还兼任"导航即时反馈"——点击 Link 到动态页瞬间先见骨架，体感零延迟（呼应 next-routing 第一节段文件全家桶、mp-render 的占位思想）。
@@ -78,14 +83,15 @@ RSC 导航（Link 预取命中失败时）走的是 **RSC Payload 流**：序列
 ## 五、骨架屏的工程学
 
 ```tsx
-// 好骨架的三个标准：尺寸一致、形状可辨、无跳动
+// 目的：好骨架的三个标准——尺寸一致、形状可辨、无跳动
 function ReportSkeleton() {
   return (
-    <div className="report-skeleton animate-pulse" style={{ height: 420 }}>
+    <div className="report-skeleton animate-pulse" style={{ height: 420 }}>   // ✅ height 与 ReportPanel 对齐，预留尺寸防 CLS
       {/* 与 ReportPanel 同高同栅格 */}
     </div>
   );
 }
+// ❌ 骨架里引入重型组件库取好看 → 骨架本身在 HTML shell 里，每个首访者都要下载，拖慢首屏
 ```
 
 - **尺寸一致防 CLS**：骨架与真实内容等高，布局零偏移（LCP/CLS 指标直达，呼应 react-performance 指标篇、next-fonts-images 的"预留尺寸"同理）；

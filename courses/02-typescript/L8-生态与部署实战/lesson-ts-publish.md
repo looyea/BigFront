@@ -27,6 +27,7 @@ tsup src/index.ts --format esm,cjs --dts --clean --target es2020
 ## 二、package.json 的"指向"字段（最容易错的地方）
 
 ```jsonc
+// 目的：一份"自带类型的 TS 库"的 package.json 指向字段——告诉各类解析器去哪儿找运行时与 .d.ts
 {
   "name": "my-lib",
   "version": "1.0.0",
@@ -52,6 +53,16 @@ tsup src/index.ts --format esm,cjs --dts --clean --target es2020
 - **`exports` 里 `types` 条件必须是该对象第一个键**——Node/TS 按顺序匹配，排在 `import`/`require` 后面就永远轮不到，消费方"找不到类型"（呼应 ts-declarations 查找顺序）；
 - 一旦写了 `exports`，它就**接管**子路径导出，没列出的路径外部 `import "my-lib/foo"` 会失败（可按需加 `"./foo": {...}`）；
 - `main`/`types` 仍保留是为兼容不认识 `exports` 的老工具。
+
+```ts
+// 目的：从消费方验证"types 排第一"与"exports 接管子路径"两条铁律
+import { greet } from "my-lib";   // ✓ 按 exports["."] 解析：拿到 greet，且返回类型来自 index.d.ts
+greet("x");                        // ✓ 若没发 .d.ts，这里会报 Could not find a declaration file for module 'my-lib'
+
+import foo from "my-lib/foo";      // ✗ exports 只列了 "." 与 "./package.json"，未声明 "./foo"
+// 运行时报 ERR_PACKAGE_PATH_NOT_EXPORTED: Package 'my-lib' does not provide export './foo'
+// 解法：在 exports 里补上 "./foo": { types/import/require }（未列出的路径一律拒访）
+```
 
 ---
 

@@ -7,11 +7,12 @@
 反面起点是一个 800 行的 `useAppStore`：用户、购物车、播放器、UI 全在一起——改一行都要在文件里爬山。Zustand 的拆法不引入新概念，就是**函数拼对象**：
 
 ```js
+// 目的：slices 分片—把大 store 拆成"返回对象的函数"，组装点用展开拼起来
 // stores/cartSlice.js
 export const createCartSlice = (set, get) => ({
   items: [],
-  addItem: (p) => set((s) => ({ items: [...s.items, p] })),
-  total: () => get().items.reduce((sum, i) => sum + i.price, 0),
+  addItem: (p) => set((s) => ({ items: [...s.items, p] })),   // ✅ 产生新数组，订 items 的组件才重渲
+  total: () => get().items.reduce((sum, i) => sum + i.price, 0),   // ✅ get 读同 store 最新值
 });
 
 // stores/playerSlice.js
@@ -29,10 +30,11 @@ import { createPlayerSlice } from './playerSlice';
 
 export const useAppStore = create(
   devtools(subscribeWithSelector((...args) => ({
-    ...createCartSlice(...args),
+    ...createCartSlice(...args),      // ✅ 函数拼对象：各 slice 摊平进同一 store
     ...createPlayerSlice(...args),
   }))),
 );
+// ❌ slice 之间直接 import 彼此单例互引→ 循环依赖 + 无法单测；跨 slice 一律走 get() 或独立 store 单向 import
 ```
 
 要点三条：① slice 就是『返回对象的函数』，无框架概念、可单测（直接 call 它传假 set/get）；② 跨 slice 调用走 `get()`（同一 store 内互通）或 import 对方的独立 store（跨 store）；③ **拆分维度按业务不按技术**——『购物车的一切』优于『所有 actions 一个文件』，这跟 mobx-stores 的 RootStore 按域组装是同一直觉的两种实现。
@@ -44,16 +46,18 @@ export const useAppStore = create(
 za-core 面试第 7 题的正式版。场景：播放器进度条每 250ms 更新、拖拽坐标每帧更新——走 React 渲染流就是全树陪跑。transient 的思路：**数据留在 store，更新绕开 setState→render，直接写 DOM**：
 
 ```js
+// 目的：transient 订阅—高频值不走 setState→render，直接写 DOM
 // 组件挂载时注册一次性订阅，卸载时退订——不进 React 数据流
 useEffect(() => {
   const unsub = useAppStore.subscribe(
-    (s) => s.progress,               // 需要 subscribeWithSelector 中间件
+    (s) => s.progress,               // ✅ 需 subscribeWithSelector 中间件才有这个 selector 版签名
     (p) => {
-      barRef.current.style.width = `${p}%`;   // 直写 DOM，零重渲
+      barRef.current.style.width = `${p}%`;   // ✅ 直写 DOM，零重渲
     },
   );
-  return unsub;
+  return unsub;                      // ✅ 卸载退订，防泄漏
 }, []);
+// ❌ 忘 return unsub→ 组件卸载后订阅仍在跑，barRef.current 已为 null，写 width 报错
 ```
 
 对比三种通道的选型表：

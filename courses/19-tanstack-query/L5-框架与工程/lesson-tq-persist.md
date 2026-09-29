@@ -7,11 +7,14 @@ Query 的缓存活在内存，刷新即蒸发。persistQueryClient 把「已完�
 ## 二、最小接线
 
 ```ts
+// 目的：persistQueryClient 最小接线——把已完成查询序列化进 storage，重启灌回
 const queryClient = new QueryClient();
 const persister = createSyncStoragePersister({
   storage: window.localStorage,     // 同步存储走这个；异步(IndexedDB/FS)用 createAsyncStoragePersister
 });
-persistQueryClient({ queryClient, persister, maxAge: 24 * 60 * 60 * 1000 });
+persistQueryClient({ queryClient, persister, maxAge: 24 * 60 * 60 * 1000 });   // maxAge：持久数据二次保质期，过期条目灌回即弃
+// ✅ 冷启动首帧显示上次数据、后台按 staleTime 验证刷新；shouldDehydrateQuery 挑值得出院的（资料留、股价不留）
+// ❌ 在服务端 persist：window 不存在直接 ReferenceError，且多用户共享存储=串数据事故
 ```
 
 `maxAge` 给持久数据二次保质期（过期条目灌回即弃）；`dehydrateOptions: { shouldDehydrateQuery }` 做白名单。两个 persister 对应两类存储介质，接口都是 { persistClient, restoreClient, removeClient } 三件套。
@@ -19,7 +22,10 @@ persistQueryClient({ queryClient, persister, maxAge: 24 * 60 * 60 * 1000 });
 ## 三、多标签页一份缓存：broadcastQueryClient
 
 ```ts
-const unsub = broadcastQueryClient({ queryClient, broadcastChannel: 'TQ' });
+// 目的：broadcastQueryClient 多标签共享一条缓存总线——基于 BroadcastChannel
+const unsub = broadcastQueryClient({ queryClient, broadcastChannel: 'TQ' });   // 同名 channel 的标签页缓存互通
+// ✅ A 页 invalidate/写入，B 页立即可见；一个标签取数另一个直接用（与 persist 正交）
+// ❌ 忘调返回的 unsub：组件/测试反复注册广播订阅，泄漏且相互干扰
 ```
 
 基于 BroadcastChannel：同源的多个标签页共享一条缓存总线——A 页 invalidate/写入，B 页立即可见；一个标签页取数，另一个直接用（官方定位 experimental，但机制简单：变更全量广播 + 新成员入网求快照）。与 persist 正交：persist 管「穿越刷新」，broadcast 管「穿越标签页」。

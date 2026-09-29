@@ -43,11 +43,13 @@ src/
 ## 3. 数据层：一次做对 Prisma + 缓存边界
 
 ```ts
+// 目的：PrismaClient 挂到 globalThis 做单例——防 dev 热重载每次新建连接把数据库连爆
 // src/lib/db.ts —— PrismaClient 单例，防 dev 热重载连爆数据库
 import { PrismaClient } from '@prisma/client';
 const globalForPrisma = globalThis as unknown as { db?: PrismaClient };
-export const db = globalForPrisma.db ?? new PrismaClient();
-if (process.env.NODE_ENV !== 'production') globalForPrisma.db = db;
+export const db = globalForPrisma.db ?? new PrismaClient();   // ✅ 有就复用、没有才新建
+if (process.env.NODE_ENV !== 'production') globalForPrisma.db = db;   // ✅ 只在非生产挂全局（生产无需）
+// ❌ 直接每处 new PrismaClient() → HMR 每改一次代码就新建一批连接，很快“too many connections”打爆
 ```
 
 读路径原则：**"响应与请求者无关"才有资格被缓存**——笔记列表与详情都因登录而异，全部走动态渲染（cookies() 出现即自动动态，不必手写 force-dynamic，呼应 next-fetch-cache 第 4、5 节）；营销落地页与公开文档才配 Full Route Cache/ISR。取数在页面一次拿全再传 props，别在子组件各拉一份（瀑布预防，呼应 next-perf 第 3 节）。
@@ -55,9 +57,11 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.db = db;
 ## 4. 鉴权：三层纵深的落地
 
 ```ts
+// 目的：三层纵深的第一层——middleware 粗粒度把无会话请求挡在应用段外
 // middleware.ts —— 第一层：粗粒度挡在段外
-export { auth as middleware } from '@/lib/auth';
-export const config = { matcher: ['/((?!api/auth|_next|login|landing).*)'] };
+export { auth as middleware } from '@/lib/auth';   // ✅ 委托 Auth.js 验 session JWT（edge 可无库验签）
+export const config = { matcher: ['/((?!api/auth|_next|login|landing).*)'] };   // ✅ 负向断言排除登录/落地/静态
+// ❌ 把它当成唯一防线 → 攻击者绕过 UI 直接 POST Action，数据层 owner 校验（第三层）才是最终防线
 ```
 
 第二层：(app)/layout.tsx 服务端 `await auth()` 再校验一次（middleware 的 JWT 可能过期于握手之间，呼应 next-middleware-auth 第 3 节"middleware 不是最终防线"）；第三层：actions.ts 每个变更函数开头 `const session = await auth(); if (!session) throw redirect('/login')`——**Action 是公开端点，永远假设攻击者直接 POST 它**（呼应 next-forms-mutations 防御四层模板）。
@@ -69,16 +73,18 @@ export const config = { matcher: ['/((?!api/auth|_next|login|landing).*)'] };
 - **编辑器是客户端岛**：`<Editor>` 标 'use client'（受控 textarea + 预览），但它的数据由服务端父组件查好传进来——props 序列化海关只过纯数据（呼应 next-boundaries 第 2、3 节）；Markdown 预览这类重组件用 next/dynamic 隔离，不进列表页首屏包（呼应 next-perf 第 2 节）。
 
 ```ts
+// 目的：写操作的标准骨架——鉴权→校验→写库→声明失效（四层防御落地）
 // (app)/actions.ts 骨架
-'use server';
+'use server';   // ✅ 文件顶声明：本文件所有导出都是公网 Action 端点
 export async function saveNote(prev: State, form: FormData) {
-  const session = await auth(); if (!session?.user) return { ok: false, error: '未登录' };
-  const parsed = noteSchema.safeParse(fromFormData(form));      // zod，校验在服务端
-  if (!parsed.success) return { ok: false, fields: flatten(parsed.error) };
+  const session = await auth(); if (!session?.user) return { ok: false, error: '未登录' };   // ✅ 第一层鉴权
+  const parsed = noteSchema.safeParse(fromFormData(form));      // ✅ zod，校验在服务端
+  if (!parsed.success) return { ok: false, fields: flatten(parsed.error) };   // ✅ 第二层校验
   const note = await db.note.upsert({ ... });
-  revalidatePath('/notes'); revalidatePath(`/notes/${note.id}`);
-  return { ok: true, id: note.id };   // 页面层 redirect 放调用方，避免 Action 里 throw 被 catch 吞
+  revalidatePath('/notes'); revalidatePath(`/notes/${note.id}`);   // ✅ 列表+详情两个缓存位点都算上
+  return { ok: true, id: note.id };   // ✅ 页面层 redirect 放调用方，避免 Action 里 throw 被 catch 吞
 }
+// ❌ 只 revalidatePath('/notes') 漏了详情 → 改完刷新才变（幽灵 bug，失效半径≠变更影响面）
 ```
 
 ## 6. 体验件：一次配齐，不再回头

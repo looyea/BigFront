@@ -17,22 +17,24 @@ Node 单事件循环：一个 3 秒的同步压缩能把所有请求停摆（nod
 ## 二、BullMQ：队列的四块拼图
 
 ```js
-// producer.js —— web 进程里，只管投递
+// producer.js —— web 进程里，只管投递（不自己干重活）
+// 目的：把一个邮件任务投进队列，声明重试/退避/清理策略
 import { Queue } from 'bullmq'
 const emailQueue = new Queue('emails', { connection: { host: '127.0.0.1' } })
 await emailQueue.add('welcome',            // 任务名
   { to: user.email },                      // payload（可序列化 JSON）
-  { attempts: 5, backoff: { type: 'exponential', delay: 1000 },  // 1s→2s→4s→8s
+  { attempts: 5, backoff: { type: 'exponential', delay: 1000 },  // 失败重 5 次：1s→2s→4s→8s
     removeOnComplete: 100, delay: 0 }      // 完成只留最近 100 条
 )
 ```
 
 ```js
 // worker.js —— 独立进程，消费要显式声明并发
+// 目的：从队列拉任务执行；抛错 = 交给重试，成功 = 自动标 completed
 import { Worker } from 'bullmq'
 new Worker('emails',
-  async (job) => { await smtp.send(job.data.to) },  // throw = 交给重试
-  { connection: { host: '127.0.0.1' }, concurrency: 5 }
+  async (job) => { await smtp.send(job.data.to) },  // throw = 交给重试（job.data 即生产者发的 payload）
+  { connection: { host: '127.0.0.1' }, concurrency: 5 }  // 同时最多跑 5 个，保护下游
 )
 ```
 
@@ -48,9 +50,9 @@ new Worker('emails',
 ## 四、定时任务：delay、repeat 与 cron 的坑
 
 ```js
-// 延迟与日历重复都交给队列，不必自己 setInterval
-await emailQueue.add('digest', {}, { delay: 3_600_000 })               // 1 小时后
-await reportQueue.add('daily', {}, { repeat: { pattern: '0 9 * * *', tz: 'Asia/Shanghai' } })  // 每天早上 9 点
+// 目的：延迟与日历重复都交给队列（多实例也不会重复触发），不必自己 setInterval
+await emailQueue.add('digest', {}, { delay: 3_600_000 })               // 1 小时后才消费
+await reportQueue.add('daily', {}, { repeat: { pattern: '0 9 * * *', tz: 'Asia/Shanghai' } })  // 每天早上 9 点（cron）
 ```
 
 - `repeat` 任务由 Redis 里的 scheduler 统一发放——**多实例部署 web 进程也不会重复触发**；自己 `node-cron` 写在 web 进程里，cluster 四个 worker 就是四倍执行（清库 cron 跑四遍是真实事故）；

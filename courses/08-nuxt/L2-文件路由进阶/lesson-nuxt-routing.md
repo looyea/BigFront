@@ -17,12 +17,14 @@ app/pages/blog/[id].vue    →  /blog/:id（下一关主角）
 
 ```vue
 <script setup>
+// 目的：页面级配置——definePageMeta 是编译宏，只能写静态值，运行时判断请放中间件
 definePageMeta({
-  middleware: 'auth',        // 本路由独占中间件（nuxt-middleware-auth 详解）
-  layout: 'admin',           // 指定命名布局
-  alias: ['/home'],          // 别名路径
-  name: '首页',              // 覆盖生成的路由名
+  middleware: 'auth',        // ✅ 进本路由前先跑 auth 中间件（nuxt-middleware-auth 详解）
+  layout: 'admin',           // ✅ 套上 app/layouts/admin.vue 命名布局
+  alias: ['/home'],          // ✅ /home 也能命中本页
+  name: '首页',              // ✅ 覆盖按路径生成的路由名，供命名跳转
 });
+// ❌ 传运行时变量（如 layout: userStore.role）→ 宏只认静态值，报错或被忽略；要动态布局改用 <NuxtLayout :name>
 </script>
 ```
 
@@ -31,9 +33,11 @@ definePageMeta({
 ## 2. NuxtLink：一个组件管内外链
 
 ```vue
-<NuxtLink to="/about">关于</NuxtLink>
-<NuxtLink to="https://vuejs.org" external>Vue 官网</NuxtLink>
-<NuxtLink :to="{ name: 'blog-id', params: { id: 1 } }">命名跳转</NuxtLink>
+<!-- 目的：一个 NuxtLink 同时管内部 SPA 导航与外部真链接 -->
+<NuxtLink to="/about">关于</NuxtLink><!-- ✅ 内部路由，渲染 <a> 但走 SPA 不刷新，视口内自动预取 -->
+<NuxtLink to="https://vuejs.org" external>Vue 官网</NuxtLink><!-- ✅ 外链必须带 external，走浏览器原生跳转 -->
+<NuxtLink :to="{ name: 'blog-id', params: { id: 1 } }">命名跳转</NuxtLink><!-- ✅ 按路由名+参数跳转，等价 /blog/1 -->
+<!-- ❌ 外链漏写 external → 把 https://vuejs.org 当内部 path 拼成 /https://vuejs.org，跳错页 -->
 ```
 
 - 内部路由自动渲染 `<a>` 并接管为 SPA 导航（不刷新页面）；外链必须 `external`，否则会把绝对 URL 当内部 path 拼出错误路由；
@@ -44,13 +48,15 @@ definePageMeta({
 
 ```vue
 <script setup>
-const route = useRoute();       // 当前路由对象：params/query/hash 全响应式
-const router = useRouter();     // 导航实例
+// 目的：读参数与编程式导航——vue-router 血统，新增的只有 SSR 安全的 navigateTo
+const route = useRoute();       // ✅ 当前路由对象：params/query/hash 全响应式
+const router = useRouter();     // ✅ 导航实例
 
-router.push('/users');          // 编程式前进
-router.replace({ query: { ...route.query, page: 2 } }); // 不留历史
-await router.push('/x').catch(() => {}); // 导航被中间件中断时 reject，必须 catch
-navigateTo('/login', { redirectCode: 302 }); // SSR 安全跳转（服务端响应码生效）
+router.push('/users');          // ✅ 编程式前进到 /users
+router.replace({ query: { ...route.query, page: 2 } }); // ✅ 改 query 且不留历史记录
+await router.push('/x').catch(() => {}); // ✅ 被中间件 abort 时 push 会 reject，必须 catch 否则未处理拒绝
+navigateTo('/login', { redirectCode: 302 }); // ✅ SSR 期也生效、可设响应码的跳转
+// ❌ const { query } = useRoute() 解构 → 丢掉响应式代理，URL 变了 query 不更新（要 route.query 整体取）
 </script>
 ```
 

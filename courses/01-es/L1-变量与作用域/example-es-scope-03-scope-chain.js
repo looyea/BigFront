@@ -1,5 +1,6 @@
 // 示例 03：作用域链 + 遮蔽 + 模块顶层作用域
-// 运行：node courses/01-es/examples/es-scope/03-scope-chain.js
+// 目的：看清作用域链查找、同名遮蔽引发的 TDZ、for 的 per-iteration 绑定、const/freeze 的边界
+// 运行：node "courses/01-es/L1-变量与作用域/example-es-scope-03-scope-chain.js"
 
 const outer = 'I am outer';
 
@@ -44,5 +45,10 @@ const user = { name: 'Ann' };
 user.name = 'Bob';             // ✅
 try { user = {}; } catch (e) { console.log('const reassign:', e.constructor.name); }
 Object.freeze(user);
-user.name = 'Cindy';
-console.log('after freeze, name still:', user.name); // 'Bob'（浅冻结生效）
+// ❌ 错误用例：向冻结对象写属性（本文件是 ES Module，永远严格模式）
+try {
+  user.name = 'Cindy';   // 后果：TypeError: Cannot assign to read only property 'name'（严格模式会抛；非严格模式则静默失败）
+} catch (e) {
+  console.log('freeze 后写入:', e.constructor.name); // TypeError
+}
+console.log('after freeze, name still:', user.name); // 'Bob'（写入未生效，浅冻结成功保护了内部）

@@ -100,6 +100,13 @@ declare function getUser(id: UserId): void;
 type Fn = (...args: any[]) => any;
 declare function once<F extends Fn>(fn: F): F;         // 返回类型完全等价于入参
 declare function withMeta<F extends Fn>(fn: F): F & { __once: true };  // 交叉附加元信息
+// ✅ 应用：once 把原函数的参数/返回类型原样带出
+declare function load(a: number, b: string): boolean;
+const loadOnce = once(load);        // loadOnce: (a: number, b: string) => boolean
+loadOnce(1, "x");                    // ✓ 保留精确签名
+// loadOnce("1", "x");                // ❌ 第一参应为 number
+const m = withMeta(load);            // (a,b)=>boolean 且多出 __once: true
+m(1, "x"); m.__once;                 // ✓
 ```
 
 `once<F extends Fn>(fn: F): F` 用泛型"原样透传"整个函数类型（参数、返回、this 全保留），比 `(...a:any[])=>any` 精确得多（呼应 ts-functions、ts-generic-constraints 第 8 题避免 any 泄漏）。

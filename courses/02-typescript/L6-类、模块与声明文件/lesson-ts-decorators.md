@@ -9,17 +9,22 @@
 装饰器 = **一个函数，前面加 `@` 贴在声明上，在该声明被定义时运行，可读取/修改被装饰的目标**。语法早于 TS（源自 Babel 提案），TS 提供两种实现：
 
 ```ts
+// 目的：写一个标准（TC39）方法装饰器，在定义期把 fetch 换成"带日志"的版本
+// 注：标准装饰器需 TS 5.0 默认语义；老版 experimentalDecorators 签名不同（见第二节）
 function logged(target: any, ctx: ClassMethodDecoratorContext) {
-  // 标准装饰器：包装方法
+  // 返回的新函数会替换原方法：先打日志，再用 apply 调原实现（保留 this 与参数）
   return function (this: any, ...args: any[]) {
-    console.log("call", ctx.name);
-    return (target as Function).apply(this, args);
+    console.log("call", ctx.name);          // ctx.name 即被装饰成员名 "fetch"
+    return (target as Function).apply(this, args);  // 转调原方法，返回其结果
   };
 }
 
 class Svc {
-  @logged fetch() { /* ... */ }   // 定义期把 fetch 换成了带日志的版本
+  @logged fetch() { return "data"; }        // 定义期 fetch 已被换成带日志的版本
 }
+
+// ✅ 应用：调用被装饰方法时，先输出日志再拿到原返回值
+new Svc().fetch();   // 控制台打印: call fetch   （表达式值为 "data"）
 ```
 
 装饰器分五类作用对象：**类装饰器、方法装饰器、属性（字段）装饰器、访问器装饰器、参数装饰器**。
@@ -43,15 +48,21 @@ class Svc {
 ## 三、类装饰器：注册与增强
 
 ```ts
+// 目的：用类装饰器工厂把类"定义即注册"进一个容器（DI/路由表/实体表的常见形态）
 const registry = new Map<string, Function>();
 function register(name: string) {          // 装饰器工厂（带参装饰器都是"工厂返回装饰器"）
   return function <T extends new (...a:any[]) => any>(Ctor: T) {
-    registry.set(name, Ctor);
-    return Ctor;                            // 可返回新类替换原类
+    registry.set(name, Ctor);             // side-effect：把构造器存进 registry
+    return Ctor;                            // 可返回新类替换原类（这里原样返回）
   };
 }
 
 @register("user") class User { }            // 定义即注册进 registry
+
+// ✅ 应用：容器能按名字取回构造器并实例化
+registry.get("user");        // => User 的构造器（Function）
+new (registry.get("user") as any)();  // => 创建一个 User 实例
+// ❌ registry.get("admin");  // => undefined：未注册过的名字取不到（不是报错而是空值，消费前需判空）
 ```
 
 类装饰器接收构造签名 `new (...a)=>T`（呼应 ts-classes 第 8 题），要么**side-effect 登记**（DI 容器、路由表、实体表），要么**返回子类做增强**（mixins，如给类加方法）。带参数的 `@register("x")` 是"装饰器工厂"——先调用工厂拿到真正的装饰器函数（TS 语法要求）。
@@ -61,13 +72,16 @@ function register(name: string) {          // 装饰器工厂（带参装饰器�
 ## 四、DI 的真实机制（NestJS 风格）
 
 ```ts
+// 目的：示意 NestJS 风格 DI——类装饰器打标记、参数装饰器指定注入 token
+// 注：本节为老版 experimentalDecorators 语义，需配 emitDecoratorMetadata，不能用 node 类型擦除直接跑
 @Injectable()                         // 类装饰器：打元数据标记为"可注入"
 class UserService {
   constructor(
-    @Inject(REPO) private repo: Repo, // 参数装饰器：指定注入 token
+    @Inject(REPO) private repo: Repo, // 参数装饰器：指定注入 token（REPO 是提供者令牌）
     private http: HttpService,        // 无 @Inject → 靠 emitDecoratorMetadata 反射出 HttpService
   ) {}
 }
+// 容器读到这份元数据后，等价于帮你 new UserService(container.get(REPO), container.get(HttpService))
 ```
 
 老版装饰器 + `emitDecoratorMetadata` 会把 `constructor` 各参数的**类型**编译期记录为 `design:paramtypes`（一个构造函数数组）。运行时 DI 容器读这份元数据 + 参数装饰器存的 token，就知道"该 new/查哪个 provider 塞进哪个位置"——这正是"泛型擦除下运行时拿不到类型"问题的破解：类型信息被装饰器**主动写进了元数据**（呼应 ts-generic-constraints 第 7 题构造器令牌）。没有 `emitDecoratorMetadata`，基于类型的自动注入就失效。
@@ -77,13 +91,15 @@ class UserService {
 ## 五、方法 / 字段 / 访问器装饰器
 
 ```ts
+// 目的：示意方法/字段/访问器装饰器的三类典型包装（@readonly/@cache/@logGetter 为示意，需自行实现）
+// 注：同样是老版/自定义装饰器语义，不能直接用 node 跑；重点看"装饰器贴在哪类成员上"
 class Repo {
   @readonly id!: string;              // 字段装饰器：把 id 设为只读（addInitializer 里 defineProperty）
 
-  @cache                              // 方法装饰器：缓存返回值
-  expensive(n: number) { /* ... */ }
+  @cache                              // 方法装饰器：缓存返回值（同参二次调用直接命中缓存）
+  expensive(n: number) { /* 耗时计算 */ return n * n; }
 
-  @logGetter                          // 访问器装饰器（呼应 ts-classes 第 9 题 get/set）
+  @logGetter                          // 访问器装饰器（呼应 ts-classes 第 9 题 get/set）：get 被读时打日志
   get fullName() { return `${this.first} ${this.last}`; }
 }
 ```

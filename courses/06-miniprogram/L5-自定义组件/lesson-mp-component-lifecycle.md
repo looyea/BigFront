@@ -7,12 +7,16 @@
 ## 一、组件四钩子：一棵树的生老病死
 
 ```js
+// 目的：组件自带四钩子（非页面 onLoad/onShow）——created→attached→ready→detached
 Component({
   created()  { /* 实例刚创建：还不能用 setData、不能碰节点 */ },
   attached() { /* 进入页面节点树：可 setData；仍无布局 */ },
-  ready()    { /* 首次渲染完成：可安全查节点/播放器可 init */ },
-  detached() { /* 移出节点树：清定时器、解绑 bus、释放实例引用 */ },
+  ready()    { /* ✅ 首次渲染完成：可安全查节点/播放器可 init */ },
+  detached() { /* ✅ 移出节点树：清定时器、解绑 bus、释放实例引用 */ },
 })
+// ❌ created 里 setData → 无效（视图还不存在），初始化改 data 默认值或放 attached
+// ❌ attached 里查宽高/位置 → 拿不到（要等 ready）
+// ❌ detached 不清定时器/bus 订阅 → wx:if 反复重建时"回调打给幽灵实例"
 ```
 
 与页面生命周期对齐记忆：
@@ -38,13 +42,15 @@ Component({
 ## 二、pageLifetimes：组件旁观页面事件
 
 ```js
+// 目的：组件"寄生"于页面，用 pageLifetimes 旁观所在页面的 show/hide/resize
 Component({
   pageLifetimes: {
-    show()  { /* 所在页面 onShow 时 */ },
-    hide()  { /* 页面 onHide */ },
+    show()  { /* ✅ 所在页面 onShow 时（如恢复定位） */ },
+    hide()  { /* 页面 onHide（如暂停定位） */ },
     resize() { /* 页面尺寸变化（横竖屏/键盘致窗口变化） */ },
   },
 })
+// ❌ 把 onShow/onLoad 写在 Component 顶层 → 静默无效（组件无页面钩子，应用 pageLifetimes）
 ```
 
 场景：地图组件在页面 hide 时暂停定位、resize 时重算画布。组件"寄生"于页面，页面钩子经此转发——**组件没有 onShow/onLoad，别把页面钩子写进 Component 顶层**（写了静默无效，新一代工具会提示）。
@@ -54,12 +60,13 @@ Component({
 ## 三、observer 全解：数据层的"生命周期"
 
 ```js
+// 目的：observer 监听数据变化做派生（组件版 watch，非 useEffect，无"渲染后"语义）
 Component({
   properties: {
     price: {
       type: Number,
       observer(newVal, oldVal, changedPath) {
-        this.setData({ yuan: (newVal / 100).toFixed(2) });
+        this.setData({ yuan: (newVal / 100).toFixed(2) });   // ✅ 派生写另一个字段 yuan
       },
     },
   },
@@ -70,6 +77,7 @@ Component({
     'userInfo.**': function (path, value) { /* 对象任意层变化 */ },
   },
 })
+// ❌ observer 里再 setData 被观察的同一字段(price) → 无限循环（工具报 setData 循环告警）
 ```
 
 五条军规：
@@ -85,14 +93,15 @@ Component({
 ## 四、behavior：小程序的"混入/组合函数"
 
 ```js
+// 目的：behavior = 小程序的混入，把"要挂生命周期/properties 的成套逻辑"打包复用
 // behaviors/countdown.js —— 倒计时逻辑打包
 export const countdown = Behavior({
   properties: {
     endTime: Number,
   },
   data: { timeText: '00:00' },
-  attached() { this._startCountdown(); },     // 钩子可合并：behavior 与组件同名钩子都会跑
-  detached() { clearInterval(this._timer); },
+  attached() { this._startCountdown(); },     // ✅ 钩子可合并：behavior 与组件同名钩子都会跑
+  detached() { clearInterval(this._timer); },  // ✅ behavior 自带清理
   methods: {
     _startCountdown() {
       this._timer = setInterval(() => {
@@ -107,9 +116,10 @@ export const countdown = Behavior({
 // 组件里使用
 import { countdown } from '../../behaviors/countdown';
 Component({
-  behaviors: [countdown, anotherBehavior],   // 数组：靠后者覆盖前者同名成员
+  behaviors: [countdown, anotherBehavior],   // 数组：靠后者覆盖前者同名成员（生命周期不覆盖、都跑）
   methods: { /* ... */ },
 });
+// ❌ 多个 behavior/组件有同名 methods/data → 后者静默覆盖前者，难排查（behavior 与 mixin 同病）
 ```
 
 behavior 能带：properties、data、methods、生命周期、页面事件声明、甚至嵌套其他 behavior。合并规则：**数据/属性按"组件 > 后 > 前"浅合并覆盖，生命周期不覆盖而是**都执行（behavior 先于组件，≈Vue mixin 的钩子合并）。

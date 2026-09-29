@@ -20,6 +20,7 @@
 ## 二、`JSON.parse(JSON.stringify(x))` 的 7 大坑
 
 ```js
+// 目的：造一个"什么坑都有"的对象，用来观察 JSON 大法的 7 种丢失/变形
 const x = {
   n: NaN,
   inf: Infinity,
@@ -75,11 +76,12 @@ x.cyclic = x;   // 循环引用
 
 **⚠️ 关键陷阱**：structuredClone 后**类实例的原型丢失**：
 ```js
+// 目的：structuredClone 只拷自有数据属性，原型链/methods 全部丢失
 class Foo { x = 1; hi() { return 'hi'; } }
 const f = new Foo();
-const g = structuredClone(f);
+const g = structuredClone(f);   // g 是普通对象，不带 Foo.prototype
 g instanceof Foo;   // ❌ false
-g.hi();              // ❌ TypeError
+// g.hi();          // ❌ TypeError: g.hi is not a function（方法没被拷）
 g.x;                  // ✅ 1（自有属性被拷）
 ```
 
@@ -88,17 +90,18 @@ g.x;                  // ✅ 1（自有属性被拷）
 ## 四、`structuredClone` 的三个高级用法
 
 ```js
+// 目的：structuredClone 三个高级用法（transfer 转移 / 拷子树 / Worker 隐式调用）
 // 1. transfer（性能：把 ArrayBuffer **转移**而不是拷贝）
 const buf = new ArrayBuffer(1024 * 1024);
 const clone = structuredClone({ buf }, { transfer: [buf] });
-buf.byteLength;   // 0（已转移）
+buf.byteLength;   // 0（已转移，原 buffer 被"搬空"，数据零拷贝进 clone）
 
 // 2. 拷部分子树
 const full = { a: { b: 1 }, c: 2 };
 const part = structuredClone(full.a);   // { b: 1 }
 
 // 3. Worker 与主线程之间的隐式调用
-worker.postMessage({ data });    // 内部就走 structuredClone
+// worker.postMessage({ data });    // 内部就走 structuredClone（浏览器环境）
 ```
 
 **兼容性**：Chrome 98 / Firefox 94 / Safari 15.4 / Node 17+（Node 更早通过 `v8.structuredClone`）。老浏览器用 `core-js` 或 `lodash.cloneDeep`。
@@ -108,6 +111,7 @@ worker.postMessage({ data });    // 内部就走 structuredClone
 ## 五、手写递归深拷贝：一个**较完整**版本（**面试高频**）
 
 ```js
+// 目的：手写递归深拷贝——处理循环引用/Date/RegExp/Map/Set/TypedArray/原型链/getter/Symbol 键
 function deepClone(v, seen = new WeakMap()) {
   if (v === null || typeof v !== 'object') return v;
   if (seen.has(v)) return seen.get(v);           // 循环引用
@@ -136,6 +140,23 @@ function deepClone(v, seen = new WeakMap()) {
   }
   return out;
 }
+
+// ✅ 应用：一次拷齐循环引用 + Date/Map/Set + 原型保留，验证拷贝结果
+function Point(x) { this.x = x; }
+Point.prototype.sum = function () { return this.x; };
+const origin = { d: new Date(0), m: new Map([['k', 1]]), s: new Set([1, 1, 2]), p: new Point(5) };
+origin.self = origin;                       // 循环引用
+const copy = deepClone(origin);             // 不爆栈：seen 命中已拷对象
+copy.self === copy;                          // true（循环引用被完整复刻）
+copy.d instanceof Date;                      // true（Date 保留，不像 JSON 变字符串）
+copy.m.get('k');                              // 1（Map 内容拷过来）
+copy.s.size;                                  // 2（Set 自动去重后仍为 2）
+copy.p instanceof Point;                     // true（原型链保留，structuredClone 做不到）
+copy.p.sum();                                 // 5（方法可调用）
+
+// ❌ 错误对照：JSON 大法处理同样数据会丢类型/抛错
+// JSON.stringify(origin);                    // ❌ TypeError: Converting circular structure to JSON
+// structuredClone(new Point(5)).p instanceof Point;  // ❌ false（原型丢失）
 ```
 
 **面试追问要点**：
@@ -163,6 +184,7 @@ function deepClone(v, seen = new WeakMap()) {
 
 `JSON.stringify` 把 Date 变字符串后想恢复：
 ```js
+// 目的：replacer/reviver 成对使用——序列化时给 Date 打标记，反序列化时按标记还原
 JSON.stringify(x, (k, v) => v instanceof Date ? { __t: 'Date', v: v.toISOString() } : v);
 JSON.parse(s, (k, v) => v && v.__t === 'Date' ? new Date(v.v) : v);
 ```

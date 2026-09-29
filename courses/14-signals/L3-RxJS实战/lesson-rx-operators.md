@@ -9,17 +9,19 @@ Observable 本身几乎不写逻辑——转换全在 `pipe(...)` 里串操作�
 ## 二、单值转换组：map / filter / scan
 
 ```js
+// 目的：单值转换组—map 变形、filter 筛选、scan 带记忆累加
 import { of, fromEvent } from 'rxjs';
 import { map, filter, scan } from 'rxjs';
 
 fromEvent(input, 'input').pipe(
-  map((e) => e.target.value),           // 事件 → 数据
-  filter((v) => v.length >= 2),         // 太短不处理
+  map((e) => e.target.value),           // ✅ 事件对象 → 数据（取输入框的值）
+  filter((v) => v.length >= 2),         // ✅ 太短的直接丢弃，不往下游送
 );
 
 of(1, 2, 3).pipe(
-  scan((acc, v) => acc + v, 0),         // 带记忆的累加：吐 1, 3, 6
+  scan((acc, v) => acc + v, 0),         // ✅ 累加中间值都吐出：依次 1, 3, 6
 );
+// ❌ 把 scan 当 reduce→ reduce 只给终值 6，scan 会逐个吐 1/3/6；想要“只要总和”该用 reduce
 ```
 
 `scan` 是 `reduce` 的流版：reduce 给终值，scan 把每一步的中间累计都吐出来。它是『事件流维护状态』的原生方案——计数器、缓冲区、撤销栈都是 scan 一句话的事（与 L1『Zustand 的 set 相当于手动 scan』的对照伏笔）。
@@ -27,13 +29,15 @@ of(1, 2, 3).pipe(
 ## 三、时间与去重组：debounceTime / distinctUntilChanged
 
 ```js
+// 目的：时间与去重组—“事件太吵”的三种吵法各对一个药
 import { fromEvent, map, debounceTime, distinctUntilChanged } from 'rxjs';
 
 fromEvent(input, 'input').pipe(
   map((e) => e.target.value),
-  debounceTime(300),            // 静默 300ms 才放行最后一个值
-  distinctUntilChanged(),       // 与上一个放行值相同则丢弃
+  debounceTime(300),            // ✅ 静默 300ms 才放行最后一个值（等手停下来）
+  distinctUntilChanged(),       // ✅ 与上一个放行值相同则丢弃（默认按 ===）
 );
+// ❌ 搜索框用 throttleTime 代替 debounceTime→ 会把用户停顿前的中间词也按时放行，多发几次无效请求
 ```
 
 分工要说细：
@@ -60,12 +64,14 @@ concatMap:  排队串行       → --a[A....]--b[B..]--c[C.]  严格 FIFO   按�
 **打字机搜索一次讲透 switchMap**：
 
 ```js
+// 目的：switchMap—每输入一次发一个请求，新值到来则把旧的未完成请求直接 unsubscribe（解决竞态）
 searchInput$.pipe(
   debounceTime(300),
   distinctUntilChanged(),
-  switchMap((q) => from(fetch(`/api/s?q=${q}`))),   // 每次发请求，保留最新
+  switchMap((q) => from(fetch(`/api/s?q=${q}`))),   // ✅ 保留最新、作废旧内层流
   catchError(() => of([])),
 ).subscribe(renderResults);
+// ❌ 用 mergeMap 替 switchMap→ 慢的 "re" 响应后到会覆盖快的 "react" 结果，重新引入竞态
 ```
 
 场景：用户打了 "re"（发了搜 "re" 的慢请求），又打完 "react"（发搜 "react" 的快请求）。**没有 switchMap**：慢的 "re" 响应后到，覆盖 "react" 的结果——经典竞态事故。**switchMap 的语义就是"新值到来，旧内层流直接 unsubscribe"**——不仅忽略旧结果，连旧请求本身也退订作废。这正是 RxJS 相对手写 `let latestToken` 防竞态方案的结构化优势：令牌比对是命令式的补丁，switchMap 是声明式的语义（呼应 rx-inapp 的 AbortController 对照）。
@@ -84,12 +90,14 @@ searchInput$.pipe(
 ## 五、多流组合：combineLatest（与 withLatestFrom）
 
 ```js
+// 目的：combineLatest—任一侧更新就用双方最新值重算（signal computed 的流版替身）
 import { combineLatest } from 'rxjs';
 
 const price$ = ..., qty$ = ...;
 combineLatest([price$, qty$]).pipe(
-  map(([p, q]) => p * q),
-).subscribe(renderTotal);      // 任一源更新 → 用双方最新值重算
+  map(([p, q]) => p * q),       // ✅ 拿到两个源的最新值算总价
+).subscribe(renderTotal);      // ✅ 任一源更新 → 重算并推送
+// ❌ 忘了“每个源至少吐过一个值前不吐”→ 冷流场景首值未到总价一直不更新，应先 startWith(初值)
 ```
 
 combineLatest 的脾气：① 每个源至少吐过一个值之前不吐（冷流场景考虑 `startWith(初值)`）；② 它是『多个当下值的最新组合』——这几乎是 signal computed 的流版替身（L6 sig-vs-streams 会正面比）。`withLatestFrom` 则相反：只以主源节奏吐、从源仅供"顺便看一眼"（浅观察的流版，与 tc39-control 的 watch 姿态暗合）。
@@ -97,15 +105,17 @@ combineLatest 的脾气：① 每个源至少吐过一个值之前不吐（冷�
 ## 六、错误与杂项：catchError / retry / tap / finalize
 
 ```js
+// 目的：错误与杂项—tap 旁路观察、catchError 兜底、retry 重订阅、finalize 善后
 pipe(
-  tap((v) => console.log('路过看一眼', v)),   // 副作用调试器，不改流
+  tap((v) => console.log('路过看一眼', v)),   // ✅ 副作用调试器，不改流
   map(parse),
-  catchError((err, caught) => {                // 转成兜底值或换一条流
+  catchError((err, caught) => {                // ✅ 转成兜底值或换一条流
     return err.status === 401 ? refreshThenRetry : of([]);
   }),
-  retry({ count: 3, delay: 1000 }),            // 失败重订阅（指数退避现代写法）
-  finalize(() => hideSpinner()),               // 无论终局/退订都跑（teardown 保险丝）
+  retry({ count: 3, delay: 1000 }),            // ✅ 失败重订阅（指数退避现代写法）
+  finalize(() => hideSpinner()),               // ✅ 无论终局/退订都跑（teardown 保险丝）
 );
+// ❌ 在管道末端放一个 catchError 兜一切→ 会吞掉上游 map(parse) 里的编程 bug，掩盖真错；应只包 fetch
 ```
 
 三条纪律：

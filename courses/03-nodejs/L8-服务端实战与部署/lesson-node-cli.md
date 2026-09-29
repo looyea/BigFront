@@ -7,10 +7,11 @@
 ## 一、`process.argv`：最朴素的解析
 
 ```js
-// node cli.js build --watch src
+// 目的：不装任何库，直接从 process.argv 取用户参数
+// 运行：node cli.js build --watch src
 // process.argv = ['/usr/bin/node', '/path/cli.js', 'build', '--watch', 'src']
-const [node, script, ...args] = process.argv;
-console.log(args);   // ['build', '--watch', 'src']
+const [node, script, ...args] = process.argv;   // 解构丢掉前两项（node 路径 + 脚本路径）
+console.log(args);   // ✅ 输出 ['build', '--watch', 'src']
 ```
 
 - 前两项是 node 与脚本路径，**用户参数从索引 2 起**（`argv.slice(2)`，呼应 node-config 第二节）；
@@ -22,13 +23,14 @@ console.log(args);   // ['build', '--watch', 'src']
 
 ```jsonc
 // package.json
+// 目的：bin 字段声明"安装后 mycli 命令指向哪个文件"（呼应 node-npm）
 { "name": "mycli", "bin": { "mycli": "./bin/cli.js" } }
 ```
 
 ```js
 #!/usr/bin/env node            // ← 第一行 shebang：告诉 OS 用 node 执行本文件
 import { run } from "../src/index.js";
-run();
+run();   // 直接执行命令逻辑
 ```
 
 - **shebang**（`#!`）仅在 Unix 生效，Windows 靠 npm 生成的 `.cmd` 垫片；
@@ -40,17 +42,18 @@ run();
 ## 三、用库解析：commander / yargs / `util.parseArgs`
 
 ```js
+// 目的：用 commander 声明式地定义参数/选项/子命令，自动生成 --help
 import { program } from "commander";
 program
   .name("mycli")
-  .version("1.0.0")                       // 自动 --version
-  .argument("<file>", "输入文件")            // 位置参数（必填）
-  .option("-w, --watch", "监听模式")
-  .option("-o, --out <dir>", "输出目录", "dist")   // 带值 + 默认
+  .version("1.0.0")                       // 自动支持 --version
+  .argument("<file>", "输入文件")            // 位置参数（<> 表必填）
+  .option("-w, --watch", "监听模式")          // 布尔开关
+  .option("-o, --out <dir>", "输出目录", "dist")   // 带值 + 默认 dist
   .command("build")
   .description("构建项目")
-  .action((opts) => { /* opts.watch / opts.out */ });
-program.parse();                          // 自动生成 --help
+  .action((opts) => { /* opts.watch / opts.out 已被解析好 */ });
+program.parse();                          // 解析 argv，无参/--help 时自动打用法
 ```
 
 - 库负责：`--flag`/`-f`/短横组合/子命令/校验/**自动生成 `--help`**；
@@ -61,6 +64,7 @@ program.parse();                          // 自动生成 --help
 ## 四、stdout / stderr / stdin：三条流
 
 ```js
+// 目的：区分输出目标——结果走 stdout（可被管道），诊断走 stderr（不污染数据流）
 process.stdout.write("普通输出\n");     // 正常结果 → stdout（可被管道 | 捕获）
 process.stderr.write("出错了\n");       // 错误/日志 → stderr（不进管道数据流）
 ```
@@ -74,11 +78,12 @@ process.stderr.write("出错了\n");       // 错误/日志 → stderr（不进�
 ## 五、退出码：给 shell/CI 的信号
 
 ```js
+// 目的：用退出码给 shell/CI 一个成/败信号
 if (fatal) {
   console.error("失败原因");
   process.exit(1);          // 非 0 = 失败，CI/脚本据此中断（&& 链、set -e）
 }
-// 正常结束不必显式 exit，事件循环空了自然以 0 退出（呼应 node-event-loop）
+// ✅ 正常结束不必显式 exit，事件循环空了自然以 0 退出（呼应 node-event-loop）
 ```
 
 - `0` 成功、`1` 通用错误；`126` 不可执行、`127` 命令未找到（呼应 node-child-process 第三节）；
@@ -99,11 +104,13 @@ if (fatal) {
 ## 七、健壮性：错误处理与"管道友好"
 
 ```js
+// 目的：统一错误兜底——用 exitCode 而非硬 exit，保证 stdout 缓冲能 flush 完
 try {
   await run();
 } catch (err) {
   console.error(err.message);        // 只给用户看得懂的；细节可 --verbose 才打
   process.exitCode = 1;              // 设 exitCode 而非硬 exit，让缓冲 flush 完
+  // ❌ 若写成 process.exit(1)可能截断尚未 flush 的 stdout（尤其重定向到管道/文件时）
 }
 ```
 

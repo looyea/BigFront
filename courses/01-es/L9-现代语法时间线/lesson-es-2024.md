@@ -17,6 +17,7 @@
 ## 二、`Object.groupBy` / `Map.groupBy`
 
 ```js
+// 目的：groupBy 按回调返回值分桶（Object 版原型为 null、Map 版键可任意）
 const items = [
   { name: '球', type: 'sports', weight: 600 },
   { name: '书', type: 'study', weight: 300 },
@@ -47,6 +48,7 @@ const byWeight = Map.groupBy(items, ({ weight }) => weight > 250 ? 'heavy' : 'li
 ## 三、`Promise.withResolvers`
 
 ```js
+// 目的：withResolvers 把 resolve/reject 拿到构造器外（旧写法需闭包接住）
 // 以前
 let resolve, reject;
 const p = new Promise((res, rej) => { resolve = res; reject = rej; });
@@ -58,6 +60,7 @@ const { promise, resolve, reject } = Promise.withResolvers();
 **价值**：把 resolve/reject 拿到**构造器外面**——在 class 方法、事件监听器、队列里等场景更自然。
 
 ```js
+// 目的：Modal 用 withResolvers——show 返回 promise，close 时才 resolve，调用方可 await 整个弹窗生命周期
 class Modal {
   #resolver;
   show() {
@@ -68,7 +71,12 @@ class Modal {
   }
   close() { this.visible = false; this.#resolver?.(); }
 }
-// await modal.show(); → close 时自动 resolve
+// ✅ 应用：点开后关闭→await 完成
+const modal = new Modal();
+const closed = modal.show();      // 返回 Promise（此时未 settle）
+modal.close();                     // 触发 #resolver → 上面那个 promise 变 fulfilled
+await closed;                       // 不挂起（close 已 resolve）
+console.log(modal.visible);         // false（close 里置 false）
 ```
 
 ---
@@ -76,14 +84,24 @@ class Modal {
 ## 四、`ArrayBuffer.transfer()` / `transferToFixedLength()`
 
 ```js
+// 目的：ArrayBuffer.transfer 零拷贝转移所有权——原 buffer 随即 detached
 const buf = new ArrayBuffer(1024);
 const view = new Uint8Array(buf);
 view[0] = 42;
 
-const transferred = buf.transfer();   // ⚠️ buf **detached**，后续读写返回 0
+const transferred = buf.transfer();   // buf 变 detached（byteLength 0），数据零拷贝移交
 new Uint8Array(transferred)[0];       // 42
+buf.byteLength;                        // 0（原 buffer 已分离）
 
-const sliced = buf.transfer(0, 512);  // transferToFixedLength 变体
+// ❌ 已 detached 的 buf 再 transfer 会抛 TypeError
+// buf.transfer(0, 512);               // ❌ TypeError: Transfer detached ArrayBuffer
+
+// ✅ 部分长度转移要用新 buffer：transferToFixedLength(len) 取前 len 字节
+const buf2 = new ArrayBuffer(1024);
+const sliced = buf2.transferToFixedLength(512);   // 转移前 512 字节
+sliced.byteLength;                                   // 512
+const buf3 = new ArrayBuffer(1024);
+buf3.transfer(512).byteLength;                        // 512（从下标 512 到末尾）
 ```
 
 **价值**：**零拷贝**转移所有权——以前 `new Uint8Array(old).slice().buffer` 是**复制**；`transfer` 只是**把底层内存移交**——Web Worker、GPU buffer 场景性能飞跃。
@@ -93,9 +111,10 @@ const sliced = buf.transfer(0, 512);  // transferToFixedLength 变体
 ## 五、`String.isWellFormed()` / `toWellFormed()`
 
 ```js
+// 目的：isWellFormed 检测孤立代理对；toWellFormed 用 \uFFFD 填补孤立代理
 '\uD800' + 'a';              // 代理对截断——「脏」字符串
 '\uD800a'.isWellFormed();     // false
-'\uD800a'.toWellFormed();     // '\uFFFD a'（用替换字符填补）
+'\uD800a'.toWellFormed();     // '\uFFFDa'（孤立高代理变替换字符，后面的 a 保留）
 
 '正常'.isWellFormed();        // true
 ```
@@ -107,6 +126,7 @@ const sliced = buf.transfer(0, 512);  // transferToFixedLength 变体
 ## 六、`Atomics.waitAsync`（SharedArrayBuffer）
 
 ```js
+// 目的：waitAsync 不阻塞主线程（返回带 value 的 Promise）；worker 写后 notify 唤醒
 const sab = new SharedArrayBuffer(4);
 const i32 = new Int32Array(sab);
 
@@ -128,6 +148,7 @@ Atomics.notify(i32, 0);
 ## 七、`Array.fromAsync`（ES2024 提案，Node 22+）
 
 ```js
+// 目的：Array.fromAsync 把异步可迭代一次性收集成数组
 const asyncGen = async function* () {
   yield 1; yield 2; yield 3;
 };

@@ -13,8 +13,9 @@
 
 ```tsx
 <Suspense fallback={<Skeleton/>}>
-  <TodoList/>        {/* 内部 useSuspenseQuery 挂起 */}
-  <FilterChips/>     {/* 订阅 Zustand 筛选态，不挂起 */}
+  {/* 目的：Suspense 只管数据区挂起，Zustand 交互区不挂起——两种节奏同屏 */}
+  <TodoList/>        {/* 内部 useSuspenseQuery 挂起，走 fallback 骨架 */}
+  <FilterChips/>     {/* 订阅 Zustand 筛选态，即时渲染、不挂起 */}
 </Suspense>
 ```
 
@@ -25,9 +26,12 @@
 数据加载失败由 ErrorBoundary 捕获；store 里若有相关 loading 标志，应在边界 reset 时一并清理，避免卡在 loading。
 
 ```tsx
+// 目的：错误边界与 store 联动——捕获渲染错误时清掉 loading 标志，避免界面卡在加载中
 class StoreAwareBoundary extends React.Component {
-  componentDidCatch() { useStore.setState({ loading: false }); }
+  componentDidCatch() { useStore.setState({ loading: false }); }   // 直接 setState 复位 UI 态（非经 action）
 }
+// ✅ setState 在边界外清标志，卡片不再永久转圈
+// ❌ 不清标志→数据区已 fallback 到错误态，可 store 里 loading 仍 true，重试按钮永远禁用
 ```
 
 细节：componentDidCatch 里 setState 清 store 要防循环（清标志本身别再触发抛错的渲染）；更稳的写法是把「重置 UI 态」放进 ErrorBoundary 的 onReset 回调，用户点重试时才清。
@@ -41,8 +45,11 @@ Query 的 retry: 3 + exponential backoff 是数据层策略；「重试」按钮
 SSR 拿到首屏数据后，用 effect 把值 setState 进 store（一次性水合），之后 store 管交互态。
 
 ```tsx
-// RSC 里： <ClientIsland initial={await fetchConfig()} />
-useEffect(() => { useCfgStore.setState({ cfg: initial }); }, [initial]);
+// 目的：SSR 首屏数据 effect 一次性注入 store——服务端取数交下来，客户端水合后进交互态
+// RSC 里： <ClientIsland initial={await fetchConfig()} />   // initial 由服务端 await 得到，作 prop 下发
+useEffect(() => { useCfgStore.setState({ cfg: initial }); }, [initial]);   // 挂载后注入，之后 store 接管交互
+// ✅ setState 走 effect（提交后），不进渲染路径，水合一次性注入干净
+// ❌ 直接在 render 里 useCfgStore.setState(...)→渲染期写 store 触发重渲死循环，React 报 Cannot update a component while rendering
 ```
 
 注意 effect 注入晚于首帧——依赖 cfg 的 UI 首帧要能渲染「无值」形态（skeleton 或默认值），否则闪白（呼应 za-hydration）。

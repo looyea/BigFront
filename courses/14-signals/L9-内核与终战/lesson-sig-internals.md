@@ -7,23 +7,25 @@
 L1 立的 flag：signal=值+订阅者集合+拉取式读取。六十行就是这句话的直译：
 
 ```js
+// 目的：signal 内核—"读时登记依赖、写时广播订阅者"，全库共有的心脏就这两句
 let CURRENT = null;            // 当前观察者栈顶：谁在读我？
 const bump = { v: 0 };         // 全局版本号（调试用，可删）
 
 function createSignal(init) {
   let value = init;
-  const subs = new Set();      // 订阅者集合：记住谁读过我
+  const subs = new Set();      // ✅ 订阅者集合：记住谁读过我
   const signal = () => {
-    if (CURRENT) { subs.add(CURRENT); CURRENT.deps.add(signal); }  // 读=建立依赖
+    if (CURRENT) { subs.add(CURRENT); CURRENT.deps.add(signal); }  // ✅ 读=双向记边建立依赖
     return value;
   };
   signal.set = (next) => {
-    if (Object.is(value, next)) return;   // 值→变化闸门（equals 的极简版）
+    if (Object.is(value, next)) return;   // ✅ 值→变化闸门（equals 的极简版）：同值直接短路不通知
     value = next; bump.v++;
-    [...subs].forEach(fn => fn());        // 推送：通知全部订阅者
+    [...subs].forEach(fn => fn());        // ✅ 推送：通知全部订阅者
   };
   return signal;
 }
+// ❌ 删掉 Object.is 短路→ set 相同值也全图广播，退化成"每次写都算变化"的风暴源
 ```
 
 **读的时候建立依赖、写的时候广播**——全库共有的心脏就这两句。tc39-core 的『读即订阅』、MobX 的追踪窗口、Solid 的 get 陷阱，剥到底都是这个 `if (CURRENT)`。
@@ -31,14 +33,15 @@ function createSignal(init) {
 ## 二、computed 与 effect：栈一进一出，图就立起来
 
 ```js
+// 目的：computed/effect—靠 CURRENT 压栈-出栈把依赖图"跑"出来（不是分析出来的）
 function createComputed(fn) {
   const compute = () => {
-    compute.deps.forEach(d => d.subs.delete(compute));   // 先清旧边（依赖集会变）
-    const prev = CURRENT; CURRENT = compute;             // 压栈：从现在开始我监听了
-    try { compute.value = fn(); } finally { CURRENT = prev; }  // 出栈：恢复现场
+    compute.deps.forEach(d => d.subs.delete(compute));   // ✅ 先清旧边（每次跑依赖集会变）
+    const prev = CURRENT; CURRENT = compute;             // ✅ 压栈：从现在开始我监听了
+    try { compute.value = fn(); } finally { CURRENT = prev; }  // ✅ 出栈：finally 恢复现场是命门
   };
   compute.deps = new Set(); compute.subs = new Set();
-  compute();                                              // 首跑建立依赖
+  compute();                                              // ✅ 首跑建立依赖
   compute.dependsOn = (target) => { /* 订阅 target 的通知，见下 */ };
   return compute;
 }
@@ -47,8 +50,9 @@ function createEffect(fn) {
   const run = () => { /* 同款压栈出栈，跑用户副作用 */ };
   run.deps = new Set(); run.subs = new Set();
   run();
-  return () => run.deps.forEach(d => d.subs.delete(run)); // 返回 dispose——退订纪律的出生地
+  return () => run.deps.forEach(d => d.subs.delete(run)); // ✅ 返回 dispose——退订纪律的出生地
 }
+// ❌ 把 finally 去掉、CURRENT=prev 改放 try 之后→ fn() 抛异常时 CURRENT 卡在死者身上，全世界替它订阅
 ```
 
 computed 包一层『压栈-执行-出栈』，内部对 signal 的每次读都被 `CURRENT` 捕获——**依赖图不是分析出来的，是跑出来的**（solid-internals 的 track 机制原样）。`finally` 恢复栈是命门：忘了它，一次异常之后全世界都在替死者订阅。通知传播这里用最笨的『写→直接跑所有订阅者』：级联 computed 靠各自重跑来传导——能用，但 §三会告诉你它的账单。

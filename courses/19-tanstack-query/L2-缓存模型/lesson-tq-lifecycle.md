@@ -34,7 +34,10 @@ staleTime:0 的应用里，第二次进详情页依然白屏——这不是 gcTi
 ## 五、观察实验（三十秒看穿）
 
 ```tsx
-useQuery({ queryKey: ['now'], queryFn: () => Date.now(), staleTime: 5_000 });
+// 目的：观察双时钟生命周期实验——staleTime 5s，看 fresh 秒出 / stale 重取 / GC 消失三态
+useQuery({ queryKey: ['now'], queryFn: () => Date.now(), staleTime: 5_000 });   // 5s 内切组件读缓存旧值，5s 后转 stale 下次挂载才重取
+// ✅ staleTime:5_000 让“秒级切换组件”命中 fresh 缓存不发请求，devtools 盯 status 列即证
+// ❌ 误以为“缓存 5 分钟就没”去调 gcTime→其实是数据一直 stale（staleTime:0），该动的是 staleTime 不是 gcTime
 ```
 
 devtools 面板里盯 status 列：fresh 期切换组件秒出旧值；5 秒后变 stale，下次挂载才见新值；全部卸载 5 分钟后条目从面板消失（GC）。三个现象对应三节内容，一次跑通。

@@ -20,23 +20,26 @@
 RSC 没有 hook 可炸、没有生命周期，测试出奇地简单——渲染它、断言 HTML：
 
 ```tsx
+// 目的：服务端组件就是个 async 函数——直接 await 调用拿 UI 再 render 断言
 // __tests__/article.test.tsx
 import { render, screen } from '@testing-library/react';
 import ArticlePage from '@/app/articles/[slug]/page';
 
 test('渲染文章标题', async () => {
-  // params 在 Next 15 是 Promise，测试里也要 await
+  // ✅ params 在 Next 15 是 Promise，测试里也要 await
   const ui = await ArticlePage({ params: Promise.resolve({ slug: 'hello' }) });
-  render(ui); // RSC 输出可直接 render
+  render(ui); // ✅ RSC 输出可直接 render
   expect(screen.getByRole('heading')).toHaveTextContent('Hello');
 });
+// ❌ 把服务端组件当客户端件用 render(<ArticlePage/>) 再等 hook → 它不是组件调用而是 async 函数，直接 await 才拿得到 UI
 ```
 
 关键技巧是**在数据层截断**：组件依赖 DB/fetch，测试就 mock 仓储函数或全局 fetch：
 
 ```ts
-vi.mock('@/lib/db', () => ({ getPost: vi.fn().mockResolvedValue({ title: 'Hello' }) }));
-// 或 mock fetch（呼应 next-fetch-cache：next 对 fetch 动了手脚，测试里也要按它的签名来）
+// 目的：在数据层截断——组件依 DB/fetch，测试就 mock 掉，不发真实请求
+vi.mock('@/lib/db', () => ({ getPost: vi.fn().mockResolvedValue({ title: 'Hello' }) }));   // ✅ mock 仓储函数
+// ✅ 或 mock fetch（呼应 next-fetch-cache：next 对 fetch 动了手脚，测试里也要按它的签名来）
 vi.stubGlobal('fetch', vi.fn(async (url) =>
   new Response(JSON.stringify({ title: 'Hello' }), { headers: { 'content-type': 'application/json' } })));
 ```
@@ -48,21 +51,25 @@ vi.stubGlobal('fetch', vi.fn(async (url) =>
 Server Action 去掉网络层后就是普通 async 函数，直接调用断言返回值与副作用（呼应 next-server-actions 第 1 节"序列化端点"的另一面）：
 
 ```ts
+// 目的：Action 去掉网络层就是普通 async 函数——直接调用断言返回值与副作用
 import { createPost } from '@/app/posts/actions';
-const state = await createPost({}, formDataWith('title', 'T1'));
+const state = await createPost({}, formDataWith('title', 'T1'));   // ✅ 直接调用
 expect(state.ok).toBe(true);
-expect(mockDb.insert).toHaveBeenCalledOnce();
-// 重定向断言：redirect 抛的是特殊信号，用 rejects 匹配
+expect(mockDb.insert).toHaveBeenCalledOnce();   // ✅ 断言副作用（写库一次）
+// ✅ 重定向断言：redirect 抛的是特殊信号，用 rejects 匹配
 await expect(createPost({}, emptyForm)).rejects.toThrow(/NEXT_REDIRECT/);
+// ❌ 用 expect(...).toThrow() 不带 /NEXT_REDIRECT/ 去捕普通错 → redirect 的正常控制流会被误当失败
 ```
 
 Route Handler 测的是 Web Standards 契约（呼应 next-route-handlers 第 1 节）：
 
 ```ts
+// 目的：Route Handler 测的是 Web Standards 契约——构造 Request 直接调导出的函数
 import GET from '@/app/api/posts/route';
-const res = await GET(new Request('http://test/api/posts'));
+const res = await GET(new Request('http://test/api/posts'));   // ✅ 不起服务器，直接喂 Request
 expect(res.status).toBe(200);
 expect(await res.json()).toEqual(expect.arrayContaining([expect.objectContaining({ id: 1 })]));
+// ❌ 鉴权分支只测“200 成功”不测“未带 cookie 时 401” → auth 逻辑的 bug 都是安全事故
 ```
 
 鉴权分支务必测"未带 cookie 时 401"——auth 逻辑的 bug 都是安全事故（呼应 next-middleware-auth 第 2 节三层纵深）。
@@ -77,16 +84,18 @@ npx playwright test --ui   # 时间旅行调试界面
 ```
 
 ```ts
+// 目的：E2E 走真浏览器验“整车能开”，只盖黄金路径
 // e2e/post.spec.ts
 test('发布文章全流程', async ({ page }) => {
   await page.goto('/articles');
-  await page.getByRole('link', { name: '写文章' }).click();
+  await page.getByRole('link', { name: '写文章' }).click();   // ✅ 优先 role/label 选择器（顺带验可访问性）
   await page.getByLabel('标题').fill('测试文章');
   await page.getByRole('button', { name: '发布' }).click();
-  // Server Action 提交后断言跳转与落库呈现
+  // ✅ Server Action 提交后断言跳转与落库呈现
   await expect(page).toHaveURL(/\/articles\/.*test/);
   await expect(page.getByRole('heading', { name: '测试文章' })).toBeVisible();
 });
+// ❌ 把错误分支全交给 E2E → 套件又慢又碎跑不动；错误分支应下沉到组件测试
 ```
 
 实践要点：① CI 里 `webServer` 配置自动 `next start` 拉起被测实例；② 只测黄金路径（登录、下单、发布），错误分支交给组件测试，否则 E2E 套件跑不动；③ 用 `data-testid` 锚定关键节点，但优先 role/label 选择器（可访问性顺带被检验）；④ 时间旅行截图 + trace.zip 归档是排查 CI 偶发失败的标准姿势（呼应 exp-testing 的 CI 思想）。

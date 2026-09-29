@@ -15,12 +15,15 @@
 补两块拼图：卡片**标题行内编辑**用 splitAtom 从 cardsAtom 拆行（jo-focus-select），编辑只重渲该行；**跨列拖拽**落点是两个 write atom（removeFrom 列 + addTo 列）合成一次 moveCardAtom 调用——一个 write 里多次 set 天然同帧原子提交（jo-dependencies 的 batching），不会出现「卡片从 A 消失但没出现在 B」的中间态。
 
 ```ts
+// 目的：跨列移动——write atom 封装“乐观改 + 失败回滚”，一个 write 里多次 set 同帧原子提交
 const moveCardAtom = atom(null, async (get, set, { id, to }: MoveArg) => {
-  const prev = get(cardsAtom);
-  set(cardsAtom, move(prev, id, to));            // 乐观
-  try { await api.move(id, to); }
-  catch { set(cardsAtom, prev); }                // 回滚
+  const prev = get(cardsAtom);                         // 先快照旧列表做回滚点
+  set(cardsAtom, move(prev, id, to));            // 乐观：立即把卡片挑到目标列上屏
+  try { await api.move(id, to); }                      // 发请求，成功则保留乐观结果
+  catch { set(cardsAtom, prev); }                // 回滚：失败恢复快照，不会停“A 消失却没进 B”的中间态
 });
+// ✅ 移动是“一次 set”而非“先从 A 删、再往 B 加”两写，天然无半移动中间帧
+// ❌ 回滚用的 prev 是引用而非快照，move 若原地 mutate 了同一数组→prev 被污染，set 回去还是新值，回滚失效
 ```
 
 ## 三、隔离与 SSR

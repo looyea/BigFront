@@ -7,20 +7,21 @@
 ## 一、同一个 `readFile` 的三副面孔
 
 ```js
+// 目的：同一个 readFile 的三种 API 形态（同步/回调/Promise）
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 
 // ① 同步：一行返回，但会阻塞事件循环，直到读完
-const a = fs.readFileSync("a.txt", "utf8");
+const a = fs.readFileSync("a.txt", "utf8");   // 直接拿到字符串（文件不存在则同步抛 ENOENT）
 
 // ② 错误优先回调（传统异步）
 fs.readFile("b.txt", "utf8", (err, data) => {
-  if (err) return console.error(err);      // 呼应 node-async-errors 第二节
-  console.log(data);
+  if (err) return console.error(err);      // ★ 先查 err（文件不存在时 err.code==='ENOENT'）
+  console.log(data);                        // ✓ 无错时 data 是文件内容字符串
 });
 
 // ③ Promise（现代推荐）：能 await、能 try/catch
-const data = await fsp.readFile("c.txt", "utf8");
+const data = await fsp.readFile("c.txt", "utf8");   // reject 时会抛，需包在 try/catch 内
 ```
 
 选择原则：
@@ -40,8 +41,10 @@ const data = await fsp.readFile("c.txt", "utf8");
 `readFile(path, encoding)` 不传 `encoding` 时返回 **Buffer**（原始字节，呼应 node-buffer）：
 
 ```js
+// 目的：不传编码返回 Buffer（二进制必须走这条路），传 utf8 才返回字符串
 const buf = await fsp.readFile("logo.png");   // <Buffer 89 50 4e 47 ...> 二进制没有"utf8 字符串"概念
 const txt = await fsp.readFile("a.txt", "utf8"); // 指定编码 → 字符串
+// ❌ await fsp.readFile("logo.png", "utf8") → 把图片字节当文本解码，内容损坏（不能写回原图）
 ```
 
 图片、zip、字体等**二进制文件绝不能指定 `utf8`** 去读——会把字节按文本解码成乱码甚至损坏。写也一样：`writeFile(path, bufferOrString)`，字符串配编码、二进制直接给 Buffer。
@@ -51,9 +54,10 @@ const txt = await fsp.readFile("a.txt", "utf8"); // 指定编码 → 字符串
 ## 三、写文件：writeFile、appendFile 与"整文件覆盖"
 
 ```js
+// 目的：区分三种写入语义——writeFile 覆盖、appendFile 追加、truncate 清空
 await fsp.writeFile("out.txt", "hello");         // ★ 覆盖写入（不存在则创建，存在则清空重写）
-await fsp.appendFile("log.txt", "一行日志\n");    // 追加，不覆盖
-await fsp.truncate("out.txt", 0);                // 清空
+await fsp.appendFile("log.txt", "一行日志\n");    // 追加，不覆盖（日志场景用这个）
+await fsp.truncate("out.txt", 0);                // 清空为 0 字节
 ```
 
 `writeFile` 是"开文件 → 全量写 → 关文件"的封装，适合**内容已在内存、体量不大**的场景。要"边生成边写"或"超大内容"，同样不能靠一次性字符串，得用流（`createWriteStream`，L4）。
@@ -63,12 +67,13 @@ await fsp.truncate("out.txt", 0);                // 清空
 ## 四、stat、目录与"元信息"
 
 ```js
+// 目的：读元信息、建多级目录、递归遍历目录树
 const st = await fsp.stat("a.txt");
 st.isDirectory(); st.isFile(); st.size; st.mtime;   // 类型/大小/修改时间
 
-await fsp.mkdir("dist/assets", { recursive: true }); // ★ recursive 让多级目录不报错
-await fsp.rm("dist", { recursive: true, force: true }); // 删目录树（Node 14.14+）
-const entries = await fsp.readdir("src", { withFileTypes: true });
+await fsp.mkdir("dist/assets", { recursive: true }); // ★ recursive 让多级目录不报错（不开会因父目录不存在抛 ENOENT）
+await fsp.rm("dist", { recursive: true, force: true }); // 删目录树（Node 14.14+，force 使不存在也不报错）
+const entries = await fsp.readdir("src", { withFileTypes: true }); // 得到 Dirent 对象，能直接判目录
 for (const e of entries) e.isDirectory() ? walk(e) : handle(e.name);  // 递归遍历
 ```
 
@@ -81,10 +86,11 @@ for (const e of entries) e.isDirectory() ? walk(e) : handle(e.name);  // 递归�
 前面都是"一步到位"的封装。真正的手动流程揭示 OS 视角：
 
 ```js
+// 目的：手动 open/read/close 揭示 OS 视角——fd 是有限资源，开了必须关
 const fd = await fsp.open("big.bin", "r");     // open 返回 FileHandle
 const buf = Buffer.alloc(1024);
-const { bytesRead } = await fd.read(buf, 0, 1024, 0); // 从偏移 0 读进 buf
-await fd.close();
+const { bytesRead } = await fd.read(buf, 0, 1024, 0); // 从偏移 0 读最多 1024 字节进 buf（返回实际字节数）
+await fd.close();                              // ✗ 不 close → fd 泄漏，句柄耗尽后报 EMFILE
 // 或用自动管理：
 await using h = await fsp.open("x", "r");      // ES 显式资源管理，出作用域自动 close
 ```
@@ -96,8 +102,9 @@ await using h = await fsp.open("x", "r");      // ES 显式资源管理，出作
 ## 六、watchers：fs.watch / fs.watchFile
 
 ```js
+// 目的：监听目录变化——watcher 是活跃句柄，不关则进程不退出
 import { watch } from "node:fs";
-const w = watch("src", (eventType, filename) => console.log(eventType, filename));
+const w = watch("src", (eventType, filename) => console.log(eventType, filename));  // 'change'/'rename' + 变动的文件名
 w.close();   // 记得关，否则进程不退出（有活跃句柄，呼应 node-event-loop）
 ```
 

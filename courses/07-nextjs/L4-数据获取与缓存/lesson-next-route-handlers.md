@@ -7,17 +7,19 @@
 ## 一、形态：一段目录的"HTTP 方法导出"
 
 ```ts
+// 目的：一个 route.ts = 一段目录的 HTTP 方法导出，用 Web 标准 Request/Response
 // app/api/hello/route.ts
 import { NextResponse } from 'next/server';
 
-export async function GET(req: Request) {          // 文件名固定 route，方法=导出函数名
+export async function GET(req: Request) {          // ✅ 文件名固定 route，方法=导出函数名
   const q = new URL(req.url).searchParams.get('q');
-  return NextResponse.json({ ok: true, q });
+  return NextResponse.json({ ok: true, q });   // ✅ 自动 stringify + content-type
 }
 export async function POST(req: Request) {
   const body = await req.json();
-  return new Response(JSON.stringify({ echo: body }), { status: 201 });  // 原生 Response 完全合法
+  return new Response(JSON.stringify({ echo: body }), { status: 201 });  // ✅ 原生 Response 完全合法
 }
+// ❌ 用 Express 习惯写 res.status(201).json(...) → Response 是不可变对象，没有 res.send/res.status 链式糖，报错
 ```
 
 - 支持 `GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS`（+ 实验 `handler` 全方法）；
@@ -31,10 +33,12 @@ export async function POST(req: Request) {
 ## 二、NextResponse：Response 的三块糖
 
 ```ts
-NextResponse.json(data)                      // 省手动 stringify+content-type
-NextResponse.redirect(url)                   // 3xx
-res.cookies.set('sid', v, { httpOnly: true, sameSite: 'lax', secure: true })  // 读写 cookie 双功能
-req.cookies.get('sid')                       // 读也可走 Request 侧
+// 目的：NextResponse 在原生 Response 上多加的三块糖（cookie 读写 / json / redirect）
+NextResponse.json(data)                      // ✅ 省手动 stringify+content-type
+NextResponse.redirect(url)                   // ✅ 3xx
+res.cookies.set('sid', v, { httpOnly: true, sameSite: 'lax', secure: true })  // ✅ 写 cookie
+req.cookies.get('sid')                       // ✅ 读也可走 Request 侧
+// ❌ 期待 res.send / res.status().json() 那套 Express 链式 API → 不存在，得用构造参数传状态/头
 ```
 
 中间件那套 `NextResponse.next()/rewrite()` 在 L5 见。**没有 `res.send/res.status().json()` 链式糖**——Web 标准的 `Response` 是不可变对象，状态/头都在构造参数里，写过 node-http 原生版的人秒懂（呼应 node-http 的 res 对象对比）。
@@ -61,12 +65,14 @@ req.cookies.get('sid')                       // 读也可走 Request 侧
 | 响应约定 | NextResponse.json + 状态码语义同 exp-rest 那张表 |
 
 ```ts
+// 目的：鉴权与写侧失效的完整写法——withAuth 是 Express 中间件的“函数式转世”
 export const POST = withAuth(async (req, ctx) => {
-  const dto = CreateSchema.parse(await req.json());     // 抛错 → 统一错误响应
-  await createOrder(ctx.uid, dto);
-  revalidateTag(`orders-${ctx.uid}`);                   // 写侧失效（L4 闭环）
+  const dto = CreateSchema.parse(await req.json());     // ✅ zod 校验，抛错 → 统一错误响应 400
+  await createOrder(ctx.uid, dto);                    // ✅ 鉴权后才写，uid 来自会话不信前端
+  revalidateTag(`orders-${ctx.uid}`);                 // ✅ 写侧失效（L4 闭环）
   return NextResponse.json({ ok: true }, { status: 201 });
 });
+// ❌ 不包 withAuth 直接写 → 任何人可 POST 下单；或从 req.body 取 uid 而非会话 → 越权改他人订单
 ```
 
 高阶函数 `withAuth` 就是 Express 中间件的"函数式转世"——同一条管线思想换了一种宿主（呼应 exp-patterns、es-closure 的闭包复用）。
@@ -76,7 +82,9 @@ export const POST = withAuth(async (req, ctx) => {
 ## 五、Edge 与 Node 双运行时
 
 ```ts
-export const runtime = 'edge';   // 该 handler 跑在轻量隔离运行时：冷启动亚毫秒、就近部署
+// 目的：声明该 handler 的运行环境——edge 冷启动快但无 Node API
+export const runtime = 'edge';   // ✅ 轻量隔离运行时：冷启动亚毫秒、就近部署
+// ❌ 在 runtime='edge' 的 handler 里 import pg/fs 等 node-only 包 → 构建期就报（import 图不能横跨）
 ```
 
 - Edge：无 Node API（fs/child_process/多数 npm 原生包）、有 Web API+平台 KV；适合鉴权判断、A/B、轻量聚合；

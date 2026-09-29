@@ -15,20 +15,21 @@ Vue 2 用 `Object.defineProperty` 逐个属性劫持 getter/setter，天生有�
 `Proxy` 是**对整个对象的代理**，拦截的是"读/写/删除/枚举"等**操作**本身：
 
 ```js
+// 目的：手写一个最小 Proxy，展示"拦截操作本身"而非"逐属性劫持"——新增/删除/数组均能感知
 const target = { count: 0, user: { name: 'a' } };
 const seen = new Set();
 const proxy = new Proxy(target, {
   get(t, key, r) {
-    recordRead(t, key);            // ← 依赖收集发生在这里
+    recordRead(t, key);            // ← 依赖收集发生在这里（读时把当前 effect 记进桶）
     const v = Reflect.get(t, key, r);
-    return (v && typeof v === 'object') ? reactive(v) : v; // 深层懒代理
+    return (v && typeof v === 'object') ? reactive(v) : v; // 深层懒代理：只有 get 到对象才递归建代理
   },
   set(t, key, value, r) {
     const ok = Reflect.set(t, key, value, r);
-    trigger(t, key);               // ← 触发更新发生在这里
+    trigger(t, key);               // ← 触发更新发生在这里（写时通知该桶里的 effect）
     return ok;
   },
-  deleteProperty(t, key) { const ok = Reflect.deleteProperty(t, key); trigger(t, key); return ok; }
+  deleteProperty(t, key) { const ok = Reflect.deleteProperty(t, key); trigger(t, key); return ok; }  // defineProperty 做不到的一环
 });
 ```
 
@@ -41,15 +42,16 @@ const proxy = new Proxy(target, {
 响应式的最终目的，是"数据变了，把用到它的地方重新执行一遍"。Vue 内部用一个 `ReactiveEffect` 记录这个"要重跑的函数"：
 
 ```js
+// 目的：effect 把"要重跑的函数"包起来，执行时把自身设为 activeEffect，供 get 时收集
 let activeEffect;                       // 当前正在执行的 effect
 const effectStack = [];
 function effect(fn) {
   const e = (...args) => {
-    activeEffect = e; effectStack.push(e);
-    try { return fn(...args); }         // 运行 fn 的过程会读响应式属性 → 触发 get
-    finally { effectStack.pop(); activeEffect = effectStack[effectStack.length - 1]; }
+    activeEffect = e; effectStack.push(e);                       // 入栈：标记"正在收集的我"
+    try { return fn(...args); }         // 运行 fn 的过程会读响应式属性 → 触发 get → track
+    finally { effectStack.pop(); activeEffect = effectStack[effectStack.length - 1]; }  // 出栈还原外层
   };
-  e.deps = new Set();                   // 这个 effect 依赖了哪些"桶"
+  e.deps = new Set();                   // 这个 effect 依赖了哪些"桶"，重跑前据此 cleanup
   return e;
 }
 ```
@@ -72,11 +74,12 @@ targetMap:  WeakMap< 原始对象,
 - **set** 时 `trigger(target, key)`：取出对应桶，遍历里面的每个 effect，**调度**它们重新执行。
 
 ```js
+// 目的：track 把当前 effect 登记到 (target,key) 对应的 Set（"桶"），完成依赖收集
 function track(target, key) {
-  if (!activeEffect) return;
-  let dm = targetMap.get(target); if (!dm) targetMap.set(target, (dm = new Map()));
-  let dep = dm.get(key); if (!dep) dm.set(key, (dep = new Set()));
-  dep.add(activeEffect); activeEffect.deps.add(dep);
+  if (!activeEffect) return;                    // 不在 effect 里读→无人收集，直接返回
+  let dm = targetMap.get(target); if (!dm) targetMap.set(target, (dm = new Map()));   // 第二层 Map
+  let dep = dm.get(key); if (!dep) dm.set(key, (dep = new Set()));                     // 第三层 Set
+  dep.add(activeEffect); activeEffect.deps.add(dep);   // 双向记录：桶里有我，我依赖这个桶
 }
 ```
 
@@ -89,11 +92,12 @@ function track(target, key) {
 `computed` 内部也把一个 getter 包成 effect，但**不立即执行**，而是靠 `.value` 访问时才求值：
 
 ```js
+// 目的：computed = 带 dirty 标记的惰性 effect——依赖变只标脏，.value 被读且脏时才重算
 function computed(getter) {
   let value, dirty = true;
   const runner = effect(getter, { lazy: true,
     scheduler: () => { dirty = true; triggerRef(computedRef); } }); // 依赖变→只标脏，不立即算
-  const computedRef = { get value() { if (dirty) { value = runner(); dirty = false; } track(); return value; } };
+  const computedRef = { get value() { if (dirty) { value = runner(); dirty = false; } track(); return value; } };  // 惰性：读时脏才算
   return computedRef;
 }
 ```
@@ -128,13 +132,16 @@ function computed(getter) {
 `customRef` 示例（防抖，把 vue-watch 的 onCleanup 思想内化进 ref）：
 
 ```js
+// 目的：用 customRef 自控 track/trigger，做出"写后停顿 delay 才触发更新"的防抖 ref
+import { customRef } from "vue";
 function useDebounceRef(value, delay = 300) {
   let timer, _v = value;
   return customRef((track, trigger) => ({
-    get() { track(); return _v; },
-    set(nv) { clearTimeout(timer); timer = setTimeout(() => { _v = nv; trigger(); }, delay); }
+    get() { track(); return _v; },                // 读时收集依赖
+    set(nv) { clearTimeout(timer); timer = setTimeout(() => { _v = nv; trigger(); }, delay); }  // 写时推迟触发
   }));
 }
+// ✅ 应用：const kw = useDebounceRef(''); kw.value = 'vue' → 300ms 后依赖 kw 的 effect/computed 才重跑（搜索框防抖）
 ```
 
 ---

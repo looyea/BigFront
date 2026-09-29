@@ -18,27 +18,30 @@ Angular 里 `@Component` 本身就是 `@Directive` 的子类（`class Component 
 ## 二、属性指令：Host 绑定的三种形态
 
 ```ts
+// 目的：属性指令——给宿主元素【悬停变色】，不新建视图、不改 DOM 结构
 import { Directive, HostListener, HostBinding, input } from '@angular/core';
 
 @Directive({
-  selector: '[appHighlight]',
+  selector: '[appHighlight]',   // 方括号=属性选择器：元素上有 appHighlight 这个属性就匹配
 })
 export class HighlightDirective {
   // 用 input() 接收参数
-  color = input('yellow');
+  color = input('yellow');        // 信号式输入，默认 'yellow'，宿主可用 [appHighlight]="..." 覆盖
 
   // HostBinding：动态设置宿主元素的 class/attr/style
   @HostBinding('style.backgroundColor')
-  get bg() { return this.color(); }
+  get bg() { return this.color(); }   // 把 color() 当前值绑到宿主背景色，color 变→背景自动重设
 
   // HostListener：监听宿主元素事件
   @HostListener('mouseenter') onMouseEnter() {
-    this.color.set('red');
+    this.color.set('red');        // 鼠标移入：把背景切到红
   }
   @HostListener('mouseleave') onMouseLeave() {
-    this.color.set('yellow');
+    this.color.set('yellow');     // 移出：复位
   }
 }
+// ✅ 属性指令靠 selector '[...]' 附着到任意已有标签，只加行为不加 DOM
+// ❌ selector 写成 appHighlight（无方括号）→变成标签选择器，只有 <appHighlight> 才匹配，挂在 <p> 上根本不生效
 ```
 
 使用方：`<p appHighlight>鼠标悬停变红</p>`——指令附着在 `<p>` 上、不改变 DOM 结构。
@@ -53,35 +56,41 @@ export class HighlightDirective {
 v17 前的 *ngIf/*ngFor 就是**结构型指令**——它们不渲染自己，而是**有条件地创建/销毁嵌入视图**。新控制流 @if/@for 变成编译器内建后不再是指令，但**你仍可以自定义结构指令**处理特殊场景。
 
 ```ts
+// 目的：结构指令 appUnless（反向 ngIf）——条件为 false 时才渲染嵌入视图
 import { Directive, input, TemplateRef, ViewContainerRef, effect } from '@angular/core';
 
 @Directive({
   selector: '[appUnless]',
 })
 export class UnlessDirective {
-  condition = input.required<boolean>();
-  private tpl = inject(TemplateRef);
-  private container = inject(ViewContainerRef);
+  condition = input.required<boolean>();          // 必填布尔输入，宿主用 [appUnless]="expr" 传入
+  private tpl = inject(TemplateRef);               // 注入被包裹的 <ng-template> 内容引用
+  private container = inject(ViewContainerRef);    // 注入宿主视图容器：在此创建/销毁嵌入视图
 
   constructor() {
-    effect(() => {
+    effect(() => {                                  // zoneless 下用 effect 替代旧 ngOnChanges 做响应式控制
       if (this.condition()) {
         this.container.clear();       // 条件为 true → 移除视图
       } else {
-        if (this.container.length === 0) {
+        if (this.container.length === 0) {          // 幂等保护：仅在尚未创建时才新建，避免重复叠加
           this.container.createEmbeddedView(this.tpl);  // 为 false → 渲染
         }
       }
     });
   }
 }
+// ✅ TemplateRef+ViewContainerRef+effect 三件套：能条件创建/销毁子树，这是属性指令做不到的
+// ❌ 切换分支时不先 clear() 就 createEmbeddedView→条件反复翻转→视图堆叠加出多份内容
 ```
 
 使用方（用 ng-template 包裹内容）：
 ```html
-<ng-template [appUnless]="isLoggedIn()">
-  <p>请先登录</p>
+<!-- 目的：结构指令使用方——内容必须裹进 <ng-template>，方括号 [appUnless] 是属性绑定传值 -->
+<ng-template [appUnless]="isLoggedIn()">   <!-- isLoggedIn() 读 signal 传给 condition -->
+  <p>请先登录</p>                              <!-- 未登录（false）时才渲染这一支 -->
 </ng-template>
+<!-- ✅ ng-template 不立即渲染，只当 TemplateRef 交给指令按需 createEmbeddedView -->
+<!-- ❌ 把 appUnless 直接写在 <p> 上（无 ng-template）→指令 inject 不到 TemplateRef，无法创建/销毁视图 -->
 ```
 
 核心 API 三件套：
@@ -103,19 +112,22 @@ track 写错的代价量化：500 行列表、中间插一行——有 track（�
 
 **composition（替代继承）**：Angular 不鼓励指令 class 继承（v16 起 lint 规则 warn），推荐组合：
 ```ts
+// 目的：host 对象字面量合并写法——用一个 {} 声明事件/属性绑定，少一层装饰器噪音
 @Directive({
   selector: '[appFocusable]',
   host: {
-    '(focus)': 'onFocus()',
-    '(blur)': 'onBlur()',
-    '[class.focused]': 'focused()',
+    '(focus)': 'onFocus()',            // 监听宿主 focus 事件→调 onFocus()
+    '(blur)': 'onBlur()',              // 监听 blur→调 onBlur()
+    '[class.focused]': 'focused()',    // focused() 为 true 时给宿主加 .focused 类
   },
 })
 export class FocusableDirective {
-  focused = signal(false);
+  focused = signal(false);              // 内部状态 signal
   onFocus() { this.focused.set(true); }
   onBlur() { this.focused.set(false); }
 }
+// ✅ host:{} 里的字符串由模板上下文求值，引用成员不带 this
+// ❌ '[class.focused]' 写成 'this.focused()'→host 字符串里不能用 this→报错或永不生效
 ```
 `host: {}` 是 @HostListener/@HostBinding 的**对象字面量合并写法**——更适合声明简洁场景、少一层装饰器噪音。
 

@@ -22,17 +22,25 @@ const add2: Adder = (a, b) => a + b;   // 上下文推断，参数无需再标
 ## 二、可选参数 `?`、默认参数、剩余参数
 
 ```ts
+// 目的：可选参数 ?、默认参数、剩余参数三种“可省参数”写法
 function greet(name: string, title?: string) {   // title: string | undefined
   return title ? `${title} ${name}` : name;
 }
+greet("Ada");          // => "Ada"（未传 title）
+greet("Ada", "Dr.");   // => "Dr. Ada"
 
 function area(w: number, h: number = w) {         // 默认参数：可省且类型已知
   return w * h;
 }
+area(3);      // => 9（h 默认等于 w）
+area(3, 4);   // => 12
 
 function sum(...nums: number[]): number {         // 剩余参数：数组类型
   return nums.reduce((a, b) => a + b, 0);
 }
+sum(1, 2, 3);   // => 6
+// ❌ 可选参数后不能跟必选参数：
+// function bad(a?: number, b: number) {}   // ✗ A required parameter cannot follow an optional parameter
 ```
 
 规则：
@@ -102,7 +110,7 @@ fib("5");     // string ✓
 - 实现签名参数常写得比所有声明更宽（`any` 或联合），内部再区分。
 
 ```ts
-// 更实际的例子：根据是否传 callback 决定返回同步值还是 Promise
+// 目的：根据是否传 callback 重载为“同步返回值”或“void”
 function read(p: string): string;
 function read(p: string, cb: (s: string) => void): void;
 function read(p: string, cb?: (s: string) => void): string | void {
@@ -110,6 +118,8 @@ function read(p: string, cb?: (s: string) => void): string | void {
   if (cb) { cb(s); return; }
   return s;
 }
+const txt = read("a.txt");        // 命中第一个重载 → txt: string
+read("a.txt", (s) => console.log(s));  // 命中第二个 → 返回 void
 ```
 
 **能用联合/泛型/条件类型表达时优先不用重载**——重载的可维护性较差（见第七节）。

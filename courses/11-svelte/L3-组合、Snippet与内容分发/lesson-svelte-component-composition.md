@@ -10,8 +10,9 @@ Svelte 没有全局注册、没有 `components: {}` 选项——**ES import 就�
 
 ```svelte
 <script>
+  // 目的：ES import 就是注册—无全局注册、无 components:{} 选项
   import Navbar from './Navbar.svelte';
-  import Sidebar from './Sidebar.svelte';
+  import Sidebar from './Sidebar.svelte';   // ✅ 大写开头，编译器据此区分组件与小写原生元素
 </script>
 
 <Navbar />
@@ -19,6 +20,7 @@ Svelte 没有全局注册、没有 `components: {}` 选项——**ES import 就�
   <Sidebar items={menu} />
   <main>主体内容（需要时可用 children/snippet 传入）</main>
 </div>
+<!-- ❌ 小写命名导入当组件用 <navbar/> → 被当原生元素，不渲染你的组件 -->
 ```
 
 - 组件名必须**大写开头**（编译器用它区分组件与小写原生元素，呼应 svelte-events 大小写陷阱）。
@@ -39,15 +41,16 @@ Svelte 没有全局注册、没有 `components: {}` 选项——**ES import 就�
 ```svelte
 <!-- ListBox.svelte：三通道齐全的典型接口 -->
 <script>
-  let { items, empty = '暂无数据', format, onSelect } = $props();
+  // 目的：一个接口同时用数据 prop、snippet 模板、回调事件三通道
+  let { items, empty = '暂无数据', format, onSelect } = $props();   // ✅ format=父传 snippet、onSelect=回调、其余数据
 </script>
 
 {#if items.length}
   <ul>
     {#each items as item (item.id)}
-      <li onclick={() => onSelect?.(item)}>
+      <li onclick={() => onSelect?.(item)}>   {/* ✅ 事件上报：回调 prop 把 item 传回父 */}
         {#if format}
-          {@render format(item)}
+          {@render format(item)}   {/* ✅ 渲染策略下放：父决定怎么画一项 */}
         {:else}
           {item.name}
         {/if}
@@ -70,10 +73,11 @@ Svelte 没有全局注册、没有 `components: {}` 选项——**ES import 就�
 ```svelte
 <!-- Parent.svelte：state 在父，两个孩子一个显示一个修改 -->
 <script>
-  let count = $state(0);
+  // 目的：状态提升—共享给多组件的 state 提到最近公共父
+  let count = $state(0);   // ✅ 唯一数据源在父
 </script>
-<Display {count} />
-<Controls bind:count />      <!-- Controls 内 value=$bindable()，见 svelte-props 第四节 -->
+<Display {count} />              {/* ✅ 向下传数据 */}
+<Controls bind:count />      {/* ✅ Controls 内 count=$bindable()，双向回写父的 count */}
 ```
 
 跨层级太深、到处提升很烦时 → 用 **context**（L4 svelte-context）或**全局状态模块**（L4 svelte-global-state），而不是急着上 store。
@@ -87,8 +91,9 @@ Svelte 没有全局注册、没有 `components: {}` 选项——**ES import 就�
 ```svelte
 <!-- Video.svelte -->
 <script>
+  // 目的：export function 暴露命令式方法—供父拿实例引用调用 play/pause
   let el;
-  export function play() { el?.play(); }
+  export function play() { el?.play(); }   // ✅ ?. 兼容 el 未挂载
   export function pause() { el?.pause(); }
 </script>
 <video bind:this={el} src="/a.mp4" />
@@ -97,11 +102,13 @@ Svelte 没有全局注册、没有 `components: {}` 选项——**ES import 就�
 ```svelte
 <!-- 父 -->
 <script>
+  // 目的：bind:this 拿子组件实例引用，事件里命令式调用其导出方法
   import Video from './Video.svelte';
-  let player;
+  let player;   // ✅ 挂载后才非空，调用处判空
 </script>
 <Video bind:this={player} />
-<button onclick={() => player?.play()}>播放</button>
+<button onclick={() => player?.play()}>播放</button>   {/* ✅ 事件触发时 player 已就绪 */}
+<!-- ❌ 不等挂载就调 player.play()（如顶层直接调）→ player 还是 undefined，报 Cannot read properties of undefined -->
 ```
 
 - 实例引用**挂载后才非空**，调用处要判空（在 `onMount`/事件里调用天然安全，呼应 svelte-template 第六节 `bind:this`）。
@@ -116,9 +123,10 @@ Svelte 没有全局注册、没有 `components: {}` 选项——**ES import 就�
 
 ```svelte
 <script>
-  const Chart = (await import('./Chart.svelte')).default; // 顶层 await（编译器支持）
+  // 目的：动态 import 懒加载—Vite 自动分包，重量组件用到才下（代码分割）
+  const Chart = (await import('./Chart.svelte')).default; // ✅ 顶层 await（编译器支持）
 </script>
-{#await import('./Chart.svelte') then mod}<mod.default />{/await}
+{#await import('./Chart.svelte') then mod}<mod.default />{/await}   {/* ✅ pending 期间不渲染，加载完渲染组件 */}
 ```
 
 更常见的做法是放进 `{#await}` 或用路由级分割（SvelteKit 里是页面级自动分包，见 12-sveltekit）。

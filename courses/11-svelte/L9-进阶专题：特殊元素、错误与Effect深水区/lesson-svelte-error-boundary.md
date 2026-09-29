@@ -11,16 +11,18 @@
 ## 二、基本形态：failed snippet + reset
 
 ```svelte
+<!-- 目的：failed snippet + reset—圈住哪，崩溃就只塌哪一角 -->
 <svelte:boundary>
-  <FlakyWidget />
+  <FlakyWidget />   {/* ✅ 它渲染期报错不会白屏全站，只影响这个 boundary 内部 */}
 
   {#snippet failed(error, reset)}
     <div class="error-card">
-      <p>这块坏了：{error.message}</p>
-      <button onclick={reset}>重试</button>
+      <p>这块坏了：{error.message}</p>   {/* ✅ error 是抓到的异常对象 */}
+      <button onclick={reset}>重试</button>   {/* ✅ reset() 重建内容，$state 回初始值 */}
     </div>
   {/snippet}
 </svelte:boundary>
+<!-- ❌ 对确定性 bug 无限给 reset 入口→一点就再塌一次，UX 上要有重试次数上限 -->
 ```
 
 协议三要点：
@@ -33,13 +35,15 @@
 boundary 的另一半职责是**异步占位**：
 
 ```svelte
+<!-- 目的：pending snippet—边界创建时、内部 await 首次解析期间显示占位 -->
 <svelte:boundary>
-  <p>{await delayed('hello!')}</p>
+  <p>{await delayed('hello!')}</p>   {/* ✅ await 未决时先渲染 pending，解析完换成真内容 */}
 
   {#snippet pending()}
-    <p>loading...</p>
+    <p>loading...</p>   {/* ✅ 只在首次 await 期间出，后续异步更新不重播 */}
   {/snippet}
 </svelte:boundary>
+<!-- ❌ 本地工程没包 boundary 就写顶层 await → playground 能跑是假象（它默认包了空 pending boundary），搬回本地直接翻车 -->
 ```
 
 规则要背准：pending 只在**边界创建时、内部 await 首次解析期间**显示；后续的异步更新不重播 pending——那种场景的正确工具是 `$effect.pending()`（反应式判断"现在有没有在等"，配合局部转圈）。playground 默认把应用包在空 pending 的 boundary 里，所以新手在那儿写顶层 `await` 不报错，挪回本地工程没包 boundary 就翻车——这是个高频"见鬼"现场。
@@ -47,9 +51,11 @@ boundary 的另一半职责是**异步占位**：
 ## 四、onerror：上报、双-handler 与传播协议
 
 ```svelte
-<svelte:boundary onerror={(e) => report(e)}>
+<!-- 目的：onerror—只要上报不要 UI 时单独给；与 failed 共存则先 onerror 后渲染 failed -->
+<svelte:boundary onerror={(e) => report(e)}>   {/* ✅ 接错即上报；内部再 throw 则交给父级 boundary */}
   <Widget />
 </svelte:boundary>
+<!-- ❌ 指望 boundary 接住 onclick 里的报错→接不到，boundary 只管渲染/effect，事件处理器要自己 try-catch -->
 ```
 
 - `onerror(error, reset)` 与 failed 各自**可以单独存在**：只要上报不要 UI → 只给 onerror；两者都给 → 先 onerror 后渲染 failed；

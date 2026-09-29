@@ -7,10 +7,13 @@
 官方定义：*"a specialized signal designed specifically for managing asynchronous data fetching"*，它**非阻塞**——`createResource` 保证取数期间 UI 依旧响应，绕开"取数时界面卡住"的传统坑。它包住的正是 React 里你要手写 `useState(data)+useState(loading)+useState(error)+useEffect(fetch,[deps])` 的一整套。
 
 ```js
+// 目的：createResource—一个自带五态、非阻塞的异步 signal，取代手写 data/loading/error 三 state + effect
 import { createResource } from "solid-js";
 
 const fetchUser = async (id) => (await fetch(`/api/users/${id}`)).json();
-const [user] = createResource(userId, fetchUser);   // userId 是 signal
+const [user] = createResource(userId, fetchUser);   // ✅ userId 是 signal：变化即自动重取，取数期间 UI 照样响应
+// user() 取数据、user.loading / user.error / user.state 都是可读响应式属性
+// ❌ 误以为 createResource 会“卡住等Promise”→ 它非阻塞，不配合 Suspense 时首帧 user() 是 undefined 而非挂起
 ```
 
 `createResource` 要求 fetcher **返回 Promise**；返回的是一个"带响应式属性的 signal"：`user()` 拿数据、`user.loading`、`user.error`、`user.latest`、`user.state` 都是可读的响应式状态。
@@ -20,13 +23,16 @@ const [user] = createResource(userId, fetchUser);   // userId 是 signal
 两种调用形态：
 
 ```js
+// 目的：source+fetcher 双参—无 source 只跑一次，有 source 则一变就重取并把当前值作首参传入
 // ① 无 source：fetcher 只跑一次（除非 refetch）
 const [data] = createResource(async () => (await fetch("/api")).json());
 
 // ② 有 source：source 每次变化 → 自动重跑 fetcher，并把 source 当前值作第一参传入
 const [userId, setUserId] = createSignal(1);
 const [user] = createResource(userId, async (id) => (await fetch(`/api/users/${id}`)).json());
-setUserId(2);   // 自动用 id=2 重取
+setUserId(2);   // ✅ 自动用 id=2 重取
+// ✅ 条件取数：userId() 为 false/null/undefined 时 fetcher 根本不跑—“ID 为空不发请求”无需手写 if
+// ❌ 用 createEffect(async () => { if(userId()) await fetch… }) 自己管—丢内建加载态/错误态/追踪，还易内存泄漏
 ```
 
 **条件取数**靠 source 的假值短路：source 求值为 `false`/`null`/`undefined` 时 **fetcher 根本不跑**——所以"用户 ID 为空就不该发请求"这种逻辑，直接 `createResource(userId, ...)`（`userId()` 为 undefined 时就不取），无需手写 `if`。这也是它比 `createEffect(async...)` 干净的点：追踪、条件、加载态、错误态全内建。
@@ -46,9 +52,11 @@ setUserId(2);   // 自动用 id=2 重取
 actions：
 
 ```js
+// 目的：返回的第二个值 = 读写接口—refetch 重取（发请求）、mutate 直接改本地值（不发请求）
 const [posts, { refetch, mutate }] = createResource(fetchPosts);
-await refetch();                         // 不改 source 也重跑 fetcher；传参会进 fetcher 的 info.refetching
-mutate(optimisticValue);                 // 直接改本地值、不发网络请求（乐观更新）
+await refetch();                         // ✅ 不改 source 也重跑 fetcher；传参会进 fetcher 的 info.refetching
+mutate(optimisticValue);                 // ✅ 直接改本地值、不发网络请求（乐观更新）
+// ❌ 把 mutate 当“重取”用→ 它跳过 fetcher、不碰服务器，以为 mutate 能拉到最新数据就错了
 ```
 
 - **`refetch(info?)`**：手动重取；`info` 会作为 `info.refetching` 传进 fetcher（区分"是哪种刷新"）。
@@ -61,7 +69,7 @@ fetcher 签名是 `(source, info) => ...`，`info` 里带 `{ value, refetching }
 条件渲染三态，两种风格：
 
 ```jsx
-// 手写：用 loading/error/data 属性
+// 目的：渲染三态—手写 Switch 用 loading/error/data，或交给 Suspense 只写成功态
 <Show when={user.loading}><p>加载中…</p></Show>
 <Switch>
   <Match when={user.error}><span>出错了</span></Match>
@@ -70,6 +78,7 @@ fetcher 签名是 `(source, info) => ...`，`info` 里带 `{ value, refetching }
 
 // 或交给 Suspense（下一关），只写"成功态"，加载中由边界兜底
 <Suspense fallback={<p>加载中…</p>}>{user.loading ? null : <div>{user().name}</div>}</Suspense>
+// ⚠️ 不包 Suspense 也不判 loading 就直接 user().name → unresolved/pending 时 user() 为 undefined，读 .name 报错
 ```
 
 官方提示：**预计会出错时，把 createResource 包进 `ErrorBoundary`**——fetcher 抛出的错误会让 resource 进入 `errored`（`user.error` 可读），若被 Suspense 消费则向上冒泡到边界（详见 solid-error-boundary）。
@@ -77,19 +86,22 @@ fetcher 签名是 `(source, info) => ...`，`info` 里带 `{ value, refetching }
 ## 五、initialValue、懒加载与轮询
 
 ```js
-// initialValue：给初值 → 直接从 ready 态开始、类型也去掉 undefined、首帧不闪空
-const [user] = createResource(fetchUser, { initialValue: { name: "加载中…" } });
+// 目的：initialValue 去 |undefined + 首帧不闪；lazy:true 初始不自动取、需手动 refetch
+const [user] = createResource(fetchUser, { initialValue: { name: "加载中…" } });  // ✅ 从 ready 态开始、类型去掉 undefined
 
 // 懒取（deferred）：初始不自动跑，需手动 refetch 触发
 const [data, { refetch }] = createResource(source, fetcher, { lazy: true });
-refetch();   // 你决定何时开始取
+refetch();   // ✅ 你决定何时开始取
+// ❌ 设了 lazy:true 却忘调 refetch → 永远停在 unresolved，data() 一直空
 ```
 
 **轮询**用 `refetch` + `onCleanup` 管定时器，干净回收：
 ```js
+// 目的：轮询 = refetch + onCleanup 管定时器—组件销毁即停，不遗留空转 interval
 const [price, { refetch }] = createResource(fetchPrice);
 const t = setInterval(() => refetch(), 1000);
-onCleanup(() => clearInterval(t));   // 组件销毁即停（solid-lifecycle）
+onCleanup(() => clearInterval(t));   // ✅ 组件销毁（Owner dispose）即停（solid-lifecycle）
+// ❌ 只 setInterval 不 onCleanup → 组件卸载后定时器空转、继续 refetch，内存泄漏
 ```
 
 ## 六、createAsync 与 lazy：两个邻居

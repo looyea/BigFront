@@ -5,24 +5,30 @@
 POST/PATCH/DELETE 与 GET 的三宗不同：**不该按 key 缓存**（每次点击都是新操作）、**需要「提交中」态驱动按钮**、**要拿响应回写缓存**。useMutation 就是为此而生：不缓存结果、提供生命周期回调、variables 参数化。
 
 ```tsx
+// 目的：写操作交 useMutation——不缓存结果、variables 参数化、提供“提交中”态驱动 UI
 const m = useMutation({
-  mutationFn: (todo: Todo) => fetch('/api/todos', { method: 'POST', body: JSON.stringify(todo) }),
+  mutationFn: (todo: Todo) => fetch('/api/todos', { method: 'POST', body: JSON.stringify(todo) }),   // 入参即 variables
 });
-button.onClick = () => m.mutate(newTodo);
+button.onClick = () => m.mutate(newTodo);   // 触发一次写，m.isPending 期间按钮置 loading
+// ✅ 每次点击都是独立操作，不像 useQuery 按 key 复用——写天然不该缓存
+// ❌ 用 useQuery 做写：把 POST 塞 queryFn→结果被按 key 缓存、不会重发，语义全错
 ```
 
 ## 二、四拍生命周期
 
 ```ts
+// 目的：四拍生命周期——onMutate 备乐观快照、onSuccess 回写、onError 回滚、onSettled 收尾失效
 useMutation({
   mutationFn,
-  onMutate: (vars) => ({ snapshot: 1 }),     // 请求前（乐观更新的舞台，见 tq-optimistic）
+  onMutate: (vars) => ({ snapshot: 1 }),     // 请求前（乐观更新舞台，见 tq-optimistic；返回值作 ctx 传下去）
   onSuccess: (data, vars, ctx) => { ... },   // 响应成功（拿 data 回写/失效）
-  onError:   (err, vars, ctx) => { ... },    // 失败（提示/回滚）
+  onError:   (err, vars, ctx) => { ... },    // 失败（提示/回滚，ctx 拿回 onMutate 的快照）
   onSettled: (data, err, vars, ctx) => {     // 成败都跑（invalidate 标准位）
     queryClient.invalidateQueries({ queryKey: ['todos'] });
   },
 });
+// ✅ onSettled 放 invalidate 比 onSuccess 更稳：接口“200 但语义失败”也照样拉服务器真相兜底
+// ❌ 只在 onSuccess invalidate：200 空/语义失败时缓存不更新，UI 停在旧列表
 ```
 
 onSettled 放 invalidate 比 onSuccess 更稳：就算接口「返回 200 但语义失败」，也照样拉一次服务器真相兜底。
@@ -36,11 +42,14 @@ onSettled 放 invalidate 比 onSuccess 更稳：就算接口「返回 200 但语
 mutate 触发的 isPending 是**每个 useMutation 实例**的局部状态——A 组件的 pending 不会传给 B 组件。跨组件读「这条变更提交中」用 **useMutationState**：
 
 ```tsx
+// 目的：跨组件读“这条变更提交中”——isPending 是各实例局部态，聚合用 useMutationState
 const pendingIds = useMutationState({
-  filters: { mutationKey: ['add-todo'] },
-  select: (m) => m.state.context?.id,
+  filters: { mutationKey: ['add-todo'] },   // 前提：useMutation 得配 mutationKey 才被选中
+  select: (m) => m.state.context?.id,        // 从 ctx 挑出正在提交的那条 id
 });
 // 任何组件里：pendingIds.includes(id) 决定该行转圈
+// ✅ 多个“添加”实例的 pending 汇成一个 id 集合，任意组件读它渲染行级 loading
+// ❌ 忘了给 useMutation 配 mutationKey→filters 选不中，pendingIds 永远空
 ```
 
 给 useMutation 配 mutationKey 是它的前提（v5 惯例，也是 devtools 里认出它的名牌）。

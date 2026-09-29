@@ -5,14 +5,16 @@
 如果你用过 Vuex 4，下面这些场景一定不陌生：
 
 ```ts
-// Vuex 的"仪式感"：改一个 count 要写四层
+// 目的：展示 Vuex 的“仪式感”痛点——改一个 count 要写四层（作为 Pinia 要干掉的反面教材）
 const module = {
   state: () => ({ count: 0 }),
-  mutations: { INCREMENT(state) { state.count++ } },  // 同步只能写这里
-  actions: { inc({ commit }) { commit('INCREMENT') } }, // 组件只能 dispatch action
+  mutations: { INCREMENT(state) { state.count++ } },  // 同步只能改这里，不能直接 mutate state
+  actions: { inc({ commit }) { commit('INCREMENT') } }, // 组件只能 dispatch action，再转 commit 字符串
   getters: { double: (s) => s.count * 2 },
 };
 // 还有 namespaced 字符串路径、TypeScript 全靠 as 强转……
+// ❌ Vuex 旧写法：一个自增拆成 mutation+action+commit 字符串三处，类型还得手写 as（本块仅作对照）
+// ✅ Pinia 里同样需求：action 里 this.count++ 或直接赋值，无 mutation 层、类型自动推断
 ```
 
 痛点总结：**mutation 冗余**（同步改 state 非要过一层 commit 字符串）、**module 割裂**（自动导入/跨模块引用要 rootState 绕路）、**类型推断几乎为零**。
@@ -34,20 +36,23 @@ Pinia 的口号就一句话——"把这些痛全部干掉"。它由 Vue 核心�
 Pinia 提供两种定义 store 的方式：
 
 ```ts
+// 目的：同一个 counter 的两种 store 定义写法——Options 与 Setup（后者为推荐）
 // ===== Options Store（Vuex 用户上手友好，但推荐用 Setup）=====
 export const useCounterStore = defineStore('counter', {
-  state: () => ({ count: 0 }),
-  getters: { double: (s) => s.count * 2 },
-  actions: { inc() { this.count++ } },
+  state: () => ({ count: 0 }),               // state 回函数返初始值
+  getters: { double: (s) => s.count * 2 },   // getter 类比 computed
+  actions: { inc() { this.count++ } },        // action 里 this 直接改 state（无 mutation）
 });
 
 // ===== Setup Store（推荐）=====
 export const useCounterStore = defineStore('counter', () => {
-  const count = ref(0);           // state
-  const double = computed(() => count.value * 2); // getter
-  function inc() { count.value++ } // action
-  return { count, double, inc };
+  const count = ref(0);           // ref 即 state
+  const double = computed(() => count.value * 2); // computed 即 getter
+  function inc() { count.value++ } // 普通函数即 action
+  return { count, double, inc };   // 必须 return 暴露——没 return 的外部用不到
 });
+// ✅ Setup 写法类型从 ref/computed 自动推断，无需 ThisType/as，还能放其他 composable
+// ❌ Setup Store 忘 return { count, double, inc }→组件里 store.count 为 undefined
 ```
 
 Setup Store 的好处：
@@ -60,18 +65,24 @@ Setup Store 的好处：
 ## 安装与注册
 
 ```bash
-npm install pinia
+# 目的：安装 Pinia（Vue 3 官方推荐状态库）
+npm install pinia   # 写入 package.json 依赖
+# ✅ 装完在 main.ts 用 createPinia() 注册即可全局使用
+# ❌ 误装 Vuex 4 进 Vue 3 项目→与 <script setup> 组合式风格不匹、无 Setup Store
 ```
 
 ```ts
+// 目的：在应用入口一行注册 Pinia——所有 store 依赖这个根实例
 // main.ts
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 
 const app = createApp(App);
-app.use(createPinia());   // 一行注册
+app.use(createPinia());   // 一行注册（必须在 mount 前）
 app.mount('#app');
+// ✅ 先 app.use(createPinia()) 再 mount，组件里 useXxxStore() 才能拿到注入实例
+// ❌ 忘 app.use(createPinia) 就在组件调 store→报错“getActivePinia() was called but there was no active Pinia”
 ```
 
 > **Nuxt 3 用户**：`npx nuxi module add pinia` 即可——SSR 水合自动处理（L4 详述）。
@@ -81,16 +92,17 @@ app.mount('#app');
 在 04-vue 包学过 `<script setup>` 和 `ref/computed/watch`。Pinia 的 Setup Store 就是一个 setup 函数，所有你已知的响应式工具在这里**原封不动工作**：
 
 ```ts
+// 目的：Setup Store 内响应式工具原封不动工作——computed/watch/组合 composable
 const useCartStore = defineStore('cart', () => {
-  const items = ref<Item[]>([]);
-  const coupon = ref<string | null>(null);
+  const items = ref<Item[]>([]);            // state：商品列表
+  const coupon = ref<string | null>(null);  // state：优惠券
 
-  // 用 computed 做 getter
+  // 用 computed 做 getter（依赖 items+coupon，自动重算）
   const total = computed(() =>
     items.value.reduce((s, i) => s + i.price, 0) * (coupon.value ? 0.9 : 1)
   );
 
-  // 用 watch 做副作用
+  // 用 watch 做副作用（total 一变就写 localStorage）
   watch(total, (v) => localStorage.setItem('cartTotal', String(v)));
 
   // 组合其他 composable
@@ -98,6 +110,8 @@ const useCartStore = defineStore('cart', () => {
 
   return { items, coupon, total };
 });
+// ✅ ref/computed/watch 在 store 里与组件 <script setup> 完全同构，零学习成本
+// ❌ 把 store 里的 ref 解构后直接当普通变量改→失去响应式，应用 storeToRefs 保留引用
 ```
 
 没有 mutation 字符串、没有 dispatch、没有 namespaced path——就是普通的响应式代码。

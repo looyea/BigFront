@@ -7,9 +7,12 @@
 ## 一、v-model 全家族：不止 `bind:input`
 
 ```vue
-<input v-model.trim="form.name" />          <!-- change 后才同步：v-model.lazy -->
-<input v-model.number="form.age" />         <!-- 能转 Number 就转（01-es 隐式转换的显式化） -->
+<!-- 目的：v-model 的三个修饰符与组件多绑 -->
+<input v-model.trim="form.name" />          <!-- trim：输入写回前自动去首尾空格 -->
+<input v-model.lazy="form.bio" />           <!-- lazy：change（失焦）后才同步，长文本省重渲染 -->
+<input v-model.number="form.age" />         <!-- number：能转 Number 就转（避免 "18" 字符串） -->
 <input v-model="price" v-model:discount="disc" />   <!-- 组件多 v-model：参数化 -->
+<!-- ❌ 忘加 .number 时 form.age 是字符串："18"+1 会变 "181" 而非 19 -->
 ```
 
 - 三个修饰符就是三个高频需求：`trim`（用户名去空格）、`lazy`（长文本失焦才进 state，省重渲染）、`number`。
@@ -20,12 +23,14 @@
 
 ```vue
 <!-- DateInput.vue -->
+<!-- 目的：手写 modelValue prop + update:modelValue 事件，实现自定义双向组件 -->
 <script setup>
 const props = defineProps({ modelValue: String })
 const emit = defineEmits(['update:modelValue'])
 </script>
 <template><input type="date" :value="props.modelValue"
   @input="emit('update:modelValue', $event.target.value)" /></template>
+<!-- ✅ 应用：父组件 <DateInput v-model="form.day"/> 即可双向；prop/事件名必须成对，否则 v-model 接不上 -->
 ```
 
 纪律四条：
@@ -39,9 +44,11 @@ const emit = defineEmits(['update:modelValue'])
 
 ```vue
 <form @submit.prevent="onSubmit" novalidate>
+  <!-- 目的：novalidate 关掉浏览器弹框，但保留 required/type 属性当合法性声明，提示自绘 -->
   <input v-model="form.email" type="email" required maxlength="50" />
   <output v-if="emailErr">{{ emailErr }}</output>
 </form>
+<!-- ❌ 不写 novalidate 又想自绘：浏览器默认弹框会和自定义提示叠加出现 -->
 ```
 
 - `required/type=email/pattern/min/max/step` 是**免费且最强**的一层（自动 focus 第一个非法字段、屏幕阅读器直接播报）；
@@ -54,26 +61,29 @@ const emit = defineEmits(['update:modelValue'])
 
 ```js
 // schema.ts —— 校验逻辑第一次有了"单一事实源"，还能和后端共享（zod 呼应 09-express）
+// 目的：用 zod 声明式定义注册表单的校验规则，前后端共享
 import { z } from 'zod'
 export const signupSchema = z.object({
-  name: z.string().min(2).max(20),
-  email: z.string().email(),
-  age: z.coerce.number().min(18),
+  name: z.string().min(2).max(20),                // 长度 2~20
+  email: z.string().email(),                      // 非法邮箱报错
+  age: z.coerce.number().min(18),                 // coerce 把字符串输入转成数字再比较
   pwd: z.string().min(8).regex(/[A-Z]/, '需含大写'),
   confirm: z.string(),
-}).refine(v => v.pwd === v.confirm, { path: ['confirm'], message: '两次密码不一致' })
+}).refine(v => v.pwd === v.confirm, { path: ['confirm'], message: '两次密码不一致' })  // 跨字段校验
+// ✅ 应用：signupSchema.parse(data) 合法返回数据；❌ 不合法抛 ZodError（.issues 逐项报错）
 ```
 
 ```vue
 <script setup>
+// 目的：vee-validate 接管表单状态，useField 直接拿到双向值 + 错误消息
 import { useForm, useField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 const { handleSubmit, errors } = useForm({
-  validationSchema: toTypedSchema(signupSchema),
+  validationSchema: toTypedSchema(signupSchema),   // zod schema 直接推给类型
   initialValues: { name: '', email: '', age: 0, pwd: '', confirm: '' },
 })
-const { value: email, errorMessage } = useField('email')
-const onSubmit = handleSubmit((values) => api.signup(values))
+const { value: email, errorMessage } = useField('email')   // 双向值 + 该字段错误
+const onSubmit = handleSubmit((values) => api.signup(values))   // 只有校验通过才进回调
 </script>
 <template>
   <form @submit="onSubmit" novalidate>

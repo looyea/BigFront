@@ -7,16 +7,17 @@
 ## 一、搭起来：BrowserRouter + Routes + Route
 
 ```jsx
+// 目的：声明式路由——路由树即组件树，element 是一个 React 元素
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter>            {/* 用 HTML5 History API 同步 URL与UI（❌ 服务端不回退 index.html 时刷 /about 会 404） */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
-        <Route path="/user/:id" element={<User />} />
-        <Route path="*" element={<NotFound />} />   {/* 404 兜底 */}
+        <Route path="/user/:id" element={<User />} />   {/* 动态段：/user/42 → id=42 */}
+        <Route path="*" element={<NotFound />} />   {/* 404 兑底（✅ 放最后，否则先吞其它路由） */}
       </Routes>
     </BrowserRouter>
   );
@@ -33,13 +34,15 @@ function App() {
 ## 二、Link / NavLink：切换不刷新
 
 ```jsx
+// 目的：Link 做前端导航不刷新；NavLink 自带激活态高亮
 import { Link, NavLink } from 'react-router-dom';
 
 <Link to="/about">关于</Link>
 
-<NavLink to="/about" className={({ isActive }) => isActive ? 'active' : ''}>
+<NavLink to="/about" className={({ isActive }) => isActive ? 'active' : ''}>   // ✅ 当前路由是 /about 时自动加 active 类
   关于
 </NavLink>
+// ❌ 用 <a href="/about"> 代替 Link → 整页刷新，SPA state 全丢
 ```
 - 一定用 `<Link to>` 而非 `<a href>`：`<a>` 会整页刷新、丢失 SPA state（呼应 vue 的 `<router-link>` vs `<a>`）；
 - `NavLink` 自带**激活态**：`className`/`style` 接收 `({ isActive, isPending })`，做导航高亮；
@@ -50,12 +53,13 @@ import { Link, NavLink } from 'react-router-dom';
 ## 三、读取路由信息：hooks
 
 ```jsx
+// 目的：hooks 读路由信息——动态段、query、位置/state
 import { useParams, useSearchParams, useLocation } from 'react-router-dom';
 
 function User() {
-  const { id } = useParams();            // /user/:id → id
+  const { id } = useParams();            // ✅ /user/:id → id（如 /user/42 得 '42'）
   const [sp] = useSearchParams();        // ?tab=posts&page=2
-  const tab = sp.get('tab');
+  const tab = sp.get('tab');             // 'posts'（都是字符串）
   const loc = useLocation();             // { pathname, search, state }
   return <div>{id} · {tab}</div>;
 }
@@ -69,6 +73,7 @@ function User() {
 ## 四、嵌套路由与 Outlet
 
 ```jsx
+// 目的：嵌套路由——父 element 渲染外壳，<Outlet/> 是子路由插槽（对应 vue <router-view>）
 <Route path="/dashboard" element={<Layout />}>
   <Route index element={<Overview />} />        {/* /dashboard 默认子路由 */}
   <Route path="settings" element={<Settings />} /> {/* /dashboard/settings */}
@@ -78,7 +83,7 @@ function Layout() {
   return (
     <div>
       <Sidebar />
-      <Outlet />        {/* ← 子路由渲染在这，等于 Vue 的 <router-view> */}
+      <Outlet />        {/* ← 子路由渲染在这（❌ 不写 Outlet 则匹配到子路由也不显示） */}
     </div>
   );
 }

@@ -151,6 +151,12 @@ async function onQuizPassed() {
            v-html="marked.parse(lesson.interviews)"></div>
       <p v-else class="hint">本关尚未提供面试题。</p>
     </section>
+
+    <!-- 底部返回：读完不必滚回顶部或退回菜单，一键回课程目录选下一节 -->
+    <div class="part-foot">
+      <router-link class="btn ghost" :to="`/l/${lesson.pkgId}/${lesson.id}`">← 回到课文</router-link>
+      <router-link class="btn" :to="`/p/${lesson.pkgId}`">📚 返回课程目录 · 选下一节</router-link>
+    </div>
   </div>
 </template>
 
@@ -169,4 +175,6 @@ async function onQuizPassed() {
 .progress-card .v em { font-style: normal; margin-left: 8px; font-size: 14px; }
 .progress-card .v em.ok { color: var(--ok); }
 .progress-card .v em.todo { color: var(--warn); }
+/* 底部返回条：右对齐、上边距拉开，正文读完就地可返 */
+.part-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); }
 </style>

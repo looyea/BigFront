@@ -12,16 +12,20 @@ matcher 放 `src/params/`，**文件名即 matcher 名**：
 
 ```ts
 // src/params/fruit.ts
+// 目的：matcher 契约—(param: string) => boolean，false 直接宣告此路由不适用
 import type { ParamMatcher } from '@sveltejs/kit';
 
 export const match = ((param: string): param is 'apple' | 'orange' => {
+  // ✅ 返回 true 才让 /fruits/apple 进门；/fruits/rocketship 判 false，路由不参与匹配
   return param === 'apple' || param === 'orange';
-}) satisfies ParamMatcher;
+}) satisfies ParamMatcher;   // ✅ satisfies 而非 : ParamMatcher：保住字面量收窄信息
+// ❌ 在 match 里读全局状态/发请求 → 双端执行时服务端判进、客户端判 404 的分裂行为
 ```
 
 挂载时在参数名后接 `=名称`，目录改名即可生效：
 
 ```
+# 目的：名字挂在目录名上—[page] 仍占一段，但只有过 match 为 true 的值才命中
 src/routes/fruits/[page=fruit]/+page.svelte
 ```
 
@@ -46,10 +50,14 @@ src/routes/fruits/[page=fruit]/+page.svelte
 
 ```ts
 // src/params/uuid.ts —— 只放行合法 UUID 段
+// 目的：实战模板—格式白名单归 matcher，“在库里存不存在”归 load，两层分工
 import type { ParamMatcher } from '@sveltejs/kit';
 export const match = ((param: string) =>
+  // ✅ /orders/latest、/orders/1 判 false，被挡去其他候选路由（排序兜底链），全败才 404
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(param)
 ) satisfies ParamMatcher;
+// 同法可治 rest 匹配空的坑：挂一个 param.length > 0 级别的 matcher
+// ❌ 拿 matcher 做查库存在性校验（只有参数字符串这一个输入，做不了异步事）→ 存在性该去 load 里 throw error(404)
 ```
 
 路由 `/orders/[id=uuid]` 从此把 `/orders/latest`、`/orders/1` 全部挡去别的候选路由。rest 参数"匹配空"的坑（上一关第三节）官方推荐的修法也正是 matcher——给 `[...rest]` 挂一个 `param.length > 0` 级别的 matcher，或至少在 load 里校验。matcher 是路由层的正则军刀，短、快、纯、双端安全，四条都占。

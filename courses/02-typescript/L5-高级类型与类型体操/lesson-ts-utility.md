@@ -37,10 +37,13 @@ type MyReadonly<T>  = { readonly [K in keyof T]: T[K] };
 ## 三、挑键两兄弟：Pick / Record
 
 ```ts
+// 目的：Pick 只保留指定键（键受 keyof T 约束），Record 从键联合构造对象类型
 type MyPick<T, K extends keyof T> = { [P in K]: T[P] };
 
 const u: User = { id:1, name:"a", email:"e" };
 type NameOnly = Pick<User, "name">;              // { name: string }
+const no: NameOnly = { name: u.name };          // ✅ 应用：只剩 name
+// type Bad = Pick<User, "nope">;               // ❌ "nope" 不在 keyof User
 ```
 
 `Pick` 的第二参数被 `K extends keyof T` 约束——写错键名直接编译报错。`Record` 则是"从键联合构造对象类型"：
@@ -98,14 +101,18 @@ type Un = Awaited<ReturnType<typeof load>>;     // User（解到非 Promise 为�
 真实工程里几乎从不单用，而是组合：
 
 ```ts
+// 目的：工具类型层层组合，从一份源类型派生出表单/响应/可创建变体
 type User = { id: number; name: string; meta: { tag: string } };
 
 // 编辑表单：所有字段可选，但 id 必须保留 → 交叉
 type UserForm = Partial<Omit<User, "id">> & Pick<User, "id">;
+const form: UserForm = { id: 1 };            // ✅ id 必给，其余可省
+const form2: UserForm = { id: 1, name: "x" };  // ✅ name 可选
+// const bad: UserForm = { name: "x" };       // ❌ 缺必填 id
 
 // API 响应统一包装
 type ApiResponse<T> = { code: number; data: T; msg: string };
-type GetUserResp = ApiResponse<Pick<User, "name">>;
+type GetUserResp = ApiResponse<Pick<User, "name">>;   // data 形状为 { name: string }
 
 // 校验：只读、且去掉服务端管理字段
 type Creatable = Omit<Readonly<User>, "id">;

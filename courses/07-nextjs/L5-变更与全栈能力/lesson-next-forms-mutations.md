@@ -7,26 +7,28 @@
 ## 一、提交态下沉：useFormStatus 与 useOptimistic
 
 ```tsx
+// 目的：提交态下沉——useFormStatus 让按钮自查父 form 的 pending，useOptimistic 先渲染“想象中的它”
 'use client';
-import { useFormStatus, useOptimistic } from 'react';  // 19：Action 相关 hook 归 React 本体
+import { useFormStatus, useOptimistic } from 'react';  // ✅ 19：Action 相关 hook 归 React 本体
 
 function SubmitBtn() {
-  const { pending } = useFormStatus();     // 读"父 form 是否正在执行 Action"——父不用传 props
+  const { pending } = useFormStatus();     // ✅ 读“父 form 是否正在执行 Action”——父不用传 props
   return <button disabled={pending}>{pending ? '…' : '保存'}</button>;
 }
 
 export function TodoList({ todos }: { todos: Todo[] }) {
   const [optimistic, addOptimistic] = useOptimistic(
-    todos,                                  // 真实数据
-    (state, newItem: Todo) => [...state, newItem],   // 纯函数 reducer
+    todos,                                  // ✅ 真实数据
+    (state, newItem: Todo) => [...state, newItem],   // ✅ 纯函数 reducer
   );
   async function create(formData: FormData) {
     const text = formData.get('text') as string;
-    addOptimistic({ id: 'pending', text });          // ← 先渲染"想象中的它"
-    await createTodo(formData);                      // Action：失败自动回滚 optimistic
+    addOptimistic({ id: 'pending', text });          // ✅ 先渲染“想象中的它”（乐观先行）
+    await createTodo(formData);                      // ✅ Action：失败自动回滚 optimistic
   }
   return <form action={create}>{optimistic.map(renderTodo)}</form>;
 }
+// ❌ useFormStatus 必须用在子组件且其父链有 <form>；若直接在包着 form 的组件里调 → 读不到 pending（它只看父 form）
 ```
 
 两件套的共性：**状态从"你手动 setState"变成"框架在 Action 生命周期里替你维护"**——pending 随 Action 起落、optimistic 随成功/失败提交或回滚。老代码里手搓的 `setLoading(true)/try/catch/setLoading(false)` 三件套整体退役（对照 mp-interaction 的 feedback 封装：同一件事换了宿主）。
@@ -38,12 +40,14 @@ export function TodoList({ todos }: { todos: Todo[] }) {
 Action 的 FormData 只适合"三五个字段的朴素表单"。复杂表单（多步、动态字段、即时校验）用 RHF 接管 UI，**提交那一刻打包 FormData 或直接调 Action**：
 
 ```tsx
-const { register, handleSubmit } = useForm({ resolver: zodResolver(ProfileSchema) });
+// 目的：重表单交给 RHF，提交那一刻直接调 Action（参数可是普通对象）
+const { register, handleSubmit } = useForm({ resolver: zodResolver(ProfileSchema) });   // ✅ 前端即时校验（体验）
 // ProfileSchema 从 lib/schemas.ts import —— 同一份 schema，前端即时反馈 + Action 内 safeParse 兜底
-const onSubmit = handleSubmit((values) => startTransition(async () => {
-  const err = await saveProfile(values);   // 直接调用 Action（参数可以是普通对象！）
+const onSubmit = handleSubmit((values) => startTransition(async () => {   // ✅ 非阻塞转换里调 Action
+  const err = await saveProfile(values);   // ✅ 直接调用 Action（参数可以是普通对象！）
   if (err) setError('root', { message: err });
 }));
+// ❌ 以为有 RHF+zod 前端校验就可省 Action 内校验 → 前端校验只防误操作，不防绕过 UI 的直接请求（安全）
 ```
 
 纪律没变、只是分工：**客户端校验是体验，服务端（Action 内）校验是安全**——两侧同一份 zod schema（ts-utility 的 z.infer 类型贯通在这回收，呼应 exp-validation 首尾同一条军规）。
@@ -53,18 +57,20 @@ const onSubmit = handleSubmit((values) => startTransition(async () => {
 ## 三、after()：响应之后再干杂活
 
 ```ts
+// 目的：after() 把“用户不必等”的副作用移出关键路径（TTFB 立省）
 'use server';
 import { after } from 'next/server';
 
 export async function publish(post: PostDto) {
   await db.post.create({ data: post });
   revalidateTag('posts');
-  after(async () => {                 // ← 响应已发出，这里继续跑
+  after(async () => {                 // ✅ 响应已发出，这里继续跑
     await notifyFollowers(post);      //   发通知、审计日志、埋点上报
     await imageCache.warm(post.cover);
   });
   redirect('/blog');
 }
+// ❌ 把 await 30s 的邮件/重活直接写在 Action 体里而非 after/队列 → 用户白屏等待，且平台超时会掐断
 ```
 
 价值：把"用户不必等"的副作用移出关键路径（TTFB 立省）；限制：平台有超时窗（真重活仍进队列——Action 内 await 30s 邮件是反模式，呼应 next-route-handlers 面试 12 的"接口只做状态机一步"）。同类心智：小程序 request 回调里别 setData 大对象后再发请求（mp-setdata 的成本阶梯）。

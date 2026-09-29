@@ -18,7 +18,9 @@ Solid 组件只运行一次、更新直达具体 DOM 属性——**没有"重渲
 
 memo = **缓存 + 惰性 + 即时一致**：依赖不变就不重算、算出来值没变就不通知下游。适合把"多处用到、且昂贵"的派生值收敛成一份：
 ```ts
-const visible = createMemo(() => state.items.filter((i) => i.show).sort(byTime));
+// 目的：memo 收敛“多处用到且昂贵”的派生计算—依赖不变不重算、算出值未变不通知下游
+const visible = createMemo(() => state.items.filter((i) => i.show).sort(byTime));  // ✅ filter+sort 只算一份，多处读 visible() 共用
+// ❌ memo 只是直接返回一个属性（无过滤/排序/计算）→ 反而多建一个订阅，不如直接用那个属性
 ```
 **但别过度**：官方点名——如果 memo 只是**直接返回一个属性、没有任何过滤/排序/计算**，那它反而多创建了一个订阅者，不如**直接用那个属性**。memo 是给"真计算"用的。
 
@@ -26,9 +28,11 @@ const visible = createMemo(() => state.items.filter((i) => i.show).sort(byTime))
 
 有时一个 effect/JSX 里读了某信号，**却不希望它的变化触发自己**：
 ```ts
+// 目的：untrack/on 关掉多余订阅—读了某信号却不希望它变化触发自己
 import { on, untrack } from "solid-js";
-createEffect(on(a, (aVal) => { /* 只订阅 a，不追踪这里面读别的信号 */ }));
-createEffect(() => { b(); untrack(() => c()); }); // c 不进依赖集
+createEffect(on(a, (aVal) => { /* ✅ 只订阅 a，回调里读的别的信号不入依赖集 */ }));
+createEffect(() => { b(); untrack(() => c()); }); // ✅ c 被 untrack 包裹，不进依赖集
+// ❌ 本想只跟 a、却直接 createEffect(() => use(a) + use(b)) → b 也拖着狂跑，用 on(a,…) 才能只订阅 a
 ```
 `on(deps, fn, { defer })` 显式指定依赖、`defer: true` 跳过首次执行——避免"顺手读了个信号结果被它拖着狂跑"。
 
@@ -36,8 +40,10 @@ createEffect(() => { b(); untrack(() => c()); }); // c 不进依赖集
 
 一个同步块里连续多次写，默认各自触发更新。用 `batch`（或 store 的自动批处理）合并成一次：
 ```ts
+// 目的：batch 合并一个同步块里的多次写—下游只更新一次
 import { batch } from "solid-js";
-batch(() => { setA(1); setB(2); setC(3); }); // 下游只更新一次
+batch(() => { setA(1); setB(2); setC(3); }); // ✅ 三次写合并，依赖它们的下游只重跑一次
+// ❌ 不包 batch 直接连写 setA/setB/setC → 默认各自触发，下游可能被连更新三轮
 ```
 store 一次 `setState` 多个属性、或 produce 里改多字段，天然会批处理——这也是"少写 effect 里连环 set"的又一层收益。
 
@@ -55,8 +61,10 @@ effects 官方明确：**尽量别在 effect 里写信号**——可能造成额
 
 组件卸载后仍有引用在后台跑 = 内存泄漏。`setInterval`、事件订阅、WebSocket、第三方实例等都要在 `onCleanup` 里释放（effects 官方专门点出这个用途）：
 ```ts
+// 目的：定时器/订阅/第三方实例等都要在 onCleanup 里释放，防内存泄漏
 const timer = setInterval(tick, 1000);
-onCleanup(() => clearInterval(timer));
+onCleanup(() => clearInterval(timer));   // ✅ 组件销毁（Owner dispose）自动调，不会遗留空转 interval
+// ❌ 只 setInterval 不 onCleanup → 组件卸载后后台照跑，就是内存泄漏
 ```
 `createRoot` 之外的游离响应式作用域（前面异步桥接的例子）不自动回收，更要显式 dispose。
 

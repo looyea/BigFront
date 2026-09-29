@@ -5,12 +5,15 @@
 `@swc/jest` 是一个符合 Jest transformer 接口的薄封装，把转译交给 SWC：
 
 ```js
+// 目的：@swc/jest 换掉 babel-jest——transform 命中 TS/JSX，options 形状即 .swcrc
 // jest.config.js
 module.exports = {
-  transform: { '^.+.(t|j)sx?$': ['@swc/jest', {
-    jsc: { parser: { syntax: 'typescript', tsx: true },
-      transform: { react: { runtime: 'automatic' } } } }] },
+  transform: { '^.+.(t|j)sx?$': ['@swc/jest', {          // 命中的文件交给 @swc/jest 转译
+    jsc: { parser: { syntax: 'typescript', tsx: true },   // 按 TS+JSX 解析
+      transform: { react: { runtime: 'automatic' } } } }] },   // 自动 JSX runtime，与构建端对齐
 };
+// ✅ 收益：TS/JSX 大仓 Jest 冷启动与单文件转译显著提速，甩开 babel-jest 配置地狱
+// ❌ NestJS 项目在这漏配 legacyDecorator+decoratorMetadata→测试里 DI 拿不到元数据，provider 解析失败
 ```
 
 配置对象形状还是 `.swcrc` 那套。收益：TS/JSX 大仓的 Jest 冷启动与单文件转译时间显著下降，甩开 babel-jest 的配置地狱。

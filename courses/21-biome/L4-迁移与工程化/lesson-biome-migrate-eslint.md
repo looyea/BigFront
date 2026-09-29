@@ -5,7 +5,10 @@
 `@biomejs/migrate` 能把 `.eslintrc*` / `.prettierrc*` 尽量翻译成 `biome.json`：
 
 ```bash
-npx @biomejs/migrate            # 读现有配置，产出 biome.json
+# 目的：官方迁移工具把 .eslintrc/.prettierrc 尽量近似翻译成 biome.json
+npx @biomejs/migrate            # 读现有配置，产出 biome.json（“最大近似”而非 1:1 保证）
+# ✅ 提速起步：Prettier 侧几乎全覆盖，先让 biome.json 落地再逐条校准
+# ❌ 跑完直接 commit 不 review→“无法映射”的插件规则被静默丢弃，lint 基线悄悄变松
 ```
 
 它做「最大近似」而非 1:1 保证——Prettier 侧几乎全覆盖，ESLint 侧覆盖主干、插件规则标出「无法映射」。跑完必须人工 review 产出，别直接 commit。

@@ -8,6 +8,25 @@
 
 测防抖、轮询、延时动画不能真等。开 `vi.useFakeTimers()` 接管 setTimeout/setInterval，用 `vi.advanceTimersByTime(1500)`/`vi.runAllTimers()` 手动推进虚拟时钟，断言「到时后该发生的发生了」。**用完必须** `vi.useRealTimers()`（放 afterEach）回退真实时钟，否则污染其它用例。
 
+```ts
+// 目的：假定时器秒测延时逻辑——接管时钟、手动推进、用完必恢复
+import { it, expect, vi, afterEach } from 'vitest';
+
+afterEach(() => vi.useRealTimers());   // ✅ 每个用例后复位真实时钟，防假时钟泄漏污染其它用例
+
+it('debounce 到点才触发一次', () => {
+  vi.useFakeTimers();                  // 接管 setTimeout
+  const cb = vi.fn();
+  const debounced = debounce(cb, 300); // 被测：300ms 防抖
+  debounced(); debounced(); debounced();
+  vi.advanceTimersByTime(299);         // 推进到 299ms
+  expect(cb).not.toHaveBeenCalled();   // ✅ 还没到点，一次都不该触发
+  vi.advanceTimersByTime(1);           // 再推 1ms 跨过 300
+  expect(cb).toHaveBeenCalledTimes(1); // ✅ 只触发一次（三次调用被防抖合并）
+});
+// ❌ 忘 afterEach useRealTimers：假时钟泄漏到后续用例，别的 setTimeout 测试全被「冻住」莫名挂起
+```
+
 ## 三、冻结时间：vi.setSystemTime
 
 测「基于当前日期」的逻辑（过期判断、格式化）用 `vi.setSystemTime(new Date('2026-01-01'))` 把 `Date.now()/new Date()` 冻结到固定点，结果可复现。测完 `vi.useRealTimers()` 一并复位。

@@ -15,6 +15,7 @@
 ## 二、第一步：让 TS 和 JS 共存
 
 ```jsonc
+// 目的：一份"JS/TS 共存起步"的 tsconfig——先纳入 JS、不检查 JS、只当类型检查器
 {
   "compilerOptions": {
     "allowJs": true,          // 纳入 .js/.jsx 参与编译（与 .ts 混编）
@@ -37,13 +38,15 @@
 
 ```js
 // @ts-check
+// 目的：不改后缀，只靠一行注释 + JSDoc 就给单个 .js 文件开启类型检查
 /**
  * @param {number} a
  * @param {number} b
  * @returns {number}
  */
 function sum(a, b) { return a + b; }
-sum("x", 1);   // 立刻报错，即使文件还是 .js
+sum(1, 2);     // ✓ 合法，返回 3
+sum("x", 1);   // ✗ Argument of type 'string' is not assignable to parameter of type 'number'（即使文件还是 .js）
 ```
 
 意义：① 零风险地给热点 JS 文件补类型、发现现有 bug；② 大量代码（尤其要长期留 JS 的）用 JSDoc 就够，无需转语法。JSDoc 类型和 TS 类型可互转（`tsc` 能从 `.js`+JSDoc 生成 `.d.ts`）。
@@ -67,12 +70,14 @@ sum("x", 1);   // 立刻报错，即使文件还是 .js
 外部数据是迁移期最大的"谎言温床"。`JSON.parse`/HTTP/`localStorage`/DOM 一律先当 `unknown`，用**类型守卫**收窄（呼应 ts-guards、ts-strict 第 11 题）：
 
 ```ts
+// 目的：外部数据先当 unknown，用类型守卫收窄后再用，而不是直接 as 假装已校验
 function isUser(x: unknown): x is { id: number; name: string } {
   return typeof x === "object" && x !== null
     && typeof (x as any).id === "number" && typeof (x as any).name === "string";
 }
 const data: unknown = JSON.parse(text);
-if (isUser(data)) greet(data.name);   // 安全；否则用 zod 做运行时校验更好（呼应 ts-declarations 第 12 题）
+if (isUser(data)) greet(data.name);   // ✓ 收窄为 {id;name} 后才能安全访问 name
+// else 分支：data 仍是 unknown，直接 data.name 会报 'data' is of type 'unknown'（否则用 zod 做运行时校验更好）
 ```
 
 反面教材：`const u = JSON.parse(text) as User` ——运行时啥也没校验，等于把旧的 JS"裸信任"搬进 TS 只是换了身皮。迁移的**目的**恰恰是在边界补上校验，而不是用 `as` 假装类型存在。

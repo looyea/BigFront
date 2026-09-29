@@ -7,11 +7,12 @@
 ## 一、组件注册
 
 ```js
+// 目的：两种组件注册——全局到处可用但不可 tree-shake，局部（import）推荐
 // 全局（app.use / app.component）——到处可用，但无法 tree-shake
-app.component('MyButton', { /* ... */ });
+app.component('MyButton', { /* ... */ });   // 模板里任意处可写 <MyButton/>
 
 // 局部（推荐）：<script setup> 里 import 即可当标签用
-import MyButton from './MyButton.vue';
+import MyButton from './MyButton.vue';      // 只有本组件模板能用，未被用则可被摇树
 ```
 `<script setup>` 中**被 import 的组件、以及在模板里用到的顶层绑定**自动注册，无需 `components: {}`。组件名：SFC 文件名（`MyButton.vue` → `<MyButton/>`），模板里用 **PascalCase** 与 kebab-case（`<my-button>`）都能匹配。
 
@@ -22,12 +23,15 @@ import MyButton from './MyButton.vue';
 ```vue
 <!-- Child.vue -->
 <script setup>
+// 目的：props 声明带类型/必填/默认值，编译期生成运行时校验
 // 类型化声明（推荐，编译期生成运行时校验）
 const props = defineProps({
-  title: { type: String, required: true },
-  count: { type: Number, default: 0 },
-  tags:  { type: Array, default: () => [] },   // 引用类型用工厂函数
+  title: { type: String, required: true },   // 父不传 title → 控制台警告 Missing required prop
+  count: { type: Number, default: 0 },        // 不传时 count=0
+  tags:  { type: Array, default: () => [] },   // ❌ 引用类型不能写 default: []（多实例共享同一数组）→必须工厂函数
 });
+// ❌ 子组件直接改 props：props.count++ → 开发环境警告、破坏单向数据流
+// ✅ 要本地可编辑：const local = ref(props.count) 拷一份
 </script>
 ```
 
@@ -44,12 +48,13 @@ const props = defineProps({
 ```vue
 <!-- Child.vue -->
 <script setup>
+// 目的：defineEmits 声明事件后，emit 携带载荷上抛；显式声明的事件不再透传为原生属性
 const emit = defineEmits(['add', 'update']);
-function onClick() { emit('add', 1); }        // 携带载荷
+function onClick() { emit('add', 1); }        // ✅ 抛 add 事件并带载荷 1
 </script>
 
 <!-- Parent.vue -->
-<Child @add="onAdd" />
+<Child @add="onAdd" />                        <!-- 父用 @add 接住载荷（onAdd(1)） -->
 ```
 - 显式 `defineEmits` 声明后，这些事件**不会**再作为原生事件透传到根元素（避免 `@click` 之类的 fallthrough 歧义）；
 - 事件名同样有 kebab/camel 对应；载荷即 `emit(name, payload)` 的参数。
@@ -64,15 +69,15 @@ function onClick() { emit('add', 1); }        // 携带载荷
 <!-- Card.vue -->
 <template>
   <div class="card">
-    <header><slot name="title">默认标题</slot></header>
-    <main><slot>这里是内容的兜底</slot></main>
+    <header><slot name="title">默认标题</slot></header>   <!-- 具名插槽，父不传则显"默认标题"兜底 -->
+    <main><slot>这里是内容的兜底</slot></main>            <!-- 默认插槽（无 name） -->
   </div>
 </template>
 
 <!-- 使用 -->
 <Card>
-  <template #title><h2>文章</h2></template>   <!-- 具名插槽（# = v-slot:） -->
-  <p>正文……</p>                                <!-- 默认插槽 -->
+  <template #title><h2>文章</h2></template>   <!-- 具名插槽（# = v-slot:）填到 title 处 -->
+  <p>正文……</p>                                <!-- 直接子内容填到默认插槽 -->
 </Card>
 ```
 
@@ -83,12 +88,12 @@ function onClick() { emit('add', 1); }        // 携带载荷
 ### 作用域插槽（子把数据回传给插槽）
 
 ```vue
-<!-- List.vue -->
+<!-- List.vue：子组件把数据通过 slot 参数传出去 -->
 <slot :item="item" :index="i">{{ item.name }}</slot>
 
-<!-- 使用：v-slot 接收子传出的 props -->
+<!-- 使用：v-slot 接收子传出的 props（作用域插槽） -->
 <List>
-  <template #default="{ item, index }">
+  <template #default="{ item, index }">    <!-- ✅ 子组件的 item/index 回传到父的模板里渲染 -->
     <li>{{ index }}: {{ item.name }}</li>
   </template>
 </List>
@@ -100,10 +105,10 @@ function onClick() { emit('add', 1); }        // 携带载荷
 ## 五、组件上的 v-model（含多值与修饰符）
 
 ```vue
-<!-- 自定义组件 v-model 绑定 modelValue -->
+<!-- 目的：组件上的 v-model 就是下面两行绑定的糖 -->
 <MyInput v-model="text" />
 <!-- 等价于 -->
-<MyInput :model-value="text" @update:model-value="text = $event" />
+<MyInput :model-value="text" @update:model-value="text = $event" />   <!-- 子 emit('update:modelValue', v) 就回写 text -->
 ```
 
 Vue 3 默认 `v-model` = `modelValue` prop + `update:modelValue` 事件。子组件用 **`defineModel`**（3.4+）最省心：
@@ -111,7 +116,8 @@ Vue 3 默认 `v-model` = `modelValue` prop + `update:modelValue` 事件。子组
 ```vue
 <!-- MyInput.vue -->
 <script setup>
-const model = defineModel();          // 一个可读写 ref
+// 目的：defineModel 一个宏拿到可读写的双向 ref（Vue 3.4+）
+const model = defineModel();          // 一个可读写 ref：读写它即同步父子两侧
 </script>
 <template><input v-model="model" /></template>
 ```
@@ -127,7 +133,8 @@ const model = defineModel();          // 一个可读写 ref
 组件根元素会自动接收父传的非 prop attribute（`class`、`style`、`data-*`、`@click`…）：
 
 ```vue
-<BaseButton class="primary" @click="x" />   <!-- 落到按钮根元素 -->
+<BaseButton class="primary" @click="x" />   <!-- 非 prop 的 class/@click 自动落到按钮根元素 -->
+<!-- ❌ 组件有两个根元素时无法自动透传 → 警告 "Extraneous non-emits event listeners"，需手动 <div v-bind="$attrs"> 指定落点 -->
 ```
 - **多个根元素**时无自动透传，必须手动 `<div v-bind="$attrs">` 指定落到哪；
 - `inheritAttrs: false`（`defineOptions({ inheritAttrs: false })`）关闭默认透传，把 `$attrs` 绑到内部某个元素；

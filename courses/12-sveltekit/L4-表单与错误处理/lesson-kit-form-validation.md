@@ -16,33 +16,38 @@ zod schema 是纯函数对象，天然同构——放 `src/lib/schema/` （注�
 
 ```ts
 // src/lib/schema/login.ts —— 双端共享，零副作用
+// 目的：一份 zod schema 两端复用—避开 FormData 三坑的写法全在这
 import { z } from 'zod';
 export const loginSchema = z.object({
-  email: z.string().email(),
-  // 坑 1：表单数字是字符串！number 输入也要 coerce
+  email: z.string().email(),                       // ✅ 服务端裁决字段，浏览器 curl 也过这一关
+  // 坑 1：表单数字是字符串！✅ coerce 把 '20' 转 20，纯 z.number() 对字符串必挂
   age: z.coerce.number().int().min(18),
   // 坑 2：未勾选的 checkbox 根本不在 FormData 里，undefined ≠ false
-  tos: z.boolean().optional().refine(v => v === true, '必须同意条款'),
+  tos: z.boolean().optional().refine(v => v === true, '必须同意条款'),   // ✅ 先 optional 容缺席，再 refine 裁 true
 });
+// ❌ 把本文件放进 $lib/server 私域 → 客户端 import 被构建拦截，双端复用变单端孤岛
 ```
 
 ```ts
 // src/routes/login/+page.server.js
+// 目的：服务端校验管道—FormData→对象→safeParse，失败回 input+errors 实现“错了不用重填”
 import { loginSchema } from '$lib/schema/login';
 import { fail } from '@sveltejs/kit';
 
 export const actions = {
   default: async ({ request }) => {
-    const raw = Object.fromEntries(await request.formData()); // 管道第一步
-    const parsed = loginSchema.safeParse(raw);
+    const raw = Object.fromEntries(await request.formData()); // ✅ 管道第一步：FormData 展平成普通对象
+    const parsed = loginSchema.safeParse(raw);                // ✅ safeParse 不 throw，返回 success/data/error 判别式
     if (!parsed.success) {
-      const fieldErrors = parsed.error.flatten().fieldErrors; // 坑 3：errors 展平成字段→消息映射
-      // 回传原值实现"错了不用重填"，但敏感字段除外（官方：不回 password）
+      const fieldErrors = parsed.error.flatten().fieldErrors; // ✅ 坑 3：展平成 字段→消息 映射，模板按字段名取用
+      // ✅ 回传原值实现回显；敏感字段除外（官方：不回 password）
       return fail(400, { input: raw, errors: fieldErrors });
     }
     // TODO 用 parsed.data（类型收窄后的成品），不要再碰 raw
+    // ✅ parsed.data.age 已是 number；raw.age 仍是字符串——拿 raw 参与业务就吃类型坑
   }
 } satisfies Actions;
+// ❌ 只靠模板 input=required 就算校验完 → curl 绕过浏览器直打 action，未过服务端校验的数据长驱直入
 ```
 
 三条坑背熟：FormData 值全是字符串（或 File）→ 数值要 coerce；未勾选的 checkbox **不会**以 false 出现，而是整个键缺失；`safeParse` + `flatten().fieldErrors` 是把 zod 错误整形进 action 返回值的惯用桥。另一个纪律：`.optional()` 用于"可能缺席"与 `.default()` 用于"缺席补默认"语义不同，筛选表单常配 `z.literal('').optional()` 处理空串。

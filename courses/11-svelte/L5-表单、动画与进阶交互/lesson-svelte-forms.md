@@ -8,10 +8,11 @@
 
 ```svelte
 <script>
+  // 目的：bind:value 一句话双向绑定—输入与变量自动同步，无需手写 oninput
   let username = $state('');
 </script>
-<input bind:value={username} placeholder="用户名" />
-<p>当前输入：{username || '（空）'}</p>
+<input bind:value={username} placeholder="用户名" />   {/* ✅ 打字即时回写 username */}
+<p>当前输入：{username || '（空）'}</p>   {/* ✅ 变量变又驱动视图，形成闭环 */}
 ```
 
 `bind:value` 适用于 `<input>`（text/password/email/search…）、`<textarea>`、`<select>`（单选值/`multiple` 时绑数组）。修饰符类需求走**类型参数**而非指令后缀：
@@ -24,11 +25,12 @@
 
 ```svelte
 <script>
+  // 目的：type=number 的 NaN 兜底—清空输入框时 value 是 NaN，需手动归 0
   let count = $state(0);
-  let debounced = $derived.by(() => { /* 配合 $effect+setTimeout 做输入节流 */ });
 </script>
-<input type="number" bind:value={count} />
-<!-- 数字输入框清空时 value 是 NaN,记得兜底：bind:value={{ get: () => count, set: (v) => count = Number.isNaN(v) ? 0 : v }} -->
+<input type="number" bind:value={count} />   {/* ✅ count 按数字绑定 */}
+<!-- ✅ 兜底写法：bind:value={{ get: () => count, set: (v) => count = Number.isNaN(v) ? 0 : v }} -->
+<!-- ❌ 不做兜底→用户清空输入框，count 变 NaN，后续参与运算一路 NaN 传染 -->
 ```
 
 ---
@@ -37,9 +39,10 @@
 
 ```svelte
 <script>
-  let taste = $state('sweet');           // 单选组：共同绑一个变量
-  let fruits = $state([]);               // 复选组：绑数组
-  let agreed = $state(false);            // 单个复选框：布尔
+  // 目的：勾选/单选家族—bind:checked(布尔)、bind:group(数组/单选组)、bind:files(文件)
+  let taste = $state('sweet');           // ✅ 单选组：共同绑一个变量
+  let fruits = $state([]);               // ✅ 复选组：绑数组
+  let agreed = $state(false);            // ✅ 单个复选框：布尔
   let touched = $state(false);
   let files = $state(null);
 </script>
@@ -49,10 +52,11 @@
 <input type="checkbox" bind:group={fruits} value="apple" />
 <input type="checkbox" bind:group={fruits} value="banana" />
 
-<input type="checkbox" bind:checked={agreed} />          <!-- 不是 bind:value! -->
+<input type="checkbox" bind:checked={agreed} />          <!-- ⚠️ 不是 bind:value! -->
 <label class:error={touched && !agreed}>需勾选同意</label>
 
-<input type="file" bind:files={files} />                 <!-- FileList -->
+<input type="file" bind:files={files} />                 <!-- ✅ FileList -->
+<!-- ❌ 单个布尔复选框错用 bind:value={agreed}（而非 bind:checked）→ 勾选不会把 agreed 变 true -->
 ```
 
 三个高频口误：单框布尔用 **`bind:checked`**；多框/多选用 **`bind:group`**（配 `value`）；`name` 在 group 模式下仍建议写（原生语义/无障碍）。
@@ -66,16 +70,18 @@
 ```svelte
 <!-- PriceInput.svelte -->
 <script>
-  let { value = $bindable(0) } = $props();
+  // 目的：自定义输入组件用 $bindable—一个声明即允许父用 bind:
+  let { value = $bindable(0) } = $props();   // ✅ 标为可双向，父才能 bind:value
 </script>
 <div class="price">
-  ￥<input type="number" bind:value />
+  ￥<input type="number" bind:value />   {/* ✅ shorthand：bind:value 绑到同名 prop value */}
 </div>
 ```
 
 ```svelte
 <!-- 父 -->
-<PriceInput bind:value={total} />
+<!-- 目的：父 bind:value 到子组件的 $bindable prop—输入变化回写 total -->
+<PriceInput bind:value={total} />   {/* ✅ 无需手写回调，子组件改动直接同步 total */}
 <p>总价 {total}</p>
 ```
 
@@ -89,12 +95,13 @@
 
 ```svelte
 <script>
+  // 目的：受控提交—每字段都有 $state，提交直接读变量，适合字段联动/实时校验
   let email = $state('');
   let pwd = $state('');
-  const valid = $derived(/@\S+/.test(email) && pwd.length >= 8);
+  const valid = $derived(/@\S+/.test(email) && pwd.length >= 8);   // ✅ 派生实时算合法性
   async function onsubmit(e) {
-    e.preventDefault();   // 或改写 on:submit|preventDefault={fn}(见 svelte-events 修饰符)
-    if (!valid) return;
+    e.preventDefault();   // ✅ 阻止默认刷新（或改写 on:submit|preventDefault）
+    if (!valid) return;   // ✅ 不合法直接不提交
     await api.signup({ email, pwd });
   }
 </script>
@@ -105,16 +112,18 @@
 
 ```svelte
 <script>
+  // 目的：非受控提交—不绑变量，提交时用 FormData 一把抓，零状态开销
   function onsubmit(e) {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const obj = Object.fromEntries(data);     // { username: '...', role: 'admin' }
+    const data = new FormData(e.currentTarget);   // ✅ currentTarget 即 form 元素
+    const obj = Object.fromEntries(data);     // ✅ 转普通对象 { username: '...', role: 'admin' }
   }
 </script>
 <form {onsubmit}>
-  <input name="username" required />
+  <input name="username" required />   {/* ✅ 靠 name 而非变量，交给原生校验 */}
   <select name="role"><option>admin</option><option>user</option></select>
 </form>
+<!-- ❌ 非受控忘了写 name → FormData 里无此字段键，obj 拿到 undefined -->
 ```
 
 提交时最常用的是 `e.currentTarget`(即 form 元素);需要长期持有引用就 `bind:this={formEl}`(呼应 svelte-template 第六节)。生产项目里两者常混用：联动字段绑定、其余交给 FormData。
@@ -128,9 +137,11 @@
 - 无障碍三件套：错误文案 `aria-describedby` 关联输入、`aria-invalid={!!errors.email}`、提交后焦点跳到第一个错误字段。
 
 ```svelte
+<!-- 目的：自定义校验＋无障碍—blur 时机跑规则，错误文案用 aria 关联输入 -->
 <input name="email" bind:value={email} onblur={checkEmail}
-       aria-invalid={!!errors.email} aria-describedby="email-err" />
-{#if errors.email}<span id="email-err">{errors.email}</span>{/if}
+       aria-invalid={!!errors.email} aria-describedby="email-err" />   {/* ✅ 标错字段供读屏器播报 */}
+{#if errors.email}<span id="email-err">{errors.email}</span>{/if}   {/* ✅ id 与 describedby 对应 */}
+<!-- ❌ 只用红框不配 aria-describedby/invalid → 读屏用户听不到错在哪，无障碍不过关 -->
 ```
 
 ---

@@ -30,15 +30,18 @@
 ## 二、分享：两条线，别忘了新页面
 
 ```js
+// 目的：定义分享卡片（标题/路径/图）——被分享者冷启动直落 path，该页必须自治自拉数据
 // ① 转发给好友/群（右上角菜单或页面内 button open-type="share"）
 Page({
   onShareAppMessage() {
-    return { title: '限时五折', path: '/pages/goods/goods?id=42', imageUrl: '/img/share.png' };
+    return { title: '限时五折', path: '/pages/goods/goods?id=42', imageUrl: '/img/share.png' };   // ✅ 带参打开指页
     // 群场景可带 promise 选项做"分享后解锁"？——诱导分享违规，别打这主意（呼应 mp-interaction 面试10）
   },
   // ② 分享到朋友圈（基础库 2.17.3+，需页面允许）
   onShareTimeline() { return { title: '会场', query: 'id=42' }; },
 });
+// ❌ 未定义 onShareAppMessage → 右上角转发按钮是灰的
+// ❌ 分享目标页依赖"上一跳页面内存"而非自拉数据 → 别人点开白屏（页面不自治）
 ```
 
 - 分享的本质是**带参数打开指定页面**——被分享者冷启动直接落在 path 上：该页必须**自治**（自己拉数据，不能依赖"上一跳页面内存"，呼应 mp-communication 面试 12）；onLoad 的 query 要防御性校验（分享链接可被转发无数手）；
@@ -67,11 +70,13 @@ Page({
 小程序没有"推送自由"——**模板订阅消息**是唯一官方触达通道：
 
 ```js
+// 目的：订阅消息是官方唯一触达通道——必须在用户主动行为里申请（量=用户授权次数）
 // 端：在用户主动行为里申请（点击按钮时调，别在 onLoad 裸申请）
 wx.requestSubscribeMessage({
   tmplIds: ['TEMPLATE_ID_xxx'],   // 后台"订阅消息"里挑模板，字段严格对位
   success(res) { /* 逐模板 accepted/rejected/ban 状态 */ },
 });
+// ❌ 在 onLoad 裸申请（非用户主动行为）→ 被拒/违规；诱导弹窗轰炸拉低转化
 ```
 
 ```js

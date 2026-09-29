@@ -9,15 +9,17 @@
 snippet = **编译期的模板函数**。声明它不会渲染任何东西，只有 `{@render}` 才实例化一份：
 
 ```svelte
+{/* 目的：snippet=编译期模板函数—声明不渲染任何东西，只有 {@render} 才实例化一份 */}
 {#snippet row(item)}
-  <li>{item.name} — ￥{item.price}</li>
+  <li>{item.name} — ￥{item.price}</li>   {/* ✅ 声明一段可复用模板，带形参 item */}
 {/snippet}
 
 <ul>
   {#each items as item}
-    {@render row(item)}
+    {@render row(item)}   {/* ✅ 在这里才实例化渲染，可多次调用各自独立 */}
   {/each}
 </ul>
+<!-- ❌ 只声明 {#snippet row} 不写 {@render row(..)} → 页面上什么都不会输出 -->
 ```
 
 - 参数支持默认值与解构：`{#snippet row({ name, price = 0 })}`。
@@ -33,19 +35,22 @@ snippet = **编译期的模板函数**。声明它不会渲染任何东西，只
 ```svelte
 <!-- Card.svelte -->
 <script>
+  // 目的：children 默认就是一个 snippet prop—标签包进去的内容作为 children 传入
   let { title, children } = $props();
 </script>
 <section class="card">
   <h3>{title}</h3>
-  {@render children?.()}
+  {@render children?.()}   {/* ✅ ?. 兼容父未传内容的情况 */}
 </section>
 ```
 
 ```svelte
 <!-- 父组件 -->
+<!-- 目的：父写任意内容“包”进标签，即为子组件的 children -->
 <Card title="公告">
-  <p>这段 <b>任意内容</b> 就是 children</p>
+  <p>这段 <b>任意内容</b> 就是 children</p>   {/* ✅ 等价 Vue 默认插槽 / React children */}
 </Card>
+<!-- ❌ 子组件里直接写 {children} 而非 {@render children?.()} → 抛错：children 是 snippet 需调用才渲染 -->
 ```
 
 - 这就是 Vue **默认插槽**、React `children` 的对应物。
@@ -60,19 +65,21 @@ Vue 用具名插槽 `<slot name="header">`；Svelte 5 的做法是**声明多个
 ```svelte
 <!-- Layout.svelte -->
 <script>
+  // 目的：具名 snippet—声明多个 snippet prop 做内容分发，取代 Vue 具名插槽
   let { header, sidebar, children } = $props();
 </script>
-<header>{@render header?.()}</header>
+<header>{@render header?.()}</header>   {/* ✅ header 未传则 ?. 不渲染 */}
 <aside>{@render sidebar?.()}</aside>
-<main>{@render children()}</main>
+<main>{@render children()}</main>   {/* ✅ children 必传，直接调用 */}
 ```
 
 ```svelte
 <!-- 父组件 -->
+<!-- 目的：父在标签内就近定义 {#snippet xxx}，名字对上子声明的 prop -->
 <Layout>
-  {#snippet header()}<h1>站点标题</h1>{/snippet}
-  {#snippet sidebar()}<nav>菜单</nav>{/snippet}
-  <p>主体内容（children）</p>
+  {#snippet header()}<h1>站点标题</h1>{/snippet}   {/* ✅ 对应 header prop */}
+  {#snippet sidebar()}<nav>菜单</nav>{/snippet}   {/* ✅ 对应 sidebar prop */}
+  <p>主体内容（children）</p>   {/* ✅ 未包在 snippet 里的内容归 children */}
 </Layout>
 ```
 
@@ -87,13 +94,14 @@ Vue 作用域插槽 `<slot :item="x">`；Svelte 5 里 snippet **本来就能带�
 ```svelte
 <!-- Table.svelte -->
 <script>
+  // 目的：作用域 snippet—snippet 本就能带参，子在合适位置带合适数据 {@render} 它
   let { rows, cols, cell } = $props();
 </script>
 <table>
   {#each rows as row}
     <tr>
       {#each cols as col}
-        <td>{@render cell(row, col)}</td>
+        <td>{@render cell(row, col)}</td>   {/* ✅ 把 row/col 作用域数据回传给父的 snippet */}
       {/each}
     </tr>
   {/each}
@@ -102,9 +110,10 @@ Vue 作用域插槽 `<slot :item="x">`；Svelte 5 里 snippet **本来就能带�
 
 ```svelte
 <!-- 父：自定义每个单元格怎么画，拿到 row/col 作用域数据 -->
+<!-- 目的：带参 snippet 覆盖 React render props 场景，写法仍是模板、编译期优化 -->
 <Table {rows}>
   {#snippet cell(row, col)}
-    <b>{row[col.key]}</b>
+    <b>{row[col.key]}</b>   {/* ✅ row/col 由子组件 {@render cell(row,col)} 时传入 */}
   {/snippet}
 </Table>
 ```

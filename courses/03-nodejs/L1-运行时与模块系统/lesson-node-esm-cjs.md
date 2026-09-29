@@ -24,6 +24,7 @@
 ## 二、语法与"身份"的硬差异
 
 ```js
+// 目的：同一件事在两套系统里的写法对照（注意：下面 ESM/CJS 两段不能共处同一文件）
 // ESM
 import fs from "node:fs";              // 默认导入
 import { readFile } from "node:fs/promises";
@@ -55,11 +56,12 @@ module.exports = { x: 1 };
 ESM 的 `import`/`export` 是**声明**、必须在**顶层**、必须**静态可分析**。好处正是 tree-shaking 与并行预解析（呼应 node-modules 第 9 题、10-vite）。需要"条件加载"时，用**动态 `import()`**（它返回 Promise、可在任意处调用）：
 
 ```js
-// ✗ 语法错误
+// 目的：需要"条件加载"时不能用静态 import，改用动态 import()（返回 Promise）
+// ✗ 语法错误（import 是声明，必须在顶层、不能裹进 if）
 // if (dev) import { logger } from './dev-logger';
 
 // ✓ 用动态 import（ESM 与 CJS 里都可用！）
-const { logger } = await import(dev ? "./dev-logger" : "./prod-logger");
+const { logger } = await import(dev ? "./dev-logger" : "./prod-logger");  // 按条件加载其中一个模块
 ```
 
 动态 `import()` 是**两套系统唯一都支持**的异步加载入口，也是"延迟加载重依赖优化冷启动"的正解（呼应 node-modules 第 8 题）。
@@ -69,9 +71,10 @@ const { logger } = await import(dev ? "./dev-logger" : "./prod-logger");
 ## 四、顶层 await：只在 ESM 有
 
 ```js
-// ESM 模块顶层，直接 await，无需包 async 函数
-const db = await createPool(process.env.DSN);   // ✓
+// 目的：ESM 模块顶层可直接 await（CJS 不行）——初始化异步资源时不再造 IIFE
+const db = await createPool(process.env.DSN);   // ✓ 顶层 await，等连接池就绪再往下
 export default db;
+// ❌ 若本文件是 .cjs：SyntaxError: await is only supported ...（CJS 同步加载不支持顶层 await）
 ```
 
 意义：初始化依赖异步资源（读配置、连库）时不必再造 `(async()=>{})()`。代价：含顶层 await 的模块会让其**导入方也变异步**（阻塞依赖图解析），且**不能**在 CJS 里用（CJS 同步加载，`require` 一个含顶层 await 的 ESM 会报错）。
@@ -83,8 +86,9 @@ export default db;
 在 `"type":"module"` 下：
 
 ```js
+// 目的：type:module 下 ESM 不做扩展名猜测，相对路径必须写全
 import utils from "./utils";       // ✗ ERR_MODULE_NOT_FOUND —— 不会自动补 .js！
-import utils from "./utils.js";    // ✓ 必须写全（指向源码文件名，不是编译产物）
+import utils2 from "./utils.js";    // ✓ 必须写全（指向源码文件名，不是编译产物）
 ```
 
 CJS 的 `require` 会自动尝试 `.js/.json/.node`（呼应 node-modules 第 4 题），ESM **不做扩展名猜测**，路径必须精确。这是"项目一切换 `type:module`，几十个 import 全红"的元凶。TS 端开了 `moduleResolution: nodenext/bundler` 时同样有"import 该写 `.js` 还是源文件"的讲究（呼应 ts-modules 第五节、ts-migration 第 5 题）。
@@ -112,8 +116,10 @@ CJS 的 `require` 会自动尝试 `.js/.json/.node`（呼应 node-modules 第 4 
 - **混栈过渡期**：主 ESM、把需要 `require` 的胶水写成 `.cjs`，或用 `createRequire(import.meta.url)` 在 ESM 里造一个 `require`：
 
 ```js
+// 目的：在 ESM 里需要同步 require 一个 CJS-only 依赖时，用 createRequire 造一个 require
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);   // 在 ESM 里获得同步 require 能力（给少数 CJS-only 依赖用）
+const legacy = require("some-cjs-only-pkg");       // ✓ 拿到该包的 module.exports
 ```
 
 ---

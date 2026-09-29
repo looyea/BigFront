@@ -11,8 +11,9 @@
 ## 持久化插件里的 SSR 守卫
 
 ```ts
+// 目的：SSR 安全的持久化插件——用 import.meta.client 守卫，只在浏览器读写 localStorage
 export function persistPlugin({ store }) {
-  // 只在客户端恢复
+  // 只在客户端恢复（服务端无 localStorage）
   if (import.meta.client) {
     const saved = localStorage.getItem(`pinia_${store.$id}`);
     if (saved) store.$patch(JSON.parse(saved));
@@ -25,6 +26,8 @@ export function persistPlugin({ store }) {
     }
   }, { detached: true });
 }
+// ✅ import.meta.client 分支服务端不执行→服务端无 localStorage 也不崩
+// ❌ 不守卫直接读 localStorage→SSR 报 ReferenceError: localStorage is not defined，服务端渲染失败
 ```
 
 服务端无 localStorage——不加守卫则 SSR 崩溃。
@@ -38,11 +41,14 @@ export function persistPlugin({ store }) {
 | 交互后按需加载 | store action（CSR only） |
 
 ```ts
+// 目的：Nuxt 全局插件里 await 首屏数据——服务端就拉好并注入 state，随 HTML 水合
 // plugins/auth.ts（Nuxt plugin 里 await）
 export default defineNuxtPlugin(async () => {
   const auth = useAuthStore();
-  await auth.fetchProfile(); // 服务端就执行，数据注入 state 再水合
+  await auth.fetchProfile(); // 服务端就执行，数据注入 state 再水合（首屏 HTML 即含用户信息）
 });
+// ✅ 服务端 await 完再渲染，SEO/首屏直接带数据，客户端水合不重拉
+// ❌ 不 await 直接发→插件未等请求完成就继续，服务端拿到 pending Promise，水合时数据缺失闪烁
 ```
 
 ## 避免双重请求
@@ -51,10 +57,13 @@ SSR 里 action 执行了一次 → HTML 注入 state → 客户端水合恢复 s
 
 解法：action 里加缓存判断：
 ```ts
+// 目的：防 SSR 双请求——action 里判缓存，水合恢复的数据不重拉
 async function fetchProfile() {
   if (user.value) return; // 已有数据（水合恢复的），跳过
-  user.value = await $fetch('/api/me');
+  user.value = await $fetch('/api/me');   // 仅真空时发请求
 }
+// ✅ 服务端取过一次、水合把 user 填上→客户端再调 fetchProfile 命中缓存直接返回，不发第二遍
+// ❌ 不加 if (user.value) return→SSR 一次、onMounted 又一次，同一数据请求两遍（双请求浪费）
 ```
 
 ## store 里用 $fetch 还是 axios？

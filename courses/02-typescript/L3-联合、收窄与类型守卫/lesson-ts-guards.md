@@ -44,6 +44,9 @@ function use<T>(r: Result<T>) {
     console.log(r.error);        // ✓ 收窄到 Failure，有 error
   }
 }
+use<number>({ ok: true, data: 42 });    // => 42（走 Success 分支）
+use<number>({ ok: false, error: "boom" }); // => boom（走 Failure 分支）
+// use({ ok: true });                     // ❌ Success 缺 data
 ```
 
 ---
@@ -134,6 +137,8 @@ type StateKey = keyof typeof STATES;      // 'idle'|'loading'|'error'
 function stepOf(k: StateKey): number {
   return STATES[k].step;                  // 返回类型是精确的 0|1|2
 }
+stepOf("loading");   // => 1
+// stepOf("done");   // ❌ "done" 不属于 StateKey（无此状态）
 ```
 
 没有 `as const`，`step` 会被推成宽类型 `number`，`StateKey` 也可能退化——精度全靠 `as const` 守住（呼应 ts-object-types、ts-basics）。

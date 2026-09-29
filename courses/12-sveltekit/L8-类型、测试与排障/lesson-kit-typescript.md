@@ -8,8 +8,10 @@
 
 ```js
 // src/routes/[foo]/[bar]/[baz]/+server.js
+// 目的：手写 Params 泛型的反面样本—把每个动态段抄进类型，改目录名即漂移
 /** @type {import('@sveltejs/kit').RequestHandler<{ foo: string; bar: string; baz: string }>} */
 export async function GET({ params }) { /* ... */ }
+// ❌ 把 [foo] 目录改名 [qux] 却忘了改上面泛型 → params.qux 报不存在、TS 一脸无辜（副本与真相源脱节）
 ```
 
 两个致命缺点，官方原话点破：**写起来繁琐**（每个动态段都要手抄进类型），且**不便携**——把 `[foo]` 目录改名成 `[qux]`，类型就与现实脱节了，TS 还一脸无辜。路由结构是"真相源"，手写泛型是"抄一份副本"，副本必然漂移。
@@ -19,8 +21,10 @@ export async function GET({ params }) { /* ... */ }
 SvelteKit 的解法是**为每个端点/页面生成 `.d.ts`**。构建/`vite dev` 期，在 `.svelte-kit/types/src/routes/[foo]/[bar]/[baz]/$types.d.ts` 产出：
 
 ```ts
-type RouteParams = { foo: string; bar: string; baz: string };
-export type RequestHandler = Kit.RequestHandler<RouteParams>;
+// .svelte-kit/types/src/routes/[foo]/[bar]/[baz]/$types.d.ts（构建/vite dev 期自动生成，勿手改）
+// 目的：类型从路由树长出来—RouteParams 由目录里的 [段] 名字推导，再灌进各处理器类型别名
+type RouteParams = { foo: string; bar: string; baz: string };   // ✅ 动态段名自动收成 key，值恒为 string
+export type RequestHandler = Kit.RequestHandler<RouteParams>;   // ✅ 端点用它就不必再手写泛型
 export type PageLoad = Kit.Load<RouteParams>;
 // 还有 PageData / LayoutData / ActionData / PageProps / ...
 ```
@@ -28,9 +32,11 @@ export type PageLoad = Kit.Load<RouteParams>;
 于是源码里只需 `import` 同级的 `./$types`，`params` 自动带上收窄：
 
 ```js
+// 目的：源码只 import 同级虚拟模块 ./$types，params 自动带收窄—目录改名重新生成就跟上
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params }) {
-  params.foo; // string，且编译器知道只有 foo/bar/baz
+  params.foo; // ✅ string，且编译器知道只有 foo/bar/baz 三个 key
+  // ❌ 取 params.qux → 路由无此段，编译直接报 "Property 'qux' does not exist"（正是手写泛型给不出的守护）
 }
 ```
 
@@ -41,10 +47,12 @@ export async function GET({ params }) {
 `./$types` 并不真实存在于 `src/routes/.../` 目录里——它映射到 `.svelte-kit/types/src/routes/.../$types.d.ts`。这靠的是生成的 tsconfig 里两行：
 
 ```jsonc
+// 目的：./$types 能当兄弟模块 import 全靠这两行（生成 tsconfig 里的，勿删）
 "compilerOptions": {
-  "paths": { "$lib": ["../src/lib"], "$lib/*": ["../src/lib/*"] },
-  "rootDirs": ["..", "./types"]   // 关键
+  "paths": { "$lib": ["../src/lib"], "$lib/*": ["../src/lib/*"] },   // ✅ $lib 别名解析，与 rootDirs 无关
+  "rootDirs": ["..", "./types"]   // ✅ 关键：把 src/routes/... 与 .svelte-kit/types/src/routes/... 视作同一虚拟目录，import('./$types') 才命中
 }
+// ❌ 自己的 tsconfig.json 不 extends ./.svelte-kit/tsconfig.json → rootDirs/paths 缺失，./$types 红一片
 ```
 
 `rootDirs` 让 TS 把 `src/routes/...` 与 `.svelte-kit/types/src/routes/...` **视作同一虚拟目录**，于是 `import('./$types')` 命中生成的那份。前提：**你自己的 `tsconfig.json`/`jsconfig.json` 必须 `extends` 生成的 `./.svelte-kit/tsconfig.json`**。不继承，`rootDirs`/`paths` 缺失，`./$types` 就红一片。
@@ -64,8 +72,10 @@ export async function GET({ params }) {
 
 ```svelte
 <script lang="ts">
+  // 目的：2.16+ 的 PageProps 一把包住 data+form—组件 props 的整体形状
   import type { PageProps } from './$types';
-  let { data, form }: PageProps = $props();
+  let { data, form }: PageProps = $props();   // ✅ data 对上 PageData、form 对上 ActionData，load 改返回结构这里立刻红
+  // ❌ 还手写 { data: PageData; form: ActionData } 拼形状 → 2.16 前的样板，PageProps 已代劳
 </script>
 ```
 
@@ -76,16 +86,19 @@ export async function GET({ params }) {
 `./$types` 管的是"单路由局部"，跨全站共享的类型放 `src/app.d.ts` 的 `App` 命名空间（ambient，无需 import）：
 
 ```ts
+// src/app.d.ts
+// 目的：跨全站共享的类型放 App 命名空间（ambient，无需 import）—locals/error/PageData 等在此定型
 declare global {
   namespace App {
-    interface Error {}      // 错误体形状（L4：+error.svelte / handleError）
-    interface Locals {}     // event.locals（L5 鉴权：塞 user 在此定型）
-    interface PageData {}   // 跨所有页共享的 data（如全局 me/lang）
-    interface PageState {}  // goto/pushState 传的 page.state
-    interface Platform {}   // adapter 注入的 event.platform（如 Cloudflare env）
+    interface Error {}      // ✅ 错误体形状（L4：+error.svelte / handleError 读它）
+    interface Locals {}     // ✅ event.locals（L5 鉴权把 user 写进来，全站 event.locals.user 就带类型）
+    interface PageData {}   // ✅ 跨所有页共享的 data（如全局 me/lang）
+    interface PageState {}  // ✅ goto/pushState 传的 page.state 形状
+    interface Platform {}   // ✅ adapter 注入的 event.platform（如 Cloudflare env）
   }
 }
-export {};
+export {};   // ✅ 必须有：否则此文件被当脚本而非模块，无法再写 import
+// ❌ App.PageData 加索引签名 [key: string]: any → 击穿所有 data 的收窄，端到端类型形同废纸
 ```
 
 - 填了这些接口，`event.locals.user`、`event.platform.env` 等才**有类型**——L5 鉴权把 `locals.user` 写进 `App.Locals`，全站 load/handle 就能 `event.locals.user` 带类型取用。

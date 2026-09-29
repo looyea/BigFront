@@ -7,10 +7,12 @@
 ## 一、`<Link>`：会预测人心的 a 标签
 
 ```tsx
+// 目的：Link 渲染成一个真正的 <a>，但额外自带预取与渐进增强
 import Link from 'next/link';
 
 <Link href="/blog/hello">看这篇文章</Link>
-// 渲染结果就是 <a href="/blog/hello"> —— SEO 与右键新开全都天然正常
+// ✅ 渲染结果就是 <a href="/blog/hello"> —— SEO 与右键新开全都天然正常
+// ❌ 用 <a href="/blog/hello"> 直接跳 → 丢失预取（无 RSC Payload 预热），且全站跳转无统一拦截点
 ```
 
 三个内置行为：
@@ -20,8 +22,9 @@ import Link from 'next/link';
 3. **悬停/进视口双通道**：默认 `prefetch` 在"能静态预取"的页生效，动态页则靠 visible 时预取缓存片段。
 
 ```tsx
-<Link href="/admin" prefetch={false}>后台</Link>   // 关掉预取：低频/昂贵页
-<Link href="/blog/[id]" as={`/blog/${id}`}>…</Link> // 动态段拼接（或直接模板字符串）
+// 目的：按页控制预取开关 + 动态段拼接
+<Link href="/admin" prefetch={false}>后台</Link>   // ✅ 关掉预取：低频/昂贵页，避免无谓请求风暴
+<Link href="/blog/[id]" as={`/blog/${id}`}>…</Link> // ✅ 动态段拼接（或直接模板字符串）
 ```
 
 代价意识：预取=多发请求。列表页 200 条链接全在视口边缘反复进出时，预取风暴会打爆接口——**能关则关、该限则限**（呼应 mp-setdata 的"广播有成本"、react-performance 的"优化是有账单的"）。
@@ -33,15 +36,17 @@ import Link from 'next/link';
 旧 `next/router`（Pages 时代）一个大对象包打天下；App Router 拆成按需引入：
 
 ```tsx
-'use client';
+// 目的：App Router 把旧 useRouter 大对象拆成按需引入的三个小钩子（均为客户端钩子）
+'use client';   // ✅ 这三个钩子依赖浏览器环境，必须标记为客户端组件
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 function Toolbar() {
-  const router = useRouter();        // push / replace / back / forward / refresh / prefetch
-  const pathname = usePathname();    // '/shop/cart'（字符串，不是 route 对象）
-  const searchParams = useSearchParams();  // URLSearchParams 实例
+  const router = useRouter();        // ✅ push / replace / back / forward / refresh / prefetch
+  const pathname = usePathname();    // ✅ '/shop/cart'（字符串，不是 route 对象）
+  const searchParams = useSearchParams();  // ✅ URLSearchParams 实例
   ...
 }
+// ❌ 在服务端组件里调 useRouter() → 报错 "useRouter only works in the Client-side Environment when Rendering"
 ```
 
 | 旧用法（Pages） | 新用法（App） | 备注 |
@@ -58,15 +63,17 @@ function Toolbar() {
 ## 三、命令式重定向：服务端用 redirect()
 
 ```tsx
+// 目的：服务端组件里做鉴权跳转，用 redirect() 而非客户端 push——避免白屏闪烁
 // app/profile/page.tsx —— 服务端组件
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 
 export default async function Profile() {
   const session = await getSession();
-  if (!session) redirect('/login');      // ← 服务端直接发 307，页面根本不渲染
+  if (!session) redirect('/login');      // ✅ 抛特殊错误中断渲染、直接发 307，页面根本不渲染
   return <UserInfo user={session.user} />;
 }
+// ❌ 在服务端组件里用 const router = useRouter(); router.push('/login') → 报“客户端钩子不可用于服务端”；即使用于客户端也先渲染一轮登录页骨架，多一次白屏
 ```
 
 - 服务端 `redirect()`：抛特殊错误中断渲染、返回 3xx——**比客户端 `router.push('/login') + return null` 少一次白屏闪烁**（先渲染登录页骨架再跳的历史 bug 在 Next 用这招根除，呼应 react-router-basics 的 Navigate 讨论）；
@@ -78,11 +85,12 @@ export default async function Profile() {
 ## 四、useSearchParams 的水合暗坑
 
 ```tsx
-// ❌ 首版就按 searchParams 渲染 → SSR 时它是空的，水合不一致
+// 目的：展示 useSearchParams 的水合暗坑——首轮 SSR 时 query 为空，与客户端不一致
 function List() {
   const sp = useSearchParams();
-  return <div>{sp.get('q') ?? '默认'}</div>;
+  return <div>{sp.get('q') ?? '默认'}</div>;   // ❌ 服务端预渲染时 sp 为空→渲染“默认”，客户端有 q→水合对账失败
 }
+// ✅ 修法一：<Suspense> 包住此组件，让这段延迟到客户端补齐；✅ 修法二：服务端组件直接收 searchParams prop（async）传下去渲染
 ```
 
 规则：`useSearchParams` 只在客户端有意义。页面若在构建/服务端被预渲染，此刻 query 是空的——**首轮服务端 HTML 与客户端首轮结果不同**。两种正解：
@@ -94,8 +102,10 @@ function List() {
 ## 五、router.refresh / prefetch 两个"知道但少用"的按钮
 
 ```tsx
-button onClick={() => router.refresh()}   // 重新拉当前页 RSC Payload：Server Action 后同步 UI 的原始手段
-await router.prefetch('/next-step')       // 手动预取：适合"下一步几乎必然发生"（表单最后一页预取成功页）
+// 目的：两个知道但少用的按钮——refresh 重拉服务端数据、prefetch 手动预热
+button onClick={() => router.refresh()}   // ✅ 重新拉当前页 RSC Payload：Server Action 后同步 UI 的原始手段
+await router.prefetch('/next-step')       // ✅ 手动预取：适合“下一步几乎必然发生”（表单最后一页预取成功页）
+// ❌ 把 refresh 当 F5：它不重跑客户端 effect、不清状态，想清客户端状态得另想办法
 ```
 
 `refresh` 只刷新**服务端数据**，不重跑客户端 effect、不清状态——与 F5 是两回事（对比 mp-network 里"重新请求≠重新加载页面"的层次区分）。L5 学完 `revalidatePath` 后，refresh 的出场率会进一步下降。

@@ -21,11 +21,14 @@
 ## 二、`{{}}` 插值：唯一的"数据入口"
 
 ```wxml
+<!-- 目的：{{}} 是视图唯一的数据入口——支持表达式、默认转义防 XSS、但不能调 js 方法 -->
 <!-- data: { greeting: '你好', name: '大前端', raw: '<b>粗?</b>', n: 3 } -->
 <view>{{ greeting }}, {{ name }}!</view>   <!-- 你好, 大前端! -->
-<view>{{ n + 1 }}</view>                    <!-- 4：支持表达式 -->
-<view>{{ n > 2 ? '大' : '小' }}</view>      <!-- 三元可用 -->
-<view>{{ raw }}</view>                      <!-- 转义输出 <b>粗?</b>，不会变粗体 -->
+<view>{{ n + 1 }}</view>                    <!-- 4：✅ 支持表达式 -->
+<view>{{ n > 2 ? '大' : '小' }}</view>      <!-- 大：三元可用 -->
+<view>{{ raw }}</view>                      <!-- 转义输出 <b>粗?</b>，不会变粗体（天然防 XSS） -->
+<!-- ❌ <view>{{ fmt(name) }}</view> → WXML 不能调逻辑层方法，渲染为空/报错（要么 setData 前算好，要么用 wxs） -->
+<!-- ❌ <{{tag}}/> 动态标签名 → 非法（{{}} 不能出现在标签名/节点类型上） -->
 ```
 
 关键规则：
@@ -42,10 +45,13 @@
 ## 三、属性与事件绑定：方言速查
 
 ```wxml
+<!-- 目的：属性用 {{}} 插值、事件用 bind事件名="方法名字符串"（非函数引用） -->
 <image src="{{ avatarUrl }}" mode="aspectFill" />
-<view class="box {{ active ? 'box--on' : '' }}">条件类名</view>
+<view class="box {{ active ? 'box--on' : '' }}">条件类名</view>   <!-- 动态类名只能字符串拼 -->
 <input value="{{ keyword }}" bindinput="onInput" />
-<button bindtap="onTap" data-id="{{ item.id }}">点我</button>
+<button bindtap="onTap" data-id="{{ item.id }}">点我</button>   <!-- ✅ e.currentTarget.dataset.id 在 onTap 里取 -->
+<!-- ❌ bindtap="onTap" 但逻辑层无 onTap → 点了没反应，仅静默警告（新手头号坑） -->
+<!-- ❌ 把事件值写成函数/带括号 bindtap="{{onTap}}" → 小程序要的是方法名字符串 -->
 ```
 
 | 需求 | WXML 写法 | Vue 写法 | React 写法 |
@@ -64,6 +70,7 @@
 ## 四、`<block>` 与 `<template>`：分组与复用
 
 ```wxml
+<!-- 目的：block 做无容器的分组括号；template 做视图片段复用（只结构、无逻辑与状态） -->
 <!-- block：不渲染任何节点的"分组括号"，配合 wx:for/wx:if -->
 <block wx:if="{{ logged }}">
   <view>欢迎 {{ nickName }}</view>
@@ -74,7 +81,8 @@
 <template name="userCard">
   <view class="card">{{ name }} / {{ level }}</view>
 </template>
-<template is="userCard" data="{{ ...userInfo }}" />
+<template is="userCard" data="{{ ...userInfo }}" />   <!-- ✅ 展开 userInfo 各字段供模板取 name/level -->
+<!-- ❌ <template is> 写错 name → 不渲染；template 里想调 js 方法 → 不支持（要逻辑请用自定义组件） -->
 ```
 
 - `<block>` 对标 Vue 的 `<template v-if>`（无容器包裹多个兄弟节点的场景）；
@@ -87,15 +95,18 @@
 WXML 不能调 js 方法，那"价格分转元"这种小格式化怎么办？——**wxs**：跑在**渲染层**的受限脚本语言。
 
 ```wxml
+<!-- 目的：wxs 跑在渲染层，用于纯展示格式化（如分转元），弥补 WXML 不能调 js 方法 -->
 <wxs module="fmt">
 module.exports.yuan = function (fen) {
-  return (fen / 100).toFixed(2) + '元'
+  return (fen / 100).toFixed(2) + '元'   // ES5 子集：用 function，无箭头/let/const
 }
 </wxs>
-<text>{{ fmt.yuan(price) }}</text>
+<text>{{ fmt.yuan(price) }}</text>        <!-- ✅ price=1990 → "19.90元"，不占 setData -->
 
 <!-- 也可以放独立 .wxs 文件 -->
 <wxs src="../../utils/fmt.wxs" module="fmt" />
+<!-- ❌ wxs 里调用 Page 的方法/引入逻辑层 js → 报错（渲染层与逻辑层两个世界互不相通） -->
+<!-- ❌ wxs 里写 let/=>/新 API → 语法报错（它是 ES5 子集） -->
 ```
 
 wxs 的三条"铁律"（全部源于它工作在渲染层）：

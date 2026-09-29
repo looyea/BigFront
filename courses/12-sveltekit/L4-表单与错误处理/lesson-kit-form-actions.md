@@ -12,24 +12,27 @@ SvelteKit 的 Form Actions 把"提交数据给服务端"降级回 HTML 原语：
 
 ```ts
 // src/routes/login/+page.server.js
+// 目的：具名 action 全链路—FormData 进、fail() 出、成功设 cookie，零 JS 也能提交
 import * as db from '$lib/server/db';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
 export const actions = {
   login: async ({ cookies, request, url }) => {
-    const data = await request.formData();
+    const data = await request.formData();          // ✅ 原生 FormData，字段靠 input 的 name 寻址
     const email = data.get('email');
     const user = await db.getUser(email);
-    if (!user) return fail(400, { email, missing: true });
-    cookies.set('sessionid', await db.createSession(user), { path: '/' });
+    if (!user) return fail(400, { email, missing: true });   // ✅ 4xx+回显值→页面 form prop 拿到 {email,missing}，输入框预填 email
+    cookies.set('sessionid', await db.createSession(user), { path: '/' });   // ✅ 种会话 cookie（path 不写默认 '/'，漏写则换页读不到）
     if (url.searchParams.has('redirectTo')) {
-      redirect(303, url.searchParams.get('redirectTo'));
+      redirect(303, url.searchParams.get('redirectTo'));   // ✅ 303 专用于 POST 后转 GET，防刷新重提交
     }
-    return { success: true };
+    return { success: true };                        // ✅ 普通对象→form.success，模板显欢迎语（刷新即消失，短暂性）
   },
   register: async (event) => { /* TODO */ }
 } satisfies Actions;
+// ❌ 登出 action 只 cookies.delete 不置 event.locals.user = null → handle 不为提交后的 load 重跑，本次响应链里 locals 还是旧登录态
+// ❌ 同目录再写 default action 与 login 具名并存 → POST 后 ?/register 残留 URL，后续 default 提交被残留参数劫持
 ```
 
 调用语法四条：
@@ -59,11 +62,14 @@ export const actions = {
 
 ```svelte
 <script>
+  // 目的：use:enhance 接管原生提交—去掉整页刷新，保留六件默认事
   import { enhance } from '$app/forms';
-  let { form } = $props();
+  let { form } = $props();   // ✅ action 返回值在这回显（form?.success 等）
 </script>
 
-<form method="POST" use:enhance>...</form>
+<form method="POST" use:enhance>...</form>   {/* ✅ 无 JS 时照样是原生 POST——渐进增强：先能用，再变爽 */}
+<!-- ❌ 挂在 method="GET" 表单或指向 +server.js 端点 → use:enhance 直接报错（它只认 POST + 本页 actions） -->
+<!-- ❌ 自定义回调里 return 函数后以为默认行为还在 → 提供回调即覆盖六件套，要找回需在回调里调 update()/applyAction(result) -->
 ```
 
 限制先行：`use:enhance` **只认 method="POST" 且目标是 +page.server.js 的 actions**——挂在 GET 表单或指向 +server.js 端点上会直接报错（官方原话）。无参调用时它模拟浏览器原生行为、但去掉整页刷新，做六件事：

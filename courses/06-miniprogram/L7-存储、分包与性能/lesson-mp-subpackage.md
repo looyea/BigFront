@@ -19,6 +19,7 @@ dist/
 - tabBar 页必须在主包（mp-tabbar 已论证）；分包**不能引用主包以外其他分包**的代码（可以引主包的）；跨分包共享的东西放主包。
 
 ```json
+// 目的：把代码按"进入时机"切块——主包管启动、分包按需下载（主包/单包≤2M、总包上限30M）
 // app.json
 {
   "pages": ["pages/home/home"],
@@ -28,6 +29,8 @@ dist/
   ]
 }
 // 跳转照常：wx.navigateTo({ url: '/packageA/order/list' })  ← 路径即物理目录
+// ❌ tabBar 页写进 subPackages → 编译即报错（tab 页必在主包）
+// ❌ 分包内相对路径 require 到主包层级算错、或跨分包引用 → 分包页空白/报错
 ```
 
 ---
@@ -41,12 +44,14 @@ dist/
 ### ② 预下载规则（preloadRule）：治"第一次进分包要等"
 
 ```json
+// 目的：preloadRule 进首页后利空闲预下载高频分包，治"第一次进分包要等"
 "preloadRule": {
   "pages/home/home": {                 // 当进入首页（本页空闲时）
     "network": "all",                  // wifi | all（蜂窝也下）
     "packages": ["packageA"]           // 提前偷偷下载
   }
 }
+// ❌ 把低频角落页（设置）也预下载 → 吃满启动后空闲带宽、反而拖慢交互
 ```
 
 策略直觉：首页预下载"高频下一步"（购物车/下单）；低频角落（设置页）不预下载——预下载吃的是**启动后的空闲带宽**，铺太满反而拖慢交互（呼应 vite-splitting 的 prefetch 取舍）。
@@ -54,7 +59,9 @@ dist/
 ### ③ 独立分包（independent）：活动/引流页的快进快出
 
 ```json
+// 目的：独立分包不依赖主包即可运行——扫码/分享直落活动页时只下活动包
 { "root": "packageAct", "independent": true, "pages": ["lottery/index"] }
+// ❌ independent 页里 require 主包 js/用主包组件/getApp() → 行为异常（主包未必在），活动包要自包含
 ```
 
 - **不依赖主包即可运行**：扫码/分享直落活动页时，只下载活动分包；

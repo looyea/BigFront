@@ -7,6 +7,7 @@
 ## 一、API 全景与限额
 
 ```js
+// 目的：Storage 是唯一本地持久仓库（单 key≤1MB/总 10MB、跨启动、可能被清空→读取必容错回源）
 // 异步（官方推荐——同步版会阻塞逻辑层线程）
 wx.setStorage({ key: 'k', data: obj, success, fail, complete });
 wx.getStorage({ key: 'k', success: (res) => res.data });
@@ -15,9 +16,10 @@ wx.getStorageInfo({ success: ({ keys, currentSize, limitSize }) => {} }); // 体
 
 // 同步版：命名是"驼峰带 Sync"
 wx.setStorageSync('k', obj);
-const v = wx.getStorageSync('k');      // 不存在时返回 ''（空字符串，不是 undefined！）
+const v = wx.getStorageSync('k');      // ❌ 不存在时返回 ''（空串不是 undefined）——用 !v 判未命中
 wx.removeStorageSync('k'); wx.clearStorageSync();
 wx.getStorageInfoSync();
+// ❌ 存 Date/函数/循环引用 → 序列化为字符串/丢失，回读类型不一致（跨端通病）
 ```
 
 硬约束清单：
@@ -48,17 +50,18 @@ wx.getStorageInfoSync();
 裸用 `wx.setStorageSync('user', ...)` 三个月后必然遭遇：key 冲突、僵尸数据、无差别清空。上"三件套"：
 
 ```js
+// 目的：给裸 setStorageSync 加"命名空间前缀+TTL过期+启动 sweep"三件套（治 key 冲突/僵尸数据/无差别清空）
 // utils/cache.js
 const NS = 'mp_shop:';                       // ① 命名空间前缀
 const now = () => Date.now();
 
 export function set(key, data, ttlMs = 0) {  // ② 过期策略：0=不过期
-  wx.setStorageSync(NS + key, { v: data, e: ttlMs ? now() + ttlMs : 0 });
+  wx.setStorageSync(NS + key, { v: data, e: ttlMs ? now() + ttlMs : 0 });   // ✅ 包一层 {v,e} 携带过期时间戳
 }
 export function get(key, fallback = null) {
   const raw = wx.getStorageSync(NS + key);
-  if (!raw) return fallback;                 // 注意空串/未命中
-  if (raw.e && raw.e < now()) { wx.removeStorageSync(NS + key); return fallback; }
+  if (!raw) return fallback;                 // 注意空串/未命中（getStorageSync 未命中返回 ''）
+  if (raw.e && raw.e < now()) { wx.removeStorageSync(NS + key); return fallback; }   // ✅ 过期即删并回退
   return raw.v;
 }
 export function sweep() {                    // ③ 容量治理：启动时扫一遍过期 key
@@ -71,6 +74,8 @@ export function sweep() {                    // ③ 容量治理：启动时扫�
   return { total: keys.length, removed };
 }
 export const keys = () => wx.getStorageInfoSync().keys.filter((k) => k.startsWith(NS));
+// ❌ 不带前缀直接裸存 'user' → 与他处 key 冲突、无法定向 sweep、一 clear 全没
+// ❌ get 不判过期 e 就返回 → 拿到陈旧脏数据（业务错乱）
 ```
 
 使用约定：`cache.set('dict:goods', dict, 24 * 3600e3)`（字典 24h）、`cache.set('token', t)`（不过期，登出时 remove）、`cache.set('draft:order', form, 7 * 864e5)`（草稿 7 天）。

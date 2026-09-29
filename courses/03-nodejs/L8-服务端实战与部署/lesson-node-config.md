@@ -13,9 +13,12 @@
 ## 二、process.env 与 process.argv
 
 ```js
+// 目的：读取环境变量的常见三行，注意它们全是字符串（或未定义）
 process.env.NODE_ENV        // "development" | "production" | "test"（事实上的环境开关）
-process.env.PORT ?? 3000    // 全部是**字符串**！"8080" 不是 8080
-process.env.DEBUG           // 见第六节
+process.env.PORT ?? 3000    // 未设时默认 3000；设了则拿到的是字符串 "8080" 而非数字
+process.env.DEBUG           // 见第七节
+// ❌ 坑：if (process.env.FEATURE_X) 对字符串 "false" 也成立（非空串 truthy）
+// ✓ 写法：const on = process.env.FEATURE_X === "true"；数字用 Number(process.env.PORT)
 ```
 
 - **`process.env` 值永远是字符串或未定义**：`if (process.env.FEATURE_X)` 对 `"false"` 也成立（非空字符串 truthy）→ 要显式 `=== 'true'`；数字要 `Number(...)`；
@@ -29,9 +32,10 @@ process.env.DEBUG           // 见第六节
 `.env` 文件（**必须 gitignore**）+ `dotenv` 在启动时把键**写入 `process.env`**：
 
 ```js
-// 尽早、在读取 env 之前加载（ESM 顶层 await 或 preload）
+// 目的：本地开发把 .env 里的键注入 process.env（必须在读 env 之前加载）
 import "dotenv/config";                 // 最简：加载当前目录 .env
-// 或显式：dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+// 或显式：dotenv.config({ path: `.env.${process.env.NODE_ENV}` });   // 按环境选文件
+// ❌ 时序错：先 const p = process.env.PORT 再 import "dotenv/config" → p 拿到的是 undefined
 ```
 
 - 只在**本地/无 secret 管理时**用；生产应由**平台注入**真环境变量（K8s Secret、系统 env、CI secrets），别把 `.env` 打进镜像（呼应 node-publish `files` 白名单、node-deploy-perf）；
@@ -46,12 +50,13 @@ import "dotenv/config";                 // 最简：加载当前目录 .env
 
 ```js
 // config.js
+// 目的：配置单一出口——集中读取 + 类型转换 + 启动即校验，避免 process.env.X 散落各处
 import "dotenv/config";
 const env = {
-  port: Number(process.env.PORT ?? 3000),
-  dbUrl: process.env.DATABASE_URL,           // 无默认=必需
+  port: Number(process.env.PORT ?? 3000),        // 转成数字
+  dbUrl: process.env.DATABASE_URL,               // 无默认=必需项
   logLevel: process.env.LOG_LEVEL ?? "info",
-  isProd: process.env.NODE_ENV === "production",
+  isProd: process.env.NODE_ENV === "production",  // 显式比较，避 truthy 陷阱
 };
 if (!env.dbUrl) throw new Error("缺少必需配置 DATABASE_URL");   // fail fast（呼应 node-async-errors）
 export default Object.freeze(env);            // 冻结防误改
@@ -78,12 +83,13 @@ export default Object.freeze(env);            // 冻结防误改
 
 ```js
 // pino
+// 目的：输出结构化 JSON 日志，带级别与自动脱敏字段
 import pino from "pino";
 const log = pino({
   level: process.env.LOG_LEVEL ?? "info",   // fatal/error/warn/info/debug/trace
   redact: ["req.headers.authorization", "password"],   // 自动脱敏（呼应第五节）
 });
-log.info({ userId: 42, sku: "A-1" }, "order created");  // 消息 + 结构化字段
+log.info({ userId: 42, sku: "A-1" }, "order created");  // ✅ 输出：一行 JSON，msg + 结构化字段可被 ELK/Loki 检索
 ```
 
 要点：
@@ -100,10 +106,11 @@ log.info({ userId: 42, sku: "A-1" }, "order created");  // 消息 + 结构化字
 `debug` 包用命名空间 + 环境变量 `DEBUG` 精细开关，避免在生产留下 `console.log`：
 
 ```js
+// 目的：用命名空间 + DEBUG 环境变量精细开关，生产不留多余 console.log
 import debug from "debug";
 const m = debug("app:db");     // 命名空间
 m("query %s", sql);            // 仅当 DEBUG 匹配 app:* 时输出
-// 运行：DEBUG=app:db node app.js     （设 env.DEBUG 才打印）
+// ✅ 运行：DEBUG=app:db node app.js     （不设 DEBUG 则静默）
 ```
 
 pino 也可用 `level` + `LOG_LEVEL` 达到类似"运行时不改动、按 env 开合"的效果。

@@ -19,23 +19,25 @@ TS 的模块语法就是 ES 模块语法，但编译产物可以是 CommonJS / E
 ## 二、导出与导入的形式
 
 ```ts
-// 命名导出
+// 目的：盘点各种导出/导入形式（跨文件示意，不必在同一文件全部成立）
+// —— 命名导出 ——
 export const VERSION = "1.0";
 export function parse() {}
 export class Widget {}
 export type Config = { a: number };   // 类型也能导出
 
-// 重命名 / 聚合
-export { parse as parseConfig };
+// —— 重命名 / 聚合 ——
+export { parse as parseConfig };       // 对外改用别名
 export * from "./other";              // 转导出（re-export）
 export * as ns from "./other";        // 命名空间式整体导出
 
-// 默认导出
+// —— 默认导出 ——
 export default class Main {}          // 一个模块至多一个 default
-import M from "./main";               // 导入 default
-import { VERSION } from "./version";  // 导入命名
-import def, { named } from "./mod";   // 混用
-import * as all from "./mod";         // 整体作为对象
+// —— 导入侧： ——
+import M from "./main";               // 导入 default（名字可自取）
+import { VERSION } from "./version";  // 导入命名（必须同名或 as 改名）
+import def, { named } from "./mod";   // 混用：default + 命名
+import * as all from "./mod";         // 整体作为对象（all.default / all.named）
 ```
 
 命名导出便于 tree-shaking 与重构（IDE 能追引用、改名），default 导出易造成"同名不同物"的导入歧义。**优先命名导出**是社区共识。
@@ -56,10 +58,11 @@ import { type Config, parse } from "./x"; // 内联 type 修饰符，混导时�
 ## 四、桶文件 barrel 与循环引用
 
 ```ts
-// src/index.ts —— 把子模块统一对外
-export * from "./user";
-export * from "./order";
-export type { Config } from "./config";
+// src/index.ts —— 把子模块统一对外（目的：一个入口汇聚多个子模块的导出）
+export * from "./user";                // 转导出 user 的全部命名
+export * from "./order";               // 转导出 order 的全部命名
+export type { Config } from "./config"; // 只转导出类型（擦除，无运行时）
+// ✅ 消费：import { User, Order } from "@/src"  一个入口搞定
 ```
 `import { User, Order } from "@/src"` 一个入口搞定，API 面整洁。代价：① 可能**破坏 tree-shaking**（拉一个全初始化）、② 更易制造**循环导入**（A→index→B→A）导致运行时 `undefined`（ESM 的 live binding 在环里取到未初始化值）。缓解：对外的公共入口用 barrel，内部互相引用走**具体文件路径**；大项目慎用 barrel 做内部聚合。
 

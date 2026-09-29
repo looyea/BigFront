@@ -28,21 +28,24 @@ Git 集成下每个 PR 自动出 Preview 部署（带独立域名，评审直接
 默认 `.next` 目录跑服务还得带着完整 node_modules（上千个包、镜像巨大）。开启：
 
 ```js
+// 目的：开启 standalone 产物——按依赖图裁出最小 server.js + 所需 node_modules
 // next.config.js
-module.exports = { output: 'standalone' };
+module.exports = { output: 'standalone' };   // ✅ build 后生成 .next/standalone/，从几百 MB 缩到几十 MB
 ```
 
 `next build` 后生成 `.next/standalone/`：基于依赖图裁剪出**最小 server.js + 所需 node_modules**，通常从几百 MB 缩到几十 MB。注意它默认不含静态资源，要手动补：
 
 ```dockerfile
+# 目的：standalone 产物不自带静态资源，镜像要手动补上 static 与 public
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-COPY .next/standalone ./
-COPY .next/static ./.next/static
+COPY .next/standalone ./      # ✅ 最小服务端产物
+COPY .next/static ./.next/static   # ✅ 不补这行 → JS/CSS 全 404（standalone 默认不含）
 COPY public ./public
 EXPOSE 3000
 CMD ["node", "server.js"]
+# ❌ 容器里忘设 HOSTNAME=0.0.0.0 → server.js 只听 127.0.0.1，外部探活/反代都连不上
 ```
 
 多阶段构建再压一层：deps 与 builder 阶段装全量依赖，runner 只拷 standalone 产物（Docker 分层缓存思路同 vue-deploy 第 4 节）。跑起来后用 `pm2` 或 systemd 守护，进程级调优（集群、内存上限）回到 node-cluster/node-deploy-perf 的老手艺。
@@ -57,8 +60,9 @@ CMD ["node", "server.js"]
 ## 5. Nginx / CDN 前置：把合适的流量挡在应用外
 
 ```nginx
+# 目的：把合适的流量拦在应用外——静态给 immutable，动态才进 Node
 location /_next/static/ {
-  proxy_cache static_cache;      # 内容哈希命名，可缓存一年
+  proxy_cache static_cache;      # ✅ 内容哈希命名，可缓存一年
   add_header Cache-Control "public, max-age=31536000, immutable";
   proxy_pass http://next_app;
 }
@@ -67,6 +71,7 @@ location / {
   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   proxy_set_header Host $host;
 }
+# ❌ 不透传 X-Forwarded-Proto/Host → Next 误判协议，HTTPS 下重定向跳回 http 形同死循环
 ```
 
 要点：① 静态资源直接给 immutable（呼应 next-perf 第 4 节）；② ISR 页面想让 CDN 顶住回源，透传 `stale-while-revalidate` 或在 CDN 层配置；③ `X-Forwarded-*` 系列决定 `req.ip` 与协议识别，配错会导致重定向跳 http 死循环；④ HTTPS 终结在 Nginx 则 Node 侧只需 http（TLS 全链路与证书自动化回到 node-https-tls 的领地）；⑤ 若用 next/image 且源站不在 image 优化白名单，检查 `images.remotePatterns`（呼应 next-fonts-images 第 4 节）。

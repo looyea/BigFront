@@ -17,11 +17,12 @@
 ## 二、mount vs shallowMount
 
 ```js
+// 目的：mount 渲染整棵子树、shallowMount 只渲染本组件（子组件用桩）——单元测首选后者
 import { mount, shallowMount } from '@vue/test-utils';
 import Parent from '@/components/Parent.vue';
 
 const w1 = mount(Parent);           // 渲染 Parent 及其【所有子组件】
-const w2 = shallowMount(Parent);    // 只渲染 Parent，子组件用【桩】替代
+const w2 = shallowMount(Parent);    // 只渲染 Parent，子组件用【桩】替代（✅ 子组件内部 bug 不会弄红本组件单测）
 ```
 - **`mount`**：测"整棵子树协作"的集成行为；
 - **`shallowMount`**：隔离被测组件，不被子组件实现细节拖累——单元测首选。
@@ -33,7 +34,8 @@ const w2 = shallowMount(Parent);    // 只渲染 Parent，子组件用【桩】�
 ## 三、查询：find / get / findByText
 
 ```js
-w.find('button.submit')          // 返回 DOMWrapper（找不到是空 wrapper）
+// 目的：查询元素——find 找不到返回空 wrapper，get 找不到直接报错
+w.find('button.submit')          // 返回 DOMWrapper（找不到是空 wrapper，❌ 对空 wrapper 再 .trigger() 会静默失效难发现）
 w.get('button.submit')           // 找不到直接【报错】，更适合断言前置
 w.findAll('.row')                // 数组，遍历列表项
 w.findComponent(Child)           // 拿到子组件的 VueWrapper
@@ -46,17 +48,20 @@ screen.getByText('欢迎')          // Testing Library 风格：按用户可见�
 ## 四、交互与异步更新
 
 ```js
+// 目的：模拟用户交互——trigger 触发事件、setValue 写输入并同步 v-model
 await w.find('button').trigger('click');       // 触发事件
-await w.find('input').setValue('abc');         // 双向绑定输入
+await w.find('input').setValue('abc');         // 双向绑定输入（✅ 同时更新 DOM 值与绑定变量）
 await w.find('select').setValue('b');
 ```
 Vue 更新 DOM 是**异步**（微任务批量，见 vue-reactivity-theory nextTick）。触发后要等一轮更新：
 
 ```js
+// 目的：触发后要等一轮异步更新再断言，否则读到旧 DOM
 import { nextTick, flushPromises } from 'vue';
 btn.trigger('click');
 await nextTick();                 // 等一次 DOM 更新
 await flushPromises();            // 等所有挂起的 Promise（如接口回来）
+// ❌ 忘 await 是"测试偶发红"头号原因：断言时 DOM 还没更新
 ```
 忘了 await 是"测试偶发红"的头号原因（呼应 node-testing 的 async 测试）。
 
@@ -65,6 +70,7 @@ await flushPromises();            // 等所有挂起的 Promise（如接口回�
 ## 五、断言 props / emits / exposed
 
 ```js
+// 目的：验证父子契约——传 props、断言 emit 事件与参数、调 exposed 方法
 // 传 props
 const w = mount(Child, { props: { title: 'Hi' } });
 expect(w.text()).toContain('Hi');
@@ -72,7 +78,7 @@ expect(w.text()).toContain('Hi');
 // 断言子组件 emit
 w.find('button').trigger('click');
 expect(w.emitted().submit).toBeTruthy();
-expect(w.emitted().submit[0]).toEqual([1, 'x']);   // 第一次调用的参数
+expect(w.emitted().submit[0]).toEqual([1, 'x']);   // 第一次调用的参数（❌ 事件名写错时 emitted().xxx 为 undefined，断言失败）
 
 // 断言 defineExpose 暴露的方法/状态
 const vm = w.vm;
@@ -86,13 +92,14 @@ expect(w.vm.exposedFlag).toBe(true);
 ## 六、mock Pinia / Router / 网络
 
 ```js
+// 目的：每个用例给一个全新 pinia，避免上一用例的 state 滋到下一个
 import { createPinia } from 'pinia';
 import { setActivePinia } from 'pinia';
 
 setActivePinia(createPinia());         // 每个用例一个干净 pinia（呼应 vue-pinia-advanced SSR 防水合污染同理）
 const store = useCounter();
 store.increment();
-expect(store.count).toBe(1);
+expect(store.count).toBe(1);           // ❌ 不在 beforeEach 重建，count 会累加导致断言飘红
 ```
 - **Router**：`global.mocks: { $router: { push: vi.fn() } }` 或用 `createRouter({ history: createMemoryHistory() })`（memory 路由专供测试，呼应 vue-router-basics）；
 - **网络**：`vi.mock` 掉 api 模块，或 msw 拦截 fetch。核心是**隔离外部世界**，测组件自身逻辑（呼应 node-testing 的 mock/stub）。
@@ -102,7 +109,9 @@ expect(store.count).toBe(1);
 ## 七、快照测试：用对地方
 
 ```js
+// 目的：快照锁定输出结构整体形状，首次存基准、之后结构变了 diff 提示
 expect(w.html()).toMatchSnapshot();
+// ⚠️ 只保证"和上次一样"，❌ 不能当正确性断言（实现本写错也会被固化）
 ```
 第一次存基准，之后结构变了就 diff 提示。**适合**：锁定"输出结构整体形状"、防手滑。**不适合**：把快照当正确性断言——它只保证"和上次一样"，一旦实现本来写错，错也会被固化；且任意 class/时间戳都会造成脆断。建议**行为断言为主、快照为辅**，快照要人工 review。
 

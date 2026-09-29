@@ -3,9 +3,13 @@
 ## 一、三兄弟：toBe / toEqual / toStrictEqual
 
 ```ts
-expect({ a: 1 }).toEqual({ a: 1 });       // 内容深比较 ✔
-expect(obj).toBe(obj);                    // 同一引用 ✔
-expect(instance).toStrictEqual(other);    // 还要求同一 class/undefined 属性一致
+// 目的：三兄弟的精度阶梯——toBe(引用) < toEqual(内容) < toStrictEqual(内容+类型/undefined)
+const obj = { a: 1 };
+expect(obj).toBe(obj);                        // ✅ 同一引用 → toBe 通过
+expect({ a: 1 }).toEqual({ a: 1 });           // ✅ 内容深比较 → toEqual 通过
+// ❌ toEqual 会放过 undefined 键的差异：
+expect({ a: 1, b: undefined }).toEqual({ a: 1 });        // ✅ 仍通过（toEqual 忽略值为 undefined 的键）
+expect({ a: 1, b: undefined }).toStrictEqual({ a: 1 });  // ❌ 失败（toStrictEqual 要求键集合严格一致）
 ```
 
 `toBe` 引用/原始值、`toEqual` 内容深比较、`toStrictEqual` 更严（区分类实例、`{a:undefined}` 与 `{a:1}` 等）。日常 toBe + toEqual 打天下，要精确用 toStrictEqual。

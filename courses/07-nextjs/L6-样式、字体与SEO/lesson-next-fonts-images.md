@@ -7,14 +7,16 @@
 ## 一、next/font：字体不再闪
 
 ```tsx
+// 目的：字体不再闪——构建期自托管（零外部请求）+ 度量补偿（零 CLS）
 // 构建期自托管：零外部请求、零隐私外泄（Google 字体也不再经浏览器之手）
 import { Inter } from 'next/font/google';
-import { PingFangBase } from '@/fonts/brand';   // next/font/local 本地字体文件
+import { PingFangBase } from '@/fonts/brand';   // ✅ next/font/local 本地字体文件
 
-const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });   // ✅ display:'swap'+度量补偿：首屏走系统字、真字后到不跳动
 
 // app/layout.tsx
-<html className={inter.variable}>              // CSS 变量注入，子树 font-family: var(--font-inter)
+<html className={inter.variable}>              // ✅ CSS 变量注入，子树 font-family: var(--font-inter)
+// ❌ 回到手写 <link href="fonts.googleapis.com"> → 多一次外部请求 + GDPR 隐私外泄 + 无度量补偿→字体到位时布局跳动
 ```
 
 机制两层（面试深度）：
@@ -28,12 +30,14 @@ CJK 警告：中文字体动辄数 MB，子集化/分片（unicode-range 切片�
 ## 二、next/image：一张图的完整生产线
 
 ```tsx
+// 目的：一张图的完整生产线——选尺寸/格式协商/请求时优化/懒加载全由框架接管
 <Image
   src={post.cover} alt="封面"
-  width={1200} height={630}        // 比例决定占位高度 → 防 CLS 的第一参数
-  sizes="(max-width: 768px) 100vw, 50vw"   // 响应式选档的依据（srcset 大脑）
-  priority={isHero}                // LCP 图：取消懒加载+预加载，抢首屏
+  width={1200} height={630}        // ✅ 比例决定占位高度 → 防 CLS 的第一参数
+  sizes="(max-width: 768px) 100vw, 50vw"   // ✅ 响应式选档的依据（srcset 大脑）
+  priority={isHero}                // ✅ LCP 图：取消懒加载+预加载，抢首屏
 />
+// ❌ 把所有图都 priority=true → 并发抢带宽、非首屏图阻塞 LCP（priority 只给首屏那一张）
 ```
 
 编译后它做四件事：
@@ -49,12 +53,13 @@ CJK 警告：中文字体动辄数 MB，子集化/分片（unicode-range 切片�
 ## 三、远程图片与 loader 的权限模型
 
 ```ts
+// 目的：远程图与 loader 的权限模型——白名单是安全设计，不是累赘
 // next.config.ts
 images: {
-  remotePatterns: [{ protocol: 'https', hostname: 'cdn.example.com', pathname: '/cover/**' }],
-  // 不声明 = 直接报错拒绝优化：这是安全设计（防开放代理被滥用打图）
-  loader: 'custom', loaderFile: './image-loader.ts',   // 云厂商（COS/OSS imgix）直连优化
-  dangerouslyAllowSVG: true, contentDispositionType: 'attachment',   // SVG 需显式放行（XSS 面）
+  remotePatterns: [{ protocol: 'https', hostname: 'cdn.example.com', pathname: '/cover/**' }],   // ✅ 声明可信域名
+  // ❌ 不声明 = 直接报错拒绝优化：这是安全设计（防开放代理被滥用打图）
+  loader: 'custom', loaderFile: './image-loader.ts',   // ✅ 云厂商（COS/OSS imgix）直连优化
+  dangerouslyAllowSVG: true, contentDispositionType: 'attachment',   // ⚠️ SVG 需显式放行（XSS 面，配套强制下载头缓解）
 }
 ```
 
@@ -77,8 +82,10 @@ images: {
 ## 五、blurDataURL 与占位体验
 
 ```tsx
-<Image src={cover} width={800} height={500} blurDataURL={tinyBase64} placeholder="blur" />
-// 或静态 import 自动得到内联 64 字节模糊底
+// 目的：图片到达前先显示内联极小模糊图（data URI 进 HTML 不占请求）
+<Image src={cover} width={800} height={500} blurDataURL={tinyBase64} placeholder="blur" />   // ✅ 动态图手写 blurDataURL
+// ✅ 或静态 import 自动得到内联 64 字节模糊底
+// ❌ 不给 blurDataURL 又不留尺寸 → 大图加载前一片空白、到位时页面跳动（CLS）
 ```
 
 图片到达前显示**内联极小模糊图**（data URI 进 HTML 不占请求）——"渐进显影"体验；与骨架屏（L3）/字体补偿（本课第一节）同属一个世界观：**空白不是中性感，占位才是**（mp 的 skeleton、OG 图缺省同理，呼应 next-context-streaming 第五节）。

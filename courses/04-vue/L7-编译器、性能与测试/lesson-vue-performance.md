@@ -10,9 +10,10 @@
 
 - **静态提升（hoist）**：完全不变的节点/属性只创建一次，提到 render 外层复用，每次渲染不再重新 `createVNode`：
   ```html
+  <!-- 目的：不变的节点被编译器提升为常量，每次渲染不再重新 createVNode -->
   <div class="card">            <!-- class 永远不变 → 提升为常量 -->
     <span class="label">状态：</span>   <!-- 纯静态 → 整段提升 -->
-    {{ status }}                <!-- 唯一动态点 -->
+    {{ status }}                <!-- 唯一动态点（只它带 patchFlag，更新时只查这里） -->
   </div>
   ```
 - **`patchFlag`（差分标记）**：给动态节点打标签（`TEXT=1`、`CLASS=2`、`PROPS=4`、`FULL_PROPS=8`、`STYLE=16`……），更新时 Vue 只看被标记的那一处，而**不是逐条 diff 所有属性**（呼应 vue-reactivity-theory 的按需更新思路）。
@@ -28,14 +29,17 @@
 
 - **`v-once`**：元素/子树只渲染一次，之后完全跳过：
   ```html
+  <!-- 目的：内容永远不变，只渲染一次后完全跳过 diff -->
   <header v-once>这段永远不变</header>
   ```
 - **`v-memo`**：按依赖数组缓存子树，依赖不变就复用上次的 VNode（对**大 `v-for`** 尤其有效）：
   ```html
+  <!-- 目的：给每项一个 computed 式缓存，只有依赖变了才重渲染该子树 -->
   <li v-for="item in list" :key="item.id"
       v-memo="[item.selected === props.selected]">
     <!-- 只有该项的 selected 变了才重渲染，其余整段跳过 -->
   </li>
+  <!-- ❌ 漏 :key 时 v-memo 无法定位缓存，刷新结果错乱 -->
   ```
   `v-memo` 相当于"给这段一个 computed 式的缓存"，别忘了它要求配 `:key`（呼应 vue-conditional-list 的 key 一节）。
 
@@ -46,10 +50,11 @@
 深度 `reactive`/`ref` 会**懒代理**整棵嵌套对象（呼应 vue-reactivity-theory Proxy），对上万条只读明细、图表数据、ECharts 实例，代理开销和 track 成本都很高：
 
 ```js
+// 目的：上万条只读数据只追 .value 替换，避免深度代理的开销与 track 成本
 const list = shallowRef([]);           // 只追踪 .value 的替换
 list.value = newList;                  // ✅ 整体替换触发更新
 // list.value[0].x = 1;                // ❌ 深层改动不触发（这是特性）
-list.value.push(x); triggerRef(list);  // 非要原地改，手动 triggerRef
+list.value.push(x); triggerRef(list);  // 非要原地改，手动 triggerRef 才推动重渲染
 ```
 - 大列表/不可变数据优先 `shallowRef` + 整体替换；
 - 纯常量（不参与 UI 的大配置、字典）用 `markRaw`/`Object.freeze` 免代理（呼应 vue-reactivity-theory 的 markRaw/customRef）；

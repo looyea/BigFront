@@ -3,11 +3,14 @@
 ## 一、signal 从天而降（v5）
 
 ```ts
+// 目的：v5 把 AbortSignal 白送进 queryFn context——接上那一行就能真掐底层请求
 queryFn: async ({ queryKey, signal }) => {
-  const res = await fetch(url, { signal });   // 一行接入
-  if (!res.ok) throw new Error('bad ' + res.status);
+  const res = await fetch(url, { signal });   // 一行接入：这次执行没意义时 Query 会 abort 它
+  if (!res.ok) throw new Error('bad ' + res.status);   // 非 2xx 主动 throw，否则被当成功
   return res.json();
 }
+// ✅ 失效重取挤掉在飞请求、key 变化失订、GC 回收时 signal 触发，省流量省后端算力
+// ❌ 不传 signal：结果层竞态仍正确（旧值被忽略），但底层请求照跑完，Network 堆满冗余
 ```
 
 v5 把 AbortSignal 直接塞进 queryFn context。Query 在「这次请求已经没有意义」时 abort 它：**失效/重取挤掉在飞请求、key 变化旧查询失去订阅、GC 回收、setActive(false)**。不传 signal 也能跑——结果照样被正确忽略（竞态层），只是底层流量没省（取消层）。

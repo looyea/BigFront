@@ -16,32 +16,36 @@ L1 建的这组坐标系，到本关要做成正反两方面的肌肉：看一�
 **RxJS 版（rx-operators 的原样回收）**：
 
 ```ts
+// 目的：搜索去抖—RxJS 版—作废旧请求由 switchMap 白送
 fromEvent(input, 'input').pipe(
   map((e: any) => e.target.value),
-  debounceTime(300),
-  distinctUntilChanged(),
-  switchMap((q) => from(fetch(`/search?q=${q}`).then((r) => r.json()))),
+  debounceTime(300),                        // ✅ 静默 300ms 才放行最后一个值
+  distinctUntilChanged(),                   // ✅ 同值吞掉，不重复发
+  switchMap((q) => from(fetch(`/search?q=${q}`).then((r) => r.json()))),   // ✅ 新输入进来，旧未完成请求被 unsubscribe
 ).subscribe({ next: (data) => (results = data), error: (e) => (err = e) });
+// ❌ 少了 error 通道→ 某次 fetch 失败流就此终结，之后不再响应输入（终局不复活）
 ```
 
 **signals 版（Preact/@preact/signals 语义，effect+watch 手写节奏）**：
 
 ```ts
+// 目的：搜索去抖—signals 版—去抖与作废都要手写（setTimeout + latest 比对）
 const query = signal('');
 const results = signal([]);
-input.addEventListener('input', (e) => query.set(e.target.value));
+input.addEventListener('input', (e) => query.set(e.target.value));   // ✅ 输入写进 query
 
-let latest = '';                      // 手写『作废』：自己记下最新一轮
+let latest = '';                      // ✅ 手写"作废"：自己记下最新一轮
 
 effect(() => {
-  const q = query.get();              // 读即订阅：只依赖 query
+  const q = query.get();              // ✅ 读即订阅：只依赖 query
   latest = q;
   const t = setTimeout(async () => {
     const data = await (await fetch(`/search?q=${q}`)).json();
-    if (latest === q) results.value = data;   // 写 results 不建依赖；已被新输入超越则丢弃
+    if (latest === q) results.value = data;   // ✅ 已被新输入超越则丢弃；写 results 不建依赖
   }, 300);
-  return () => clearTimeout(t);       // 退订=清理，effect 重跑前自动执行
+  return () => clearTimeout(t);       // ✅ 退订=清理，effect 重跑前自动执行（这就是手写 debounce）
 });
+// ❌ 去掉 if (latest === q) 守卫→ 慢请求后到会覆盖新结果，正是 switchMap 帮你免掉的竞态
 ```
 
 并排看差异就三行字：**RxJS 的『作废旧请求』是 switchMap 白送的，signals 版要手写 latest 比对**；RxJS 把『300ms 静默』『同值吞掉』都表达成管道上的算子（事件间关系是头等公民），signals 版里时间和序列是**你用 setTimeout 自造的**（它的世界观里只有当下值）。反过来，需求改成『把 results 显示出来+别的地方随时能读当前结果』——signals 版完胜：`results.get()` 随处可取；RxJS 版你得自己再造一个变量存『最后一个值』（这正是 BehaviorSubject 存在的理由——流的『当下值』是补丁不是本性）。

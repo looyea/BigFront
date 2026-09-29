@@ -3,14 +3,17 @@
 ## 一、三个 API 一张脸
 
 ```ts
+// 目的：@swc/core 三 API 同构返回 {code,map}——给打包器写插件的基本面，CLI 只是这层壳
 import { transform, transformSync, transformFile } from '@swc/core';
 
 // 异步（推荐，走内部线程池）
-const { code, map } = await transform(src, { filename: 'a.ts', jsc: { parser: { syntax: 'typescript' } } });
+const { code, map } = await transform(src, { filename: 'a.ts', jsc: { parser: { syntax: 'typescript' } } });   // 传源码字符串 + opts
 // 同步（简单脚本/构建钩子里）
-const out = transformSync(src, { /* 同上 opts */ });
+const out = transformSync(src, { /* 同上 opts */ });   // 阻塞式，仅小任务用
 // 直接读文件
-const r = await transformFile('./src/a.ts', opts);
+const r = await transformFile('./src/a.ts', opts);     // 省了自己 fs.readFile
+// ✅ 批量转译走 transform（异步线程池）压榨多核
+// ❌ 大仓里滥用 transformSync 阻塞事件循环→构建钩子被拖慢，热路径应异步
 ```
 
 三者返回同构的 `{ code, map }`。给打包器写插件时你几乎必然用它们——CLI 只是这层 API 的壳。

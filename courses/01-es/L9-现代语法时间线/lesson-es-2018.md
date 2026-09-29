@@ -19,6 +19,7 @@
 
 ### 语法
 ```js
+// 目的：对象 rest（剩余收进新对象）/ spread（浅拷贝+覆盖，后者胜）
 const user = { id: 1, name: 'Ann', email: 'a@x.com', pwd: 'secret' };
 const { pwd, ...publicUser } = user;    // **rest**：把剩下的收进 publicUser
 const updated = { ...user, name: 'Bob' };  // **spread**：浅拷贝 + 覆盖
@@ -49,6 +50,7 @@ const merged = { ...defaults, ...opts };   // 后者胜
 ## 三、异步迭代：`for-await-of`
 
 ```js
+// 目的：异步生成器 + for-await-of 逐页串行拉取（fetch 为浏览器/Node 18+）
 // 一个 AsyncIterable（每次 yield 一个 Promise）
 async function* fetchPages() {
   for (let i = 1; i <= 3; i++) {
@@ -76,6 +78,7 @@ for await (const page of fetchPages()) {
 ## 四、`Promise.prototype.finally`
 
 ```js
+// 目的：finally 无论成败都跑（常用于收 loading）；上游值/reason 原样穿透
 showLoading();
 fetch(url)
   .then(r => r.json())
@@ -98,6 +101,7 @@ fetch(url)
 
 ### 1. **命名捕获组**（`(?<name>...)`）
 ```js
+// 目的：命名捕获组——结果挂在 m.groups，可直接解构
 const re = /(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/;
 const m = re.exec('2026-09-20');
 console.log(m.groups.year);        // '2026'
@@ -107,6 +111,7 @@ const { year, month, day } = m.groups;   // 直接解构
 
 ### 2. **`s` 标志**（dotAll）
 ```js
+// 目的：s 标志 dotAll——让 . 也能匹配换行
 /a.b/s.test('a\nb');   // true
 /a.b/.test('a\nb');    // false（. 默认不匹配 \n）
 ```
@@ -114,6 +119,7 @@ const { year, month, day } = m.groups;   // 直接解构
 
 ### 3. **Lookbehind**（`(?<=...)` / `(?<!...)`）
 ```js
+// 目的：lookbehind 断言——固定前缀/后缀而不把它吃进匹配
 'abc123'.match(/(?<=b)\d+/);       // ['123'] — 前面必须是 b
 '1.50 2.00'.match(/(?!\.)(\d+)/);  // 负向先行
 '12USD'.match(/(?<=\d)USD/);       // 前面必须是数字
@@ -122,6 +128,7 @@ const { year, month, day } = m.groups;   // 直接解构
 
 ### 4. **Unicode Property Escape**（`\p{...}` / `\P{...}`）
 ```js
+// 目的：\p{...} Unicode 属性转义——按字符类别匹配，不用手写码点范围
 const emoji = /\p{Emoji_Presentation}/gu;
 '🎉 hello'.match(emoji);   // ['🎉']
 const han = /\p{Script=Han}+/u;
@@ -145,6 +152,8 @@ const han = /\p{Script=Han}+/u;
 
 ### 场景 1：**Redux reducer 的不可变更新**
 ```js
+// 目的：reducer 用 spread 做不可变更新（返回新对象，不改旧 state）
+const initial = { items: [], user: { name: 'Ann' } };
 function reducer(state = initial, action) {
   switch (action.type) {
     case 'ADD': return { ...state, items: [...state.items, action.item] };
@@ -156,6 +165,12 @@ function reducer(state = initial, action) {
     default: return state;
   }
 }
+// ✅ 应用：走三个 action，验证返回新对象且原 state 不变
+const s1 = reducer(initial, { type: 'ADD', item: 'x' });
+console.log(s1.items, initial.items);        // ['x'], []（旧 state 未被污染）
+const s2 = reducer(s1, { type: 'SET_NAME', name: 'Bob' });
+console.log(s2.user.name, s1.user.name);     // 'Bob', 'Ann'（user 也是新对象）
+console.log(reducer(s2, { type: 'UNKNOWN' }) === s2);  // true（default 直接回原引用）
 ```
 
 ### 场景 2：**Node 流式处理**
@@ -174,6 +189,7 @@ await pipeline(
 
 ### 场景 3：**日期字符串解析**
 ```js
+// 目的：命名捕获组 + nullish coalescing + 解构三件套（不匹配时不会报错）
 const re = /^(?<y>\d{4})-(?<m>\d{2})-(?<d>\d{2})(?:[T\s](?<time>.*))?$/;
 const { groups: { y, m, d } } = re.exec('2026-09-20T10:00') ?? {};
 ```

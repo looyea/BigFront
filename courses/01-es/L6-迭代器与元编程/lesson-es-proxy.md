@@ -9,6 +9,7 @@
 **Proxy = 给对象套一层「拦截器」**——所有对目标对象的读、写、枚举、函数调用等操作都可以被**拦截并改写**。
 
 ```js
+// 目的：给 target 套 get/set 拦截器，观察每次读写都先打日志再转发给 Reflect
 const target = { name: 'Ann', age: 20 };
 const proxy = new Proxy(target, {
   get(obj, key, receiver) {
@@ -65,19 +66,20 @@ Reflect 方法与 trap **一一对应**，是「把 Object 上散落的静态方
 规范里**target 是什么形状，trap 就必须返回什么形状**——否则抛 TypeError：
 
 ```js
+// 目的：验证 invariant 约束——target 的形状 trap 必须如实反映，否则恒抛 TypeError（与严格模式无关）
 const p = new Proxy({}, {
   get: () => 1,
 });
-p.x;   // 1（没问题，target.x 是 undefined，configurable true 时随便返回）
+p.x;   // 1 ✅（target.x 是 undefined 且可配置，configurable true 时 get 随便返回）
 
-// ❌ 违规
+// ❌ 违规 1：freeze 把 x 变成 non-writable + non-configurable，get 必须返回真实值 1
 const frozen = Object.freeze({ x: 1 });
-new Proxy(frozen, { get: () => 2 }).x;   // 2（非严格模式静默失败）/ 严格模式 TypeError
+// new Proxy(frozen, { get: () => 2 }).x;   // ❌ TypeError（invariant 违反总是抛错，非严格模式也抛）
 
-// ownKeys 必须**覆盖 target 全部自有键**
-new Proxy({ a: 1 }, { ownKeys: () => [] }).a;   // TypeError: proxy 必须返回全部键
-
-// non-configurable 属性**不能消失**
+// ❌ 违规 2：ownKeys 必须覆盖 target 的"不可配置"自有键——触发时机是 Object.keys/for-in，不是读属性
+const nonCfg = Object.defineProperty({}, 'a', { value: 1, configurable: false, enumerable: true });
+// Object.keys(new Proxy(nonCfg, { ownKeys: () => [] }));  // ❌ TypeError: trap result did not include 'a'
+// （若 a 是 configurable，ownKeys 返回 [] 不报错——invariant 只管"不可配置"键）
 ```
 
 **为什么这么设计**：如果不约束，`Object.isFrozen(p)` 与 `Object.isFrozen(target)` 结论可能不一致——引擎的**形状假设**崩塌。
@@ -92,6 +94,7 @@ Vue 2 用 `Object.defineProperty` 逐字段劫持；三大痛点：① 无法感
 
 **Vue 3 用 Proxy**：
 ```js
+// 目的：示意 Vue3 reactive——get 收集依赖并懒代理、set/delete 派发更新（track/trigger 为伪代码）
 function reactive(obj) {
   return new Proxy(obj, {
     get(target, key, receiver) {
@@ -119,6 +122,7 @@ function reactive(obj) {
 ### 战场 2：**immutable 数据**、**默认值**、**私有字段**
 
 ```js
+// 目的：三个"运行时 schema"式包装器——默认值 / 只读 / 禁止新增键
 const withDefaults = (target, defaults) => new Proxy(target, {
   get: (t, k) => k in t ? Reflect.get(t, k) : defaults[k],
 });
@@ -133,6 +137,19 @@ const noNewKeys = (target) => new Proxy(target, {
     return Reflect.set(t, k, v);
   },
 });
+
+// ✅ 应用：三个包装器各自的读/写效果
+const cfg = withDefaults({ host: 'localhost' }, { host: '0.0.0.0', port: 8080 });
+cfg.host;          // 'localhost'（target 有，用 target）
+cfg.port;          // 8080（target 无，回退默认值）
+
+const ro = readonly({ a: 1 });
+ro.a;              // 1（读正常）
+// ro.a = 2;        // ❌ TypeError: readonly
+
+const strict = noNewKeys({ name: 'x' });
+strict.name = 'y';         // ✅ 改已有键 → 'y'
+// strict.age = 3;          // ❌ TypeError: 未知属性 age
 ```
 
 TypeScript 的严格模式在运行时没有校验，配一层 Proxy 立刻变「运行时 schema」。
@@ -168,6 +185,7 @@ Sinon.js / jest.spyOn 底层思路；localStorage 拦截、API mock 都类似。
 ## 六、Proxy 的 apply / construct 与函数包装
 
 ```js
+// 目的：apply 拦截函数调用、construct 拦截 new——实现透明包装/计数
 const callable = new Proxy(function () {}, {
   apply(target, thisArg, args) { return args.reduce((a, b) => a + b, 0); },
 });
@@ -216,6 +234,7 @@ Counted.count;   // 2
 ## 九、Proxy 撤销（revocable）
 
 ```js
+// 目的：revocable 造"可撤销"proxy，revoke 后一切操作抛错（适合临时授权/插件卸载）
 const { proxy, revoke } = Proxy.revocable({}, {});
 proxy.x = 1;
 proxy.x;      // 1

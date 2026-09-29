@@ -1,5 +1,6 @@
 // 示例 03：truthy/falsy + Object.is + 显式转换的工程写法
-// 运行：node courses/01-es/examples/es-coercion/03-truthy-explicit.js
+// 目的：列 falsy 值、区分 Object.is/===/isNaN，展示显式转换与空值兑底的正确写法
+// 运行：node "courses/01-es/L2-数据类型与转换/example-es-coercion-03-truthy-explicit.js"
 
 // —— 8 个 falsy 值 ——
 const values = [false, 0, -0, 0n, '', null, undefined, NaN, [], {}, '0', ' ', [0]];
@@ -34,3 +35,11 @@ console.log('Number("")       =', Number(''));        // 0，容易踩坑
 console.log('"" ? "" : "空"  =', '' || '空');         // '空'
 console.log('0 ?? "零值"     =', 0 ?? '零值');        // 0（?? 只在 null/undefined 才走右侧）
 console.log('0 || "假值"     =', 0 || '假值');        // '假值'（|| 会吃掉 0）
+
+// ── ❌ 错误用例：parseInt 不传基数 / 拿 parseInt 当数字解析 ──
+console.log('parseInt("12abc") =>', parseInt('12abc')); // 12（遇非法字符即停，静默截断！）
+console.log('Number("12abc")   =>', Number('12abc'));   // NaN（Number 要么整体成功要么整体失败）
+console.log('parseInt("0x10")  =>', parseInt('0x10'));   // 16（自动按十六进制）
+console.log('parseInt("10", 8) =>', parseInt('10', 8));  // 8（基数传错就出错）
+// 后果：parseInt 会“吃掉”尾部非法字符并按基数解释，得出看似正确实则隐蔽的错误数字
+// ✅ 正确：永远传基数 parseInt(s, 10)；要“要么数字要么 NaN”用 Number(s)

@@ -21,8 +21,11 @@ d ──> e
 同一事件里 set 多个 atom，React 18 自动批处理成一次渲染。极端同步场景（promise 微任务外）可用 unstable_batchedUpdates 手动包裹。
 
 ```ts
+// 目的：同事件多次 set，React 18+ 自动批处理成一次渲染——“一事件一帧”是运行时保证
 set(firstNameAtom, 'Grace');
 set(lastNameAtom, 'Hopper');   // 同事件两次写 → fullAtom 的订阅者只重渲一次
+// ✅ 两次写落进同一帧，中间不出现“名已改、姓未改”的半更新态快照
+// ❌ 把两次 set 拆到两个独立 await/微任务且期待它们合并→分属两帧各渲一次，订阅者看到两次闪烁
 ```
 
 React 19 里连 setTimeout/await 之后的多次 set 也自动批（并发渲染器的 universal batching），unstable_batchedUpdates 基本退役——记住「一事件一帧」是运行时保证，不再依赖库层去重。

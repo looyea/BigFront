@@ -71,19 +71,22 @@
 ## 四、ES2025 前瞻（已落地的新糖）
 
 ```js
-// 迭代器助手（Iterator Helpers 提案）
-const nums = [1, 2, 3, 4, 5][Symbol.iterator]();
+// 目的：演示 ES2025 迭代器助手的惰性链式——不建中间数组，take 短路即停
+const nums = [1, 2, 3, 4, 5][Symbol.iterator]();   // 取数组的迭代器作为链式起点
 const result = nums
-  .filter(x => x % 2 === 0)     // 惰性！
-  .map(x => x * 10)
-  .take(2)
-  .toArray();                     // [20, 40]
+  .filter(x => x % 2 === 0)     // 惰性：偶数 2,4 逐个流过，不物化
+  .map(x => x * 10)             // 惰性：流到即变换 → 20,40
+  .take(2)                      // 只取 2 个就短路，源迭代器立即停止
+  .toArray();                     // 终端操作，物化为数组 → [20, 40]
+console.log(result);              // [20, 40]
 ```
 —— **惰性链式**不创建中间数组，比 `arr.filter().map().slice()` 更省内存。
 
 ```js
-// Promise.try
-const p = Promise.try(() => JSON.parse(str));   // 同步异常也变 rejection
+// 目的：Promise.try 统一兜住同步抛错——无论 fn 同步 throw 还是返回 Promise，结果都是 Promise
+const str = '{bad json}';                    // 非法 JSON，JSON.parse 会同步抛错
+const p = Promise.try(() => JSON.parse(str)); // 同步异常也变 rejection（而非直接抛出）
+p.catch(e => console.log('捕获:', e.name));   // 捕获: SyntaxError —— 一个 catch 兜住同步+异步
 ```
 
 ---

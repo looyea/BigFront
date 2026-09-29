@@ -21,11 +21,14 @@
 ## 二、五种跳转 API：一张决策表
 
 ```js
-wx.navigateTo({ url: '/pages/detail/detail?id=5' });   // 入栈：保留当前页，可 back 回来
-wx.redirectTo({ url: '/pages/login/login' });           // 替换：关闭当前页再打开（栈不加深）
-wx.navigateBack({ delta: 1 });                          // 出栈：返回上（delta）页
-wx.switchTab({ url: '/pages/home/home' });              // 跳 tabBar 页（且会清空非 tab 栈）
-wx.reLaunch({ url: '/pages/home/home' });               // 重启：关掉所有页，打开唯一页
+// 目的：命令式操作页面栈的五种跳转——按"要不要能返回/栈变不变"选型
+wx.navigateTo({ url: '/pages/detail/detail?id=5' });   // ✅ 入栈：保留当前页，可 back 回来（+1）
+wx.redirectTo({ url: '/pages/login/login' });           // ✅ 替换：关闭当前页再打开（栈不加深，原页 onUnload）
+wx.navigateBack({ delta: 1 });                          // ✅ 出栈：返回上（delta）页
+wx.switchTab({ url: '/pages/home/home' });              // ✅ 跳 tabBar 页（会清空非 tab 栈）
+wx.reLaunch({ url: '/pages/home/home' });               // ✅ 重启：关掉所有页，只剩 1 页
+// ❌ navigateTo 到 tabBar 页 → 失败报 "can not navigateTo a tabbar page"（tab 页只能 switchTab/reLaunch）
+// ❌ 第 11 次 navigateTo → 失败（页面栈上限 10 层，深层流程要改 redirectTo）
 ```
 
 | 需求 | 用哪个 | 页面栈变化 | 传参后原页数据还在吗 |
@@ -49,11 +52,14 @@ wx.reLaunch({ url: '/pages/home/home' });               // 重启：关掉所有
 ## 三、url 传参：小程序唯一的"路由参数"
 
 ```js
+// 目的：url query 是小程序唯一的路由参数（都是字符串，一次性、返回带不回）
 // 跳转
 wx.navigateTo({ url: `/pages/detail/detail?id=${id}&from=list` });
 
 // 接收（呼应 mp-lifecycle onLoad）
-Page({ onLoad(query) { this.setData({ id: query.id, from: query.from }); } });
+Page({ onLoad(query) { this.setData({ id: query.id, from: query.from }); } });   // ✅ query.id 是字符串 "5"，要数字需 Number()
+// ❌ 以为拿到的是数字/布尔 → `?id=5` 收到的是 "5"（字符串），比较/运算前未转会错
+// ❌ 大对象拼进 url（JSON.stringify+encode）→ 长度限制、可读性差，是坏味道（应只传 id + 用 globalData/缓存）
 ```
 
 规则与坑：

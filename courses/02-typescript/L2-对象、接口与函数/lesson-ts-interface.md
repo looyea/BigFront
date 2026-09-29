@@ -53,9 +53,15 @@ interface 只能描述"对象/函数/可索引**形状**"，表达不了联合�
 同名 interface 会**自动合并**，成员取并集：
 
 ```ts
+// 目的：同名 interface 自动合并，两个声明的成员取并集
 interface Window { title: string }
 interface Window { close(): void }
 // 合并后 Window = { title: string; close(): void }
+// ✅ 应用：合并后的形状两个字段都能用
+declare const w: Window;
+w.title;           // string（来自第一个声明）
+w.close();         // void（来自第二个声明）
+// w.nope;        // ❌ Error：Property 'nope' does not exist on type 'Window'
 ```
 
 这是 interface 的杀手锏，用于：
@@ -114,14 +120,24 @@ interface Dict { [k: string]: unknown; length: number }
 ## 七、实战片段
 
 ```ts
-// 用 interface 定义可扩展的实体契约
-interface Entity { readonly id: string }
+// 目的：interface 定义可扩展实体契约，type 做类型运算
+interface Entity { readonly id: string }                    // 基契约：id 只读
 interface User extends Entity { name: string; email?: string }
 
 // 用 type 做类型运算
-type UserPreview = Pick<User, "id" | "name">;       // 见 ts-utility
-type OptionalUser = Partial<User>;
-type UserKey = keyof User;                          // "id" | "name" | "email"（见 ts-generic-constraints）
+type UserPreview = Pick<User, "id" | "name">;       // 只取 id/name 两个字段
+type OptionalUser = Partial<User>;                       // 一切字段变可选
+type UserKey = keyof User;                             // "id" | "name" | "email"（见 ts-generic-constraints）
+
+// ✅ 应用：UserPreview 只需 id/name，允许不传 email
+const pv: UserPreview = { id: "1", name: "Ada" };
+// const bad: UserPreview = { id: "1", name: "Ada", email: "x" };  // ❌ email 不在 UserPreview 里
+// OptionalUser 可传空对象（全可选）
+const ou: OptionalUser = {};
+// ❌ 断言到 UserKey 以外的键会报错
+declare function get<K extends UserKey>(k: K): User[K];
+get("name");   // ✓
+// get("age"); // ❌ "age" 不属于 "id"|"name"|"email"
 ```
 
 ---

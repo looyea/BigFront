@@ -7,12 +7,14 @@
 官方比喻很准：signal 像"一个可变变量，现在指一个值、将来能指向另一个值"。区别在于——它被读的时候会记下"谁在读"，被写的时候会通知那些读者。这就是**细粒度**的最小单元。
 
 ```js
+// 目的：signal 的最小用法—createSignal 返回 [getter, setter] 元组，读即调用、写即调用
 import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(1);
-console.log(count());   // 1  —— 读：调用 getter
-setCount(0);            // 写：调用 setter
-console.log(count());   // 0
+const [count, setCount] = createSignal(1);   // ✅ 元组解构：count 是 getter、setCount 是 setter
+console.log(count());   // 1  —— 读：调用 getter（追踪作用域里才登记订阅）
+setCount(0);            // 写：调用 setter，值不同才通知订阅者
+console.log(count());   // 0  —— getter 现读现取，拿到最新值
+// ❌ 写成 console.log(count) 漏括号 → 打的是 getter 函数本身，不是值
 ```
 
 `createSignal(初值)` 返回一个**两元素数组（元组）**：`[getter, setter]`。`count` 是 getter、`setCount` 是 setter。这一对就是 Solid 所有响应式的原子。
@@ -33,9 +35,11 @@ console.log(count());   // 0
 `setCount` 写值时会把新值和旧值比一下，**只有真的不同才通知订阅者**。官方手搓响应系统那段就是这句：`if (value === newValue) return;`。
 
 ```js
+// 目的：setter 的"值相等短路"—新值与旧值 === 就不通知，省掉无效重渲染
 const [n, setN] = createSignal(5);
-setN(5);   // 值没变（===）→ 不通知、下游 effect 不跑
-setN(6);   // 变了 → 通知
+setN(5);   // ✅ 值没变（===）→ 短路 return，不通知、下游 effect 不跑
+setN(6);   // ✅ 变了 → 通知订阅者
+// ❌ signal 存对象时原地改内部再 setObj(同一引用) → === 判"没变"，UI 不更新（深层改要 createStore）
 ```
 
 **坑点**：比较用的是引用相等（`===`）。若你 signal 存的是对象/数组，每次 `setObj({...})` 造了新引用就算"变了"；反之你**原地改了对象内部**再 set 同一个引用，会被短路当成"没变"、不更新。所以：**标量/整体替换用 signal；深层对象要按路径精确更新，用 `createStore`（L2）**。
@@ -45,8 +49,10 @@ setN(6);   // 变了 → 通知
 setter 也能收一个"由旧值算新值"的函数，避免读到过期闭包值：
 
 ```js
-setCount(c => c + 1);        // 基于当前值递增
-setCount(n => n * 2);        // 派生式更新
+// 目的：函数式更新—setter 收一个"由旧值算新值"的回调，避免读到过期闭包值
+setCount(c => c + 1);        // ✅ 回调拿到的是当前最新值，递增不会跨错旧值
+setCount(n => n * 2);        // ✅ 派生式更新，同理基于当下值翻倍
+// ❌ 异步/批处理里 setCount(count() + 1) 读的是调用瞬间的旧快照，连调多次会互相覆盖（用函数形式更稳）
 ```
 
 需要**多个 signal 一起更新且只通知一次**时，用 `batch`（见下一关）；Solid 在事件/effect 里通常已自动批量，但异步回调里手动 `batch` 能合并多次写、削减中间通知。
@@ -56,12 +62,14 @@ setCount(n => n * 2);        // 派生式更新
 signal 的一切坑都源于一件事：**你拿走了值，而不是保留了对 getter 的调用**。
 
 ```js
-const [count, setCount] = createSignal(1);
+// 目的：丢响应根因一—你拿走了值，而不是保留了对 getter 的调用
+const [count, setCount] = createSignal(1);   // ✅ 一对 getter/setter 就是响应式原子
 
-// ❌ 丢失响应：存了快照
-const snapshot = count();          // 只是个数字 1，永远不变
-// ✅ 保留响应：包进函数/getter
-const current = () => count();     // 每次调用都读当下值
+// ❌ 丢失响应：存了快照 → snapshot 只是个数字 1，count 再变它也不动
+const snapshot = count();
+// ✅ 保留响应：包进函数/getter → 每次调用都读当下值
+const current = () => count();
+// ❌ 把 count()（快照）当实参传给只跑一次的表达式 → 定格；要跟着变得传函数 count（getter 本身）
 ```
 
 - **解构**：`const { x } = state` 或把 signal 解构成普通变量，得到的是定格值；要响应就别解构，或 `createMemo` 暴露。

@@ -7,13 +7,15 @@
 ## 一、对象类型基础
 
 ```ts
+// 目的：行内对象类型 + 类型别名复用，把“形状”抽出来多次使用
 const point: { x: number; y: number } = { x: 0, y: 0 };
 
-// 属性可加类型别名复用
-type Coord = { x: number; y: number };
-function dist(a: Coord, b: Coord) {
+type Coord = { x: number; y: number };      // 属性抽成类型别名复用
+function dist(a: Coord, b: Coord) {          // 两个参数都按 Coord 形状接收
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
+dist({ x: 0, y: 0 }, { x: 3, y: 4 });   // ✅ 应用 => 5
+// dist({ x: 0 }, { x: 3, y: 4 });     // ❌ 第一个参缺 y：Property 'y' is missing
 ```
 
 ---
@@ -144,11 +146,16 @@ function area(s: Shape) {
 ## 九、嵌套与深只读
 
 ```ts
+// 目的：readonly 只挡一层，嵌套对象内部仍可改（浅只读）
 type Address = { city: string; zip: string };
 type Person = { name: string; address: Address };
+const p: Person = { name: "Ada", address: { city: "SH", zip: "200000" } };
+p.address.city = "BJ";   // ✓ address 内部仍可改（没标 readonly）
 
 // readonly 只挡一层，address 内部仍可变：
 type Deep = { readonly name: string; readonly address: { readonly city: string } };
+const d: Deep = { name: "Ada", address: { city: "SH" } };
+// d.address.city = "BJ";  // ❌ 逐层都标 readonly 后，内部也不可改
 ```
 
 要"整棵树一层不变"得用递归工具类型 `Readonly<T>` / 手写 `DeepReadonly<T>`（映射类型，见 ts-utility / ts-advanced）。理解 `readonly` 的"浅"特性很重要。

@@ -33,10 +33,12 @@
 **`[...rest]` 能匹配空**——`/foo/[...rest]` 连 `/foo` 本身都匹配（rest 为空字符串）。想让它强制至少一段？load 里自己校验：
 
 ```ts
+// 目的：给 [...rest] 补“至少一段”校验—rest 能匹配空，需在 load 里自己拦
 export function load({ params }) {
-  if (!params.rest) throw redirect(307, '/foo');
-  return { segments: params.rest.split('/') };
+  if (!params.rest) throw redirect(307, '/foo');   // ✅ /foo 本身命中时 rest 为空串→重定向回主页，防空段渲染
+  return { segments: params.rest.split('/') };   // ✅ 非空才拆段交给页面
 }
+// ❌ 不校验直接用 params.rest.split('/') → /foo 时 rest 是 ''，split 得 ['']，页面渲染出一个空段幽灵
 ```
 
 **`[[optional]]` 不能接在 rest 参数之后**——`/[...rest]/[[maybe]]` 是非法结构，官方明话：那玩意永远匹配不到任何东西，rest 已经把尾巴全吃了。设计 URL 时别指望"剩余段之后还有个可选尾段"。

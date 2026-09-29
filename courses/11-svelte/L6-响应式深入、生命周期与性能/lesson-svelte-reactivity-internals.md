@@ -10,11 +10,12 @@ Vue 的响应式建立在 **Proxy 依赖收集 + 渲染函数重跑**；React �
 
 ```svelte
 <script>
-  let count = $state(0);
-  let double = $derived(count * 2);
+  // 目的：看编译后的信号图源头—一个 $state 是 source，一个 $derived 是中间节点，模板表达式是终端 effect
+  let count = $state(0);            // ✅ 编译成 source 信号（带版本号）
+  let double = $derived(count * 2); // ✅ 编译成 derived 信号：惰性，有人读才算
 </script>
-<p>{double}</p>
-<button onclick={() => count++}>+1</button>
+<p>{double}</p>                     {/* ✅ 这个表达式被编译成微型 effect，只更新这一个文本节点 */}
+<button onclick={() => count++}>+1</button>   {/* ✅ 写操作：version+1 → 下标脏 → 排队微任务 flush */}
 ```
 
 编译后可视化为三层图：
@@ -42,12 +43,14 @@ count(source) ──► double(derived) ──► <p> 文本 effect
 effect 里读了什么就依赖什么，有时多余（只想"被 A 触发、顺带读 B"）：
 
 ```js
+// 目的：untrack 显式断开依赖—读了但不因它重跑
 import { untrack } from 'svelte';
 
 $effect(() => {
-  a;                                   // 依赖 a
-  untrack(() => console.log(b));       // 读 b 但不因 b 重跑
+  a;                                   // ✅ 依赖 a：a 变才重跑这个 effect
+  untrack(() => console.log(b));       // ✅ 读 b 但不建立依赖：b 变不会触发重跑
 });
+// ❌ 不 untrack 直接读 props 传入的回调 → 父每次渲染回调换新引用，effect 风暴重跑
 ```
 
 典型用途：effect 里调用**props 传入的回调**（回调对象每次父渲染换新引用，不 untrack 就会风暴重跑）；上报/日志。**副作用依赖越少越好**是通则（呼应 react-useeffect 依赖数组哲学）。
@@ -57,9 +60,11 @@ $effect(() => {
 ## 四、$inspect：runes 时代的 console.log
 
 ```js
-$inspect(count);                       // count 变就打印
-$inspect(count).with((c) => ({ c }));  // 自定义呈现(对象/分组)
-$inspect.trace(() => { /* 谁改了谁 */ }); // 5.x:追溯一次写入惊动了哪些 effect
+// 目的：$inspect — runes 时代的 console.log，只在 dev 生效、生产自动剔除
+$inspect(count);                       // ✅ count 变就打印（没打印=上游没变/依赖没建）
+$inspect(count).with((c) => ({ c }));  // ✅ 自定义呈现(对象/分组)
+$inspect.trace(() => { /* 谁改了谁 */ }); // ✅ 5.x：追溯一次写入惊动了哪些 effect
+// ❌ 在组件体里 console.log(count) 排查更新 → 组件体只跑一次，根本看不到后续变化
 ```
 
 - 只在**开发模式**生效，生产自动剔除——放心留在代码里调试。

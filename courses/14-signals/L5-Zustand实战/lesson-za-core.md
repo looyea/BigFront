@@ -5,23 +5,25 @@
 ## 一、十行起步：Zustand 的最小完整体
 
 ```js
+// 目的：十行写一个可用的 Zustand store—create 返回的 hook 本身就是 store+绑定层
 import { create } from 'zustand';
 
 const useBearStore = create((set, get) => ({
   bears: 0,
-  addBear: () => set((s) => ({ bears: s.bears + 1 })),   // action 就长在 store 里
+  addBear: () => set((s) => ({ bears: s.bears + 1 })),   // ✅ action 就长在 store 里，函数式 set 基于最新值
   reset: () => set({ bears: 0 }),
-  roar: () => console.log('当前熊数：', get().bears),     // get：action 里读最新状态
+  roar: () => console.log('当前熊数：', get().bears),     // ✅ get：action 里读最新状态
 }));
 
 function BearCounter() {
-  const bears = useBearStore((s) => s.bears);            // selector：订什么拿什么
+  const bears = useBearStore((s) => s.bears);            // ✅ selector：订什么拿什么，只订阅 bears
   return <h1>{bears} around here...</h1>;
 }
 function Controls() {
-  const addBear = useBearStore((s) => s.addBear);        // 取函数引用稳定，天然不过时
+  const addBear = useBearStore((s) => s.addBear);        // ✅ 取函数引用稳定，天然不过时
   return <button onClick={addBear}>one more</button>;
 }
+// ❌ 不传 selector 直接 useBearStore()→ 订阅整个 state，任何字段变都重渲本组件（丧失细粒度）
 ```
 
 对照 Redux 同功能：没有 Provider（模块单例即全局）、没有 action type 表、没有 reducer 文件、没有 dispatch 样板——**create 返回的 hook 本身就是 store+绑定层**。这也是 13 包之后我们对『外部 store 入 React』的标准答案（L1 提过：Zustand v1 早于 useSyncExternalStore，机制上先于官方正门）。
@@ -29,9 +31,11 @@ function Controls() {
 ## 二、set 的合并语义与『不可变』硬约束
 
 ```js
-set({ bears: 1 });                    // 浅合并：其余字段原样保留，返回新 state 对象
-set((s) => ({ bears: s.bears + 1 })); // 函数式：基于最新 state 计算（并发/连续 set 安全）
-set({ nested: { ...s.nested, x: 1 } });// 深字段：手动展开——或者交给 immer 中间件（za-middleware）
+// 目的：set 的合并语义—浅合并、必须产生新引用
+set({ bears: 1 });                    // ✅ 浅合并：其余字段原样保留，返回新 state 对象
+set((s) => ({ bears: s.bears + 1 })); // ✅ 函数式：基于最新 state 计算（并发/连续 set 安全）
+set({ nested: { ...s.nested, x: 1 } });// ✅ 深字段：手动展开——或者交给 immer 中间件（za-middleware）
+// ❌ 就地改 state.bears = 5 或原对象返回→ Object.is(新,旧) 判"没变"，UI 静默不更新（不报错，最难查）
 ```
 
 两条铁律：
@@ -42,10 +46,11 @@ set({ nested: { ...s.nested, x: 1 } });// 深字段：手动展开——或者�
 ## 三、selector：订阅面就是你的比较面
 
 ```js
-const user = useStore((s) => s.user);                  // ✓ 只订 user
-const pos = useStore((s) => ({ x: s.x, y: s.y }));     // ✗ 每次返回新对象 → 永远『变了』→ 无限重渲
+// 目的：selector 的订阅面就是比较面—默认 Object.is 比产物
+const user = useStore((s) => s.user);                  // ✅ 只订 user，产物是稳定引用
+const pos = useStore((s) => ({ x: s.x, y: s.y }));     // ❌ 每次返回新对象 → 永远"变了"→ 无限重渲
 import { useShallow } from 'zustand/react/shallow';
-const pos = useStore(useShallow((s) => ({ x: s.x, y: s.y })));  // ✓ 浅比较产物，稳了
+const pos = useStore(useShallow((s) => ({ x: s.x, y: s.y })));  // ✅ 浅比较产物，稳了
 ```
 
 Zustand 的订阅模型一句话说尽：**每次相关更新时执行你的 selector，把产物与上次产物比较（默认 Object.is），变了才重渲组件**。于是：
@@ -59,12 +64,14 @@ Zustand 的订阅模型一句话说尽：**每次相关更新时执行你的 sel
 ## 四、store 的旁路：组件外读写与订阅
 
 ```js
-useBearStore.getState().addBear();            // 事件处理器、工具函数里直接用
-useBearStore.setState({ bears: 42 });         // 测试重置利器
+// 目的：store 旁路三件套—组件外 getState/setState/subscribe，框架无关状态源
+useBearStore.getState().addBear();            // ✅ 事件处理器、工具函数里直接读写
+useBearStore.setState({ bears: 42 });         // ✅ 测试重置利器
 const unsub = useBearStore.subscribe(
-  (s) => s.bears,                              // v4.4+：selector 版 subscribe
-  (bears) => sendBeacon(bears),                // 只在 bears 变时回调
+  (s) => s.bears,                              // ✅ v4.4+：selector 版 subscribe
+  (bears) => sendBeacon(bears),                // ✅ 只在 bears 变时回调
 );
+// ❌ subscribe 不接 unsub 又不退订→ 作用域销毁后回调仍跑，泄漏（与所有订阅同款纪律）
 ```
 
 三件套把 store 变成真正的『框架无关状态源』：路由守卫、WebSocket 回调、Web Worker 消息处理都能读写——**这份能力正是 signal 派共享状态层的同款卖点**（Zustand 在这里是『带 React 绑定的 signal store』的不可变变体，L6 再收）。subscribe 的 transient 用法（不走渲染的高频订阅，如动画帧读数）在 za-patterns 展开。
@@ -72,11 +79,12 @@ const unsub = useBearStore.subscribe(
 ## 五、useSyncExternalStore：外部 store 的官方正门
 
 ```js
-// React 18 提供的外部订阅标准桥（简化示意）：
+// 目的：useSyncExternalStore—外部 store 入 React 的官方正门（解决并发撕裂）
 const value = useSyncExternalStore(
-  (cb) => { const u = store.subscribe(cb); return u; },  // subscribe：注册监听返回退订
-  () => store.getState(),                                 // getSnapshot：读当下快照
+  (cb) => { const u = store.subscribe(cb); return u; },  // ✅ subscribe：注册监听、返回退订函数
+  () => store.getState(),                                 // ✅ getSnapshot：读当下快照（必须返回稳定的已缓存值）
 );
+// ❌ getSnapshot 每次返回新对象（如 () => ({...store.getState()})）→ React 报 "getSnapshot should be cached" 并死循环
 ```
 
 它解决的问题专列：**撕裂（tearing）**——并发渲染下两个组件可能读到同一 store 的不同时刻的值。React 通过此 hook 在渲染提交时复核快照、不一致即重渲，把『外部可变源』纳入并发安全体系。Zustand v4+ 的 useStore 底层就是它；你手写任何外部 store 绑定（包括 Redux、自研 signal 桥），正门都在这。L1 时间线里 2020 年『外部 store 复兴』的技术注脚就是这一行 hook（呼应 13 包 solid 与 React 集成的同类讨论）。

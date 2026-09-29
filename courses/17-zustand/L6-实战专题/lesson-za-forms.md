@@ -16,12 +16,19 @@
 ## 三、跨步骤草稿进 store
 
 ```ts
+// 目的：跨步骤草稿进 persist store——step 与 data 落盘，刷新可恢复到上次进度
 const useWizard = create(
   persist(
-    (set) => ({ step: 0, data: {}, setStep: (n) => set({ step: n }), patch: (d) => set((s) => ({ data: { ...s.data, ...d } })) }),
-    { name: 'wizard' }
+    (set) => ({
+      step: 0, data: {},                                                     // 当前步 + 已填草稿
+      setStep: (n) => set({ step: n }),                                      // 切步
+      patch: (d) => set((s) => ({ data: { ...s.data, ...d } })),            // 函数式合并局部字段，不覆盖整块 data
+    }),
+    { name: 'wizard' }                                                       // 存 localStorage 的 key
   )
 );
+// ✅ patch 取最新 s 再展开合并，多次连点草稿不互相覆盖
+// ❌ patch 写成 set({ data: d }) 整体替换→传部分字段就把已填的其它字段清空，草稿越填越少
 ```
 步骤切换不丢、刷新可恢复。
 
@@ -36,11 +43,14 @@ const useWizard = create(
 提交 loading → 乐观展示 → 失败回滚：把提交态放 store，RHF 负责取值校验（呼应 za-transition 的 useOptimistic）。
 
 ```tsx
+// 目的：提交流程——loading 置位、成功 reset、finally 收尾，杜绝按钮卡在半转
 async function onSubmit(v) {
-  setSubmitting(true);
-  try { await api.save(v); reset(); }
-  finally { setSubmitting(false); }
+  setSubmitting(true);                          // 提交态进 store，按钮据此禁用/转圈
+  try { await api.save(v); reset(); }          // 成功才清空表单（RHF reset）
+  finally { setSubmitting(false); }            // 无论成败都落回非提交态，防异常下永远 loading
 }
+// ✅ finally 保证 setSubmitting(false) 一定执行，请求抛错也不会让按钮永远转圈
+// ❌ 不写 finally、把 setSubmitting(false) 放 try 末尾→api.save 抛错就跳过，按钮永久禁用假死
 ```
 
 服务端字段错误回写：`setError('email', { message: err })`——把后端 422 映射回具体字段，是 RHF 与 store 协作的最后一块拼图。

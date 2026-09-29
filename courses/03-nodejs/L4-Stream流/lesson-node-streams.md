@@ -26,10 +26,11 @@ Duplex = Readable + Writable 两端互不影响；Transform 是"写进去的会�
 一旦 `on('data')`（或 `resume()`），流进入"流动模式"，把数据**尽可能快**地一块块推给你：
 
 ```js
+// 目的：flowing 模式——挂 on('data') 后流全速推数据，逐块消费
 const rs = fs.createReadStream("big.txt", "utf8");
-rs.on("data", (chunk) => process.stdout.write(chunk));  // 每来一块触发
+rs.on("data", (chunk) => process.stdout.write(chunk));  // 每来一块触发（chunk 是一段文本）
 rs.on("end", () => console.log("\n读完"));               // 正常结束（非 error）
-rs.on("error", (e) => console.error(e));                 // ★ 必须挂（呼应 node-events）
+rs.on("error", (e) => console.error(e));                 // ★ 必须挂，否则读失败时 'error' 无监听→崩进程（呼应 node-events）
 ```
 
 ### 2.2 paused（手动拉取）
@@ -37,9 +38,11 @@ rs.on("error", (e) => console.error(e));                 // ★ 必须挂（呼�
 不挂 `data`、只用 `read()`：适合"我要按自己的节奏取"（背压场景的基础）。
 
 ```js
+// 目的：paused 模式——不挂 data，用 read() 按自己节奏拉取（背压场景基础）
 let chunk;
-while ((chunk = rs.read()) !== null) handle(chunk);   // 内部缓冲有货才给
+while ((chunk = rs.read()) !== null) handle(chunk);   // 内部缓冲有货才给，取完返回 null 退出循环
 rs.on("readable", () => { /* 可读，自行 read */ });
+// ⚠️ data 与 readable 二选一：混用会抢走同一块数据、行为怪异
 ```
 
 **关键事件语义**：`'end'` 只在**正常读完**触发；`'close'` 表示资源释放（呼应 node-events 第六节）；`'error'` 一旦发生流即终止。**`data` 与 `readable` 二选一**，混用会行为怪异。
@@ -49,8 +52,9 @@ rs.on("readable", () => { /* 可读，自行 read */ });
 ## 三、Writable 与"写完再说"
 
 ```js
+// 目的：Writable—write 入缓冲并拿背压信号，end 收流，'finish' 代写尽落地
 const ws = fs.createWriteStream("out.txt");
-const ok = ws.write("第一块\n");      // 返回 boolean：是否还能继续无脑写
+const ok = ws.write("第一块\n");      // 返回 boolean：true=还能继续写，false=缓冲超 hwm 应等 'drain'
 if (!ok) { /* 缓冲区已满，等 'drain' 再写（见背压） */ }
 ws.end("最后一块", () => console.log("全部落盘完成"));  // end = 写完这几块就关闭
 ws.on("error", console.error);
@@ -67,13 +71,14 @@ ws.on("error", console.error);
 Transform 有进有出，中间做变换，最适合串成"流水线"：
 
 ```js
+// 目的：自定义 Transform——每块进来加工后 push 出去，用 pipe 串成流水线
 const { createGzip } = require("node:zlib");
 const upper = new (require("node:stream").Transform)({
-  transform(chunk, enc, cb) {           // 每块进来，加工后 push 出去
-    cb(null, chunk.toString().toUpperCase());
+  transform(chunk, enc, cb) {           // 每块进来，加工后交回流
+    cb(null, chunk.toString().toUpperCase());   // 第一个参 null=无错，第二参是加结果输出
   },
 });
-src.pipe(upper).pipe(gz).pipe(dest);    // pipe 串接（错误处理缺陷见下一关 pipeline）
+src.pipe(upper).pipe(gz).pipe(dest);    // pipe 串接（src/gz/dest 为示意流；错误处理缺陷见下一关 pipeline）
 ```
 
 典型 Transform：`zlib`（压缩/解压）、`crypto` 加解密、`StringDecoder`（utf8 分块解码，呼应 node-buffer 第四节）、CSV 解析、JSON 转行。
@@ -91,13 +96,13 @@ src.pipe(upper).pipe(gz).pipe(dest);    // pipe 串接（错误处理缺陷见�
 - 于是"快的读端"被"慢的写端"反向节流，整条链内存恒定。
 
 ```js
-// 手动写一个遵守背压的循环（理解原理用；实际请优先 pipeline，见下一关）
+// 目的：手写一个遵守背压的 pump（理解原理用；实际请优先 pipeline，见下一关）
 function pump(readable, writable) {
   readable.on("data", (chunk) => {
-    if (!writable.write(chunk)) readable.pause();   // 满了就先暂停读
+    if (!writable.write(chunk)) readable.pause();   // write 返回 false（缓冲满）→ 暂停读，防止内存堆积
   });
-  writable.on("drain", () => readable.resume());    // 缓冲腾空再继续
-  readable.on("end", () => writable.end());
+  writable.on("drain", () => readable.resume());    // 下游腾空缓冲→恢复读
+  readable.on("end", () => writable.end());         // 读完了通知写端关闭
 }
 ```
 

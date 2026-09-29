@@ -11,10 +11,12 @@ Svelte 4 用 `export let size`；**Svelte 5 统一用 rune**：
 ```svelte
 <!-- Button.svelte -->
 <script>
-  let { size = 'medium', disabled = false } = $props();
+  // 目的：$props() 解构声明组件输入—等号给默认值，解构出的变量仍响应父端变化
+  let { size = 'medium', disabled = false } = $props();   // ✅ 每个 prop 被编译成 getter，非取一次快照
 </script>
 
 <button class={size} {disabled}>按钮内容</button>
+<!-- ❌ 用旧写法 export let size → Svelte 5 不推荐，且无法享受 runes 一致的响应语义 -->
 ```
 
 父组件：`<Button size="large" />`
@@ -29,6 +31,7 @@ Svelte 4 用 `export let size`；**Svelte 5 统一用 rune**：
 
 ```svelte
 <script>
+  // 目的：props 只读—要本地可变就显式拷进 $state，遵守单向数据流
   let { count } = $props();
   // count += 1;           // ❌ 报错：不能给 prop 重新赋值
   let local = $state(count); // ✅ 要本地可变，就拷进 $state
@@ -46,17 +49,19 @@ Svelte 5 弃用 `createEventDispatcher`，改用**把函数当 prop 传下去再
 ```svelte
 <!-- 子 SearchBox.svelte -->
 <script>
-  let { onsubmit } = $props();
+  // 目的：往上传—把函数当 prop 收下来再调用，取代 createEventDispatcher
+  let { onsubmit } = $props();   // ✅ 父传的回调，约定名 onXxx
   let q = $state('');
 </script>
-<form onsubmit={(e) => { e.preventDefault(); onsubmit?.(q); }}>
+<form onsubmit={(e) => { e.preventDefault(); onsubmit?.(q); }}>   {/* ✅ ?. 兼容父未传的情况 */}
   <input bind:value={q} />
 </form>
 ```
 
 ```svelte
 <!-- 父 -->
-<SearchBox onsubmit={(query) => doSearch(query)} />
+<!-- 目的：父传回调接住子组件抛回的数据 -->
+<SearchBox onsubmit={(query) => doSearch(query)} />   <!-- ✅ 子组件提交时回传 q 给父 -->
 ```
 
 命名约定：常用 `onXxx`（也可 `onclick` 这类原生事件名直接透传，见 L2 svelte-events）。
@@ -70,15 +75,18 @@ Svelte 5 弃用 `createEventDispatcher`，改用**把函数当 prop 传下去再
 ```svelte
 <!-- Input.svelte -->
 <script>
-  let { value = $bindable('') } = $props();
+  // 目的：$bindable—把 prop 标成可双向，才能被父用 bind: 绑定
+  let { value = $bindable('') } = $props();   // ✅ 带默认值；不加默认则要求父必须绑
 </script>
 <input bind:value />
 ```
 
 ```svelte
 <!-- 父 -->
+<!-- 目的：父 bind: 到子组件的 $bindable prop—子改 value，父的 name 同步 -->
 <script>let name = $state('');</script>
-<Input bind:value={name} />   <!-- 子组件改 value，父的 name 同步 -->
+<Input bind:value={name} />   <!-- ✅ 双向：子组件内改动会回写父的 name -->
+<!-- ❌ 子组件的 value 没标 $bindable 就在父里 bind: → 编译报错，bind 不了只读 prop -->
 ```
 
 - 没标 `$bindable` 的 prop 只能父→子（只读）；标了才能 `bind:` 双向。
@@ -96,12 +104,14 @@ Svelte 5 弃用 `createEventDispatcher`，改用**把函数当 prop 传下去再
 
 ```svelte
 <script>
-  let { title, children } = $props();
+  // 目的：children 也是 prop—标签间内容作为 snippet，用 {@render} 渲染
+  let { title, children } = $props();   // ✅ children 是标签之间的内容
 </script>
 <section>
   <h2>{title}</h2>
-  {@render children?.()}
+  {@render children?.()}   <!-- ✅ ?. 调用渲染插槽内容，无内容则不渲染 -->
 </section>
+<!-- ❌ 只写 {children} 不写 {@render children?.()} → snippet 不被调用，子内容根本不出现 -->
 ```
 
 ---

@@ -7,6 +7,7 @@
 ## 一、tsconfig 的三段结构
 
 ```jsonc
+// 目的：一份 tsconfig.json 的完整骨架——顶层字段各自圈定"编译范围"与"继承/引用关系"
 {
   "compilerOptions": { /* 编译/检查选项 */ },
   "files": ["src/main.ts"],           // 显式文件清单（少用）
@@ -24,6 +25,7 @@
 ## 二、编译目标与产物
 
 ```jsonc
+// 目的：最常用的"编译目标与产物"选项——控制降到哪版 JS、输出到哪、给什么环境类型
 {
   "compilerOptions": {
     "target": "ES2022",           // 语法降级到哪一版 JS（决定 class/#、可选链等是否转译）
@@ -98,6 +100,7 @@ tsconfig.node.json      // 给 vite.config.ts / 脚本用（types=node、module�
 ## 六、项目引用与增量编译
 
 ```jsonc
+// 目的：声明"根工程只聚合不直接编译，子包用 composite+declaration 供上游复用"
 // tsconfig.json
 { "files": [], "references": [{ "path": "app" }, { "path": "lib" }] }
 // lib/tsconfig.json

@@ -50,9 +50,12 @@
 - **代价**：WXSS 能力子集不同（部分选择器/特性不支持）、老机型与复杂生态页需双渲染方案回退 WebView——**按页面灰度**，一刀切是赌博（呼应 react 18 并发渲染的"渐进采纳"、vite 构建 target 的兼容权衡）。
 
 ```wxml
+<!-- 目的：Skyline 引擎内置回收列表 list-view/item-view，只渲染可视区行，大列表帧率与一致性提升 -->
 <!-- Skyline 下的回收列表示意 -->
 <list-view scroll-y style="height: 100vh">
   <item-view wx:for="{{ feed }}" wx:key="id" ...>
+<!-- ❌ 未开 renderer:skyline 直接用 list-view → 不生效（需页面/app.json 配 renderer） -->
+<!-- ❌ Skyline 下用部分不被支持的 WXSS 选择器/特性 → 样式丢失（能力子集不同，需回退 WebView） -->
 ```
 
 ---

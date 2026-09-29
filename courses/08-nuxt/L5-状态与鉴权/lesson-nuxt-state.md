@@ -20,12 +20,14 @@
 ## 3. useState：最低成本的同构状态
 
 ```ts
+// 目的：useState 同构状态——刷新后回默认值的轻量共享态，key 相同即同一 ref
 // composables/useSidebar.ts
 export const useSidebar = () => {
-  const open = useState<boolean>('sidebar-open', () => false);
-  const toggle = () => (open.value = !open.value);
+  const open = useState<boolean>('sidebar-open', () => false);  // ✅ 服务端首访执行 init、结果进 payload，客户端水合复用
+  const toggle = () => (open.value = !open.value);              // ✅ 任意组件调 useSidebar() 拿到同一个 open
   return { open, toggle };
 };
+// ❌ init 返回 Date/Map/Set/函数 → 序列化进 payload 时 Date 变字符串、Map/Set 变空对象、函数直接丢失
 ```
 
 `useState(key, init)` 三个要点：
@@ -39,22 +41,25 @@ export const useSidebar = () => {
 ## 4. Pinia：官方模块 + SSR 的自动水合
 
 ```bash
-nuxt ts pinia@latest   # 或 nuxt mod add pinia（呼应 nuxt-directory 的模块生态）
+# 目的：安装 Pinia 官方模块（呼应 nuxt-directory 的模块生态）
+nuxt module add pinia   # ✅ 自动写入 nuxt.config 的 modules 并配好 SSR 自动水合
 ```
 
 写法与 04-vue 里几乎完全相同，Setup Store 优先：
 
 ```ts
+// 目的：Setup Store——与 04-vue 写法一致，Nuxt 模块负责每请求新建实例 + 自动水合
 // stores/cart.ts
 export const useCartStore = defineStore('cart', () => {
-  const items = ref<CartLine[]>([]);
-  const total = computed(() => items.value.reduce((s, i) => s + i.price * i.qty, 0));
-  async function hydrateFromServer() {
+  const items = ref<CartLine[]>([]);   // ✅ state：必须可 JSON 序列化，才能进 payload
+  const total = computed(() => items.value.reduce((s, i) => s + i.price * i.qty, 0)); // ✅ getter：随 items 自动重算
+  async function hydrateFromServer() { // ✅ action：SSR 期在 setup 顶层 await 调用，数据烘进 payload
     const { data } = await useFetch('/api/cart', { pick: ['items'] });
     if (data.value) items.value = data.value.items;
   }
   return { items, total, hydrateFromServer };
 });
+// ❌ 往 state 塞 class 实例/函数/循环引用 → 服务端序列化进 payload 时报错或还原成空壳
 ```
 
 Nuxt 的 Pinia 模块在背后做了三件事，值得知道而不是当成黑箱：
@@ -75,8 +80,10 @@ Nuxt 的 Pinia 模块在背后做了三件事，值得知道而不是当成黑�
 
 ```vue
 <script setup>
-const cart = useCartStore();
-await cart.hydrateFromServer();   // 顶层 await → Nuxt 挂进 Suspense（nuxt-lifecycle 第 5 节）
+// 目的：SSR 取数放 store action、setup 顶层 await——服务端渲染时数据已就位
+const cart = useCartStore();               // ✅ 在 setup 内调用，靠 getCurrentInstance 找回本请求的 pinia
+await cart.hydrateFromServer();            // ✅ 顶层 await → Nuxt 挂进 Suspense，SSR HTML 带数据
+// ❌ 改到 onMounted 里 fetch → onMounted 只客户端跑，SSR 出的 HTML 是空的，SEO 与首屏全丢（SPA 迁移团队头号错）
 </script>
 ```
 

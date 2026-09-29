@@ -7,19 +7,20 @@
 ## 一、三件套
 
 ```jsx
-const ThemeCtx = createContext('light');       // 建 context，参数是默认值
+// 目的：三件套——祖先 Provider 供值，任意深度 useContext 直接取（免 prop drilling）
+const ThemeCtx = createContext('light');       // 建 context，参数是默认值（无 Provider 时用它）
 
 function App() {
   const [theme, setTheme] = useState('dark');
   return (
-    <ThemeCtx.Provider value={theme}>          {/* 提供方 */}
+    <ThemeCtx.Provider value={theme}>          {/* 提供方（✅ 传原始值 theme，不是新对象） */}
       <DeepTree />
     </ThemeCtx.Provider>
   );
 }
 function Deep() {
-  const theme = useContext(ThemeCtx);          // 任意深度直接消费
-  return <span>当前主题：{theme}</span>;
+  const theme = useContext(ThemeCtx);          // 任意深度直接消费（向上找最近 Provider）
+  return <span>当前主题：{theme}</span>;   // 输出"当前主题：dark"
 }
 ```
 - `createContext(default)` 建容器；`<Ctx.Provider value=...>` 供值；`useContext(Ctx)` 取值；
@@ -51,12 +52,14 @@ Context 的比较是 `Object.is(value)`。value 换成新对象 → 通知所有
 3. **组件化下移 + 就地消费**：让"包 provider 的组件"本身不因无关 state 重渲染，把 provider 尽量下移到需要它的子树，消费组件保持小巧。
 
 ```jsx
+// 目的：拆 state/dispatch 两个 context——dispatch 引用稳定，只用它的组件不重渲染
 const StateCtx = createContext(null);
-const DispatchCtx = createContext(null);     // dispatch 引用稳定 → 只用它的组件不重渲染
+const DispatchCtx = createContext(null);     // ✅ dispatch 引用稳定 → 只用它的组件不重渲染
 function App({ children }) {
   const [state, dispatch] = useReducer(reducer, init);
   return <StateCtx.Provider value={state}><DispatchCtx.Provider value={dispatch}>{children}</DispatchCtx.Provider></StateCtx.Provider>;
 }
+// ❌ state+dispatch 合在一个 context：state 一变，连"只用 dispatch"的组件也被迫重渲染
 ```
 
 ---
@@ -70,11 +73,13 @@ Context 只管"把值透传给后代"，**本身不做**：性能优化选择器
 ## 六、封装成自定义 Hook（推荐）
 
 ```jsx
+// 目的：把 useContext 藏进 useXxx 并 fail-fast 判空，消费方更干净、错误更早暴露
 function useTheme() {
   const ctx = useContext(ThemeCtx);
-  if (ctx === null) throw new Error('useTheme 必须在 ThemeProvider 内');
+  if (ctx === null) throw new Error('useTheme 必须在 ThemeProvider 内');   // ✅ 早报错而非默默用 undefined
   return ctx;
 }
+// ❌ 不封装直接 useContext：忘包 Provider 时默默拿到默认值，bug 延到很晚才暴露
 ```
 把 `useContext` 藏进 `useXxx`、并 **fail-fast 判空**，消费方更干净、错误更早暴露（呼应 vue-provide-inject 的 fail fast、react-custom-hooks）。React 19 起还可 `use(Ctx)` 条件读取（呼应 react-advanced-hooks）。
 

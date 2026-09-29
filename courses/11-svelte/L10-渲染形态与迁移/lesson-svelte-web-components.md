@@ -7,20 +7,24 @@
 ## 一、开箱：三行变 `<my-widget>`
 
 ```svelte
-<svelte:options customElement="my-widget" />
+<svelte:options customElement="my-widget" />   {/* ✅ 声明 tag 名：编译侧开 customElement:true 后 import 即自动 customElements.define */}
 
 <script>
-  let { name = 'world' } = $props();
+  // 目的：三行变 <my-widget>—props 即对外 API 面
+  let { name = 'world' } = $props();   // ✅ 显式解构的 name 会被暴露成可设置的属性
 </script>
 
 <h1>Hello {name}!</h1>
-<slot />
+<slot />   {/* ✅ shadow DOM 里的原生插槽：宿主写的子内容落这里（急渲染，见第四节） */}
+<!-- ❌ 写成 let props = $props() 不点名属性 → 编译器不知要暴露哪些 prop，DOM 属性同步直接失效 -->
 ```
 
 编译侧开 `customElement: true`（vite 的 compilerOptions 或 svelte.config——L7 旋钮的第三个出口），import 这个文件时**自动 `customElements.define`**，之后它就是标准自定义元素：
 
 ```html
-<my-widget name="everybody"><p>slotted</p></my-widget>
+<!-- 目的：注册后它就是标准自定义元素，任何框架/原生页面都可用 -->
+<my-widget name="everybody"><p>slotted</p></my-widget>   <!-- ✅ name 属性经 attribute 通道传进组件，渲染出 Hello everybody! -->
+<!-- ❌ 想用驼峰属性 my-name→maxLength 这类驼峰 prop 默认收不到（attribute 通道是小写 prop 名），需在 options 里点名 attribute -->
 ```
 
 不想自动注册？省略 tag，拿静态属性 `MyWidget.element`（构造器）自己 `customElements.define('x-y', MyWidget.element)`——库作者控名必备。**内部组件不用全暴露**：没写 customElement 的子组件照常当普通 Svelte 组件用。
@@ -33,13 +37,15 @@
 - **attribute 通道默认是小写 prop 名**、类型是 String——驼峰 `maxLength` 收不到、数字 `"5"` 变字符串。在 options 里点名改造：
 
 ```svelte
+<!-- 目的：props 跨界协议—type 定翻译档、reflect 定是否写回、attribute 改名 -->
 <svelte:options customElement={{
   tag: 'my-widget',
   props: {
-    name:     { reflect: true, type: 'Number', attribute: 'my-name' },
-    items:    { type: 'Array' }
+    name:     { reflect: true, type: 'Number', attribute: 'my-name' },   // ✅ 读 <my-widget my-name="5">→ 组件拿到数字 5；prop 变也写回 DOM
+    items:    { type: 'Array' }   // ✅ attribute 存 JSON 串，自动 JSON.parse 成数组
   }
 }} />
+<!-- ❌ 默认 reflect 是不回写！查元素时“属性怎么没更新”不是 bug；驼峰 maxLength 不设 attribute 名则永远收不到值 -->
 ```
 
 `type` 决定 attribute↔prop 的 JSON 翻译档位（String/Boolean/Number/Array/Object），`reflect: true` 让 prop 变化写回 DOM（默认不回！查元素时别慌"属性怎么没更新"）；`attribute` 自定义属性名。
@@ -52,10 +58,13 @@ Svelte 5 的回调 prop（`onchange={...}`）在自定义元素场景的跨界�
 
 ```svelte
 <script>
-  let { ondone } = $props();
+  // 目的：$host—组件内访问宿主元素本体的官方通道，主动往外发标准 CustomEvent
+  let { ondone } = $props();   // ✅ Svelte 宿主可直接传回调
   function finish() {
-    $host.dispatchEvent(new CustomEvent('done', { detail: { ok: true } }));
+    // ✅ 原生/其他框架宿主用 el.addEventListener('done', ...) 也能听到
+    $host.dispatchEvent(new CustomEvent('done', { detail: { ok: true } }));   // ✅ detail 携带载荷
   }
+  // ❌ 想用 <my-widget ondone={fn}> 传回调→on 前缀是禁区，会被解释成 addEventListener('done')，不是赋 prop
 </script>
 ```
 
@@ -79,14 +88,16 @@ Svelte 5 的回调 prop（`onchange={...}`）在自定义元素场景的跨界�
 默认 wrapper 的生命周期够日常：**connectedCallback 的下一 tick 才建组件**（提前赋的 property 会被缓存不丢）、短暂脱离 DOM 不触发销毁、disconnected 下一 tick 才 destroy。要更深控制就 `extend`——拿 Svelte 生成的构造器再继承：
 
 ```svelte
+<!-- 目的：extend—拿 Svelte 生成的构造器再继承，接管理生命周期与表单集成 -->
 <svelte:options customElement={{
   tag: 'my-field',
   extend: (Base) => class extends Base {
-    static formAssociated = true;
-    constructor() { super(); this.internals = this.attachInternals(); }
-    validate() { return this.internals.checkValidity(); }
+    static formAssociated = true;   // ✅ 声明进原生表单校验体系
+    constructor() { super(); this.internals = this.attachInternals(); }   // ✅ ElementInternals：组件自己报 validity
+    validate() { return this.internals.checkValidity(); }   // ✅ 挂载前就可调（内部组件未建时 property 方法还不行，类方法即时）
   }
 }} />
+<!-- ❌ extend 函数里写 TS 类型语法（非 erasable）→ 编译直接拒绝，文档明示只吃可擦除语法 -->
 ```
 
 价值位：ElementInternals 进原生表单校验体系、挂载前就可用的方法（内部组件还没建时 property 方法不可用——extend 的类方法是即时的）。注意 TS 限制：extend 函数只吃 erasable 语法（文档明示）。

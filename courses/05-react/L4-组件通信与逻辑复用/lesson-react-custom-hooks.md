@@ -7,16 +7,17 @@
 ## 一、什么是自定义 Hook
 
 ```jsx
+// 目的：把"监听 resize + 状态 + 自清理"抽成 use 开头的函数，任何组件一行复用
 function useWindowWidth() {
-  const [w, setW] = useState(window.innerWidth);
+  const [w, setW] = useState(window.innerWidth);   // ⚠️ SSR 首帧无 window，应惰性/守卫
   useEffect(() => {
     const on = () => setW(window.innerWidth);
     window.addEventListener('resize', on);
-    return () => window.removeEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);   // ✅ 自带清理
   }, []);
   return w;
 }
-// 组件里：const w = useWindowWidth();
+// 组件里：const w = useWindowWidth();   // ✅ 每个组件调用得到各自独立的一份 w
 ```
 - 约定：**名字以 `use` 开头**（不是强制语法，但 ESLint `rules-of-hooks` 与人都靠它识别）；
 - 本质：一个**能调用 Hook 的函数**，把"有状态逻辑"抽出来复用；
@@ -36,11 +37,13 @@ function useWindowWidth() {
 ## 三、返回什么：state / setter / 函数 / ref
 
 ```jsx
+// 目的：返回对象 {state, actions}，内部函数用 useCallback 稳定引用便于 memo
 function useToggle(initial = false) {
   const [on, setOn] = useState(initial);
-  const toggle = useCallback(() => setOn(v => !v), []);   // 稳定引用便于 memo
+  const toggle = useCallback(() => setOn(v => !v), []);   // ✅ 空依赖→toggle 引用永不变，传给 memo 子不失效
   return { on, toggle };          // 返回对象：消费方命名清晰、易扩展
 }
+// ❌ 把整个 Hook 包进条件里（if(x){ useToggle() }）→ 违反 Rules of Hooks，报 "Rendered fewer hooks than expected"
 ```
 - 返回**值**（`w`）：简单；
 - 返回**对象** `{state, actions}`：多数场景最友好、字段可增不改调用方；
@@ -54,9 +57,10 @@ function useToggle(initial = false) {
 自定义 Hook 可调用别的自定义 Hook，层层拼装：
 
 ```jsx
+// 目的：自定义 Hook 可套自定义 Hook，层层拼装成小数据层
 function useLocalStorage(key, init) { /* 读写+订阅 */ }
 function useCounter(key) {
-  const [n, setN] = useLocalStorage(key, 0);   // 复用上面的 Hook
+  const [n, setN] = useLocalStorage(key, 0);   // ✅ 复用上面的 Hook
   return { n, inc: () => setN(c => c + 1), reset: () => setN(0) };
 }
 ```

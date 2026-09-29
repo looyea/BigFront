@@ -3,8 +3,11 @@
 ## 一、GitHub Actions 跑 Vitest
 
 ```yml
-- run: npm ci
-- run: npx vitest run --coverage
+# 目的：CI 里跑 Vitest 的两步——装依赖 + 单次运行出覆盖率
+- run: npm ci                       # 严格按 lockfile 安装、比 npm install 可复现
+- run: npx vitest run --coverage    # ✅ run 跑一次给退出码，绝不用 watch
+# ❌ CI 写成 vitest（watch）→ 永不退出、卡死流水线
+# ❌ 加 -u → 快照回归被自动改基线「洗白」，CI 永远绿但已失真
 ```
 
 要点：**CI 永远用 `vitest run`（不给 watch、不给 -u 更新快照）**；`actions/setup-node` 的 `cache: npm` 缓存依赖；用 `--reporter=default --reporter=github-actions`（或 junit + 上传 artifact）让 PR 里直接看红；偶发不稳定用 `retry` 配置，但**别拿重跑掩盖真 flaky**。想只跑受影响用例用 `--changed`。

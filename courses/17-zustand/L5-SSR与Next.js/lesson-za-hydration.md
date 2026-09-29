@@ -10,9 +10,12 @@ React 19 对 mismatch 更严格：文本不一致直接清掉整棵子树客户�
 ## 二、对策：skeleton + 延迟注入
 
 ```tsx
-const [ready, setReady] = useState(false);
-useEffect(() => { useStore.persist.rehydrate(); setReady(true); }, []);
-return ready ? <RealUI/> : <Skeleton/>;
+// 目的：skeleton + 延迟水合——首帧两边都渲 skeleton，手动 rehydrate 完成后再切真实 UI，规避 mismatch
+const [ready, setReady] = useState(false);                              // 服务端/首帧都是 false，两边一致
+useEffect(() => { useStore.persist.rehydrate(); setReady(true); }, []); // 只在客户端跑：读 localStorage 后点亮
+return ready ? <RealUI/> : <Skeleton/>;                                // ready 前占位，之后换真内容
+// ✅ rehydrate 放到 effect（提交后），首帧 HTML 与客户端首帧完全对齐，无 mismatch
+// ❌ 直接顶层 useStore.persist.rehydrate() 不门控→服务端读到 undefined、客户端读到旧值，React 报 Hydration failed
 ```
 首帧统一渲染 skeleton，水合完成后切换真实 UI，规避 mismatch。
 
@@ -22,7 +25,10 @@ return ready ? <RealUI/> : <Skeleton/>;
 SSR 能读的是 Cookie。自定义 storage：server 用 cookie、client 用 localStorage，实现「服务端可读的首屏偏好」：
 
 ```ts
-storage: createJSONStorage(() => (typeof window === 'undefined' ? cookieStorage : localStorage))
+// 目的：getStorage 双适配——服务端读 cookie、客户端读 localStorage，让 SSR 也能拿到首屏偏好
+storage: createJSONStorage(() => (typeof window === 'undefined' ? cookieStorage : localStorage))   // 按环境选存储源
+// ✅ typeof window === 'undefined' 判环境，server 走 cookie（SSR 可读）、client 走 localStorage
+// ❌ 直接写 localStorage 不做环境判断→服务端模块求值即 ReferenceError: localStorage is not defined，SSR 崩
 ```
 
 theme 类偏好的业界更优解是「一行阻塞 script 提前改 html class」（next-themes 原理），完全不经过 React——SSR 直出的就是正确主题，零闪烁零水合负担（呼应 07-nextjs、08-nuxt 的主题方案）。
@@ -31,9 +37,12 @@ theme 类偏好的业界更优解是「一行阻塞 script 提前改 html class�
 监听 `storage` 事件或 BroadcastChannel，一个 tab 改 persist → 其他 tab setState 更新：
 
 ```ts
+// 目的：跳标签页同步——监听 storage 事件，别的 tab 改了 persist 就 rehydrate 跟上
 window.addEventListener('storage', (e) => {
-  if (e.key === 'auth-storage') useAuthStore.persist.rehydrate();
+  if (e.key === 'auth-storage') useAuthStore.persist.rehydrate();   // 命中本 store 的 key 才重新水合
 });
+// ✅ storage 事件只在“其他”标签页触发（本 tab 不触发），天然防回声循环
+// ❌ 不加 e.key 判断就 rehydrate→别的无关 storage 变更也惊动本 store，白白重渲甚至串数据
 ```
 
 storage 事件只在**其他**标签页触发（本 tab 不触发，天然防回声）；同源 iframe 也算其他 browsing context。结构复杂的同步用 BroadcastChannel 自定协议（发 action 名而非全量 state，避免 merge 打架）。

@@ -7,22 +7,25 @@
 ## 一、最小可跑：test + assert
 
 ```js
-// math.test.js（文件名 *.test.js 会被自动发现）
+// math.test.js（文件名 *.test.js 会被 node --test 自动发现）
+// 目的：零依赖写第一个测试——用内置 test + 严格断言验证 add
 import { test } from "node:test";
 import assert from "node:assert/strict";   // strict 模式：类型也要相等
 import { add } from "./math.js";
 
 test("add", () => {
-  assert.equal(add(2, 3), 5);
-  assert.deepEqual([1, [2]], [1, [2]]);
+  assert.equal(add(2, 3), 5);              // strict 下 equal 等价于严格比较
+  assert.deepEqual([1, [2]], [1, [2]]);    // ✅ 通过：深结构相等
+  // ❌ assert.deepEqual([1, [2]], [1, ["2"]]); // 会报 AssertionError：数值 2 vs 字符串 "2" 不等
 });
 ```
 
 ```bash
-node --test                 # 跑所有匹配的测试文件
-node --test math.test.js    # 跑单文件
-node --test --watch         # 监听重跑
-npm test 里写 "test": "node --test"   # （呼应 node-npm scripts）
+# 目的：内置 test runner 的几种常用跑法
+node --test                 # 递归发现并跑所有匹配的测试文件
+node --test math.test.js    # 只跑单文件
+node --test --watch         # 文件改动自动重跑
+# "test": "node --test"     # 写进 npm scripts（呼应 node-npm），npm test 即可
 ```
 
 `assert/strict` 让 `equal` 等价于 `deepStrictEqual`（严格 + 深比较），比松散的老 `assert` 更安全（老 `assert.deepEqual` 用 `==`，易漏 bug）。
@@ -32,13 +35,14 @@ npm test 里写 "test": "node --test"   # （呼应 node-npm scripts）
 ## 二、组织：describe / it / 子测试
 
 ```js
+// 目的：describe 分组、it 写单条用例，回调里拿 TestContext 附诊断信息
 import { describe, it } from "node:test";
 
 describe("购物车", () => {
   it("空车总额为 0", () => assert.equal(total([]), 0));
   it("含一件商品", (t) => {
-    assert.equal(total([{ price: 10, qty: 2 }]), 20);
-    t.diagnostic("10 * 2");                    // 附带诊断信息
+    assert.equal(total([{ price: 10, qty: 2 }]), 20);   // ✅ 10*2=20
+    t.diagnostic("10 * 2");                    // 输出附带诊断信息（不影响通过/失败）
   });
 });
 ```
@@ -52,15 +56,17 @@ describe("购物车", () => {
 ## 三、异步与断言Promise/异常
 
 ```js
+// 目的：测试本身是 async 时 runner 会自动 await；异步断言用 rejects/throws
 import assert from "node:assert/strict";
 
 test("异步返回", async () => {
   assert.equal(await fetchUser(1), { id: 1 });
-  await assert.rejects(read("/nope"), { code: "ENOENT" });   // 断言会 reject，且校验错误对象（呼应 node-fs 错误码）
+  await assert.rejects(read("/nope"), { code: "ENOENT" });   // ✅ 断言会 reject，且校验错误码（呼应 node-fs）
 });
 
 test("同步抛错", () => {
-  assert.throws(() => JSON.parse("{"), SyntaxError);
+  assert.throws(() => JSON.parse("{"), SyntaxError);   // ✅ 期望的 SyntaxError 被抛出
+  // ❌ 若函数其实不抛，assert.throws 会报 Missing expected exception
 });
 ```
 
@@ -72,12 +78,13 @@ test("同步抛错", () => {
 ## 四、before/after 钩子与资源清理
 
 ```js
+// 目的：服务端测试用钩子统一起/停资源，after 里 close 避免句柄泄漏卡住退出
 import { before, after, beforeEach } from "node:test";
 
 let server;
-before(async () => { server = await startServer(0); });   // 起一次
+before(async () => { server = await startServer(0); });   // 起一次（端口 0 = 随机分配）
 beforeEach(() => resetDb());
-after(() => server.close());                              // 收尾，避免句柄泄漏（呼应 node-event-loop 退出）
+after(() => server.close());   // 收尾，否则测试进程挂住不退（呼应 node-event-loop 退出条件）
 ```
 
 顶层或 `describe` 内都可放钩子；`after` 里务必 `close` 服务器/连接，否则测试进程挂住不退（呼应 node-child-process interview 第 10 题）。
@@ -89,16 +96,17 @@ after(() => server.close());                              // 收尾，避免句�
 `t.mock`（或全局 `mock`）可替换方法、跟踪调用，**自动在测试后还原**：
 
 ```js
+// 目的：用 t.mock 替掉外部依赖（磁盘读取），只测本函数降级逻辑，测完自动还原
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
 test("读取失败降级", (t) => {
-  const read = t.mock.method(fs, "readFileSync", () => { throw new Error("disk"); });
-  const result = loadConfig();               // 内部调用 fs.readFileSync，被替换
-  assert.equal(result.usingDefault, true);
-  assert.equal(read.mock.callCount(), 1);   // 断言被调用次数/参数
-  read.mock.calls[0].arguments;              // 拿到调用参数
+  const read = t.mock.method(fs, "readFileSync", () => { throw new Error("disk"); });   // stub：调用即抛
+  const result = loadConfig();               // 内部调 fs.readFileSync，被替换成抛错
+  assert.equal(result.usingDefault, true);   // ✅ 验证降级到了默认配置
+  assert.equal(read.mock.callCount(), 1);   // ✅ spy：断言被调用次数
+  read.mock.calls[0].arguments;              // 拿到实际调用参数
 });
 ```
 
@@ -113,6 +121,7 @@ test("读取失败降级", (t) => {
 内置 `fetch`（Node 18+）直接打真服务器，是最实用的集成测试方式：
 
 ```js
+// 目的：用内置 fetch 打真服务器做集成测试；listen(0) 随机端口避免并行冲突
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
@@ -123,16 +132,16 @@ before(async () => {
     res.setHeader("content-type", "application/json");
     res.end(JSON.stringify({ ok: true, url: req.url }));
   }).listen(0);                              // 端口 0 = 让 OS 随机分配，避免并行冲突
-  await new Promise((r) => srv.once("listening", r));
+  await new Promise((r) => srv.once("listening", r));   // 等真正监听成功再取地址
   base = `http://127.0.0.1:${srv.address().port}`;
 });
 after(() => srv.close());
 
 test("GET /json 返回 ok", async () => {
   const res = await fetch(`${base}/json`);
-  assert.equal(res.status, 200);
+  assert.equal(res.status, 200);              // ✅ 断言状态码
   assert.match(res.headers.get("content-type"), /application\/json/);
-  assert.deepEqual(await res.json(), { ok: true, url: "/json" });
+  assert.deepEqual(await res.json(), { ok: true, url: "/json" });   // ✅ 断言 body
 });
 ```
 

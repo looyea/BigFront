@@ -3,17 +3,20 @@
 ## 一、三件套模板（背下来）
 
 ```ts
+// 目的：乐观更新三件套模板——快照→先爽→回滚→对齐，四拍生命周期全用上
 const m = useMutation({
   mutationFn: toggleLike,
   onMutate: async (post) => {
-    await queryClient.cancelQueries({ queryKey: ['posts'] });      // ① 停掉在飞重取
-    const prev = queryClient.getQueryData(['posts']);              // ② 快照
-    queryClient.setQueryData(['posts'], (old) => flip(old, post.id)); // ③ 先爽
-    return { prev };                                               // ④ 交给 onError
+    await queryClient.cancelQueries({ queryKey: ['posts'] });      // ① 停掉在飞重取（防乐观改完被旧落地盖掉）
+    const prev = queryClient.getQueryData(['posts']);              // ② 快照当前列表
+    queryClient.setQueryData(['posts'], (old) => flip(old, post.id)); // ③ 先爽：本地立刻翻转点赞态
+    return { prev };                                               // ④ 快照作 ctx 交给 onError
   },
-  onError: (_e, _v, ctx) => queryClient.setQueryData(['posts'], ctx.prev), // 回滚
-  onSettled: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),  // 对齐
+  onError: (_e, _v, ctx) => queryClient.setQueryData(['posts'], ctx.prev), // 失败：整张快照回滚
+  onSettled: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),  // 成败都对齐服务器真数
 });
+// ✅ onSettled 兜底：乐观是 UX 层骗一骗，服务器口径最终回流、不留假账
+// ❌ 省掉 onSettled：乐观态永久成立，服务器实际点赞数/并发操作从不校正=假账永久入账
 ```
 
 cancelQueries 那一步防的是「乐观改完恰好后台重取落地，旧数据把你盖掉」——顺序不是玄学，每步都有对手。

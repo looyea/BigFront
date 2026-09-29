@@ -18,8 +18,9 @@ components/
 ```
 
 ```json
-// product-card.json —— 没有 "component": true 就只是普通页面片段
+// 目的：声明这是个组件——没有 "component": true 就只是普通页面片段
 { "component": true, "usingComponents": {} }
+// ❌ 忘写 component:true → 不能当组件引用（会被当页面）
 ```
 
 ### usingComponents：组件的"登记表"
@@ -27,6 +28,7 @@ components/
 WXML 里能出现什么标签，由**当前页/当前组件 json 的 usingComponents** 决定：
 
 ```json
+// 目的：usingComponents 决定本页 wxml 能出现哪些自定义标签（组件登记表）
 // pages/home/home.json
 {
   "usingComponents": {
@@ -34,6 +36,8 @@ WXML 里能出现什么标签，由**当前页/当前组件 json 的 usingCompon
     "van-button": "@vant/weapp/button/index"
   }
 }
+// ❌ 用了 <product-card/> 却未在本页/app.json 登记 → 标签显示为空白（静默失败）
+// ❌ npm 组件（vant）未“构建 npm”就按路径引用 → 找不到模块
 ```
 
 - 登记后可在**本页** wxml 写 `<product-card />`；想让整个 app 都能用某组件，写在 **app.json 的 usingComponents**（全局组件，但所有页都会带上，权衡同全局样式，呼应 mp-wxss 第三节）；
@@ -45,6 +49,7 @@ WXML 里能出现什么标签，由**当前页/当前组件 json 的 usingCompon
 ## 二、Component 构造器全解
 
 ```js
+// 目的：Component 构造器——properties(对外 props、只读)、data(私有状态)、methods(事件与对外 API)
 // components/product-card/product-card.js
 Component({
   options: {
@@ -52,13 +57,13 @@ Component({
     addGlobalClass: false,        // true = 允许 app/页面全局类影响组件内部
   },
 
-  properties: {                   // ← 对外"props"
+  properties: {                   // ← 对外"props"（只读！）
     title: String,                          // 简写：仅类型
     price: {                                // 完整写：五件套
-      type: Number,                          // 必填（Type 校验，见第三节）
+      type: Number,                          // 必填（Type 校验会自动转换，见第三节）
       value: 0,                              // 默认值
       optionalTypes: [String],               // 补充可接受类型
-      observer(newV, oldV, path) {           // 值变化回调（mp-component-lifecycle 专讲）
+      observer(newV, oldV, path) {           // ✅ 值变化回调：分转元派生到另一个字段
         this.setData({ yuan: (newV / 100).toFixed(2) });
       },
     },
@@ -70,13 +75,14 @@ Component({
   },
 
   methods: {                       // ← 事件处理与对外 API 都在这
-    onFav() { this.triggerEvent('fav', { id: this.properties.bid ?? '' }); },
+    onFav() { this.triggerEvent('fav', { id: this.properties.bid ?? '' }); },   // ✅ 上行通知父
     playAnimation() { /* 供父页 selectComponent 调用 */ },
   },
 
   // 组件级生命周期 created/attached/ready/detached 与页面事件 pageLifetimes
   // —— 下一关 mp-component-lifecycle 专讲
 });
+// ❌ 组件内写 this.properties.title = 'x' → 告警且不生效（props 只读，要改拷进 data 或通知父改）
 ```
 
 对照记忆：**properties ≈ props（只读！）、data ≈ 组件内 state、methods ≈ 事件处理集合**——Vue 的 props/data/methods 三分法几乎逐字平移；React 里 props/state 合一进函数体，概念相同形态不同（呼应 vue-component-basics、react-component）。
@@ -112,10 +118,12 @@ Component({
 mp-wxss 埋过的问题：隔离下父页面想改组件内某节点的类怎么办？
 
 ```js
+// 目的：externalClasses 声明对外暴露的"类占位"，让隔离下父页面能往组件内指定节点注入样式
 Component({
-  externalClasses: ['ext-class'],   // 声明对外暴露的"类占位"
+  externalClasses: ['ext-class'],   // ✅ 声明一个类名占位（父用同名 attr 传真类名）
   properties: { /* ... */ },
 });
+// ❌ 不加 externalClasses 直接指望父页面类选中 isolated 组件内节点 → 选不中（样式隔离）
 ```
 
 ```wxml

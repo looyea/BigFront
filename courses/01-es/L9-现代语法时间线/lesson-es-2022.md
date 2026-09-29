@@ -17,6 +17,7 @@
 ## 二、Class 字段（Public）
 
 ```js
+// 目的：实例字段/静态字段——声明即初始化（不走 setter，等价 defineOwnProperty）
 class User {
   name = 'anonymous';        // 实例字段（非 static）
   count = 0;
@@ -27,6 +28,11 @@ class User {
     this.count++;
   }
 }
+// ✅ 应用：实例化后观察字段默认值与构造器覆盖
+const u = new User('Ann');
+u.name;          // 'Ann'（构造器覆盖了默认 'anonymous'）
+u.count;         // 1（字段先初始化为 0，构造里 ++）
+User.default;    // 'guest'（静态字段挂在类而非实例）
 ```
 
 **与旧写法的差别**：
@@ -39,6 +45,7 @@ class User {
 ## 三、私有字段 `#`（Brand Check）
 
 ```js
+// 目的：# 真私有字段/私有静态——引擎级 brand，外部无法访问
 class Bank {
   #balance = 0;               // 真私有（引擎级，不是命名约定）
   static #instances = new Map();
@@ -51,8 +58,11 @@ class Bank {
   }
 }
 
+// ✅ 应用：只能通过公开 getter 读私有数据
 const b = new Bank();
-b.#balance;   // ❌ SyntaxError（编译时就报错，不是运行时）
+b.deposit(100);
+b.balance;      // 100（get 内部读 this.#balance）
+// b.#balance;   // ❌ SyntaxError（私有字段类外访问，编译时就报错，不是运行时）
 ```
 
 **Symbol / `#` / WeakMap 三种私有对比**：
@@ -69,6 +79,7 @@ b.#balance;   // ❌ SyntaxError（编译时就报错，不是运行时）
 ## 四、`static initialization block`
 
 ```js
+// 目的：static 块—类定义时执行一次，能给静态字段做派生计算/共享局部变量
 class Config {
   static env = process.env.NODE_ENV ?? 'dev';
   static isProd = false;
@@ -87,6 +98,7 @@ class Config {
 ## 五、Top-Level Await（预告 L7）
 
 ```js
+// 目的：模块顶层直接 await（依赖本模块的会等它完成）
 // module.mjs
 const data = await fetch('/api/init').then(r => r.json());
 export default data;
@@ -98,6 +110,7 @@ export default data;
 ## 六、`Object.hasOwn(obj, key)`
 
 ```js
+// 目的：Object.hasOwn 静态方法——不担心对象没 hasOwnProperty / 被 shadow
 const proto = { inherited: 1 };
 const obj = Object.create(proto);
 obj.own = 2;
@@ -114,6 +127,7 @@ Object.hasOwn(obj, 'own');          // true ← 推荐
 ## 七、`Array.prototype.at(n)`
 
 ```js
+// 目的：Array.at 支持负下标（不跳稀疏洞，越界返回 undefined 而非报错）
 [1, 2, 3].at(-1);    // 3（取倒数第一个）
 [1, 2, 3].at(1);     // 2
 [1, 2, 3].at(99);    // undefined（不抛错）
@@ -129,6 +143,7 @@ arr[arr.length - 1]  // 麻烦
 ## 八、`error.cause`
 
 ```js
+// 目的：error.cause 保留原始错误——包一层新错也不丢内层栈
 try {
   await fetch(url);
 } catch (e) {
@@ -144,6 +159,7 @@ try {
 ## 九、RegExp `d` flag（hasIndices）
 
 ```js
+// 目的：d 标志（hasIndices）——每组拿到在源串中的起止下标
 const re = /(\w+)@(\w+)/d;
 const m = 'user@host'.match(re);
 m.index;          // 0
@@ -157,6 +173,7 @@ m.indices;        // [[0,9],[0,4],[5,9]]  ← 每组的起止位置
 ## 十、`#private` in `for-in`（Class Fields 补充）
 
 ```js
+// 目的：#private 不进 for-in / Object.keys（不可枚举），只能类内访问
 class Foo {
   #x = 1;
   y = 2;

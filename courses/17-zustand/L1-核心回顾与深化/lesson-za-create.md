@@ -5,11 +5,14 @@
 ## 一、create 返回的到底是什么
 
 ```ts
+// 目的：create 返回的既是 hook 又是 store——一个函数兼具订阅读取与命令式读写
 import { create } from 'zustand';
-const useFishStore = create<FishState>((set, get) => ({
-  fish: [],
-  addFish: (f) => set((s) => ({ fish: [...s.fish, f] })),
+const useFishStore = create<FishState>((set, get) => ({   // create 接 (set,get)，返回 hook+store 一体的函数
+  fish: [],                                               // state 初始值
+  addFish: (f) => set((s) => ({ fish: [...s.fish, f] })), // action：浅合并回新数组（不 mutate）
 }));
+// ✅ 组件里 useFishStore(s => s.fish) 订阅、组件外 useFishStore.getState() 拿快照，同一函数两用
+// ❌ 像 Redux 那样把 store 当独立对象持有再 Provider 注入→Zustand 无需，直接 import 这个 hook 即可
 ```
 
 `create` 返回的是一个 **hook 函数**，同时它本身又是 store 实例——挂在上面的静态方法：
@@ -30,9 +33,12 @@ const useFishStore = create<FishState>((set, get) => ({
 ## 三、set 的两种写法
 
 ```ts
-set({ count: 1 });                       // 浅合并 partial
-set((s) => ({ count: s.count + 1 }));    // 函数式，能拿到最新 state
-set(() => ({ a: 1 }), true);             // replace=true 整体替换（少用）
+// 目的：set 三种写法——浅合并对象、函数式取最新、replace 整体替换
+set({ count: 1 });                       // 浅合并 partial：只改 count，其余字段保留
+set((s) => ({ count: s.count + 1 }));    // 函数式，能拿到调用时刻的最新 state
+set(() => ({ a: 1 }), true);             // replace=true 整体替换 state（少用，会丢掉其余字段）
+// ✅ 连续自增这类依赖旧值用函数式 set(s=>...)，读到的是最新
+// ❌ set({ count: count + 1 }) 用闭包里旧 count 连续调两次→都基于同一旧值，只 +1（应改函数式）
 ```
 
 多次 set 在同一事件回调里会被 React 18 自动批处理，只渲染一次。

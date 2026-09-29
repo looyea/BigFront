@@ -3,10 +3,13 @@
 ## 一、vi.fn：造一个「带记忆」的假函数
 
 ```ts
-const cb = vi.fn();
+// 目的：vi.fn 造带调用记录的替身——只验证「被怎么调用」，不碰真实实现
+const cb = vi.fn();          // 不带实现：调用它什么都不做，但记录每次传参
 cb('a');
-expect(cb).toHaveBeenCalled();
-expect(cb).toHaveBeenCalledWith('a');
+expect(cb).toHaveBeenCalled();         // ✅ 被调过 ≥1 次
+expect(cb).toHaveBeenCalledWith('a');   // ✅ 曾以参数 'a' 被调用
+expect(cb).toHaveBeenCalledTimes(1);    // ✅ 恰好一次
+// ❌ 断言写成 toHaveBeenCalledWith('b') → 失败：Received "a"，替你抓出传参回归
 ```
 
 `vi.fn()` 返回一个可编程又自带调用记录的函数。**给回调、事件处理、被依赖函数喂一个「我不管它干嘛，我只关心它被怎么调用」的替身**，是单元隔离的核心手段。传参可直接写实现：`vi.fn((x) => x * 2)`。

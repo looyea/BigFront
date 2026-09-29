@@ -3,11 +3,14 @@
 ## 一、async atom 天生可挂起
 
 ```ts
+// 目的：async atom——getter 是 async 返回 Promise，Jotai 在渲染读取时 throw promise 交给 Suspense
 const userAtom = atom(async (get) => {
-  const id = get(userIdAtom);
-  const res = await fetch('/api/user/' + id);
-  return res.json();
+  const id = get(userIdAtom);                  // 读依赖：userIdAtom 一变就自动重取
+  const res = await fetch('/api/user/' + id);  // await 请求，值未就绪时本原子处于挂起态
+  return res.json();                           // resolve 后 Promise 结果即原子值，React 重试渲染
 });
+// ✅ useAtomValue(userAtom) 未就绪时 throw thenable，外层 Suspense fallback 顶上，无需手写 isLoading
+// ❌ 在没有 Suspense 边界的树里直接读 async atom→promise 一路上抛，React 报“A component suspended while rendering... no fallback”整树崩
 ```
 getter 是 async → 返回 Promise → Jotai 在渲染读取时「throw promise」交给 Suspense 捕获。
 
@@ -17,7 +20,8 @@ getter 是 async → 返回 Promise → Jotai 在渲染读取时「throw promise
 
 ```tsx
 <Suspense fallback={<Spinner/>}>
-  <Profile/>   {/* 内部 useAtomValue(userAtom) */}
+  {/* 目的：数据区交给 Suspense 代管三态，就绪前显 fallback、就绪后自动渲染真组件 */}
+  <Profile/>   {/* 内部 useAtomValue(userAtom)，挂起由这层边界捕获 */}
 </Suspense>
 ```
 数据没就绪时展示 fallback，就绪后自动渲染——无需手写 isLoading（对比 Zustand 手动 loading，呼应 za-suspense）。
@@ -28,9 +32,12 @@ getter 是 async → 返回 Promise → Jotai 在渲染读取时「throw promise
 async atom 依赖的源 atom 变化时自动重新执行（重取），Jotai 管理每个依赖值的 promise 状态。
 
 ```ts
-const userIdAtom = atom(1);
-const userAtom = atom(async (get) => (await fetch('/u/' + get(userIdAtom))).json());
+// 目的：依赖驱动的自动重取——改依赖原子即触发 async atom 以新参数重跑，声明式取数
+const userIdAtom = atom(1);                                          // 源：当前要查的用户 id
+const userAtom = atom(async (get) => (await fetch('/u/' + get(userIdAtom))).json());   // get(userIdAtom) 建依赖
 set(userIdAtom, 2);   // userAtom 自动以 id=2 重取，订阅者经 Suspense 再看新数据
+// ✅ 组件不写任何“何时刷新”逻辑，改参数原子就重取——useEffect 依赖数组那套整体消失
+// ❌ 想刷新却在组件里手动 useState+useEffect 编排 fetch→又回到手动簿记依赖，绕开了 atom 的自动重取红利
 ```
 
 「取数参数化」由此变成纯声明：组件不管何时刷新，改依赖原子即触发重取——useEffect + useState 那套「手动编排依赖数组」整体消失，这正是 async atom 最降维的一处（对比 svelte-load、solid-createAsync 各家都在解同一道题）。

@@ -1,5 +1,6 @@
 // 示例 02：debounce / throttle / memoize 三个经典闭包工具
-// 运行：node courses/01-es/examples/es-closure/02-classic-utils.js
+// 目的：闭包保存 timer/last/cache 等“跨调用状态”，实现防抖/节流/缓存
+// 运行：node "courses/01-es/L1-变量与作用域/example-es-closure-02-classic-utils.js"
 
 function debounce(fn, wait = 200) {
   let timer;
@@ -46,3 +47,11 @@ const d = debounce(() => log('debounced'), 50);
 const t = throttle(() => log('throttled'), 50);
 for (let i = 0; i < 10; i++) { d(); t(); }
 setTimeout(() => log('--- 100ms 后 ---'), 100);
+// 预期：debounced 只输出 1 次（最后一击）；throttled 按间隔多次；--- 100ms 后 --- 最后输出
+
+// ── ❌ 错误用例：每次调用都现场新建 debounce 实例 ──────────
+for (let i = 0; i < 10; i++) {
+  debounce(() => log('新实例'))();  // 每轮都创建一个全新的 debounce，各自有独立 timer
+}
+// 后果：10 个独立 debounce 各只被调用一次，定时器互不干扰→全部会触发，完全没起到“合并高频调用”的作用
+// ✅ 正确：debounce/throttle/memoize 实例必须只创建一次、反复复用同一个（如上面的 const d = debounce(...)）

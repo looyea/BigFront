@@ -40,46 +40,53 @@ Express **不做的事**：不绑 ORM、不锁模板引擎、不管前端渲染�
 ### 3.1 创建项目
 
 ```bash
+# 目的：从零建一个 Express 5 项目并确认版本
 mkdir my-app && cd my-app
-npm init -y
-npm install express
+npm init -y                 # ✅ 生成默认 package.json
+npm install express         # ✅ 装最新 Express（当前为 5.x）
 # 确认版本
-node -e "console.log(require('express').version)"  # 5.x.x
+node -e "console.log(require('express').version)"  # ✅ 打印 5.x.x
 ```
 
 ### 3.2 Hello World
 
 ```js
+// 目的：最小可跑的 Express 5 服务——一个路由 + 监听端口
 // app.js  (ESM)
-import express from 'express';
-const app = express();
+import express from 'express';        // ✅ 默认导出工厂函数
+const app = express();                 // ✅ 创建应用实例（本质是可调用的请求处理函数）
 const PORT = 3000;
 
-app.get('/', (req, res) => {
-  res.send('Hello Express 5!');
+app.get('/', (req, res) => {           // ✅ 注册 GET / 的 handler，路径精确匹配 '/'
+  res.send('Hello Express 5!');        // ✅ 发 200、Content-Type text/html、正文这串
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, () => {               // ✅ 绑定端口开始监听，回调在就绪后打印
   console.log(`Running at http://localhost:${PORT}`);
 });
+// ❌ 忘 app.listen() → 进程直接退出、无人监听；访问 /nope → 命中默认 404（本 app 未注册该路由）
 ```
 
 ```bash
-node app.js
+# 目的：启动服务并验证
+node app.js                 # ✅ 起 HTTP 服务、阻塞进程保持监听
 # 打开 http://localhost:3000 → "Hello Express 5!"
 ```
 
 ### 3.3 package.json 配置 ESM
 
 ```json
+// 目的：声明 ESM + 脚本——type:module 让 .js 按 ESM 解析，--watch 自动重启
 {
-  "type": "module",
+  "type": "module",                     // ✅ 启用 ESM，import/export 语法直接可用
   "scripts": {
-    "start": "node app.js",
-    "dev": "node --watch app.js"
+    "start": "node app.js",             // ✅ npm start 跑生产入口
+    "dev": "node --watch app.js"        // ✅ Node 18.11+ 文件改动自动重启
   }
 }
 ```
+
+> ❌ 不加 `"type":"module"` 却用 import 语法 → 报 “Cannot use import statement outside a module”。
 
 `--watch`（Node 18.11+）自动重启——开发利器。
 
@@ -109,8 +116,10 @@ GET /search?filter[price][gt]=100&tags[]=js&tags[]=node
 ```
 
 ```js
+// 目的：Express 5 默认用 qs 解析 → 嵌套对象/数组开箱可用
 req.query;
-// { filter: { price: { gt: '100' } }, tags: ['js', 'node'] }
+// ✅ 结果 { filter: { price: { gt: '100' } }, tags: ['js', 'node'] }（4 里需自行配置才能这样）
+// ❌ 依赖旧 querystring 行为做字符串拼接解析 → 结构变了没察觉；要切回可 app.set('query parser','simple')
 ```
 
 可通过 `app.set('query parser', 'simple')` 切回 querystring。
@@ -122,11 +131,13 @@ req.query;
 ### 6.1 Express 4 的痛点
 
 ```js
+// 目的：回忆 Express 4 痛点——async handler 里 reject 不会被接管
 // Express 4：async handler 里 throw → 未捕获 → 进程崩溃
 app.get('/users', async (req, res) => {
-  const data = await db.query('SELECT...');  // 如果 reject → 💥
+  const data = await db.query('SELECT...');  // ❌ reject → 无人 catch → UnhandledRejection，进程崩溃
   res.json(data);
 });
+// 4 里必须 try/catch 调 next(err)，或装 express-async-errors 猴补丁
 ```
 
 需要 `express-async-errors` 包或手写包装器。
@@ -134,16 +145,17 @@ app.get('/users', async (req, res) => {
 ### 6.2 Express 5 原生支持
 
 ```js
-// Express 5：Promise reject 自动传递给 error handler
+// 目的：Express 5 原生捕获 async 错误——reject 自动转给 error handler，无需 try/catch
 app.get('/users', async (req, res) => {
-  const data = await db.query('SELECT...');  // reject → 直接进 error middleware
-  res.json(data);
+  const data = await db.query('SELECT...');  // ✅ reject → Express 检测 thenable 自动 .catch(next)
+  res.json(data);                             // ✅ 成功才走到这
 });
 
-// 统一错误处理
+// ✅ 统一错误处理：四参数 (err, req, res, next) 签名才会被识别为错误中间件
 app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message });
 });
+// ❌ 错误中间件漏写 next 变成三参数 (err, req, res) → 被当成普通中间件，永远接不到 err
 ```
 
 **原理**：Express 5 检查 handler 返回值是否为 thenable → 是就 `.catch(next)`。

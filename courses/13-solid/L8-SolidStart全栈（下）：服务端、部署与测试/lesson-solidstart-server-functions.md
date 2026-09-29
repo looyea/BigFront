@@ -11,15 +11,17 @@
 
 两种写法都合法：
 ```ts
+// 目的："use server" 两种写法—编译器认的指令串，无需 import，函数体只进服务端 manifest
 // 函数级：函数体首行
 const logMessage = async (message: string) => {
-  "use server";
+  "use server";   // ✅ 仅这个函数被转为服务端引用，客户端调用它=发一次远程调用
   console.log(message);
 };
 
 // 文件级：文件首行，整个模块导出的函数都是服务端函数
 "use server";
-export async function logMessage(message: string) { console.log(message); }
+export async function logMessage(message: string) { console.log(message); }   // ✅ 模块内所有导出都钉在服务端
+// ❌ 把 "use server" 当普通语句写在函数体中间（非首行）→ 不被识别为指令，编译期不转换，函数依旧在客户端跑
 ```
 
 ## 二、边界纪律：客户端只能"调用"，不能"看见"
@@ -37,13 +39,16 @@ export async function logMessage(message: string) { console.log(message); }
 
 数据变更用 Solid Router 的 **`action`**，把 `"use server"` 放进 action 体，整个动作就只在服务端跑：
 ```ts
+// 目的：action 套 "use server" 成动作层—整个动作只在服务端跑，redirect 用 throw 传递
 import { action, redirect } from "@solidjs/router";
 const logoutAction = action(async () => {
-  "use server";
+  "use server";   // ✅ action 体钉服务端：session/密钥/db 操作不下发
   const session = await useSession({ password: process.env.SESSION_SECRET, name: "session" });
-  if (session.data.sessionId) { await session.clear(); /* db 删除… */ }
-  throw redirect("/");   // redirect 用 throw 传递
+  if (session.data.sessionId) { await session.clear(); /* ✅ 清 session + db 删除… */ }
+  throw redirect("/");   // ✅ redirect 靠 throw 传递，不是 return
 }, "logout");
+// ❌ 不加 "use server" 就在 action 里读 process.env.SESSION_SECRET → 在浏览器执行，既拿不到又泄密钥
+// ❌ 用 return redirect("/") 而非 throw → redirect 不会被框架识别为跳转信号
 ```
 `<form action={myAction.with(id)} method="post">` 直接绑表单——官方登出/改商品名两例皆此形态。
 
@@ -55,11 +60,13 @@ const logoutAction = action(async () => {
 
 机制：表单提交发一个 POST；action 完成后，框架**自动 revalidate** 相关 query；因为数据已 preload，服务端能直接重校验并**把结果流式塞回同一个响应**。
 ```ts
+// 目的：single-flight mutation—action 改完框架自动 revalidate 已 preload 的 query，一次请求完成“改+取”
 const updateProduct = action(async (id, formData: FormData) => {
-  "use server"; await db.products.update(id, { name: formData.get("name")?.toString() });
+  "use server"; await db.products.update(id, { name: formData.get("name")?.toString() });   // ✅ 直取 FormData 改库
 }, "updateProduct");
-const getProduct = query(async (id) => { "use server"; return db.products.get(id); }, "product");
-export const route = { preload: ({ params }) => getProduct(params.id) } satisfies RouteDefinition;
+const getProduct = query(async (id) => { "use server"; return db.products.get(id); }, "product");   // ✅ 同键“product”供重校验
+export const route = { preload: ({ params }) => getProduct(params.id) } satisfies RouteDefinition;   // ✅ 目标页 preload 是“改+取”合并的前提
+// ❌ 数据未 preload（或缺 route.preload）→ 只能退回“1 个请求更新 + 再 1 个拉新”两步，享不到 single-flight 收益
 ```
 
 ## 六、拿请求上下文：getRequestEvent

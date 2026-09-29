@@ -8,19 +8,25 @@ SSR 必须每个请求 createStore 一份，绝不复用全局默认 store（呼
 App Router 骨架：
 
 ```tsx
+// 目的：每请求一个 store——server 组件里建 store、预置数据，再透传给客户端 Provider
 // app/page.tsx (Server Component)
-const store = createStore();          // 每请求新建
-store.set(userAtom, await fetchUser());
-return <Provider store={store}><ClientTree/></Provider>;
+const store = createStore();          // 每请求新建，绝不用全局默认 store（那是进程级单例）
+store.set(userAtom, await fetchUser());  // 服务端 await 取数并预置进 store
+return <Provider store={store}><ClientTree/></Provider>;   // 把这份 store 注入客户端树
+// ✅ 每请求独立 store，A 用户写 token 不会被 B 用户渲染读到，跨请求隔离
+// ❌ 复用模块级默认 store→Node 单进程共享，A 的 userAtom 值泄漏给 B，是最难在 dev 复现的 SSR 事故
 ```
 
 ## 二、水合：dehydrate / hydrateAtoms
 
 ```ts
+// 目的：dehydrate/hydrateAtoms——把服务端已 resolve 结果传下去，避免客户端二次取数
 import { dehydrate, hydrateAtoms } from 'jotai/utils';
-const values = dehydrate(store);            // 服务端序列化
+const values = dehydrate(store);            // 服务端序列化（只收已被 mount 订阅过的原子）
 // 客户端：
-hydrateAtoms(new Map(values), store);        // 水合避免二次取数
+hydrateAtoms(new Map(values), store);        // 水合：首帧 render 前预置同一份值，跳过重新请求
+// ✅ async atom 已 resolve 的结果随 values 下发，客户端命中缓存不发二跳请求
+// ❌ 服务端只 store.get 却没订阅某原子→dehydrate 不收它，客户端水合后读到空；需用 dehydrate(store,{atoms:[...]}) 显式列清单
 ```
 把 async atom 已 resolve 的结果一并传下去，防止客户端重新请求（呼应 jo-async）。
 

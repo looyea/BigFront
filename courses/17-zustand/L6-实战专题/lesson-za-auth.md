@@ -3,12 +3,15 @@
 ## 一、store 形状
 
 ```ts
+// 目的：auth store 形状——token 与 user 同进同退，login 是 async action，pending 态也进 store
 interface AuthState {
-  token: string | null;
-  user: User | null;
-  login: (p: Creds) => Promise<void>;
-  logout: () => void;
+  token: string | null;                    // 未登录 null，登录写入
+  user: User | null;                       // 与 token 同步，杜绝“有 token 没 user”中间帧
+  login: (p: Creds) => Promise<void>;      // async action：一次 set 写完 token+user+status
+  logout: () => void;                      // 复位初值 + 清 persist
 }
+// ✅ token/user/status 在一个 action 里一次 set 落定，订阅者看到的每帧都自洽
+// ❌ 先 set({token}) 再 set({user}) 分两帧→中间帧“有 token 没 user”，守卫据此放行就渲染空用户崩
 ```
 
 设计要点：token 与 user 同进同退（一个 action 里一次 set 写完，避免「有 token 没 user」的中间帧）；login 是 async action，pending 态也放 store（`status: 'idle' | 'pending'`），组件订阅 status 渲染按钮 loading。
@@ -22,15 +25,18 @@ interface AuthState {
 ## 三、axios 拦截器读 token
 
 ```ts
+// 目的：拦截器 getState 非响应式读 token——请求头注入，401 统一登出（非渲染管线才用 getState）
 axios.interceptors.request.use((c) => {
-  const t = useAuthStore.getState().token;
-  if (t) c.headers.Authorization = 'Bearer ' + t;
+  const t = useAuthStore.getState().token;                 // 拦截器不在组件渲染里，getState 直读最新值
+  if (t) c.headers.Authorization = 'Bearer ' + t;          // 有 token 才挂头，避免 'Bearer null'
   return c;
 });
 axios.interceptors.response.use(r => r, (e) => {
-  if (e.response?.status === 401) useAuthStore.getState().logout();
+  if (e.response?.status === 401) useAuthStore.getState().logout();   // 过期统一登出
   return Promise.reject(e);
 });
+// ✅ getState 只用在拦截器/回调这类非渲染管线，读到的是当下最新 snapshot
+// ❌ 把 getState() 塞进组件 render 里判 token→它不订阅、变了不重渲，登录态更新界面不跟（渲染期只该用 useStore 订阅）
 ```
 用 getState 非响应式读、401 统一登出（呼应 za-store-api）。
 
@@ -39,10 +45,13 @@ axios.interceptors.response.use(r => r, (e) => {
 ## 四、路由守卫
 
 ```tsx
+// 目的：路由守卫订阅式判登录——token 变化触发重渲，未登录重定向登录页
 function RequireAuth({ children }) {
-  const ok = useAuthStore((s) => !!s.token);
-  return ok ? children : <Navigate to="/login" replace />;
+  const ok = useAuthStore((s) => !!s.token);   // 用 selector 订阅（非 getState），token 变则本组件重渲
+  return ok ? children : <Navigate to="/login" replace />;   // 未登录跳走，replace 不留历史
 }
+// ✅ selector 订阅保证登录/登出即时反映到路由
+// ❌ SSR 首帧 token 常尚未 rehydrate→直接重定向会把刷新用户踢到登录页；应先等 ready 标志渲染骨架
 ```
 或 selector canAccess(route)。
 

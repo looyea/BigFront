@@ -9,13 +9,15 @@
 零散多次 `this.a++; this.b++` 会触发多次更新、产生多条 devtools 记录。用 `$patch` 一次改一堆：
 
 ```js
-store.$patch({ count: store.count + 1, list: [...store.list, x] });
+// 目的：把多次变更合并为一次——减少响应式触发次数 + devtools 只记一条
+store.$patch({ count: store.count + 1, list: [...store.list, x] });   // 对象式
 
 // 函数式（适合对数组 push/splice 等、逻辑更复杂）
 store.$patch((state) => {
   state.list.push(item);
   state.meta.updatedAt = Date.now();
 });
+// ❌ 逐条写 store.count++; store.list.push(x) → 触发多次更新、devtools 多条记录，回退/订阅噪声大
 ```
 好处：① **一次性更新**（少几次响应式触发，呼应 vue-reactivity-theory 批量 flush）；② devtools 里是**一条记录**，好回溯；③ 在 store 外部也能安全地"逻辑性改 state"（把改动集中成一处）。`$patch` 会被 `$subscribe` 捕获为一次 `patch` 类型变更。
 
@@ -24,21 +26,23 @@ store.$patch((state) => {
 ## 二、$subscribe 与 $store 变更订阅
 
 ```js
+// 目的：订阅 state 变化（含 $patch 与直接改）——常用于变更后落盘/打点
 // 订阅 state 变化（含 $patch 与直接改）
 const stop = store.$subscribe((mutation, state) => {
   // mutation.type: 'direct' | 'patchObject' | 'patchFunction'
   localStorage.setItem('cart', JSON.stringify(state.items));   // 每次变更落盘
 }, { detached: false });   // detached:false 时随组件卸载自动停
-stop();   // 手动取消订阅
+stop();   // 手动取消订阅（❌ detached:true 又不自调 stop → 订阅常驻泄漏）
 ```
 - **用途**：**持久化**（变更后写本地）、打点、同步到 URL；
 - 组件里默认随组件卸载清理；`detached:true` 可脱离组件生命周期常驻（要自己 stop，呼应 vue-watch 第六节）。
 
 `$onAction` 则订阅 **action 执行**（开始/成功/错误），适合统一埋点/日志：
 ```js
+// 目的：订阅 action 生命周期（开始/成功/错误），统一埋点与错误上报
 store.$onAction(({ name, args, after, onError }) => {
   const t0 = performance.now();
-  after((r) => track(name, performance.now() - t0));
+  after((r) => track(name, performance.now() - t0));   // action 成功→上报耗时
   onError((e) => report(name, e));      // 呼应 node-config 结构化日志
 });
 ```
@@ -48,7 +52,9 @@ store.$onAction(({ name, args, after, onError }) => {
 ## 三、$reset 与 state 工厂
 
 ```js
+// 目的：一键把 state 恢复到初始值（仅选项式开箱可用）
 store.$reset();   // 选项式：把 state 恢复到 state() 的初始值
+// ❌ setup 式调 store.$reset() → 报 “store.$reset() is not a function”（需自己写 reset() action）
 ```
 - 选项式 `$reset` 开箱可用；**setup 式没有默认 `$reset`**（没有"初始 state"概念），需自己写一个 `reset()` action 把各 ref 赋回初值（呼应 vue-pinia-basics 第一节）；
 - 登出、关闭向导、表单重置常用（避免"手改一遍每个字段"漏项）。
@@ -59,11 +65,12 @@ store.$reset();   // 选项式：把 state 恢复到 state() 的初始值
 
 最简手动版（利用 `$subscribe` + 初始化读回）：
 ```js
+// 目的：最简手动持久化——启动时 hydrate 读回，配合 $subscribe 落盘
 export const useSettings = defineStore('settings', {
   state: () => ({ theme: 'light', sidebar: true }),
   actions: {
     hydrate() {                        // 启动时读回
-      const saved = JSON.parse(localStorage.getItem('settings') || 'null');
+      const saved = JSON.parse(localStorage.getItem('settings') || 'null');   // ❌ 不判 'null' 直接 JSON.parse(null) 得 null，下步 $patch(null) 会报错
       if (saved) this.$patch(saved);
     },
   },
@@ -73,10 +80,11 @@ export const useSettings = defineStore('settings', {
 
 **只持久化部分字段 / 自动同步** → 用官方生态 `pinia-plugin-persistedstate`：
 ```js
+// 目的：官方插件只持久化指定字段，避免敏感信息明文落盘
 pinia.use(piniaPluginPersistedstate);
 defineStore('user', {
   state: () => ({ token: '', name: '' }),
-  persist: { paths: ['name'] },   // 只存 name，别把敏感 token 明文落盘！
+  persist: { paths: ['name'] },   // ✅ 只存 name；❌ 默认全存会把敏感 token 明文写进 localStorage，易被 XSS 读走
 });
 ```
 > **安全红线**：`localStorage` 是明文、易被 XSS 读取。**token 等敏感信息谨慎持久化**，优先 `httpOnly` cookie（呼应 exp-auth session、exp-security XSS、node-config 密钥不外泄）。
@@ -88,11 +96,12 @@ defineStore('user', {
 插件 = 给每个 store 注入共享能力（`store.xxx`），最常用于持久化/日志/校验：
 
 ```js
-const myPlugin = (context) => ({ store, options }) => {
-  // 给每个 store 挂一个方法
+// 目的：插件 = 一个接收 context 的函数，给每个 store 注入共享能力（挂 store.xxx）
+const myPlugin = (context) => {
+  const { store, options } = context;                 // context 带 store/$id/options 等
   store.logAll = () => console.log(options.id, JSON.parse(JSON.stringify(store.$state)));
 };
-pinia.use(myPlugin);
+pinia.use(myPlugin);                                  // ❌ 写成双层箭头 (ctx)=>({store})=>{} 会被当成返回一个函数而非安装方法
 ```
 - 通过 `pinia.use(plugin)` 注册，作用于**所有** store；可读取 `store.$id`、`options` 做差异化；
 - Pinia 自身的持久化/devtools 集成都靠插件机制（呼应 vue-project-architecture 插件、Vue 的 `app.use`）。

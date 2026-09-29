@@ -7,6 +7,7 @@
 ## 一、默认参数：不是「编译期常量」，是**每次调用的表达式**
 
 ```js
+// 目的：默认值不是编译期常量，而是每次调用时才求值的表达式
 let count = 0;
 function inc(x = count++) { return x; }
 inc(); // 0
@@ -19,8 +20,9 @@ inc(); // 2
 **为什么这样设计**：让「每次调用生成一个新对象」这种语义成为可能：
 
 ```js
+// 目的：默认表达式“每次新建”的价值——不传 opts 时每次得到全新的 AbortController
 function fetchUser(id, opts = { signal: new AbortController().signal }) {
-  // 每次不带 opts 的调用都会新建一个 AbortController
+  // 每次不带 opts 的调用都会新建一个 AbortController（而不是共享同一个已取消的 signal）
 }
 ```
 
@@ -29,6 +31,7 @@ function fetchUser(id, opts = { signal: new AbortController().signal }) {
 ## 二、默认参数**自成作用域**（**最反直觉**）
 
 ```js
+// 目的：参数自成作用域——默认值引用同名后位参数会落入其 TDZ
 let y = 100;
 function f(x = y, y = 200) { return [x, y]; }
 f(); // ❌ ReferenceError: Cannot access 'y' before initialization
@@ -38,6 +41,7 @@ f(1); // [1, 200]
 规范里函数参数**是一个独立的词法作用域**（Scope for Formals），外层 y 被内层 y 遮蔽且**内层 y 已进入 TDZ**。这层作用域在函数体作用域**之外**——函数体里再读 y 会拿到外层。
 
 ```js
+// 目的：参数作用域优先于外层同名变量
 let z = 1;
 function g(z = 2) { return z; }
 g(); // 2（参数作用域）
@@ -49,6 +53,7 @@ g(3); // 3
 ## 三、默认参数与解构组合（**工程最常用**）
 
 ```js
+// 目的：三层默认值防 undefined（解构本身/每个 key/嵌套对象都给默认），避免读属性报错
 function createUser(
   name,
   { age = 18, role = 'member', contact: { email = '-' } = {} } = {},
@@ -56,9 +61,11 @@ function createUser(
   return { name, age, role, email };
 }
 
-createUser('Ann');
-createUser('Bob', { age: 25 });
-createUser('Cid', { contact: { email: 'x@y.z' } });
+createUser('Ann');                                            // { name:'Ann', age:18, role:'member', email:'-' }
+createUser('Bob', { age: 25 });                               // { name:'Bob', age:25, role:'member', email:'-' }
+createUser('Cid', { contact: { email: 'x@y.z' } });           // { name:'Cid', age:18, role:'member', email:'x@y.z' }
+// ❌ 反面：传 null 不触发默认值（默认值只对 undefined 生效）
+createUser('Dee', { age: null });                             // { ..., age: null }——不是 18！要兜 null 得用 ??
 ```
 
 三层默认值：解构对象本身默认 `{}`（避免 undefined 报错）、每个 key 有默认、嵌套对象也默认 `{}`。这就是 **lodash-style options 的写法**，也是 React 组件 props 默认值的**替代 bind/merge 方案**。
@@ -70,6 +77,7 @@ createUser('Cid', { contact: { email: 'x@y.z' } });
 ## 四、rest 参数：真数组，取代 arguments
 
 ```js
+// 目的：rest 参数把不定个数实参收集成真数组
 function sum(...nums) { return nums.reduce((a, b) => a + b, 0); }
 sum(1, 2, 3); // 6
 
@@ -85,6 +93,7 @@ first('a', 1, 2, 3); // { label: 'a', rest: [1,2,3] }
 **与展开的对称性**：rest **收集**多个值 → 数组；展开 **摊平** 数组 → 多个值。二者是同一个 `...` 语法在两个方向的用法。
 
 ```js
+// 目的：rest（收集）与展开（摊平）是同一个 ... 的两个方向
 const arr = [1, 2, 3];
 const [a, ...rest] = arr;   // rest 收集
 Math.max(...arr);            // 展开
@@ -96,6 +105,7 @@ const copy = [...arr, 4];    // 展开
 ## 五、展开的四种典型用法
 
 ```js
+// 目的：展开四种典型用法（浅拷贝/合并/类数组转数组/参数摊平）
 // 1. 数组浅拷贝 / 拼接
 const b = [...a];
 const c = [...a, x, y];
@@ -108,6 +118,9 @@ const nodes = [...document.querySelectorAll('p')];
 
 // 4. 函数调用参数摊平
 const p = Promise.all([...promises]);
+
+// ❌ 反面：普通对象不可迭代，展开进数组会抛 TypeError
+// [...{ a: 1 }];   // TypeError: obj is not iterable（对象没 Symbol.iterator；对象展开只能写 {...obj} 形式）
 ```
 
 **⚠️ 展开是**「一层」浅拷贝**」**：嵌套对象/数组元素与源共享引用。深拷贝走 `structuredClone`（见 es-structured 关）。
@@ -131,18 +144,20 @@ const p = Promise.all([...promises]);
 ## 七、箭头 + rest + 默认 组合出的优雅写法
 
 ```js
-const logger = (level = 'info', ...msgs) => console[level] ?? (() => {})(), ...;
-// 更清晰版：
+// 目的：箭头 + 默认 + rest 组合出的柯里化式日志工厂
 const log = (level = 'info') => (...msgs) => console[level](...msgs);
-const warn = log('warn');
-warn('disk full', { used: 80 });
+const warn = log('warn');                 // 预置 level，得到专用函数
+warn('disk full', { used: 80 });          // 等价于 console.warn('disk full', { used: 80 })
 ```
 
 **Partial Application**（偏应用）经典形态：
 ```js
+// 目的：部分应用的三种写法（箭头包装 / bind）
 const multiply = (a, b = 2) => a * b;
 const double = (a) => multiply(a, 2);
 const triple = multiply.bind(null, 3); // 用 bind 固定第一个参数
+double(4);  // 8（箭头包装：实参 4 + 固定 2）
+triple(4);  // 12（bind 固定第一参为 3，再乘以 4）
 ```
 
 `bind` 也能与默认参数配合：`multiply.bind(null)` 相当于保持默认签名。

@@ -13,9 +13,12 @@ Server Action 运行在服务器，同样无法访问浏览器里的 client stor
 2. 或下发一个「待水合值」由 client effect setState。
 
 ```tsx
+// 目的：Server Action 改不了 client store——它是 HTTP 请求，与浏览器内存里的 store 是两个世界
 'use server';
-export async function rename(name) { await db.update(name); revalidatePath('/'); }
+export async function rename(name) { await db.update(name); revalidatePath('/'); }   // 改库后让 RSC 重取，靠重渲染带回新数据
 // client: const pending = useTransition(); 提交后靠 RSC 重渲染带回新数据
+// ✅ 正确回路：Action 改服务端数据 → revalidatePath/Query 失效 → 组件拿到新值
+// ❌ 以为 Action 里能 useXxxStore.setState(...)→服务端根本拿不到 client store 实例，写了也是幻觉、不生效
 ```
 
 「action 里偷偷 set 客户端 store」的幻觉来自 SPA 经验——Server Action 是 HTTP 请求，跟浏览器内存里的 store 是两个世界。
@@ -23,9 +26,12 @@ export async function rename(name) { await db.update(name); revalidatePath('/');
 ## 三、server 下发 → client 注入模式
 
 ```tsx
+// 目的：server 下发 → client 注入——服务端取数交 prop，客户端 effect 一次性塞进 store
 // page.server
-<ClientWidget initial={await fetchConfig()} />
-// ClientWidget: useEffect(()=>store.setState({config:initial}),[])
+<ClientWidget initial={await fetchConfig()} />                       // 服务端 await 取数，作 initial 下发
+// ClientWidget: useEffect(()=>store.setState({config:initial}),[])  // 客户端挂载后注入，只做初始化
+// ✅ 边界清晰：注入仅负责首屏初值，之后同步交 Query invalidation / Router Refresh
+// ❌ 在 effect 里轮询对账把 store 与服务端反复对齐→双真相源互相打架，闪烁 + 无限请求
 ```
 服务端取数、客户端注入 store，边界清晰。
 

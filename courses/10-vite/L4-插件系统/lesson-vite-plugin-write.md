@@ -8,17 +8,20 @@
 
 ```js
 // plugins/hello.js
+// 目的：最简插件—只带 name 的空插件，验证插件能否被加载
 export default function helloPlugin(opts = {}) {
   return {
-    name: 'hello',
+    name: 'hello',   // ✅ 有 name 就合法，Vite 会挂载但不做任何事
   };
 }
 ```
 
 ```js
 // vite.config.js
+// 目的：接入插件—从数组 plugins 里按顺序注册，可传 options
 import helloPlugin from './plugins/hello.js';
 export default { plugins: [helloPlugin({ /* options */ })] };
+// ❌ 直接把函数本身塞进去 plugins:[helloPlugin] （未调用）→ 传入的是函数而非插件对象，钩子不生效
 ```
 
 Vite 加载时会依次调用对象上存在的钩子。下面三个例子由浅入深。
@@ -31,32 +34,35 @@ Vite 加载时会依次调用对象上存在的钩子。下面三个例子由浅
 
 ```js
 // plugins/virtual-package.js
+// 目的：虚拟模块插件—不落地文件，把 package.json 的 name/version 变成可 import 的模块
 import { readFileSync } from 'node:fs';
 
 const VirtualId = 'virtual:package-info';
-const ResolvedId = '\0' + VirtualId;   // \0 前缀：标记非真实文件、防被其它插件当文件读
+const ResolvedId = '\0' + VirtualId;   // ✅ \0 前缀：标记非真实文件、防被其它插件当文件读
 
 export default function virtualPackage() {
   return {
     name: 'virtual-package',
     resolveId(id) {
-      if (id === VirtualId) return ResolvedId;   // 认领说明符
+      if (id === VirtualId) return ResolvedId;   // ✅ 认领说明符：裸 id → 带 \0 的最终 id
     },
     load(id) {
       if (id === ResolvedId) {
         const { name, version } = JSON.parse(readFileSync('package.json', 'utf8'));
-        return `export default ${JSON.stringify({ name, version })};`;   // 生成源码
+        return `export default ${JSON.stringify({ name, version })};`;   // ✅ 供货：为最终 id 生成源码
       }
     },
   };
 }
+// ❌ resolveId/load 两处 id 对不上（一处带 \0 一处不带）→ 报 [vite] Failed to resolve import 'virtual:package-info'
 ```
 
 业务侧：
 
 ```js
+// 目的：业务侧直接 import 虚拟模块，无需磁盘上真有这个文件
 import pkg from 'virtual:package-info';
-console.log(pkg.name, pkg.version);   // 无需真实存在这个文件
+console.log(pkg.name, pkg.version);   // ✅ 拿到 package.json 里的 name/version
 ```
 
 要点：`resolveId` 认领、`load` 供货，一一对应；`\0` 前缀是 Rollup 生态惯例。TS 项目再补一个类型声明 `declare module 'virtual:package-info'`。
@@ -70,36 +76,40 @@ console.log(pkg.name, pkg.version);   // 无需真实存在这个文件
 **需求 A（简单）**：给所有自有 `.js` 顶部注入一行构建标记。
 
 ```js
+// 目的：banner 插件—enforce:'pre' 在其它转换前给自有 js/ts 顶部注入标记
 export default function banner() {
   return {
     name: 'banner',
-    enforce: 'pre',           // 在其它转换之前，注入的是"原始"源码层
+    enforce: 'pre',           // ✅ 在其它转换之前，注入的是原始源码层
     transform(code, id) {
-      if (id.includes('node_modules')) return;      // 过滤：只处理自己的代码
-      if (!/\.[jt]sx?$/.test(id)) return;           // 过滤：只处理 js/ts
+      if (id.includes('node_modules')) return;      // ✅ 过滤：只处理自己的代码
+      if (!/\.[jt]sx?$/.test(id)) return;           // ✅ 过滤：只处理 js/ts
       return `/* injected by banner plugin */\n${code}`;
     },
   };
 }
+// ❌ 不写两条 return 过滤→连 node_modules 与非 js 文件都被注入标记，dev 每个请求空跑拖慢
 ```
 
 **需求 B（实用）**：把源码里的 `__FEATURE_X__` 编译期开关，根据环境变量替换掉未启用的分支（类似 dead-code 消除）。
 
 ```js
+// 目的：featureFlags 插件—把 __FEATURE_X__ 编译期开关替换为 true/false，配合摇树删未启用分支
 export default function featureFlags(flags = {}) {
   return {
     name: 'feature-flags',
     transform(code, id) {
       if (id.includes('node_modules')) return;
-      if (!code.includes('__FEATURE_')) return;     // 快速跳过无关模块
+      if (!code.includes('__FEATURE_')) return;     // ✅ 快速跳过无关模块
       let changed = code;
       for (const [k, on] of Object.entries(flags)) {
-        changed = changed.replaceAll(`__FEATURE_${k}__`, on ? 'true' : 'false');
+        changed = changed.replaceAll(`__FEATURE_${k}__`, on ? 'true' : 'false');   // ✅ 开关 → 布尔字面量
       }
-      return changed === code ? null : changed;     // 没变就返回 null（别制造空 transform）
+      return changed === code ? null : changed;     // ✅ 没变就返回 null，不制造空 transform
     },
   };
 }
+// ❌ 未命中也 return code → 每个模块都产生一次“变了”的假象，破后续 sourcemap 链并拖慢构建
 ```
 
 替换成 `true/false` 后，配合 Rollup tree-shaking，`if (false) {...}` 分支会被剔除。`define` 也能做常量替换，但 `transform` 让你能对**任意模式**动手（AST 级用 `magic-string`/`es-module-lexer` 保 sourcemap）。
@@ -113,12 +123,13 @@ export default function featureFlags(flags = {}) {
 **需求**：dev 下暴露 `GET /__api/now` 返回服务器时间（给调试面板用），生产不打包进去。
 
 ```js
+// 目的：dev 中间件插件—apply:'serve' 只在开发挂一个返回服务器时间的接口，生产零成本
 export default function devTimeApi() {
   return {
     name: 'dev-time-api',
-    apply: 'serve',            // 关键：只在 dev 生效，build 时完全不挂载
+    apply: 'serve',            // ✅ 关键：只在 dev 生效，build 时完全不挂载
     configureServer(server) {
-      // 返回一个函数 => 在 Vite 内部中间件"之后"插入（这里用不到转换后的模块，直接同步响应）
+      // ✅ Connect 风格 use(path, fn)，按路径前缀匹配，直接同步响应
       server.middlewares.use('/__api/now', (req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ now: Date.now() }));
@@ -126,6 +137,7 @@ export default function devTimeApi() {
     },
   };
 }
+// ❌ 忘写 apply:'serve' → 该中间件插件在 build 下也被实例化（虽然钩子不触发，但易误以为调试接口会随线上带出）
 ```
 
 - `apply: 'serve'` 保证生产构建零成本、不把调试端点带上线；
@@ -135,13 +147,15 @@ export default function devTimeApi() {
 **进阶：主动推 HMR。** 比如监听某个非源码文件变化后通知前端刷新：
 
 ```js
+// 目的：监听非源码文件变化，主动推 HMR—改了 .env.local 就通知前端全量刷新
 configureServer(server) {
   server.watcher.on('change', (file) => {
     if (file.endsWith('.env.local')) {
-      server.ws.send({ type: 'full-reload' });   // 通过 WebSocket 推 HMR
+      server.ws.send({ type: 'full-reload' });   // ✅ 通过 WebSocket 推 HMR 全量刷新
     }
   });
 }
+// ❌ .env 变更默认不触发重载→不加此监听，改了环境变量得手动重启 dev server 才生效
 ```
 
 ---
@@ -154,13 +168,15 @@ configureServer(server) {
 - **构建产物校验**：在 `generateBundle(_, chunks)` 里遍历产物断言（如"确保没有把 __SECRET 打进包"），做守卫型插件。
 
 ```js
+// 目的：构建守卫—generateBundle 里扫产物，确保秘密没被打进包
 generateBundle(_, bundle) {
   for (const [file, chunk] of Object.entries(bundle)) {
     if (chunk.type === 'chunk' && chunk.code.includes('process.env.SUPER_SECRET')) {
-      this.error(`疑似秘密泄露进产物 ${file}`);   // 直接让构建失败
+      this.error(`疑似秘密泄露进产物 ${file}`);   // ✅ this.error 直接让构建失败
     }
   }
 },
+// ❌ 只用 console.log 不调 this.error → 泄露了仍照常产出包上线，守卫形同虚设
 ```
 
 ---

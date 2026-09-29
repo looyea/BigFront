@@ -7,13 +7,15 @@
 ## 一、默认事实：你的组件在服务端跑
 
 ```tsx
+// 目的：体验 RSC 默认事实——没写 'use client' 的组件就在服务端跑，能直连数据库/密钥
 // app/page.tsx —— 没有 'use client'，它就是 Server Component
-import { db } from '@/lib/db';                 // 直接 import 数据库客户端！
+import { db } from '@/lib/db';                 // ✅ 直接 import 数据库客户端（这些代码不下发到浏览器）
 
 export default async function Home() {
-  const posts = await db.query('select * from posts');   // 服务器直连，无 HTTP 无 API
-  return <PostList posts={posts} />;           // 注意：<PostList> 也在服务端渲染
+  const posts = await db.query('select * from posts');   // ✅ 服务器直连，无 HTTP 无 API
+  return <PostList posts={posts} />;           // ✅ <PostList> 也在服务端渲染，产物是 RSC Payload
 }
+// ❌ 在这个组件里写 onClick 或 useState → 报错 "Server Components cannot have state / event handlers"，构建失败
 ```
 
 RSC 的运行契约：**组件在服务器上执行，产物不是 HTML 字符串，而是序列化的"组件树描述"（RSC Payload）**，浏览器按描述拼 DOM。于是：
@@ -29,14 +31,16 @@ RSC 的运行契约：**组件在服务器上执行，产物不是 HTML 字符�
 ## 二、'use client'：边界声明，不是导入语句
 
 ```tsx
+// 目的：'use client' 是模块级边界声明——标中文件 = 标它整个 import 子图为客户端岛
 // components/Counter.tsx
-'use client';                    // ← 文件第一行。声明：本文件及其 import 图 = 客户端岛屿
+'use client';                    // ✅ 必须是文件第一行（在任何 import 之前）
 import { useState } from 'react';
 
 export default function Counter() {
-  const [n, setN] = useState(0);
+  const [n, setN] = useState(0);              // ✅ 客户端组件才能用 hooks/事件
   return <button onClick={() => setN(n + 1)}>{n}</button>;
 }
+// ❌ 把 'use client' 写在 import 之后或非首行 → 报错 "'use client' directive must be at the top of the file"
 ```
 
 三个常见误读一次纠正：
@@ -66,20 +70,22 @@ export default function Counter() {
 ## 四、一棵真实的混合树
 
 ```tsx
+// 目的：一个页面本就是混合树——服务端取数、把结果作为 props 喂给客户端岛
 // app/blog/page.tsx (Server)
 import { getPosts } from '@/lib/db';
 import PostList from './post-list';        // (Client) 带点赞交互
 import AdBanner from './ad-banner';        // (Client) 用 window 尺寸
 
 export default async function Blog() {
-  const posts = await getPosts();
+  const posts = await getPosts();          // ✅ 服务端拿数据（快、安全、可缓存）
   return (
     <>
       <AdBanner />
-      <PostList posts={posts} />           {/* 服务端取数 → props 喂给客户端岛 */}
+      <PostList posts={posts} />           {/* ✅ 服务端取数 → props 喂给客户端岛 */}
     </>
   );
 }
+// ❌ 客户端组件 post-list 里再 import 一个服务端组件直接用 → 违反铁律（正确做法是走 children 穿透，见下关）
 ```
 
 ```text
@@ -110,8 +116,10 @@ Server Blog ──┬── Client AdBanner   (岛屿：JS 下发，水合后可
 手滑把含密钥的模块 import 进客户端组件怎么办？给服务端模块上锁：
 
 ```ts
+// 目的：给含密钥的服务端模块上锁，防被客户端图误引入
 // lib/db.ts 顶部安装依赖：npm i server-only
-import 'server-only';     // ← 一旦被客户端图引用，构建直接失败
+import 'server-only';     // ✅ 一旦被客户端图引用，构建直接失败（把错误推到构建期而非运行时）
+// ❌ 忘加此锁 → 含密钥的 db 模块被 'use client' 组件 import → 密钥打包进客户端 bundle 泄漏
 ```
 
 对称地还有 `client-only`。ESLint 规则 `react-server-components/*` 是第二道锁。工程直觉同 ts-strict：**能把错误推到构建期的，绝不留给运行时**（呼应 exp-security 的纵深防御）。

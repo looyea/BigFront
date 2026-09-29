@@ -13,9 +13,12 @@ SWC 把最常用的转换**内置**了——React 自动 runtime、TS 擦除、s
 真正的生产插件是 **Rust 编译成 Wasm**，在 SWC 原生进程里直接操作 AST、无边界序列化开销：
 
 ```jsonc
+// 目的：Wasm 插件挂载点——Rust 编成的插件在 [包名, 选项] 元组里注册进 experimental.plugins
 "jsc": { "experimental": { "plugins": [
-  ["@my-org/swc-plugin-foo", { "option": 1 }]
+  ["@my-org/swc-plugin-foo", { "option": 1 }]   // 元组：[插件包标识符, 传给插件的选项]
 ]}}
+// ✅ 内置开关（react/styled/emotion/decorator 等）能解决的绝不写插件——省一堆版本兼容麻烦
+// ❌ 插件与 @swc/core 版本强耦合：AST 结构随版本变，换 core 不匹配会直接崩（v1.15 起 plugin_transform_v2 ABI 才趋稳）
 ```
 
 配套生态是 SWC 的 AST crate 与 `ast_tools`/`StructVisitor` 派生。写 Wasm 插件=用 Rust 遍历/改写 AST，能力强但门槛是「会 Rust + 懂 SWC AST 版本」。

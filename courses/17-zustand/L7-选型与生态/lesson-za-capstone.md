@@ -3,11 +3,14 @@
 ## 一、封装统一 createStore
 
 ```ts
+// 目的：团队统一 store 工厂——固化 devtools>persist>immer 中间件顺序与命名，一处升级全站受益
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 export const createStore = (name, initializer, opts) =>
-  create(devtools(persist(immer(initializer), { name, ...opts }), { name }));
+  create(devtools(persist(immer(initializer), { name, ...opts }), { name }));   // 外层 devtools 记命名、中层 persist、内层 immer
+// ✅ 顺序 immer最内/persist中/devtools最外，persist 可被 opts 关、devtools 常驻——21 个 store 只改工厂一处即升级
+// ❌ 手滑写成 create(immer(devtools(persist(...))))→devtools 夹在中间记的是 draft Proxy 快照，时间旅行/序列化全乱
 ```
 固定中间件顺序（呼应 za-middleware-chain）与命名。
 

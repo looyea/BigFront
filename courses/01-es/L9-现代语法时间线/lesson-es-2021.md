@@ -16,6 +16,7 @@
 ## 二、逻辑赋值运算符：`||=` `&&=` `??=`
 
 ```js
+// 目的：逻辑赋值——短路时才赋值，比 a = a || b 少一次赋值与 setter/Proxy 触发
 a ||= b;    // 等价 a = a || b，但 a 为 truthy 时**不求值 b、也不重新赋值**
 a &&= b;    // a 为 truthy 才执行 a = b
 a ??= b;    // a 为 null/undefined 才赋值（0 / '' / false 视为已存在！）
@@ -23,6 +24,7 @@ a ??= b;    // a 为 null/undefined 才赋值（0 / '' / false 视为已存在�
 
 **`??=` 的杀手场景——惰性初始化 / 缓存**：
 ```js
+// 目的：??= 杀手场景——惰性初始化/缓存（只有 nullish 才给默认，0 会被保留）
 config.timeout ??= 3000;         // 只有没设（nullish）才给默认，0 会被保留
 cache[key] ??= await expensive(key);   // 命中就跳过计算
 ```
@@ -36,6 +38,7 @@ cache[key] ??= await expensive(key);   // 命中就跳过计算
 ## 三、数字分隔符 `_`
 
 ```js
+// 目的：数字分隔符 _ 纯可读性，运行时被忽略（typeof 仍是 number）
 const billion = 1_000_000_000;      // 下划线被忽略，纯可读性
 const mask    = 0xFF_00_00_00;      // 十六进制分组
 const frac    = 1_000.50_25;        // 小数部分也行
@@ -48,6 +51,7 @@ const frac    = 1_000.50_25;        // 小数部分也行
 ## 四、`String.prototype.replaceAll`
 
 ```js
+// 目的：replaceAll 一次换掉所有（传字符串时不需 g；传正则时必须带 g）
 'a-b-c'.replaceAll('-', '_');        // 'a_b_c'
 // 旧写法 1：/'-'/g 正则全局（容易忘 g）
 // 旧写法 2：split('-').join('_')
@@ -63,6 +67,7 @@ const frac    = 1_000.50_25;        // 小数部分也行
 ## 五、`Promise.any`：竞速「首个成功」
 
 ```js
+// 目的：Promise.any 取首个成功；全部失败才 reject，抛 AggregateError
 Promise.any([p1, p2, p3])
   .then(first)      // 任一 **fulfilled** 就 resolve（取最快成功者）
   .catch(err => {   // 全部 rejected 才 reject
@@ -86,6 +91,7 @@ Promise.any([p1, p2, p3])
 ## 六、`WeakRef` 与 `FinalizationRegistry`：可控的弱引用
 
 ```js
+// 目的：WeakRef 弱持有单个值（deref 可能 undefined）；FinalizationRegistry 注册回收回调
 const ref = new WeakRef(hugeObj);
 // 需要用时解引用，可能已被 GC 回收
 const obj = ref.deref();

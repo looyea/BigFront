@@ -13,6 +13,7 @@ npm i vue-router        # 本项目已用；配 Vite 即可（呼应 10-vite）
 ```
 ```js
 // router/index.js
+// 目的：声明路径→组件映射并创建路由实例（history 控制 URL 长相，routes 是表）
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '@/views/Home.vue';
 
@@ -22,16 +23,17 @@ const routes = [
 ];
 
 export const router = createRouter({
-  history: createWebHistory(),   // 用 HTML5 History API
+  history: createWebHistory(),   // 用 HTML5 History API（❌ 无后端回退时刷新 /about 会 404，见第二节）
   routes,
 });
 ```
 ```js
 // main.js
+// 目的：把路由实例 install 进应用（.use(router) 后才有 RouterLink/RouterView/useRoute）
 import { createApp } from 'vue';
 import App from './App.vue';
 import { router } from './router';
-createApp(App).use(router).mount('#app');
+createApp(App).use(router).mount('#app');   // ❌ 漏 .use(router) 就 mount → 模板里 <RouterView> 报未注册组件、useRoute() 返回 undefined
 ```
 
 ---
@@ -56,9 +58,10 @@ hash 模式不需要回退（`#` 后的部分服务器看不到），但 URL 不
 ## 三、`<RouterLink>` 与 `<RouterView>`
 
 ```vue
+<!-- 目的：RouterLink 做前端导航（不整页刷新），RouterView 是当前匹配路由的渲染出口 -->
 <nav>
   <RouterLink to="/">首页</RouterLink>
-  <RouterLink :to="{ name: 'about' }">关于</RouterLink>   <!-- 命名路由更稳 -->
+  <RouterLink :to="{ name: 'about' }">关于</RouterLink>   <!-- 命名路由更稳（✅ 路径改了调用点不用改） -->
 </nav>
 <RouterView />    <!-- 当前匹配路由的组件渲染出口 -->
 ```
@@ -74,12 +77,14 @@ hash 模式不需要回退（`#` 后的部分服务器看不到），但 URL 不
 
 ```vue
 <script setup>
+// 目的：读当前路由用 useRoute（响应式只读快照），执行跳转用 useRouter
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();   // 当前路由信息（响应式，只读语义）
 const router = useRouter(); // 导航实例（执行跳转）
 
 console.log(route.path, route.params.id, route.query.tab, route.hash);
 console.log(route.name, route.meta);        // meta 见 vue-router-guard-lazy
+// ❌ 想在非 setup（如普通函数/定时器回调）里调 useRoute() → 返回 undefined（依赖当前组件实例）
 </script>
 ```
 - **`useRoute`**：当前激活路由的**只读**快照（`params`/`query`/`hash`/`fullPath`/`matched`/`meta`），本质是响应式对象，可在 `watch` 里跟随变化重取数（呼应 vue-watch、vue-router-guard-lazy）；
@@ -97,11 +102,14 @@ console.log(route.name, route.meta);        // meta 见 vue-router-guard-lazy
 ```
 ```js
 // 编程式（useRouter）
+// 目的：用代码触发导航——push 新增历史、replace 替换当前、back/go 操作历史栈
 router.push('/user/1');                          // 路径
 router.push({ name: 'user', params: { id: 1 } }); // 命名路由（推荐，路径改了不用改调用点）
 router.replace({ name: 'login' });               // 替换历史（不留后退项，登录重常用）
 router.back();                                   // 等价 history.back()
 router.go(-2);
+// ✅ push 返回 Promise，可 await router.push(...) 确认导航完成
+// ❌ 导航被守卫 next(false) 中断时 Promise 会 reject → 未 catch 则报 Uncaught (in promise)
 ```
 - **命名路由**（`name` + `:to="{ name }"`）解耦"路径字符串"与"跳转点"，重构友好；
 - `push` 新增历史、`replace` 替换当前（如登录后不该回退到登录页）；

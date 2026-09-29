@@ -5,13 +5,17 @@
 `biome init` 生成的 `biome.json` 顶层带 `$schema`（编辑器据此补全/校验），主要四大区：
 
 ```jsonc
+// 目的：biome.json 顶层骨架——$schema 托底 + files 圈范围 + formatter/linter/organizeImports 三功能开关
 {
-  "$schema": "https://biomejs.dev/schemas/2.x/schema.json",
-  "files": { "include": ["src"], "ignore": ["dist", "node_modules"] },
-  "formatter": { "enabled": true, "indentStyle": "space", "lineWidth": 100 },
-  "linter":    { "enabled": true, "rules": { "recommended": true } },
-  "organizeImports": { "enabled": true }
+  "$schema": "https://biomejs.dev/schemas/2.x/schema.json",   // 写错字段名编辑器立刻标红，等于免费配置文档
+  "files": { "include": ["src"], "ignore": ["dist", "node_modules"] },   // include 划定处理范围，ignore 排产物/依赖
+  "formatter": { "enabled": true, "indentStyle": "space", "lineWidth": 100 },   // 全局格式化：空格缩进、行宽 100
+  "linter":    { "enabled": true, "rules": { "recommended": true } },   // recommended=true 开官方推荐集做低噪音基线
+  "organizeImports": { "enabled": true }   // import 自动排序开关
 }
+// ✅ 起手用最小可用配置（recommended + 对齐团队旧风格），其余踩到再补、别一上来抄满配
+// ❌ 忘了 files.include→Biome 扫全仓含 dist/生成物，报一堆无关诊断且拖慢 CI
+// 优先级：CLI 参数 > biome.json 显式设置 > 默认值
 ```
 
 `$schema` 让你写错字段名时编辑器立刻提示，等于免费的配置文档。

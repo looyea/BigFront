@@ -7,13 +7,14 @@
 ## 一、最小服务器：一个回调说明一切
 
 ```js
+// 目的：不靠任何框架，一个回调就能起一个会应答的 HTTP 服务器
 import http from "node:http";
 
 const server = http.createServer((req, res) => {   // 每个请求触发一次
-  res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
-  res.end("Hello World");                            // end = 发完并（可能）关闭
+  res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });  // 先提交状态码+头
+  res.end("Hello World");                            // end = 发完正文并结束响应（不调则请求永挂）
 });
-server.listen(3000, () => console.log("http://localhost:3000"));
+server.listen(3000, () => console.log("http://localhost:3000"));  // 监听后访问根路径→看到 Hello World
 ```
 
 - `createServer(fn)` 的 `fn` 就是**请求监听器**——Express 的 `app` 最终也就是被这样喂给 `http.createServer`（呼应 Express：`app` 是 `(req,res)=>{}`）。
@@ -27,12 +28,13 @@ server.listen(3000, () => console.log("http://localhost:3000"));
 ## 二、读请求：方法、路径、头
 
 ```js
+// 目的：从 req 上读方法/路径/头，并用 new URL 拆出 pathname 与 query
 http.createServer((req, res) => {
   req.method;                 // 'GET' | 'POST' ...
-  req.url;                    // '/users/42?x=1' —— 只是相对路径+query（呼应 node-path-url 第 7 题）
-  req.headers["user-agent"];  // 全小写键
+  req.url;                    // '/users/42?x=1' —— 只是相对路径+query（无协议/主机）
+  req.headers["user-agent"];  // 键全小写
   req.headers.host;
-  // 解析出 pathname 与 query：
+  // 解析出 pathname 与 query（req.url 是相对，必须补 base）：
   const u = new URL(req.url, `http://${req.headers.host}`);
   u.pathname;                 // '/users/42'
   u.searchParams.get("x");    // '1'
@@ -48,25 +50,27 @@ http.createServer((req, res) => {
 body 不自动给你——`req` 是 Readable，得**收集所有块**。而且必须防"超大 body"（内存攻击，呼应 node-streams interview 第 12 题）：
 
 ```js
+// 目的：req 是读流，手收集 body 并加"大小上限"防内存攻击
 function readBody(req, limit = 1e6) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
     req.on("data", (c) => {
       size += c.length;
-      if (size > limit) {
+      if (size > limit) {   // ❌ 超过 1MB：拒收并断流，避免恶意大 body 把内存吃爆
         reject(Object.assign(new Error("payload too large"), { statusCode: 413 }));
         req.destroy();                 // 超限直接断
         return;
       }
       chunks.push(c);
     });
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-    req.on("error", reject);           // ★ 别忘了（呼应 node-events 第三节）
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));  // 收完所有块再拼接
+    req.on("error", reject);           // ★ 别忘了（否则 'error' 无监听会崩）
   });
 }
 
 // POST /users，application/json
+// ✅ 应用：收集原始 body 再手动 JSON.parse
 const raw = await readBody(req);
 const body = JSON.parse(raw);          // express 的 express.json() 做的就是这些 + 校验类型
 ```
@@ -78,15 +82,16 @@ const body = JSON.parse(raw);          // express 的 express.json() 做的就�
 ## 四、手写路由：一个 if/switch 就够起步
 
 ```js
+// 目的：用 method+pathname 的 if 匹配手写一个最小路由（send 统一收尾）
 http.createServer(async (req, res) => {
   const { pathname } = new URL(req.url, `http://${req.headers.host}`);
   if (req.method === "GET" && pathname === "/")       return send(res, 200, "home");
   if (req.method === "GET" && pathname === "/api")    return send(res, 200, JSON.stringify({ ok: true }), "application/json");
   if (req.method === "POST" && pathname === "/echo")  return send(res, 200, await readBody(req));
-  send(res, 404, "Not Found");
+  send(res, 404, "Not Found");   // 都不匹配 → 兑底 404
 }).listen(3000);
 
-function send(res, status, body, type = "text/plain; charset=utf-8") {
+function send(res, status, body, type = "text/plain; charset=utf-8") {  // 封装"写头+结束"
   res.writeHead(status, { "Content-Type": type });
   res.end(body);
 }
@@ -99,17 +104,18 @@ Express 的 `app.get('/x', h)`、路由参数、中间件链，都是在**这套
 ## 五、响应：状态码、头、流式发送
 
 ```js
+// 目的：设状态码/头/多值头，流式发送（SSE 与大文件下载）
 res.statusCode = 201;                          // 或 writeHead
 res.setHeader("Location", "/users/42");        // 201 后配 2xx/3xx 语义
 res.setHeader("Set-Cookie", ["a=1", "b=2"]);   // 多值用数组（呼应 Express L5 认证）
-res.writeHead(200, { "Content-Type": "text/event-stream" });   // SSE
-res.write("data: 1\n\n"); res.write("data: 2\n\n"); res.end();
+res.writeHead(200, { "Content-Type": "text/event-stream" });   // SSE：长连接逐条推
+res.write("data: 1\n\n"); res.write("data: 2\n\n"); res.end();  // 每段 "data: ...\n\n" 是一条事件
 
-// 大文件流式下载：把 Readable 直接 pipe 到 res（背压自动处理，呼应 node-stream-pipeline）
+// 大文件流式下载：把 Readable 直接 pipeline 到 res（背压自动处理，呼应 node-stream-pipeline）
 import fs from "node:fs";
 const rs = fs.createReadStream("video.mp4");
-res.setHeader("Content-Length", fs.statSync("video.mp4").size);
-await import("node:stream/promises").then(({ pipeline }) => pipeline(rs, res));
+res.setHeader("Content-Length", fs.statSync("video.mp4").size);   // 告知总长，浏览器才能显示进度
+await import("node:stream/promises").then(({ pipeline }) => pipeline(rs, res));  // 错误/资源自动收口
 ```
 
 `Content-Type`、`Content-Length`、`Location`、`Set-Cookie` 这些是**响应头的地基**（呼应 Express L4 静态、L5 认证）。用 `pipeline(rs, res)` 而非手撸 `on('data')`——错误与资源自动收口（呼应 node-stream-pipeline）。
@@ -121,18 +127,19 @@ await import("node:stream/promises").then(({ pipeline }) => pipeline(rs, res));
 裸客户端：
 
 ```js
+// 目的：用内置 http.request 当裸客户端发请求（记得监听 error、最后 end()）
 import http from "node:http";
 const req = http.request(
   { host: "localhost", port: 3000, path: "/api", method: "GET", headers: { accept: "application/json" } },
   (res) => {
     let data = "";
-    res.setEncoding("utf8");
-    res.on("data", (c) => (data += c));
-    res.on("end", () => console.log(res.statusCode, data));
+    res.setEncoding("utf8");                    // 让 data 事件直接给字符串
+    res.on("data", (c) => (data += c));         // 逐块累加响应体
+    res.on("end", () => console.log(res.statusCode, data));  // 收完打印状态码+内容
   }
 );
-req.on("error", console.error);   // 连接失败也走 error（呼应 node-events）
-req.end();
+req.on("error", console.error);   // 连接失败也走 error（不监听会崩，呼应 node-events）
+req.end();                        // ★ 必须 end 才真正发出请求
 ```
 
 现代首选 **全局 `fetch`**（Node 18+，WHATWG 标准）：`const r = await fetch(url); const j = await r.json();`。`fetch` 的响应体是 Web `ReadableStream`，可用 `Readable.fromWeb` 转成 Node 流再 `pipeline`（呼应 node-stream-pipeline 第六节）。超时用 `AbortController`（呼应 node-net-dns 第 11 题、node-stream-pipeline 第 10 题）。

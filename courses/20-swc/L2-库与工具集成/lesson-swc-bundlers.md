@@ -3,12 +3,15 @@
 ## 一、webpack：swc-loader 换掉 babel-loader
 
 ```js
+// 目的：webpack 用 swc-loader 换掉 babel-loader——options 形状即 .swcrc，冷启动从分钟到秒
 // webpack.config.js
 module.exports = { module: { rules: [{
-  test: /\.(t|j)sx?$/, exclude: /node_modules/,
-  use: { loader: 'swc-loader', options: { jsc: { parser: { syntax: 'typescript', tsx: true },
-    transform: { react: { runtime: 'automatic' } } } } }
+  test: /\.(t|j)sx?$/, exclude: /node_modules/,          // 只编自己的 TS/JS(X)，跳过依赖
+  use: { loader: 'swc-loader', options: { jsc: { parser: { syntax: 'typescript', tsx: true },   // 声明按 TS+JSX 解析
+    transform: { react: { runtime: 'automatic' } } } } }   // 自动 JSX runtime
 }]}};
+// ✅ 收益：大仓转译时间骤降；Rspack 用户更省事——内置 builtin:swc-loader 无需装包
+// ❌ 忘了 exclude: /node_modules/→对依赖也跑 swc-loader，构建时间爆炸且可能重编坏三方包
 ```
 
 配置对象形状就是 `.swcrc`。收益：大仓冷启动转译时间从分钟级到秒级。Rspack 用户更省事——它**内置** `builtin:swc-loader`，无需装包。

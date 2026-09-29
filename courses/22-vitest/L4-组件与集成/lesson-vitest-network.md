@@ -8,11 +8,13 @@
 
 ```ts
 // setup.ts
+// 目的：MSW 在 Node 侧建一个假服务器，挂在 setupFiles 上全项目共用
 import { setupServer } from 'msw/node';
-export const server = setupServer(...handlers);
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+export const server = setupServer(...handlers);   // handlers：路由 → 假响应
+beforeAll(() => server.listen());                 // 套件开始：开始拦截真请求
+afterEach(() => server.resetHandlers());          // ✅ 每条用例后复位，防 server.use 的临时覆盖泄漏
+afterAll(() => server.close());                   // 套件结束：关拦截
+// ❌ 漏 resetHandlers → 上一条用 server.use 设的 500 泄漏到后续用例、全串
 ```
 
 `handlers` 定义路由 → 响应。把上面放 `setupFiles`（**on-server**，Node 里跑），全项目共用一个 server。呼应 **19-tanstack-query** 的测试关——那里用 MSW 测 query 组件是同一套思路。

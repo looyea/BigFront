@@ -9,7 +9,10 @@
 ## 二、useSyncExternalStore 的契约
 
 ```ts
-const value = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+// 目的：useSyncExternalStore 三参数契约——外部状态并发安全订阅的标准接口
+const value = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);   // 注册订阅 / 取当前快照 / 取 SSR 稳定快照
+// ✅ getSnapshot 无变化时返回同一引用（Object.is 相等），React 判定“没变”不重渲
+// ❌ getSnapshot 每次返回新对象→引用永不相等，React 认定“一直变”，报 "The result of getSnapshot should be cached" 或死循环
 ```
 
 - `subscribe(onChange)`：注册变化回调，返回退订函数。
@@ -40,13 +43,16 @@ SSR 下必须提供稳定 server snapshot，否则水合 mismatch。Zustand 的 
 ## 六、手写 30 行复刻一个 mini-useStore
 
 ```ts
+// 目的：30 行复刻 mini useStore——讲清这几处，Zustand/Redux/Jotai 的 React 绑定就都通了
 function useMiniStore(store, sel) {
   return React.useSyncExternalStore(
-    store.subscribe,
-    () => sel(store.getState()),
-    () => sel(store.getInitialState())   // 水合快照
+    store.subscribe,                        // 订阅：store 变化时回调通知 React
+    () => sel(store.getState()),            // 客户端快照：现取现算，依赖 sel 稳定返回
+    () => sel(store.getInitialState())      // 水合快照：SSR/水合期只读这份，不跑 subscribe
   );
 }
+// ✅ 订阅的是模块级 store 实例、与组件树无关→这正是“Zustand 为什么不需要 Provider”的答案
+// ❌ 第二参内联 () => sel(...) 若 sel 每造新对象，快照引用不稳→同 §四 的死循环坑
 ```
 
 能把这四行讲清楚，Zustand/Redux/Jotai 的 React 绑定就都通了——面试题「Zustand 为什么不需要 Provider」的答案也在里面：订阅的是模块级 store 实例，与组件树无关。

@@ -3,13 +3,16 @@
 ## 一、两要素：queryKey + queryFn
 
 ```tsx
+// 目的：useQuery 两要素最小用法——queryKey 数组定身份、queryFn 收 context 取数并把 signal 透传给 fetch
 const { data } = useQuery({
-  queryKey: ['user', userId],          // 缓存身份，必填
-  queryFn: async ({ queryKey, signal }) => {   // 怎么取，必填（除 initialData）
-    const r = await fetch('/api/user/' + queryKey[1], { signal });
+  queryKey: ['user', userId],          // 缓存身份，必填；数组可前缀匹配，userId 参与身份才能“换 id 重取”
+  queryFn: async ({ queryKey, signal }) => {   // 怎么取，必填（除 initialData）；从 context 解出 key 与取消信号
+    const r = await fetch('/api/user/' + queryKey[1], { signal });   // signal 透传给 fetch，查询被取消时请求随之中断
     return r.json();
   },
 });
+// ✅ 应用：queryFn 里非 2xx 自己 throw，错误才会进 error 分支（Query 只在 reject 时算失败）
+// ❌ fetch 不判 res.ok：4xx/5xx 也 resolve 成“成功”，错误被当数据吞掉
 ```
 
 queryKey 是数组不是字符串——序列化后作缓存主键，还能前缀匹配（tq-query-key 专讲）；queryFn 收到 context：{queryKey, signal, client, meta}，**signal 记得透传给 fetch**，取消能力就靠它（tq-cancel 专讲）。
@@ -38,9 +41,12 @@ status 描述**数据**（pending/success/error），fetchStatus 描述**请求*
 ## 五、写组件的习惯
 
 ```tsx
-if (isPending) return <Skeleton/>;
-if (isError) return <Error msg={error.message}/>;
-return <List items={data}/>;
+// 目的：三态早返回的书写习惯——pending/error 先返回，主路径 data 天然非空
+if (isPending) return <Skeleton/>;                    // 还没成功过：骨架
+if (isError) return <Error msg={error.message}/>;   // 失败：错误 UI
+return <List items={data}/>;                         // 成功：data 已由 TS 自动收窄为非空
+// ✅ 先窄后宽早返回，末行 data 类型被收窄，无需 data! 或可选链
+// ❌ 不判空直接 return <List items={data}/> → 首取时 data 为 undefined 组件崩
 ```
 
 先窄后宽：pending/error 早返回，主渲染路径拿到的 data 天然非空（配合 TS 泛型，data 类型在 success 分支自动收窄，见官方 TypeScript 指南）。

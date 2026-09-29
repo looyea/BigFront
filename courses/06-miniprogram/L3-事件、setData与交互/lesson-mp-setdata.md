@@ -7,7 +7,9 @@
 ## 一、一次 setData 的完整旅程
 
 ```js
-this.setData({ greeting: '你好' })
+// 目的：setData 是逻辑层→渲染层唯一"去程快递"（合并→序列化→跨线程→diff→更新五步）
+this.setData({ greeting: '你好' })   // ✅ data.greeting 合并为新值，视图 {{greeting}} 同步更新
+// ❌ this.data.greeting = '你好' 直接赋值 → 不报错但视图永不更新（跳过了序列化/跨线程/diff，无响应式代理）
 ```
 
 背后五步：
@@ -27,10 +29,13 @@ this.setData({ greeting: '你好' })
 setData 是**异步**的：调用后 `this.data` 立即是新值（逻辑层已合并），但**页面还没更新完**。
 
 ```js
+// 目的：setData 异步——this.data 立即新值但页面未更新完；要读渲染结果放回调/wx.nextTick
 this.setData({ list: newList }, () => {
-  // 渲染层确认更新完毕后执行：此处再查节点布局才稳
+  // ✅ 渲染层确认更新完毕后执行：此处再查节点布局才稳
   wx.createSelectorQuery().select('.first').boundingClientRect();
 });
+// ❌ 写完立刻同步查布局（不放回调）→ 拿到更新前的旧尺寸（setData 异步）
+// ❌ 拆碎连环 setData 当优化 → 不会自动合并成一次渲染（同 React18 不同），应合并为一次
 ```
 
 三条守则：
@@ -44,6 +49,7 @@ this.setData({ list: newList }, () => {
 ## 三、路径更新：只寄"变化的那页纸"
 
 ```js
+// 目的：路径更新只寄"变化的那页纸"，避免整个大数组重序列化跨线程
 // ❌ 改一项标题，把整个 200 条数组重新序列化寄一遍
 this.setData({ list: this.data.list });
 
@@ -57,6 +63,8 @@ this.setData({
 // ✅ 动态路径：先算 key 再 setData（对象展开）
 const key = `list[${index}].done`;
 this.setData({ [key]: true });
+// ❌ 路径下标写 'list[999].done' 越界定位不存在项 → 不生效（路径更新只能定位已存在下标）
+// ❌ 把不进视图的中间量（临时数组/原始响应）也塞 setData → 白占跨线程带宽（应存 this._cache 普通属性）
 ```
 
 路径更新还有**追加**语义吗？没有——它只能定位已存在的下标；往数组尾部加数据，更省的写法是**分页拼接在逻辑层做、只传新页 + 索引指针**，或用 setData 传整段但控制量（视场景）。

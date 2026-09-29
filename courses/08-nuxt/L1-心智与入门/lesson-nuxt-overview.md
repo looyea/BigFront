@@ -26,8 +26,10 @@ Nuxt 的答案与 Next 如出一辙：**把 Vue 生态的工业级拼装做成�
 ## 3. 十分钟跑起来
 
 ```bash
-npm create nuxt@latest my-app   # 选 Vue+TS，对比 create-next-app
-cd my-app && npm install && npm run dev
+# 目的：十分钟跑起来——脚手架对标 create-next-app
+npm create nuxt@latest my-app   # ✅ 选 Vue+TS，对比 create-next-app
+cd my-app && npm install && npm run dev   # ✅ 先装依赖再起 HMR 开发服务
+# ❌ 未 npm install 就 npm run dev → 报 “nuxt: command not found”（依赖未装）；Windows PowerShell 不支持 &&，改用 ; 分隔
 ```
 
 默认项目只有一个 `app/app.vue`（Nuxt 4 起目录收敛到 app/，旧教程里的根级 pages/ 现在挪进 app/pages/——**看 Nuxt 资料必须先核对它基于 app server 还是 pages server**，版本断层比 Next 的 pages→app 迁移更频繁）。`npm run build` 产出 `.output/`，`node .output/server/index.mjs` 直接跑——注意这个"产物即可运行服务"的形态，是 Nitro 的手笔（nuxt-deploy 详解）。

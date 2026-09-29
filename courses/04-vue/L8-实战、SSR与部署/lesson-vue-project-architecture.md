@@ -54,9 +54,11 @@ src/
 
 1. **`app.config.errorHandler`**：组件树内未捕获的渲染/生命周期/监听器错误统一入口，上报监控（呼应 node-async-errors 的"别让错误静默"）：
    ```js
+   // 目的：组件树内未捕获的渲染/生命周期/监听器错误的统一入口——上报监控防静默失败
    app.config.errorHandler = (err, instance, info) => {
-     reportToSentry(err, info);        // info: 'componentUpdate' 等来源
+     reportToSentry(err, info);        // info: 'componentUpdate' 等来源（✅ 能定位错误出自哪个钩子/组件）
    };
+   // ❌ 不设 errorHandler 时，子组件抛错只会 console.warn，生产环境无监控上报→错误默默丢失
    ```
 2. **`onErrorCaptured`**：在某个父组件拦截**其子孙**的错误，做局部降级 UI；返回 `false` 阻止继续上抛（呼应 vue-lifecycle 第五节）；
 3. **异步/API 错误**：在 action 或 `try/catch` 里就地处理或转成 `emit`/state（呼应 vue-pinia-advanced 的 `$onAction onError`、node-http 错误中间件思路）。

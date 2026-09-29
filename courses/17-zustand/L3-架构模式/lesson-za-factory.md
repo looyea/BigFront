@@ -9,12 +9,15 @@
 ## 二、工厂函数统一中间件
 
 ```ts
+// 目的：工厂函数产纯 store——参数化初始值，中间件在工厂里统一挂好，实现「配置一次、实例化 N 次」
 import { createStore } from 'zustand';
 const makeTableStore = (init) =>
   createStore((set) => ({
-    page: 1, rows: init,
-    next: () => set((s) => ({ page: s.page + 1 })),
+    page: 1, rows: init,                              // init 注入初始行，每个实例各一份、互不共享
+    next: () => set((s) => ({ page: s.page + 1 })),   // 函数式取最新 s，浅合并只改 page
   }));
+// ✅ createStore(vanilla) 返回纯 store 对象，不带 hook——正好塞进 Context 按实例分发
+// ❌ 这里若用 create() 会连 hook 一起产，而 hook 绑定的是模块级单例，多实例照样共享同一份 state
 ```
 `createStore`（vanilla）返回纯 store，不带 hook。
 
@@ -23,13 +26,17 @@ const makeTableStore = (init) =>
 ## 三、多实例：Context 注入独立 store
 
 ```tsx
-const TableCtx = createContext<StoreApi<TableState>>(null);
+// 目的：Context 注入独立 store——每个 TableProvider 建一份，多个表格互不干扰
+const TableCtx = createContext<StoreApi<TableState>>(null);   // 存纯 store（StoreApi），不是 hook
 function TableProvider({ children, init }) {
-  const ref = useRef();
-  if (!ref.current) ref.current = makeTableStore(init);
+  const ref = useRef();                              // 用 ref 而非 state 承载 store
+  if (!ref.current) ref.current = makeTableStore(init);   // 惰性建：只首渲染调工厂，之后复用同一实例
   return <TableCtx.Provider value={ref.current}>{children}</TableCtx.Provider>;
 }
-const useTable = (sel) => useStore(useContext(TableCtx), sel);
+const useTable = (sel) => useStore(useContext(TableCtx), sel);   // vanilla 绑定 hook，从 Context 取 store 再订阅
+// ✅ useRef 保证工厂只跑一次；两个 <TableProvider> 各持 store，翻页互不影响
+// ❌ 直接 useState(makeTableStore())→参数每次渲染都求值，工厂被反复调用、state 说没就没
+// ❌ 把 // 注释写进 <TableCtx.Provider value=...> 开标签的属性区→JSX 语法报错，行注释只能待在语句级
 ```
 每个 TableProvider 建立一份独立 store，多个表格互不干扰。用 `useStore(store, selector)`（zustand 的 vanilla 绑定 hook）。
 

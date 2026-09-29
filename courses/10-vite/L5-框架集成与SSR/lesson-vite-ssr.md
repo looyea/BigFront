@@ -36,13 +36,15 @@ Vite 提供一个"能编译模块、也能在服务端把模块加载执行"的 
 
 ```js
 // server.js（Node，开发用）
+// 目的：Vite SSR 开发三件套—createServer(middlewareMode) + transformIndexHtml + ssrLoadModule，服务端即时渲染+热更
 import express from 'express';                 // 呼应 09-express！
 import { createServer } from 'vite';
 
 const app = express();
+// ✅ middlewareMode:true → Vite 不自起端口，只当中间件跑在 Express 里
 const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
 
-app.use(vite.middlewares);                     // 让 Vite 处理模块转换/HMR
+app.use(vite.middlewares);                     // ✅ 让 Vite 处理模块转换/HMR
 
 app.use('*', async (req, res) => {
   const url = req.originalUrl;
@@ -50,20 +52,21 @@ app.use('*', async (req, res) => {
     // ① 读 index.html
     let html = await import('node:fs').then(fs => fs.promises.readFile(resolve('index.html'), 'utf-8'));
     // ② 交给 Vite 插件链转换（注入 module script 等）
-    html = await vite.transformIndexHtml(url, html);
+    html = await vite.transformIndexHtml(url, html);   // ✅ 套用框架插件对 HTML 的处理
     // ③ 在服务端加载入口模块（SSR entry），拿到 render 函数
-    const { render } = await vite.ssrLoadModule('/src/entry-server.js');
+    const { render } = await vite.ssrLoadModule('/src/entry-server.js');   // ✅ 在 Node 里加载并执行前端模块，即时编译带 HMR
     // ④ 用框架把 App 渲染成 HTML 字符串
     const { html: appHtml, state } = await render(url);
     // ⑤ 把 SSR HTML + 序列化的状态注入模板后返回
     const finalHtml = html.replace('<!--app-html-->', appHtml).replace('<!--app-state-->', serialize(state));
     res.status(200).set({ 'Content-Type': 'text/html' }).end(finalHtml);
   } catch (e) {
-    vite.ssrFixStacktrace(e);                  // 让报错映射回源码
+    vite.ssrFixStacktrace(e);                  // ✅ 把 SSR 报错栈映射回源文件
     res.status(500).end(e.message);
   }
 });
 app.listen(3000);
+// ❌ 在 entry-server 的 render 里直接访问 window/document → 服务器无这些全局，报 ReferenceError: window is not defined
 ```
 
 - `middlewareMode`：Vite 不自己起端口，作为 Express 中间件跑；
@@ -84,12 +87,15 @@ app.listen(3000);
 
 ```js
 // vite.config.js
+// 目的：生产构双产物—client（hydration 用）+ server（Node 里跑 render 用），需两次构建
 export default {
   plugins: [vue()],
   build: {
     // 通过两次构建或框架构建 API 产出 client + server
+    // ✅ 服务端入口：vite build --ssr src/entry-server.js --outDir dist/server；再普通 vite build 构客户端
   },
 };
+// ❌ 拿 dev server 的 ssrLoadModule 上生产 → 它为开发设计，慢且不安全，高并发下性崩
 ```
 
 用 `vite build --ssr src/entry-server.js --outDir dist/server` 构服务端入口，再普通 `vite build` 构客户端。运行时 Node 服务加载 server 产物 render、静态资源指向 client 产物。**别用 dev server 上生产**（`ssrLoadModule` 是为开发设计的，慢且不安全）。

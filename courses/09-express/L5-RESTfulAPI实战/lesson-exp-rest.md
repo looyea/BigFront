@@ -81,55 +81,58 @@ DELETE /articles/:id      删除
 ## 五、CRUD 实战
 
 ```js
+// 目的：一套规范 CRUD 资源路由—列表/详情/创建/全量替换/局部更新/删除，统一 { data, meta } 结构
 // routes/articles.js
 import { Router } from 'express';
 const router = Router();
 
-// 列表（支持过滤/排序/分页，见 exp-pagination）
+// ✅ 列表（支持过滤/排序/分页，见 exp-pagination）
 router.get('/', async (req, res, next) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
-    const filter = status ? { status } : {};
-    const [items, total] = await Promise.all([
+    const { status, page = 1, limit = 20 } = req.query;         // ✅ query 取分页参数带默认值
+    const filter = status ? { status } : {};                    // ✅ 有状态才加过滤条件
+    const [items, total] = await Promise.all([                  // ✅ 并发查列表与总数，省一次往返
       Article.find(filter).skip((page - 1) * limit).limit(+limit).sort({ createdAt: -1 }),
       Article.countDocuments(filter),
     ]);
-    res.json({ data: items, meta: { page: +page, total, hasMore: page * limit < total } });
+    res.json({ data: items, meta: { page: +page, total, hasMore: page * limit < total } });  // ✅ 分页信息放 meta
   } catch (e) { next(e); }
 });
 
-// 详情
+// ✅ 详情
 router.get('/:id', async (req, res, next) => {
   try {
     const article = await Article.findById(req.params.id);
-    if (!article) return res.status(404).json({ error: 'Article not found' });
+    if (!article) return res.status(404).json({ error: 'Article not found' });  // ✅ 找不到回 404，不返 null+200
     res.json({ data: article });
   } catch (e) { next(e); }
 });
 
-// 创建
+// ✅ 创建：201 + Location 头指向新资源
 router.post('/', async (req, res, next) => {
   try {
     const article = await Article.create(req.body);
-    res.status(201).location(`/articles/${article._id}`).json({ data: article });
+    res.status(201).location(`/articles/${article._id}`).json({ data: article });  // ✅ 新资源用 201 开 Location
   } catch (e) { next(e); }
 });
 
-// 全量替换 / 局部更新
+// ✅ 全量替换 / 局部更新（共用工厂，区别在语义）
 router.put('/:id', upsertOrUpdate('full'));
 router.patch('/:id', upsertOrUpdate('partial'));
 
-// 删除
+// ✅ 删除：204 无体
 router.delete('/:id', async (req, res, next) => {
   try {
     const del = await Article.findByIdAndDelete(req.params.id);
-    if (!del) return res.status(404).json({ error: 'Not found' });
-    res.status(204).end();
+    if (!del) return res.status(404).json({ error: 'Not found' });   // ✅ 删不存在资源回 404
+    res.status(204).end();                                            // ✅ 成功无返回体用 204
   } catch (e) { next(e); }
 });
 
 export default router;
-// app.use('/api/v1/articles', articlesRouter)
+// ✅ app.use('/api/v1/articles', articlesRouter)
+// ❌ 把创建也写成 res.json(...) 默认 200 → 客户端无法区分“查到了”还是“新建好了”，应 201
+// ❌ findById 传入非合法 ObjectId 字符串（如 'abc'）→ mongoose 抛 CastError，靠 catch 转 next(err)否则 500 裸报
 ```
 
 Express 5 的 async handler 错误自动 `next(err)`（呼应 L2）→ 不再需要到处 try/catch，可移除上面的 try 直接依赖自动捕获。

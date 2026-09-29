@@ -51,14 +51,20 @@ get(user, "nope");    // ✗ "nope" 不在 keyof typeof user
 多类型参数可用 `extends` 表达相互关系：
 
 ```ts
+// 目的：多类型参数用 extends 表达相互关系
 function merge<T extends object, U extends object>(a: T, b: U): T & U {
   return { ...a, ...b };
 }
+merge({ a: 1 }, { b: 2 });   // => { a: 1, b: 2 }，返回类型 { a: number } & { b: number }
+// merge(1, {});            // ❌ 第一参不是 object，不满足 T extends object
 
 // 用第一个参数决定第二个的合法范围
 function setProp<O extends Record<string, unknown>, K extends keyof O>(
   obj: O, key: K, val: O[K]
 ): void { obj[key] = val; }
+const conf = { age: 1, name: "x" };
+setProp(conf, "age", 18);    // ✓ age 键要求 number
+// setProp(conf, "age", "x"); // ❌ "x" 不匹配 O["age"]=number
 ```
 
 `K extends keyof O` + `val: O[K]` 保证"键与值类型对应"——写 `setProp(obj,'age','x')` 会报错，因为 `age` 键要求 `number`。
@@ -89,13 +95,15 @@ function bind<T extends abstract new (...a: any) => any>(cls: T) { /* ... */ }
 ## 五、约束 + 默认类型参数
 
 ```ts
+// 目的：约束 + 默认类型参数，不传 keys 时默认取全部键
 function pick<T, K extends keyof T = keyof T>(obj: T, keys?: K[]): Pick<T, K> {
-  // 不传 keys 时默认取全部键（K 默认 keyof T）
   const ks = (keys ?? Object.keys(obj)) as K[];
   const out = {} as Pick<T, K>;
   for (const k of ks) out[k] = obj[k];
   return out;
 }
+const p = pick({ a: 1, b: "x", c: true }, ["a", "b"]);  // => { a: 1, b: "x" }
+// pick({ a: 1 }, ["z"]);   // ❌ "z" 不在 keyof { a: number } = "a"
 ```
 
 注意默认里可以引用**前面已确定的类型参数**（`K extends keyof T = keyof T`），顺序敏感（呼应 ts-generic 第 8 题）。
@@ -118,12 +126,16 @@ const v = makeConst("hello");   // v: "hello"（不是 string）
 ## 七、常见坑：约束后仍访问不到成员
 
 ```ts
+// 目的：索引访问 obj[key] 要求 key 是 keyof T，否则任意字符串不被允许
+declare const o: { a: number; b: string };
 function bad<T extends object>(o: T, k: string) {
   // return o[k];   // ✗ k 是普通 string，TS 不知它是 keyof T
 }
 function good<T extends object>(o: T, k: keyof T) {
   return o[k];       // ✓
 }
+good(o, "a");        // ✓ "a" 属于 keyof typeof o
+good(o, "c");        // ❌ "c" 不在 "a"|"b"
 ```
 
 访问 `obj[key]` 要求 `key` 类型是 `keyof T`，否则"任意字符串"不被允许索引。这是从 `any`/JS 迁来最容易忘的一条（也受 `noImplicitAny` 索引检查影响，见 ts-strict）。

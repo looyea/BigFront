@@ -21,6 +21,7 @@ Taro 3 的机制一句话：**React 渲染器（reconciler）产出"DOM 模拟�
 ## 二、Taro：用 React 写小程序
 
 ```jsx
+// 目的：Taro3 用 React 写小程序——reconciler 产出模拟 DOM 树 → 序列化 diff → 翻译成 setData
 // pages/index.jsx —— 函数组件、Hooks 全原生体验
 import { View, Text, Button } from '@tarojs/components'
 import { useState } from 'react'
@@ -28,14 +29,16 @@ import Taro, { useDidShow } from '@tarojs/taro'
 
 export default function Index() {
   const [n, setN] = useState(0);
-  useDidShow(() => console.log('页面 onShow 时跑'));   // 生命周期 → Hooks 化
+  useDidShow(() => console.log('页面 onShow 时跑'));   // ✅ 生命周期 → Hooks 化（对应原生 Page.onShow）
   return (
     <View>
       <Text>{n}</Text>
-      <Button onClick={() => Taro.previewImage({ urls: [...] })}>+1</Button>
+      <Button onClick={() => setN(n + 1)}>+1</Button>   {/* ✅ onClick 由 Taro 映射为 bindtap */}
     </View>
   );
 }
+// ❌ 直接写 <div>/<span> 或 wx.原生小写标签 → 不被编译成小程序节点（应用 @tarojs/components 的 View/Text）
+// ❌ 把 wx.xxx 直接写进代码 → 跨端不通（应用 Taro.xxx 门面，内部按平台分发）
 ```
 
 对照检查你的知识迁移度：
@@ -52,23 +55,25 @@ export default function Index() {
 ## 三、uni-app：Vue 语法 + 条件编译打天下
 
 ```vue
+<!-- 目的：uni-app 用 Vue 语法 + 条件编译（#ifdef 编译期裁剪）一套代码多端 -->
 <template>
   <view class="cnt">
     <!-- #ifdef MP-WEIXIN -->
-    <button open-type="getPhoneNumber" @getphonenumber="onPhone">手机号快登</button>
+    <button open-type="getPhoneNumber" @getphonenumber="onPhone">手机号快登</button>   <!-- ✅ 仅编译进微信端 -->
     <!-- #endif -->
     <!-- #ifdef H5 -->
-    <button @click="oauthLogin">微信网页授权</button>
+    <button @click="oauthLogin">微信网页授权</button>   <!-- ✅ 仅编译进 H5，不占小程序包体 -->
     <!-- #endif -->
     <text>{{ count }}</text>
-  </template>
+  </view>
 </template>
 <script setup>
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 const count = ref(0)
-onShow(() => console.log('页面显示'))
+onShow(() => console.log('页面显示'))   // ✅ uni-app 页面生命周期 Hook
 </script>
+<!-- ❌ 条件编译块里写错平台标识（如 MP-WXIN）→ 该段不被任何端包含，功能默默消失 -->
 ```
 
 特色两件套：

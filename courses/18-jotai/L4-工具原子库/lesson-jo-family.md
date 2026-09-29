@@ -13,15 +13,18 @@ Jotai v2 移除了内置 atomFamily——因「无限缓存 + 无失效策略」
 ## 三、现代替代
 
 ```ts
+// 目的：现代 atomFamily 替代——Map 手动 memo + 显式 remove/clear，自己管生命周期防泄漏
 function makeFamily<T>(make: (id: string) => T) {
-  const cache = new Map<string, T>();
+  const cache = new Map<string, T>();                                          // 参数→原子实例的缓存
   return Object.assign(
-    (id: string) => cache.get(id) ?? (cache.set(id, make(id)), cache.get(id)!),
-    { remove: (id: string) => cache.delete(id), clear: () => cache.clear() }
+    (id: string) => cache.get(id) ?? (cache.set(id, make(id)), cache.get(id)!),  // 命中即复用；未命中则造、存、返回（同名同实例）
+    { remove: (id: string) => cache.delete(id), clear: () => cache.clear() }      // 附失效口：删行/清空防僵尸原子
   );
 }
-const rowAtom = makeFamily((id: string) => atom({ open: false, draft: '' }));
+const rowAtom = makeFamily((id: string) => atom({ open: false, draft: '' }));   // 每行一个独立状态原子
 // 删除行时：rowAtom.remove(id)
+// ✅ 命中复用保证同 id 恒等原子（订阅稳定）；删行即 remove(id) 从 cache 剔除，不攒僵尸
+// ❌ 参数用对象且每次传新引用→Object.is 不等，cache 永远 miss、每渲染造新原子，缓存形同虚设还内存爆
 ```
 自己控制生命周期：删除行时 cache.delete(id) 防泄漏。
 
@@ -40,9 +43,12 @@ const rowAtom = makeFamily((id: string) => atom({ open: false, draft: '' }));
 ## 六、异步 family：详情加载的标准件
 
 ```ts
+// 目的：异步 family——按 id 现造详情原子，天然配 Suspense + 按 id 缓存已取结果
 const detailAtom = makeFamily((id: string) =>
-  atom(async () => (await fetch('/api/task/' + id)).json()));
-// 卡片组件： const detail = useAtomValue(detailAtom(card.id))
+  atom(async () => (await fetch('/api/task/' + id)).json()));   // 每个 id 一个 async 原子，结果按 id 缓存
+// 卡片组件： const detail = useAtomValue(detailAtom(card.id))   // 点哪张卡取哪张，同名复用已取结果
+// ✅ “取哪张缓存哪张”+ 关卡 rowAtom.remove(id) 释放，10 行工厂齐活
+// ❌ 卡片频繁进出却不 remove(id)，无界缓存越攒越多→回到 v1 atomFamily 的内存泄漏老路
 ```
 
 「点哪张卡取哪张数据」+ Suspense + 按 id 缓存已取结果 + 关卡即 remove——一个 10 行工厂齐活（对比 Query 的 key 缓存：语义相似，Jotai 版全在你手里，Query 版白送失效策略——小型只读详情用 family 够了，重缓存需求请回 jo-race 分工表）。

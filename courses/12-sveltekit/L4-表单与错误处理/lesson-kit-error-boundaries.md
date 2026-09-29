@@ -7,11 +7,14 @@
 都从 `@sveltejs/kit` 导入，前两件是**抛**（调用即中断，返回类型 `never`），第三件是**造响应**：
 
 ```ts
+// 目的：三件投掷工具—前两件调用即中断（返回 never），第三件只造响应
 import { error, redirect, json } from '@sveltejs/kit';
 
-error(404, { message: 'Not found', code: 'NOT_FOUND' });   // 状态码必须 400-599；第二参对象进 page.error；传字符串则自动包成 { message }
-redirect(303, '/login');                                    // 状态码限 3xx 家族；303=POST 后转 GET、307 保方法临时、308 保方法永久
-json({ ok: true }, { status: 201 });                        // 端点里造 Response（非抛掷）；load 的世界不用它，json() 是 +server.js 三件套之一
+error(404, { message: 'Not found', code: 'NOT_FOUND' });   // ✅ 状态码限 400-599；第二参对象原样进 page.error；传字符串自动包成 { message }
+redirect(303, '/login');                                    // ✅ 303=POST 后转 GET（PRG 防重提交）；307 保方法临时、308 保方法永久
+json({ ok: true }, { status: 201 });                        // ✅ 端点里一键出 Response（自动补 Content-Type/Length）；load 的世界不用它
+// ❌ 用 try/catch 包住 load 全体再 catch(e) 吞掉一切 → redirect 也是一种抛，跳转静默失效；要接得先 if (isRedirect(e)) throw e
+// ❌ redirect 的 location 直接用 url.searchParams.get('redirectTo') 不验白名单 → 开放式重定向钓鱼面
 ```
 
 两件抛掷工具的通用红线（JSDoc 原文点名）：**别把 thrown 的东西 catch 掉**——`Make sure you're not catching the thrown redirect/error, which would prevent SvelteKit from handling it`。try/catch 包住 load 全体是新手最常见的"吞重定向"事故：redirect 也是一种抛，被你的 `catch (e)` 拦住后跳转静默失效。要过滤着接：`if (isRedirect(e)) throw e;`（`@sveltejs/kit` 提供 isRedirect/isHttpError 判据）。

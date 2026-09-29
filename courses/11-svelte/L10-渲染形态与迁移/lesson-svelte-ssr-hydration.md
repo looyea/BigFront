@@ -8,15 +8,17 @@
 
 ```js
 // server.js（Node 侧，与业务组件同仓）
-import { render } from 'svelte/server';
+// 目的：SSR 发动机—render() 把组件编译产物跑成 HTML 字符串（仅服务端 + server 编译目标存在）
+import { render } from 'svelte/server';   // ✅ v5 物理隔离：不会意外进客户端 bundle
 import App from './App.svelte';
 
 const { head, body } = await render(App, {
-  props: { url: req.url, user: session.user },
-  context: new Map([[sessionKey, session]]),  // setContext 的服务端入口
-  idPrefix: 'app',                             // 组件内部 id 前缀（多实例防碰撞）
-  csp: { nonce: res.locals.cspNonce }          // 给内联 style/script 发通行证
+  props: { url: req.url, user: session.user },   // ✅ 组件的 $props 从这里来
+  context: new Map([[sessionKey, session]]),  // ✅ setContext 的服务端入口（hydrate 侧无法传 context，这是 render 特有）
+  idPrefix: 'app',                             // ✅ 组件内部 id 前缀（多实例防碰撞）
+  csp: { nonce: res.locals.cspNonce }          // ✅ 给内联 style/script 发通行证
 });
+// ❌ 顶层有 await 却不解 await render(...) 直接用 body → 拿到的是两态 PromiseLike，body 为 undefined
 ```
 
 四个签名级事实，面试默写级：
@@ -29,15 +31,17 @@ const { head, body } = await render(App, {
 服务端拿到 `body/head` 后塞进 HTML 模板：
 
 ```js
+// 目的：把 render 的 body/head 安置进 HTML—head 怎么放是你的责任，不是它的
 const html = `<!DOCTYPE html>
 <html lang="zh">
 <head>${head}</head>
 <body>
-  <div id="app">${body}</div>
-  <script>window.__DATA__ = ${JSON.stringify(data).replace(/</g, '\\u003c')}<\/script>
-  <script type="module" src="/build/client.js"></script>
+  <div id="app">${body}</div>   <!-- ✅ body 里的注释锚点不能被破，别“顺手美化”合并空白 -->
+  <script>window.__DATA__ = ${JSON.stringify(data).replace(/</g, '\\u003c')}<\/script>   <!-- 教学注释(真项目勿留)：已转义 < 防 </script> 提前闭合导致 XSS -->
+  <script type="module" src="/build/client.js"><\/script>
 </body>
 </html>`;
+// ❌ 忘写 .replace(/</g, ...) → 数据里含 </script> 就提前闭合标签，成为注入点
 ```
 
 这就是全部"框架"了——路由自己匹配、CSS 提取自己编排（server 编译目标的 `css` 输出）、404/重定向自己处理。**Kit 的 +page.svelte 全家桶 = 把这段样板工程化**，发动机一模一样。
@@ -46,13 +50,16 @@ const html = `<!DOCTYPE html>
 
 ```js
 // client.js
+// 目的：客户端接棒—用 hydrate 而非 mount，对已有 DOM“只认领不重建”
 import { hydrate } from 'svelte';
 import App from './App.svelte';
 
 const app = hydrate(App, {
-  target: document.getElementById('app'),
-  props: window.__DATA__   // 反序列化服务端注入的数据
+  target: document.getElementById('app'),   // ✅ 容器里已是 SSR 留下的真 DOM，顺注释锚点对位
+  props: window.__DATA__   // ✅ 反序列化服务端注入的数据
 });
+// ❌ 这里误用 mount(...) → 会清空容器重建整棵 DOM，丢掉“省一次渲染”的 SSR 意义，还闪一下
+// ❌ hydrate 的 props 与 render 时不等价（如 Date 变字符串）→ hydration mismatch，dev 抛错、prod 静默打补丁闪动
 ```
 
 `hydrate` 与 `mount` 同一族 API、唯一区别是**契约**：mount 对空容器"从无到有"；hydrate 面对已有 DOM，**只认领不重建**——事件、双向绑定、effect 全部挂到现成节点上，一个 `<div>` 都不重新创建。这就是 SSR 的钱花得值的地方：首屏 HTML 由服务端渲染（秒开、SEO），交互升级由客户端补（rehydration），中间**省掉一次完整渲染**的闪动与开销。

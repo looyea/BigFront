@@ -9,11 +9,13 @@
 Svelte 官方工具链已收拢进 **sv CLI**（`create/check/test/tidy/migrate` 一锅端，`create-svelte` 的继任者）：
 
 ```bash
+# 目的：官方工具链收拢后的唯一脚手架入口（create-svelte 的继任者）
 npx sv create my-app
 # 交互式决策项：
-#   - 模板：bare / demo / minimal
+#   - 模板：bare / demo / minimal（demo 带完整 + 文件族例子，学前者选 minimal 防干扰）
 #   - TypeScript：full strict / strict 基础 / library 模式 / 不用
 #   - 是否装 prettier + eslint
+# ❌ 网上抄 npx degit sveltejs/kit-template → 已退役，建出来是 Svelte 4+Kit 1.0 旧世界
 ```
 
 生成的骨架三要点：`svelte.config.js`（Kit 配置：adapter/paths/prerender 都在这，vite.config.ts 里挂 `sveltekit()` 插件——**两个配置文件分工：编译器与 Kit 归前者，打包器插件链归后者**，L7 的 svelte 包同款分裂在这延续）；`src/app.html`（HTML 模板，`%sveltekit.head%` / `%sveltekit.body%` 两个占位符就是 11 包手搓 SSR 里"你自己拼模板"的那块底板）；`src/app.d.ts`（**类型增强登记处**：`App.Locals`/`App.Error`/`App.Platform` 往这写，L5/L8 都要回来用它）。
@@ -50,8 +52,10 @@ npx sv create my-app
 
 ```bash
 # .env 文件
-PUBLIC_API_BASE=https://api.example.com   # PUBLIC_ 前缀
-DATABASE_URL=postgres://...               # 无前缀 = 私有
+# 目的：$env 四模块的源头—前缀决定能不能出境，PUBLIC_ 即向全世界公开
+PUBLIC_API_BASE=https://api.example.com   # ✅ static/public 可导入，两端可用（会进客户端 bundle）
+DATABASE_URL=postgres://...               # ✅ 无前缀 = 私有：只能 import 自 $env/static/private，进客户端直接 build 报错
+# ❌ 把 DATABASE_URL 顺手写成 PUBLIC_DATABASE_URL → 密钥被内联进 JS，“注入即公开”事故重演
 ```
 
 - `$env/static/private` —— 构建期**内联进服务端产物**，客户端 bundle 物理不含（编译器看到 import 自 static/private 的代码进客户端直接 build 报错——这是 Next `NEXT_PUBLIC_` 靠约定、Kit 靠编译拦截的差别）；

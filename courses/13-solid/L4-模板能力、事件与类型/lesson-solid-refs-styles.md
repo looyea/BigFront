@@ -12,22 +12,28 @@
 
 **① 变量赋值**（最常用）：
 ```jsx
-let myElement;                       // TS 里写 let myElement!: HTMLDivElement（明确赋值断言）
+// 目的：变量形态 ref—直接拿元素引用（最常用）
+let myElement;                       // ✅ TS 里写 let myElement!: HTMLDivElement（明确赋值断言）
 return <p ref={myElement}>Hi</p>;
+// ⚠️ 赋值发生在"元素创建时、加入 DOM 之前"；要入 DOM 后再摸它，得放 onMount
 ```
 关键时序：赋值发生在**元素创建时、把它加入 DOM 之前**。所以想在"入 DOM 前"就用它（比如加属性/监听），要用回调形态。
 
 **② 回调形式**（要入 DOM 前访问，或元素可能反复增删）：
 ```jsx
+// 目的：回调形态 ref—要在"入 DOM 前"访问，或元素可能反复增删时用
 <p ref={(el) => { myElement = el; /* el 已创建但尚未加入 DOM */ }}>Hi</p>
+// ✅ 回调里此刻 el 已创建但未进 DOM：适合在挂载前加属性/监听
 ```
 
 **③ signal 作 ref**（元素首次渲染时可能不存在、或被 `<Show>` 卸载再挂）：
 ```jsx
+// 目的：signal 作 ref—元素可能随 <Show> 卸载再挂、首次可能不存在时的标准解法
 const [element, setElement] = createSignal();
 <Show when={show()}>
-  <p ref={setElement}>条件里的元素</p>   // 挂载时 setElement(el)，卸载时 setElement(undefined)
+  <p ref={setElement}>条件里的元素</p>   {/* ✅ 挂载时 setElement(el)，卸载时 setElement(undefined) */}
 </Show>
+// ✅ 把 setter 直接当 ref，元素生命周期就映射进 signal—"引用一个会消失的节点"的正解
 ```
 把 setter 直接当 ref，元素生命周期就映射进这个 signal——这是"引用一个会消失的节点"的标准解法。
 
@@ -35,13 +41,15 @@ const [element, setElement] = createSignal();
 
 想让父组件操作子组件内部的某个 DOM，把 ref 当 prop 传下去：
 ```jsx
+// 目的：转发 ref—把 ref 当 prop 传下去，子组件收到的 props.ref 永远是回调形态
 // 父
 let canvasRef;
 <Canvas ref={canvasRef} />
 // 子
 function Canvas(props) {
-  return <canvas ref={props.ref} />;    // 直接把自己元素的 ref 指向父给的（回调）
+  return <canvas ref={props.ref} />;    // ✅ 直接把自己元素的 ref 指向父给的（回调），不必判断类型
 }
+// ❌ 在子组件里 if(typeof props.ref==="function") 分叉处理 → 父传变量还是回调都是回调，多此一举
 ```
 官方要点：**无论父传的是"简单变量赋值"还是"回调"，子组件收到的 `props.ref` 都以回调函数形式呈现**。所以转发时把它直接挂到要暴露的元素上即可，不必判断类型。
 
@@ -49,10 +57,12 @@ function Canvas(props) {
 
 `use:` 前缀是自定义指令，给元素附加可复用行为。签名固定为 `(element, accessor)`：
 ```ts
-function highlight(element: Element, accessor: () => any) {
-  createEffect(() => { element.style.background = accessor() ? 'yellow' : ''; });
+// 目的：use: 自定义指令—签名 (element, accessor)，可复用、能吃响应式数据
+function highlight(element: Element, accessor: () => any) {   // ✅ 第一参是元素本身，第二参是"读值"的 accessor 函数
+  createEffect(() => { element.style.background = accessor() ? 'yellow' : ''; });   // ✅ 建 effect 订阅 accessor，active 变就改样式（指令在入 DOM 前调用，可安全起 effect）
 }
-// <div use:highlight={active()} />
+// <div use:highlight={active()} />   ✅ active() 被包成 accessor 传进指令
+// ❌ 把第二参当"一次性值"直接用 accessor（不写 ()）→ 丢了响应式，之后 active 变不再更新
 ```
 它和"回调 ref"像，但多两个能力：① **一个元素可挂多个指令**；② **第二参是 accessor，能接收响应式数据**。指令在渲染时、元素入 DOM 前调用——因此能安全地建 signal、起 effect、加事件监听（用 `onCleanup` 回收，solid-lifecycle 讲过）。`use:model`（双向绑定）就是社区常见指令。
 
@@ -61,14 +71,19 @@ function highlight(element: Element, accessor: () => any) {
 先破一个 React 带来的惯性：**Solid 没有自带的 CSS-in-JS/作用域样式系统**，它对这个话题保持中立——你照样用普通 CSS、CSS Modules、UnoCSS/vanilla-extract 等。而"动态样式"在 Solid 里根本不需要重渲，因为**任何读了 signal 的 JSX 属性都会编译成一个只更新该属性的响应式 effect**：
 
 ```jsx
+// 目的：动态样式不需重渲—任何读了 signal 的 JSX 属性都编译成只更新该属性的响应式 effect
 const [active, setActive] = createSignal(false);
 const [w, setW] = createSignal(100);
 
 <div
-  class={active() ? "btn on" : "btn"}     // 条件类名：active 变→只改 class 这个属性
-  classList={{ on: active(), disabled: locked() }}  // 多布尔开关，推荐用它切类
-  style={{ width: w() + "px" }}           // style 对象：Solid 逐项设置样式属性
+  class={active() ? "btn on" : "btn"}
+  classList={{ on: active(), disabled: locked() }}
+  style={{ width: w() + "px" }}
 />
+// ✅ class：条件类名，active 变→只改 class 这一个属性，其余 DOM 不碰
+// ✅ classList：多布尔开关批量切类（推荐用它加/删单个 class，免手写空格/覆盖）
+// ✅ style 对象：Solid 逐项设置样式属性，w 变只动 width 这一条样式
+// ❌ 想靠 setActive 触发整个组件重跑一遍来更新样式 → Solid 组件只执行一次，压根不重渲；绑定 effect 才负责刷属性
 ```
 
 - **`class`/`className` 都支持**，Solid 社区惯用 `class`；

@@ -9,14 +9,15 @@
 `v-if`/`v-model` 不是引擎魔法——编译后分别是条件块补丁与 `onUpdate:modelValue` props 组合。自定义指令就是**给元素挂生命周期补丁**：
 
 ```js
+// 目的：全局注册一个自定义指令，封装"只管 DOM 不管状态"的复用
 // main.js 全局注册（或组件内 vFocus 局部：指令也遵循"驼峰即 v-CamelCase"解析）
 app.directive('focus', {
-  mounted(el) { el.focus() },
+  mounted(el) { el.focus() },     // 元素插入 DOM 后自动聚焦（此时 DOM 才存在）
 })
 ```
 
 ```vue
-<input v-focus />                       <!-- 打开页面即聚焦，零 ref 零 onMounted -->
+<input v-focus />                       <!-- ✅ 应用：打开页面即聚焦，零 ref 零 onMounted -->
 ```
 
 **钩子全家福**（组合式风格下都是对象方法）：
@@ -35,6 +36,7 @@ app.directive('focus', {
 ## 二、带参数与响应式的指令：update 别忘
 
 ```js
+// 目的：带响应式参数的指令——mounted 建实例、updated 重播、unmounted 销毁，三件套缺一不可
 app.directive('tooltip', {
   mounted(el, binding) {
     el._tip = createTooltip(el, binding.value)   // 实例挂元素上（弱引用更佳）
@@ -42,12 +44,13 @@ app.directive('tooltip', {
   updated(el, binding) {                          // ← 忘了这条=参数变了没反应的 bug 之母
     el._tip?.update(binding.value)
   },
-  unmounted(el) { el._tip?.destroy(); delete el._tip },
+  unmounted(el) { el._tip?.destroy(); delete el._tip },   // 不销毁→监听/实例泄漏
 })
 ```
 
 ```vue
 <span v-tooltip="{ text: row.help, placement: 'top' }">{{ row.name }}</span>
+<!-- binding.value = { text, placement }；row.help 变了会重跑 updated 里的 update -->
 ```
 
 对照记忆：这就是 **Svelte 的 action `{ node, parameter } => { update, destroy }`** 契约（呼应 svelte-actions）——两家解决同一问题：**"行为跟着元素走，参数变化要能重播"**。React 没有指令位，等价物是自定义 hook + ref 回调，代码更啰嗦但显式。
@@ -68,11 +71,13 @@ app.directive('tooltip', {
 模态框的老大难：父级有 `overflow:hidden`/`transform`/`z-index` 堆叠上下文，弹窗被"关"在容器里。**`<Teleport to="body">`** 让组件**逻辑上还在树里（props/events/inject 全正常），DOM 上搬到目标选择器**：
 
 ```vue
-<Teleport to="body" :disabled="isMobile">
+<!-- 目的：Teleport 把节点逻辑上留在组件树（props/events/inject 全正常），DOM 上搬到 body -->
+<Teleport to="body" :disabled="isMobile">    <!-- isMobile=true 时禁用传送，就地内联渲染 -->
   <div class="modal-backdrop" @click.self="$emit('close')">
     <slot />
   </div>
 </Teleport>
+<!-- ✅ 应跳出父级 overflow:hidden/z-index 堆叠；SSR 需 to="body" 目标锚点存在于首屏 HTML -->
 ```
 
 - `:disabled` 热开关：小屏内联渲染、大屏 teleport——一个 prop 切换宿主；

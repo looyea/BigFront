@@ -6,6 +6,7 @@
 
 官方用不到 30 行讲清全部魔法。核心三件套：
 ```js
+// 目的：官方“从零搭响应系统”的最小实现—讲透读时登记 / ===短路 / 同步跑一次
 let currentSubscriber = null;                 // 全局"当前正在跑的 observer"
 function createSignal(initialValue) {
   let value = initialValue;
@@ -27,6 +28,9 @@ function createEffect(fn) {
   fn();                                      // 立即跑一次 → 建立订阅
   currentSubscriber = prev;
 }
+
+// ✅ 应用：const [c, setC] = createSignal(0); createEffect(() => console.log(c())); 首跑登记 c，setC(1) 通知 effect 重跑并打印 1
+// ❌ 在 effect 里 setTimeout(() => c(), 1000) 读→回调跑时 currentSubscriber 已复位为 null，登记不上（“异步丢追踪”）
 ```
 一句话记牢：**signal = 值 + 订阅者集合；getter 读时把"当前 observer"塞进集合；setter 变了才遍历通知**。你前面学的一切"自动依赖收集"都是这段代码的展开。
 

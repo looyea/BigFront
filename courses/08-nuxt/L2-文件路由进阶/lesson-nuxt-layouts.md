@@ -13,10 +13,11 @@ app/layouts/
 
 ```vue
 <!-- app/layouts/admin.vue -->
+<!-- 目的：命名布局——一层外壳，页面内容通过 <slot> 注入 -->
 <template>
   <div class="admin-shell">
-    <AdminSidebar />
-    <main><slot /></main>   <!-- 页面内容注入点 -->
+    <AdminSidebar /><!-- ✅ 布局自带的常驻侧栏 -->
+    <main><slot /></main><!-- ✅ 页面内容注入点：认领本布局的页面渲染在此 -->
   </div>
 </template>
 ```
@@ -29,15 +30,17 @@ app/layouts/
 
 ```vue
 <script setup>
+// 目的：布局运行时决定——① 静态认领 ② 动态包裹 两条路
 // ① meta 里静态指定
-definePageMeta({ layout: 'admin' });
+definePageMeta({ layout: 'admin' });   // ✅ 编译期就锁死 admin 壳
 </script>
 
 <template>
   <!-- ② 页面内动态包：按角色/数据切换外壳 -->
-  <NuxtLayout :name="isAdmin ? 'admin' : 'user'">
+  <NuxtLayout :name="isAdmin ? 'admin' : 'user'"><!-- ✅ 运行时按 isAdmin 换壳，Next 需拆路由组才能做到 -->
     <PageContent />
   </NuxtLayout>
+  <!-- ❌ 用②动态包裹却忘在 meta 配 layout:false → app.vue 的全局 <NuxtLayout> 再套一层，出现双层外壳 -->
 </template>
 ```
 
@@ -58,9 +61,10 @@ layouts 的实例在"同名布局的页面之间切换"时**保持存活**（不
 
 ```vue
 <!-- app/layouts/console/billing.vue（Nuxt 支持子目录，name 为 'console-billing'） -->
+<!-- 目的：布局套布局——在布局文件里再包一层 NuxtLayout -->
 <template>
-  <NuxtLayout name="console">      <!-- 外层壳 -->
-    <div class="billing-pane"><slot /></div>
+  <NuxtLayout name="console"><!-- ✅ 先套外层 console 壳（子目录拼进名：console/billing→'console-billing'） -->
+    <div class="billing-pane"><slot /></div><!-- ✅ 本页内容落在最内层 -->
   </NuxtLayout>
 </template>
 ```

@@ -7,8 +7,10 @@
 ## 一、两个 API，一个目的：控制"引用"
 
 ```jsx
-const value  = useMemo(() => expensive(a, b), [a, b]);   // 缓存"计算结果"
-const fn     = useCallback(() => doX(a), [a]);           // 缓存"函数本身"
+// 目的：缓存一个计算结果/函数引用，依赖不变就复用上次，避免重复计算与引用不稳
+const value  = useMemo(() => expensive(a, b), [a, b]);   // ✅ a/b 不变则不重算，返回上次结果
+const fn     = useCallback(() => doX(a), [a]);           // 等价 useMemo(() => () => doX(a), [a])，缓存函数引用
+// ❌ 漏依赖（用了 b 却只写 [a]）→ 缓存里的值永远基于旧 b（同 effect 漏依赖的 bug）
 ```
 - `useMemo(fn, deps)`：deps 不变则返回**上次算好的值**，不重算；
 - `useCallback(fn, deps)`：`useMemo(() => fn, deps)` 的语法糖，缓存的是**函数引用**；
@@ -36,8 +38,10 @@ const fn     = useCallback(() => doX(a), [a]);           // 缓存"函数本身"
 ## 四、经典失效场景
 
 ```jsx
-const data = useMemo(() => transform(list), [list]);   // list 若每次新引用 → 白 memo
-<Child onClick={useCallback(() => go(id), [id])} />    // id 每次变 → 仍每次新函数
+// 目的：依赖本身每帧都变时，memo 形同虚设——这就是“无效记忆化”
+const data = useMemo(() => transform(list), [list]);   // ❌ list 若每次新引用 → 白 memo
+<Child onClick={useCallback(() => go(id), [id])} />    // ❌ id 每次变 → 仍每次新函数
+// ✅ 解药：依赖用原始值（id 而非 {id}），或用 selector 取出稳定基本值
 ```
 memo 依赖必须稳定，否则记忆化形同虚设。**不要 memo 一个本身每帧都变的值来"假装优化"**。深层对象可用选择器/原始值依赖替代（呼应 react-state-mgmt 的 selector）。
 

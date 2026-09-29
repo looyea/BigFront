@@ -21,8 +21,10 @@
 **rpx（responsive unit）**：规定屏幕宽为 **750rpx**。iPhone6（375px 宽）下 `1rpx = 0.5px`；任何设备上 `rpx = px × 750 / 屏幕宽度px`。
 
 ```wxss
+/* 目的：rpx 以屏宽 750rpx 为基准自动缩放——设计稿按 750px 出图，量多少 px 就写多少 rpx */
 /* 设计稿按 750px 宽出图 → 量出来多少 px 就写多少 rpx，零换算 */
-.box { width: 375rpx; padding: 20rpx; font-size: 28rpx; }
+.box { width: 375rpx; padding: 20rpx; font-size: 28rpx; }   /* ✅ iPhone6(375px) 下 375rpx=187.5px，大屏自动变宽 */
+/* ❌ 发丝级边框用 1rpx → 小屏不足 1 物理像素，边框消失/粗细不一（细线应用 px） */
 ```
 
 换算速记：
@@ -58,9 +60,11 @@
 - app.wxss 只放**真正的公共原子**（重置、字体、通用卡片），全塞全局会让每页都背全量样式——对照 **10-vite** 里"全局 CSS 有体积成本"的结论。
 
 ```wxss
-/* @import：把公共片段拆文件 */
-@import "../../styles/variables.wxss";
+/* 目的：@import 把公共样式拆文件复用（必须写在文件最顶部） */
+@import "../../styles/variables.wxss";   /* ✅ 引入变量/公共片段 */
 .page { background: var(--bg); }
+/* ❌ @import 写在其他规则之后 → 不生效（必须在顶部） */
+/* ❌ 分包场景路径写错 → 样式加载失败（相对路径解析是高频坑） */
 ```
 
 `@import` 书写注意：**必须在文件最顶部**、多级页面路径用相对路径且**不能以 `./` 开头的写法混用出错**——分包场景路径解析是高频坑（呼应 mp-subpackage）。

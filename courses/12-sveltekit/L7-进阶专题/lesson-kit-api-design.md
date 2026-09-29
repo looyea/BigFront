@@ -8,13 +8,16 @@
 
 ```js
 // src/routes/api/add/+server.js
+// 目的：方法导出即路由—导出名等于 HTTP 动词，就是该路由对该动词的处理器
 import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request }) {
-  const { a, b } = await request.json();
-  return json(a + b);
+export async function POST({ request }) {   // ✅ 导出名 POST 即映射 POST /api/add（URL 不带动词，靠导出名分派）
+  const { a, b } = await request.json();   // ✅ 读 JSON body；请求 Content-Type 非 application/json 会抛
+  return json(a + b);   // ✅ 自动补 Content-Type: application/json + Content-Length，把 a+b 序列化回去
 }
+// ❌ 忘了 return Response（只 return 数字/undefined）→ 运行时报错，端点无"隐式 204"
+// ❌ 导出名写成小写 post → 不被识别为处理器，该路由对 POST 直接 405
 ```
 
 - 动词全集：`GET / POST / PUT / PATCH / DELETE / OPTIONS / HEAD`，再加一个特殊的 `fallback`。
@@ -40,15 +43,18 @@ export async function POST({ request }) {
 2. **导出 `fallback`** 可接住任何"没专门导出对应函数"的方法——包括 `MOVE` 这种没有专属导出的冷门动词：
 
 ```js
+// 目的：fallback 兜底—接住任何"没专门导出对应函数"的方法，含 MOVE 这类冷门动词
 import { json, text } from '@sveltejs/kit';
 export async function POST({ request }) {
   const { a, b } = await request.json();
-  return json(a + b);
+  return json(a + b);   // ✅ POST 有专属导出，正常走这里
 }
-// 接住 PUT / PATCH / DELETE / MOVE ...
+// ✅ 未导出 PUT / PATCH / DELETE / MOVE ... 统统被 fallback 接住，省掉"每个动词都回 Not Allowed"的样板
 export async function fallback({ request }) {
-  return text(`I caught your ${request.method} request!`);
+  return text(`I caught your ${request.method} request!`);   // ✅ request.method 是当前动词，回显兼兜底
 }
+// ❌ 以为导出了 GET 就得手写 HEAD → 不必：GET 会自动为 HEAD 返回其 Content-Length
+// ❌ 无 fallback 又无对应动词导出 → 那些动词一律 405，前端拿不到自定义提示
 ```
 
 没有 `fallback` 也没有对应动词导出时，该动词返回 405。用 `fallback` 统一兜底能避免"每个动词都导出但只是回 Not Allowed"的样板。
@@ -58,17 +64,19 @@ export async function fallback({ request }) {
 `Response` 第一个参数可以是 **`ReadableStream`**，于是能流式吐大数据、做 server-sent events：
 
 ```js
+// 目的：Response 首参可传 ReadableStream—流式吐大数据 / SSE 的底层写法
 export function GET() {
   const stream = new ReadableStream({
     async start(controller) {
       for (const chunk of await slowSource()) {
-        controller.enqueue(new TextEncoder().encode(chunk));
+        controller.enqueue(new TextEncoder().encode(chunk));   // ✅ 每块须是 Uint8Array，故用 TextEncoder 编码
       }
-      controller.close();
+      controller.close();   // ✅ 不 close 则连接永不结束，客户端一直挂着等
     },
   });
   return new Response(stream, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
 }
+// ❌ 部署到会缓冲响应的平台（AWS Lambda）→ 整个 body 攒齐才发，流式形同虚设
 ```
 
 红线：**部署到会缓冲响应的平台（如 AWS Lambda）就没法真流式**——它会把整个 body 攒齐再发。这与 L3 讲页面流式（streaming）时"平台得支持 streaming 才有效"是同一条约束。SSE 的 `content-type: text/event-stream` + 保持连接也走这条路。
@@ -88,15 +96,19 @@ export function GET() {
 关键心智：**SvelteKit 对 `+server.js` 的响应不做任何自动缓存**。要给 CDN/浏览器设缓存策略，你在返回时手动写头：
 
 ```js
+// 目的：Kit 对端点响应不做自动缓存—CDN/浏览器策略全靠手写的 cache-control + etag
 export async function GET({ url }) {
   const data = await getSomething(url.searchParams.get('id'));
   return json(data, {
     headers: {
+      // ✅ max-age 管浏览器、s-maxage 管 CDN、stale-while-revalidate 过期先回旧值后台刷新
       'cache-control': 'public, max-age=60, s-maxage=600, stale-while-revalidate',
-      etag: `"${hash(data)}"`,
+      etag: `"${hash(data)}"`,   // ✅ 内容指纹，配合 If-None-Match 命中回 304 省带宽
     },
   });
 }
+// ❌ 不写头就指望 CDN 缓存 → Kit 不代劳，默认不缓存，每次全量回源
+// ❌ 只发 etag 不写命中分支 → 应在 If-None-Match 相等时 return new Response(null, { status: 304 })
 ```
 
 - `Cache-Control`：`public/private`、`max-age`（浏览器）、`s-maxage`（CDN）、`stale-while-revalidate` 是这套 API 的常用四件套。

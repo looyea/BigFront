@@ -8,21 +8,22 @@
 
 ```js
 // useMouse.js —— 一个"追踪鼠标位置"的可复用逻辑
+// 目的：封装"监听+状态+自清理"为一个 use 开头的函数，任何组件 setup 里一行复用
 import { ref, onMounted, onUnmounted } from 'vue';
 
 export function useMouse() {
-  const x = ref(0), y = ref(0);
-  function update(e) { x.value = e.pageX; y.value = e.pageY; }
-  onMounted(() => window.addEventListener('mousemove', update));
-  onUnmounted(() => window.removeEventListener('mousemove', update)); // 自带清理
+  const x = ref(0), y = ref(0);                 // 内部状态是 ref
+  function update(e) { x.value = e.pageX; y.value = e.pageY; }   // 写 ref 要 .value
+  onMounted(() => window.addEventListener('mousemove', update));   // 挂载后监听全局鼠标
+  onUnmounted(() => window.removeEventListener('mousemove', update)); // 自带清理（避免泄漏）
   return { x, y };
 }
 ```
 ```vue
 <script setup>
-const { x, y } = useMouse();   // 在 setup 里调用，拿到响应式状态
+const { x, y } = useMouse();   // ✅ 应用：在 setup 里调用，拿到响应式状态（解构安全因为返回的是 ref）
 </script>
-<template>{{ x }}, {{ y }}</template>
+<template>{{ x }}, {{ y }}</template>   <!-- 鼠标移动时模板自动更新坐标 -->
 ```
 
 **约定（不是硬性 API）**：
@@ -35,15 +36,16 @@ const { x, y } = useMouse();   // 在 setup 里调用，拿到响应式状态
 ## 二、返回值：ref vs reactive vs toRefs
 
 ```js
+// 目的：三种返回方式的取舍——优先一组 ref（解构安全）
 // ① 返回多个独立 ref（最常用、解构安全、调用方清楚哪些是响应式）
 return { x, y };
 
 // ② 返回一个 reactive 对象：解构会丢响应！
 const state = reactive({ a: 1 });
-return state;              // ❌ const { a } = useX() 后 a 不再响应
+return state;              // ❌ const { a } = useX() 后 a 不再响应（拿到的是快照）
 
 // ③ 想返回对象又能安全解构：用 toRefs
-return toRefs(state);      // ✅ 每个属性都是 ref
+return toRefs(state);      // ✅ 每个属性都是 ref，解构后 { a } 里的 a 仍是 Ref
 ```
 经验：**优先返回一组 ref**（解构天然安全、`x.value` 语义明确）；状态字段多又想打包，则 `reactive` + **`toRefs` 返回**（呼应 vue-reactivity-theory 第六节）。返回值不是"只能对象"——也可以只返回一个 ref 或一个函数。
 
@@ -54,20 +56,21 @@ return toRefs(state);      // ✅ 每个属性都是 ref
 组合式函数最大价值是**自由组合**：
 
 ```js
+// 目的：composable 套 composable——useUser 复用通用 useFetch，分层拼出小型数据层
 export function useFetch(url) {          // 通用：取数 + loading/error
   const data = ref(null), error = ref(null), loading = ref(false);
   async function doFetch() {
     loading.value = true; error.value = null;
-    try { data.value = await (await fetch(unref(url))).json(); }
+    try { data.value = await (await fetch(unref(url))).json(); }   // unref：url 是 ref 取值、是普通值那么原用
     catch (e) { error.value = e; }
     finally { loading.value = false; }
   }
-  watch(url, doFetch, { immediate: true });   // url 是 ref 时自动重取（呼应 vue-watch）
+  watch(url, doFetch, { immediate: true });   // ✅ url 变化自动重取（immediate 首屏跑一次）
   return { data, error, loading, refresh: doFetch };
 }
 
 export function useUser(id) {            // 业务：组合 useFetch
-  const { data, loading, error } = useFetch(computed(() => `/api/users/${unref(id)}`));
+  const { data, loading, error } = useFetch(computed(() => `/api/users/${unref(id)}`));   // id 变→URL 变→重取
   return { user: data, loading, error };
 }
 ```
@@ -80,17 +83,18 @@ export function useUser(id) {            // 业务：组合 useFetch
 组件里的组合式函数靠 `onUnmounted` 自动清理。但在**组件之外**（一个全局单例、一个 store、一段 setup 后异步逻辑）创建响应式 effect，需要一个"作用域"来统一收集/释放：
 
 ```js
+// 目的：组件外创建的副作用用 effectScope 统一收集，scope.stop() 一次性回收，避免跨请求泄漏
 import { effectScope, onScopeDispose, watch } from 'vue';
 
 export function useTicker() {                       // 内部登记"可被作用域回收"的副作用
   const stop = watch(src, cb);
-  onScopeDispose(() => stop());                     // 作用域停止时自动清
+  onScopeDispose(() => stop());                     // 作用域停止时自动清（不管在不在组件里）
   return …;
 }
 
 const scope = effectScope();
 scope.run(() => { useTicker(); useMouse(); });      // 这俩的 effect 归入 scope
-scope.stop();                                        // 一次性回收全部（呼应 vue-watch 第六节 stop）
+scope.stop();                                        // ✅ 一次性回收全部（呼应 vue-watch 第六节 stop）
 ```
 Pinia、`useFetch` 库、SSR"每请求作用域"都靠它避免跨请求泄漏（呼应 node-deploy-perf 资源释放、vue-ssr-nuxt）。
 

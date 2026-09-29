@@ -18,16 +18,18 @@
 ## 二、动态 import 自动分割
 
 ```js
+// 目的：动态 import—Rollup 把被引模块及其独有依赖拆成独立异步 chunk，用到才加载
 // 路由懒加载（Vue Router）
 const routes = [
-  { path: '/about', component: () => import('./views/About.vue') },
+  { path: '/about', component: () => import('./views/About.vue') },   // ✅ About 单独成 chunk，首屏不含它
 ];
 
 // 条件加载
 button.addEventListener('click', async () => {
-  const { heavyCalc } = await import('./utils/heavy.js');
+  const { heavyCalc } = await import('./utils/heavy.js');   // ✅ 点击时才下 heavy.js
   heavyCalc();
 });
+// ❌ 把所有页面都用静态 import 写顶部 → 全进主 bundle，失去分割意义、首屏变大
 ```
 
 Rollup 遇到 `import()` → 把 `heavy.js` 及其独有依赖打成独立 chunk（如 `heavy-a1b2c3.js`），主 chunk 里只保留一个加载器。构建日志会显示：
@@ -40,9 +42,11 @@ dist/assets/heavy-a1b2c3.js  120.50 kB │ gzip: 40.10 kB
 ### 2.1 静态资源 vs 动态 import 的变量路径
 
 ```js
+// 目的：动态 import 含变量的陷阱—路径不确定时无法 tree-shake，整目录被打进来
 // ✅ 完整字面量 → 可静态分析
-import(`./locales/${lang}.json`)      // ⚠️ 动态变量，Rollup 把整个目录都打进来
-// 用 import.meta.glob 更可控（见 L2）
+import(`./locales/${lang}.json`)      // ⚠️ lang 是变量，Rollup 把整个 locales 目录都打进来
+// 用 import.meta.glob 更可控（见 L2）：只把命中的文件拆块，可配 eager/关键控制
+// ❌ 以为动态 import 变量只拉那一个文件→实际全目录打包，体积失控
 ```
 
 `import()` 里含变量时，Rollup 无法精确 tree-shake → 会把匹配目录的所有文件纳入。尽量用 `import.meta.glob` + `{ eager: false }` 显式声明。
@@ -54,16 +58,18 @@ import(`./locales/${lang}.json`)      // ⚠️ 动态变量，Rollup 把整个�
 ### 3.1 对象式（简单）
 
 ```js
+// 目的：对象式 manualChunks—把指定包固定打进命名 chunk（简单但靠人工维护）
 build: {
   rollupOptions: {
     output: {
       manualChunks: {
-        vendor: ['react', 'react-dom', 'react-router-dom'],
-        charts: ['echarts', 'dayjs'],
+        vendor: ['react', 'react-dom', 'react-router-dom'],   // ✅ 这三件进 vendor.js
+        charts: ['echarts', 'dayjs'],                          // ✅ 这两件进 charts.js
       },
     },
   },
 }
+// ❌ 新增一个大依赖忘加进列表 → 它落回主 chunk，发版后主 chunk hash 变、缓存失效
 ```
 
 把指定包固定打进 `vendor.js` / `charts.js`。缺点：手动维护列表，依赖变化易漏。
@@ -71,14 +77,16 @@ build: {
 ### 3.2 函数式（推荐，按 node_modules 自动分组）
 
 ```js
+// 目的：函数式 manualChunks—按模块 id 归组，新依赖自动进 vendor，免手动维护列表
 manualChunks(id) {
   if (id.includes('node_modules')) {
-    // 按包名拆分：react 相关一个 chunk，其他 UI 库一个
-    if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react-vendor';
-    if (/[\\/]node_modules[\\/](echarts|zrender)[\\/]/.test(id)) return 'echarts';
-    return 'vendor';   // 其余第三方兜底
+    // ✅ 按包名拆分：react 相关一个 chunk，其他 UI 库一个
+    if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react-vendor';   // ✅ 框架层单独拆
+    if (/[\\/]node_modules[\\/](echarts|zrender)[\\/]/.test(id)) return 'echarts';                     // ✅ 图表库单独拆
+    return 'vendor';   // ✅ 其余第三方兜底进 vendor
   }
 }
+// ❌ return 的同一字符串把循环依赖的两包分进不同 chunk → 初始化顺序错乱报 Cannot access 'x' before initialization
 ```
 
 ### 3.3 分包的坑：循环依赖 & React 报错
@@ -94,7 +102,8 @@ manualChunks(id) {
 Vite 构建自动为动态 import 的 chunk 在 HTML 注入 `<link rel="modulepreload">`（入口依赖）；异步 chunk 被触发时，其依赖通过 `__vitePreload` helper 提前加载。
 
 ```html
-<link rel="modulepreload" crossorigin href="/assets/react-vendor-x1y2.js">
+<!-- 目的：Vite 自动为入口依赖注入 modulepreload，提前下载+解析模块 -->
+<link rel="modulepreload" crossorigin href="/assets/react-vendor-x1y2.js">   <!-- ✅ 框架 chunk 预先拉取 -->
 <link rel="modulepreload" crossorigin href="/assets/index-a1b2.js">
 ```
 
@@ -104,7 +113,9 @@ Vite 构建自动为动态 import 的 chunk 在 HTML 注入 `<link rel="modulepr
 
 ```js
 // hover 预取
-a.addEventListener('mouseenter', () => import('./views/About.vue'));
+// 目的：路由级预取—鼠标 hover 就提前 import 目标页，点击即秒开
+a.addEventListener('mouseenter', () => import('./views/About.vue'));   // ✅ About chunk 在 hover 时已下好
+// ❌ 对所有页都无条件预取 → 与懒加载相悖，等于把整站代码都提前拉下来
 ```
 
 ---
@@ -112,14 +123,17 @@ a.addEventListener('mouseenter', () => import('./views/About.vue'));
 ## 五、产物分析
 
 ```bash
+# 目的：安装产物体积分析插件
 npm i -D rollup-plugin-visualizer
 ```
 
 ```js
+// 目的：接入 visualizer—构建后生成 treemap 报告，一眼找出体积大头
 import { visualizer } from 'rollup-plugin-visualizer';
 export default defineConfig({
-  plugins: [visualizer({ open: true, gzipSize: true, filename: 'stats.html' })],
+  plugins: [visualizer({ open: true, gzipSize: true, filename: 'stats.html' })],   // ✅ gzipSize 显真实传输体积
 });
+// ❌ 忘按环境限定→visualizer 常驻会拖慢每次构建；建议仅 production 或单独 analyze 脚本启用
 ```
 
 `vite build` 后打开 `stats.html` → treemap 视图，一眼看出哪个依赖体积最大 → 决定：换轻量库、动态加载、还是 external 到 CDN。
@@ -158,15 +172,18 @@ export default defineConfig({
 ```
 
 ```js
+// 目的：完全关闭自动 modulepreload（特殊场景才需）
 build: {
-  modulePreload: false,   // 完全关闭自动 modulepreload
+  modulePreload: false,   // ⚠️ 关掉后异步 chunk 依赖不再自动预取，首屏二次请求变多
 }
+// ❌ 多数应用不应关→关了反而使依赖加载瀑布、体验变差
 ```
 
 手动 prefetch 次要资源：
 
 ```html
-<link rel="prefetch" href="/assets/NextPage-y3z4.js">
+<!-- 目的：手动 prefetch—未来可能用到的资源，空闲时低优先级拉 -->
+<link rel="prefetch" href="/assets/NextPage-y3z4.js">   <!-- ✅ 当前导航空闲时预取下一页 -->
 ```
 
 `preload` = 当前导航关键资源高优先级；`prefetch` = 未来可能用到，空闲时低优先级。

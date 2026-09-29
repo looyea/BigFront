@@ -12,11 +12,14 @@
 ## 二、createStore 造独立实例
 
 ```ts
+// 目的：vanilla store 三 API——脱离 React 读写订阅，状态成为“框架无关”
 import { createStore } from 'jotai/vanilla';
-const store = createStore();
-store.set(countAtom, 5);
-store.get(doubleAtom);
-store.sub(anAtom, () => {/* 变化回调 */});
+const store = createStore();          // 独立 store 实例，不绑任何组件树
+store.set(countAtom, 5);               // set：纯逻辑层（service/守卫/事件处理器）直写
+store.get(doubleAtom);                 // get：按需算派生值，不订阅不触发渲染
+store.sub(anAtom, () => {/* 变化回调 */});   // sub：只要副作用不要渲染的 transient 场景（埋点/日志/高频搬运）
+// ✅ sub 支持任意 atom（含派生），比 Zustand 只能盯 store 整体的 subscribe 更细
+// ❌ 在 sub 回调里再 set 别的 atom→订阅里触发写，容易滚成循环通知，副作用应保持幂等且不回写
 ```
 vanilla store 可脱离 React 读写与订阅（呼应 za-store-api）。
 
@@ -25,10 +28,13 @@ vanilla store 可脱离 React 读写与订阅（呼应 za-store-api）。
 ## 三、Provider 注入作用域
 
 ```tsx
+// 目的：Provider 注入作用域——每个 Provider 建一份独立 store，其内 atom 读写各走各的
 import { Provider } from 'jotai';
-<Provider store={createStore()}>
+<Provider store={createStore()}>    {/* 显式传 store：需 externally 操作这份实例时用 */}
   <Widget/>
 </Provider>
+// ✅ 两个 <Provider> 各包一个 Widget→同一套原子定义、两份独立值，双栏编辑互不串数据
+// ❌ 裸 <Provider> 不传 store→它自动 new 一个空 store（继承外层值），想从外部 imperative reset 就抓不到实例句柄
 ```
 每个 Provider 建一份独立 store，其内部所有 atom 读写都走这份——弹窗/向导/多标签页互不干扰（呼应 za-factory）。
 
@@ -40,11 +46,14 @@ import { Provider } from 'jotai';
 Vitest 里最干净的一档：不 render 任何组件，纯 store 操作原子逻辑——
 
 ```ts
+// 目的：测试隔离首选——每个 it 新建 store，用例间零共享，不需 reset 钩子
 it('double 跟随 count', () => {
-  const store = createStore();
-  store.set(countAtom, 5);
-  expect(store.get(doubleAtom)).toBe(10);
+  const store = createStore();                 // 每个用例一个全新 store
+  store.set(countAtom, 5);                      // 直写，隔离于其它用例
+  expect(store.get(doubleAtom)).toBe(10);       // 直读派生断言，无 DOM、毫秒级
 });
+// ✅ “隔离的单位从用例缩小到实例”——原子化架构送给测试的红利
+// ❌ 复用全局默认 store 跨 it→前一用例 set(5) 漏到后一用例，得手动 beforeEach $reset，脆弱且易漏
 ```
 
 用例之间零共享（每个 it 新 store），不需要 reset 钩子——「隔离的单位从用例缩小到实例」是原子化架构送给测试的红利（对比全局 store 方案里 beforeEach 手动 $reset 的脆弱）。

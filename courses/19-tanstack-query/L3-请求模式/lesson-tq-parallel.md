@@ -7,13 +7,16 @@
 ## 二、useQueries：一个都不少地批量发
 
 ```tsx
+// 目的：useQueries 批量并行——数组长度可变，每个子查询仍是独立缓存条目
 const results = useQueries({
   queries: repoIds.map(id => ({
-    queryKey: ['repo', id],
+    queryKey: ['repo', id],                        // key 含 id：单独失效互不牵连
     queryFn: () => fetch('/api/repo/' + id).then(r => r.json()),
   })),
-};
+});
 // results: 与入参等长的状态数组，各自 data/isPending 独立
+// ✅ 首屏 N 张头像卡这种“数量不定”的并行用它，加卡片=加请求
+// ❌ 用一个大 queryFn 打包 map 里所有资源→一个变全部重取，失去条目级缓存与失效粒度
 ```
 
 数组长度可变（加卡片=加请求），每个子查询仍是独立缓存条目（key 含 id），单独失效互不牵连。列表页「首屏 6 个头像卡」这种就它了。
@@ -21,9 +24,12 @@ const results = useQueries({
 ## 三、prefetch：把请求做在点击之前
 
 ```ts
+// 目的：prefetch 把请求做在点击之前——结果按正常缓存规则入场
 // 路由 hover / 渲染列表时预热详情
 button.onMouseEnter = () =>
-  queryClient.prefetchQuery({ queryKey: ['post', id], queryFn, staleTime: 10_000 });
+  queryClient.prefetchQuery({ queryKey: ['post', id], queryFn, staleTime: 10_000 });   // 预取并给 10s 新鲜期
+// ✅ hover 预热→点进详情页 staleTime 内秒出缓存，过期则挂载重取（先给内容再保新鲜）
+// ❌ 不配 staleTime（默认0）：预取回来立刻 stale，点进去还要重取，白热一次
 ```
 
 prefetch 的结果**按正常缓存规则入场**——staleTime 内点进详情页秒出，过期则挂载重取（这正是想要的：先给内容，再保新鲜）。usePrefetchQuery 给组件内用，usePrefetchInfiniteQuery 预热无限流；RSC 里还有服务端版 prefetch（tq-ssr 见）。

@@ -1,5 +1,6 @@
 // 示例 03：TDZ 的三种真实踩坑场景
-// 运行：node courses/01-es/examples/es-hoisting/03-tdz.js
+// 目的：用 safe() 统一捕获异常，演示块内遮蔽、参数默认值前向引用、class 未初始化三种 ReferenceError
+// 运行：node "courses/01-es/L1-变量与作用域/example-es-hoisting-03-tdz.js"
 
 function safe(label, fn) {
   try { fn(); console.log(label, 'OK'); }

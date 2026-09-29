@@ -7,10 +7,12 @@
 组件只执行一次，JSX 里的表达式也就只跑一次：
 
 ```jsx
-// ❌ 列表：items 变了不会重画——.map 只在组件执行那刻算了一遍
+// 目的：JSX 表达式只求值一次—对"会变的数据"用 .map/&& 会冻结
+// ❌ 列表：items 变了不会重画——.map 只在组件执行那刻算了一遍，返回固定元素数组
 {items().map(t => <li>{t}</li>)}
-// ❌ 条件：&& 同理，once-and-done
+// ❌ 条件：&& 同理 once-and-done；show 翻转也不会增删 Banner
 {show && <Banner/>}
+// ✅ 改用控制流组件 <For>/<Show>（内部建 createMemo，each/when 变才做最小 DOM 协调）
 ```
 
 `.map` 返回的是**一个固定的元素数组**，之后 `items` 再变，没有谁去重跑这段——于是列表定格。Solid 的解法是：**别用数组方法，用控制流组件**，它们内部建 `createMemo`，`each`/`when` 变化时才做**最小 DOM 协调**。
@@ -20,11 +22,15 @@
 ## 二、`<For>`：keyed 列表（默认首选）
 
 ```jsx
+// 目的：<For> keyed 列表—为每个 item 身份建响应式并记忆 item→DOM，改一行不刷全表
 import { For } from "solid-js";
 
 <For each={props.todos()} fallback={<p>空</p>}>
   {(todo, index) => <li>{todo.text} #{index()}</li>}
 </For>
+// ✅ each 传访问器 props.todos()；fallback 是空列表占位；index 是访问器要写 index()，todo 是值本身
+// ❌ 把 index 当数字写 {index}（漏 ()）→ 渲染出访问器函数而非下标
+// ✅ item 换引用才重挂该 DOM；仅增删/重排只移动已有节点、更新 index()，不重建
 ```
 
 - `each` 传**信号/访问器**（这里 `props.todos()`），children 是 `(item, index: Accessor<number>) => JSX` 回调；`index` 是**访问器**（要 `index()`）。
@@ -36,11 +42,13 @@ import { For } from "solid-js";
 ## 三、`<Index>`：位置式列表（身份不稳定时用）
 
 ```jsx
+// 目的：<Index> 位置式列表—按位置绑定，身份不稳定/纯按下标时用，避免 keyed 比对开销
 import { Index } from "solid-js";
 
 <Index each={props.items()}>
-  {(item, index) => <li>{item().text} #{index}</li>}   {/* item 是 accessor，index 是静态数字 */}
+  {(item, index) => <li>{item().text} #{index}</li>}   {/* ✅ item 是 accessor 要 item()，index 是静态数字——与 <For> 正好相反 */}
 </Index>
+// ❌ 对"会重排且含输入框"的列表用 <Index> → 位置即身份，交换位置时 DOM 状态（焦点）不跟着走
 ```
 
 - 底层 `indexArray`：按**位置**绑定，children 回调拿到的是 `(item: Accessor<T>, index: number)`——注意这里 **`item` 是访问器（`item()`）、`index` 是普通数字**（与 `<For>` 正好相反）。
@@ -58,19 +66,22 @@ import { Index } from "solid-js";
 ## 四、`<Show when>`：条件渲染与 keyed/非 keyed
 
 ```jsx
+// 目的：<Show when> 条件渲染—when 真才渲 children，假渲 fallback，只在翻转时增删 DOM
 import { Show } from "solid-js";
 
 <Show when={user()} fallback={<Spinner/>}>
   <Profile name={props.user().name} />
 </Show>
+// ✅ 内部用 untrack + createMemo(when)：条件不翻就不重渲，fallback 是假时占位
 ```
 
 - `when` 为真才渲染 children，`fallback` 是假时的占位。它用 `untrack + createMemo(when)`，只在条件翻转时增删 DOM。
 - **收窄回调**（v1.7+，给 TS 用）：children 写成函数时——
   ```jsx
-  // 非 keyed：回调拿到"收窄后的 accessor"，条件转假后再读它会抛错，不重建节点
+  // 目的：收窄回调（v1.7+，给 TS）—children 写成函数时拿"收窄后的值"
+  // ✅ 非 keyed：回调拿到收窄后的 accessor，条件转假后再读它会抛错，但不重建节点
   <Show when={user()}>{u => <div>{u().name}</div>}</Show>
-  // keyed：值一变就重建 children，回调拿到的是值本身
+  // ✅ keyed：值一变就重建 children，回调拿到的正是值本身（省掉 ()）
   <Show when={user()} keyed>{u => <div>{u.name}</div>}</Show>
   ```
   非 keyed 省重建、keyed 保证"值是新的那份"。
@@ -78,6 +89,7 @@ import { Show } from "solid-js";
 ## 五、`<Switch>` / `<Match>`：多分支
 
 ```jsx
+// 目的：<Switch>/<Match> 多分支—渲第一个 when 为真的 Match，都不真则 fallback
 import { Switch, Match } from "solid-js";
 
 <Switch fallback={<Unknown/>}>
@@ -85,6 +97,8 @@ import { Switch, Match } from "solid-js";
   <Match when={status() === "error"}><Err/></Match>
   <Match when={status() === "ok"}><Content/></Match>
 </Switch>
+// ✅ 等价于惰性、按分支建订阅的 if/else 链—比嵌套三元可读，且不会"一次求值全展开"
+// ❌ 用三元链 {status()==="loading" ? <Spinner/> : ...} → 三元是普通表达式，只跑一次不订阅
 ```
 
 渲染**第一个 `when` 为真的 `<Match>`**，都不真则 `fallback`。等价于一个惰性、按分支建订阅的 if/else 链——比嵌套三元可读、且不会"一次求值全展开"。

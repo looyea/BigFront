@@ -29,6 +29,7 @@ pending┤
 
 **核心 API**：
 ```js
+// 目的：执行器同步运行；resolve 后通过 then 异步取值
 const p = new Promise((resolve, reject) => {
   // 执行器：同步运行
   try { resolve(42); } catch (e) { reject(e); }
@@ -60,6 +61,7 @@ p.then(v => console.log(v));        // 42
 - 常用于关 loading、清 timer。
 
 ```js
+// 目的：典型链式——成功走 then、任一环节报错由链尾 catch 兜底、finally 无论成败都关 loading
 showLoading();
 fetch(url)
   .then(r => r.json())
@@ -73,10 +75,11 @@ fetch(url)
 ## 四、链式与异常穿透
 
 ```js
+// 目的：异常穿透——then 里 throw 跳过后续 then，直到 catch；catch 的返回值又恢复下游
 Promise.resolve()
   .then(() => { throw new Error('A'); })
   .then(() => console.log('不会跑'))              // 跳过
-  .catch(e => { console.log('捕到', e.message); return 'recovered'; })
+  .catch(e => { console.log('捕到', e.message); return 'recovered'; })   // 捕到 A
   .then(v => console.log('catch 的返回值:', v));  // 'recovered'
 ```
 
@@ -109,11 +112,25 @@ Promise.resolve()
 
 **⚠️ 非 Promise 输入**：四个 API 都会走 `Promise.resolve(item)` 包装。
 
+```js
+// ✅ 应用：四种聚合对同一批任务的不同行为（fulfill 两个、reject 一个）
+const ok1 = Promise.resolve('A');
+const ok2 = Promise.resolve('B');
+const bad = Promise.reject(new Error('X'));
+
+Promise.all([ok1, ok2]).then(v => console.log('all', v));            // ['A','B']（全成功才有值）
+Promise.all([ok1, bad]).catch(e => console.log('all reject', e.message));  // 'X'（fail-fast）
+Promise.allSettled([ok1, bad]).then(v => console.log('settled', v.map(x => x.status)));  // ['fulfilled','rejected']
+Promise.race([bad, ok2]).then(v => console.log('race', v)).catch(e => console.log('race', e.message));  // 先 settle 的赢
+Promise.any([bad, ok2]).then(v => console.log('any', v));            // 'B'（第一个成功，忽略 bad）
+```
+
 ---
 
 ## 六、`resolve` 的三种输入 & Thenable
 
 ```js
+// 目的：resolve 三种输入—直接值/同构 Promise 原样返回/thenable 被解开
 p1 = Promise.resolve(42);                 // 直接 fulfilled
 p2 = Promise.resolve(otherPromise);       // 返回 otherPromise 本身（同构造函数）
 p3 = Promise.resolve({ then: (rs) => rs(7) });   // fulfilled 7（**thenable**）
@@ -222,6 +239,14 @@ class MyPromise {
   catch(fn) { return this.then(null, fn); }
   finally(fn) { return this.then(v => { fn(); return v; }, e => { fn(); throw e; }); }
 }
+
+// ✅ 应用：链式 then / catch / finally，验证自定义 Promise 行为
+new MyPromise((resolve) => setTimeout(() => resolve(1), 5))
+  .then(v => v + 1)                       // 2
+  .then(v => { throw new Error('e' + v); }) // rejected Error('e2')
+  .catch(e => e.message)                    // 捕获 → 'e2'
+  .then(v => console.log('结果', v))        // 结果 e2
+  .finally(() => console.log('收尾'));       // 收尾（不改变链上结果）
 ```
 
 **⚠️ 缺什么才算「符合 Promises/A+ 规范」**：**resolve 一个 thenable 时要递归解开**（x 是 thenable 不能直接 fulfilled）；`resolve(this)` 要抛 `TypeError`（循环引用）。**面试写到这里就赢了**。

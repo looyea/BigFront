@@ -9,10 +9,14 @@
 ES 已有 `class`（`constructor`、`extends`、`super`、`#private`、`static`、`get/set`——呼应 ES class 关）。TS 在其上加的是**类型层**：字段/方法类型注解、可见性修饰符、`abstract`、`implements`、泛型类、`readonly`、参数属性。关键认知：**TS 的 `private`/`protected` 只在编译期生效，擦除后不存在**（呼应 ts-intro）；真正的运行时私有是 ES 的 `#field`。
 
 ```ts
+// 目的：参数属性一行完成“声明字段 + 构造里赋值”
 class Point {
-  constructor(public x: number, public y: number) {}  // 参数属性：一行声明+赋值
+  constructor(public x: number, public y: number) {}  // 参数属性：自动声明并 this.x=x
   toString() { return `(${this.x}, ${this.y})`; }
 }
+const p = new Point(1, 2);   // 无需手写 this.x = x
+p.toString();                // => "(1, 2)"
+// new Point("1", 2);        // ❌ x 应为 number
 ```
 
 `public x: number` 写在构造参数上叫**参数属性（parameter property）**，自动声明字段并赋值，省去 `this.x = x` 样板。
@@ -116,11 +120,15 @@ TS 默认结构化（"长得一样就算同一类型"，呼应 ts-object-types�
 ## 七、访问器、索引签名与 `this`
 
 ```ts
+// 目的：get/set 访问器对外像属性、内部做计算
 class Temp {
   private _c = 0;
-  get f() { return this._c * 9 / 5 + 32; }   // getter：像属性一样读
-  set f(v: number) { this._c = (v - 32) * 5 / 9; }  // setter
+  get f() { return this._c * 9 / 5 + 32; }   // getter：读时自动换算成华氏
+  set f(v: number) { this._c = (v - 32) * 5 / 9; }  // setter：写华氏时反算存摄氏
 }
+const t = new Temp();
+t.f = 212;        // 走 setter → _c = (212-32)*5/9 = 100
+t.f;              // 走 getter => 212（100*9/5+32）
 ```
 `get`/`set` 访问器在类型上表现为一对读写类型（可不对称：读 `number` 写 `string` 需 `get`/`set` 各自注解，TS 4.3 起允许）。类方法里的 `this` 默认按"所在类实例"推断；作为回调丢失 `this` 时，用箭头函数字段或 `this: void` 参数处理（呼应 ts-functions `this` 参数）。`noImplicitThis`（呼应 ts-strict）会抓住裸 `this` 指向不明的 bug。
 

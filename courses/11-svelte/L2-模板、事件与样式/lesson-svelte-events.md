@@ -9,8 +9,10 @@
 Svelte 5 里给元素绑事件有**两种等价写法**：
 
 ```svelte
-<button on:click={increment}>＋</button>      <!-- 传统指令 -->
-<button onclick={increment}>＋</button>        <!-- Svelte 5：DOM 事件即小写属性 -->
+{/* 目的：绑事件两种等价写法—传统 on: 指令 vs Svelte 5 把事件当小写属性 prop */}
+<button on:click={increment}>＋</button>      <!-- ✅ 历史指令写法，仍可配修饰符 -->
+<button onclick={increment}>＋</button>        <!-- ✅ Svelte 5：DOM 事件即小写属性，便于转发 -->
+<!-- ❌ 把小写 onclick 与自定的 onXxx 回调混为一谈→onclick 是原生 DOM 事件属性，onSubmit 是你自己的 prop，语义不同 -->
 ```
 
 - `on:click` 是历史指令写法，仍然可用。
@@ -25,8 +27,9 @@ Svelte 5 里给元素绑事件有**两种等价写法**：
 
 ```svelte
 <script>
+  // 目的：处理函数默认收到原生 Event 对象
   function handleClick(event) {
-    console.log(event.target, event.currentTarget);
+    console.log(event.target, event.currentTarget);   // ✅ target=实际点击元素，currentTarget=绑定元素
   }
 </script>
 <button onclick={handleClick}>go</button>
@@ -35,10 +38,11 @@ Svelte 5 里给元素绑事件有**两种等价写法**：
 需要传额外参数时，用**内联箭头函数**包一层（否则会被立即调用，和 React 同坑，呼应 react-jsx 找 bug）：
 
 ```svelte
-<!-- ✅ 正确：包一层 -->
+{/* 目的：带参处理需内联箭头包一层，否则渲染时就执行（与 React 同坑） */}
+<!-- ✅ 正确：包一层，点击才调 remove -->
 <button onclick={() => remove(todo.id)}>删</button>
 
-<!-- ❌ 错误：render 时就执行了 remove -->
+<!-- ❌ 错误：render 时就执行了 remove，而非点击时 -->
 <button onclick={remove(todo.id)}>删</button>
 ```
 
@@ -49,10 +53,12 @@ Svelte 5 里给元素绑事件有**两种等价写法**：
 用 `|` 链式修饰，省去手写 `preventDefault`/`stopPropagation`（对标 Vue `.prevent`/`.stop`，呼应 vue-events）：
 
 ```svelte
-<form on:submit|preventDefault={submit}>...</form>
-<div onclick|stopPropagation={inner}>内</div>
-<button onclick|once={claim}>只领一次</button>
-<input on:keydown|capture={log} />
+{/* 目的：用 | 链式修饰符，省去手写 preventDefault/stopPropagation */}
+<form on:submit|preventDefault={submit}>...</form>   {/* ✅ 自动阻止表单默认提交刷新 */}
+<div onclick|stopPropagation={inner}>内</div>   {/* ✅ 阻止冒泡到父 */}
+<button onclick|once={claim}>只领一次</button>   {/* ✅ 触发一次后自动解绑 */}
+<input on:keydown|capture={log} />   {/* ✅ 捕获阶段触发 */}
+<!-- ❌ 用小写属性写法 onclick|stopPropagation → 语法不成立，小写 prop 写法不支持修饰符，需改回 on: 指令 -->
 ```
 
 | 修饰符 | 作用 |
@@ -77,9 +83,10 @@ Svelte 5 里给元素绑事件有**两种等价写法**：
 ```svelte
 <!-- Button.svelte：把 onclick prop 透传到内部 <button> -->
 <script>
-  let { onclick } = $props();
+  // 目的：事件转发—把收下的 onclick prop 直接绑到内部元素，父传的处理函数顺 prop 流下去
+  let { onclick } = $props();   // ✅ 父传来的回调
 </script>
-<button {onclick}>点我</button>
+<button {onclick}>点我</button>   {/* ✅ shorthand 把 onclick 绑上内部 button */}
 ```
 
 父：`<Button onclick={() => console.log('父收到')} />`
@@ -89,10 +96,11 @@ Svelte 5 里给元素绑事件有**两种等价写法**：
 ```svelte
 <!-- Search.svelte -->
 <script>
+  // 目的：自定义“事件”=回调 prop—Svelte 5 弃用 createEventDispatcher，直接调父传来的函数
   let { onsubmit } = $props();
   let q = $state('');
 </script>
-<form onsubmit|preventDefault={() => onsubmit?.(q)}>
+<form onsubmit|preventDefault={() => onsubmit?.(q)}>   {/* ✅ ?. 兼容父未传；preventDefault 阻默认刷新 */}
   <input bind:value={q} />
 </form>
 ```
@@ -106,7 +114,8 @@ Svelte 5 里给元素绑事件有**两种等价写法**：
 指令可作用在 `<svelte:window>`、`<svelte:document>` 等特殊元素上，或直接绑定：
 
 ```svelte
-<svelte:window onkeydown={handleKey} />   <!-- 监听全局键盘 -->
+{/* 目的：在全局元素上绑事件—避免手写 addEventListener + 清理 */}
+<svelte:window onkeydown={handleKey} />   <!-- ✅ 监听全局键盘，组件销毁自动解绑 -->
 ```
 
 （`svelte:window`/`svelte:document`/`svelte:body` 是内置的"全局元素"，避免手动 `addEventListener` + 清理，呼应 svelte-lifecycle。）

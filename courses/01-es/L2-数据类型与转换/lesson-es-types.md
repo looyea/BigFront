@@ -49,16 +49,23 @@
 ## 三、instanceof：原型链上的向下匹配
 
 ```js
+// 目的：演示 instanceof 沿原型链向上匹配；末尾给出它的两处误用
 class Animal {}
 class Dog extends Animal {}
 const d = new Dog();
-d instanceof Dog;    // true
-d instanceof Animal; // true
-d instanceof Object; // true
+d instanceof Dog;    // true（d 的原型链上有 Dog.prototype）
+d instanceof Animal; // true（继续向上，Animal.prototype 也在链上）
+d instanceof Object; // true（链顶端是 Object.prototype）
 
 [] instanceof Array;   // true
 [] instanceof Object;  // true
 (function(){}) instanceof Function; // true
+
+// ❌ 错误用例 1：拿 instanceof 判基本类型——primitive 一律 false
+'hi' instanceof String;   // false（不是 String 实例，只是原始值）
+// ❌ 错误用例 2：跨 realm 判数组失效
+// iframe 里创建的数组 arr，在主 realm 执行 arr instanceof Array 得 false（Array 构造器不是同一个）
+// ✅ 正确：判数组用 Array.isArray(arr)，它对跨 realm 也可靠
 ```
 
 **原理**：`x instanceof C` 沿 `x.__proto__` 向上找，看有没有 `C.prototype`。
@@ -74,6 +81,7 @@ d instanceof Object; // true
 ## 四、Object.prototype.toString.call：最准的运行时判定
 
 ```js
+// 目的：用 Object.prototype.toString.call 得到精确的内部 [[Class]] 标签
 const t = (v) => Object.prototype.toString.call(v);
 t(undefined);          // '[object Undefined]'
 t(null);               // '[object Null]'          ← 与 typeof 联手破除 null 陷阱
@@ -104,13 +112,26 @@ Object.prototype.toString.call(new Bar()); // '[object Bar]'
 ## 五、判定组合拳（面试高频）
 
 ```js
+// 目的：通用类型判定——typeof 处理 primitive，toString.call 处理 object 家族
 function typeOf(v) {
-  if (v === null) return 'null';
+  if (v === null) return 'null';                 // 先单独破除 typeof null === 'object'
   const t = typeof v;
-  if (t !== 'object' && t !== 'function') return t;
-  const tag = Object.prototype.toString.call(v).slice(8, -1);
+  if (t !== 'object' && t !== 'function') return t;  // 基本类型直接拿到 typeof 结果
+  const tag = Object.prototype.toString.call(v).slice(8, -1); // '[object Array]' → 'Array'
   return tag.toLowerCase();  // 'array' / 'map' / 'set' / 'date' / 'regexp' / 'object' ...
 }
+
+// ✅ 应用：真正拿它来判类型（别只定义不使用）
+typeOf(null);            // 'null'
+typeOf(undefined);       // 'undefined'
+typeOf(42);              // 'number'
+typeOf([1, 2]);          // 'array'
+typeOf(new Map());       // 'map'
+typeOf(new Date());      // 'date'
+typeOf(() => {});        // 'function'
+
+// ❌ 反面：只用 typeof 判数组/Map，会把它们都误判为 'object'
+typeof [];               // 'object'（区分不出 array）→ 应改用 typeOf([]) 得 'array'
 ```
 
 上面这个 6 行的函数就是 **jQuery.type / lodash.isXxx 家族的公共内核**。
@@ -134,11 +155,22 @@ function typeOf(v) {
 ## 七、判断「对象是不是普通对象」的三条硬题
 
 ```js
-const isPlainObject = (v) =>
-  v !== null &&
-  typeof v === 'object' &&
-  Object.getPrototypeOf(v) === Object.prototype ||
-  Object.getPrototypeOf(v) === null;
+// 目的：判定「普通对象」——要同时排除 null 与“有原型的类实例”
+const isPlainObject = (v) => {
+  if (v === null || typeof v !== 'object') return false; // 先挡住 null / 基本类型
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;   // 原型是 Object.prototype 或 null 才算“纯对象”
+};
+
+isPlainObject({});                  // true
+isPlainObject(Object.create(null)); // true（无原型对象）
+isPlainObject([]);                  // false（原型是 Array.prototype）
+isPlainObject(new Date());          // false（原型是 Date.prototype）
+
+// ❌ 反面（旧写法有运算符优先级陷阱）：
+//   v !== null && typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null
+// 因为 && 比 || 更紧密，末尾的 `|| ...` 分支绕过了前面的 null/类型守卫；
+// 后果：传入 null 时，&& 短路为 false 后仍会执行 Object.getPrototypeOf(null) → TypeError。
 ```
 
 - `{}`、`Object.create(null)` → true

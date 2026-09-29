@@ -15,16 +15,19 @@
 ## 二、toSignal：Observable → Signal 单向桥
 
 ```ts
+// 目的：toSignal——Observable → Signal 单向桥，模板里不用再挂 async pipe
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({...})
 export class UserProfile {
   private route = inject(ActivatedRoute);
   // 把 Observable<Params> 转成 ReadonlySignal<Params>
-  params = toSignal(this.route.params, { initialValue: {} as Params });
+  params = toSignal(this.route.params, { initialValue: {} as Params });   // 给初值防首帧 undefined
 
   // 模板直接用：{{ params().id }}——不需要 async pipe
 }
+// ✅ toSignal 把流变成只读 signal，随当前注入上下文销毁自动 unsubscribe
+// ❌ 流可能不立即发值却不给 initialValue→signal 初值 undefined→模板 params().id 读 undefined.id 崩
 ```
 
 选项：
@@ -35,16 +38,19 @@ export class UserProfile {
 ## 三、toObservable：Signal → Observable 反向桥
 
 ```ts
+// 目的：toObservable——Signal → Observable 反向桥，让 signal 能进 RxJS 操作符链
 import { toObservable } from '@angular/core/rxjs-interop';
 
 const searchQuery = signal('');
 // 转 Observable 后进 RxJS 管道
 const results$ = toObservable(searchQuery).pipe(
-  debounceTime(300),
-  distinctUntilChanged(),
-  switchTerm(q => this.http.get<Result[]>(`/api/search?q=${q}`)),
+  debounceTime(300),            // 节流：连敲只留最后一次
+  distinctUntilChanged(),       // 去重：同值不重发请求
+  switchTerm(q => this.http.get<Result[]>(`/api/search?q=${q}`)),   // 取消旧请求只留最新
 );
-const results = toSignal(results$, { initialValue: [] as Result[] });
+const results = toSignal(results$, { initialValue: [] as Result[] });   // 结果再转回 signal 供模板用
+// ✅ signal 存状态、Observable 做时间变换、结果回 signal——双向桥无摩擦共存
+// ❌ 搭完 results$ 却漏掉最后 toSignal(results$)→无人订阅→搜索管道根本不跑
 ```
 
 场景：signal 做状态、进 RxJS 操作符链处理复杂异步、结果再回 signal——**双向桥让两者共存无摩擦**。
@@ -84,12 +90,15 @@ AsyncPipe 没被废但在**新文档与脚手架里已不再是默认推荐**—
 ## 七、DestroyRef 与 toSignal 的关系
 
 ```ts
+// 目的：toSignal 的自动清理基于注入上下文——只在组件 field 里用才安
 @Component({...})
 export class Comp implements OnDestroy {
-  data = toSignal(this.http.get('/api'));
+  data = toSignal(this.http.get('/api'));   // field initializer：随视图生命周期自动退订
   // toSignal 内部已注册 DestroyRef.onDestroy(() => sub.unsubscribe())
   // → 组件销毁时自动取消订阅，不需要手写 ngOnDestroy
 }
+// ✅ 在组件/指令 field 里 toSignal→内部自动 onDestroy 退订，无需手写 ngOnDestroy
+// ❌ 在 providedIn:'root' 的 service 里用 toSignal→service 永不销毁→流永不退订（泄漏）
 ```
 
 toSignal 的自动清理基于**当前注入上下文**的 DestroyRef——若 toSignal 在 service 里调（providedIn:'root'），service 永不销毁→流永不退订！最佳实践：只在组件/指令的 field initializer 里用 toSignal（跟随视图生命周期）；service 里要订阅+转换→手动管 Subscription 或用 `takeUntilDestroyed(destroyRef)` 操作符。

@@ -5,13 +5,16 @@
 看板/列表用「ids + entities」结构（呼应 redux 归一化）：
 
 ```ts
+// 目的：归一化 ids+entities——列表顺序进 ids、数据进 entities，改单条 O(1) 且不惊动其它行订阅者
 interface Board {
-  ids: string[];
-  entities: Record<string, Task>;
+  ids: string[];                              // 渲染顺序（列表 key 走这里）
+  entities: Record<string, Task>;            // id→数据，改一条只换 entities[id] 引用
   addTask: (t: Task) => void;
-  updateTask: (id: string, patch: Partial<Task>) => void;
+  updateTask: (id: string, patch: Partial<Task>) => void;   // 按 id 局部合并
   removeTask: (id: string) => void;
 }
+// ✅ 改一条只动 entities[id]，其余行的 selector 引用不变 → 行级订阅纹丝不动
+// ❌ 用 tasks: Task[] 存列表，改一条 = map 出新数组 = 整个列表引用变，所有行 selector 失效、全表重渲
 ```
 列表顺序放 ids，数据放 entities，更新单条 O(1)。
 
@@ -20,11 +23,14 @@ interface Board {
 ## 二、乐观增改删 + 回滚
 
 ```ts
+// 目的：乐观改 + 失败回滚——先本地改即时反馈，api 失败恢复快照
 updateTask: (id, patch) => {
-  const snapshot = structuredClone(get().entities[id]);
-  set((s) => { s.entities[id] = { ...s.entities[id], ...patch }; }); // 乐观
-  api.patch(id, patch).catch(() => set((s) => { s.entities[id] = snapshot; }));
+  const snapshot = structuredClone(get().entities[id]);        // 深拷贝当前值做回滚点（浅拷会连带改动原对象）
+  set((s) => { s.entities[id] = { ...s.entities[id], ...patch }; }); // 乐观：立即合并 patch 上屏
+  api.patch(id, patch).catch(() => set((s) => { s.entities[id] = snapshot; }));   // 请求挂了才回滚
 },
+// ✅ structuredClone 拿到独立副本，回滚时恢复的是干净的旧值
+// ❌ 用 JSON.parse(JSON.stringify(...)) 快照→Date/undefined/Map 字段被吞，回滚后数据缺胳膊少腿
 ```
 先本地改，失败恢复快照（呼应 pinia-optimistic）。
 
@@ -40,11 +46,14 @@ updateTask: (id, patch) => {
 patch 多 id：一次 set 更新多个 entities，只触发一次订阅通知；undo 栈中间件可整批回滚（呼应 za-middleware-chain）。
 
 ```ts
+// 目的：批量归档——一次 set 改多个 entities，单帧通知，失败整批回滚
 archiveMany: (ids) => {
-  const prev = ids.map((id) => [id, structuredClone(get().entities[id])]);
-  set((s) => { for (const id of ids) s.entities[id].archived = true; }); // 单帧
-  api.batch(ids).catch(() => set((s) => { for (const [id, t] of prev) s.entities[id] = t; }));
+  const prev = ids.map((id) => [id, structuredClone(get().entities[id])]);   // 先把受影响项全快照
+  set((s) => { for (const id of ids) s.entities[id].archived = true; }); // 一次 set 批量置位（配 immer）→ 只通知一轮
+  api.batch(ids).catch(() => set((s) => { for (const [id, t] of prev) s.entities[id] = t; }));   // 失败逐 id 复原
 }
+// ✅ 多次改动收进一个 set，一帧渲染，不会 N 个 id 触发 N 次重渲
+// ❌ 循环里逐个 set({entities:{...}})→每次一次订阅通知 N 次重渲，且中途失败留下“半归档”脏状态
 ```
 
 ## 五、选择与拖拽

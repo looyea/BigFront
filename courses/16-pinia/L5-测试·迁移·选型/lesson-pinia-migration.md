@@ -3,10 +3,11 @@
 ## 官方 Codemod 工具
 
 ```bash
-npx @posva/vuex-to-pinia src/store
+# 目的：官方 codemod——把 Vuex module 目录批量机械翻译成 Pinia Setup Store
+npx @posva/vuex-to-pinia src/store   # 自动把 src/store/modules/*.ts 转成 src/stores/*.ts
+# ✅ 标准四件套（state/getters/mutations/actions）的 module 能直译，拿到约 80% 成品
+# ❌ 指望一条命令收官→动态 type 常量/插件/subscribeAction 边角不会被转，需手工按映射表收尾
 ```
-
-自动把 `src/store/modules/*.ts` 转成 `src/stores/*.ts`（Setup Store）。
 
 预期管理：codemod 覆盖标准形态的 module（state/getters/mutations/actions 四件套直译），但动态 type 常量（`MutationTypes.SET_X`）、插件（vuex-persist/vuex-router-sync）、`subscribeAction` 类边角它不管——先跑 codemod 拿到 80% 机械翻译，剩下的手工按下方映射表收尾，别指望一条命令收官。
 

@@ -7,6 +7,7 @@
 ## 一、tabBar 配置全解（app.json）
 
 ```json
+// 目的：全局底栏配置——2~5 个 tab，pagePath 必须已在 pages 注册（首页页是 pages 第一项）
 {
   "tabBar": {
     "color": "#7A7E83",
@@ -22,6 +23,8 @@
     ]
   }
 }
+// ❌ pagePath 未写进 pages → 编译报错；tab 少于 2 或多于 5 → 不合法
+// ❌ 改了 tabBar 配置热重载不生效 → 需重启开发者工具（新手常误以为"改了没用"）
 ```
 
 硬约束（审核与运行都会查）：
@@ -47,11 +50,13 @@
 ## 三、徽标与运行时操作
 
 ```js
-wx.setTabBarBadge({ index: 2, text: '5' });      // 红点数字（text 最多 3 字符显示）
+// 目的：角标/样式等运行时 API 按 index 全局操作（在非 tab 页也能给 tab 加角标）
+wx.setTabBarBadge({ index: 2, text: '5' });      // ✅ 红点数字（text 最多 3 字符显示）
 wx.removeTabBarBadge({ index: 2 });
 wx.showTabBarRedDot({ index: 0 });               // 小红点
 wx.setTabBarStyle({ selectedColor: '#ff0000' }); // 运行时改样式
 wx.hideTabBar({ animation: true });              // 沉浸态可临时藏起底栏
+// ❌ 自定义 tabBar（custom:true）下这些 API 无效 → 需自己在组件里同步角标状态
 ```
 
 经典用法：未读消息数在**别的页面**也能给 tab 加角标（API 按 index 全局操作）；角标数据源应在登录/推送刷新时统一重算（呼应 mp-interaction 的"出口唯一"）。注意：这些 API **对自定义 tabBar 无效**——自定义后要自己同步状态。
@@ -73,13 +78,14 @@ custom-tab-bar/index.js  .wxml  .wxss  .json
 ```
 
 ```js
-// custom-tab-bar/index.js —— 它就是普通 Component
+// 目的：自定义 tabBar = 用普通 Component 接管底栏绘制，高亮跟随需每页手动同步
+// custom-tab-bar/index.js —— 它就是普通 Component（固定目录/文件名，名字不能改）
 Component({
   data: { selected: 0, list: [ /* 自己的菜单数据 */ ] },
   methods: {
     onTap(e) {
       const { index, pathtext } = e.currentTarget.dataset;
-      wx.switchTab({ url: pathtext });
+      wx.switchTab({ url: pathtext });     // ✅ 点击仍靠 switchTab 真正切页
     },
   },
 });
@@ -87,8 +93,9 @@ Component({
 // 每个 tab 页 onShow 里同步选中态（官方文档示例做法）：
 onShow() {
   const tabBar = this.getTabBar();     // tab 页专属 API
-  if (tabBar) { tabBar.setData({ selected: 1 }); }
+  if (tabBar) { tabBar.setData({ selected: 1 }); }   // ✅ 手动把选中态推到自定义底栏
 }
+// ❌ 漏写每页 onShow 的 setData({selected}) → 切了页底栏高亮不跟上的错位 bug
 ```
 
 三条代价须知：

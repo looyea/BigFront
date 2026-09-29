@@ -7,13 +7,15 @@
 `createMemo(fn)` 返回一个 getter（只读 signal），它把你写的计算包起来：**首次读时求值、并登记它同步读到的所有 signal 为依赖；之后只有这些依赖变化时才重算**，没变就直接吐缓存值。
 
 ```js
+// 目的：createMemo 返回只读派生 signal—首次读求值并登记依赖，依赖变才重算，否则吐缓存
 import { createSignal, createMemo } from "solid-js";
 
 const [first, setFirst] = createSignal("John");
 const [last, setLast] = createSignal("Doe");
-const full = createMemo(() => `${first()} ${last()}`);   // full 是个 getter
+const full = createMemo(() => `${first()} ${last()}`);   // ✅ full 是 getter；同步读到的 first/last 成为它的依赖
 
-console.log(full());   // "John Doe"
+console.log(full());   // ✅ "John Doe"——缓存，直到 first/last 变化才重算
+// ❌ 把 full 当普通变量 console.log(full) 漏括号 → 拿到 memo 的 getter 函数，不是字符串
 ```
 
 官方把它归为"resemble effects but distinct"——它像 effect 一样按依赖更新，但**多一个能力：返回 signal 并缓存计算**，"more ideal for computational optimization"。所以定位很清楚：**派生值用 memo，别用 effect。**
@@ -23,8 +25,9 @@ console.log(full());   // "John Doe"
 假设要"随 count 得到 count 是否大于 5"：
 
 ```js
-// ① 直接内联：{count() > 5}         —— 简单场景 OK，但同一段计算被多处用会重复算
-// ② effect 同步：createEffect(()=>setBig(count()>5))  —— ❌ big 会慢一帧、且要额外一个 signal 存它
+// 目的：同一句"随 count 得 count>5"的三种写法对比—只有 memo 既即时一致又能当 signal 复用
+// ① 直接内联：{count() > 5}         —— ✅ 简单场景 OK，但同一段计算被多处用会重复算
+// ② effect 同步：createEffect(()=>setBig(count()>5))  —— ❌ big 会慢一帧、且要额外一个 signal 存它，两个 effect 互写还可能回环
 // ③ memo：const big = createMemo(()=>count()>5)      —— ✅ 恒等于计算值、无中间态、可当 signal 到处读
 ```
 
@@ -35,12 +38,14 @@ effect 同步的通病：effect 在依赖变化后的**更新阶段**才跑，`b
 当某段逻辑在高频变化的 signal 上其实只关心**一个粗粒度结论**时，直接读那个 signal 会让所有订阅者被细碎更新轰炸。把结论压成 memo，下游只订阅 memo，变化频率骤降：
 
 ```js
-const [scrollY, setScrollY] = createSignal(0);          // 每帧都在变
-const showTop = createMemo(() => scrollY() > 300);      // 只关心"要不要显示"
+// 目的：用 memo 断链收敛过度订阅—下游只订阅粗粒度结论，不被高频源每帧轰炸
+const [scrollY, setScrollY] = createSignal(0);          // 每帧都在变（60fps）
+const showTop = createMemo(() => scrollY() > 300);      // ✅ 只关心"要不要显示"的布尔结论，变化频率骤降
 createEffect(() => {
-  // 依赖 showTop 而非 scrollY：只有布尔翻转才触发，不被每帧刷屏
+  // ✅ 依赖 showTop 而非 scrollY：只有布尔翻转才触发，不被每帧刷屏
   toggleButton(showTop());
 });
+// ❌ 若 effect 直接读 scrollY() 做判断 → 每帧都重跑，60fps 的源把下游刷屏
 ```
 
 memo 在这里起"**断链**"作用：`scrollY→showTop` 收敛成 `showTop→下游`，把 60fps 的源变成分散的布尔事件。这是 Solid 性能心智的核心手法之一（L6 会继续展开）。
@@ -50,15 +55,16 @@ memo 在这里起"**断链**"作用：`scrollY→showTop` 收敛成 `showTop→�
 memo 的依赖 = **本次执行同步读到的那些 signal**。若计算里 `if` 提前 return，那一次没读到的 signal 就**不在本次依赖里**，之后它变化不会触发重算：
 
 ```js
+// 目的：早返回会"改变依赖集"—memo 依赖 = 本次同步读到的 signal，没读到的这次就不订阅
 const [temp, setTemp] = createSignal(72);
 const [unit, setUnit] = createSignal("F");
 const [on, setOn] = createSignal(true);
 
 const show = createMemo(() => {
-  if (!on()) return "off";              // on=false 时这一支没读 temp/unit
-  return `${temp()}°${unit()}`;
+  if (!on()) return "off";              // ❌ on=false 时这一支提前 return，本次没读 temp/unit
+  return `${temp()}°${unit()}`;         // ✅ on=true 时才把 temp/unit 纳入依赖
 });
-// 当 on 为 false 时，setUnit('C') 不会让 show 重算——因为它这次没订阅 unit
+// ⚠️ 当 on 为 false 时，setUnit('C') 不会让 show 重算——因为它这次没订阅 unit（特性：天然省算，但易困惑）
 ```
 
 这正是官方 fine-grained 文档温度示例的含义：**追踪由"实际读到什么"动态决定**，不是静态声明。它是特性（天然省算），但要当心"我明明改了 unit 怎么没反应"——先想想是不是被早返回挡在依赖之外了。
@@ -68,12 +74,15 @@ const show = createMemo(() => {
 `createMemo(fn)` 的 `fn` 能收到 `(prev, init)` 两个参数——`prev` 是上一次的计算结果、`init` 是否首次。配合自定义相等可进一步抑制重通知：
 
 ```js
-const list = createMemo((prev) => {
+// 目的：prev 参数 + equals 选项—基于旧结果增量算、自定义"算不算变了"抑制无谓重通知
+const list = createMemo((prev) => {   // ✅ 回调收 (prev, init)：prev 是上次计算结果
   const next = source();
-  return cheapMerge(prev, next);        // 想基于旧结果增量算
+  return cheapMerge(prev, next);        // ✅ 基于旧结果增量算，而非整体重建
 }, undefined, {
-  equals: (a, b) => a.length === b.length,   // 自定义"算不算变了"，默认是 ===
+  equals: (a, b) => a.length === b.length,   // ✅ 自定义相等：默认用 ===，这里只比长度，长度没变就不通知下游
 });
+// ❌ 大对象数组用默认 === 比较 → 每次新引用都算"变了"，下游全量重渲染（该配自定义 equals 或换 createStore）
+// ✅ equals: false → 反过来：每次依赖变化都强制通知，放弃相等短路
 ```
 
 - `equals: false` → 每次依赖变都通知（关掉相等短路）。

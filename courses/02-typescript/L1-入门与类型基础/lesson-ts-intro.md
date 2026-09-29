@@ -125,18 +125,20 @@ npx tsc --noEmit
 ## 七、一个最小可跑例子
 
 ```ts
+// 目的：一个最小可跑例子——interface 约束入参形状，演示“未运行就能在编辑期报类型错”
 // src/index.ts
-interface User { id: number; name: string; }
+interface User { id: number; name: string; }   // 声明一个形状：必须有 id(number) 与 name(string)
 
-function format(user: User): string {
+function format(user: User): string {          // 参数必须是 User，返回值必须是 string
   return `#${user.id} ${user.name}`;
 }
 
-const u: User = { id: 1, name: "Ada" };
-console.log(format(u));
+const u: User = { id: 1, name: "Ada" };        // ✅ 正确用例：字段齐且类型对
+console.log(format(u));                         // => #1 Ada
 
-// format({ id: 1 });           // ✗ 编译期：缺 name
-// format({ id: 1, name: 2 });  // ✗ 编译期：name 应为 string
+// ❌ 错误用例（都是编译期错，tsc 未运行即标红）：
+// format({ id: 1 });           // ✗ 缺 name：Property 'name' is missing
+// format({ id: 1, name: 2 });  // ✗ name 应为 string，传入 number
 ```
 
 `tsc` 会立刻在**没运行**时标出后两行的错误——这就是 TS 的核心价值：**把一类运行时 bug 提前到编辑期**。

@@ -7,17 +7,19 @@
 同一个需求："计数器 +1，页面上三处显示要更新，还要记日志。"四种写法四种世界观：
 
 ```js
+// 目的：同一“计数器+1”需求，四家四种世界观—前三答“值现在多少”、第四答“发生过什么”
 // Zustand：快照比较派 —— 写新值，订阅了相关切片的组件重渲
-set(s => ({ count: s.count + 1 }));
+set(s => ({ count: s.count + 1 }));   // ✅ 造新 state 对象，引用变了→ selector 命中 count 的组件重渲
 
 // MobX：自动追踪可变派 —— 直接赋值，"谁读过这个字段"框架记账
-this.count++;                       // 在 action 里
+this.count++;                          // ✅ 在 action 里直接改，读过 count 的 computed/observer 自动更新
 
 // TC39 Signals：显式容器派 —— 值装在盒子里，读即订阅
-count.set(count.get() + 1);
+count.set(count.get() + 1);            // ✅ get() 读当下值、set() 写回，读它的 effect/computed 被通知
 
 // RxJS：流派 —— 根本没有"值"，只有"事件依次经过操作符管道"
-inc$.pipe(scan(acc => acc + 1, 0)).subscribe(render);
+inc$.pipe(scan(acc => acc + 1, 0)).subscribe(render);   // ✅ scan 累加成状态，每次 inc$ 发值才推给 render
+// ❌ 范式错配：拿 signal 表达“300ms 内双击/竞态丢弃”要手写一堆命令式计时器—那本就是 stream 的活
 ```
 
 前三个都在回答"值现在是多少"；第四个回答的是"**发生过什么**"。这就是两大范式的分界线。

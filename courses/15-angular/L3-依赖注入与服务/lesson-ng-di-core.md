@@ -25,19 +25,22 @@ Platform Injector（createPlatformApplication 创建，极少手工用）
 ## 三、四种 provider 写法
 
 ```ts
+// 目的：四种 provider 写法——provide 左边是 key（token/class），右边 useXxx 决定怎么造值
 // 1. useClass（默认——注入时 new 一个实例）
-{ provide: AuthService, useClass: AuthServiceImpl }
+{ provide: AuthService, useClass: AuthServiceImpl }    // 请求 AuthService 时返回 AuthServiceImpl 实例
 
 // 2. useValue（注入一个固定值——配置/DOM/mock）
-{ provide: API_BASE, useValue: 'https://api.example.com' }
+{ provide: API_BASE, useValue: 'https://api.example.com' }  // 直接注入常量，不构造任何对象
 
 // 3. useFactory（懒创建、可组合其他 provider）
-{ provide: TOKEN_STREAM, useFactory: (auth: AuthService) => auth.token$, deps: [AuthService] }
+{ provide: TOKEN_STREAM, useFactory: (auth: AuthService) => auth.token$, deps: [AuthService] }  // 旧静态写法：deps 声明工厂参数从哪来
 // standalone 写法更常见：
-{ provide: TOKEN_STREAM, useFactory: () => inject(AuthService).token$ }
+{ provide: TOKEN_STREAM, useFactory: () => inject(AuthService).token$ }  // 工厂内直接 inject，免写 deps
 
 // 4. useExisting（别名——两个 token 指向同一个实例）
-{ provide: NewNameService, useExisting: LegacyService }
+{ provide: NewNameService, useExisting: LegacyService }  // 不 new 两次，两个 key 拿到同一个实例
+// ✅ 抽象/接口多实现切换：测试用 {provide: Logger, useClass: MockLogger}，生产换 ProdLogger
+// ❌ 想要别名却写成 useClass→两个 token 各 new 一份→本应共享的状态变成两份
 ```
 
 何时用哪种：
@@ -51,16 +54,19 @@ Platform Injector（createPlatformApplication 创建，极少手工用）
 Angular DI 的 provider key 通常是 class 类型（`inject(AuthService)`），但当你想注入一个**值/接口/函数**时 class 不存在或不够用——InjectionToken 补这个位：
 
 ```ts
+// 目的：InjectionToken——为『非 class 的值/接口/函数』提供 provider key
 // 定义 token（单独文件 tokens.ts）
-export const AppConfig = new InjectionToken<{apiUrl: string; debug: boolean}>('AppConfig');
+export const AppConfig = new InjectionToken<{apiUrl: string; debug: boolean}>('AppConfig');  // 泛型给 inject 提供类型推断
 
 // 注册
 providers: [
-  { provide: AppConfig, useValue: { apiUrl: 'https://...', debug: false } },
+  { provide: AppConfig, useValue: { apiUrl: 'https://...', debug: false } },  // 用 useValue 注入一个配置对象
 ]
 
 // 消费
-const config = inject(AppConfig);
+const config = inject(AppConfig);   // 返回类型自动是 {apiUrl: string; debug: boolean}
+// ✅ 没有 class 也能当 DI 的 key，注入值/配置/回调，全局注册一次到处 inject
+// ❌ 只在某个子 injector 注册了 AppConfig，却在更早/更远的层级 inject→NullInjectorError: No provider for AppConfig
 ```
 
 Token 的泛型参数给 TypeScript 类型推断——`inject(AppConfig)` 返回 `{apiUrl: string; debug: boolean}`。
@@ -70,12 +76,13 @@ Token 的泛型参数给 TypeScript 类型推断——`inject(AppConfig)` 返回
 ## 五、standalone 时代 providers 的分布图
 
 ```ts
+// 目的：standalone 时代 providers 分布——全局放 app.config、feature 状态放组件级
 // app.config.ts —— 全局 providers（root 作用域）
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
-    { provide: AppConfig, useValue: environment },  // 配置类
+    provideRouter(routes),                                   // 路由
+    provideHttpClient(withInterceptors([authInterceptor])),  // HTTP + 函数式拦截器
+    { provide: AppConfig, useValue: environment },  // 配置类：useValue 注入
     // 业务服务通常不写这里——用 providedIn:'root' 自注册
   ],
 };
@@ -84,9 +91,11 @@ export const appConfig: ApplicationConfig = {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  providers: [DashboardState],   // 只在 dashboard 子树里单例
+  providers: [DashboardState],   // 只在 dashboard 子树里单例，子树销毁随之销毁
 })
 export class Dashboard { ... }
+// ✅ feature 级状态注册在组件 providers→进入即建、离开即销，页面间互不串状态
+// ❌ 把 DashboardState 写进 app.config→它升为全应用单例→离开 dashboard 不销毁→状态残留串页
 ```
 
 **分布原则**：
@@ -98,14 +107,17 @@ export class Dashboard { ... }
 ## 六、DI 与测试：框架级收益最明显的地方
 
 ```ts
+// 目的：DI 与测试——一行 useValue 替换全树依赖，不碰渲染树
 // 被测组件依赖 AuthService（用 HttpClient）
 // 测试里：
 TestBed.configureTestingModule({
   imports: [ LoginComponent ],
   providers: [
-    { provide: AuthService, useValue: { login$: of(true), logout: vi.fn() } },
+    { provide: AuthService, useValue: { login$: of(true), logout: vi.fn() } },  // mock 替身，组件里 inject(AuthService) 全拿到它
   ],
 });
+// ✅ 用 token 替换 provider：组件无需知道被测依赖被换，解耦测试
+// ❌ mock 对象漏掉组件实际调用的方法（如只给 login$ 没给 logout）→运行到 logout 时 undefined is not a function
 ```
 
 一行替换全树依赖——不需要 wrapper Provider 组件、不需要 mock 整个 Context。对比 React Testing Library：要手动包一层 `<AuthContext.Provider value={mock}>`；对比 Svelte：直接 `$mocked.store.set(...)` 改全局 store（没有作用域隔离）。Angular DI 的作用域隔离 + token 替换 = **企业测试效率的框架级红利**。

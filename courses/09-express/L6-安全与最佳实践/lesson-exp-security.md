@@ -13,12 +13,15 @@
 ## 二、Helmet：安全响应头
 
 ```bash
+# 目的：安装安全头中间件
 npm i helmet
 ```
 
 ```js
+// 目的：helmet 一次开启一组安全响应头
 import helmet from 'helmet';
-app.use(helmet());   // 一次开启一组安全头中间件
+app.use(helmet());   // ✅ 默认设 CSP/nosniff/X-Frame-Options/HSTS 等
+// ❌ helmet 要放最前：若排在已 res.end 的中间件之后就加不上头
 ```
 
 它默认设置的头：
@@ -35,17 +38,19 @@ app.use(helmet());   // 一次开启一组安全头中间件
 ### CSP 精配
 
 ```js
+// 目的：精配 CSP—限定各类资源只能从白名单来源加载（XSS 最后防线）
 app.use(helmet.contentSecurityPolicy({
   directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", 'https://trusted.cdn.com'],
-    styleSrc: ["'self'", "'unsafe-inline'"],   // 尽量避 unsafe-inline
+    defaultSrc: ["'self'"],                                       // ✅ 未单独声明的类型默认只允许同源
+    scriptSrc: ["'self'", 'https://trusted.cdn.com'],               // ✅ 脚本只允同源+可信 CDN
+    styleSrc: ["'self'", "'unsafe-inline'"],                        // ⚠️ 尽量避 unsafe-inline（生产用 nonce/hash）
     imgSrc: ["'self'", 'data:', 'https:'],
-    connectSrc: ["'self'", 'https://api.example.com'],
-    objectSrc: ["'none'"],
-    frameAncestors: ["'self'"],
+    connectSrc: ["'self'", 'https://api.example.com'],               // ✅ fetch/XHR 只能连这些域
+    objectSrc: ["'none'"],                                          // ✅ 禁插件
+    frameAncestors: ["'self'"],                                     // ✅ 防点击劫持（谁能 embed 自己）
   },
 }));
+// ❌ scriptSrc 加 'unsafe-inline' 等于放弃对内联脚本的拦截，CSP 防 XSS 效果大打折扣
 ```
 
 CSP 是 XSS 的最后防线——即使有注入，脚本也因来源不在白名单而无法执行。生产可用 nonce/hash 替代 unsafe-inline。
@@ -57,16 +62,18 @@ CSP 是 XSS 的最后防线——即使有注入，脚本也因来源不在白�
 **不要用 `origin: '*'` 图省事**，尤其带凭证时。
 
 ```js
+// 目的：CORS 白名单—带凭证时 origin 绝不能是 '*'
 import cors from 'cors';
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://app.example.com', 'https://admin.example.com']   // 白名单
-    : true,
-  credentials: true,               // 允许携带 cookie（origin 不能是 *）
+    ? ['https://app.example.com', 'https://admin.example.com']   // ✅ 生产精确白名单
+    : true,                                                        // ✅ 开发允许任意源（方便本地联调）
+  credentials: true,               // ✅ 允许携带 cookie（此时 origin 不能是 *）
   methods: ['GET','POST','PUT','PATCH','DELETE'],
   allowedHeaders: ['Content-Type','Authorization'],
-  maxAge: 86400,                   // 缓存预检结果，减少 OPTIONS
+  maxAge: 86400,                   // ✅ 缓存预检结果，减少 OPTIONS
 }));
+// ❌ origin:'*' + credentials:true 互斥 → 浏览器直接拒绝带凭证跨域，前端拿不到 Set-Cookie
 ```
 
 原理：浏览器同源策略拦截跨域读；CORS 是服务端"授权哪些源能读"。`credentials: true` 时 `origin` 必须精确回显（不能 `*`）。防 CSRF 不能完全依赖 CORS（简单请求不发预检）。
@@ -78,12 +85,14 @@ app.use(cors({
 XSS = 注入恶意脚本到别人页面。三类：存储型（存 DB）、反射型（URL 参数回显）、DOM 型（前端）。后端职责：
 
 ```js
+// 目的：富文本入库前先白名单清洗，抹掉脚本/事件属性
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
-const purify = DOMPurify(new JSDOM('').window);
+const purify = DOMPurify(new JSDOM('').window);           // ✅ Node 环境需 JSDOM 提供 window
 
-// 存富文本前先清洗（白名单标签）
+// ✅ 存富文本前先清洗（只允许安全标签）
 const clean = purify.sanitize(req.body.htmlContent, { ALLOWED_TAGS: ['b','i','a','p','ul','li'] });
+// ❌ 自己写正则剔 <script> → 大小写/嵌套/变形属性易绕过；不清洗直接存原 HTML → 存储型 XSS
 ```
 
 - **输出编码/转义**：模板默认转义（EJS `<%= %>`）、JSON 响应浏览器不解析为 HTML；
@@ -102,6 +111,7 @@ const clean = purify.sanitize(req.body.htmlContent, { ALLOWED_TAGS: ['b','i','a'
 2. **CSRF Token**（同步器令牌 / 双提交 cookie）：
 
 ```bash
+# 目的：安装 CSRF 防护（csurf 已归档，用社区 fork）
 npm i csrf-csrf    # 或 csurf（已归档，用 fork）
 ```
 
@@ -119,8 +129,9 @@ npm i csrf-csrf    # 或 csurf（已归档，用 fork）
 - **永远用参数化查询 / ORM**，绝不字符串拼接 SQL：
 
 ```js
-db.query('SELECT * FROM users WHERE id = $1', [req.params.id]);   // ✅ pg 参数化
-const q = `SELECT * FROM users WHERE name = '${name}'`;            // ❌ 注入
+// 目的：SQL 只能参数化，绝不拼接用户输入
+db.query('SELECT * FROM users WHERE id = $1', [req.params.id]);   // ✅ pg 参数化，值作数据传
+const q = `SELECT * FROM users WHERE name = '${name}'`;            // ❌ 注入：name="'; DROP TABLE users;--" 直接改变语义
 ```
 
 ### NoSQL 注入
@@ -130,9 +141,10 @@ const q = `SELECT * FROM users WHERE name = '${name}'`;            // ❌ 注入
 - 避免 `exec(\`convert ${userFile}\`)`；用 `execFile('convert', [argv])`（不经 shell）或参数数组、白名单。
 
 ```js
+// 目的：命令执行避开 shell—用 execFile 传参数数组，不拼接用户输入
 import { execFile } from 'child_process';
-execFile('convert', [inputPath, outputPath], cb);   // ✅ 数组参数不过 shell
-// exec(`convert ${input}`)   ❌ input="a; rm -rf /" 直接执行
+execFile('convert', [inputPath, outputPath], cb);   // ✅ 数组参数不过 shell，分号不被当命令分隔
+// ❌ exec(`convert ${input}`)   input="a; rm -rf /" 会经 shell 直接执行后半句（命令注入）
 ```
 
 ---
@@ -140,21 +152,24 @@ execFile('convert', [inputPath, outputPath], cb);   // ✅ 数组参数不过 sh
 ## 七、限流与防暴力
 
 ```bash
+# 目的：安装限流中间件
 npm i express-rate-limit
 ```
 
 ```js
+// 目的：全局宽松 + 登录更严两档限流，防暴力/刷接口
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 
 const general = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 100,               // 每 IP 15min 100 次
+  windowMs: 15 * 60 * 1000, max: 100,               // ✅ 每 IP 15min 100 次
   standardHeaders: 'draft-7', legacyHeaders: false,
 });
-const loginGuard = rateLimit({ windowMs: 15*60*1000, max: 5, message: { error:{ code:'TOO_MANY' } } });
+const loginGuard = rateLimit({ windowMs: 15*60*1000, max: 5, message: { error:{ code:'TOO_MANY' } } });  // ✅ 登录窗口内仅 5 次
 
-app.use('/api', general);
-app.use('/api/login', loginGuard);                   // 登录单独更严
+app.use('/api', general);                              // ✅ 挂业务路由前才拦得住
+app.use('/api/login', loginGuard);                     // ✅ 登录单独更严
+// ❌ 多进程/多实例用默认内存 store → 各实例独立计数、重启清零，限额形同虚设，需 RedisStore
 ```
 
 集群必须用 **Redis Store**（默认内存 store 各实例独立 + 重启清零）。配合账号锁定、验证码、异常检测。
@@ -164,9 +179,11 @@ app.use('/api/login', loginGuard);                   // 登录单独更严
 ## 八、依赖安全
 
 ```bash
-npm audit                          # 扫已知漏洞
+# 目的：扫描并修复已知依赖漏洞
+npm audit                          # ✅ 扫已知漏洞
 npm audit fix
 npx better-npm-audit audit
+# ❌ 只本地偶尔跑→应进 CI 阻断；锁版本 + npm ci 保证可复现构建
 ```
 
 - CI 集成 `npm audit` / Snyk / Dependabot / Renovate 自动升级告警；
@@ -189,8 +206,10 @@ npx better-npm-audit audit
 - **头注入**：设置响应头前过滤 CRLF（框架多已处理）。
 
 ```js
-app.disable('x-powered-by');
-app.use(express.json({ limit: '10kb' }));
+// 目的：隐藏技术栈指纹 + 限小 body 防大包 DoS
+app.disable('x-powered-by');                     // ✅ 去掉 X-Powered-By: Express（helmet 已含）
+app.use(express.json({ limit: '10kb' }));         // ✅ 超 10kb 直接 413，防超大 JSON 打爆内存
+// ❌ body 解析不设 limit → 攻击者发几百 MB JSON，解析时内存骤升导致 OOM/拒绝服务
 ```
 
 ---

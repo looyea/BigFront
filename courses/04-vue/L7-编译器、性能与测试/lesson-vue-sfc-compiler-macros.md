@@ -10,8 +10,10 @@
 
 ```vue
 <script setup>
+// 目的：两个宏都会被编译期转成真正的 props/emits 选项（无需 import）
 const props = defineProps({ msg: String });
 const emit  = defineEmits(['change']);
+// ❌ 把宏放进条件/回调里（如 if(x){ defineProps(...) }）→ 编译报错 “defineProps() is a compiler-hint helper that... must be called in <script setup>”
 </script>
 ```
 编译后大致等价于：
@@ -32,11 +34,13 @@ export default {
 
 ```vue
 <script setup lang="ts">
+// 目的：用 TS 类型声明 props，编译期自动翻成运行时校验 + 类型推断
 interface Props { title: string; count?: number; tags?: string[] }
 const props = withDefaults(defineProps<Props>(), {
   count: 0,                 // 默认值
-  tags: () => [],           // 引用类型默认值仍需工厂
+  tags: () => [],           // 引用类型默认值仍需工厂（❌ 写 tags: [] 会被编译拒绝）
 });
+// ❌ defineProps<Props>() 的类型参必须字面量写死，写成 `type T = Props; defineProps<T>()` 跨文件导入的旧版不支持
 </script>
 ```
 - `defineProps<T>()` 纯类型声明 → 自动得到 `props.title: string` 的类型（模板里也有类型检查）；
@@ -49,12 +53,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 ```vue
 <script setup lang="ts">
+// 目的：emits 类型化签名 + defineModel 合并样板 + defineExpose 开放给父
 // emits 类型化：声明事件签名
 const emit = defineEmits<{ change: [id: number]; submit: [] }>();
-emit('change', 1);        // 第二参受类型约束
+emit('change', 1);        // 第二参受类型约束（❌ emit('change','abc') → 编译期报类型不匹配）
 
 const model = defineModel({ type: String });           // v-model（3.4+），一个可写 ref
-defineExpose({ focus: () => el.value.focus() });       // 开放给父（呼应 vue-refs-expose）
+defineExpose({ focus: () => el.value.focus() });       // 开放给父（❌ 不 defineExpose 则父 ref 拿不到子内部方法）
 </script>
 ```
 `defineModel` 把"`modelValue` prop + `update:modelValue` 事件"两个宏**合并成一个**，省样板。多值 `defineModel('x')`、修饰符 `const [m, mods] = defineModel()`（呼应 vue-component-basics 第五节）。
@@ -78,8 +83,9 @@ SFC 可写多个 `<style>`，`scoped` 让样式只作用于**本组件**（编�
 
 ```vue
 <style scoped>
-.title { color: red; }             /* 只命中本组件的 .title */
-:deep(.child-class) { color: blue; }   /* 穿透到子组件内部元素 */
+/* 目的：scoped 只命中本组件元素，:deep() 显式下沉选择器穿透到子组件 */
+.title { color: red; }             /* 只命中本组件的 .title（编译后带 [data-v-xxxx]） */
+:deep(.child-class) { color: blue; }   /* 穿透到子组件内部元素（❌ 不加 :deep 直接写 .child-class 命不中子组件） */
 ::v-deep(.x) { }                   /* :deep 的旧别名 */
 </style>
 ```
@@ -87,10 +93,11 @@ SFC 可写多个 `<style>`，`scoped` 让样式只作用于**本组件**（编�
 - **`:global()`**：包裹的选择器不加 scope，写全局样式；
 - **CSS `v-bind()`**：把组件响应式状态注入 CSS：
 ```vue
+<!-- 目的：把组件响应式状态注入 CSS（底层是 useCssVars 设 --xxxx 变量） -->
 <template><p class="t">hi</p></template>
 <script setup>const color = ref('red');</script>
 <style scoped>
-.t { color: v-bind(color); }        /* 相当于绑定一个 CSS 变量 */
+.t { color: v-bind(color); }        /* 相当于绑定一个 CSS 变量（✅ color 变了颜色自动重渲染） */
 </style>
 ```
 `v-bind` 底层是 `useCssVars` 设 `--xxxx` 变量（呼应 vue-class-style-transition 第二节绑定 CSS 变量）。

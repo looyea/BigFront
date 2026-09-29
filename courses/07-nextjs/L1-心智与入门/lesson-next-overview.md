@@ -9,9 +9,10 @@
 用 10-vite 打包出来的纯 SPA（`index.html` + 一堆 JS）：
 
 ```html
-<!-- 服务器返回的其实只有这个壳 -->
-<div id="root"></div>   <!-- 内容？等 JS 下载、执行、取数、渲染完才有 -->
-<script src="/assets/index-3f8a.js"></script>
+<!-- 目的：看清纯 SPA 服务器返回的真相——只有一个空壳，内容全靠浏览器 JS 现拼 -->
+<div id="root"></div>   <!-- 此刻是空的：内容要等 JS 下载→执行→取数→渲染完才出现 -->
+<script src="/assets/index-3f8a.js"></script>  <!-- 浏览器抓到这行才开始下载几百 KB 的 JS -->
+<!-- ❌ 弱网下：JS 未执行前 view-source 里 #root 空空如也 → 白屏 + 爬虫抓不到内容（SEO 失效） -->
 ```
 
 1. **白屏期**：JS 下载执行前用户看空白，弱网下 LCP 轻松飙到 3s+（呼应 react-performance 的 LCP 定义）；
@@ -77,15 +78,17 @@ my-app/
 ## 五、一个最小页面长什么样
 
 ```tsx
-// app/page.tsx —— 注意：没有 createRoot、没有 index.html、没有路由表
-export default function Home() {
+// 目的：写一个 Next 最小页面——没有 createRoot、没有 index.html、没有路由表，文件放进 app/ 即生效
+// app/page.tsx
+export default function Home() {   // ✅ 默认导出的组件即 / 的界面，框架自动接管渲染
   return (
     <main>
-      <h1>大前端学院</h1>
+      <h1>大前端学院</h1>   {/* ✅ 这段 HTML 在服务器上就已拼好，view-source 能直接看到 h1 */}
       <p>这段 HTML 在服务器上就已渲染好</p>
     </main>
   );
 }
+// ❌ 忘了写 export default → 报错 "page.tsx does not define a default export"，路由 500
 ```
 
 浏览器"查看源代码"（不是 DevTools 的 Elements）能看到 `<h1>` 真实存在——这就是 SSR 的第一口甜头。右键查看源代码 vs Elements 的差异，正是 **服务端 HTML** 与 **水合后 DOM** 的分界（next-render-modes 细讲 Hydration）。

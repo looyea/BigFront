@@ -3,6 +3,7 @@
 ## 一、装 + scripts
 
 ```bash
+# 目的：装 vitest 并接上三条常用 scripts
 npm i -D vitest
 ```
 
@@ -14,6 +15,22 @@ package.json 常用三条 script：`"test": "vitest"`（watch）、`"test:run": 
 - **`vite.config.ts` 里的 `test` 字段**：复用同一份 Vite 配置（别名/插件天然共享）。
 
 两者结构一致，都 `defineConfig({ test: { ... } })`。项目已高度依赖 vite.config 的解析配置时，写在 test 字段里最省事；想隔离测试关注点就用独立文件。
+
+```ts
+// 目的：一份能跑起来的最小 vitest.config.ts——environment/include/globals 三处最常改
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node',        // ✅ 纯逻辑用 node（无 DOM、启动最快）
+    globals: true,              // ⚠️ 开了它，tsconfig 必须补 "types": ["vitest/globals"]
+    include: ['src/**/*.{test,spec}.ts'],  // ✅ 收窄收集范围、把 e2e/产物挡在外面
+    // ❌ 设了 environment: 'jsdom' 却没 npm i -D jsdom → 报 "Cannot find package 'jsdom'"
+  },
+});
+```
+
+❌ 最常见的坑：`globals: true` 却忘配 tsconfig 的 `types`，TS 直接报「找不到名称 expect」——要么显式 import、要么补 types（见第五节）。
 
 ## 三、environment：node 还是 jsdom
 

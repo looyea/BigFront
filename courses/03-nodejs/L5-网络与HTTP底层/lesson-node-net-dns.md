@@ -13,21 +13,22 @@
 ## 二、TCP 服务器：`net.createServer`
 
 ```js
+// 目的：起一个 TCP echo 服务——体会 socket 是 Duplex 流、'data' 收到的是字节块而非整条消息
 import net from "node:net";
 
 const server = net.createServer((socket) => {
   console.log("客户端连接", socket.remoteAddress, socket.remotePort);
   socket.write("欢迎\r\n");                 // 向这条流写字节
-  socket.on("data", (chunk) => {            // 收到字节（Buffer 块！不是"一条消息"）
+  socket.on("data", (chunk) => {            // 收到字节（Buffer 块！可能粘包/拆包）
     console.log("收到", chunk);
-    socket.write("echo>" + chunk);
+    socket.write("echo>" + chunk);          // 原样回显
   });
-  socket.on("error", (e) => console.error(e));   // ★ socket 会 emit error（呼应 node-events 第三节）
+  socket.on("error", (e) => console.error(e));   // ★ socket 会 emit error（不挂会崩，呼应 node-events）
   socket.on("close", () => console.log("断开"));
 });
 
 server.listen(4000, "127.0.0.1", () => console.log("TCP 服务已监听"));
-server.on("error", (e) => console.error("监听失败", e));   // 端口占用等
+server.on("error", (e) => console.error("监听失败", e));   // 端口占用等会走 error
 ```
 
 **`socket` 本身是一个 Duplex Stream**（呼应 node-streams）——能 `write`/`end`、能 `on('data')`、有背压。`server` 是 EventEmitter，`'connection'`（构造回调里也等价）与 `'error'` 都挂在它上面。`socket.setTimeout(ms)` + `'timeout'` 事件用于空闲超时（注意 timeout **不会自动断连**，你要自己 `socket.destroy()`）。
@@ -37,14 +38,15 @@ server.on("error", (e) => console.error("监听失败", e));   // 端口占用�
 ## 三、TCP 客户端：`net.connect`
 
 ```js
+// 目的：TCP 客户端——先等 'connect' 再写，用 for-await 逐块读回显
 import net from "node:net";
 import { once } from "node:events";
 
-const client = net.connect(4000, "127.0.0.1");
-await once(client, "connect");          // 等连上（呼应 node-events interview 第 9 题 events.once）
-client.write("ping\r\n");
-for await (const chunk of client) console.log("<", chunk.toString()); // 流可 async 迭代
-client.end();
+const client = net.connect(4000, "127.0.0.1");   // 发起连接（异步，不立即就绪）
+await once(client, "connect");          // 等连上再往下（避免未就绪就 write）
+client.write("ping\r\n");                // 服务端会回 echo>ping
+for await (const chunk of client) console.log("<", chunk.toString()); // 流可 async 迭代，逐块打印
+client.end();                            // 主动关闭
 ```
 
 `connect` 是异步的：不要连上之前 `write`（放进缓冲会等连上再发，但更稳妥是等 `'connect'`/`'ready'`）。`net.isIP/isIPv4/isIPv6` 可校验地址字面量。
@@ -56,15 +58,16 @@ client.end();
 UDP 与 TCP 相反：**面向报文**（一次 `send` = 一个数据报，接收方一次 `message` 收到，**天然有边界**、无粘包），**无连接**（不用握手）、**不保证到达/顺序**、头部开销小、延迟低。适合：DNS 查询、音视频实时、`发现/广播`、计数遥测等"丢几个包无所谓、但要快"的场景。
 
 ```js
+// 目的：UDP 服务器——一次 send = 一个数据报（天然有边界），收到后回发 pong
 import dgram from "node:dgram";
 const sock = dgram.createSocket("udp4");
 sock.on("message", (msg, rinfo) => {          // msg 是一个完整数据报（Buffer）
   console.log("收到", msg.toString(), "来自", rinfo.address, rinfo.port);
-  sock.send(Buffer.from("pong"), rinfo.port, rinfo.address);   // 回发
+  sock.send(Buffer.from("pong"), rinfo.port, rinfo.address);   // 回发给来源
 });
 sock.bind(5000, "127.0.0.1");
 // 发送：
-sock.send(Buffer.from("hello"), 5000, "127.0.0.1", (err) => {});
+sock.send(Buffer.from("hello"), 5000, "127.0.0.1", (err) => {});  // 往固定端口发一个数据报
 ```
 
 要点：单包建议 ≤ MTU（约 1472 字节净负载），超过会 IP 分片、丢一个分片整包作废；`connect` 一个 UDP socket 后可用 `send` 只发往固定对端并收到错误反馈。
@@ -76,11 +79,12 @@ sock.send(Buffer.from("hello"), 5000, "127.0.0.1", (err) => {});
 `dns` 模块做域名解析。**`dns.lookup`** 走**操作系统**解析器（受 `/etc/hosts`、`nsswitch`、系统缓存影响，且会占 libuv 线程池，呼应 node-event-loop "dns 走线程池"）；**`dns.resolve`** 系列**直接向 DNS 服务器发查询**（绕过系统 hosts，A/AAAA/MX/TXT/SOA… 各类型）。
 
 ```js
+// 目的：对比两种解析路径——lookup 走 OS(含 hosts、占线程池)、resolve 直查 DNS(不读 hosts)
 import dns from "node:dns/promises";
-await dns.lookup("nodejs.org");            // { address, family } —— 走 OS，含 hosts
-await dns.resolve4("nodejs.org");          // ['104.16.x.x', ...] —— 直查 DNS，不读 hosts
+await dns.lookup("nodejs.org");            // { address, family } —— 走 OS，含 hosts、占线程池
+await dns.resolve4("nodejs.org");          // ['104.16.x.x', ...] —— 直查 DNS，不读 hosts、纯异步
 await dns.resolveMx("example.com");        // 邮件服务器记录
-await dns.reverse("8.8.8.8");              // 反解析
+await dns.reverse("8.8.8.8");              // 反解析 IP→域名
 ```
 
 `lookup` vs `resolve` 的差别是高频面试点：一个"问操作系统"、一个"问 DNS 协议服务器"；`lookup` 有系统缓存与 hosts 语义但走线程池，`resolve` 结果更"权威 DNS"、纯异步不占池。`dns.setServers`、`--dns-result-order` 可控制行为。
@@ -98,14 +102,15 @@ TCP/UDP 的网络 I/O **不占 libuv 线程池**——由内核的异步机制�
 把本关知识收口：在 TCP 字节流上，用 `\n` 分隔定义"一条消息"（最简单分帧），并逐帧处理——这就是 Redis/HTTP 请求行的雏形：
 
 ```js
+// 目的：在 TCP 字节流上用 \n 分帧——攒缓冲、按分隔符切出完整行再逐条处理
 server.on("connection", (socket) => {
-  let buf = "";
+  let buf = "";                            // 累积尚未处理的残字节
   socket.setEncoding("utf8");
   socket.on("data", (chunk) => {
-    buf += chunk;
+    buf += chunk;                          // 新到的字节追加进缓冲
     let i;
     while ((i = buf.indexOf("\n")) >= 0) {     // 攒缓冲、按分隔符切出完整行
-      const line = buf.slice(0, i); buf = buf.slice(i + 1);
+      const line = buf.slice(0, i); buf = buf.slice(i + 1);   // 取出这一行，剩下的留待下次
       handle(line, socket);                     // 处理"一条逻辑消息"
     }
   });

@@ -20,15 +20,17 @@ Node 是**单线程单进程**（呼应 L1 事件循环）。一个进程 = 一�
 ### 2.1 原生 cluster
 
 ```js
+// 目的：原生 cluster—primary fork 出等于核数的 worker，各 worker 共享端口自行 listen，内核分发连接打满多核
 import cluster from 'node:cluster';
 import os from 'node:os';
 
 if (cluster.isPrimary) {
-  for (let i = 0; i < os.cpus().length; i++) cluster.fork();
-  cluster.on('exit', (w) => { console.error(`worker ${w.pid} died`); cluster.fork(); });
+  for (let i = 0; i < os.cpus().length; i++) cluster.fork();   // ✅ 每个 CPU 核一个 worker
+  cluster.on('exit', (w) => { console.error(`worker ${w.pid} died`); cluster.fork(); });   // ✅ worker 挂了自动补位
 } else {
-  import('./server.js');   // 每个 worker 各自 listen 同一端口（内核分发连接）
+  import('./server.js');   // ✅ 每个 worker 各自 listen 同一端口（内核分发连接）
 }
+// ❌ 不 cluster 直接 node server.js → 单进程只用一核，多核机器浪费其余算力
 ```
 
 primary 进程共享监听句柄，把 accept 到的连接分发给 worker → 打满多核。
@@ -38,24 +40,27 @@ primary 进程共享监听句柄，把 accept 到的连接分发给 worker → �
 生产更常用 PM2/systemd，负责 fork、重启、日志、reload：
 
 ```bash
+# 目的：安装并启动 PM2 进程管家（fork/重启/日志/零停机 reload）
 npm i -g pm2
 pm2 start ecosystem.config.cjs
-pm2 status / pm2 logs / pm2 reload api   # 零停机重载
+pm2 status / pm2 logs / pm2 reload api   # ✅ reload 逐 worker 替换，零停机
 ```
 
 ```js
 // ecosystem.config.cjs
+// 目的：PM2 声明式配置—cluster 模式铺满核 + 内存阈值兜底重启
 module.exports = {
   apps: [{
     name: 'api',
     script: 'server.js',
-    instances: 'max',        // 每核一个
+    instances: 'max',        // ✅ 每核一个
     exec_mode: 'cluster',
-    max_memory_restart: '512M',   // 内存超阈值自动重启（兜泄漏）
+    max_memory_restart: '512M',   // ✅ 内存超阈值自动重启（兜泄漏）
     env: { NODE_ENV: 'production' },
     merge_logs: true,
   }],
 };
+// ❌ K8s 里再叠 PM2 cluster → 平台已横向扩 Pod，每 Pod 单进程，两层拉重启相互干扰
 ```
 
 > 容器编排（K8s）里通常**不再用 PM2 cluster**——由平台横向扩多 Pod、每 Pod 单进程，重启/调度交给 K8s。两种方式别叠用。
@@ -65,24 +70,26 @@ module.exports = {
 ## 三、Docker 化
 
 ```dockerfile
+# 目的：多阶段构建 Docker 镜像—构建层装 devDeps，运行层只带产物，体积小且攻击面小
 # ---- 构建阶段 ----
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci                    # 锁定版本、可复现
+RUN npm ci                    # ✅ 严格锁版本、可复现（非 npm install）
 COPY . .
-RUN npm run build || true     # 如需 TS 编译/资源构建
+RUN npm run build || true     # ✅ 如需 TS 编译/资源构建
 
 # ---- 运行阶段（瘦身）----
 FROM node:22-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-COPY --from=build /app/dist ./dist
-USER node                     # 非 root 运行
+RUN npm ci --omit=dev && npm cache clean --force   # ✅ 只装生产依赖，devDeps 不进运行镜像
+COPY --from=build /app/dist ./dist                 # ✅ 只拷构建产物，源码不进镜像
+USER node                     # ✅ 非 root 运行，容器逃逸时降权
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
+# ❌ 忘了 .dockerignore 排除 node_modules/.env/.git → 镜像变大且泄密钥
 ```
 
 要点：
@@ -99,10 +106,11 @@ CMD ["node", "dist/server.js"]
 Node 直接暴露公网不理想。**反代**（Nginx/Caddy/云 LB）负责：TLS 终结、静态资源、限流、gzip、缓冲、多实例负载均衡、隐藏后端。
 
 ```nginx
+# 目的：Nginx 反向代理—TLS 终结 + 多 worker 负载均衡 + 转发真实 IP/协议头给后端
 upstream api {
     server 127.0.0.1:3000;
-    server 127.0.0.1:3001;   # 多 worker
-    keepalive 64;            # 复用到后端的连接（见 L8 性能）
+    server 127.0.0.1:3001;   # ✅ 多 worker 轮询
+    keepalive 64;            # ✅ 复用到后端的连接（省 TCP 握手，见性能关）
 }
 server {
     listen 443 ssl http2;
@@ -114,11 +122,12 @@ server {
         proxy_pass http://api;
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
-        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Real-IP         $remote_addr;                      # ✅ 传递真实客户端 IP
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;   # 让 app 知道原始是 http/https
+        proxy_set_header X-Forwarded-Proto $scheme;   # ✅ 让 app 知道原始是 http/https（决定 req.secure）
     }
 }
+# ❌ 后端没 app.set('trust proxy',1) → req.ip 全是代理 IP，限流/日志/判站全错
 ```
 
 > ⚠️ 反代后 `req.ip` 全是代理 IP。**必须** `app.set('trust proxy', 1)`（呼应 L3），否则限流/日志/IP 判断全错。`X-Forwarded-Proto` 决定 `req.secure`。
@@ -138,23 +147,25 @@ server {
 编排/监控系统需要知道"这个实例能不能接流量"。提供两类端点：
 
 ```js
+// 目的：健康检查双端点—liveness 只验进程活着，readiness 验依赖可接活（两者分开防雪崩）
 import { Router } from 'express';
 const health = Router();
 
 // liveness：进程还活着吗？（卡死/死锁则应被重启）
-health.get('/healthz', (req, res) => res.sendStatus(200));
+health.get('/healthz', (req, res) => res.sendStatus(200));   // ✅ 不查 DB，纯返 200，避免依赖抖动误杀
 
 // readiness：能干活吗？检查关键依赖（不检查也可返回 200 表示就绪）
 health.get('/readyz', async (req, res) => {
   try {
-    await db.ping({ $top: 1 });         // DB 可达？
-    await redis.ping();                  // 缓存可达？
+    await db.ping({ $top: 1 });         // ✅ DB 可达？
+    await redis.ping();                  // ✅ 缓存可达？
     res.json({ status: 'ok' });
   } catch {
-    res.status(503).json({ status: 'unavailable' });   // 摘出负载均衡轮询
+    res.status(503).json({ status: 'unavailable' });   // ✅ 503 → 摘出负载均衡轮询但不重启
   }
 });
 export default health;
+// ❌ 把 liveness 也写成查 DB → DB 抖动时 kubelet 按失败阈值全量重启，小故障放大成雪崩
 ```
 
 K8s：`livenessProbe` 失败→重启；`readinessProbe` 失败→暂停转发但不重启。**别把 readiness 和 liveness 配成同一个重检查**（DB 抖动会引发全量重启雪崩）。
@@ -167,6 +178,7 @@ K8s：`livenessProbe` 失败→重启；`readinessProbe` 失败→暂停转发�
 
 ```js
 // server.js
+// 目的：优雅关闭—收 SIGTERM 后先摘流量→不再收新连接→等在途完成→关依赖，超时兜底防 hang
 import app from './app.js';
 import config from './config/index.js';
 import { logger } from './common/logger.js';
@@ -175,22 +187,22 @@ const server = app.listen(config.port);
 let shuttingDown = false;
 
 async function shutdown(signal) {
-  if (shuttingDown) return;
+  if (shuttingDown) return;                      // ✅ 幂等：重复信号不重入
   shuttingDown = true;
   logger.info({ signal }, 'graceful shutdown start');
-  app.set('shuttingDown', true);          // 让 /readyz 返回 503，先摘流量
+  app.set('shuttingDown', true);          // ✅ 让 /readyz 返回 503，先摘流量
 
   const force = setTimeout(() => {
     logger.error('forced exit after timeout');
     process.exit(1);
-  }, 10_000);                              // 兜底：超时未清空强退
-  force.unref();
+  }, 10_000);                              // ✅ 兜底：超时未清空强退，防永不退出
+  force.unref();                                 // ✅ 不让这个定时器本身撑住 event loop
 
-  server.close(async () => {               // 停止 accept 新连接，等在途请求完成
+  server.close(async () => {               // ✅ 停止 accept 新连接，等在途请求完成
     try {
-      await db.disconnect();
-      await redis.quit();
-      await logger.flush?.();
+      await db.disconnect();                 // ✅ 关 DB
+      await redis.quit();                     // ✅ 关 Redis
+      await logger.flush?.();                 // ✅ 冲日志
       logger.info('shutdown complete');
       clearTimeout(force);
       process.exit(0);
@@ -201,9 +213,10 @@ async function shutdown(signal) {
   });
 }
 
-['SIGTERM', 'SIGINT'].forEach((s) => process.on(s, () => shutdown(s)));
-process.on('unhandledRejection', (r) => { logger.error({ reason: r }, 'unhandledRejection'); });
-process.on('uncaughtException', (e) => { logger.error(e, 'uncaughtException'); shutdown('uncaught'); });
+['SIGTERM', 'SIGINT'].forEach((s) => process.on(s, () => shutdown(s)));   // ✅ 发版/缩容信号走优雅关闭
+process.on('unhandledRejection', (r) => { logger.error({ reason: r }, 'unhandledRejection'); });   // ✅ 只记不杀（Node20 默认已 crash，需显式接）
+process.on('uncaughtException', (e) => { logger.error(e, 'uncaughtException'); shutdown('uncaught'); });   // ✅ 状态不可信，记日志后走关闭重启
+// ❌ 不做 server.close() 直接 process.exit → 在途请求被掐断，用户 500/数据写一半
 ```
 
 关键点：

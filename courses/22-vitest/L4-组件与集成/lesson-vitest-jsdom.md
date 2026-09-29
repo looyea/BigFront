@@ -9,7 +9,17 @@
 追求速度、API 覆盖够多数组件 → `happy-dom`；遇到它没实现的偏门 API → 回 `jsdom`（完整度更高但稍慢）。全局设一个、单文件用注解覆盖：
 
 ```ts
-// @vitest-environment jsdom
+// @vitest-environment jsdom   ← 必须在文件最顶，per-file 覆盖全局 environment
+// 目的：单个文件临时切到 jsdom，拿到 document 测 DOM 逻辑
+import { it, expect } from 'vitest';
+
+it('能查到注入的节点', () => {
+  document.body.innerHTML = '<h1 id="x">hi</h1>';   // 注入一段 DOM
+  const el = document.getElementById('x');           // ✅ jsdom 提供了 document，可查询
+  expect(el).toBeInTheDocument();                     // ✅ jest-dom 语义断言
+  // ❌ 没写本行注解（仍是 node）→ ReferenceError: document is not defined
+  // ❌ 调 window.matchMedia(...)：jsdom 未实现 → 报 not a function，需 setupFiles 补 stub
+});
 ```
 
 `environmentOptions` 可配 `jsdom.url`、`userAgent` 等，测依赖 `location.href` 的逻辑时用得上。

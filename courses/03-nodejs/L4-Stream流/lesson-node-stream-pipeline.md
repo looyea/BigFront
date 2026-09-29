@@ -9,6 +9,7 @@
 `src.pipe(a).pipe(b).pipe(dest)` 优雅地处理了背压和 `end`，但**错误是黑洞**：
 
 ```js
+// 目的：演示裸 pipe 的错误黑洞——源文件不存在时 error 不往下传也不关 dest
 fs.createReadStream("missing.txt")
   .pipe(zlib.createGzip())
   .pipe(fs.createWriteStream("out.gz"));
@@ -31,6 +32,7 @@ fs.createReadStream("missing.txt")
 3. 正常完成时 callback 收到 `err === null`。
 
 ```js
+// 目的：用 pipeline 把三个流串接，任一环节出错都在回调一处收口、所有流自动销毁
 import { pipeline } from "node:stream";
 import fs from "node:fs";
 import zlib from "node:zlib";
@@ -41,10 +43,10 @@ pipeline(
   fs.createWriteStream("output.txt.gz"),
   (err) => {
     if (err) {
-      console.error("管道失败，所有流已清理", err);   // ★ 一处收口所有错误
+      console.error("管道失败，所有流已清理", err);   // ★ 一处收口所有错误（input.txt 不存在也走这）
       // 不会出现"写了半个 out.gz 还开着 fd"的情况
     } else {
-      console.log("完成");
+      console.log("完成");                              // ✓ 仅当全部成功才进这里
     }
   }
 );
@@ -59,6 +61,7 @@ pipeline(
 回调版仍要嵌一层。Node 15+ 提供 **`stream/promises` 的 `pipeline`，返回 Promise**——错误直接走 `reject`，能 `await`、能被外层 `try/catch` 抓（呼应 node-async-errors 第一、三节）：
 
 ```js
+// 目的：Promise 版 pipeline——错误直接走 reject，能统一用 try/catch 收
 import { pipeline } from "node:stream/promises";
 
 async function compress(src, dst) {
@@ -69,6 +72,7 @@ async function compress(src, dst) {
   );                       // 任一环节 error → 这个 await 抛出 → 外层 try/catch 抓
   console.log("完成");      // 全部 finish 才走到这
 }
+// ✅ 应用：直接调用，成败走 async 错误路径
 try { await compress("a.txt", "a.txt.br"); }
 catch (e) { console.error("失败", e); }   // 统一的 async 错误路径
 ```
@@ -82,6 +86,7 @@ catch (e) { console.error("失败", e); }   // 统一的 async 错误路径
 `stream/promises` 还有 `finished(stream)`，返回 Promise，在流 `'end'`/`'finish'`（或 `'error'`）时落定。适合"我只关心某个流何时写完/读完"，而不组整条管道：
 
 ```js
+// 目的：finished() 把"某个流写完"包成 Promise，替代手写 on('finish')+新 Promise
 import { finished } from "node:stream/promises";
 const ws = fs.createWriteStream("x");
 ws.write("hello");
@@ -98,6 +103,7 @@ await finished(ws);      // 等真正落盘（等价于 await 'finish'，且会�
 有时你确实需要"最终整个结果"（小数据）。`stream/consumers` 提供把 Readable 一次性消费为 Promise 的工具，且**内部已正确收集 Buffer/处理编码**：
 
 ```js
+// 目的：stream/consumers 把 Readable 一次性收成值（仅限数据量可控时）
 import { Readable } from "node:stream";
 import { buffer, text, json } from "node:stream/consumers";
 
@@ -113,9 +119,10 @@ const data = await json(someRespStream);// 收文本再 JSON.parse
 ## 六、Readable.from / toWeb：与迭代器、Web 流互转
 
 ```js
+// 目的：Readable.from 造流 + for-await 消费（自带背压）；Node/Web 流互转
 import { Readable } from "node:stream";
 const rs = Readable.from(["ab", "cd"]);         // 从数组/生成器/异步迭代器造可读流
-for await (const chunk of rs) console.log(chunk); // 流可用 for-await 消费（async 迭代）
+for await (const chunk of rs) console.log(chunk); // 依次打印 'ab'、'cd'（每轮读完才要下一块）
 
 const web = rs.toWeb();   // Node Readable ↔ Web ReadableStream（呼应 fetch、Deno/Browser）
 const back = Readable.fromWeb(web);
@@ -128,6 +135,7 @@ const back = Readable.fromWeb(web);
 ## 七、把两关串起来：一个健壮的大文件处理模板
 
 ```js
+// 目的：一个生产级大文件处理模板——pipeline 串读→加工→压缩→写，错误一处收口
 import { pipeline } from "node:stream/promises";
 import { Transform } from "node:stream";
 import fs from "node:fs";

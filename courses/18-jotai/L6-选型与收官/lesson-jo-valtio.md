@@ -4,11 +4,14 @@
 同作者（Daishi Kato）生态里的另一极：用 Proxy 把**可变对象**变成可订阅状态。
 
 ```ts
+// 目的：Valtio 的 proxy 路线——可变对象经 Proxy 拦截读写自动建订阅，改本体像 Vue reactive
 import { proxy, useSnapshot } from 'valtio';
-const state = proxy({ count: 0, list: [] });
-state.count++;                       // 直接可变地改
+const state = proxy({ count: 0, list: [] });   // proxy 把普通对象变成可订阅状态
+state.count++;                       // 直接可变地改本体，Proxy 已拦截，订阅者会被通知
 // 组件
-const snap = useSnapshot(state);     // 只读快照，自动订阅
+const snap = useSnapshot(state);     // 只读快照，自动订阅；渲染里读 snap，写要回 state
+// ✅ 深路径属性级精确追踪：只改 count，订 list 的组件不动，省心程度同 Vue reactive
+// ❌ 在组件里直接改 snap.count++→snapshot 是只读代理，dev 环境报警告且不该生效，写必须落到 state
 ```
 
 「像 Vue 的 reactive」是最快的心智锚点：改的是对象本体，订阅靠 Proxy 拦截属性读写自动建立——深路径 propsUsed 级精确追踪，Vue3 用户零学习成本（呼应 vue-reactive、solid-signals 的同族谱系）。

@@ -7,10 +7,12 @@
 ## 一、useEffect 是什么
 
 ```jsx
+// 目的：渲染提交到 DOM 后异步跑副作用，可返一个清理函数
 useEffect(() => {
   // 副作用：订阅、手动改 DOM、打点、定时器……
-  return () => { /* 可选：清理函数 */ };
+  return () => { /* 可选：清理函数 */ };   // ✅ 下次重跑前/卸载时执行
 }, [dep1, dep2]);   // 依赖数组
+// ❌ effect 里直接 return 一个非函数（如 return true）→ React 报 “useEffect must not return anything besides a function”
 ```
 - 它在**渲染提交到 DOM 之后**异步执行（不阻塞绘制，呼应 react-render-model commit）；
 - 语义是"**这次渲染的结果和外部系统同步**"，而非"值变了回调一次"（和 Vue `watch` 的心智不同）。
@@ -20,9 +22,11 @@ useEffect(() => {
 ## 二、依赖数组三种形态（务必分清）
 
 ```jsx
-useEffect(fn);            // 无第二参：每次渲染后都跑（几乎总不该这样）
+// 目的：依赖数组三形态——决定 effect 何时重跑（React 用 Object.is 逐个比依赖）
+useEffect(fn);            // ❌ 无第二参：每次渲染后都跑（几乎总不该这样）
 useEffect(fn, []);        // 空数组：仅【挂载后】跑一次
 useEffect(fn, [id]);      // 依赖 id：挂载后 + id 变化后跑
+// ❌ effect 里用了 user 却只写 [id] 漏列 user → 永远读到旧 user（exhaustive-deps 会告警）
 ```
 React 用 `Object.is` 逐个比较本轮依赖与上轮，**任一不同就重跑** effect（先跑上次的清理，再跑新的）。漏写依赖 = 读到旧值的经典 bug（见第五节、ESLint `react-hooks/exhaustive-deps`）。
 
@@ -31,11 +35,13 @@ React 用 `Object.is` 逐个比较本轮依赖与上轮，**任一不同就重�
 ## 三、清理函数：卸载前 / 重跑前
 
 ```jsx
+// 目的：需成对释放的资源（连接/订阅/定时器）在清理函数里回收
 useEffect(() => {
   const ws = new WebSocket(url);
   ws.connect();
-  return () => ws.close();          // 组件卸载 或 url 变化重跑前，先 close
+  return () => ws.close();          // ✅ 组件卸载 或 url 变化重跑前，先 close
 }, [url]);
+// ❌ 忘 return 清理→url 多次变化会堆积多个未关连接，内存泄漏
 ```
 - 清理发生在：**下次 effect 执行前** 和 **组件卸载时**；
 - 订阅、定时器、事件监听、`AbortController` 都必须成对清理，否则**内存泄漏**（呼应 vue-events off、node-events 泄漏、events 的 addListener/removeListener 对称）。
@@ -53,6 +59,7 @@ effect 在 paint 之后跑，所以它不该用来**计算渲染所需的派生�
 组件函数每次渲染重跑，effect 里闭包捕获的是**那次渲染**的 props/state 快照（呼应 react-usestate 第五节）：
 
 ```jsx
+// 目的：effect 闭包捕获的是本次渲染的快照——空依赖里引用的 state 会定格
 useEffect(() => {
   const t = setInterval(() => {
     setCount(count + 1);        // ❌ count 永远是挂载时的 0 → 一直变 1

@@ -20,16 +20,18 @@
 ## 二、Context 做全局态（及其代价）
 
 ```jsx
+// 目的：用 Context 把 useReducer 的状态+动作广播给深层组件（读多写少的低频全局态）
 const CountCtx = createContext(null);
 function CountProvider({ children }) {
-  const [count, dispatch] = useReducer(reducer, 0);
+  const [count, dispatch] = useReducer(reducer, 0);   // 状态用 reducer 管，变更走 dispatch
   return (
-    <CountCtx.Provider value={{ count, dispatch }}>   // dispatch 引用稳定
+    <CountCtx.Provider value={{ count, dispatch }}>   // value 每次渲染都是新对象→全体消费者重渲染
       {children}
     </CountCtx.Provider>
   );
 }
-const useCount = () => useContext(CountCtx);
+const useCount = () => useContext(CountCtx);          // ✅ 自定义 hook 收敛读取，调用方不碰 Context 本体
+// ❌ value 直接写 {{count,dispatch}} 字面量：每次 render 新引用，即便 React.memo 也挡不住广播→用 useMemo 包 value
 ```
 - 适合**读多写少、变化不频繁**的全局值；
 - 代价：`value` 是**新对象**时所有消费者都重渲染，`React.memo` 挡不住 Provider 下的广播（呼应 react-context）；
@@ -40,16 +42,19 @@ const useCount = () => useContext(CountCtx);
 ## 三、外部 store：Zustand
 
 ```jsx
+// 目的：Zustand 建组件外单例 store，组件用选择器只订阅用到的切片，避免无谓重渲染
 import { create } from 'zustand';
 const useStore = create((set) => ({
   count: 0,
-  inc: () => set(s => ({ count: s.count + 1 })),     // 单向：action 里算新值
+  inc: () => set(s => ({ count: s.count + 1 })),     // ✅ 单向：读旧 s 算新值（不可变更新）
 }));
 
 function A() {
-  const count = useStore(s => s.count);              // 选择器：只订阅 count 切片
-  return <button onClick={useStore.getState().inc}>{count}</button>;
+  const count = useStore(s => s.count);              // 选择器：只订阅 count 切片，其它字段变不触发本组件
+  return <button onClick={useStore.getState().inc}>{count}</button>;   // getState() 拿 action 引用，不订阅
 }
+// ❌ 用 useStore() 不传选择器→订阅整个 store，任意字段变动都重渲染，退化得比 Context 还差
+// ❌ set({ count: s.count+1 }) 里误用闭包旧值（不在 set 回调内）→ 并发点击丢更新
 ```
 - **选择器订阅**：组件只重渲染于它 `s => ...` 选中的切片变化——这正是 Context 难做到、Redux 靠 `useSelector` 做到的"细粒度更新"；
 - store 在组件外、天然单例，`set` 支持函数式（读旧 `s`）；

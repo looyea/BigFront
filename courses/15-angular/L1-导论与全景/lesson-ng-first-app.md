@@ -5,10 +5,12 @@
 ## 一、三十秒建工程，然后立刻 `ng version`
 
 ```bash
+# 目的：跑通 ng new→serve，并立刻抄下版本号当全课对表基准
 npm i -g @angular/cli
 ng new tour          # 交互式问两个问题：样式用 SCSS？不做 SSR（先选 No）
 cd tour && npm start   # ng serve，默认 4200 端口
-ng version           # 把输出抄进笔记——下面所有解读按这个版本对表
+ng version           # ✅ 把输出抄进笔记——下面所有解读按这个版本对表
+# ❌ 忽略版本直接照搬旧教程：v17 前是 NgModule 启动、v19 起默认 standalone，跨版本代码编译即错
 ```
 
 v20+ 的 CLI 已经不问『是否 standalone』——**因为默认就是**，这正是上关说的『默认值即版本号』：问什么问题、默认值是什么，就是 Angular 该年的产品形态。
@@ -34,12 +36,13 @@ tour/
 ## 三、启动层与应用层：main.ts 和 app.config.ts 的分工
 
 ```ts
+// 目的：启动层(main.ts)与应用层(app.config.ts)分工—一个管启动、一个管全局装配
 // main.ts —— 只管『启动』这一件事
 import { bootstrapApplication } from '@angular/platform-browser';
 import { App } from './app/app';
 import { appConfig } from './app/app.config';
 
-bootstrapApplication(App, appConfig)
+bootstrapApplication(App, appConfig)   // ✅ standalone 世界的 main：喂根组件 + 全局配置
   .catch((err) => console.error(err));
 
 // app.config.ts —— 只管『这应用装配了哪些全局能力』
@@ -52,10 +55,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // v21+ 新工程默认 zoneless，不再写任何 zone 相关提供者；
     // v18-20 的工程里这里可能是 provideZoneChangeDetection(...) 或手动换装的 provideZonelessChangeDetection()
-    provideRouter(routes),
-    provideHttpClient(withFetch()),
+    provideRouter(routes),                    // ✅ 路由表在此挂号：懒加载/守卫/preload 的地基
+    provideHttpClient(withFetch()),           // ✅ HTTP 客户端，withFetch 走浏览器 fetch API
   ],
 };
+// ❌ 若看到 platformBrowserDynamic().bootstrapModule(AppModule)—那是 v17 前 NgModule 旧世界，非本教程 standalone 写法
 ```
 
 两行注释讲三个知识点：① **bootstrapApplication 是 standalone 世界的 main**——旧世界叫 platformBrowserDynamic().bootstrapModule(AppModule)，见到后者就是 v17 前教程（版本探针）；② **providers 数组是全应用的『总装配线』**——路由表、HTTP 客户端、变更检测策略全在这挂号，L3 的 DI 关会拆这台机器；③ 这个数组里 zone 提供者的有无本身就是一枚版本指纹——v21 起新工程默认什么都不写（zoneless），v18-20 之间则可能看见 provideZonelessChangeDetection() 手装或 provideZoneChangeDetection() 残留（L4 讲透，这里先认脸）。
@@ -63,6 +67,7 @@ export const appConfig: ApplicationConfig = {
 ## 四、组件层：App 组件只有八行，但每行都是新语法
 
 ```ts
+// 目的：组件层—standalone 组件自声明依赖、无 NgModule declarations 注册表
 import { Component } from '@angular/core';
 
 @Component({
@@ -73,6 +78,7 @@ import { Component } from '@angular/core';
 export class App {           // 类名 App 不是 AppComponent——v20 起的简化命名
   title = 'tour';
 }
+// ❌ strictTemplates 默认开：template 里 {{ user.naem }} 拼错属性名→ ng build 阶段直接报错，而非运行时 undefined
 ```
 
 `selector` 是自定义元素标签名、`template` 可以是内联字符串或 templateUrl 外链、类名去掉 .component 后缀的极简命名是 v20 新默认（旧教程都会写 AppComponent）——**组件自声明依赖、无 declarations 注册表**，这就是 standalone 的全部『革命成本』：八行起步，而不是先建一个 NgModule。

@@ -30,9 +30,11 @@ CSR（纯 SPA）的问题：首屏要下载 JS → 执行 → 再请求数据 �
 服务端要拿到数据才能渲染 HTML，客户端水合时**不该再请求一次**。做法：组件声明"取数"逻辑，两端跑同一份，服务端把结果塞进 `window.__INITIAL_STATE__` 供客户端复用：
 
 ```js
+// 目的：同构取数——服务端取一次并把结果序列化，客户端水合时直接复用不再重请求
 // setup 里（SSR 感知）
-const { data } = await useFetch('/api/list');   // Nuxt：SSR 取一次、水合自动复用
+const { data } = await useFetch('/api/list');   // Nuxt：SSR 取一次、水合自动复用（✅ 客户端不会二次发请求）
 // 裸 Vue：onServerPrefetch + pinia 存状态，序列化为 payload
+// ❌ 若服务端拿到的数据与客户端首屏不一致（时间/随机值），hydration 报 “server did not match client content”
 ```
 - 裸 Vue 用 `onServerPrefetch` 钩子（呼应 vue-lifecycle 的 SSR 钩子）；
 - Pinia 的状态在服务端**每请求新建实例**、渲染后序列化、客户端 hydrate（呼应 vue-pinia-advanced SSR 节）。

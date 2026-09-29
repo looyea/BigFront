@@ -14,6 +14,7 @@
 3. **槽位而非快照**：闭包捕获的是**变量本身（binding）**，不是值的一份拷贝。外层改了值，内层能立刻看到。
 
 ```js
+// 目的：最小闭包——inc/get 共享同一个词法环境的 n（捕获的是 binding 不是快照）
 function counter() {
   let n = 0;
   return {
@@ -49,6 +50,7 @@ console.log(c.get()); // 2 —— n 这个 binding 被 inc/get 共享
 ### 3.1 私有变量 / 模块模式
 
 ```js
+// 目的：IIFE + 闭包实现模块模式——把私有状态藏在闭包词法环境里，只暴露接口
 const User = (() => {
   const users = new Map();          // 外部完全看不到
   return {
@@ -57,6 +59,14 @@ const User = (() => {
     count: () => users.size,
   };
 })();
+
+// ✅ 应用：通过暴露的接口操作私有 Map
+User.add(1, 'Ann');                  // 写入
+console.log(User.get(1));            // 'Ann'
+console.log(User.count());           // 1
+// ❌ 反面：想直接拿私有变量——根本拿不到
+console.log(User.users);             // undefined（users 不在返回对象上，闭包私有）
+// console.log(users);               // ❌ ReferenceError: users is not defined
 ```
 
 现代替代：ESM 模块本身就自带「未 export 即私有」；类里 `#field` 更严格。IIFE 版仍然常见于老库。
@@ -64,16 +74,25 @@ const User = (() => {
 ### 3.2 缓存 / 记忆化（memoize）
 
 ```js
+// 目的：用闭包持有 cache，实现「相同入参只算一次」的记忆化
 function memoize(fn) {
   const cache = new Map();               // 缓存挂在闭包里
   return function (...args) {
     const key = JSON.stringify(args);
-    if (cache.has(key)) return cache.get(key);
+    if (cache.has(key)) return cache.get(key);   // ✅ 命中缓存直接返回，跳过计算
     const v = fn.apply(this, args);
     cache.set(key, v);
     return v;
   };
 }
+
+// ✅ 应用：慢函数只算一次
+let calls = 0;
+const slowAdd = memoize((a, b) => { calls++; return a + b; });
+slowAdd(1, 2);   // 首次真正计算 → calls=1，返回 3
+slowAdd(1, 2);   // 命中缓存 → calls 仍为 1，返回 3
+console.log(calls); // 1（相同入参第二次没有重新调用被包装函数）
+// ❌ 注意：JSON.stringify 作 key，对含函数/undefined/键顺序不同的对象会误判；大对象作参数还会内存泄漏（应改 WeakMap）
 ```
 
 **注意**：Map 会强引用参数与结果——若参数是大对象，闭包就成了内存泄漏源。用 WeakMap（只能对象键）替代。
@@ -81,10 +100,11 @@ function memoize(fn) {
 ### 3.3 防抖 & 节流
 
 ```js
+// 目的：debounce/throttle 都靠闭包长期持有 timer / last 状态——这是它们能"记住"上次调用的根本原因
 function debounce(fn, wait = 200) {
   let timer;                              // timer 是闭包变量
   return function (...args) {
-    clearTimeout(timer);
+    clearTimeout(timer);                  // 每次触发都撤销上一颗定时器，只在"停下来"后才执行
     timer = setTimeout(() => fn.apply(this, args), wait);
   };
 }
@@ -93,9 +113,15 @@ function throttle(fn, wait = 200) {
   let last = 0;
   return function (...args) {
     const now = Date.now();
-    if (now - last >= wait) { last = now; fn.apply(this, args); }
+    if (now - last >= wait) { last = now; fn.apply(this, args); }  // 每 wait 毫秒最多放行一次
   };
 }
+
+// ✅ 应用：同一个 debounce 实例对高频事件只留最后一次
+const onResize = debounce(() => console.log('resized'), 200);
+window.addEventListener('resize', onResize);   // 连点 N 次，停 200ms 后只打印一次
+// ❌ 反面：每次触发都新建 debounce，闭包 timer 各自独立 → 去抖彻底失效
+window.addEventListener('resize', () => debounce(render, 200)()); // 每次都新建 timer，render 被反复调用
 ```
 
 面试常追问：**为什么用 function 而不是箭头？** → 因为要保留调用方的 `this`。
@@ -103,15 +129,19 @@ function throttle(fn, wait = 200) {
 ### 3.4 柯里化 & 偏应用
 
 ```js
+// 目的：用闭包累积已传参数，凑够 fn.length 才真正调用——这就是柯里化
 const curry = (fn) =>
   function curried(...args) {
-    if (args.length >= fn.length) return fn.apply(this, args);
-    return (...more) => curried.apply(this, args.concat(more));
+    if (args.length >= fn.length) return fn.apply(this, args);   // 参数凑齐才执行
+    return (...more) => curried.apply(this, args.concat(more));   // 没凑齐：闭包留住已传参数，返回新函数
   };
 
 const add3 = curry((a, b, c) => a + b + c);
 add3(1)(2)(3);      // 6
 add3(1, 2)(3);      // 6
+// ❌ 注意：靠 fn.length 判断"凑齐"，对含默认值/剩余参数的函数不可靠
+const bad = curry((a, b = 2) => a + b);  // bad.length 只有 1（默认参数不计入 length）
+bad(10);            // 立即返回 12，而不是等待第二个参数——柯里化在此「提前触发」
 ```
 
 ---
@@ -119,10 +149,18 @@ add3(1, 2)(3);      // 6
 ## 四、闭包最经典的面试翻车：循环 + 异步
 
 ```js
+// 目的：闭包经典翻车——var 只有一个 i 槽位，三个回调共享它
 for (var i = 0; i < 3; i++) {
   setTimeout(() => console.log(i));
 }
-// 3 3 3
+// ❌ 实际输出 3 3 3：回调执行时循环早已结束，那个唯一的 i 已是 3
+
+// ✅ 修法 1：let（for 每轮新建绑定）
+for (let i = 0; i < 3; i++) setTimeout(() => console.log(i));   // 0 1 2
+// ✅ 修法 2：IIFE 用形参把当轮 i 的快照固化成独立作用域
+for (var j = 0; j < 3; j++) ((k) => setTimeout(() => console.log(k)))(j); // 0 1 2
+// ✅ 修法 3：setTimeout 第 3 个起的参数会传入回调
+for (var m = 0; m < 3; m++) setTimeout((k) => console.log(k), 0, m);       // 0 1 2
 ```
 
 三种修法：
@@ -150,11 +188,20 @@ for (var i = 0; i < 3; i++) {
 ## 六、闭包 + 类字段 vs #private
 
 ```js
+// 目的：用 class 私有字段 #n 达成与「闭包私有变量」等价的封装
 class Counter {
   #n = 0;                 // ES2022 私有字段，外部拿不到
   inc() { this.#n++; }
   value() { return this.#n; }
 }
+
+// ✅ 应用
+const ct = new Counter();
+ct.inc(); ct.inc();
+console.log(ct.value()); // 2
+// ❌ 反面：外部无法访问私有字段——是语法级拦截
+// console.log(ct.#n);   // ❌ SyntaxError: Private field '#n' must be declared in an enclosing class（解析期即报错）
+console.log(ct.n);       // undefined（私有的 #n 与普通属性 .n 是两回事，不是同一字段）
 ```
 
 与「函数 + 闭包」版相比，class 私有字段：
@@ -168,6 +215,7 @@ class Counter {
 ## 七、React Hooks 里的闭包陷阱（面试高频追问）
 
 ```jsx
+// 目的：React 经典闭包陷阱——effect 依赖数组为空时只跑一次，setInterval 里的回调捕获了本次渲染的旧 count
 function Timer() {
   const [count, setCount] = useState(0);
   useEffect(() => {

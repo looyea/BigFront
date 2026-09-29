@@ -7,20 +7,24 @@
 ## 一、action 是什么：三段式生命周期
 
 ```svelte
-<div use:clickOutside={{ on_outclick: close }}>…</div>
+<!-- 目的：use: 把一段 DOM 行为焊在元素上，挂载即运行 -->
+<div use:clickOutside={{ on_outclick: close }}>…</div>   {/* ✅ 元素插入 DOM 后立即调用 clickOutside(node, {on_outclick}) */}
 ```
 
 ```js
 // actions.js
+// 目的：action 契约—(node, param) => { update?, destroy? }，返回 destroy 用于清理
 export function clickOutside(node, params = {}) {
   const handleClick = (e) => {
+    // ✅ 点击落在 node 之外才触发回调（contains 判内部）
     if (!node.contains(e.target)) params.on_outclick?.();
   };
-  document.addEventListener('click', handleClick, true);
+  document.addEventListener('click', handleClick, true);   // ✅ 捕获阶段监听，先于子元素 click
   return {
-    destroy() { document.removeEventListener('click', handleClick, true); },
+    destroy() { document.removeEventListener('click', handleClick, true); },   // ✅ 元素移除前摘掉全局监听，防泄漏
   };
 }
+// ❌ 不 return destroy → 元素早已销毁，document 上的监听还挂着，闭包引用 node 造成内存泄漏
 ```
 
 契约极短：**函数 `(node, parameter) => { update?(parameter), destroy?() }`**。
@@ -41,21 +45,22 @@ export function clickOutside(node, params = {}) {
 
 ```svelte
 <script>
+  // 目的：内置 action 与"过渡当 action 用"—focus/blur 开箱即用，过渡函数也能挂常驻元素
   import { blur, focus } from 'svelte/action';
   import { fly } from 'svelte/transition';
   import { animate } from 'svelte/action';
 </script>
 
-<input use:focus />          <!-- 挂载即聚焦(替代 onMount+$tick 手动 focus) -->
-<textarea use:blur />        <!-- 元素被移除前触发,常用于"离开时保存" -->
+<input use:focus />          {/* ✅ 挂载即聚焦(替代 onMount+$tick 手动 focus) */}
+<textarea use:blur />        {/* ✅ 元素被移除前触发,常用于"离开时保存" */}
 
-<!-- 过渡函数也能当 action 用在"一直存在"的元素上,补播进场(transition: 只服务显隐块) -->
-<div use:fly="{{ y: 20, duration: 400 }}">首屏/SSR 水合后的进场</div>
+<!-- 目的：过渡函数当 action 用在"一直存在"的元素上,补播进场(transition: 只服务显隐块) -->
+<div use:fly="{{ y: 20, duration: 400 }}">首屏/SSR 水合后的进场</div>   {/* ✅ 不依赖显隐，挂载即飞入 */}
 
-<!-- use:animate: 内容变化时对子元素位移/尺寸变化跑过渡(Svelte 5 签名:回调报告每段) -->
+<!-- 目的：use:animate—内容变化时对子元素位移/尺寸变化跑过渡(Svelte 5 签名:回调报告每段) -->
 <div use:animate={(seg, { node, from, to }) => ({
   duration: 400,
-  css: (t) => `transform: translate(${(1 - t) * seg.x}px, ${(1 - t) * seg.y}px); opacity: ${t}`,
+  css: (t) => `transform: translate(${(1 - t) * seg.x}px, ${(1 - t) * seg.y}px); opacity: ${t}`,   // ✅ 每段 seg 给位移量，t 从 0→1
 })}>
   {#each items as item}<p>{item}</p>{/each}
 </div>
@@ -68,42 +73,45 @@ export function clickOutside(node, params = {}) {
 ## 三、实战弹药库：三个最高频 action
 
 ```js
+// 目的：三个最高频 action—都遵循 (node, param)=>{update?,destroy?} 契约，destroy 必给
+
 // 1) tooltip：悬浮显示,离开销毁
 export function tooltip(node, { text = '' } = {}) {
   let tip;
   const enter = () => {
     tip = document.createElement('div');
     tip.className = 'tip'; tip.textContent = text;
-    document.body.append(tip);
-    const { left, bottom } = node.getBoundingClientRect();
+    document.body.append(tip);   // ✅ 挂到 body，不受父元素 overflow 裁切
+    const { left, bottom } = node.getBoundingClientRect();   // ✅ 测量宿主节点定位
     Object.assign(tip.style, { left: `${left}px`, top: `${bottom + 6}px` });
   };
   const leave = () => tip?.remove();
   node.addEventListener('mouseenter', enter);
   node.addEventListener('mouseleave', leave);
   return {
-    update: (p) => (node.title = p.text ?? ''),
-    destroy() { node.removeEventListener('mouseenter', enter); node.removeEventListener('mouseleave', leave); leave(); },
+    update: (p) => (node.title = p.text ?? ''),   // ✅ 参数变化时增量更新（快照不会自动刷新，靠 update 补）
+    destroy() { node.removeEventListener('mouseenter', enter); node.removeEventListener('mouseleave', leave); leave(); },   // ✅ 摘监听 + 移 tooltip
   };
 }
 
 // 2) 长按出菜单
 export function longpress(node, cb) {
   let t;
-  const down = () => { t = setTimeout(() => cb(), 600); };
-  const up = () => clearTimeout(t);
+  const down = () => { t = setTimeout(() => cb(), 600); };   // ✅ 按下起 600ms 计时
+  const up = () => clearTimeout(t);   // ✅ 提前松手则取消，不算长按
   node.addEventListener('pointerdown', down);
   ['pointerup', 'pointerleave', 'pointercancel'].forEach((e) => node.addEventListener(e, up));
   return { destroy: () => up() };
 }
+// ❌ longpress 的 cb 是快照式传入，父组件换了回调却不写 update 重存 → 一直调用旧闭包（旧状态）
 
 // 3) 元素入场once(IntersectionObserver 曝光埋点)
 export function expose(node, onExpose) {
   const io = new IntersectionObserver((es) => {
-    if (es[0].isIntersecting) { onExpose(node.dataset); io.disconnect(); }
+    if (es[0].isIntersecting) { onExpose(node.dataset); io.disconnect(); }   // ✅ 首次曝光即上报并断开，只触发一次
   });
   io.observe(node);
-  return { destroy: () => io.disconnect() };
+  return { destroy: () => io.disconnect() };   // ✅ 元素移除时断开 observer
 }
 ```
 

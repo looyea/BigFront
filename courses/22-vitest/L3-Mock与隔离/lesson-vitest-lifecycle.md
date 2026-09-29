@@ -7,10 +7,15 @@
 ## 二、作用域：describe 内的钩子只管内
 
 ```ts
+// 目的：钩子作用域——describe 内的 beforeEach 只作用于其内用例
+beforeEach(() => console.log('root'));   // 顶层：对全文件所有用例都跑
 describe('A', () => {
-  beforeEach(() => { /* 只影响 A 里的用例 */ });
-  it('a1', () => {});
+  beforeEach(() => console.log('A'));    // ✅ 只影响 A 里的用例
+  it('a1', async () => {
+    // 钩子里有异步一定要 await，否则 hookTimeout 内没跑完就判失败
+  });
 });
+// ❌ 指望顶层 beforeEach「只对某个 describe 生效」→ 它对所有用例都跑，作用域理解反了
 ```
 
 嵌套 describe 时，外层钩子先跑、内层后跑；清理反之。别把 `beforeEach` 写在顶层却指望它只对某个 describe 生效。

@@ -7,13 +7,15 @@
 ## 一、组件是函数，props 是入参
 
 ```jsx
+// 目的：组件就是函数，props 是入参，返回 JSX（大写开头才是组件，小写当原生标签）
 function Welcome(props) {
   return <h1>Hello, {props.name}</h1>;
 }
 // 也可箭头 + 解构
 const Welcome = ({ name, role = 'guest' }) => <h1>{name} · {role}</h1>;
 
-<Welcome name="Ada" />   // 使用：大写开头 = 组件，小写 = 原生标签
+<Welcome name="Ada" />   // ✅ 使用：解构后 name="Ada"、role 用默认 'guest'
+// ❌ 写成 <welcome name="Ada" /> → React 当作未知 HTML 标签 <welcome>，组件根本不渲染
 ```
 - **首字母必须大写**：React 靠大写判断"这是组件还是 `<div>`"（小写会当字符串标签）；
 - `props` 是一个对象，含所有属性 + `children`；解构 + 默认值即"props 默认值"（对照 vue props default、withDefaults）。
@@ -23,8 +25,9 @@ const Welcome = ({ name, role = 'guest' }) => <h1>{name} · {role}</h1>;
 ## 二、props 只读：单向数据流
 
 ```jsx
+// 目的：props 只读——子不能自改，要影响父就调父传下的回调
 function Badge(props) {
-  // props.count = 5;   ❌ 禁止：不得改 props
+  // props.count = 5;   ❌ 禁止：不得改 props（严格模式下静默失效/可变对象会污染父级）
   return <span>{props.count}</span>;
 }
 ```
@@ -35,12 +38,13 @@ function Badge(props) {
 ## 三、children：标签之间就是插槽
 
 ```jsx
+// 目的：标签之间的内容就是 props.children（类似 Vue 默认插槽）
 function Card({ title, children }) {
   return <section className="card"><h3>{title}</h3>{children}</section>;
 }
 
 <Card title="简介">
-  <p>这段成为 props.children</p>   {/* 类似 Vue 默认插槽 */}
+  <p>这段成为 props.children</p>   {/* ✅ <p>…</p> 会被填进上面的 {children} 位置 */}
 </Card>
 ```
 `children` 可以是节点、数组、函数。具名插槽用普通 props 传 JSX（`<Layout header={<Bar/>}>{body}</Layout>`），作用域插槽用 **render prop / children-as-function**（`{({x}) => ...}`）——组合代替继承（呼应 vue slot、react-composition）。
@@ -52,11 +56,13 @@ function Card({ title, children }) {
 **这是 React 与 Vue 最大的一处分野。** Vue 的 `setup()` 在组件实例创建时跑一次；React 函数组件在**每一次渲染**时从头到尾**重新执行一遍**：
 
 ```jsx
+// 目的：每次渲染都从头重跑本函数——理解 Hooks 一切规则的钥匙
 function Counter() {
   console.log('每次渲染都打印');       // 状态每变一次就重跑
-  const [n, setN] = useState(0);       // useState 靠"顺序+位置"记状态
+  const [n, setN] = useState(0);       // useState 靠"顺序+位置"记状态（首次给 0，之后返缓存值）
   return <button onClick={() => setN(n + 1)}>{n}</button>;
 }
+// ❌ 若把 useState 放进 if 里条件调用，某次渲染少调一个 → Hook 顺序错位，React 报错并丢状态
 ```
 - 重新执行 → 函数内所有变量/函数**每次都是全新的**；
 - 但 `useState` 的值**不丢**——React 按 Hook 调用顺序在内部为每个组件缓存状态槽；
@@ -75,8 +81,10 @@ function Counter() {
 
 表单输入有两种接管方式，贯穿到 react-forms 详解：
 ```jsx
+// 目的：受控（值握在 React state）vs 非受控（值留在 DOM，用 ref 读）
 // 受控：值来自 state，onChange 回写——数据在 React 手里
-<input value={text} onChange={e => setText(e.target.value)} />
+<input value={text} onChange={e => setText(e.target.value)} />   // ✅ 输入什么 state 就是什么
+// ❌ 只给 value 不给 onChange → 输入框锁死无法编辑（React 警告 "provided `value` without `onChange`"）
 // 非受控：值在 DOM 里，React 用 ref 读——数据在 DOM 手里
 <input defaultValue="x" ref={inputRef} />
 ```

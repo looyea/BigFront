@@ -1,0 +1,136 @@
+{
+  "title": "vue-hello-world 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "从零创建一个能跑的 Vue 工程，最标准的命令入口是？",
+      "options": [
+        "npm install vue",
+        "npm create vue@latest（或 npm create vite@latest 选 vue 模板）",
+        "新建一个 index.html 引入 vue.js 就算工程",
+        "npm run vue"
+      ],
+      "answer": 1,
+      "explanation": "现代 Vue 项目用脚手架 create-vue / Vite 生成，再 npm install、npm run dev（呼应 vue-hello-world 第二节）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "脚手架生成后，让开发服务器跑起来、浏览器能访问，通常执行？",
+      "options": [
+        "npm run build",
+        "npm start 打开 dist",
+        "npm install 然后 npm run dev",
+        "node App.vue"
+      ],
+      "answer": 2,
+      "explanation": "先 npm install 装依赖，再 npm run dev 启动 Vite 开发服务器（build 是打包产物用，不是开发预览）（呼应第二节）。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "在 Vite 的 Vue 项目里，应用的「挂载点」写在哪个文件？",
+      "options": [
+        "src/main.js",
+        "src/App.vue",
+        "根目录 index.html 的 <div id=\"app\">",
+        "vite.config.js"
+      ],
+      "answer": 2,
+      "explanation": "index.html 提供 <div id=\"app\"> 挂载容器与引入 /src/main.js 的 script；main.js 再 mount('#app')（呼应第四节）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "src/main.js 里 `createApp(App).mount('#app')` 的作用是？",
+      "options": [
+        "定义一个组件",
+        "把根组件 App 创建成应用实例并挂载到 #app 这个 DOM 节点",
+        "引入 CSS",
+        "启动路由"
+      ],
+      "answer": 1,
+      "explanation": "这是整个应用的启动按钮：createApp 造实例、mount 挂到 index.html 的挂载点（呼应第四节）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "一个标准 `.vue` 单文件组件由哪三块组成？",
+      "options": [
+        "head / body / foot",
+        "template / script / style",
+        "html / js / json",
+        "view / model / controller"
+      ],
+      "answer": 1,
+      "explanation": "SFC = <template> 视图、<script> 逻辑、<style> 样式，收拢在一个文件里（呼应第五节）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "`<style scoped>` 里 scoped 的含义是？",
+      "options": [
+        "样式性能更高",
+        "该样式只作用于当前组件，不污染全局其它组件",
+        "禁止使用外部 CSS",
+        "只对 App.vue 生效"
+      ],
+      "answer": 1,
+      "explanation": "scoped 给本组件元素加数据属性做隔离，避免样式串味（呼应第五节）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "开发时改完 `App.vue` 保存，浏览器不手动刷新就更新，这是？",
+      "options": [
+        "Vue 的响应式",
+        "Vite 的 HMR 热模块替换",
+        "浏览器缓存",
+        "SSR 水合"
+      ],
+      "answer": 1,
+      "explanation": "npm run dev 下 Vite 提供 HMR，改文件局部替换模块并自动刷新视图（呼应第三节）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "`public/` 与 `src/assets/` 的本质区别是？",
+      "options": [
+        "没区别，只是位置不同",
+        "public 里的资源原样拷贝不参与编译；assets 里的资源经打包器处理（hash、内联、别名）",
+        "assets 只能是图片",
+        "public 不能放 favicon"
+      ],
+      "answer": 1,
+      "explanation": "public 直接拷贝到产物根、按绝对路径引用；assets 参与构建管线（呼应第四节）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "按本课的「重要性分层」，起步阶段下列哪组属于🔴核心必烂熟？",
+      "options": [
+        "SSR、编译器宏编译产物、虚拟滚动",
+        ".vue 三段式、<script setup>+ref/computed、组件组合(props/emits)、模板指令",
+        "vite.config 别名代理、Pinia 插件、Nuxt",
+        "npm 脚本原理、node_modules 结构"
+      ],
+      "answer": 1,
+      "explanation": "每天都在写的才是🔴：SFC、响应式基本功、组件组合、模板语法；其余是🟡/🟢（呼应第六节）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "关于 Vue Router 和 Pinia，正确的定位是？",
+      "options": [
+        "它们是 Vue 本体的一部分，缺了 Vue 就跑不起来",
+        "它们是官方推荐的插件生态（路由/状态管理），不是 Vue 核心，起步可暂缓",
+        "只能二选一",
+        "必须用脚手架才能装"
+      ],
+      "answer": 1,
+      "explanation": "Vue 本体不含路由和全局状态；Router/Pinia 是可选官方库，属🟡，用到再加（呼应第一、六节）。"
+    }
+  ]
+}

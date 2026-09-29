@@ -24,6 +24,7 @@ Object 构造函数上的静态方法可以分成三组：
 ## 二、枚举：keys / values / entries / fromEntries
 
 ```js
+// 目的：枚举类方法对比——keys/values/entries 只看可枚举字符串键，Symbol 需单独拿
 const u = { id: 1, name: 'Ann', [Symbol('t')]: 'x' };
 
 Object.keys(u);     // ['id', 'name'] — 只有字符串键
@@ -41,6 +42,7 @@ Object.getOwnPropertySymbols(u);         // [Symbol(t)]
 
 **⚠️ 数字键陷阱**：
 ```js
+// 目的：❗整数键会自动升序排在前，不按插入顺序
 const o = { 10: 'a', 2: 'b', 'x': 'c', 1: 'd' };
 Object.keys(o);  // ['1', '2', '10', 'x']  ← 整数键自动排序
 ```
@@ -53,6 +55,7 @@ Object.keys(o);  // ['1', '2', '10', 'x']  ← 整数键自动排序
 ## 三、合并：`Object.assign` 与 spread
 
 ```js
+// 目的：Object.assign 会触发 target 的 setter，spread 会触发源 getter
 const target = { a: 1, set b(v) { this._b = v; }, get b() { return this._b } };
 Object.assign(target, { b: 2, c: 3 });
 // 触发 setter；target 变 { a:1, _b:2, c:3 }
@@ -96,15 +99,25 @@ const copy = { ...target };  // 触发 getter；copy 是 { a:1, _b:2, c:3 }
 
 **手写一个 Vue 2 式响应式属性**：
 ```js
+// 目的：用闭包 + defineProperty 手写一个 Vue 2 式响应式属性（getter/setter 拦截读写）
 function reactive(obj, key, val) {
   let v = val;
   Object.defineProperty(obj, key, {
-    get() { return v; },
-    set(nv) { if (nv !== v) { v = nv; notify(); } },
+    get() { return v; },                                              // 读属性 → 返回闭包里的 v
+    set(nv) { if (nv !== v) { v = nv; notify(); } },                  // 写且值真变 → 更新并通知依赖
     enumerable: true,
     configurable: true,
   });
 }
+
+// ✅ 应用：定义完必须装上、并观察读写效果（否则就是"只定义不使用"）
+function notify() { notify.count++; }   // 真实框架里这里是"触发依赖重收集 / 重渲染"
+notify.count = 0;
+const box = {};
+reactive(box, 'count', 0);
+console.log(box.count);            // 0（读走 get，返回闭包里的 v）
+box.count = 5;                     // 写走 set：5 !== 0 → v 更新为 5 并调用 notify()
+console.log(box.count, notify.count); // 5, 1（值已变，且 notify 被触发一次）
 ```
 
 ---
@@ -112,6 +125,7 @@ function reactive(obj, key, val) {
 ## 五、`defineProperty` vs `defineProperties` vs 直接赋值
 
 ```js
+// 目的：直接赋值 vs defineProperty——后者不写 flags 时默认全 false
 const o = {};
 o.a = 1;                                        // writable/enumerable/configurable 全 true
 Object.defineProperty(o, 'b', { value: 2 });   // 三个 flag 默认全 false！
@@ -125,6 +139,7 @@ Object.defineProperties(o, {
 
 **`Object.getOwnPropertyDescriptors(obj)`（ES2017）**：**正确浅拷贝 getter/setter/flags 的写法**：
 ```js
+// 目的：保留 getter/setter/flags 的正确浅拷贝（spread 会丢访问器语义）
 const clone = Object.create(
   Object.getPrototypeOf(obj),
   Object.getOwnPropertyDescriptors(obj),
@@ -144,6 +159,7 @@ const clone = Object.create(
 
 三档都**只作用于自有属性**，嵌套对象不受影响：
 ```js
+// 目的：证明 freeze 是浅冻结——只封一层，嵌套对象仍可改
 const a = Object.freeze({ nested: { x: 1 } });
 a.nested.x = 42;      // ✅ 成功！freeze 是**浅**冻结
 ```
@@ -155,6 +171,7 @@ a.nested.x = 42;      // ✅ 成功！freeze 是**浅**冻结
 ## 七、`Object.create` 与原型链
 
 ```js
+// 目的：Object.create 把 proto 挂到实例原型链上
 const proto = { hi() { return 'hello' } };
 const obj = Object.create(proto);
 obj.hi();  // 'hello'（走原型链）
@@ -175,6 +192,7 @@ const o = Object.create(proto, {
 ## 八、`is`：更精确的相等
 
 ```js
+// 目的：Object.is 修正 === 在 NaN / ±0 上的两个边界
 Object.is(NaN, NaN);     // true   （=== 会 false）
 Object.is(0, -0);        // false  （=== 会 true）
 Object.is(1, 1);         // true

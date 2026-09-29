@@ -7,21 +7,23 @@
 ## 一、最小闭环：表单的 action 收一个服务端函数
 
 ```tsx
+// 目的：表单的 action 直接收一个服务端函数——没 API/没 fetch/没 onClick，但浏览器仍 POST 到当前页 URL
 // app/guestbook/page.tsx —— 整页可以都是服务端组件
 export default function GuestBook() {
   async function sign(formData: FormData) {
-    'use server';                                  // ← 就地声明：这个函数是 Action
+    'use server';                                  // ✅ 就地声明：这个函数是 Action（编译成一个带密钥 ID 的公网端点）
     const name = (formData.get('name') as string) || '';
-    await db.entry.create({ data: { name } });
-    revalidatePath('/guestbook');                  // 写侧失效（L4 闭环兑现）
+    await db.entry.create({ data: { name } });    // ⚠️ 真实项目这里必须先鉴权+zod 校验（见第五节）
+    revalidatePath('/guestbook');                  // ✅ 写侧失效（L4 闭环兑现）
   }
   return (
-    <form action={sign}>
+    <form action={sign}>           {/* ✅ JS 未加载时降级为原生表单 POST，渐进增强不丢 */}
       <input name="name" />
       <button type="submit">签名</button>
     </form>
   );
 }
+// ❌ 以为“函数藏在组件里就安全” → Action 人人可 POST，不鉴权/不校验直接写库 = 公网可写接口
 ```
 
 没有 API、没有 fetch、没有 onClick——**但别被表象骗了**：浏览器提交的仍是 POST 到当前页面 URL，Next 在背后把表单数据路由给这个函数。
@@ -43,8 +45,9 @@ export default function GuestBook() {
 `<form action={serverAction}>` 在 JS 未加载/禁用时**降级为原生表单 POST**，服务端执行 Action 后返回重渲染的 HTML——用户完全无感。React 19 还给配套细节：
 
 ```tsx
-<input name="name" formAction={sign} />        // 按钮级指定 action（列表里的删除钮）
-<button formMethod="dialog">                   // method="dialog" 关闭 <dialog> 而不提交
+// 目的：React 19 的配套细节——按钮级指定 action、dialog 关闭而不提交
+<input name="name" formAction={sign} />        // ✅ 按钮级指定 action（列表里的删除钮）
+<button formMethod="dialog">                   // ✅ method="dialog" 关闭 <dialog> 而不提交
 ```
 
 这是 Web 标准"表单即 RPC"的复活——小程序的 `<form report-submit>` 老功能、以及"URL 即状态"哲学在变更侧的镜像（呼应 mp-interaction、next-link-router 第四节）。**面试金句：Server Actions 不是省了几行 fetch，是把"可用性底线"从 JS 成功执行提前到了 HTML 送达。**
@@ -56,27 +59,29 @@ export default function GuestBook() {
 原生 form 拿不到"提交中/错误消息"，于是有 hook（原 useFormState 改名）：
 
 ```tsx
+// 目的：useActionState 把“提交中/错误消息/新 state”三合一接管
 'use client';
 import { useActionState } from 'react';
-import { createEntry } from './actions';        // 从单独文件 import Action 的常见姿势
+import { createEntry } from './actions';        // ✅ 从单独文件 import Action 的常见姿势
 
 export function SignForm() {
   const [state, submitAction, isPending] = useActionState(
-    async (prev, formData) => {                 // prev = 上次返回值
+    async (prev, formData) => {                 // ✅ prev = 上次返回值
       const err = await createEntry(formData);
-      if (err) return { error: err };           // 返回 = 新 state（不 throw 的失败路径）
-      return null;                              // 成功 → 清空
+      if (err) return { error: err };           // ✅ 返回 = 新 state（不 throw 的失败路径）
+      return null;                              // ✅ 成功 → 清空
     },
-    null,                                       // 初始 state
+    null,                                       // ✅ 初始 state
   );
   return (
     <form action={submitAction}>
       <input name="name" disabled={isPending} />
       {state?.error && <p className="err">{state.error}</p>}
-      <button disabled={isPending}>{isPending ? '提交中…' : '签名'}</button>
+      <button disabled={isPending}>{isPending ? '提交中…' : '签名'}</button>   {/* ✅ isPending 随 Action 起落自动接管 */}
     </form>
   );
 }
+// ❌ 忘了在文顶加 'use client' → useActionState 在服务端组件里报“hooks 不能用于 Server Component”
 ```
 
 要点：① Action 在客户端组件包一层再喂给 hook（服务端原件保持纯净）；② **失败用返回值、成功用重定向**（`redirect()`）是官方建议的姿势——成功即导航，新数据自然到手（router cache 与服务端重渲染联动）；③ 防重复提交靠 isPending 只是 UX，**幂等**要在服务端做（唯一约束/幂等键，呼应 mp-network 的 seq 防重）。
@@ -86,20 +91,22 @@ export function SignForm() {
 ## 五、Action 的标准防御模板（背下来）
 
 ```ts
+// 目的：Action 的标准四层防御模板——鉴权→校验→最小权限写库→声明失效
 // actions.ts
 'use server';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
-import { EntrySchema } from '@/schemas';          // zod schema 两侧共享（ts-utility 的推断回收）
+import { EntrySchema } from '@/schemas';          // ✅ zod schema 两侧共享（ts-utility 的推断回收）
 
 export async function createEntry(formData: FormData) {
   const session = await auth();
-  if (!session) redirect('/login');              // 鉴权永远第一位：Action 是公网端点（redirect 内部自会 throw 中断）
+  if (!session) redirect('/login');              // ✅ 第一层鉴权：Action 是公网端点（redirect 内部自会 throw 中断）
   const parsed = EntrySchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return parsed.error.issues[0].message;   // 校验失败→返回文案
-  await db.entry.create({ data: { ...parsed.data, uid: session.user.id } });
-  revalidatePath('/guestbook');
+  if (!parsed.success) return parsed.error.issues[0].message;   // ✅ 第二层校验：失败→返回文案
+  await db.entry.create({ data: { ...parsed.data, uid: session.user.id } });   // ✅ 第三层：uid 来自会话不信前端
+  revalidatePath('/guestbook');                   // ✅ 第四层：声明失效
 }
+// ❌ 只靠前端表单校验、Action 内不 safeParse → 攻击者直接 POST 端点塞进超长/恶意字段（前端一切皆可伪造）
 ```
 
 四层防御链：**鉴权 → 校验（共享 schema，前端同份只做体验） → 最小权限写库 → 声明失效**。与 09-express 的接口规范逐层同构——换了语法没换纪律（呼应 exp-validation 的"服务端是唯一可信边界"）。

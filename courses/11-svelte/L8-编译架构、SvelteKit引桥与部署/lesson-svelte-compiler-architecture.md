@@ -10,27 +10,29 @@
 
 ```svelte
 <script>
-  let count = $state(0);
+  // 目的：最小的“一个 $state + 一处引用”样本—带去 playground 拆它的产物
+  let count = $state(0);   // ✅ 就这一个信号，看看它编译后变成什么
 </script>
 
-<button onclick={() => count++}>加了 {count} 次</button>
+<button onclick={() => count++}>加了 {count} 次</button>   {/* ✅ 只有 {count} 这个文本节点会被编译成微 effect */}
 ```
 
 产物骨架（函数名会被编译器 mangle，以 playground 实时输出为准）：
 
 ```js
+// 目的：上面的组件在 client 目标下的产物骨架—看清“没有 VDOM、没有重渲染”
 function Component($$anchor, $$payload) {
-  let count = 0;                                    // $state 在 runes 模式下的"编译后真相"
-  var fragment = $.template(`<button> </button>`, 3); // 模板 → 字符串模板克隆
+  let count = 0;                                    // ✅ $state 编译成普通 let：runes 是编译器关键字，不是运行时包装器
+  var fragment = $.template(`<button> </button>`, 3); // ✅ 模板→HTML 字符串，运行时 cloneNode 出真 DOM（无 render 函数返 VNode）
   ...
-  const render = () => { $.set(text, `加了 ${count} 次`); };
-  $.derived(() => count);        // 声明依赖
-  $.user_effect(render);         // 状态变了 → 只跑这个函数
+  const render = () => { $.set(text, `加了 ${count} 次`); };   // ✅ 更新逻辑只碰这一个文本节点
+  $.derived(() => count);        // ✅ 声明依赖：把 count 接到这个 effect
+  $.user_effect(render);         // ✅ count 脏了就只跑 render，不重跑 Component
 }
 export default function ($$anchor, $$payload) {
-  const store = $.store(() => { Component($$anchor, $$payload); });
-  ...
+  const store = $.store(() => { Component($$anchor, $$payload); });   // ✅ 组件体只在初始化跑一次，之后图在跑
 }
+// ❌ 别把 $.user_effect 误读成“整组件重渲染”——它只是那个文本的微 effect，Component 函数不再整体执行
 ```
 
 逐行对号入座：

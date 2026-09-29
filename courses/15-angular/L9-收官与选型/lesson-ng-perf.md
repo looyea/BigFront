@@ -21,19 +21,22 @@
 ## 二、@defer：模板级按需加载
 
 ```html
-@defer (on viewport) {
+<!-- 目的：@defer 模板级按需加载——不同触发器决 chunk 何时下载/渲染 -->
+@defer (on viewport) {              <!-- 滚动到可见区才加载（非首屏重组件） -->
   <app-recommendations />
-} @placeholder (minimum 500ms) {
+} @placeholder (minimum 500ms) {    <!-- 至少显骨架 500ms，避免闪烁 -->
   <div class="skeleton"></div>
 }
 
-@defer (on idle) {
+@defer (on idle) {                  <!-- hydration 后浏览器空闲时预加 -->
   <app-footer />
 }
 
-@defer (prefetch on hover; on timer(5s)) {
+@defer (prefetch on hover; on timer(5s)) {   <!-- 悬停先下载、5s 后定时渲染 -->
   <app-heavy-modal />
 }
+<!-- ✅ 首屏 HTML/JS 不含 deferred 块，配合 budgets 轻装上阵 -->
+<!-- ❌ 把首屏可见主内容也包进 @defer→白屏等 chunk 下载，反而拖慢 LCP -->
 ```
 
 触发器类型：
@@ -70,9 +73,12 @@ v21+ zoneless 默认后：
 
 **ng inspect**（v20+ CLI 命令）：
 ```bash
+# 目的：ng inspect 盘点组件与依赖边界，找重复导出/未用依赖
 ng inspect
 # → 列出所有组件的选择器 + 所属模块/懒加载边界
 # → 检测未使用的依赖/重复导出
+# ✅ 用 ng inspect 发现某组件被错归进主包→改懒加载边界后首包胉胀可定位
+# ❌ 从不检查→重复导出/未用依赖越积越多，bundle 无意识膨胀
 ```
 
 **Performance 面板**：
@@ -105,6 +111,7 @@ Angular 因全家桶（Router+Forms+HTTP+DI）基础更重——但 zoneless 去
 ## 七、@for track 的性能命门
 
 ```html
+<!-- 目的：@for track 策略是列表性能命门—— track 对象决定 DOM 是否复用 -->
 <!-- ❌ 大列表 track by index → 中间删除导致后续全重渲染 -->
 @for (item of items(); track $index) { ... }
 
@@ -119,10 +126,13 @@ Angular 因全家桶（Router+Forms+HTTP+DI）基础更重——但 zoneless 去
 zoneless 下 effect 的执行时机：signal 变 → effect 在当前微任务结束后异步执行 → 不阻塞渲染。
 
 ```ts
+// 目的：afterNextRender—只在浏览器执行、SSR 跳过，用于接第三方 DOM 库
 // 只在浏览器执行（SSR 跳过）
 afterNextRender(() => {
-  // 操作第三方 DOM 库（ECharts 初始化等）
+  // 操作第三方 DOM 库（ECharts 初始化等）——确定不在服务端跑
 });
+// ✅ afterNextRender 天然跳过 SSR，无需手写 isPlatformBrowser 判断
+// ❌ 直接构造函数里初始化 ECharts→SSR 端无 document，ReferenceError 崩溃
 ```
 
 `untracked(() => ...)` 在 computed/effect 内读取 signal 但不建立依赖 → 该 signal 变不触发重算。

@@ -36,19 +36,27 @@ HTTP 请求本身无法可靠告诉服务端"用户浏览器地址栏的真实 U
 adapter-node 产物天然适合"构建阶段全量依赖、运行阶段只留生产"：
 
 ```dockerfile
+# 目的：多阶段构建—build 层全量依赖编译，runtime 层只留生产依赖 + build 产物
 FROM node:20 AS build
 WORKDIR /app
 COPY . .
-RUN npm ci && npm run build          # 全量依赖构建
+# ✅ 全量依赖（含 dev 里的 vite/kit）才能产出构建产物
+RUN npm ci && npm run build
 
 FROM node:20 AS runtime
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit dev                 # 只装生产依赖
+# ✅ 只装生产依赖：SSR 外部化的包必须在 dependencies，否则运行时找不到
+RUN npm ci --omit dev
+# ✅ 只拷 build 产物，不带源码与 dev 依赖冗余
 COPY --from=build /app/build ./build
+# ✅ ORIGIN 运行时注入（同源镜像多环境复用）；不设则表单 action 撞 Cross-site 误判
 ENV ORIGIN=https://my.site NODE_ENV=production
+# ✅ EXPOSE 仅文档性，真正端口由 PORT 环境变量决定
 EXPOSE 3000
 CMD ["node", "build"]
+# ❌ 把 ORIGIN 烤进 build 期 ENV → 同一镜像 staging/prod 换域名就得重新构建
+# ❌ runtime 层漏装 --omit dev 依赖（只拷 build 就跑）→ 外部化的 dependencies 全缺失，启动即 MODULE_NOT_FOUND
 ```
 
 要点：①运行镜像**只 `--omit dev`**（前提是你的 SSR 外部化依赖都在 `dependencies`）；②`ORIGIN` 等**运行时**注入而非构建期烤死（同一镜像多环境复用）；③`EXPOSE` 只是文档性、真正端口靠 `PORT`；④precompress 默认 true 已产 `.br/.gz`，反代直接 serve 省 CPU（Node 单线程，压缩尽量交给反代）。

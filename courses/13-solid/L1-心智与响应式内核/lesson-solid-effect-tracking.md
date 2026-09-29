@@ -7,29 +7,31 @@
 Solid 的响应内核可以用一个"观察者模式"最小模型讲清（官方 fine-grained reactivity 一文正是这么演示的）：signal 维护一个**订阅者集合**，effect 在"跑的时候把当下读到的 signal 都把自己登记进去"。核心三步：
 
 ```js
-let currentSubscriber = null;
+// 目的：手搓最小响应系统—signal 维护订阅集，effect 同步跑回调时把读到的 signal 都登记自己
+let currentSubscriber = null;   // ✅ 全局"当前正在追踪的订阅者"指针，effect 跑前置成自己
 
 function createSignal(initialValue) {
   let value = initialValue;
-  const subscribers = new Set();
+  const subscribers = new Set();          // ✅ 谁读过这个 signal 就存进来
   function getter() {
-    if (currentSubscriber) subscribers.add(currentSubscriber); // 读时登记当前订阅者
+    if (currentSubscriber) subscribers.add(currentSubscriber); // ✅ 读时登记当前订阅者（建立依赖边的关键一句）
     return value;
   }
   function setter(newValue) {
-    if (value === newValue) return;            // 值相等短路
+    if (value === newValue) return;            // ✅ 值相等短路：没变就不惊动任何人
     value = newValue;
-    for (const s of subscribers) s();         // 写时只通知订阅过它的
+    for (const s of subscribers) s();          // ✅ 写时只通知订阅过它的，不牵连无关 effect
   }
   return [getter, setter];
 }
 
 function createEffect(fn) {
-  const prev = currentSubscriber;              // 存回去以支持嵌套
+  const prev = currentSubscriber;              // ✅ 存回旧指针以支持嵌套 effect（跑完要还原）
   currentSubscriber = fn;
-  fn();                                        // 同步跑：这期间读到的 signal 都订阅上
-  currentSubscriber = prev;                    // 跑完立刻注销
+  fn();                                        // ✅ 同步跑：这期间读到的 signal 都订阅上——依赖全靠这一段收集
+  currentSubscriber = prev;                    // ✅ 跑完立刻注销：之后再读（如异步）不再被追踪
 }
+// ❌ 若把注销留到 fn() 的异步回调之后 → 追踪窗口被无限拉长，无关 signal 也被误订阅（Solid 恰恰同步即注销）
 ```
 
 看懂这五行 `createEffect`，就看懂了 Solid：**依赖是"回调同步执行期间读到的 signal"决定的**，不多不少。这也解释了上一关的"读要 `count()`"——正是 getter 里那句 `subscribers.add(currentSubscriber)` 在建立边。
@@ -39,11 +41,14 @@ function createEffect(fn) {
 `createEffect` 登记 `currentSubscriber` → 跑 `fn()` → 注销，是**线性同步**完成的。异步回调发生时无人在追踪：
 
 ```js
+// 目的：异步读落在追踪窗口之外—effect 同步跑完就注销，setTimeout 回调里没人被追踪
 createEffect(() => {
   setTimeout(() => {
     console.log(count());   // ❌ 不会被追踪：effect 早已跑完注销，此时 currentSubscriber 为 null
-  }, 1000);
+  }, 1000);                 // ❌ count 之后变化也不会重跑本 effect（订阅从没建立）
 });
+// ✅ 修法一：on(count, ...) 显式声明依赖，不靠同步自动收集
+// ✅ 修法二：把异步本身做成 createResource（L5），resource 自己是可追踪的 signal
 ```
 
 同理，在 effect 里 `await` 之后再读 signal，那次读也在追踪窗口之外。官方给的解药有两类：一是**用 `on` 显式声明依赖**（不靠自动收集），二是**用 `createResource`** 把异步本身做成可追踪的 signal（L5）。记牢：**自动追踪只覆盖同步执行段**。
@@ -67,15 +72,18 @@ Solid 还有一个更贴渲染的变体 `createRenderEffect`（在 DOM 更新阶
 示例：
 
 ```js
+// 目的：三个追踪开关纠偏"追踪多了/追不到"—batch 合并通知、untrack 读而不订阅、on 只认显式依赖
 import { batch, untrack, on, createEffect } from "solid-js";
 
-// batch：两改一通知
+// ✅ batch：两改一通知—setA/setB 合并，末尾一次性传播，削减中间态
 batch(() => { setA(1); setB(2); });
 
-// untrack：读 b 但不因 b 变化而重跑本 effect
+// ✅ on(a, fn)：只按 a 触发重跑；fn 里 untrack(b) 读 b 的当下值却不因 b 变化重跑
 createEffect(on(a, (aVal) => {
-  console.log(aVal, untrack(b));   // a 变才跑；b 只被读一下
+  console.log(aVal, untrack(b));   // a 变才跑；b 只被读一下不入依赖
 }));
+// ❌ 忘了 untrack 直接 console.log(aVal, b()) → b 也成了依赖，b 一变这 effect 就重跑（本只想随 a 动）
+// ❌ on 默认会立即跑一次；想首跑不执行（只在变化后跑）传第三参 { defer: true }
 ```
 
 经验法则：**默认信任自动追踪**，只在"追踪多了（过度订阅）"或"追踪不到（异步）"时，才用这三个工具精确纠偏。滥用 untrack 往往是没想清楚依赖图。

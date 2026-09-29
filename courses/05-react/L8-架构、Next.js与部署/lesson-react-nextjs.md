@@ -45,17 +45,19 @@ app/
 ## 四、Server vs Client Components
 
 ```tsx
+// 目的：默认 Server Component 在服务器渲染、可 async 直取数据；只有交互部分标 'use client'
 // 默认是 Server Component：在服务器渲染，可 async 直接取数、代码不进客户端包
 async function Page() {
-  const posts = await db.query();          // 直接访问数据源
+  const posts = await db.query();          // ✅ 直接在服务器上 await 取数（密钥/SQL 不外泄、不进客户端包）
   return <List posts={posts} />;
 }
 
-'use client';                              // 需要交互/hooks/浏览器 API 才标
+'use client';                              // 需要交互/hooks/浏览器 API 才标（文件顶第一个语句）
 function LikeButton({ id }) {
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState(false);      // 有 state → 必须是 Client Component
   return <button onClick={() => setOn(x => !x)}>❤</button>;
 }
+// ❌ 在 Server Component（无 'use client'）里用 useState/onClick → 报错 "You're importing a component that needs useState... but the parent is a Server Component"（要么包进 'use client' 子组件，要么整文件标 'use client'）
 ```
 - **Server Component**：默认，只在服务器跑——可 `async/await` 直连数据库/文件、密钥不外泄、产物不进浏览器 → 客户端 bundle 更小；
 - **Client Component**（`'use client'`）：有 state/effects/事件/浏览器 API；其**子树也在客户端**；

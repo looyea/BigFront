@@ -27,17 +27,22 @@
 
 1. **同步登记**：系统"登记订阅者 → 运行函数 → 注销订阅者"是线性同步完成的。所以：
    ```ts
+   // 目的：同步登记本质—异步回调里读信号不建依赖
    createEffect(() => {
-     setTimeout(() => console.log(count()), 1000); // ❌ count 不会被追踪
+     setTimeout(() => console.log(count()), 1000); // ❌ count() 在定时器里读，此刻已无 currentSubscriber → 不被追踪
    });
+   // ✅ 真需要异步里依赖变化：用 createEffect(on(count, c => …)) 显式声明依赖
    ```
    等 setTimeout 回调真正跑时，已没有登记的 subscriber——**异步里读信号默认不建立依赖**（要手动用 `on` 指定依赖）。
 2. **动态依赖集**：只有"本次实际执行到的读取"才成为依赖。官方温度例子（`createMemo` 早返回）最能说明：
    ```ts
+   // 目的：动态依赖集—只有本次实际执行到的读取才成为依赖（早返回会改变依赖集）
    const displayTemperature = createMemo(() => {
-     if (!displayTemp()) return "Temperature display is off"; // 关掉时不读 temperature/unit
+     if (!displayTemp()) return "Temperature display is off"; // ✅ 关掉时提前 return，本次不读 temperature/unit
      return `${temperature()} degrees ${unit()}`;
    });
+   // ✅ displayTemp 为 false 时 setUnit(…) 不触发重算（unit 当前不是依赖）；重新打开才纳入
+   // ❌ 误以为依赖在声明时就固定→ 其实随每次执行路径动态变化，这一支没读的就不是依赖
    ```
    `displayTemp` 为 false 时，改 `unit` **不会**触发重算（它当前不是依赖）；重新打开才纳入。
 
@@ -55,11 +60,14 @@
 ## 五、嵌套 effect 是相互独立的
 
 ```ts
+// 目的：嵌套 effect 相互隔离—内层读的信号不会登记为外层依赖
 createEffect(() => {
   console.log("Outer starts");
-  createEffect(() => console.log(count())); // 内层订阅 count
+  createEffect(() => console.log(count())); // ✅ 内层订阅 count，count 变只重跑内层
   console.log("Outer ends");
 });
+// ✅ count() 变化只让内层重跑、不碰外层（外层只跑一次），强制每个 effect 彼此独立
+// ❌ 指望内层读 count 会让外层也订阅 count → 不会，内外层依赖隔离，外层跟 count 无关
 ```
 **内层 effect 里读的信号不会登记为外层的依赖**；`count` 变化只让内层重跑、不碰外层。这强制每个 effect 彼此独立，避免意外耦合。
 

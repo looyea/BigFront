@@ -88,6 +88,7 @@ type N = MyNonNullable<string | null | undefined>;  // string
 
 // ReturnType：提取函数返回类型
 type MyReturnType<T extends (...a: any) => any> = T extends (...a: any) => infer R ? R : never;
+type RT = MyReturnType<(n: number) => Promise<string>>;   // Promise<string>（infer 挖出 R）
 ```
 
 分发时"匹配到的成员被替换为 `never`"，`never` 在联合里等于"消失"，于是 `Exclude` 实现"减法"、`Extract` 实现"交集"。这就是联合类型运算的本质（呼应 ts-union 第 10 题）。

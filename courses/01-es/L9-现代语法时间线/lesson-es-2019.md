@@ -13,6 +13,7 @@
 ## 二、`flat` / `flatMap`：数组扁平化
 
 ```js
+// 目的：flat 按深度拍平（默认 1）、Infinity 全拍；flatMap = map 后拍一层
 [1, [2, [3, [4]]]].flat();        // [1, 2, [3, [4]]]   默认深度 1
 [1, [2, [3, [4]]]].flat(Infinity); // [1, 2, 3, 4]       全拍平
 [1, , 3].flat();                   // [1, 3]             ⚠️ 会剔除空洞
@@ -21,10 +22,13 @@
 
 **`flatMap` 的杀手用例**——一个元素映射成多个 / 零个：
 ```js
+// 目的：flatMap 杀手用例—一元素映射成多个/零个（返回 [] 即丢弃）
 // 分词：一句话 → 多个词
-sentence.split(' ').flatMap(w => w.split(','));   // 逗号再拆
+const sentence = 'a,b c';
+sentence.split(' ').flatMap(w => w.split(','));   // ['a','b','c']（逗号再拆）
 // 过滤式映射：返回 [] 就等于"丢弃这个"
-items.flatMap(i => i.valid ? [i.value] : []);
+const items = [{valid:true,value:1},{valid:false,value:2},{valid:true,value:3}];
+items.flatMap(i => i.valid ? [i.value] : []);   // [1, 3]
 ```
 
 **陷阱**：
@@ -39,6 +43,7 @@ items.flatMap(i => i.valid ? [i.value] : []);
 ## 三、`Object.fromEntries`：entries 的逆运算
 
 ```js
+// 目的：fromEntries 把键值对数组回聚成对象（entries 的逆运算）
 const entries = [['a', 1], ['b', 2]];
 Object.fromEntries(entries);            // { a: 1, b: 2 }
 
@@ -49,9 +54,10 @@ const obj = Object.fromEntries(
 );
 
 // 过滤对象属性
+const user = { name: 'Ann', pwd: 'secret' };
 Object.fromEntries(
   Object.entries(user).filter(([k]) => k !== 'pwd')
-);
+);   // { name: 'Ann' }（剔掉 pwd）
 ```
 
 `fromEntries` 让「对象 ↔ 键值对数组 ↔ Map」三态转换形成闭环（呼应 [es-map-set](es-map-set.md)、[es-object-api](es-object-api.md)）。
@@ -61,6 +67,7 @@ Object.fromEntries(
 ## 四、可选 catch 绑定
 
 ```js
+// 目的：可选 catch 绑定——不关心错误对象时省掉形参，避免 no-unused-vars 告警
 try { risky(); }
 catch {            // ✅ 不关心错误对象时，省掉形参
   fallback();
@@ -75,6 +82,7 @@ catch {            // ✅ 不关心错误对象时，省掉形参
 ## 五、`Symbol.description`（只读）
 
 ```js
+// 目的：Symbol.description 只读拿到干净的符号名
 const s = Symbol('myToken');
 s.description;      // 'myToken'（ES2019 前只能 String(s) === 'Symbol(myToken)'）
 Symbol().description; // undefined
@@ -87,6 +95,7 @@ Symbol().description; // undefined
 ## 六、字符串修剪改名：`trimStart` / `trimEnd`
 
 ```js
+// 目的：trimStart/trimEnd 单侧修剪（取代旧别名 trimLeft/trimRight）
 '  hi  '.trimStart();  // 'hi  '（旧别名 trimLeft）
 '  hi  '.trimEnd();    // '  hi'（旧别名 trimRight 保留兼容）
 ```

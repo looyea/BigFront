@@ -17,18 +17,21 @@ GET /articles?page=2&limit=20
 ```
 
 ```js
-const page = Math.max(1, +req.query.page || 1);
-const limit = Math.min(100, Math.max(1, +req.query.limit || 20));  // 上限保护
-const skip = (page - 1) * limit;
+// 目的：offset/limit 分页—页码换算 skip，并发取列表+总数，上限保护
+const page = Math.max(1, +req.query.page || 1);                       // ✅ 非法/缺省兜到第 1 页
+const limit = Math.min(100, Math.max(1, +req.query.limit || 20));      // ✅ 夹在 1~100，防 limit=999999 打爆
+const skip = (page - 1) * limit;                                       // ✅ 偏移量
 
-const [items, total] = await Promise.all([
+const [items, total] = await Promise.all([                             // ✅ 列表与计数并发，省一次串行等待
   Article.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
   Article.countDocuments(),
 ]);
 res.json({
   data: items,
-  meta: { page, limit, total, totalPages: Math.ceil(total / limit), hasMore: skip + items.length < total },
+  meta: { page, limit, total, totalPages: Math.ceil(total / limit), hasMore: skip + items.length < total },  // ✅ 分页信息放 meta
 });
+// ❌ 不做 limit 上限 → 客户端传 limit=1000000 → 一次拉全表 OOM/慢查询
+// ❌ 深分页 skip 越大越慢（DB 扫描并丢弃前 skip 行）→ 应改游标分页
 ```
 
 - 优点：实现简单、可跳任意页（页码导航）、total 已知。
@@ -46,23 +49,25 @@ GET /articles?cursor=eyJpZDoiMTIzIn0&limit=20
 ```
 
 ```js
-// cursor 编码了上一页末条的排序键（如 createdAt + _id）
+// 目的：游标分页—用上页末条的排序位置定位，走索引无 skip，多取一条探 hasMore
+// ✅ cursor 编码了上一页末条的排序键（如 createdAt + _id）
 const { createdAt, id } = decodeCursor(req.query.cursor);
 
 const filter = req.query.cursor
-  ? { $or: [{ createdAt: { $lt: createdAt } },
-            { createdAt, _id: { $lt: id } }] }        // 严格在游标之后
-  : {};
+  ? { $or: [{ createdAt: { $lt: createdAt } },            // ✅ 严格在游标之后（同时间再比 _id）
+            { createdAt, _id: { $lt: id } }] }
+  : {};                                                    // ✅ 首页无 cursor → 不过滤
 
 const items = await Article.find(filter)
-  .sort({ createdAt: -1, _id: -1 })
-  .limit(limit + 1);          // 多取一条判断 hasMore
+  .sort({ createdAt: -1, _id: -1 })                        // ✅ 排序必须与游标条件同序
+  .limit(limit + 1);          // ✅ 多取一条判断 hasMore
 
-const hasMore = items.length > limit;
-const data = hasMore ? items.slice(0, limit) : items;
-const nextCursor = data.length ? encodeCursor(data[data.length - 1]) : null;
+const hasMore = items.length > limit;                       // ✅ 取到 limit+1 说明还有
+const data = hasMore ? items.slice(0, limit) : items;        // ✅ 只回 limit 条，多取那条丢弃
+const nextCursor = data.length ? encodeCursor(data[data.length - 1]) : null;  // ✅ 末条作下页游标
 
 res.json({ data, meta: { nextCursor, hasMore, limit } });
+// ❌ 排序键不唯一（仅 createdAt）→ 并列记录会重复/漏项，必须追加 _id 打破并列
 ```
 
 - 优点：**性能稳定**（用索引 `WHERE (createdAt,_id) < (...)` 直接定位，无 SKIP 扫描）；翻页一致（不受中间插入影响）；适合**无限滚动 / feed 流**。
@@ -85,16 +90,18 @@ GET /products?sort=price,-rating       # 先价格升序，再评分降序
 ```
 
 ```js
+// 目的：把 'a,-b' 排序串编译成 {a:1,b:-1}，仅白名单字段生效（防注入）
 function buildSort(sortStr = '-createdAt', allowed = ['createdAt', 'price', 'rating', 'name']) {
-  if (!sortStr) return { createdAt: -1 };
+  if (!sortStr) return { createdAt: -1 };                       // ✅ 缺省按创建时间降序
   const sort = {};
   for (const field of sortStr.split(',')) {
-    const dir = field.startsWith('-') ? -1 : 1;
+    const dir = field.startsWith('-') ? -1 : 1;                 // ✅ '-' 前缀=降序
     const key = field.replace(/^-/, '');
-    if (allowed.includes(key)) sort[key] = dir;   // 白名单！防注入
+    if (allowed.includes(key)) sort[key] = dir;                 // ✅ 白名单！不在名单的字段直接忽略
   }
-  return Object.keys(sort).length ? sort : { createdAt: -1 };
+  return Object.keys(sort).length ? sort : { createdAt: -1 };    // ✅ 全非法时回退默认排序
 }
+// ❌ 不加白名单直接把 req.query.sort 塞进 .sort() → 用户可排序隐藏字段（内部权重/他人数据）→ 信息泄露/性能攻击
 ```
 
 **必须白名单**——直接把 `req.query.sort` 塞进 `.sort()` → 用户可排序隐藏字段（如内部权重、其他用户数据）→ 信息泄露/性能攻击。
@@ -114,21 +121,24 @@ GET /orders?created_after=2026-01-01&sort=-total
 ```
 
 ```js
+// 目的：把 query 拼成 Mongo 查询对象—逐字段取具体值，防 NoSQL 注入
 function buildFilter(q) {
   const f = {};
-  if (q.status) f.status = q.status;                        // 等值
-  if (q.price_gte || q.price_lte) {                         // 范围
+  if (q.status) f.status = q.status;                        // ✅ 等值（值作数据处理）
+  if (q.price_gte || q.price_lte) {                         // ✅ 范围
     f.price = {};
-    if (q.price_gte) f.price.$gte = +q.price_gte;
+    if (q.price_gte) f.price.$gte = +q.price_gte;            //   强制转数防字符串比较
     if (q.price_lte) f.price.$lte = +q.price_lte;
   }
-  if (q.tags) f.tags = { $in: q.tags.split(',') };         // 多值 OR
-  if (q.q) f.$or = [                                       // 模糊（注意性能）
+  if (q.tags) f.tags = { $in: q.tags.split(',') };          // ✅ 多值 OR（$in 数组）
+  if (q.q) f.$or = [                                        // ⚠️ 模糊（大表有性能问题）
     { title: { $regex: q.q, $options: 'i' } },
     { summary: { $regex: q.q, $options: 'i' } },
   ];
   return f;
 }
+// ❌ 把整个 req.query 直接展开进 filter → 用户传 status[$gt]= 可构造 $gt 空串绕过等值（NoSQL 注入）；逐字段取具体值才安全
+// ❌ $regex 不转义特殊字符 → 传 .*.*.* 触发灾难回溯 ReDoS；大表模糊应用全文索引而非 regex
 ```
 
 安全要点：
@@ -141,15 +151,17 @@ function buildFilter(q) {
 ## 六、复合查询参数（zod 统一校验，呼应 exp-validation）
 
 ```js
+// 目的：用 zod 统一兜住所有查询参数—类型转换+上限保护+枚举限制一步到位
 const ListQuery = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),              // ✅ '2' → 2
+  limit: z.coerce.number().int().min(1).max(100).default(20),   // ✅ 硬上限 100
   sort: z.string().optional(),
-  status: z.enum(['draft', 'published']).optional(),
-  q: z.string().max(100).optional(),
+  status: z.enum(['draft', 'published']).optional(),           // ✅ 枚举非法直接 400
+  q: z.string().max(100).optional(),                           // ✅ 防超长搜索串
   price_gte: z.coerce.number().optional(),
   price_lte: z.coerce.number().optional(),
 });
+// ❌ limit 不设 .max() → 校验形同虚设，仍可被 limit=999999 打穿
 ```
 
 用 schema 兜住所有查询参数 → 类型转换 + 上限保护 + 枚举限制一步到位。

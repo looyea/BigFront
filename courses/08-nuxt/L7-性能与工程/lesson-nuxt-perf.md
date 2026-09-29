@@ -22,13 +22,15 @@ SSR 每请求现场建 app、跑数据、渲染 HTML（呼应 nuxt-lifecycle 第
 **① 用对缓存，别让每个请求都打 DB。** route rules 是声明式的总闸（呼应 nuxt-render-modes）：
 
 ```ts
+// 目的：杠杆①用对缓存——声明式总闸，别让每个请求都现打 DB
 routeRules: {
-  '/':            { prerender: true },             // 构建期出 HTML，零运行时成本
-  '/docs/**':     { swr: 3600 },                   // 陈旧即回源，命中即秒回
-  '/blog/[id]':   { isr: 86400 },                  // CDN 增量静态再生
-  '/api/**':      {},                              // 交给 handler 级缓存
-  '/app/**':      { headers: { 'Cache-Control': 'private, no-store' } }, // 私有页禁缓存
+  '/':            { prerender: true },             // ✅ 构建期出 HTML，零运行时成本
+  '/docs/**':     { swr: 3600 },                   // ✅ 陈旧即回源，命中即秒回
+  '/blog/[id]':   { isr: 86400 },                  // ✅ CDN 增量静态再生，一天一刷
+  '/api/**':      {},                              // ✅ 不在 HTML 层缓存，交给 handler 级 defineCachedEventHandler
+  '/app/**':      { headers: { 'Cache-Control': 'private, no-store' } }, // ✅ 私有/带身份页禁缓存，防串号
 }
+// ❌ 给读了 cookie 的 /app/** 也配 swr/isr → A 用户的 HTML 被缓存喂给 B（性能不能以缓存泄露为代价）
 ```
 
 **② handler 级缓存**用 `defineCachedEventHandler`（呼应 nuxt-server-routes），把热点接口结果放 Redis/unstorage，多实例共享。

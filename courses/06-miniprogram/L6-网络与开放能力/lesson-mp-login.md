@@ -32,26 +32,30 @@
 ```
 
 ```js
+// 目的：端上只拿临时 code 交给后端，自己绝不碰 openid/session_key
 // 小程序端
 wx.login({
   success({ code }) {           // 临时凭证，5 分钟有效、只能用一次
     api.auth.login({ code }).then(({ token }) => {
-      wx.setStorageSync('token', token);
+      wx.setStorageSync('token', token);      // ✅ 存后端签发的自定义 token
       getApp().globalData.token = token;
     });
   },
 });
+// ❌ 把 code 拿到前端自己调 jscode2session → 需暴露 AppSecret，密钥泄漏=可伪造任意用户（官方禁止）
 ```
 
 ```js
+// 目的：后端拿 code+AppSecret 调 code2session 换 openid/session_key，再签自己的 JWT
 // Express 端（09 包技能全用上，呼应 exp-auth）
 // 注意：AppSecret 只存服务端环境变量/配置中心（node-config），泄了=可伪造任意用户
 const r = await fetch(`https://api.weixin.qq.com/sns/jscode2session?appid=${APPID}`
   + `&secret=${SECRET}&js_code=${code}&grant_type=authorization_code`);
-const { openid, session_key, unionid } = await r.json();
+const { openid, session_key, unionid } = await r.json();   // ✅ session_key 只留服务端，不下发前端
 // 错误码 40029(无效code)/45011(频率限制) 要处理；-1 系统繁忙可重试一次
-const user = await Users.upsertByOpenid(openid, unionid);
+const user = await Users.upsertByOpenid(openid, unionid);   // ✅ 把业务 uid 与 openid 绑定
 res.json({ token: signJwt({ uid: user.id }) });
+// ❌ 把 openid/session_key 一并 res 给前端 → session_key 泄漏，后续解密用户数据形同虚设
 ```
 
 **高频追问：拿到 code 能不能直接换 openid 在前端做？** 技术上 wx.request 就能调那个接口，但只要域名进白名单谁都摸得到——**AppSecret 会泄、session_key 会泄**，官方文档明确禁止。"code 放前端换、token 回前端存"的每个环节都对应一条泄露面分析，这就是 exp-security 的边界思维。

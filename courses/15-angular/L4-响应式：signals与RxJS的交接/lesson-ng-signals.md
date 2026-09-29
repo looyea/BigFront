@@ -5,22 +5,25 @@
 ## 一、Angular signals 三件套：signal / computed / effect
 
 ```ts
+// 目的：Angular signals 三件套——signal 存值 / computed 惰性派生 / effect 副作用
 import { signal, computed, effect } from '@angular/core';
 
 // signal：可写值容器
-const count = signal(0);
-count();          // 读 → 0
-count.set(5);     // 写 → 5
-count.update(c => c + 1);  // 增量 → 6
+const count = signal(0);      // 初始 0，返回 WritableSignal<number>
+count();          // 读 → 0（调用式，读即建依赖）
+count.set(5);     // 写 → 5（直接赋值）
+count.update(c => c + 1);  // 增量 → 6（基于旧值算新值）
 
 // computed：惰性派生（只读、自动追踪源）
-const doubled = computed(() => count() * 2);
-doubled();        // 12（源变时自动重算）
+const doubled = computed(() => count() * 2);   // 源 count 变时自动重算
+doubled();        // 12（惰性：只在被读且源脏时才算）
 
 // effect：副作用（写后执行，不在构造上下文里）
 effect(() => {
-  console.log('count is', count());  // 读即订阅
+  console.log('count is', count());  // 读即订阅：count 变会重跑本 effect
 });
+// ✅ count() 读即订阅、computed 惰性重算、effect 自动追踪依赖
+// ❌ 用 count = 5 直接重新赋值变量→旧的 signal 容器被丢，通知链断裂；须用 set/update/patch
 ```
 
 与 14 包 tc39-core 的关系：Angular signal/computed/effect 与 TC39 提案**同名同语义但不同实现**——Angular 在提案 Stage 1 时就独立写完了（v17 实验 v18 stable），从未用过提案 polyfill。
@@ -28,11 +31,14 @@ effect(() => {
 ## 二、写保护模型：ReadonlySignal vs WritableSignal
 
 ```ts
-const _count = signal(0);             // WritableSignal<number>
-const count = _count.asReadonly();    // ReadonlySignal<number>
+// 目的：写保护模型——WritableSignal vs ReadonlySignal 两层
+const _count = signal(0);             // WritableSignal<number>：内部持有，能写
+const count = _count.asReadonly();    // ReadonlySignal<number>：对外暴露，只能读
 
 count.set(10);   // ❌ TS 编译报错：Property 'set' does not exist
 count();         // ✅ 读没问题
+// ✅ asReadonly 在类型层屏蔽写——外部拿到也 set 不了，写只能回内部 action
+// ❌ 图省事直接导出 _count→外部可随意 .set，写保护形同虚设
 ```
 
 **设计意图**：外部只读、内部通过 action 写——L3 服务关的『私有 writable + 公开 asReadonly』模式就是这条规则的组件级应用。v20+ dev mode 还有运行时 guard：`signal.set()` 在已销毁 injector 里调用会 warn。
@@ -40,14 +46,17 @@ count();         // ✅ 读没问题
 ## 三、patch()：对象/数组的增量更新
 
 ```ts
+// 目的：patch()——对象/数组的增量更新，自动深合并+新引用（v18.1+/v19+）
 const state = signal({ user: { name: 'Alice', age: 30 }, items: [1,2,3] });
 
 // 深层更新——不可变但局部 patch（v18.1+ stable）
-state.update(s => ({ ...s, user: { ...s.user, age: 31 } }));
+state.update(s => ({ ...s, user: { ...s.user, age: 31 } }));   // 手写 spread 链：每层都要建新对象
 
 // patch 写法更短（v19+）：
-state.patch({ user: { age: 32 } });
+state.patch({ user: { age: 32 } });   // 深合并到当前值，内部仍产生新引用
 // 等价于把 { user: { age: 32 } } 深合并到当前值——内部仍产生新引用
+// ✅ patch 帮你造新引用，省去手写 spread 地狱，signal 的 === 判定能察觉变化
+// ❌ 直接 state().user.age=32（mutation）→引用没变、=== 判无变化→视图不更新
 ```
 
 **为什么 patch 重要**：signal 用 `===` 判断变化——直接改对象属性（mutation）不触发通知；patch 自动做深合并+新引用创建——省去手写 spread 地狱。与 14 包 sig-mutability 的『不可变是 signal 通知的前提』直接对应。
@@ -55,6 +64,7 @@ state.patch({ user: { age: 32 } });
 ## 四、untracked()：屏蔽读取、不建依赖
 
 ```ts
+// 目的：untracked()——屏蔽读取、不建依赖（依赖白名单）
 const a = signal(1);
 const b = signal(2);
 
@@ -62,6 +72,8 @@ const sum = computed(() => {
   return a() + untracked(() => b());
   // a() 建依赖、b() 不建——b 变了不触发 sum 重算
 });
+// ✅ untracked 里的读取不登记依赖，适合「只想因部分 signal 变化而重算」的白名单场景
+// ❌ 以为 untracked 里的 b() 变化也能触发 sum 重算→恰恰相反，untracked 正是断开这条依赖
 ```
 
 场景：effect 里只想因某些 signal 变化而执行、另一些只读取不追踪——untracked 做白名单。对照 14 包 tc39-control 的 watch/untrack 同概念。
@@ -103,13 +115,16 @@ Solid 的细粒度让 `doubled = createMemo(() => count() * 2)` 只改 doubled �
 ## 八、untracked 与 effect 的 cleanup 签名
 
 ```ts
+// 目的：effect 的 onCleanup 签名——重跑前/销毁时清副作用资源
 const svc = inject(MyService);
 
 effect((onCleanup) => {
-  const id = setInterval(() => svc.tick(), 1000);
+  const id = setInterval(() => svc.tick(), 1000);   // 开定时器（副作用资源）
   onCleanup(() => clearInterval(id));  // effect 重跑前或销毁时清
   // 只有 tick() 里读的 signal 变了才重跑
 });
+// ✅ onCleanup 跟 Solid createEffect 同名同位，防定时器/订阅堆积
+// ❌ 不写 onCleanup→依赖变化时 effect 反复重跑→每次都 setInterval 却不 clear→定时器越堆越密
 ```
 
 v18+ 的 effect 支持 `onCleanup` 回调——与 Solid createEffect 的 `onCleanup` 同名同位（13 包 solid-effect-tracking 学过的概念）。Angular 还有 `effect.debounce()` / `effect.flush()` 等调度选项（v20+）。

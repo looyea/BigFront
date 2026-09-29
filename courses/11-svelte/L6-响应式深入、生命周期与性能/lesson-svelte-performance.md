@@ -17,11 +17,11 @@
 1 万行表格的瓶颈是**1 万个真实 DOM 节点**，不是响应式：
 
 ```svelte
-<!-- 反例:无 key 的 each,中间插删会让后续行就地错位复用,组件状态串位 -->
+<!-- 目的：keyed each 是列表的第一道防线—变化只移动/替换真正变了的行 -->
+<!-- ❌ 无 key 的 each：中间插删会让后续行就地错位复用，组件状态串位、input 值归错人 -->
 {#each rows as r} <Row {r} /> {/each}
 
-<!-- 正例:keyed,变化只移动/替换真正变了的行 -->
-{#each rows as r (r.id)} <Row {r} /> {/each}
+{#each rows as r (r.id)} <Row {r} /> {/each}   <!-- ✅ 按 id 认人：删一行只销毁那一行，其余原位不动 -->
 ```
 
 - **keyed each 是性能问题首先是正确性问题**：无 key 时中间插删会导致组件状态串行、input 值错位（呼应 svelte-template keyed 节、react-lists-keys）。

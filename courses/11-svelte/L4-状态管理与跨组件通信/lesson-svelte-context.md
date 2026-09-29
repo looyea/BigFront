@@ -9,21 +9,25 @@
 ```svelte
 <!-- Ancestor.svelte -->
 <script>
+  // 目的：setContext—祖先在初始化期注入一个跨层可取的值
   import { setContext } from 'svelte';
   let { children } = $props();
-  const theme = $state({ color: 'dark', radius: 8 });
-  setContext('theme', theme);          // 注入
+  const theme = $state({ color: 'dark', radius: 8 });   // ✅ 传 $state 对象→字段是活的
+  setContext('theme', theme);          // ✅ 必须在顶层同步代码里调，不能放 onMount/事件里
 </script>
 <div class="app">{@render children?.()}</div>
+<!-- ❌ 传普通对象 setContext('theme', {color:'dark'}) 且事后改→context 外壳非响应式，不会自动更新 -->
 ```
 
 ```svelte
 <!-- 任意深度的后代 -->
 <script>
+  // 目的：getContext—跨层取用，无 props drilling
   import { getContext } from 'svelte';
-  const theme = getContext('theme');    // 取用,跨层无 drilling
+  const theme = getContext('theme');    // ✅ 读到的是同一个 $state 对象
 </script>
 <div class="card" style="border-radius:{theme.radius}px">颜色：{theme.color}</div>
+<!-- ✅ theme.color 变化时，所有读到它的后代自动更新（信号直达最小集合） -->
 ```
 
 两条铁律：
@@ -39,20 +43,23 @@
 
 ```js
 // theme.js
-export const THEME_KEY = Symbol('theme');
+// 目的：用 Symbol/导出对象作 key—避免字符串命名空间被第三方组件踩名
+export const THEME_KEY = Symbol('theme');   // ✅ 每次 Symbol 唯一，天然防冲突
 ```
 
 ```svelte
 <script>
+  // 目的：用导出的 Symbol key 注入
   import { THEME_KEY } from './theme.js';
-  setContext(THEME_KEY, theme);        // 祖先
+  setContext(THEME_KEY, theme);        // ✅ 祖先用同一 Symbol
 </script>
 ```
 
 ```svelte
 <script>
+  // 目的：用 Symbol key 取用，可给第二参作为取不到时的默认值
   import { THEME_KEY } from './theme.js';
-  const theme = getContext(THEME_KEY, fallback);   // 第二参:取不到时的默认值
+  const theme = getContext(THEME_KEY, fallback);   // ✅ 第二参:取不到时的默认值
 </script>
 ```
 
@@ -67,14 +74,15 @@ TypeScript 圈的经典模式是封装一个 `createContext` 辅助函数（Svel
 ```svelte
 <!-- Form.svelte -->
 <script>
+  // 目的：表单字段组场景—Form 提供“注册+校验”上下文，Input 后代自动接入
   import { setContext } from 'svelte';
   let { children, onsubmit } = $props();
   const fields = new Map();
-  const values = $state({});
+  const values = $state({});   // ✅ $state 对象：响应式内核
   const validate = () => [...fields.values()].every(f => f.check());
   setContext('form', {
-    register: (name, check) => fields.set(name, { check }),
-    values,                       // $state 对象:响应式内核
+    register: (name, check) => fields.set(name, { check }),   // ✅ 子组件报到接口
+    values,                       // 持有 $state 对象，字段级更新
     validate,
   });
 </script>
@@ -86,13 +94,15 @@ TypeScript 圈的经典模式是封装一个 `createContext` 辅助函数（Svel
 ```svelte
 <!-- FormInput.svelte(任意深处) -->
 <script>
+  // 目的：后代 getContext 拿到 Form 上下文，向父“报到”并把值绑进 form.values
   import { getContext } from 'svelte';
   let { name } = $props();
-  const form = getContext('form');
+  const form = getContext('form');   // ✅ 无需逐层传 props
   let el;
-  form.register(name, () => el.checkValidity());
+  form.register(name, () => el.checkValidity());   // ✅ 初始化期注册校验函数
 </script>
-<input bind:this={el} name={name} bind:value={form.values[name]} />
+<input bind:this={el} name={name} bind:value={form.values[name]} />   {/* ✅ 双向绑进 form.values[name] */}
+<!-- ❌ 在事件回调里才 getContext → 铁律一要求初始化期同步调用，晚拿会报错 -->
 ```
 
 同样的注册模式就是 L3 挑战题里 `<Tabs.List>` 路线的内核（子组件 getContext 后向父"报到"）。

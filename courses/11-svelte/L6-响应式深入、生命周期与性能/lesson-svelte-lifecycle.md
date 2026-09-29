@@ -39,15 +39,17 @@ legacy 模式仍可用旧钩子（L10 迁移课细讲），新代码一律 runes
 
 ```svelte
 <script>
+  // 目的：onMount 管一次性逻辑，$effect 的 return 清理接管旧 onDestroy 的活
   import { onMount } from 'svelte';
   let el;
-  onMount(() => { el.focus(); });                 // 一次性:聚焦
+  onMount(() => { el.focus(); });                 // ✅ 只在挂载后跑一次：聚焦（此时 bind:this 已赋值）
 
-  $effect(() => {                                 // 挂载后执行;依赖变化重跑前与销毁时都走清理
+  $effect(() => {                                 // ✅ 挂载后执行；依赖变化重跑前与销毁时都走清理
     const ro = new ResizeObserver((e) => { ... });
     ro.observe(el);
-    return () => ro.disconnect();                 // 重跑前&销毁时都清理
+    return () => ro.disconnect();                 // ✅ 重跑前&销毁时都清理，注册+清理同源不会漏
   });
+  // ❌ 把清理写成外部 ondestroy 风格另起一钩 → 与依赖声明分离，改依赖时最容易忘搬清理
 </script>
 <div bind:this={el}>…</div>
 ```
@@ -59,14 +61,17 @@ legacy 模式仍可用旧钩子（L10 迁移课细讲），新代码一律 runes
 **默认节奏**是微任务 flush：写 state 后立刻读 DOM，读到的还是**旧的**。两种打破方式：
 
 ```js
+// 目的：tick 与 flushSync—默认微任务 flush，要“量刚改完的 DOM”才手动拨钟
 import { tick, flushSync } from 'svelte';
 
 count++;
-await tick();          // 等本次 flush 完成、DOM 已更新(异步,可 await)
-console.log(el.scrollHeight);
+await tick();          // ✅ 等本次 flush 完成、DOM 已更新(异步,可 await)
+console.log(el.scrollHeight);   // ✅ 读到的是新渲染后的高度
 
 count++;
-flushSync(() => {});   // 同步强制执行挂起的 DOM 更新(下一行就能量)
+flushSync(() => {});   // ✅ 同步强制执行挂起的 DOM 更新(下一行就能量)
+// ❌ 写 state 后直接读 DOM（不 tick 不 flushSync）→ 微任务还没 flush，量到旧值
+// ❌ 把 flushSync 当默认习惯处处包 → 批处理优势丢掉，每写一次都同步重排
 ```
 
 选择：**默认永远不需要它们**；只有"量刚改完的 DOM"这类同步测量才动用，且 `flushSync` 滥用会把批处理优势丢掉（对照 React 同名 API、Vue `nextTick`，呼应 svelte-reactivity-internals 第二节）。

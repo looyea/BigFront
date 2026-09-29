@@ -9,20 +9,22 @@
 ## 二、createContext / Provider / useContext
 
 ```jsx
+// 目的：createContext/Provider/useContext—沿 Owner 树把值注入后代，别把 context 当全局袋子
 import { createContext, useContext } from "solid-js";
 
-const ThemeCtx = createContext("light");        // 参数是"没有 Provider 时的默认值"
+const ThemeCtx = createContext("light");        // ✅ 参数是"没有 Provider 时的默认值"
 
 function App() {
   return <ThemeCtx.Provider value="dark">
     <Toolbar/>
-  </ThemeCtx.Provider>;
+  </ThemeCtx.Provider>;   // ✅ value 挂到自己这棵子树，后代就近取用
 }
 
 function Toolbar() {
-  const theme = useContext(ThemeCtx);           // "dark"
+  const theme = useContext(ThemeCtx);           // ✅ 拿到沿树最近的 Provider 值 "dark"
   return <span>{theme}</span>;
 }
+// ❌ 既没 Provider 又没默认值时 useContext 抛错（不是给 undefined）——踩过一次就记住
 ```
 
 - `createContext<T>(defaultValue?)` 返回一个带 `.Provider` 的上下文对象；
@@ -35,21 +37,23 @@ function Toolbar() {
 Solid 的 context value **本身不是响应式的**——它就是原样递给后代。所以正确姿势是**在 value 里放 signal / store / accessor**，让响应式留在 signal 层、context 只负责"把这条 signal 传到深处"：
 
 ```jsx
+// 目的：本地 context 模式核心—把 signal/store 放进 value，共享状态却各消费者细粒度订阅
 const [StoreCtx, StoreProvider] = createStoreContext();   // 概念示意
 
 function StateProvider(props) {
-  const [count, setCount] = createSignal(0);              // 状态建在 Provider 里
+  const [count, setCount] = createSignal(0);              // ✅ 状态建在 Provider 里
   const [todos, setTodos] = createStore([]);
-  const api = { count, setCount, todos, setTodos };
+  const api = { count, setCount, todos, setTodos };       // ✅ 放的是 signal/store 本身，不是快照
   return <ApiCtx.Provider value={api}>{props.children}</ApiCtx.Provider>;
 }
 
-function useApi() { return useContext(ApiCtx); }           // 自定义"取用钩子"
+function useApi() { return useContext(ApiCtx); }           // ✅ 自定义"取用钩子"收口
 
-// 深处组件：
+// 深处组件各自订阅自己读的那条路径：
 const api = useApi();
-<For each={api.todos}>{t => <li>{t.text}</li>}</For>       // 只订阅 todos 这条路径
+<For each={api.todos}>{t => <li>{t.text}</li>}</For>       // ✅ 只订阅 todos，count 变不惊动它
 <button onClick={() => api.setCount(c => c + 1)}>{api.count()}</button>
+// ❌ 若 value 里放 const snapshot = { count: count() }（存了值）→ 之后 setCount 深组件永不更新
 ```
 
 要点：**共享的是 signal/store 本身，不是它们的快照**。每个消费者 `api.count()`、`api.todos[i].text` 各自建立细粒度订阅——`count` 变了不会惊动只读 `todos` 的组件，彻底避开 React 式"Provider 变→全体重渲"。这就是 Ryan 提出的 **Local Context**：一个组件当"自己的状态容器"，把内部 state 通过 context 暴露给子树，配一个 `useXxx` 收口。
@@ -59,6 +63,7 @@ const api = useApi();
 Solid 官方推荐**组合**而非"一个巨型组件塞满配置项"。三种组合手段：
 
 ```jsx
+// 目的：组合优于配置—children 插槽 / render prop / 职责单一小组件，各订各的 signal
 // ① children 插槽（ParentComponent）：结构由父决定
 <Card title="用户">{props.children}</Card>
 
@@ -67,6 +72,7 @@ Solid 官方推荐**组合**而非"一个巨型组件塞满配置项"。三种�
 
 // ③ 拆成职责单一的小组件，各自只订阅自己需要的 signal
 <Toolbar><SearchBox/><ThemeToggle/><UserChip/></Toolbar>
+// ✅ 组件"只执行一次"→多拆一个组件不多一次渲染，只多一个 Owner 节点，拆分近乎零运行时成本
 ```
 
 组件"只执行一次"让拆分**几乎零运行时成本**——多拆一个组件不会多一次渲染，只多一个 Owner 节点。所以大胆拆、按职责拆，别攒大组件。
@@ -76,15 +82,17 @@ Solid 官方推荐**组合**而非"一个巨型组件塞满配置项"。三种�
 React 的 Hook 是带调用顺序魔法规则的专用 API。Solid 里**"可复用逻辑"就是一个普通函数**，只要它在某个 Owner 作用域内被调用（组件体内、`createRoot` 下），里面就能自由 `createSignal`/`createMemo`/`createEffect`：
 
 ```jsx
-function useMouse() {                        // 约定叫 use/create 开头，其实只是普通函数
+// 目的：逻辑复用 = 普通函数（不是带调用顺序魔法的 Hook）—在 Owner 作用域内调用即可自由建响应式
+function useMouse() {                        // ✅ 约定 use/create 开头，其实只是普通函数
   const [pos, setPos] = createSignal({ x: 0, y: 0 });
   createEffect(() => {
     const h = e => setPos({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", h);
-    onCleanup(() => window.removeEventListener("mousemove", h));   // 随 owner 自动回收
+    onCleanup(() => window.removeEventListener("mousemove", h));   // ✅ 随 owner 自动回收，解绑不遗漏
   });
-  return pos;                                // 返回 signal，调用方 pos() 读
+  return pos;                                // ✅ 返回 signal，调用方 pos() 读当下值
 }
+// ❌ 以为能像 React Hook 那样"依赖数组控制重跑"→ 它不靠重渲驱动，靠 signal 订阅 + Owner 回收
 ```
 
 没有"只在顶层调用/依赖数组"的规矩——因为它不靠重渲驱动、靠的是 signal 订阅 + Owner 回收。这也是从 React 迁移时最解压的一处（react-to-solid-migration 会展开）。

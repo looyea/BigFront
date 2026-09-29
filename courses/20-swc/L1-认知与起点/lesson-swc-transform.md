@@ -11,10 +11,13 @@ SWC 的 TypeScript 处理是 `isolatedModules` 式的——它逐文件删类型
 ## 三、JSX 两种 runtime
 
 ```jsonc
+// 目的：JSX 编译策略——automatic 走 jsx-runtime、importSource 可换工厂来源
 "jsc": { "transform": { "react": {
-  "runtime": "automatic",      // React 17+：编译成 import {jsx} from 'react/jsx-runtime'
-  "importSource": "preact"     // 换 JSX 工厂来源（preact/solid 等）
+  "runtime": "automatic",      // React 17+：编译成 import {jsx} from 'react/jsx-runtime'，源码免写 import React
+  "importSource": "preact"     // 换 JSX 工厂来源（preact/solid 等）——没有 React 也能编 JSX
 }}}
+// ✅ automatic + importSource 指到 preact：一套 JSX 语法喂给不同框架
+// ❌ runtime 设 classic 却删了 import React→产物调 React.createElement 但作用域无 React，运行报 ReferenceError
 ```
 
 `automatic` 免写 `import React`；`classic` 仍编译成 `React.createElement`。现代项目默认 automatic。没有 React 也能编 JSX——把 importSource 指到你的框架即可。

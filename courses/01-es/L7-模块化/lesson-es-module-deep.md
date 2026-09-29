@@ -16,6 +16,7 @@ ESM 与 CJS 最本质的差别在**加载模型**。ESM 明确分三步：
 
 **关键点**：**Parsing 与 Evaluation 分离**——这就是为什么 import 会**提升**：
 ```js
+// 目的：import 在链接阶段就提升建立绑定，但顶层代码求值前访问导入绑定会 TDZ
 console.log(x);   // ReferenceError（TDZ），因为 x 在链接阶段就建立了但未求值
 import { x } from './m.js';   // 语法上合法（会被提升）
 ```
@@ -29,6 +30,7 @@ CJS 是**执行到 require 时才递归**——所以循环依赖、条件加载
 **ESM 通过链接阶段解决大部分循环**：a.js ↔ b.js，两个模块都能建立对方的绑定；求值时按入口 DFS，谁先求值谁就看到对方「TDZ 中」的绑定。
 
 ```js
+// 目的：循环依赖——顶层直接读对方，会撞 TDZ 报 ReferenceError
 // a.js
 import { b } from './b.js';
 export const a = 'A';
@@ -47,6 +49,7 @@ console.log('b 里读到 a:', a);
 **改成函数就没事**：
 ```js
 // b.js
+// 目的：把读取推迟到运行时（函数调用时）——届时 a 已求值，不再 TDZ
 import { a } from './a.js';
 export const b = () => a;   // 运行时才读，届时 a 已求值
 ```
@@ -92,6 +95,7 @@ export const b = () => a;   // 运行时才读，届时 a 已求值
 **症状**：库同时发布 ESM 与 CJS 版本；消费者从两条路径引入 → Node 视作**两个不同实例** → 单例状态分裂。
 
 ```js
+// 目的：dual-package hazard—同一库的 ESM/CJS 两份产物被各自加载 → 单例分裂
 // app.mjs
 import store from 'my-lib';   // 加载 my-lib 的 ESM 版本
 store.add(1);
@@ -152,6 +156,7 @@ Node 在 ESM 里 `import { readFile } from 'fs'` 时——fs 是 CJS——**它�
 ## 七、`createRequire`：ESM 里过渡性地用 require
 
 ```js
+// 目的：ESM 里过渡性用 require——createRequire 造一个局部 require 供加载 JSON/旧 CJS 包
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
@@ -167,6 +172,7 @@ const legacy = require('some-old-cjs-package'); // 有些包只有 CJS 且**同�
 
 **Import Attributes**（ES2025 落地，Node 20.10+ 支持）：
 ```js
+// 目的：with { type } 告诉运行时如何解析非 JS 资源（json/text/css）
 import config from './config.json' with { type: 'json' };
 import data from './data.txt' with { type: 'text' };
 import css from './styles.css' with { type: 'css' };   // 浏览器实验
@@ -195,6 +201,7 @@ import css from './styles.css' with { type: 'css' };   // 浏览器实验
 ## 九、顶层 `await`（ES2022）
 
 ```js
+// 目的：顶层 await——依赖本模块的模块会自动等它完成才求值
 // config.js
 export const config = await fetch('/api/config').then(r => r.json());
 

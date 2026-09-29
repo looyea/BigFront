@@ -8,9 +8,12 @@ SWC 里装饰器是**最容易配错**的一块，因为存在两套语义：
 - **TC39 Stage 3（标准装饰器）**：TS 5.0+ 默认方向、无 `experimentalDecorators`。
 
 ```jsonc
+// 目的：开装饰器解析 + legacy 语义——NestJS/Angular 从 tsc 迁 SWC 的必配组合
 "jsc": { "parser": { "syntax": "typescript",
-  "decorators": true          // 开装饰器解析（TS）
-}, "transform": { "legacyDecorator": true, "decoratorMetadata": true } }
+  "decorators": true          // 开装饰器解析（TS 语法层先允许 @ 出现）
+}, "transform": { "legacyDecorator": true, "decoratorMetadata": true } }   // legacy=2017-08 语义；metadata 产出 design:type 供 DI
+// ✅ 三者与 tsconfig 的 experimentalDecorators/emitDecoratorMetadata 取值保持一致，类型与产物两头对齐
+// ❌ 忘开 decoratorMetadata→依赖 design:paramtypes 的 DI 运行时静默失效，注入全 undefined
 ```
 
 `legacyDecorator` + `decoratorMetadata` 这对组合，正是 NestJS/Angular 项目从 tsc 迁 SWC 时必须显式打开的开关（呼应 15-angular）。忘开 `decoratorMetadata`，依赖 `design:type` 元数据的 DI 会在运行时静默失效。

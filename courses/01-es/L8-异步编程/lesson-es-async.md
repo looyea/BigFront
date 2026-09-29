@@ -7,6 +7,7 @@
 ## 一、语法糖解剖
 
 ```js
+// 目的：async/await 写法（下面等价于 Generator+自动执行器）
 async function foo() {
   const a = await p1;
   const b = await p2;
@@ -16,6 +17,7 @@ async function foo() {
 
 **等价于**（Babel regenerator 大致产物）：
 ```js
+// 目的：拆解产物——__async 跑 generator，每个 yield 的 Promise 用 .then 接回 next
 function foo() {
   return __async(function* () {
     const a = yield p1;
@@ -41,6 +43,7 @@ function foo() {
 4. **抛错等价 reject**——不用像回调那样 `reject(err)`。
 
 ```js
+// 目的：async 函数内 throw → 自动变 rejected，用 .catch 接住
 async function f() { throw new Error('boom'); }
 f().catch(e => console.log(e.message));   // boom
 ```
@@ -50,6 +53,7 @@ f().catch(e => console.log(e.message));   // boom
 ## 三、错误处理：**try/catch 复活**
 
 ```js
+// 目的：async 里 try/catch 复活—像同步一样接住 await 抛出的错，finally 收尾
 async function load() {
   try {
     const r = await fetch('/api/user');
@@ -71,6 +75,7 @@ async function load() {
 3. **不 catch 让调用方处理**——库函数默认；
 4. **包装成 tuple**（Go 风格）：
    ```js
+   // 目的：把 Promise 包成 Go 风格 [err, value] 元组，避免大段 try/catch
    const to = (p) => p.then(v => [null, v]).catch(e => [e]);
    const [err, user] = await to(fetchUser());
    ```
@@ -85,17 +90,20 @@ async function load() {
 
 **❌ 反模式：无依赖却串行**
 ```js
+// 目的：❌ 两个独立请求串行等——总耗时 = a + b
 const a = await fetchA();   // 等
 const b = await fetchB();   // 再等——总耗时 = a + b
 ```
 
 **✅ 并行**
 ```js
+// 目的：✅ 无依赖时用 Promise.all 并发——总耗时 = max(a, b)
 const [a, b] = await Promise.all([fetchA(), fetchB()]);   // 总耗时 = max(a, b)
 ```
 
 **✅ 提前发起 + 稍后 await**
 ```js
+// 目的：✅ 先拿 Promise 引用（立即开始），中间做别的，最后才 await 取结果
 const pA = fetchA();     // 立即开始（不等）
 const cfg = await loadConfig();   //  meanwhile A 在跑
 const a = await pA;                // 再取结果
@@ -103,6 +111,7 @@ const a = await pA;                // 再取结果
 
 **⚠️ 有依赖就必须串行**——不要为「并行」而并行：
 ```js
+// 目的：✅ 有数据依赖时必须串行——getOrders 需要 u.id，不能 all
 const u = await getUser();
 const orders = await getOrders(u.id);   // 依赖 u，不能 all
 ```
@@ -114,6 +123,7 @@ const orders = await getOrders(u.id);   // 依赖 u，不能 all
 ## 五、循环里的 async
 
 ```js
+// 目的：循环里异步的六种写法——var 闭包陷阱 / forEach 不等待 / 串行 / 并行 / 有限并发
 // ❌ for 循环 + let i 闭包陷阱
 for (var i = 0; i < 3; i++) {
   setTimeout(async () => { await doIt(i); });   // 全 3
@@ -143,6 +153,7 @@ for (const chunk of chunks(list, 5)) {
 
 消费**异步可迭代对象**（AsyncIterable）：
 ```js
+// 目的：for-await-of 消费异步生成器，逐块串流拿到 1→2→3
 async function* stream() {
   yield 1; await sleep(100);
   yield 2; await sleep(100);
@@ -166,6 +177,7 @@ for await (const x of stream()) console.log(x);   // 1 → 2 → 3
 ## 七、顶层 `await`（ES2022）
 
 ```js
+// 目的：顶层 await（模块顶层直接 await，依赖它的模块自动等完）
 // config.js
 export const cfg = await fetch('/c.json').then(r => r.json());
 ```
@@ -184,6 +196,7 @@ export const cfg = await fetch('/c.json').then(r => r.json());
 ## 八、`await` 一个非 Promise
 
 ```js
+// 目的：await 非 Promise 合法，但内部仍走一次微任务（多等 1 tick）
 const v = await 42;         // 合法，等价 Promise.resolve(42)
 const u = await undefined;  // 合法，v = undefined
 ```
@@ -202,6 +215,7 @@ async function hot() {
 ## 九、Promise 与 async 的错误传播
 
 ```js
+// 目的：throw 在同一 await 链上自动冒泡——只需在链尾 .catch 一次
 async function a() { throw new Error('A'); }
 async function b() { await a(); }
 async function c() { await b(); }

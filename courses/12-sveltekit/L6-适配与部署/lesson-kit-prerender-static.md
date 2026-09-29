@@ -32,12 +32,15 @@ prerender 是**页面选项**，遵循 SvelteKit 页面选项的通用继承律�
 
 ```ts
 // src/routes/blog/[slug]/+page.server.js
+// 目的：entry generator—给必填 [param] 路由喂参数清单，爬虫给不出的 slug 靠数据列出来
 /** @type {import('./$types').EntryGenerator} */
 export const entries = async () => {
-  const posts = await db.listSlugs();          // 可 async：从 CMS/DB 拉清单
-  return posts.map(p => ({ slug: p }));         // 每项是 params 对象
+  const posts = await db.listSlugs();          // ✅ 可 async：从 CMS/DB 拉全部 slug 清单
+  return posts.map(p => ({ slug: p }));         // ✅ 每项是一个 params 对象；据此把 /blog/每个slug 全烧成文件
 };
-export const prerender = true;
+export const prerender = true;                   // ✅ 与 entries 配套：标 true 才会被静态化，漏标则 entries 白列
+// ❌ 只有 <a href="/blog/hello"> 而无 entry generator → 其余 slug 爬虫发现不了，构建报 "marked as prerenderable, but were not prerendered"
+// ❌ 返回 ['a','b'] 字符串数组而非 [{slug:'a'}] 对象数组 → params 形状对不上，[slug] 永远填不进
 ```
 
 `entries` 返回**每个实例的 params 形状数组**，预渲染器据此把 `/blog/hello-world` 等全部烧出来。`'*'` 兜不住必填参数路由，entry generator 才兜得住——这是"动态路由也能全静态化"的关键机制，对应 Next 的 `generateStaticParams`。

@@ -26,31 +26,32 @@ my-pkg/
 ### 1.2 最小 package.json
 
 ```json
+// 目的：一份同时照顾 ESM/CJS/类型/_tree shaking_/环境约束的最小发布配置
 {
   "name": "@scope/my-pkg",
   "version": "0.1.0",
   "description": "一句话描述",
-  "type": "module",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+  "type": "module",                    // .js 默认按 ESM 解释
+  "exports": {                          // 真正的条件入口（优先于 main）
+    ".": {                              // 包名直引 import "@scope/my-pkg"
+      "import": "./dist/index.js",      // ESM 消费方走此
+      "require": "./dist/index.cjs"     // CJS 消费方走此
     },
-    "./utils": {
+    "./utils": {                        // 子路径入口 import "@scope/my-pkg/utils"
       "types": "./dist/utils.d.ts",
       "import": "./dist/utils.js",
       "require": "./dist/utils.cjs"
     }
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./dist/index.cjs",          // 不支持 exports 的老工具兵分
+  "module": "./dist/index.js",         // Rollup/Webpack/Vite 识别的 ESM 入口
   "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md", "LICENSE"],
-  "sideEffects": false,
-  "engines": { "node": ">=18" },
+  "files": ["dist", "README.md", "LICENSE"],  // 白名单：只发这几个，src 不上传
+  "sideEffects": false,                // 告知打包器：未用的导出可安全摇掉
+  "engines": { "node": ">=18" },        // 满源环境不足 18 时 npm 会告警
   "scripts": {
     "build": "tsup src/index.ts src/utils.ts --format esm,cjs --dts --clean",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build"  // publish 前自动重新构建，避免 dist 过期
   },
   "keywords": [],
   "author": "",
@@ -133,17 +134,30 @@ dist/index.d.ts  ← 类型声明
 ### 3.3 手写 vite-plugin-lib 方式
 
 ```ts
-// vite.config.ts
+// 目的：不用 tsup 时，手写 Vite 库模式也能产出 ESM+CJS 双格式
 import { resolve } from 'path';
 import dts from 'vite-plugin-dts';
 
 export default {
   build: {
-    lib: { entry: resolve('src/index.ts'), formats: ['es', 'cjs'], fileName: 'index' },
-    rollupOptions: { external: ['vue'] }
+    lib: { entry: resolve('src/index.ts'), formats: ['es', 'cjs'], fileName: 'index' },  // 一次产出两种格式
+    rollupOptions: { external: ['vue'] }   // vue 不打进包（交给 peerDep），避免重复打包
   },
-  plugins: [dts({ rollupTypes: true })]
+  plugins: [dts({ rollupTypes: true })]    // 生成并合并 .d.ts 类型声明
 }
+```
+
+### 3.4 消费侧引用：✅ 在 exports 内 vs ❌ 未在 exports 声明
+
+```js
+// 目的：exports 一旦声明就是“白名单”，只能引用已列举的入口
+// ✅ 正确：'.' 与 './utils' 都在 exports 里
+import { foo } from '@scope/my-pkg';         // 命中 "." → dist/index.js
+import { trim } from '@scope/my-pkg/utils';  // 命中 "./utils" → dist/utils.js
+
+// ❌ 错误：./helpers 未在 exports 声明 → 即使 src/dist 里有该文件也拒访
+// import { helper } from '@scope/my-pkg/helpers';
+// ❌ Error [ERR_PACKAGE_PATH_NOT_EXPORTED]: Package subpath './helpers' is not defined by "exports"
 ```
 
 ---

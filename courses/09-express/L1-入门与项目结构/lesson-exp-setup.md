@@ -56,7 +56,7 @@ my-api/
 ## 二、app.js / server.js 分离
 
 ```js
-// src/app.js
+// 目的：组装 app——只创建实例、挂中间件与路由、导出，绝不 listen（listen 交给 server.js，测试才能 import 而不占端口）
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -65,36 +65,38 @@ import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
 
-// 全局中间件
-app.use(morgan('dev'));
-app.use(express.json({ limit: '1mb' }));
-app.use(cors({ origin: process.env.CLIENT_URL }));
+// 全局中间件（顺序即执行顺序，见第三节洋葱圈）
+app.use(morgan('dev'));                       // ✅ 每请求打印方法/路径/状态/耗时
+app.use(express.json({ limit: '1mb' }));      // ✅ 解析 JSON body → req.body；限 1mb 防大包打爆内存
+app.use(cors({ origin: process.env.CLIENT_URL }));  // ✅ 只放行白名单源
 
 // 业务路由
-app.use('/api', routes);
+app.use('/api', routes);                      // ✅ 所有 /api/* 转给模块化 router
 
-// 404 兜底
-app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
+// 404 兜底（必须放在所有路由之后！）
+app.use((req, res) => res.status(404).json({ error: 'Not Found' }));  // ✅ 前面都没命中才到这
 
-// 全局错误处理
-app.use(errorHandler);
+// 全局错误处理（四参数签名，放最后）
+app.use(errorHandler);                        // ✅ (err,req,res,next) 接管前面 next(err) 抛出的错误
 
-export default app;
+export default app;                            // ✅ 导出实例供 server.js listen、测试 supertest 直接注入
+// ❌ 404 兜底若写在 app.use('/api',...) 之前 → 每个请求都先命中它返回 404，业务路由永远跑不到
 ```
 
 ```js
-// src/server.js
+// 目的：进程入口——唯一真正 listen 端口的地方，并挂优雅关闭
 import app from './app.js';
 import { PORT } from './config/index.js';
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, () => {   // ✅ 绑定端口开始监听，回调在就绪后打印
   console.log(`Server ready on :${PORT}`);
 });
 
-// 优雅关闭
+// 优雅关闭：收到停止信号时先让 server.close() 处理完在途请求，再退出进程
 process.on('SIGTERM', () => {
-  server.close(() => process.exit(0));
+  server.close(() => process.exit(0));    // ✅ 不再接新连接，等在途请求 drain 完退出（PM2/Docker 停容器发 SIGTERM）
 });
+// ❌ 直接 process.exit(0) 不 close → 在途请求被硬切断，客户端收到连接重置
 ```
 
 **为什么分离**：测试时 `import app from './app.js'` + supertest 不需要真正 listen。
@@ -104,11 +106,13 @@ process.on('SIGTERM', () => {
 ## 三、中间件执行模型（洋葱圈）
 
 ```js
+// 目的：演示洋葱圈——next() 之前=请求下行，next() 之后=响应上行
 app.use((req, res, next) => {
-  console.log('← 请求进来');    // 1
-  next();                       // 交给下一个
-  console.log('→ 响应出去');    // 4（返回后）
+  console.log('← 请求进来');    // 1 下行：请求阶段
+  next();                       // ✅ 交棒给下一个中间件；漏调则请求挂起永无响应
+  console.log('→ 响应出去');    // 4 上行：下游处理完回溯到这里
 });
+// ❌ 忘写 next() 且未 res.end/send → 请求石沉大海、浏览器一直转圈直到超时
 ```
 
 完整顺序（简化）：
@@ -135,65 +139,82 @@ Request → morgan → cors → express.json → auth → route-handler → erro
 ### 4.1 安全
 
 ```bash
+# 目的：安装安全头中间件
 npm i helmet
 ```
 
 ```js
+// 目的：helmet 一键设置一批安全响应头
 import helmet from 'helmet';
-app.use(helmet());  // 设置 CSP/X-Frame-Options/X-Content-Type 等安全头
+app.use(helmet());  // ✅ 自动加 X-Content-Type-Options/X-Frame-Options/CSP 等，缓解点击劫持、MIME 嗅探
+// ❌ helmet 要放最前面；若放在会 res.end 的中间件之后就加不上头
 ```
 
 ### 4.2 CORS
 
 ```bash
+# 目的：安装跨域中间件
 npm i cors
 ```
 
 ```js
+// 目的：配置 CORS 白名单——允许携带凭证时 origin 绝不能写 '*'
 import cors from 'cors';
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://myapp.com'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
+  origin: ['http://localhost:5173', 'https://myapp.com'],  // ✅ 显式白名单，命中才回 Access-Control-Allow-Origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],               // ✅ 预检 OPTIONS 允许的动词
+  credentials: true,                                       // ✅ 允许带 Cookie/Authorization
 }));
+// ❌ origin:'*' 同时 credentials:true → 浏览器直接拒绝带凭证跨域（规范冲突），前端拿不到 Set-Cookie
 ```
 
 ### 4.3 日志
 
 ```bash
+# 目的：安装 HTTP 日志中间件
 npm i morgan
 ```
 
 ```js
+// 目的：按环境切换日志格式——开发详尽、生产机器可解析
 import morgan from 'morgan';
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+// ✅ combined 含 IP/UA/耗时，供 ELK/Datadog 采集；dev 带颜色耗时便于本地看
 ```
 
 ### 4.4 静态文件
 
 ```js
-app.use('/uploads', express.static('public/uploads', {
-  maxAge: '7d',
-  etag: true,
+// 目的：托管静态资源——给 URL 前缀 + 缓存策略
+app.use('/uploads', express.static('public/uploads', {   // ✅ 请求 /uploads/x.png → 映射到磁盘 public/uploads/x.png
+  maxAge: '7d',                                          // ✅ 响应带 Cache-Control:max-age，浏览器/CDN 缓存 7 天
+  etag: true,                                            // ✅ 生成 ETag，支持 304 协商缓存
 }));
+// ❌ 路径参数写成绝对盘符或未部署该目录 → 命中不了文件，回落到底层 404
 ```
 
 ### 4.5 Body 解析
 
 ```js
-app.use(express.json({ limit: '1mb' }));           // JSON body
-app.use(express.urlencoded({ extended: true }));    // form 表单
+// 目的：解析两种请求体——必须在读取 req.body 的路由/handler 之前挂载
+app.use(express.json({ limit: '1mb' }));           // ✅ application/json → 填充 req.body 为对象
+app.use(express.urlencoded({ extended: true }));    // ✅ form 表单提交（application/x-www-form-urlencoded）
+// ❌ 漏挂 express.json → 即使请求带了 JSON，req.body 仍是 undefined，`req.body.name` 直接抛 TypeError
+// ❌ body 超过 limit → 抛 entity.too.large(413)，需在上层 errorHandler 转成友好提示
 ```
 
 ### 4.6 压缩
 
 ```bash
+# 目的：安装响应压缩中间件
 npm i compression
 ```
 
 ```js
+// 目的：gzip/brotli 压缩响应体，省带宽
 import compression from 'compression';
-app.use(compression());  // gzip/brotli 自动压缩响应
+app.use(compression());  // ✅ 客户端 Accept-Encoding 支持时对文本响应压缩（图片等已压缩格式自动跳过）
+// ❌ 放在 res.end 之后或小响应（<1kb 阈值）上不加压缩属正常，非 bug
 ```
 
 ---
@@ -201,26 +222,27 @@ app.use(compression());  // gzip/brotli 自动压缩响应
 ## 五、路由模块化
 
 ```js
-// src/routes/index.js
+// 目的：路由注册中心——把各资源子路由挂到统一前缀，保持 app.js 干净
 import { Router } from 'express';
 import userRoutes from './users.js';
 import productRoutes from './products.js';
 
-const router = Router();
-router.use('/users', userRoutes);
+const router = Router();               // ✅ 独立路由实例，可嵌套 use
+router.use('/users', userRoutes);      // ✅ /api/users/* → 转给 users.js
 router.use('/products', productRoutes);
 export default router;
 ```
 
 ```js
-// src/routes/users.js
+// 目的：users 子路由——只做 URL→handler 映射，逻辑下沉到 controller
 import { Router } from 'express';
 import { getUsers, getUserById } from '../controllers/userController.js';
 
 const router = Router();
-router.get('/', getUsers);
-router.get('/:id', getUserById);
+router.get('/', getUsers);             // ✅ 完整路径 = /api/users（前缀在 index.js 拼接）
+router.get('/:id', getUserById);       // ✅ /api/users/5 → req.params.id === '5'
 export default router;
+// ❌ 这里的 '/:id' 若用 Express4 的 ':id*' 通配语法，v8 会抛 TypeError 拒绝注册
 ```
 
 ---
@@ -228,16 +250,17 @@ export default router;
 ## 六、环境变量管理
 
 ```js
-// src/config/index.js
-import 'dotenv/config';  // npm i dotenv
+// 目的：集中读环境变量——给非敏感项默认值，敏感项留空由启动断言把关
+import 'dotenv/config';  // ✅ 副作用导入：自动加载 .env 到 process.env（npm i dotenv）
 
 export const {
-  PORT = 3000,
+  PORT = 3000,                    // ✅ 非敏感：缺省给默认值
   NODE_ENV = 'development',
-  DB_URL,
+  DB_URL,                         // ❗ 敏感/必填：无默认，取到 undefined 即暴露漏配
   JWT_SECRET,
   CLIENT_URL = 'http://localhost:5173',
 } = process.env;
+// ❌ 忘装/忘引 dotenv → DB_URL、JWT_SECRET 全 undefined，token 用 undefined 密钥签发，鉴权形同虚设
 ```
 
 **规则**：永远从 `process.env` 读取 → 不硬编码 → `.env` 文件加 `.gitignore`。

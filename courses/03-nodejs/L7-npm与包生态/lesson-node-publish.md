@@ -7,6 +7,7 @@
 ## 一、发布前的 package.json
 
 ```jsonc
+// 目的：发包前 package.json 的入口与导出字段——逐个标注它服务哪类消费者
 {
   "name": "my-lib",
   "version": "1.0.0",
@@ -14,11 +15,11 @@
   "main": "./dist/index.cjs",       // 给老 CJS 解析器的兜底入口
   "module": "./dist/index.js",      // 打包器约定（非官方）指向 ESM
   "types": "./dist/index.d.ts",     // TS 类型（呼应 ts-declarations）
-  "exports": { /* 见第三节 */ },
+  "exports": { /* 见第三节 */ },     // 现代条件导出，优先级高于 main
   "files": ["dist", "README.md"],   // 发布白名单（见第五节）
   "sideEffects": false,             // 利于打包器 tree-shaking（呼应 10-vite）
   "engines": { "node": ">=18" },
-  "scripts": { "prepublishOnly": "npm run build && npm test" }
+  "scripts": { "prepublishOnly": "npm run build && npm test" }  // 发布前自动构建+测试
 }
 ```
 
@@ -31,17 +32,21 @@
 `exports` 取代散乱的 `main`/`module`，用**条件映射**给不同环境不同入口，并**锁住未声明的子路径**（封装性）：
 
 ```jsonc
+// 目的：一个包同时向 ESM/CJS/TS 三类消费者各给一个入口，并锁住未声明子路径
 "exports": {
   ".": {
     "types": "./dist/index.d.ts",   // TS 先看（须在最前，呼应 ts-publish）
-    "import": "./dist/index.js",    // ESM 消费者
-    "require": "./dist/index.cjs",  // CJS 消费者
-    "default": "./dist/index.js"
+    "import": "./dist/index.js",    // ESM 消费者（import "my-lib"）
+    "require": "./dist/index.cjs",  // CJS 消费者（require("my-lib")）
+    "default": "./dist/index.js"    // 以上都不匹配时的兜底
   },
-  "./utils": "./dist/utils.js",     // 子路径导出：import "my-lib/utils"
+  "./utils": "./dist/utils.js",     // 子路径导出：允许 import "my-lib/utils"
   "./package.json": "./package.json"
 }
 ```
+
+> ✅ 应用：消费者 `import { x } from "my-lib"` → 命中 `import` 条件拿 ESM；`require("my-lib")` → 命中 `require` 拿 CJS。
+> ❌ 错误用例：一旦声明了 `exports`，`import "my-lib/src/internal.js"`（未声明路径）会报 `ERR_PACKAGE_PATH_NOT_EXPORTED`——这是封装性的体现，内部模块默认不可访问。
 
 - 条件**有顺序**，解析器从上到下取第一个匹配；`types` 放最前否则 TS 可能解析不到；
 - 一旦有 `exports`，`import "my-lib/src/internal.js"` 这类**未声明路径会报错**（好的一面：强制公共 API 边界）。
@@ -53,8 +58,10 @@
 同时提供 ESM 与 CJS 两套构建时，最危险的坑：**同一个包被以两种格式各加载一份**，导致模块内单例/全局状态**出现两份实例**：
 
 ```js
+// 目的：演示 dual package hazard——同一个包被两种格式各加载一份，单例就裂成两个
 // 消费者里既有 import 'x'（ESM）又有 require('x')（CJS）
 // → x 的 ESM 版和 CJS 版是两个不同模块实例，instanceof / 单例 / context 全部失效
+// ❌ 后果：x.getSingleton() !== x.getSingleton()（跨格式），new C() instanceof C === false
 ```
 
 缓解策略：
@@ -73,8 +80,8 @@
 一个 `type:module` 的 ESM 源码，要额外产 CJS（`.cjs`），常见用 **tsup / rollup / esbuild / unbuild**：
 
 ```jsonc
-// tsup 思路：一次产出 .js(ESM) + .cjs(CJS) + .d.ts
-"scripts": { "build": "tsup src/index.ts --format esm,cjs --dts" }
+// 目的：一条命令同时产出 ESM(.js) + CJS(.cjs) + 类型(.d.ts) 三套产物
+"scripts": { "build": "tsup src/index.ts --format esm,cjs --dts" }  // esm,cjs 双格式，--dts 生成声明
 ```
 
 - CJS 文件在 `type:module` 包里**必须用 `.cjs` 后缀**（呼应 node-esm-cjs）；
@@ -95,9 +102,10 @@
 ## 六、发布流程与版本管理
 
 ```bash
+# 目的：一次安全发布的命令序列——先验证产物再版本地、最后发布
 npm login                 # 或 npm adduser（建议用细粒度 access token）
-npm pack --dry-run        # 检查产物
-npm test && npm run build
+npm pack --dry-run        # 检查将发布的文件清单（不真发）
+npm test && npm run build # 发布前确保测过、构建过
 npm version patch         # 改版本号 + 打 git tag（minor/major）
 npm publish --access public   # scoped 包默认私有，公开要显式
 ```

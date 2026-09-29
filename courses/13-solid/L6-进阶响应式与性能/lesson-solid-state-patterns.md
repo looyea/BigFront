@@ -15,7 +15,9 @@
 
 把成组的状态塞进**一个** `createStore`：
 ```ts
-const [state, setState] = createStore({ tasks: [], numberOfTasks: 0 });
+// 目的：用一个 store 收拢成组状态—不再多个 signal 手动同步，一致性由结构保证
+const [state, setState] = createStore({ tasks: [], numberOfTasks: 0 });  // ✅ 点属性读 state.tasks，写用路径 setter
+// ❌ const { tasks } = state 解构→ 拿到当时快照、之后不再响应式更新
 ```
 - 读：`state.tasks`、`state.numberOfTasks`（点属性，**别解构**）；
 - 写：**路径 setter**——`setState("tasks", state.tasks.length, {...})` 追加到数组末尾，`setState("tasks", t => t.id===id, "completed", !v)` 定点改。
@@ -26,11 +28,13 @@ const [state, setState] = createStore({ tasks: [], numberOfTasks: 0 });
 
 要同时改多个字段，别写一堆 `setState`，用 `produce` 直接"变更"草稿：
 ```ts
+// 目的：produce 一次改一个对象的多个字段—无需多行 setState 调用
 import { produce } from "solid-js/store";
-setState("tasks", t => t.id === id, produce((task) => {
+setState("tasks", t => t.id === id, produce((task) => {   // ✅ 先定位到目标 task，再进 produce 改草稿
   task.text = "I'm updated text";
-  task.completed = true;
+  task.completed = true;                                    // ✅ 直接赋值多个属性，合并为一次更新
 }));
+// ❌ 对普通 signal 用 produce→ produce 只适用 store（对象/数组），不针对 Set/Map
 ```
 官方点明 produce 的好处：**无需多次 setStore 调用**就能改一个对象的多个属性（等价于把 `batch` 里的多写合并成一次直观变更）。
 
@@ -41,7 +45,9 @@ setState("tasks", t => t.id === id, produce((task) => {
 - 官方在 effects 页更明确：**尽量别在 effect 里 set 信号**（可能触发额外渲染甚至无限循环），要算新值**用 `createMemo`**。
 
 ```ts
-const completed = createMemo(() => state.tasks.filter((t) => t.completed));
+// 目的：派生值用 memo 算而非存进 state—免去手动同步
+const completed = createMemo(() => state.tasks.filter((t) => t.completed));  // ✅ tasks 变自动重算，无需手动维护
+// ❌ createEffect(() => setState("completedTasks", …)) 把派生值存回 state→ 手动同步易漏 + effect 里 set 可能循环
 ```
 > 反例：`createEffect(() => setState("numberOfTasks", state.tasks.length))`——官方示例用它只为演示"路径写入需追踪作用域"，实际这种能派生的量直接 `state.tasks.length` 或 memo 即可，别绕 effect 去 set。
 
@@ -53,16 +59,20 @@ store 的属性 signal 是**访问时才创建**的。若在组件函数体（�
 
 多层组件传递 state 和函数（prop drilling）会让代码啰嗦、数据流难追。Solid 用 **context**：
 ```ts
+// 目的：把 store 放进 context 的 value，后代按需 useContext 取用，终结 prop drilling
 const TaskContext = createContext();
 // 顶层
 <TaskContext.Provider value={{ state, setState }}>{...}</TaskContext.Provider>
 // 任意后代
 const { state, setState } = useContext(TaskContext);
+// ✅ value 里放的是 store 本体，各消费者按自己读的字段细粒度订阅，state 变不轰炸全树
+// ❌ value 里放 const snapshot = { …展开值 }→ 存了快照，后续 setState 深组件永不更新
 ```
 把 store（或 signal + 动作）放进 Provider 的 value，后代按需 `useContext` 取用——比逐层传 props 干净得多。
 
 工程上更稳的写法是把「建 context + 提供 + 消费」封进一个模块，并在消费处挡掉 `undefined`（`useContext` 的类型带 `| undefined`，没有 Provider 会拿到 undefined）：
 ```ts
+// 目的：封装“建 context + 提供 + 消费”，消费处挡掉 |undefined 并抛错守卫
 const TaskCtx = createContext<ReturnType<typeof createTaskStore>>();
 export const TaskProvider = (props) => {
   const store = createTaskStore();
@@ -70,9 +80,10 @@ export const TaskProvider = (props) => {
 };
 export const useTasks = () => {
   const c = useContext(TaskCtx);
-  if (!c) throw new Error("useTasks 必须在 TaskProvider 内使用");
+  if (!c) throw new Error("useTasks 必须在 TaskProvider 内使用");   // ✅ 比 ! 安全：漏包 Provider 时报可读错而非静默拿 undefined
   return c;
 };
+// ❌ 直接 return useContext(TaskCtx)! 非空断言→ 忘套 Provider 不报错，直到访到 undefined 属性才炸
 ```
 这样状态、动作、共享入口集中在一个文件里，组件只认 `useTasks()`，既防 prop drilling、又不会因为漏包 Provider 而在运行时静默拿到 undefined。
 

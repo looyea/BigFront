@@ -27,6 +27,7 @@
 **规则**：只要**两侧任一**是 string（或 ToPrimitive 后是 string），走字符串拼接；否则走数字相加。
 
 ```js
+// 目的：演示 + 的双重身份——任一侧为 string（或 ToPrimitive 后为 string）就拼接，否则相加
 1 + 2         // 3
 '1' + 2       // '12'
 1 + '2'       // '12'
@@ -57,6 +58,7 @@ undefined + 1 // NaN (undefined → NaN)
 `- * / % ** 位运算 一元 + 一元 -` 全部**只走数字**。
 
 ```js
+// 目的：除 + 外的算术/一元运算符一律先 ToNumber，结果只可能是数字或 NaN
 '5' - '3'      // 2
 '5' * '2'      // 10
 true + false   // 1
@@ -90,6 +92,7 @@ true + false   // 1
 **经典翻车题**：
 
 ```js
+// ❌ 错误用例集：== 的隐式转换让下面每一行都可能违反直觉（这正是工程上强制 === 的原因）
 0 == ''         // true   都是数字侧 0
 0 == '0'        // true
 false == '0'    // true   双方 ToNumber：0 == 0
@@ -127,6 +130,7 @@ false == []     // true   []→'' →0；false→0
 **其他一切都是真值**（包括 `[]`、`{}`、`'0'`、`' '`）。
 
 ```js
+// 目的：牢记 8 个 falsy 之外的都是 truthy——判空数组不能用 if(arr)
 if ([]) { ... }        // true：[] 是真值
 Boolean([]) === true   // 但 [] != true, [] == true → true? 都是 true，因为 ToNumber([]) = 0, ToNumber(true) = 1
                        // 更正：[] == true → false; [] == ![] → true（因 ![] = false）

@@ -32,21 +32,23 @@ Nuxt 钩子的注册入口有两个：插件里 `nuxtApp.hook('page:finish', ...
 ## 4. 钩子的三板斧用法
 
 ```ts
+// 目的：生命周期钩子的三板斧——分别挂在 Nuxt app、路由、Nitro 三个不同上下文
 // ① 插件：全站埋点与页面耗时
-export default defineNuxtPlugin((nuxtApp) => {
+export default defineNuxtPlugin((nuxtApp) => {   // ✅ app 创建时跑一次，nuxtApp.hook 订阅全局事件
   const t: Record<string, number> = {};
-  nuxtApp.hook('page:start', () => { t.start = performance.now(); });
-  nuxtApp.hook('page:finish', () => { sendBeacon('/api/metrics', { nav: performance.now() - t.start }); });
+  nuxtApp.hook('page:start', () => { t.start = performance.now(); });   // ✅ 进页记时
+  nuxtApp.hook('page:finish', () => { sendBeacon('/api/metrics', { nav: performance.now() - t.start }); });   // ✅ 页成上报耗时
 });
 
 // ② defineNuxtRouteMiddleware：鉴权/AB 分流（可中断导航）
 export default defineNuxtRouteMiddleware((to) => {
   if (to.path.startsWith('/admin') && !useAuth().loggedIn.value)
-    return navigateTo('/login');
+    return navigateTo('/login');   // ✅ return 跳转→中断当前导航，重定向到登录
+  // ❌ 写成 navigateTo('/login') 不 return → 导航不会中断，仍会进入 /admin
 });
 
 // ③ Nitro 服务端插件：启动期预热（只跑一次）
-export default defineNitroPlugin(() => { warmTheCache(); });
+export default defineNitroPlugin(() => { warmTheCache(); });   // ✅ 服务启动时执行一次，适合预热/建连接池
 ```
 
 对应 Next 世界：①≈instrumentation/layout 客户端上报（呼应 next-error-loading 第 4 节）、②≈middleware.ts（但 Nuxt 分"服务端运行时"与"客户端运行时"两套执行上下文，Next 只有 Edge 一份）、③≈无对等物（Nitro 插件是独立引擎赠品，nuxt-server-routes 细讲）。

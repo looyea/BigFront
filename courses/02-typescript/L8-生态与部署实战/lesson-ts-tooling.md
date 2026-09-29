@@ -42,13 +42,13 @@ esbuild/swc **只删类型语法、不做任何类型检查**——这正是它�
 esbuild/swc 是**逐文件**转译的（拿到一个 `.ts` 就删类型，看不到全项目）。`tsc` 默认全量看得到跨文件信息。为了让代码"能被安全地逐文件转译"，开 `isolatedModules`——它**不改变 emit**，只是**禁用那些"单文件看不到全貌"的危险写法**（呼应 ts-modules、10-vite）：
 
 ```ts
+// 目的：isolatedModules 禁掉"逐文件转译时单文件看不到全貌"的危险写法（不改变 emit）
 // ✗ isolatedModules 下报错：re-export 一个类型却没用 export type
-export { SomeType } from "./types";
+export { SomeType } from "./types";   // 纯转译器不知道 SomeType 是类型还是值，会留下错误import
 // ✓
-export type { SomeType } from "./types";
-
-// ✗ 跨文件 enum 成员在纯转译器下语义不定（用 const enum 更危险）
-// ✓ 用 `as const` 对象或联合类型替代（呼应 ts-modules）
+export type { SomeType } from "./types";  // 显式标 type，转译时整行安全删除
+// ✗ 跨文件 const enum 成员在纯转译器下无法内联取值（单文件看不到枚举全貌）
+// ✓ 用 as const 对象 + 联合类型替代，或用普通 enum 并避免跨文件 const enum 内联（呼应 ts-modules）
 ```
 
 Vite/tsup 这类工具要求（或强烈建议）开它，`tsc` 端开了能提前暴露"换构建器就崩"的隐患。

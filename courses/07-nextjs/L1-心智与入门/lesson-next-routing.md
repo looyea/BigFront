@@ -26,15 +26,17 @@
 ## 二、嵌套布局：children 就是插槽
 
 ```tsx
+// 目的：嵌套布局——layout 包住子段，children 就是内容插槽（框架按目录层级帮你把 children 写好）
 // app/blog/layout.tsx
-export default function BlogLayout({ children }: { children: React.ReactNode }) {
+export default function BlogLayout({ children }: { children: React.ReactNode }) {   // ✅ 必须接收 children 这个 prop
   return (
     <section>
-      <nav>博客子导航</nav>
-      {children}   {/* ← 子段（page 或下层 layout）渲染在这 */}
+      <nav>博客子导航</nav>   {/* ✅ 这段导航在 /blog 及其所有子路由间常驻，切子页不重挂载 */}
+      {children}   {/* ✅ 子段（page 或下层 layout）渲染在这；删掉这行→子页全部白屏 */}
     </section>
   );
 }
+// ❌ 忘了渲染 {children} → 访问 /blog/hello 只剩 nav、子页内容消失（最常见的白屏 bug）
 ```
 
 访问 `/blog/hello` 时渲染树是：
@@ -52,14 +54,16 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
 ## 三、根布局与 html/body 的铁律
 
 ```tsx
+// 目的：根布局是整个应用唯一的壳，必须渲染 html/body（Next 不再提供 index.html）
 // app/layout.tsx —— 根布局：整个应用唯一
 export default function RootLayout({ children }) {
   return (
-    <html lang="zh">
-      <body>{children}</body>
+    <html lang="zh">   {/* ✅ 根 layout 专职渲染 <html>，全局 lang/属性在此定 */}
+      <body>{children}</body>   {/* ✅ <body> 里装 children，所有页面最终嵌在这 */}
     </html>
   );
 }
+// ❌ 根 layout 只返回 <div>{children}</div> 不包 html/body → 报错 "Missing <html> and <body>" 或样式/SEO 全乱
 ```
 
 - **根 layout 必须渲染 `<html>` 和 `<body>`**，且**不可删除**——因为 Next 不再提供 index.html（next-overview 第三节埋的伏笔在这回收）；

@@ -14,11 +14,14 @@ minify 与转译在同一趟编译完成——这是 SWC 相比「先 bundle 再
 `minify` 为对象时细配：
 
 ```jsonc
+// 目的：minify 写成对象——compress 删什么、mangle 名字怎么缩、format 最终排版
 "minify": {
-  "compress": { "drop_console": true, "passes": 2 },  // 死代码/常量折叠
-  "mangle":   { "reserved": ["React", "useState"] },   // 标识符改名，可豁免
-  "format":   { "comments": false }                    // 输出整形
+  "compress": { "drop_console": true, "passes": 2 },  // 死代码/常量折叠，passes>1 多跑几轮压更狠
+  "mangle":   { "reserved": ["React", "useState"] },   // 标识符改名，reserved 豁免反射/调试要用的名字
+  "format":   { "comments": false }                    // 输出整形：去注释等
 }
+// ✅ drop_console 生产剔调试日志；保留名交 reserved 防被缩后行为变
+// ❌ mangle 不列 reserved 就全局改名→依赖函数名反射(toString/按名查找)的库运行期出错
 ```
 
 `compress` 决定「删什么、怎么折」，`mangle` 决定「变量名怎么缩」（用 `reserved`/`keep_classnames` 豁免反射用到的名字），`format` 管最终排版。

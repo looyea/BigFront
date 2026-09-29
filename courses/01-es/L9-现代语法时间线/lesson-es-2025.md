@@ -14,6 +14,7 @@
 
 ### 1. 为什么需要：Array 方法的「急切 + 中间数组」之痛
 ```js
+// 目的：Array 链式——每步都遍历整个数组+产出中间数组（急切、吃内存）
 [1, 2, 3, 4, 5]
   .map(x => x * x)      // 新建数组 [1,4,9,16,25]
   .filter(x => x > 5)   // 又新建一个 [9,16,25]
@@ -28,6 +29,7 @@ Iterator.from(iterableOrIterator)   // 把任何可迭代对象/迭代器包成 
 原型上提供：`map / filter / take / drop / flatMap / reduce / toArray / forEach / some / every / find`。
 
 ```js
+// 目的：Iterator 助手惰性链——逐个流过、take 短路后源立即停，对无限生成器也成立
 function* naturals() { let i = 1; while (true) yield i++; }   // 无限生成器
 
 const first3 = Iterator.from(naturals())
@@ -50,6 +52,7 @@ console.log(first3);        // [25, 100, 225]
 ### 4. 异步版：AsyncIterator Helpers
 对异步可迭代对象（`for await` 的数据源，呼应 [es-2018](es-2018.md)）：
 ```js
+// 目的：异步版助手——对 AsyncIterator 也能 filter/map/take，take 会尽早关闭上游
 const it = readLinesFromStream()[Symbol.asyncIterator]();   // 一个 AsyncIterator
 for await (const line of Iterator.from(it).filter(l => l.trim())) { ... }
 // 同样有 map/take/drop/flatMap，且 take 会尽早关闭上游
@@ -64,6 +67,7 @@ for await (const line of Iterator.from(it).filter(l => l.trim())) { ... }
 ## 三、`Promise.try`：不管同步异步，统一进 Promise
 
 ```js
+// 目的：Promise.try 统一包装—无论 fn 同步抛错还是返回 Promise，结果都是 Promise
 // 痛点：parse 同步抛错，Promise.resolve().then 又太绕
 const p = Promise.try(() => JSON.parse(userInput));   // 同步 throw 也会变 rejected
 p.then(render).catch(showError);                       // 一个 catch 兜住同步+异步错误
@@ -75,6 +79,7 @@ p.then(render).catch(showError);                       // 一个 catch 兜住同
 ## 四、`RegExp.escape`：安全拼接用户输入到正则
 
 ```js
+// 目的：RegExp.escape 转义用户输入里的正则元字符，按字面量匹配不被注入
 const userInput = '1+1=2?';                      // 含正则元字符
 const re = new RegExp(RegExp.escape(userInput)); // 转义为 1\+1\=2\?
 re.test('a 1+1=2? b');                           // true —— 按字面量匹配，不会被注入
@@ -86,6 +91,7 @@ re.test('a 1+1=2? b');                           // true —— 按字面量匹�
 ## 五、`Math.sumPrecise`：浮点求和不再越加越飘
 
 ```js
+// 目的：Math.sumPrecise 精确累加、仅最后舍入一次（需新引擎，部分 Node 尚未提供）
 const nums = [0.1, 0.2, 0.3];
 nums.reduce((a, b) => a + b, 0);   // 0.6000000000000001（逐步累加误差）
 Math.sumPrecise(nums);             // 0.6（精确求和后只舍入一次）
@@ -97,10 +103,15 @@ Math.sumPrecise(nums);             // 0.6（精确求和后只舍入一次）
 ## 六、允许「同名 getter / setter」（Duplicate prototype properties）
 
 ```js
+// 目的：ES2025 允许同名 get/set 成对共字，不再触发早期错误
 class Box {
   get size() { return this._s; }
   set size(v) { this._s = v; }   // ES2025 起：对象字面量/class 里 get、set 同名不再报错
 }
+// ✅ 应用：读写同一个 size 分别走 get/set
+const bx = new Box();
+bx.size = 5;      // 走 set → this._s = 5
+bx.size;          // 5（走 get 读回 this._s）
 ```
 此前对象字面量里 `get x(){} , set x(v){}` 同键会触发早期错误；现在规范**允许 get/set 成对共享一个名字**。
 

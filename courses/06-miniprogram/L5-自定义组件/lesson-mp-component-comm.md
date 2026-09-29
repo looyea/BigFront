@@ -21,8 +21,10 @@
 ## 二、上行：triggerEvent 家族
 
 ```js
+// 目的：子组件用 triggerEvent 上行通知父（事件名、detail 载荷、options 控制是否穿边界）
 // 子组件内
 this.triggerEvent('myblur', { value: this.data.val }, { bubbles: true, composed: true });
+// ✅ detail 里的 {value} 到父 handler 的 e.detail.value；不传第三参默认不穿透组件边界
 ```
 
 ```wxml
@@ -77,10 +79,13 @@ onBlur(e) {
 ## 四、命令式后门：selectComponent 与组件实例方法
 
 ```js
+// 目的：selectComponent 拿子组件实例直接调其方法（命令式 API：播放/弹窗/表单校验）
 // 父页/父组件
 const child = this.selectComponent('#swiper-card');   // id 或 class 选择器
-child.playNext();                                     // 直接调子 methods
+child.playNext();                                     // ✅ 调子 methods（表达"动作"）
 child.setData({ paused: true });                      // 甚至改它内部（能做，但羞耻）
+// ❌ 跨层 child.child.child.setData → 耦合核弹（应让组件暴露方法 API，不翻它 data）
+// ❌ selectComponent 只能查自己子树的自定义组件，查跨边界子子 → 拿不到 null
 ```
 
 - 适用：命令式 imperative API（播放器 play/pause、弹窗 open/close、表单 validate）——声明式属性表达"状态"，命令式方法表达"动作"，两者分工与 React `useImperativeHandle`/`ref.current.xxx()` 完全同构（呼应 react-refs）；

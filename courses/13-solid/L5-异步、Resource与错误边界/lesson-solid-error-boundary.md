@@ -16,25 +16,31 @@
 - **在 Solid 渲染/更新流之外调度的回调**里抛的错（裸 `setTimeout`/`Promise.then`/第三方异步回调里 `throw`）。
 
 ```jsx
+// 目的：ErrorBoundary 只兜“由 Solid 驱动的渲染/更新”错—子树渲染 JSX 即 throw 会被接住
 <ErrorBoundary fallback={<h1>出错了</h1>}>
-  <Broken/>               {/* 渲染即 throw → 被兜住 */}
+  <Broken/>               {/* ✅ Broken 渲染时就 throw → 被边界接住，降级成 <h1> */}
 </ErrorBoundary>
+// ❌ 把 onClick 里 throw 的错归给它兜 → 事件处理器不在渲染/更新流内，边界接不到，错会漏到 window.onerror
+// ❌ 裸 setTimeout(() => throw …) 里的错也捕不到 → 要么自己 try/catch，要么挂 globalThis.onerror/unhandledrejection
 ```
 > 这条边界是 React 老手最常踩的"我以为它什么都接"：边界不是 `try/catch` 全局网，只管"由 Solid 驱动的渲染/更新"。**事件与游离异步里的错，要么自己 try/catch，要么走 `globalThis.onerror`/`unhandledrejection`。**
 
 ## 二、fallback：静态节点 或 (err, reset) 函数
 
 ```jsx
+// 目的：fallback 可给静态 JSX 或 (err, reset)=>JSX 函数—函数形态能读错误值并就地重试
 <ErrorBoundary
   fallback={(error, reset) => (
     <div>
       <p>{String(error)}</p>
-      <button onClick={reset}>重试</button>     {/* reset：清掉错误态、重新渲染 children */}
+      <button onClick={reset}>重试</button>     {/* ✅ reset：清掉错误态、重新渲染 children */}
     </div>
   )}
 >
   <Flaky />
 </ErrorBoundary>
+// ✅ 瞬时错（网络抖一下）配 reset 最管用：点重试重跑 children，恢复就成功了
+// ❌ 错误根源未消（数据一直坏）时点 reset → 重渲又抛→ 回到 fallback，看似“重试无效”
 ```
 
 - `fallback` 可以是**一段 JSX**（静态"出错了"）；
@@ -58,13 +64,15 @@
 命令式捕获用 `solid-js` 的 `catchError`（在某个 Owner 下注册错误处理器、返回其结果，错误经 `handleError` 上抛）与 `modifyFailure`（包装/改写错误再抛，常用来给错误附上"发生在哪个组件"的诊断信息）。
 
 ```js
+// 目的：命令式捕获—catchError 在当 Owner 下注册错误处理器、返回其结果，错误经 handleError 上抛
 import { catchError, runWithOwner } from "solid-js";
 
 const owner = getOwner();
 const result = catchError(
-  () => doRiskyThing(),                       // 同步/响应式流内会抛的操作
-  (err) => console.error("捕获:", err, getOwnerDebugInfo())
+  () => doRiskyThing(),                       // ✅ 同步/响应式流内会抛的操作
+  (err) => console.error("捕获:", err, getOwnerDebugInfo())   // ✅ 第二参是错误处理器
 );
+// ❌ 拿 catchError 去捕事件/游离异步里的 throw → 与 ErrorBoundary 同病，不在流内就接不到
 ```
 ErrorBoundary 就是这套机制的 JSX 形态：源码里靠 `catchError(fn, onError)` + Owner 的 `context[ERROR]` 槽实现，`onError` 里"设一个 signal 把边界翻到 fallback 态"、`reset` 把它清回。自定义错误日志/上报，可组合 `modifyFailure` 给每个边界挂不同标签。
 

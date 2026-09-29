@@ -7,10 +7,11 @@
 ## 一、useReducer：把状态迁移收进一处
 
 ```jsx
+// 目的：用一处 reducer 集中多字段/复杂迁移，dispatch 只描述"发生了什么"
 const initialState = { count: 0, step: 1 };
 function reducer(state, action) {
   switch (action.type) {
-    case 'inc': return { ...state, count: state.count + state.step };
+    case 'inc': return { ...state, count: state.count + state.step };   // ✅ 返新对象（不可变）
     case 'setStep': return { ...state, step: action.payload };
     case 'reset': return initialState;
     default: throw new Error();
@@ -18,6 +19,7 @@ function reducer(state, action) {
 }
 const [state, dispatch] = useReducer(reducer, initialState);
 dispatch({ type: 'inc' });   // 描述"发生了什么"，不描述"怎么变"
+// ❌ reducer 里直接 state.count++（就地改）再 return state → 引用未变，不重渲染（reducer 必须纯且返新对象）
 ```
 适用：一个对象里**多字段一起变**、迁移逻辑复杂、多个子操作共享规则。优势：更新逻辑集中、可测（纯函数）、`dispatch` 引用稳定（适合传给 memo 子组件，呼应 react-memo-hooks）。这就是 Redux/Zustand 的心智雏形（呼应 react-state-mgmt）。
 
@@ -26,8 +28,10 @@ dispatch({ type: 'inc' });   // 描述"发生了什么"，不描述"怎么变"
 ## 二、useId：水合安全的唯一标识
 
 ```jsx
+// 目的：生成服务端/客户端水合一致的唯一 id（表单 label、aria 关联）
 const id = useId();     // 如 ":r1:"，服务端与客户端水合时生成同样的 id
 <input id={id} /> <label htmlFor={id}>邮箱</label>
+// ❌ 用 Math.random() 做 id → 服务端与客户端不同 → hydration mismatch 告警
 ```
 用途：给表单控件、`aria-*`、无障碍关联生成唯一且**两端一致**的 id。**别用 `Math.random()`/计数器**——那会导致 SSR 服务端与客户端 id 不一致、触发水合 mismatch（呼应 vue-ssr-nuxt 水合纪律）。
 
@@ -38,7 +42,9 @@ const id = useId();     // 如 ":r1:"，服务端与客户端水合时生成同�
 React 渲染是"快照"，若边渲染边读一个会被外部随时改的 store，可能读到撕裂（同一次渲染里前后不一致）。`useSyncExternalStore` 封装"订阅 + 读快照 + 变化通知 React"，并内建防撕裂：
 
 ```jsx
+// 目的：安全订阅组件外的可变 store，内建防撕裂（同一渲染前后一致）
 const value = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
+// ❌ 在组件里用 useState+effect 手写订阅外部可变 store → 并发渲染下可能读到撕裂的中间态
 ```
 Zustand/Redux 的 React 绑定底层就靠它（SSR 版给第三个参数 `getServerSnapshot`，呼应 react-advanced-hooks、node 每请求隔离）。手写订阅 effect 能覆盖简单场景，但库级集成用它最稳（呼应 react-effect-patterns 第三节）。
 
@@ -49,11 +55,13 @@ Zustand/Redux 的 React 绑定底层就靠它（SSR 版给第三个参数 `getSe
 大列表筛选时输入卡顿，是因为一次 state 更新触发了很重的大渲染，阻塞了后续输入。React 18 允许把更新**标记为可打断的低优先级**：
 
 ```jsx
+// 目的：把昂贵更新包成可打断的低优先级过渡，保住输入流畅
 const [isPending, startTransition] = useTransition();
 const onChange = (e) => {
   setText(e.target.value);                 // 紧急：输入框立即回显
   startTransition(() => { setQuery(e.target.value); });  // 过渡：大列表可被打断地更新
 };
+// ✅ isPending 可在过渡期间显加载态；❌ 把 setText 也放进 startTransition → 输入回显会被拖慢
 ```
 - `startTransition`：把某次 setState 包成"过渡"，高优先级（打字）可插队，isPending 显示加载态；
 - `useDeferredValue(value)`：拿到一个"允许落后一拍"的 value，把慢渲染降为低优先级，无需自己分两次 state。

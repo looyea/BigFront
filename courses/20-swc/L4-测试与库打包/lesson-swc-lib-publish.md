@@ -4,16 +4,19 @@
 
 产物目录和 package.json 的映射是发布质量的脸面：
 
-```json
+```jsonc
+// 目的：exports/types 与产物目录严格对齐——按条件把 import/require 分别指到两套产物
 {
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",              // 老解析器兜底：CJS 入口
+  "module": "./dist/index.mjs",            // 打包器认的 ESM 入口（非官方字段）
+  "types": "./dist/index.d.ts",            // 顶层类型入口兜底
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.mjs", "require": "./dist/index.cjs" },
-    "./package.json": "./package.json"
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.mjs", "require": "./dist/index.cjs" },   // types 必须放最前，import/require 条件分指
+    "./package.json": "./package.json"     // 显式放行，下游读版本号要用
   }
 }
+// ✅ 条件顺序从 specific 到宽泛：types→node→default，让 TS/Node/打包器各取所需
+// ❌ types 没放最前→TS 走到 import 条件拿不到 .d.ts，类型解析失败
 ```
 
 `exports` 里 `types` 放最前、`import`/`require` 分指两套产物；老解析器用 `typesVersions` 兜底。条件顺序敏感（`types`/`node`/`default` 从specific到宽泛）。

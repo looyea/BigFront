@@ -9,12 +9,13 @@
 VueUse 是 500+ 组合式函数的集合，价值不在"多"，在**每个函数都是一份最佳实践范本**：
 
 ```js
+// 目的：站在库肩上——VueUse 把「响应式 + 自清理」的胶水封成一行可用的 useXxx
 import { useLocalStorage, useDebounceFn, useEventListener, useElementSize } from '@vueuse/core'
 
-const theme = useLocalStorage('theme', 'light')        // 响应式 ↔ localStorage 双向同步，序列化/反序列化内置
-const onSearch = useDebounceFn(query => fetchResults(query), 300)  // 防抖且自动随作用域清理
-useEventListener(window, 'resize', onResize)           // 挂了自动解挂，unmounted 不用操心
-const { width } = useElementSize(cardEl)               // ResizeObserver 封装，SSR 安全
+const theme = useLocalStorage('theme', 'light')        // 响应式 ↔ localStorage 双向同步，序列化/反序列化内置（✅ 改 theme.value 即自动写入，无需手动 JSON.stringify）
+const onSearch = useDebounceFn(query => fetchResults(query), 300)  // 防抖且自动随作用域清理（✅ 连续敲只 300ms 后发一次请求）
+useEventListener(window, 'resize', onResize)           // 挂了自动解挂，unmounted 不用操心（❌ 手写 addEventListener 忘 remove 会内存泄漏）
+const { width } = useElementSize(cardEl)               // ResizeObserver 封装，SSR 安全（width 是 ref，元素尺寸变即更新）
 ```
 
 对照 vue-composables 学过的契约，每个函数都严格遵守：**参数接受 `MaybeRefOrGetter`（内部 `toValue` 归一）、返回一组 ref、生命周期钩子自带、`onScopeDispose` 清理**。读一个 VueUse 源码 = 复习一遍组合式函数全部纪律。
@@ -31,12 +32,13 @@ VueUse 没有的（业务特化），按同一模板自写：
 
 ```js
 // composables/useQuerySync.js —— 把 URL query 和响应式状态双向绑（列表页筛选神器）
+// 目的：状态与 URL query 双向同步——刷新/分享链接仍保留筛选，且离开组件自动停 watch
 import { watch, onScopeDispose } from 'vue'   // ref/route/router 按项目实际引入
 export function useQuerySync(key, initial) {
-  const state = ref(route.query[key] ?? initial)
-  const stop = watch(state, v => router.replace({ query: { ...route.query, [key]: v } }))
-  onScopeDispose(stop)                                    // ← 没有这行的 composable 不合格
-  return { state }
+  const state = ref(route.query[key] ?? initial)   // 初值优先取 URL（✅ 直接打开 /list?page=3 时 state 就是 3）
+  const stop = watch(state, v => router.replace({ query: { ...route.query, [key]: v } }))  // state 变即回写 URL
+  onScopeDispose(stop)                                    // ← 没有这行的 composable 不合格（❌ 缺清理：组件卸载后 watch 仍在跑，路由切换会误改 query）
+  return { state }                                       // 返回 ref，解构安全
 }
 ```
 
@@ -51,14 +53,15 @@ export default { nav: { home: '首页' }, cart: { add: '加入购物车' } }
 
 ```vue
 <script setup>
+// 目的：组合式 API 拿 t/locale/n/d 四件套，文案/数字/日期全面板外化
 import { useI18n } from 'vue-i18n'
 const { t, locale, n, d } = useI18n()          // 组合式 API；legacy: false 全局关掉旧模式
 </script>
 <template>
-  <p>{{ t('nav.home') }}</p>
-  <p>{{ n(price, 'currency') }}</p>            <!-- 数字格式化 -->
-  <p>{{ d(new Date(), 'short') }}</p>          <!-- 日期格式化 -->
-  <button @click="locale = locale === 'zh-CN' ? 'en-US' : 'zh-CN'">切换</button>
+  <p>{{ t('nav.home') }}</p>                    <!-- ✅ locale=zh-CN 渲染“首页”，切 en-US 渲染 “Home”（❌ key 写错会直接回显字面量 nav.home） -->
+  <p>{{ n(price, 'currency') }}</p>            <!-- 数字格式化：按 locale 自动千分位/货币符 -->
+  <p>{{ d(new Date(), 'short') }}</p>          <!-- 日期格式化：底层是 Intl.DateTimeFormat -->
+  <button @click="locale = locale === 'zh-CN' ? 'en-US' : 'zh-CN'">切换</button>   <!-- locale 是 ref，改它整棵已渲染文案响应式切换 -->
 </template>
 ```
 
@@ -68,8 +71,10 @@ const { t, locale, n, d } = useI18n()          // 组合式 API；legacy: false 
 ## 四、复数、插值与"翻译不动的坑"
 
 ```js
+// 目的：同一 key 用管道 | 写多形，vue-i18n 按 n 自动选单/复数（中文只写一形）
 // zh：量词简单；en：规则复数 + 例外
 cart: { items: '{n} 件商品' /* zh */, items: '{count} item | {count} items' /* en */ }
+// ✅ t('cart.items', { count: 1 }) → "1 item"；t('cart.items', { count: 3 }) → "3 items"（❌ 忘写管道则永远只显第一形）
 ```
 
 - 管道 `|` 复数（中文只写一形）、`{n}` 具名插值、`@:other.key` 引用复用；

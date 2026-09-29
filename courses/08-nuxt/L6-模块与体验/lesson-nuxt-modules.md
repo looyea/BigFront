@@ -5,16 +5,18 @@
 在 07-nextjs 里我们学过：Next 没有插件系统，能力都靠改 `next.config.js` 的字段和约定（图片靠 `<Image>`、字体靠 `next/font`）。Nuxt 走的是另一条路——**模块（Module）是一段在构建期被执行的代码**，它能读改 Nuxt 的整个内部状态（hooks 流水线），因此一行配置就能带来"自动导入 + 组件 + 服务端路由 + 类型 + 运行时配置"五件套：
 
 ```ts
+// 目的：modules 数组——每个模块是构建期执行的代码，一行带来“自动导入+组件+服务端路由+类型+运行时配置”五件套
 // nuxt.config.ts
 export default defineNuxtConfig({
   modules: [
-    '@pinia/nuxt',
-    '@nuxt/image',
-    '@nuxt/content',
-    '@nuxtjs/robots',
-    '~/modules/tenant-theme',   // 本地模块也走同一入口
+    '@pinia/nuxt',              // ✅ 官方状态模块：每请求建 Pinia + 自动水合
+    '@nuxt/image',              // ✅ <NuxtImg>/$img 图片优化
+    '@nuxt/content',            // ✅ markdown 编译成可查询集合
+    '@nuxtjs/robots',           // ✅ 自动生成 /robots.txt 端点
+    '~/modules/tenant-theme',   // ✅ 本地模块也走同一入口（相对项目根）
   ],
 });
+// ❌ 把只涉及“文件怎么编译”的东西塞进 modules（应走 vite.plugins）；或把模块与 Layer 字段放错位置
 ```
 
 `npx nuxt module add image` 会解析官方模块注册表、装依赖、改 nuxt.config、跑一次 build 自检（呼应 nuxt-directory 的 package.json 变更可见性）。**这是 Nuxt 生态最被低估的竞争力：能力的"安装体验"接近 VS Code 扩展。**
@@ -40,6 +42,7 @@ nuxt build/dev 启动
 ## 3. 写一个自己的模块：以"多租户主题"为例
 
 ```ts
+// 目的：写一个构建期模块——用 @nuxt/kit 往自动导入/插件/服务端路由/CSS 四处注入能力
 // modules/tenant-theme/index.ts
 import { defineNuxtModule, addImports, addPlugin, createResolver, useLogger } from '@nuxt/kit';
 
@@ -63,9 +66,10 @@ export default defineNuxtModule<{ tenants: string[] }>({
       `;
     });
     // ④ 注入 CSS 变量到构建期（下一关 styling 会展开）
-    nuxt.options.css.push(resolve('./runtime/theme.css'));
+    nuxt.options.css.push(resolve('./runtime/theme.css'));  // ✅ 把主题 CSS 追加进构建期全局样式
   },
 });
+// ❌ 在 index.ts（构建期代码）里 import vue 组件/运行时代码 → 构建直接炸；运行期代码一律放 runtime/
 ```
 
 目录约定：`modules/<name>/{index.ts, runtime/**}`。**`runtime/` 里的代码是运行期代码**，能被模块注入的插件/composable 引用；`index.ts` 是构建期代码，两者不要互相 import（这是模块开发第一号错误：在 index.ts 里 import vue 组件，构建期直接炸）。

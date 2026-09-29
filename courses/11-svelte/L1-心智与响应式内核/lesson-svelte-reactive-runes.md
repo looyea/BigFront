@@ -8,13 +8,15 @@
 
 ```svelte
 <script>
-  let count = $state(0);              // 基本类型
-  let user  = $state({ name: 'Ada', tags: ['a'] }); // 对象/数组：深层也响应
+  // 目的：$state 默认深响应—基本类型直接改，对象/数组深层也触发更新
+  let count = $state(0);              // ✅ 基本类型
+  let user  = $state({ name: 'Ada', tags: ['a'] }); // ✅ 对象/数组：深层代理也响应
 </script>
 
 <button onclick={() => count++}>{count}</button>
 <button onclick={() => user.name = 'Bob'}>{user.name}</button>
 <button onclick={() => user.tags.push('b')}>{user.tags.length}</button>
+{/* ❌ 若 user 用 $state.raw 声明 → user.name=.. / .push() 都不触发更新，需整体换引用才重渲染 */}
 ```
 
 - **直接改就行**：`count++`、`user.name = ...`、`user.tags.push(...)` 都能触发更新——`$state` 将对象/数组包成**深度响应式代理**（和 Vue 的 `reactive` 一致；区别于 React 必须"整体替换 + 不可变"）。
@@ -23,9 +25,10 @@
 **`$state.raw`：只换引用、不做深代理**。适合大对象/immutable 数据/不需要深层追踪的场合，性能更好、语义更像 React：
 
 ```js
-let points = $state.raw([{ x: 1 }, { x: 2 }]); // 内部元素不追踪
+// 目的：$state.raw—只换引用、不做深代理，适合大对象/不可变数据
+let points = $state.raw([{ x: 1 }, { x: 2 }]); // ✅ 内部元素不追踪
 points = [...points, { x: 3 }];                 // ✅ 整体替换才触发
-// points.push({x:4});                           // ❌ 不会触发更新
+// points.push({x:4});                           // ❌ 不会触发更新（raw 不做深层代理）
 ```
 
 > 选择：**需要改对象内部属性/数组元素 → `$state`**；**用不可变方式整体替换、或存大对象 → `$state.raw`**（呼应 react-usestate 不可变心智）。
@@ -38,10 +41,12 @@ points = [...points, { x: 3 }];                 // ✅ 整体替换才触发
 
 ```svelte
 <script>
+  // 目的：$derived 自动登记依赖、惰性求值+缓存，无需手写依赖数组
   let nums = $state([1, 2, 3]);
-  const sum   = $derived(nums.reduce((a, b) => a + b, 0)); // 声明式
-  const double = (n) => n * 2;                              // 普通函数，非响应
+  const sum   = $derived(nums.reduce((a, b) => a + b, 0)); // ✅ 声明式：nums 变则重算
+  const double = (n) => n * 2;                              // ✅ 普通函数，非响应
 </script>
+{/* ❌ 把 sum 写成 const sum=nums.reduce(...) → 只在创建时算一次，nums 变也不跟着变 */}
 ```
 
 - `$derived(表达式)`：编译器把表达式里读到的 `$state` 自动登记为依赖，依赖变则重算。等价于 Vue `computed`、React `useMemo`，但**无需手写依赖数组**。
@@ -49,10 +54,12 @@ points = [...points, { x: 3 }];                 // ✅ 整体替换才触发
 - 逻辑复杂时用 `$derived.by`（可写多条语句、能显式调用函数）：
 
 ```js
+// 目的：$derived.by—逻辑复杂时写多条语句，返回值即派生结果
 const stats = $derived.by(() => {
-  const total = nums.reduce((a, b) => a + b, 0);
+  const total = nums.reduce((a, b) => a + b, 0);   // ✅ 读到 nums 自动登记依赖
   return { total, avg: total / nums.length, max: Math.max(...nums) };
 });
+// ❌ 在 $derived/$derived.by 里对 $state 赋值或发请求 → 应归 $effect，派生必须纯计算
 ```
 
 - ⚠️ `$derived` 里**不要写副作用**（不 `$state` 赋值、不发请求）；有副作用是 `$effect` 的活。派生应当是"纯计算"。
@@ -63,12 +70,15 @@ const stats = $derived.by(() => {
 
 ```svelte
 <script>
+  // 目的：$effect 自动收集依赖 + 返回清理函数—防抖搜索、同步外部系统
   let query = $state('');
   $effect(() => {
+    // ✅ 读到 query → 建立依赖；初始也会跑一次，DOM 更新后重跑
     const id = setTimeout(() => console.log('搜索', query), 300);
-    return () => clearTimeout(id);   // ← 清理函数：下次运行前 / 组件销毁时执行
+    return () => clearTimeout(id);   // ✅ 清理函数：下次运行前 / 组件销毁时执行
   });
 </script>
+{/* ❌ 不 return 清理函数 → 旧定时器泄漏，快速输入时多个 setTimeout 叠加、重复搜索 */}
 ```
 
 `$effect` 的四条要点：
@@ -81,10 +91,12 @@ const stats = $derived.by(() => {
 **用 `untrack` 排除依赖**（只想读但不想被追踪时）：
 
 ```js
+// 目的：untrack—在 effect 里只想读但不想被追踪
 import { untrack } from 'svelte';
 $effect(() => {
-  untrack(() => console.log(ignoreMe.value)); // ignoreMe 变化不会重跑本 effect
+  untrack(() => console.log(ignoreMe.value)); // ✅ ignoreMe 变化不会重跑本 effect
 });
+// ❌ 忘了 untrack 直接读 ignoreMe → 它每次变都重跑本 effect，产生不期望的副作用
 ```
 
 > `$effect` 是"逃生舱"，不是默认选项。能用 `$derived` 表达的用派生；纯为了同步外部系统（第三方库、localStorage、焦点）才用 `$effect`（呼应 react-effect-patterns "何时不用 effect"）。

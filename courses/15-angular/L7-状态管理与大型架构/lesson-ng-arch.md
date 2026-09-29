@@ -30,9 +30,12 @@ src/
 - 一次性初始化 service（如 analytics setup）
 
 ```ts
+// 目的：core 层应用级单例服务——providedIn:'root' 全局唯一
 // core/auth/auth.service.ts — 只在 core 里定义
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: 'root' })   // root 单例：所有 feature 注入的是同一实例
 export class AuthService { ... }
+// ✅ 登录态/主题这类跨切面服务落 core，任何 feature 都能 inject
+// ❌ 把 AuthService 塞进某个 feature 再让别的 feature import→横向依赖、破坏边界
 ```
 
 core 不做 barrel export（不写 `core/index.ts`）——**避免循环 barrel**。
@@ -46,9 +49,12 @@ core 不做 barrel export（不写 `core/index.ts`）——**避免循环 barrel
 - 通用 model / interface（Page<T>、ApiResponse<T>）
 
 ```ts
+// 目的：shared 层可复用 UI 积木——standalone 组件、不含业务逻辑
 // shared/components/data-table/data-table.component.ts
-@Component({ selector: 'app-data-table', standalone: true, imports: [CommonModule], ... })
-export class DataTableComponent<T> { ... }
+@Component({ selector: 'app-data-table', standalone: true, imports: [CommonModule], ... })   // standalone 直接 import 使用
+export class DataTableComponent<T> { ... }   // 泛型 <T> 适配任意数据列
+// ✅ 通用表格作 UI 积木放 shared，v19+ standalone 无需 NgModule 打包
+// ❌ 把带业务逻辑（如专门拉 /api/orders）的组件放 shared→业务应归 features
 ```
 
 v19+ standalone 组件不需要 NgModule 打包——直接 import 使用。
@@ -72,8 +78,11 @@ features/users/
 feature 的入口是 `users.routes.ts`——由 app.routes.ts 用 loadChildren 引入：
 
 ```ts
+// 目的：延迟 feature 边界——路由被导航到时才 import 整个 feature
 // app.routes.ts
-{ path: 'users', loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES) }
+{ path: 'users', loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES) }   // 动态 import 切进懒加载 chunk
+// ✅ 主包只含 core+shared+bootstrap，feature 全在懒加载 chunk 里
+// ❌ 在 app.routes 顶部 static import feature 的组件/service→打进 initial bundle，懒加载形同虚设
 ```
 
 这是**延迟 feature 边界**——只有路由被导航到时才 import 该 feature 的所有代码（包括它 import 的 shared/core）。
@@ -84,12 +93,15 @@ feature 的入口是 `users.routes.ts`——由 app.routes.ts 用 loadChildren �
 
 为什么：
 ```ts
+// 目的：barrel 禁令——feature 内别用 index.ts 导出一切（破坏 tree-shaking）
 // ❌ barrel
 import { UserListComponent, UserDetailComponent } from './features/users';
 // barrel 把 users 里所有东西都拉进来 → 破坏 tree-shaking
 
 // ✅ 直接路径
 import { UserListComponent } from './features/users/components/user-list/user-list.component';
+// ✅ 直引具体文件，打包器能摇掉未用到的代码
+// ❌ 图省事写 feature 根 barrel re-export 全部→一处 import 拖进整个模块，懒加载/摇树失效
 ```
 
 例外：`shared/` 可以有一个窄 barrel（只导出公共 API）——因为 shared 本就是被到处 import 的。
@@ -150,11 +162,14 @@ Nx 的 `project.json` 定义每个 lib 的 tag：
 ## 九、模块边界的「延迟 import」原则
 
 ```ts
+// 目的：模块边界的「延迟 import」原则——feature 的 service 只在懒加载内引
 // ❌ 在 app.module / app.config 顶部直接 import feature 的 service
 import { UserService } from './features/users/users.service';  // 打进主包
 
 // ✅ feature 路由内 import（只有懒加载触发时才拉取）
 // users.routes.ts 里才 import UsersService
+// ✅ 主包只含 core+shared+bootstrap，feature service 随懒加载 chunk 才拉
+// ❌ 顶层 static import feature service→强制进 initial bundle→首屏变肥
 ```
 
 核心：**主包（initial bundle）只含 core + shared + bootstrap 逻辑**——feature 全在懒加载 chunk 里。

@@ -7,6 +7,7 @@
 ## 一、wx:if 家族
 
 ```wxml
+<!-- 目的：wx:if 家族为假时节点压根不创建（销毁/重建）；block 包裹多节点条件 -->
 <view wx:if="{{ score >= 90 }}">优秀</view>
 <view wx:elif="{{ score >= 60 }}">及格</view>
 <view wx:else>加油</view>
@@ -16,6 +17,7 @@
   <view>{{ name }}</view>
   <image src="{{ avatar }}" />
 </block>
+<!-- ❌ 频繁切换的 tab/弹窗用 wx:if → 每次都建/毁子树卡顿（应用 hidden 只改样式） -->
 ```
 
 机制：`wx:if` 为假时**节点压根不创建**，切换时经历"销毁/重建 + 渲染层 diff"；期间数据变了但条件没变，则**什么都不发生**（惰性）。
@@ -35,9 +37,10 @@
 ## 二、wx:for：循环的四个关键字
 
 ```wxml
+<!-- 目的：wx:for 把数组展开为节点；默认 item/index，嵌套必须改名否则内层遮蔽外层 -->
 <!-- items: [{ id: 1, name: 'a' }, { id: 2, name: 'b' }] -->
 <view wx:for="{{ items }}" wx:key="id">
-  {{ index }} - {{ item.name }}
+  {{ index }} - {{ item.name }}        <!-- ✅ 0 - a / 1 - b -->
 </view>
 
 <!-- 重命名 item/index；嵌套循环必须改名，否则内层遮蔽外层 -->
@@ -50,6 +53,8 @@
 <!-- 只渲染数组一段 -->
 <view wx:for="{{ list }}" wx:for-index="i" wx:for-item="x" hidden="{{ i < 20 }}">{{ x.t }}</view>
 <!-- 惯用替代：逻辑层 slice 后再 setData，或虚拟列表（呼应 mp-performance） -->
+<!-- ❌ wx:for="items"（漏 {{}}）→ 当字符串不渲染，静默失败 -->
+<!-- ❌ 嵌套两层都叫 item 不改名 → 内层覆盖外层，列表“串数据” -->
 ```
 
 要点：
@@ -65,9 +70,12 @@
 `wx:key` 的值有三种合法形态：
 
 ```wxml
-<view wx:for="{{ list }}" wx:key="id">      <!-- item 里的属性名（字符串字面量，不加{{}}）-->
-<view wx:for="{{ list }}" wx:key="*this">   <!-- item 本身是原始值且唯一 -->
+<!-- 目的：wx:key 给每项稳定身份，让 diff 只认"谁移动了"而非"整表重建" -->
+<view wx:for="{{ list }}" wx:key="id">      <!-- ✅ item 里的属性名（字符串字面量，不加{{}}）-->
+<view wx:for="{{ list }}" wx:key="*this">   <!-- ✅ item 本身是原始值且唯一 -->
 <view wx:for="{{ list }}" wx:key="index">   <!-- ← 能跑，但是错的，见下 -->
+<!-- ❌ wx:key="index"：头插/删除/排序时 diff 认为逐位都变 → 全列表重渲染，input 已输入内容/勾选态漂到别的行 -->
+<!-- ❌ 完全不写 wx:key → 只警告不报错，退化为 index 行为（控制台那条 warning 就是性能事故起点） -->
 ```
 
 **为什么不能用 index 当 key？**（微信/React/Vue 三家同一答案，呼应 react-lists-keys 第 4 节）

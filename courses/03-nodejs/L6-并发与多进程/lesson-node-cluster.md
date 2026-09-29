@@ -20,6 +20,7 @@
 同一份代码，既可以是 master 也可以是 worker，用 `cluster.isPrimary` 区分：
 
 ```js
+// 目的：同一份代码用 isPrimary 分流——primary 只负责 fork 多个 worker，worker 才起 HTTP 服务
 import cluster from "node:cluster";
 import os from "node:os";
 import http from "node:http";
@@ -27,15 +28,15 @@ import http from "node:http";
 if (cluster.isPrimary) {
   const n = os.cpus().length;                 // 通常 = CPU 核数
   console.log(`primary ${process.pid} 启动 ${n} 个 worker`);
-  for (let i = 0; i < n; i++) cluster.fork();
+  for (let i = 0; i < n; i++) cluster.fork();  // 每个核一个 worker
   cluster.on("exit", (worker) => {
     console.log(`worker ${worker.process.pid} 退出，重启`);
-    cluster.fork();                            // 挂了就补一个（见第五节）
+    cluster.fork();                            // 挂了就补一个（自愈，见第五节）
   });
 } else {
   http.createServer((req, res) => {
-    res.end(`handled by worker ${process.pid}\n`);
-  }).listen(3000);                             // 看似都 bind 3000，其实没冲突（见第三节）
+    res.end(`handled by worker ${process.pid}\n`);   // 响应里回当前 worker 的 pid
+  }).listen(3000);                             // 看似都 bind 3000，其实靠句柄 transfer 不冲突（见第三节）
 }
 ```
 

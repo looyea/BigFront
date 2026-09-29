@@ -10,8 +10,10 @@ Vite 核心只懂 JS/TS/CSS/HTML/资源。框架的**专属语法**（Vue 的 `.
 
 ```js
 // vite.config.js
+// 目的：接入 Vue 插件—把浏览器不认识的 .vue SFC 在 transform 阶段编译成标准 ESM
 import vue from '@vitejs/plugin-vue';
-export default { plugins: [vue()] };
+export default { plugins: [vue()] };   // ✅ .vue 文件可被识别，组件语法正常编译
+// ❌ 用了 .vue 却忘加 plugins:[vue()] → 浏览器拿到原始 SFC，报 SyntaxError: Unexpected token '<'
 ```
 
 ---
@@ -22,16 +24,18 @@ export default { plugins: [vue()] };
 
 ```js
 // 概念示意
+// 目的：plugin-vue 内部职责—拆 SFC、编译模板/宏/scoped样式、接组件级 HMR
 {
   name: 'vite:vue',
   transform(code, id) {
-    if (!id.endsWith('.vue')) return;
+    if (!id.endsWith('.vue')) return;   // ✅ 只拦 .vue，其余模块不动
     // 1) 解析 SFC：拆出 <script setup> / <template> / <style>
     // 2) template → render 函数；<script setup> 宏编译；scoped style 加哈希
     // 3) 产出标准 JS 模块（含子请求 ?vue&type=style 等）
   },
-  handleHotUpdate(ctx) { /* 精确到组件的 HMR 边界 */ },
+  handleHotUpdate(ctx) { /* ✅ 精确到组件的 HMR 边界，改一个组件不刷整页 */ },
 }
+// ❌ defineProps 等宏当成运行时函数去 import → 编译期已被转换掉，手写引入反而报未定义
 ```
 
 关键点：
@@ -47,7 +51,9 @@ export default { plugins: [vue()] };
 React 的 `.jsx`/`.tsx` 需转成 `React.createElement`/新 JSX runtime。插件用 **Babel**（默认）做两件事：
 
 ```js
-plugins: [react()]   // 默认基于 Babel
+// 目的：接入 React 插件（默认基于 Babel）—处理 JSX/TS 转换 + 注入 Fast Refresh
+plugins: [react()]   // 默认基于 Babel，✅ 组件编辑后保留 state/hook 热替换
+// ❌ 组件文件混导出了工具函数/常量 → 破坏 Fast Refresh 边界，改一行就整页刷新丢状态
 ```
 
 1. **JSX/TS/新语法转换**（也可交给 esbuild，见第四节）；
@@ -58,8 +64,10 @@ plugins: [react()]   // 默认基于 Babel
 **SWC 变体**：`@vitejs/plugin-react-swc` 用 Rust 的 SWC 替代 Babel，**编译更快**（尤其冷启动/大项目），HMR 用 SWC 的 react-refresh 插件。功能对齐、性能更优，新项目常默认用它；需要特殊 Babel 插件（某些装饰器/宏）时才回 Babel 版。
 
 ```js
+// 目的：SWC 变体—用 Rust 的 SWC 替代 Babel，冷启动/大项目编译更快，功能对齐
 import react from '@vitejs/plugin-react-swc';
-export default { plugins: [react()] };
+export default { plugins: [react()] };   // ✅ 多数新项目默认用它求编译速度
+// ❌ 依赖某些只有 Babel 才有的插件（特定装饰器/宏）时→ SWC 版不支持，需切回 @vitejs/plugin-react
 ```
 
 ---
@@ -85,8 +93,10 @@ Vite 默认用 **esbuild** 处理 TS/JSX（快），但 esbuild **只做语法�
 Svelte 是**编译时框架**（呼应本节"编译时 vs 运行时"）：`.svelte` 在构建期被编译成**近乎 vanilla 的 JS + 精细 DOM 更新**，运行时几乎没有框架体积。插件负责：调用 `svelte` 编译器把组件转成模块、处理 store/动作、接 HMR（Svelte 有自己的热替换协议）、`svelte-check`/`svelte-preprocess` 处理 TS/SCSS 预处理。
 
 ```js
+// 目的：接入 Svelte 插件—构建期把 .svelte 编译成近乎 vanilla 的 JS，运行时几乎无框架体积
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-export default { plugins: [svelte()] };
+export default { plugins: [svelte()] };   // ✅ .svelte 可被编译，自带热替换协议
+// ❌ 用了 .svelte 忘装本插件 → 报 Unknown extension 或无法解析，组件进不了构建管线
 ```
 
 ---

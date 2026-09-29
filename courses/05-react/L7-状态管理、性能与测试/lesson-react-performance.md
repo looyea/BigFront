@@ -17,7 +17,10 @@
 回忆 **react-render-model**：state 变 → 该组件**及其所有子组件默认重渲染**。手段：
 
 ```jsx
+// 目的：React.memo 对 props 浅比较，相等则跳过重渲染（挡父重渲染波及子）
 const Row = React.memo(function Row({ user, onSelect }) { /* ... */ });
+// ✅ 应用：父因其它 state 重渲染时，若 user/onSelect 引用未变，Row 不跟着重渲染
+// ❌ 父每次传内联值 <Row user={{...}} onSelect={()=>...}/> → 每次新引用，浅比较不等，memo 完全失效（要配 useCallback/useMemo 稳定引用）
 ```
 - **React.memo**：props 浅比较相等则跳过重渲染；但若父每次传**新对象/新函数**，memo 失效——所以要配合 `useCallback`/`useMemo` 稳定引用（呼应 react-memo-hooks、"传内联对象令 memo 失效"）；
 - **状态下沉（colocation）**：把只被某子树用的 state 放到**尽量靠近使用者**的组件，别放顶层，避免顶层 state 一变整树重渲染；
@@ -39,8 +42,10 @@ const Row = React.memo(function Row({ user, onSelect }) { /* ... */ });
 ## 四、代码分割与加载性能
 
 ```jsx
-const Dashboard = lazy(() => import('./Dashboard'));   // 独立 chunk
-<Suspense fallback={<Skeleton/>}><Dashboard/></Suspense>
+// 目的：大组件/路由级按需加载，React.lazy + 动态 import() 切独立 chunk，减小首包
+const Dashboard = lazy(() => import('./Dashboard'));   // 独立 chunk（构建时才拉）
+<Suspense fallback={<Skeleton/>}><Dashboard/></Suspense>   // ✅ 加载期间显示骨架屏兜底
+// ❌ lazy 组件外无 Suspense 包裹 → 渲染时报错「A component suspended ...」(缺 fallback)
 ```
 - 路由级/大组件 `React.lazy` + 动态 `import()` → Vite 自动切分 chunk，减小首包（呼应 react-render-control、10-vite-splitting）；
 - 配 `import()` 的分组、`manualChunks`、按需引入重型库（别整包引 lodash/moment）；

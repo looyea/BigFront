@@ -15,14 +15,17 @@
 ## 二、预渲染：点名路由 or 全站爬取
 
 ```ts
+// 目的：预渲染—构建期就产出静态 HTML（routes 点名名单，crawlLinks 全站爬）
 // 指定路由
 export default defineConfig({
-  server: { prerender: { routes: ["/", "/about"] } },
+  server: { prerender: { routes: ["/", "/about"] } },   // ✅ 只预渲染这两个页，构建产物里直接有对应 .html
 });
 // 全部路由：顺着链接爬
 export default defineConfig({
-  server: { prerender: { crawlLinks: true } },
+  server: { prerender: { crawlLinks: true } },   // ✅ 从入口页沿 <a> 爬遍全站，逐个预渲染
 });
+// ❌ 只能命令式跳转、不挂在任何 <a> 上的页→ crawlLinks 爬不到，需补进 routes 名单
+// ❌ 内容高度个性化/时效强的页也 prerender → 构建期拿不到用户数据，缓存到错内容
 ```
 `routes` 列名单、`crawlLinks: true` 让构建器从入口页**顺着 `<a>` 爬遍全站**；更高级选项看 Nitro 文档。注意 crawlLinks 的可达性前提：不在任何链接上的路由（如只能通过命令式跳转抵达的页面）不会被爬到，需要这类页时用 routes 名单兼容。文档/博客类还可用 SolidBase——官方点名它对快速预渲染的 Markdown/MDX 页有内建支持。
 
@@ -33,7 +36,9 @@ v1 的 `defineConfig`（app.config.ts）把 **Nitro** 的构建/部署预设暴�
 - **托管 provider**：`netlify` / `netlify-edge`、`vercel` / `vercel-edge`、`aws_lambda`（Lambda@Edge）、`cloudflare` / `cloudflare_pages` / `cloudflare_module`、`deno_deploy`。
 
 ```ts
-export default defineConfig({ server: { preset: "netlify_edge" } });
+// 目的：部署=选 Nitro 预设（不传默认 node），多数 provider 能自动探测
+export default defineConfig({ server: { preset: "netlify_edge" } });   // ✅ 显式指定 edge 运行时产物
+// ❌ 写不存在的预设名→ 构建/部署阶段报未知预设；能自动探测时其实不必手写
 ```
 多数 provider 环境能**自动探测**预设，探不到才需要手写。选预设前留意运行时能力差异：官方特别指出 SolidStart 依赖异步局部存储（ALS）做请求上下文追踪，Netlify/Vercel/Deno 开箱支持，而 Cloudflare 需要额外开启——这是第五节坑的伏笔。
 
@@ -45,15 +50,19 @@ v2 概览页口径：SolidStart v2 构建在 **Solid v1 + Vite v8+** 之上，�
 
 SolidStart 依赖 **AsyncLocalStorage**（请求上下文追踪的地基）。Netlify、Vercel、Deno 开箱支持；**Cloudflare 要手动开两处**：
 ```ts
+// 目的：Cloudflare 手动开 ALS 支持之一—把 node:async_hooks 列为 external
 export default defineConfig({
   server: {
     preset: "cloudflare_module",
-    rollupConfig: { external: ["__STATIC_CONTENT_MANIFEST", "node:async_hooks"] },
+    rollupConfig: { external: ["__STATIC_CONTENT_MANIFEST", "node:async_hooks"] },   // ✅ 不打包 async_hooks，交给运行时提供
   },
 });
+// ❌ 漏配 node:async_hooks → 构建不报错、上 Workers 后读请求上下文时才运行时报错
 ```
 ```toml
-compatibility_flags = [ "nodejs_compat" ]
+# 目的：Cloudflare 手动开 ALS 支持之二—wrangler 配置里开 nodejs_compat
+compatibility_flags = [ "nodejs_compat" ]   # ✅ 与上面 rollupConfig.external 缺一不可
+# ❌ 只改 vite 配置忘这行 nodejs_compat → ALS 仍不可用，症状同样是运行时报错
 ```
 漏配的典型症状是运行时报错而非构建失败——上 Workers 先把这两段抄齐。
 

@@ -9,15 +9,17 @@
 ```
 
 ```ts
+// 目的：全局样式只走 css 数组——按声明顺序注入，prepend 提到最前
 // nuxt.config.ts
 export default defineNuxtConfig({
   css: [
-    '~/assets/css/reset.css',
-    '~/assets/css/tokens.css',
-    { src: '~/assets/scss/main.scss', prepend: true },   // 需要注入在 others 之前时用对象写法
-    '@some-ui/lib/styles.css',                            // 第三方库样式
+    '~/assets/css/reset.css',      // ✅ 先 reset
+    '~/assets/css/tokens.css',     // ✅ 再主题变量（覆盖 reset 默认值）
+    { src: '~/assets/scss/main.scss', prepend: true },   // ✅ 需排在 others 之前时用对象写法（prepend 提到最前）
+    '@some-ui/lib/styles.css',                            // ✅ 第三方库样式，与自家 token 的先后靠这里显式控制
   ],
 });
+// ❌ 把全局样式写进某组件的非 scoped <style> → 该组件懒加载时样式才注入、切走不回收，全站样式忽生忽灭
 ```
 
 顺序规则（记这三条够用）：**模块注册的样式先于用户 css 数组，用户数组按声明顺序，`prepend: true` 提到最前**。真正会咬人的是第三方 UI 库与自己的 reset/token 谁在前——用 `prepend`/`order` 显式控制，而不是靠"看起来对了"。
@@ -29,7 +31,8 @@ SCSS/Less 不是内置的：需要 `i --save-dev sass`（10-vite 讲过原因，
 **路线 A：Tailwind v3 + 官方模块**
 
 ```bash
-npx nuxt module add tailwindcss     # 自动注入 css、配置 content、加 postcss
+# 目的：路线 A——用官方模块接 Tailwind v3
+npx nuxt module add tailwindcss     # ✅ 自动注入 css、配好 content 扫描、接 postcss
 ```
 
 模块存在的理由就是"把 Nuxt 特有的东西喂给 Tailwind"：自动扫描 `pages/components/composables` 与 **Vue 模板里的动态类名**、支持 layers 里的模板、生成 `.nuxt/tailwind/*` 并处理 SSR 下的样式注入。手接 postcss 也能跑，但你会重复造模块已经解决的轮子（呼应 nuxt-modules 第 1 节的"能力分发"逻辑）。
@@ -37,15 +40,15 @@ npx nuxt module add tailwindcss     # 自动注入 css、配置 content、加 po
 **路线 B：Tailwind v4（CSS-first）或 UnoCSS**
 
 ```ts
-// v4 不需要 nuxt 模块，走 Vite 插件（因为它是 CSS 层的编译，属于 10-vite 说的"文件怎么编译"）
-vite: { plugins: [tailwindcss()] },
-css: ['~/assets/css/main.css'],      // main.css 里 @import "tailwindcss";
+// 目的：路线 B（v4 CSS-first）——它是“文件怎么编译”，走 Vite 插件而非 nuxt module
+vite: { plugins: [tailwindcss()] },  // ✅ Tailwind v4 以 Vite 插件形态接入
+css: ['~/assets/css/main.css'],      // ✅ main.css 里 @import "tailwindcss";
 ```
 
 ```ts
-// UnoCSS 官方是 Vite 插件，但 Nuxt 有包一层：
-modules: ['@unocss/nuxt'],
-css: ['uno.css'],   // 或使用模块自动注入
+// 目的：UnoCSS——官方本是 Vite 插件，Nuxt 包了一层模块，放 modules 里即可
+modules: ['@unocss/nuxt'],   // ✅ 走模块入口（它顺手做了自动导入/扫描）
+css: ['uno.css'],            // ✅ 或省略，由模块自动注入
 ```
 
 选型口诀：**要现成组件生态（shadcn-vue 类）选 Tailwind；要极致体积与自定义规则、且团队能接受自研 shortcuts 选 UnoCSS**。两者的 SSR 注意点是同一个：产物是"按用到的类生成的单个 CSS"，天然可长缓存，但必须确保扫描覆盖所有生成类名的位置（动态拼接 `text-${color}-500` 是最经典的丢样式成因，与 04-vue 的 class 绑定规则叠加后更难查，呼应 vue-class-style-transition）。
@@ -53,10 +56,11 @@ css: ['uno.css'],   // 或使用模块自动注入
 ## 3. `.client` / `.server` 后缀：CSS 也有"只在一侧"
 
 ```ts
+// 目的：.client/.server 后缀——按“服务于哪一侧产出的 DOM”裁剪样式分包
 css: [
-  '~/assets/css/print.css',            // 两侧都进（默认）
-  '~/assets/css/editor.client.css',    // 只进客户端包
-  '~/assets/css/ssr-only.server.css',  // 只进服务端渲染的样式
+  '~/assets/css/print.css',            // ✅ 无后缀：两侧都进（默认）
+  '~/assets/css/editor.client.css',    // ✅ .client：只进客户端包，减小首屏 SSR CSS 体积
+  '~/assets/css/ssr-only.server.css',  // ✅ .server：只进服务端渲染的样式（如仅 SSR 出现的骨架）
 ]
 ```
 

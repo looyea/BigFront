@@ -5,8 +5,10 @@
 ## 一、两种绑定方式：`on:` 原生 vs `on__` 委托
 
 ```jsx
-<button onClick={handleClick}>点我</button>        // 委托：监听器加在 document，冒泡时分派给本元素
-<div on:scroll={handleScroll}>很长的内容</div>      // 原生：监听器直接 addEventListener 在这个元素上
+// 目的：两种事件绑定—onClick 委托到 document、on:click 原生挂元素上（一个冒号之差决定监听落点）
+<button onClick={handleClick}>点我</button>        // ✅ 委托：监听器加在 document，冒泡时分派给本元素
+<div on:scroll={handleScroll}>很长的内容</div>      // ✅ 原生：监听器直接 addEventListener 在这个元素上
+// ❌ scroll 不在委托清单里，写 onScroll 不会生效 → 非高频事件一律用原生 on:
 ```
 
 - **`on:eventName`（驼峰，或全小写 `onclick`）= 委托事件**：Solid 不为每个元素各挂监听，而是在 document 挂一个该类型监听、事件冒泡时派发给相关元素。
@@ -17,7 +19,9 @@
 - **委托事件不区分大小写**：`onClick` 和 `onclick` 都行（Solid 内部按标准事件名归一）。
 - **原生事件区分大小写**：`on:` 会**原样**把名字交给 `addEventListener`，所以自定义事件的大小写必须对上：
   ```jsx
-  <button on:Custom-Event={handleClick}>…</button>   // 事件名就叫 "Custom-Event"
+  // 目的：原生 on: 把事件名原样交给 addEventListener—大小写敏感，自定义事件要对上名
+  <button on:Custom-Event={handleClick}>…</button>   // ✅ 事件名就叫 "Custom-Event"，大小写不能错
+  // ❌ 写成 on:custom-event 而 dispatch 的是 "Custom-Event" → 名字对不上，处理器永不触发
   ```
 
 ## 三、委托事件清单 + 何时改用原生
@@ -27,7 +31,9 @@ Solid 只为**高频常用事件**做委托，完整清单（源码 `DelegatedEv
 
 **不常发生的事件用原生更好**（如偶发的 `mousemove`）：委托的性能收益来自"处理大量同类事件"，冷门事件享受不到、反而白占一个常驻 document 监听：
 ```jsx
-<div on:mousemove={handleMove} />     // 偶发 → 原生
+// 目的：不常发生的事件用原生更好—委托收益来自"处理大量同类事件"，冷门事件白占常驻 document 监听
+<div on:mousemove={handleMove} />     // ✅ 偶发 mousemove → 原生挂元素，卸载即随元素消失
+// ❌ 委托监听不随元素卸载而消失（按类型挂在 document），靠"删元素省监听"是错觉
 ```
 
 ## 四、委托的三大坑（务必记牢）
@@ -49,8 +55,10 @@ Solid 不加自己的语义，尊重 DOM 原生：
 事件处理器**不属于响应式系统**。你把一个 signal 直接当 handler 传，它**不会随 signal 变化而更新**（因为增删监听器开销大，Solid 不把它做成响应式绑定）：
 
 ```jsx
-<div onClick={props.onClick} />                 // 若 props.onClick 这个"引用"会变，这里不跟
+// 目的：处理器不属于响应式系统—把 signal/会变的引用直接当 handler 传，不会随其更新
+<div onClick={props.onClick} />                 // ❌ props.onClick 这个"引用"若会变，这里不跟（不重绑监听）
 <div onClick={() => props.onClick?.()} />      // ✅ 包一层箭头函数：每次触发时才现读最新 props.onClick
+// 口诀：需要"用到最新值"就在回调里现读，别指望处理器本身会重绑
 ```
 
 同理，绑定的数组参数 `[handler, data]` 里的 `data` 若需响应，也得走函数现读。**口诀：需要"用到最新值"就在回调里现读，别指望处理器本身会重绑。**
@@ -58,8 +66,10 @@ Solid 不加自己的语义，尊重 DOM 原生：
 ## 七、省开销的数组绑定 + currentTarget/target
 
 ```jsx
-const handler = (data, event) => console.log(data, event);
-<button onClick={[handler, "Hello!"]}>…</button>   // "Hello!" 作为第一个参数，event 为第二
+// 目的：数组绑定省 bind—[handler, data] 把 data 作首参、event 作次参，避免每次渲染造闭包
+const handler = (data, event) => console.log(data, event);   // ✅ data 在前、event 在后
+<button onClick={[handler, "Hello!"]}>…</button>   // ✅ "Hello!" 作第一个参数，event 为第二
+// ❌ 退回 handler.bind(null, "Hello!") 写进 JSX → 每次渲染都新建绑定函数，Solid 用数组绑定正是为省这个
 ```
 这替代了 `handler.bind(null,"Hello!")`，Solid 借此**避免每次渲染造闭包/bind**。
 

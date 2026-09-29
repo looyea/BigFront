@@ -7,11 +7,14 @@
 ## 一、四件套能力地图
 
 ```js
+// 目的：云开发把"服务器"变 SDK——云函数/云数据库/云存储直调，免域名白名单与 AppSecret
 // 小程序端直接用（app.json 配 cloud:true + wx.cloud.init）
-const call = await wx.cloud.callFunction({ name: 'createOrder', data: { goodsId, num } });
+const call = await wx.cloud.callFunction({ name: 'createOrder', data: { goodsId, num } });   // ✅ 云函数代 Express 路由
 const res  = await wx.cloud.database().collection('goods')
-  .where({ onSale: true }).orderBy('sales', 'desc').limit(20).get();
-await wx.cloud.uploadFile({ cloudPath: `avatar/${openid}.png`, filePath: tmp });
+  .where({ onSale: true }).orderBy('sales', 'desc').limit(20).get();   // 云数据库端直连（靠安全规则把关）
+await wx.cloud.uploadFile({ cloudPath: `avatar/${openid}.png`, filePath: tmp });   // ✅ 上传免域名白名单
+// ❌ 未 wx.cloud.init() 就 callFunction → 报初始化错误（需在 app.onLaunch 先 init env）
+// ❌ 集合无/写错安全规则就端直连读写 → 数据库裸奔（他人可读改你的数据）
 ```
 
 | 件 | 对应自建 | 要点 |
@@ -26,9 +29,11 @@ await wx.cloud.uploadFile({ cloudPath: `avatar/${openid}.png`, filePath: tmp });
 ### 权限模型：安全规则（云开发的"中间件层"）
 
 ```json
+// 目的：安全规则是云开发的"中间件层"——用声明式表达式限定谁能读写（仅本人订单）
 // database 集合规则示意：仅本人可读写自己的订单
 "read": "doc._openid == auth.openid",
 "write": "doc._openid == auth.openid"
+// ❌ 规则写成 "read": true 或留空 → 全量可读（数据裸奔，真实事故常客）；复杂校验一律挪进云函数
 ```
 
 规则写错=数据库裸奔（真实事故常客）；复杂校验一律挪进云函数——"端可直连是便利，边界要设在函数与规则"（呼应 exp-validation：永远不信任客户端）。

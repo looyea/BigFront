@@ -19,16 +19,18 @@
 Next 内置上报通道：
 
 ```tsx
+// 目的：用 next/script 挂真实用户（RUM）的 CWV 上报，不只靠本地 Lighthouse
 // app/layout.tsx 中挂客户端上报组件
 import Script from 'next/script';
 <Script
   src="https://unpkg.com/web-vitals@4/dist/web-vitals.js"
-  strategy="afterInteractive"
+  strategy="afterInteractive"   // ✅ hydration 后再加载，不抢首屏带宽
   onLoad={(e) => {
     const { onLCP, onINP, onCLS } = (e.target as any).contentWindow;
-    onLCP((m) => sendToAnalytics('LCP', m.value));
+    onLCP((m) => sendToAnalytics('LCP', m.value));   // ✅ 真实用户指标回传
   }}
 />
+// ❌ 把上报脚本写成 strategy="beforeInteractive" 或直接 <script> 放 head → 阻塞首屏、拖累 LCP
 ```
 
 生产上更常用 `@next/bundle-analyzer` + 平台自带的 Analytics，或自建 /api/metrics Route Handler 收点（呼应 next-route-handlers 第 3 节"三正当用途"）。
@@ -38,9 +40,11 @@ import Script from 'next/script';
 **next/dynamic 是 React.lazy + Suspense 的框架封装**，专治"首屏加载了永远用不到的 JS"：
 
 ```tsx
+// 目的：next/dynamic 懒加载非首屏重组件，专治“首屏加载了永远用不到的 JS”
 // 1) 普通懒加载：组件进视口/被触发才拉 chunk
 import dynamic from 'next/dynamic';
-const Charts = dynamic(() => import('./charts'), { ssr: false, loading: () => <Skeleton /> });
+const Charts = dynamic(() => import('./charts'), { ssr: false, loading: () => <Skeleton /> });   // ✅ ssr:false 给地图/富文本等纯客户端件；loading 永远要给防白屏伤 CLS
+// ❌ ssr:false 加多了 → 首屏最大内容变纯 CSR、白屏等 JS，LCP 反而变差（只对“首屏不可见”模块用）
 ```
 
 三个关键参数：
@@ -70,12 +74,13 @@ Next 的性能优势一半来自"提前准备"：
 服务端侧还有一个隐蔽杀手：**取数瀑布**。页面组件里 await A 完再 await B，TTFB 直接相加。解法是把串行改并行：
 
 ```tsx
+// 目的：把串行取数改并行——避免 TTFB 直接相加的“取数瀑布”
 // 反例：瀑布
 const user = await fetchUser(id);      // 300ms
-const posts = await fetchPosts(id);    // 400ms → 总共 700ms
+const posts = await fetchPosts(id);    // ❌ 等 user 完才发 → 400ms，总共 700ms
 
 // 正例：并行
-const [user, posts] = await Promise.all([fetchUser(id), fetchPosts(id)]); // 400ms
+const [user, posts] = await Promise.all([fetchUser(id), fetchPosts(id)]); // ✅ 同时发出 → 取最大值 400ms
 ```
 
 更彻底的做法是把非关键数据推给 Suspense 边界流式输出，首屏只等 LCP 需要的最小集（第 1 节 + next-context-streaming 第 4 节"骨架屏三标准"）。

@@ -7,27 +7,29 @@
 ## 一、声明式：文件里"导出配置"而不是"渲染 head"
 
 ```tsx
+// 目的：声明式“导出配置”而非“渲染 head”——全站默认值写在 layout，页面级可覆写/动态生成
 // app/layout.tsx —— 全站默认值
 export const metadata: Metadata = {
-  title: { default: '大前端学院', template: '%s · 大前端学院' },   // template 是站名统一后缀神器
+  title: { default: '大前端学院', template: '%s · 大前端学院' },   // ✅ template 统一站名后缀神器
   description: '系统化的前端学习平台',
-  metadataBase: new URL('https://college.example.com'),           // 相对 URL 解析基准（OG 图必填项）
+  metadataBase: new URL('https://college.example.com'),           // ✅ 相对 URL 解析基准（OG 图必填项）
   openGraph: { siteName: '大前端学院', type: 'website', locale: 'zh_CN' },
   robots: { index: true, follow: true },
 };
 
 // app/blog/[slug]/page.tsx —— 页面级覆写 + 动态生成
-export async function generateMetadata({ params }): Promise<Metadata> {
+export async function generateMetadata({ params }): Promise<Metadata> {   // ✅ 只有服务端组件能 export metadata
   const { slug } = await params;
-  const post = await getPost(slug);                 // 与 generateStaticParams 同一时机执行
+  const post = await getPost(slug);                 // ✅ 与 generateStaticParams 同一时机执行
   if (!post) return { title: '未找到' };
   return {
-    title: post.title,                              // 套上 template 渲染
+    title: post.title,                              // ✅ 套上 template 渲染
     description: post.excerpt,
-    alternates: { canonical: `https://college.example.com/blog/${slug}` },
+    alternates: { canonical: `https://college.example.com/blog/${slug}` },   // ✅ canonical 治重复内容
     openGraph: { images: [{ url: post.cover, width: 1200, height: 630 }] },
   };
 }
+// ❌ 不写 metadataBase 就用相对 URL 出 OG 图 → 分享时图片链接解析失败（卡片无图）
 ```
 
 规则三条：**就近合并**（子段覆盖父段同名字段、其余继承）；**只有服务端组件能 export metadata**（客户端组件要改标签用 `use()`/渲染 `<title>` 等受限手段，老 JSX `<Head>` 时代结束）；generateMetadata 的**耗时计入渲染**——它内部 await 要节制（能复用 generateStaticParams 已取的数据最好，L4 的 memoization 在这续命）。

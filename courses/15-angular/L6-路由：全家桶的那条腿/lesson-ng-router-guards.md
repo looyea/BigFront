@@ -18,33 +18,38 @@
 v15 引入、v16+ 主流——守卫就是一个函数，内部自由 `inject()`：
 
 ```ts
+// 目的：函数式登录守卫（v15+）——守卫就是一个函数，内部自由 inject
 import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 
 // 登录守卫
 export const authGuard: CanActivateFn = (route, state) => {
-  const authService = inject(AuthService);
+  const authService = inject(AuthService);   // 守卫跑在注入上下文，inject 合法
   const router = inject(Router);
 
   if (authService.isLoggedIn()) {
     return true;  // 放行
   }
   // 未登录 → 跳登录页，带 returnUrl
-  return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+  return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });   // 返 UrlTree = 重定向
 };
 
 // 在路由配置中使用
-{ path: 'admin', canActivate: [authGuard], loadComponent: () => ... }
+{ path: 'admin', canActivate: [authGuard], loadComponent: () => ... }   // 挂到 canActivate 数组
+// ✅ 返 true 放行 / 返 UrlTree 重定向 / 返 false 硬拒，三态清晰
+// ❌ 在守卫里 inject 组件私有 provider（非 root）→守卫在 root injector 执行→NullInjectorError
 ```
 
 旧 class 守卫写法（已不推荐）：
 ```ts
+// 目的：旧 class 守卫（已不推荐）——仅供读存量代码识别
 @Injectable()
-class AuthGuard implements CanActivate {
-  constructor(private auth: AuthService, private router: Router) {}
+class AuthGuard implements CanActivate {           // 要 @Injectable + implements 接口
+  constructor(private auth: AuthService, private router: Router) {}   // constructor DI
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree { ... }
 }
 // 使用：canActivate: [AuthGuard]
+// ❌ 新工程仍写 class 守卫→额外样板（@Injectable + 需注册），函数式守卫全都免
 ```
 
 函数式优势：无需 `@Injectable` + 不需在 providers 注册 + inject 上下文天然可用 + 更简洁。
@@ -54,12 +59,15 @@ class AuthGuard implements CanActivate {
 CanMatch 的核心价值：**在加载组件 JS 之前就拒绝**——省带宽：
 
 ```ts
+// 目的：CanMatch——在加载组件 JS 之前就拒绝，省带宽
 export const adminMatchGuard: CanMatchFn = () => {
   const auth = inject(AuthService);
   return auth.hasRole('admin');  // false → Router 跳过该路由（不下载 chunk）
 };
 
-{ path: 'admin', canMatch: [adminMatchGuard], loadChildren: () => import('./admin/routes').then(m => m.ADMIN_ROUTES) }
+{ path: 'admin', canMatch: [adminMatchGuard], loadChildren: () => import('./admin/routes').then(m => m.ADMIN_ROUTES) }   // canMatch 拦在懒加载前
+// ✅ canMatch 为 false 直接跳过该路由去试下一条，admin 模块 JS 根本不下载
+// ❌ 用 canActivate 拦懒加载路由→chunk 已下载才被拒，白费带宽（该用 canMatch）
 ```
 
 非管理员 → 整个 admin 模块 JS 根本不下载。
@@ -69,14 +77,17 @@ export const adminMatchGuard: CanMatchFn = () => {
 典型场景：表单编辑未保存，弹出「确认离开？」。CanDeactivate 接收**当前组件实例**：
 
 ```ts
-export const unsavedChangesGuard: CanDeactivateFn<EditComponent> = (component) => {
+// 目的：CanDeactivate——离开当前组件时的未保存确认
+export const unsavedChangesGuard: CanDeactivateFn<EditComponent> = (component) => {   // 泛型约束→拿到正确组件类型
   if (component.hasUnsavedChanges()) {
-    return confirm('有未保存的更改，确定离开吗？');
+    return confirm('有未保存的更改，确定离开吗？');   // true=离开 / false=留原地
   }
   return true;
 };
 
-{ path: 'edit/:id', component: EditComponent, canDeactivate: [unsavedChangesGuard] }
+{ path: 'edit/:id', component: EditComponent, canDeactivate: [unsavedChangesGuard] }   // 挂 canDeactivate
+// ✅ 守卫直接收当前组件实例，问一句决定去留
+// ❌ 在 CanDeactivate 里做重逻辑/订阅→组件正销毁时调用，易出错；只返 boolean/UrlTree
 ```
 
 注意：CanDeactivate 的泛型约束确保你拿到正确组件类型。
@@ -86,21 +97,24 @@ export const unsavedChangesGuard: CanDeactivateFn<EditComponent> = (component) =
 守卫可以返回 `boolean | UrlTree | Observable<boolean | UrlTree> | Promise<boolean | UrlTree>`：
 
 ```ts
-export async function paymentGuard(): Promise<boolean | UrlTree> {
+// 目的：异步守卫——返 Promise/Observable，Router 等结果再导航
+export async function paymentGuard(): Promise<boolean | UrlTree> {   // async 函数式守卫
   const vipService = inject(VipService);
   const router = inject(Router);
-  const isPaid = await vipService.checkPaymentStatus();
-  return isPaid || router.createUrlTree(['/pricing']);
+  const isPaid = await vipService.checkPaymentStatus();   // await 异步判定
+  return isPaid || router.createUrlTree(['/pricing']);    // 未付费→跳定价页
 }
 
 // RxJS 风格
 export const tokenRefreshGuard: CanActivateFn = () => {
   const http = inject(HttpClient);
   return http.get('/api/check-session').pipe(
-    map(r => r.valid),
-    catchError(() => of(false)),
+    map(r => r.valid),            // 映射成 boolean
+    catchError(() => of(false)),  // 网络错→当未登录拒绝，不让流断
   );
 };
+// ✅ Router 会等 Observable complete / Promise resolve 才继续导航
+// ❌ Observable 守卫不 catchError→接口报错时流断裂→导航永久卡 pending
 ```
 
 Router 会等 Observable complete / Promise resolve 后才继续导航。
@@ -110,11 +124,14 @@ Router 会等 Observable complete / Promise resolve 后才继续导航。
 一个路由可挂多个守卫——按数组顺序执行，任一返回 false/UrlTree 即短路：
 
 ```ts
+// 目的：守卫链——一个路由挂多个守卫，按数组序执行、任一短路
 {
   path: 'reports',
-  canActivate: [authGuard, roleGuard('viewer')],
-  canMatch: [featureFlagGuard('reports-module')],
+  canActivate: [authGuard, roleGuard('viewer')],           // 先验登录、再验角色
+  canMatch: [featureFlagGuard('reports-module')],         // 最先跑：特性开关未开就不加载
 }
+// ✅ featureFlag(CanMatch)→懒加载→authGuard→roleGuard 按序，任一 false/UrlTree 即短路
+// ❌ 把 roleGuard 排在 authGuard 前→未登录时 roleGuard 读 user 为 null→报错；应先 auth 再 role
 ```
 
 执行序：featureFlagGuard(CanMatch) → 懒加载 → authGuard → roleGuard('viewer') → Resolve。
@@ -128,16 +145,17 @@ Router 会等 Observable complete / Promise resolve 后才继续导航。
 4. admin 路由非管理员不能看
 
 ```ts
+// 目的：实战——signal 登录态 + UrlTree 回跳 + 登出清场（zoneless 仍工作）
 // auth.service.ts
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: 'root' })   // root 单例：全应用共享同一登录态
 export class AuthService {
-  private _user = signal<User | null>(loadFromStorage());
-  readonly user = this._user.asReadonly();
-  readonly isLoggedIn = computed(() => this._user() !== null);
+  private _user = signal<User | null>(loadFromStorage());    // 从本地存储恢复会话
+  readonly user = this._user.asReadonly();                    // 对外只读
+  readonly isLoggedIn = computed(() => this._user() !== null);  // 派生登录布尔
 
   login(email: string, pw: string) { /* HTTP → set token → _user.set(...) */ }
-  logout() { this._user.set(null); localStorage.removeItem('token'); }
-  hasRole(role: string) { return this._user()?.roles?.includes(role); }
+  logout() { this._user.set(null); localStorage.removeItem('token'); }   // 清场：置 null + 删 token
+  hasRole(role: string) { return this._user()?.roles?.includes(role); }   // 可选链防未登录
 }
 
 // auth.guards.ts
@@ -146,13 +164,15 @@ export const authGuard: CanActivateFn = (_route, state) => {
   const router = inject(Router);
   return auth.isLoggedIn()
     ? true
-    : router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+    : router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });   // 未登录带 returnUrl
 };
 
-export const adminGuard: CanMatchFn = () => inject(AuthService).hasRole('admin');
+export const adminGuard: CanMatchFn = () => inject(AuthService).hasRole('admin');   // 非管理员不加载 admin 模块
 
 // login.component.ts 里登录成功后：
-this.router.decode(this.route.snapshot.queryParams['returnUrl'] || '/');
+this.router.decode(this.route.snapshot.queryParams['returnUrl'] || '/');   // 登录后跳回原页，无则回首页
+// ✅ 用 providedIn:'root' 单例存登录态，登出 _user.set(null)→isLoggedIn 变 false→下次导航自然被拦
+// ❌ 把登录态存进组件级 provider→多实例不同步/登出后旧实例残留→应 root 单例
 ```
 
 关键点：

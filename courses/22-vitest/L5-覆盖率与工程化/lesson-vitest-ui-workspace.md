@@ -9,10 +9,12 @@
 同仓既要跑**纯逻辑（node）**又要跑**组件（jsdom）**，别全局设成 jsdom 拖慢全部。用 `test.projects` 拆子项目，各自带 `environment`/`include`/`setupFiles`：
 
 ```ts
+// 目的：projects 拆多环境——纯逻辑走 node、组件走 jsdom，各带 include，别全局 jsdom 拖慢全部
 test: { projects: [
-  { test: { name: 'node', environment: 'node', include: ['src/**/*.test.ts'] } },
-  { test: { name: 'dom', environment: 'jsdom', include: ['src/**/*.dom.test.tsx'] } },
-]}
+  { test: { name: 'node', environment: 'node',  include: ['src/**/*.test.ts'] } },       // 纯逻辑：最快
+  { test: { name: 'dom',  environment: 'jsdom', include: ['src/**/*.dom.test.tsx'] } },  // 组件：才需要 DOM
+]},
+// ❌ 全局设 environment:'jsdom' 图省事 → 成百上千条纯逻辑用例也被迫起 DOM、整体变慢
 ```
 
 monorepo 里每个包一个 project、共享根配置，是大型仓库的标准组织方式。

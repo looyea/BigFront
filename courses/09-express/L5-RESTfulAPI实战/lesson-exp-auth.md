@@ -21,30 +21,32 @@
 ```
 
 ```js
+// 目的：Session 认证—登录写 req.session（存 Redis），后续靠 cookie 自动携带 sessionId 定位用户
 import session from 'express-session';
 import connectRedis from 'connect-redis';
 const RedisStore = connectRedis(session);
 
 app.use(session({
-  store: new RedisStore({ client: redisClient }),
-  secret: process.env.SESSION_SECRET,        // 签名 cookie
+  store: new RedisStore({ client: redisClient }),   // ✅ 存 Redis，多实例共享
+  secret: process.env.SESSION_SECRET,               // ✅ 签名 cookie，缺失会启动报错
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 1000*60*60*24 },
+  cookie: { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 1000*60*60*24 },  // ✅ httpOnly 防 XSS 偷 cookie
 }));
 
 app.post('/login', async (req, res) => {
   const user = await User.findOne({ email: req.body.email });
-  if (user && await bcrypt.compare(req.body.password, user.passwordHash)) {
-    req.session.userId = user._id;           // 存进 session
+  if (user && await bcrypt.compare(req.body.password, user.passwordHash)) {  // ✅ 用 compare 不可直接比字符串
+    req.session.userId = user._id;           // ✅ 存进 session，浏览器拿到 sessionId cookie
     res.json({ ok: true });
-  } else res.status(401).json({ error: { code: 'BAD_CREDENTIALS' } });
+  } else res.status(401).json({ error: { code: 'BAD_CREDENTIALS' } });      // ✅ 统一错信息防枚举
 });
 
 function requireAuth(req, res, next) {
-  if (req.session?.userId) return next();
-  res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
+  if (req.session?.userId) return next();                                     // ✅ 已登录放行
+  res.status(401).json({ error: { code: 'UNAUTHORIZED' } });                   // ✅ 未登录 401
 }
+// ❌ 用默认 MemoryStore 上多进程 → 不同 worker 不共享 session，刚登录就被分到另一个进程又 401（时而登录成功时而掉线）
 ```
 
 优点：可即时吊销（删 session）、cookie 自动携带。缺点：服务端要存 session（集群需 Redis 共享）、每次查存储。
@@ -68,38 +70,42 @@ eyJhbGciOiJIUzI1NiJ9.eyJ1aWQiOiIxMjMiLCJpYXQiOjEsImV4cCI6Mn0.签名
 ### 3.2 签发与验证
 
 ```bash
+# 目的：安装 JWT 签发/验证 + 密码哈希
 npm i jsonwebtoken bcrypt
 ```
 
 ```js
+// 目的：登录签发双 Token，业验证中间件从 Authorization 头取并验签
 import jwt from 'jsonwebtoken';
 
-// 登录签发
+// ✅ 登录签发
 app.post('/login', async (req, res) => {
   const user = await userService.verify(req.body);
-  if (!user) return res.status(401).json({ error: { code: 'BAD_CREDENTIALS' } });
+  if (!user) return res.status(401).json({ error: { code: 'BAD_CREDENTIALS' } });   // ✅ 验证失败短路 401
   const token = jwt.sign(
-    { sub: user._id, role: user.role },
+    { sub: user._id, role: user.role },          // ✅ payload 只放非敏感声明（可被解码）
     process.env.JWT_SECRET,
-    { algorithm: 'HS256', expiresIn: '15m' }          // Access Token 短命
+    { algorithm: 'HS256', expiresIn: '15m' }          // ✅ Access Token 短命
   );
-  const refreshToken = jwt.sign({ sub: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
-  res.json({ accessToken: token });   // 或放 httpOnly cookie（见 3.4）
+  const refreshToken = jwt.sign({ sub: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });  // ✅ Refresh 长命、不同密钥
+  res.json({ accessToken: token });   // ✅ 或放 httpOnly cookie（见 3.4）
 });
 
-// 验证中间件
+// ✅ 验证中间件
 function auth(req, res, next) {
   const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;   // ✅ 剥掉 "Bearer " 前缀
   if (!token) return res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    req.user = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });  // ✅ 验签+验过期，挂到 req
     next();
   } catch (e) {
-    const code = e.name === 'TokenExpiredError' ? 'TOKEN_EXPIRED' : 'INVALID_TOKEN';
+    const code = e.name === 'TokenExpiredError' ? 'TOKEN_EXPIRED' : 'INVALID_TOKEN';   // ✅ 区分过期与非法
     res.status(401).json({ error: { code } });
   }
 }
+// ❌ verify 不传 algorithms:['HS256'] → 可能被 alg:none 绕过或 HS/RS 混淆伪造合法 token
+// ❌ Access 与 Refresh 用同一个密钥 → 一旦泄密全部沦陷；且 payload 塞密码等敏感信息会被 Base64 解码看到
 ```
 
 > **必须显式传 `algorithms: ['HS256']`**——否则历史上有 `alg:none` 绕过和 HS/RS 混淆漏洞。
@@ -107,12 +113,14 @@ function auth(req, res, next) {
 ### 3.3 密码哈希：bcrypt / argon2
 
 ```js
-// 注册：绝不存明文
-const passwordHash = await bcrypt.hash(req.body.password, 12);  // cost=12
+// 目的：密码只存慢哈希、登录用 compare（内部处理 salt）
+// ✅ 注册：绝不存明文
+const passwordHash = await bcrypt.hash(req.body.password, 12);  // ✅ cost=12，越高越慢越抗暴力
 await User.create({ email, passwordHash });
 
-// 登录：用 compare（内部处理 salt）
+// ✅ 登录：用 compare（内部处理 salt）
 const ok = await bcrypt.compare(input, user.passwordHash);
+// ❌ 用 MD5/SHA1 或直接字符串比密码 → 可被彩虹表/GPU 秒破，拖库即全部泄露
 ```
 
 - **绝不能自创加密**（MD5/SHA1 可被彩虹表/GPU 秒破）；
@@ -133,18 +141,20 @@ const ok = await bcrypt.compare(input, user.passwordHash);
 ### 3.5 双 Token 刷新
 
 ```js
+// 目的：双 Token 刷新—用 Refresh 换新 Access，并轮换 Refresh（旧的进黑名单）
 // POST /refresh：用 Refresh Token 换新 Access Token
 app.post('/refresh', (req, res) => {
-  const rt = req.cookies.refreshToken;
+  const rt = req.cookies.refreshToken;                              // ✅ Refresh 存 httpOnly cookie，前端 JS 读不到
   try {
-    const payload = jwt.verify(rt, process.env.JWT_REFRESH_SECRET);
-    const newAccess = jwt.sign({ sub: payload.sub, role: }, JWT_SECRET, { expiresIn: '15m' });
-    // Refresh Token 轮换：发新 refresh，旧的进黑名单
+    const payload = jwt.verify(rt, process.env.JWT_REFRESH_SECRET); // ✅ 用专用 refresh 密钥验
+    const newAccess = jwt.sign({ sub: payload.sub, role: payload.role }, process.env.JWT_SECRET, { expiresIn: '15m' });  // ✅ 重新签 Access
+    // ✅ Refresh Token 轮换：发新 refresh，旧的进黑名单
     const newRefresh = rotateRefreshToken(payload);
-    res.cookie('refreshToken', newRefresh, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 7*24*3600*1000 });
+    res.cookie('refreshToken', newRefresh, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 7*24*3600*1000 });  // ✅ 新 refresh 回写 cookie
     res.json({ accessToken: newAccess });
-  } catch { res.status(401).json({ error: { code: 'INVALID_REFRESH' } }); }
+  } catch { res.status(401).json({ error: { code: 'INVALID_REFRESH' } }); }  // ✅ refresh 无效/过期 → 强制重登
 });
+// ❌ 不轮换直接复用同一 refresh → 被盗后可长期刷新；旧 refresh 不入黑名单则 revoke 失效
 ```
 
 ### 3.6 登出与吊销
@@ -159,27 +169,29 @@ JWT 天生无法主动吊销（签名有效即认）。方案：
 ## 四、授权：RBAC 权限中间件
 
 ```js
+// 目的：RBAC 工厂—返回“需拥任某一角色”的中间件；细粒度属主防 IDOR
 function requireRole(...roles) {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: { code: 'FORBIDDEN' } });
+    if (!roles.includes(req.user.role)) {                       // ✅ req.user 由上游 auth 中间件注入
+      return res.status(403).json({ error: { code: 'FORBIDDEN' } });  // ✅ 无权 403（非 401）
     }
     next();
   };
 }
 
-router.delete('/:id', auth, requireRole('admin'), postController.remove);
-router.get('/me', auth, (req, res) => res.json({ data: req.user }));
+router.delete('/:id', auth, requireRole('admin'), postController.remove);   // ✅ 先 auth 再 requireRole，顺序不能反
+router.get('/me', auth, (req, res) => res.json({ data: req.user }));       // ✅ 取自己信息
 
-// 资源属主校验（比角色更细）
+// ✅ 资源属主校验（比角色更细）
 router.patch('/:id', auth, async (req, res) => {
   const post = await Post.findById(req.params.id);
   if (!post) return res.status(404).json({ error: { code: 'NOT_FOUND' } });
-  if (post.authorId.toString() !== req.user.sub && req.user.role !== 'admin') {
-    return res.status(403).json({ error: { code: 'FORBIDDEN' } });   // 或 404 防枚举
+  if (post.authorId.toString() !== req.user.sub && req.user.role !== 'admin') {   // ✅ 非作者且非 admin
+    return res.status(403).json({ error: { code: 'FORBIDDEN' } });   // ✅ 或 404 防枚举
   }
   // ...更新
 });
+// ❌ 把 requireRole 放在 auth 之前→ req.user 还没注入，roles.includes(undefined) 永远 403；只靠前端隐藏按钮不做服务端校验 → IDOR 越权
 ```
 
 防 IDOR（越权访问他人资源）：**每个涉及具体资源的操作都要校验归属**，不能只靠前端不显示按钮。
@@ -206,17 +218,20 @@ router.patch('/:id', auth, async (req, res) => {
 - OIDC = OAuth2 + `id_token`（JWT，含身份信息）→ 认证用途。
 
 ```bash
+# 目的：安装 passport + Google OAuth 策略
 npm i passport passport-google-oauth20
 ```
 
 ```js
+// 目的：passport 策略骨架—Google 回调后用 profile 上接/新建本地用户
 // passport 策略骨架
 passport.use(new GoogleStrategy({
-  clientID, clientSecret, callbackURL,
+  clientID, clientSecret, callbackURL,          // ✅ 三个值来自授权应用配置
 }, async (accessToken, refreshToken, profile, done) => {
-  const user = await upsertOAuthUser(profile);
-  return done(null, user);
+  const user = await upsertOAuthUser(profile);   // ✅ 用 OAuth 身份映射/创建本地用户
+  return done(null, user);                       // ✅ done(err, user) → passport 写入 req.user
 }));
+// ❌ done 第一参非 null → passport 视为认证失败进 failure 分支；callbackURL 与 Google 控制台登记不一致 → redirect_uri_mismatch
 ```
 
 ---

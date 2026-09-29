@@ -8,11 +8,12 @@
 
 ```vue
 <script setup>
+// 目的：watch 侦听一个 ref，变化时执行副作用（发请求/写存储）；默认惰性，源变才跑
 import { ref, watch } from "vue";
 const q = ref("");
 
 watch(q, (newVal, oldVal) => {
-  console.log(`搜索从 "${oldVal}" 变为 "${newVal}"`);
+  console.log(`搜索从 "${oldVal}" 变为 "${newVal}"`);   // ✅ 输入 vue 后打印：搜索从 "" 变为 "vue"
   // 副作用：防抖后发请求...
 });
 </script>
@@ -26,6 +27,7 @@ watch(q, (newVal, oldVal) => {
 ## 二、侦听源：不止 ref
 
 ```js
+// 目的：watch 的四种侦听源——多源/getter/reactive 对象/reactive 单属性
 // 1) 多个源：数组
 watch([a, b], ([na, nb], [oa, ob]) => {...});
 
@@ -33,11 +35,12 @@ watch([a, b], ([na, nb], [oa, ob]) => {...});
 watch(() => state.user.name, (n) => {...});
 
 // 3) 直接侦听 reactive 对象：自动深层（隐含 deep:true）
-watch(state, (n, o) => {...});          // ⚠️ n 和 o 是同一对象（Proxy），看不出"变了什么"
+watch(state, (n, o) => {...});          // ⚠️ n 和 o 是同一对象（Proxy），新旧看不出"变了什么"
 watch(state, {...}, { deep: true });    // 深层
 
 // 4) reactive 的某个属性要拿新/旧值，用 getter 包一层
-watch(() => state.count, (n, o) => {...});   // ✅ 才有意义的新旧值
+watch(() => state.count, (n, o) => {...});   // ✅ 才有意义的新旧值（n=1, o=0）
+// ❌ 直接写 watch(state.count, ...)：传进去的是拆下的快照值（非 ref），watch 根本不会触发
 ```
 
 要点：**侦听 reactive 整体时新旧值同引用**，要比较具体值请用 `() => state.x` 形式。
@@ -47,10 +50,11 @@ watch(() => state.count, (n, o) => {...});   // ✅ 才有意义的新旧值
 ## 三、选项：immediate / deep / flush
 
 ```js
+// 目的：三个常用选项——immediate 开场跑一次、deep 深侦、flush 控制回调相对 DOM 更新的时机
 watch(q, cb, {
   immediate: true,    // 创建时立即用当前值跑一次（初始化常用）
   deep: true,         // 深层遍历（侦听嵌套对象）
-  flush: "post",      // 默认 "post"：DOM 更新后跑回调（可安全读更新后的 DOM）
+  flush: "post",      // DOM 更新后跑回调（可安全读更新后的 DOM）
 });
 ```
 
@@ -64,11 +68,12 @@ watch(q, cb, {
 侦听源频繁变化时，上一次副作用可能还没完成（典型：**搜索请求竞态**）。回调第三个参数 `onCleanup` 会在**下次回调执行前 / 停止时**调用，用于取消：
 
 ```js
+// 目的：用 onCleanup 取消上一条未完成请求，解决搜索竞态（旧响应不会覆盖新响应）
 watch(q, async (query, _, onCleanup) => {
   const ctrl = new AbortController();
   onCleanup(() => ctrl.abort());          // 新查询进来，取消上一条请求
   const res = await fetch(`/api/search?q=${query}`, { signal: ctrl.signal });
-  // ...
+  // ❌ 不加 onCleanup：慢的旧请求后到会盖掉新请求结果（竞态）
 });
 ```
 
@@ -80,10 +85,12 @@ watch(q, async (query, _, onCleanup) => {
 ## 五、watchEffect：自动收集依赖 + 立即执行
 
 ```js
+// 目的：watchEffect 立即执行一次，并在执行中自动追踪用到的响应式依赖
 import { watchEffect } from "vue";
 watchEffect((onCleanup) => {
-  document.title = `消息 ${count.value}`;   // 用到谁就自动侦听谁
+  document.title = `消息 ${count.value}`;   // 用到 count 就自动侦听 count
 });
+// ❌ 坑：回调里若误读了不需要的 ref，它会一并被侦听→意外重跑（需精细控制时改用 watch）
 ```
 
 - **立即执行一次**并在其中**自动追踪**用到的所有响应式依赖，依赖变了再跑；
@@ -97,9 +104,10 @@ watchEffect((onCleanup) => {
 ## 六、停止侦听
 
 ```js
+// 目的：watch 返回一个停止函数，作用域外创建时需手动调它避免泄漏
 const stop = watch(src, cb);   // watch 返回停止函数
 // 组件卸载会自动停；手动停：
-stop();
+stop();                         // 调用后 src 再变也不再跑 cb
 ```
 
 在 `onUnmounted` 之外，若在组件 setup 作用域内创建，卸载时自动清理；在作用域外（如某库）需自己 `stop()` 或配合 `effectScope`（呼应 vue-composables）。

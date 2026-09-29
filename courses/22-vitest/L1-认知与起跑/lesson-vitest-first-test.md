@@ -3,11 +3,21 @@
 ## 一、三件套
 
 ```ts
+// 目的：最小可用的一个测试——describe 分组、it(=test) 一条用例、expect(x).matcher 断言
 import { describe, it, expect } from 'vitest';
+
+function sum(a: number, b: number) { return a + b; }   // 被测函数
 
 describe('sum', () => {
   it('相加两个正数', () => {
-    expect(1 + 2).toBe(3);
+    expect(sum(1, 2)).toBe(3);   // ✅ 原始值用 toBe（Object.is）：3===3 → 通过
+  });
+
+  it('对象要深比较', () => {
+    // ✅ 结构相等用 toEqual：逐字段递归比 → 通过
+    expect({ a: 1, b: [2] }).toEqual({ a: 1, b: [2] });
+    // ❌ 拿 toBe 比两个新对象：toBe 比的是引用，字面量再像也非同一对象
+    expect({ a: 1 }).toBe({ a: 1 });   // ← 运行失败：expected { a: 1 } to be { a: 1 }（引用不等），记牢 toBe≠toEqual
   });
 });
 ```

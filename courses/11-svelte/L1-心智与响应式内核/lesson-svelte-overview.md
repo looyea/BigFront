@@ -4,6 +4,25 @@
 
 ---
 
+## 〇、想马上动手？两条零负担入口
+
+学纯 Svelte 不必先搭工：**Svelte 官方在浏览器里提供了一个即时编译的 Playground（旧称 REPL，`svelte.dev/playground`）**，左边改 `.svelte`、右边即时看结果与编译产物——本课所有 runes 例子都能直接粘进去跑。
+
+想本地起工程（与后续工具链一致）：
+
+```bash
+# 目的：用官方 CLI 新建一个纯 Svelte（非 Kit）工程
+npx sv create      # 交互式：问你项目名、选 Svelte（不是 SvelteKit）、选模板
+cd <你起的名字>
+npm install
+npm run dev        # PowerShell 不支持 && 连写，就多行分开敲
+# 完整项目结构、CLI 与 SSR 细节在 12-sveltekit，本包不重复搭工程
+```
+
+下面代码里的 `$state` 等 rune 是编译器认识的“关键字”，无需 import——Playground 与本地工程都能直接识别。
+
+---
+
 ## 一、一句话：Svelte 是编译器，不是运行时框架
 
 React / Vue 是**运行时库**：你的组件被打进 bundle，浏览器里真的跑着 React/Vue 的引擎，数据变了就重新执行组件、生成新的虚拟 DOM、diff、再打补丁到真实 DOM（呼应 react-render-model、vue-reactivity-theory）。
@@ -12,10 +31,12 @@ Svelte 走另一条路：
 
 ```svelte
 <script>
-  let count = $state(0);
+  // 目的：计数器最小例—$state 声明响应式，count++ 直接改那一处文本，无虚拟 DOM diff
+  let count = $state(0);   // ✅ 编译器为 count 建信号，模板读它即登记依赖
 </script>
 
 <button onclick={() => count++}>点击了 {count} 次</button>
+{/* ❌ 写成普通 let count=0 不加 $state → count++ 不触发任何 DOM 更新，页面无反应 */}
 ```
 
 构建时 Svelte 编译器把上面这段编译成**接近手写的 JS**：初始化时 `createElement` 建好节点、`count` 变化时**直接** `textContent = count` 改那一处文本。没有虚拟 DOM、没有"重新执行组件"、没有 diff 整棵树的开销。
@@ -38,8 +59,9 @@ Svelte 走另一条路：
 
 ```svelte
 <script lang="ts">
+  // 目的：一个 .svelte 文件的三段骨架—顶层即逻辑，无需 export default/setup 包裹
   // 顶层就是组件的"逻辑"，不需要 export default / setup 包裹
-  let name = $state('Svelte');
+  let name = $state('Svelte');   // ✅ rune 是编译器认识的关键字，无需 import
 </script>
 
 <!-- 标记里用 {表达式} 插值 -->
@@ -47,7 +69,7 @@ Svelte 走另一条路：
 
 <!-- 样式默认作用域到本组件 -->
 <style>
-  h1 { color: #ff3e00; }
+  h1 { color: #ff3e00; }   /* ✅ 编译期给选择器加唯一哈希，不污染全局 */
 </style>
 ```
 
@@ -78,10 +100,12 @@ Svelte 4 及更早，响应式是**隐式**的，靠三条"约定"：
 
 ```svelte
 <script>
-  let count = $state(0);            // 状态
-  const parity = $derived(count % 2 === 0); // 派生：读了才自动追踪依赖
-  $effect(() => { document.title = `${count}`; }); // 副作用
+  // 目的：runes 三件套同屏—状态/派生/副作用，依赖精确追踪
+  let count = $state(0);                       // ✅ 状态
+  const parity = $derived(count % 2 === 0);   // ✅ 派生：读了才自动追踪依赖
+  $effect(() => { document.title = `${count}`; });   // ✅ 副作用：count 变则重跑
 </script>
+{/* ❌ 把 $derived 写成普通 const parity=count%2===0 → 不随 count 更新，永远停在初始值 */}
 ```
 
 > 心智切换：从"改了什么编译器猜"→"你自己用 `$state` 标了什么，依赖就精确追什么"。runes 底层是**信号（signal）** 系统，和 Vue 的 ref/computed、Solid 的 signals 同源（13-solid 会更彻底地走这条路）。
@@ -94,13 +118,15 @@ Svelte 4 及更早，响应式是**隐式**的，靠三条"约定"：
 
 ```js
 // counter.svelte.js  —— 一个可跨组件共享的状态模块
+// 目的：在普通模块里用 runes—后缀 .svelte.js 告知编译器“这里可用 $state”
 export function createCounter() {
-  let count = $state(0);
+  let count = $state(0);   // ✅ 模块级信号，可跨组件共享
   return {
-    get count() { return count; },
-    inc() { count += 1; },
+    get count() { return count; },   // ✅ getter 读时才登记依赖
+    inc() { count += 1; },           // ✅ 改状态的唯一入口
   };
 }
+// ❌ 直接暴露 let count 而非 getter → 外部拿到的永远是拷贝值，读不到后续变化
 ```
 
 这是 Svelte 5 做**全局状态管理**的新姿势（详见 L4 svelte-global-state、svelte-stores）。

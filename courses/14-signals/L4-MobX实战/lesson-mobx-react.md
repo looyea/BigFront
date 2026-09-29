@@ -5,6 +5,7 @@
 ## 一、observer 到底做了什么
 
 ```jsx
+// 目的：observer 把组件体变成 reaction 作用域—渲染期读到的每个字段都成依赖
 import { observer } from 'mobx-react-lite';
 import { useStore } from './store-context';
 
@@ -18,6 +19,8 @@ const TodoList = observer(function TodoList() {
     </ul>
   );
 });
+// ✅ 渲染期读了 visibleTodos→ 只有它变才重渲本组件；没读 filter 的兄弟组件不受 filter 变化惊动
+// ❌ 去掉外层 observer()→ 退化成普通 React：store 变了组件根本不重渲（没人通知它）
 ```
 
 `observer` 把组件函数体变成一个 **reaction 作用域**：渲染期间读到的每个 observable 字段都被登记为该组件的依赖；任何被登记字段变化 → MobX 调度组件重渲。React 自己那一套『父渲子必渲 + memo 浅比较』在这里退居二线——**触发重渲的是数据，不是 props**。两个直接红利：
@@ -32,8 +35,10 @@ const TodoList = observer(function TodoList() {
 ### 事故 1：解构丢追踪
 
 ```jsx
+// 目的：解构丢追踪—解构那一刻只读了一次值，之后不再读 store.count
 const { count } = store;              // ❌ 解构=快照取值，之后 count 与 store 恩断义绝
-return <b>{count}</b>;                 // 永不更新
+return <b>{count}</b>;                 // ❌ 没在渲染里读 store.count→ 无订阅，永不更新
+// ✅ 修法：渲染表达式里直接读 <b>{store.count}</b>，读了才订
 ```
 
 解构那一刻只是读了一次值，之后的渲染不再读 store.count——没读就没订。**修法**：渲染表达式里直接读 `store.count`；实在要解构，用 MobX 给的 `computed(() => store.count)` 桥或干脆别解构。这条铁律的 signal 双胞胎是 `const c = sig.get` 后不再读——**隐式追踪的世界里，『读的动作必须发生在追踪作用域内』**。
@@ -41,10 +46,12 @@ return <b>{count}</b>;                 // 永不更新
 ### 事故 2：在组件外（事件回调里）读
 
 ```jsx
+// 目的：组件外（事件回调里）读—拿到的值是最新的，但不会建立订阅
 observer(function C() {
-  const onClick = () => alert(store.count);   // 回调在渲染后才执行，不在追踪作用域内
+  const onClick = () => alert(store.count);   // ⚠️ 回调在渲染后才执行，不在追踪作用域内
   return <button onClick={onClick}>?</button>;
 });
+// ✅ 回调里"读一次当下值"没问题；想让"值变了自动做点什么"要用 computed/reaction，别指望回调建订阅
 ```
 
 澄清两个方向：事件回调里**读** store 拿到的永远是当下最新值（没问题）；真正的坑是**期望回调里的读取建立订阅**——不会。需要"值变了自动做点什么"应回到 computed/reaction，而不是在回调里读。**追踪作用域只有三种：渲染体、computed getter、reaction 回调**——在清单外的读取都是一次性快照。
@@ -52,8 +59,9 @@ observer(function C() {
 ### 事故 3：改状态漏 action
 
 ```jsx
-<button onClick={() => store.count++}>   // 严格模式告警：裸写
-<button onClick={() => store.increment()} // ✓ action 在 store 里备好
+// 目的：改状态漏 action—组件只调 store 方法，不伸手裸改字段
+<button onClick={() => store.count++}>   // ❌ 严格模式下在组件里裸写改 observable→ [MobX] 告警（通知时机失控）
+<button onClick={() => store.increment()} // ✅ 写逻辑封成 action 放 store，组件只调用
 ```
 
 组件侧的纪律：**store 是数据的唯一权威，组件只调方法不伸手**。这也是 MobX 项目里组件比 Redux 派更"瘦"的原因——dispatch 样板没了，但边界以更 OOP 的方式划在 store 类里。

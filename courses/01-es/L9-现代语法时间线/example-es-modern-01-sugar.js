@@ -1,4 +1,6 @@
-// 运行：node courses/01-es/examples/es-modern/01-sugar.js
+// 示例：现代语法糖（可选链 / 空值合并 / at / 逻辑赋值 / class 字段）
+// 目的：逐个演示近年新语法并对比旧写法的坑（|| vs ??）
+// 运行：node "courses/01-es/L9-现代语法时间线/example-es-modern-01-sugar.js"
 const user = { name: "k", address: null };
 console.log('可选链 =>', user?.address?.city);          // undefined，不报错
 console.log('空值合并 =>', user.nickname ?? '匿名');      // 匿名

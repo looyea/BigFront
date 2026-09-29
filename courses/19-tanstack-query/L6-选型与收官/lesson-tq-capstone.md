@@ -7,15 +7,18 @@
 ## 二、地基：key 工厂与 client 配置
 
 ```ts
+// 目的：毕业项目地基——树形 key 工厂单点定义 + 全站双时钟策略配置
 export const movieKeys = {
-  all: ['movies'] as const,
-  lists: (q?: string) => [...movieKeys.all, 'list', { q: q ?? '' }] as const,
-  detail: (id: number) => [...movieKeys.all, 'detail', id] as const,
-  favorites: () => [...movieKeys.all, 'favorites'] as const,
+  all: ['movies'] as const,                                        // 根前缀，一行失效整个 movies 域
+  lists: (q?: string) => [...movieKeys.all, 'list', { q: q ?? '' }] as const,   // 列表层，q 参与身份（搜索换词自动重取）
+  detail: (id: number) => [...movieKeys.all, 'detail', id] as const,            // 详情层，id 参与身份
+  favorites: () => [...movieKeys.all, 'favorites'] as const,                    // 收藏层，供乐观失效前缀
 };
 const qc = new QueryClient({ defaultOptions: {
-  queries: { staleTime: 5 * 60_000, gcTime: 30 * 60_000 },   // L2 双时钟
+  queries: { staleTime: 5 * 60_000, gcTime: 30 * 60_000 },   // L2 双时钟：5 分钟内新鲜、无人订阅 30 分钟才回收
 }});
+// ✅ 返回“热门列表”秒出：staleTime 5 分钟治“返回列表又转圈”
+// ❌ key 工厂不写 as const→推导退化成 string[]，lists(q)/detail(id) 的前缀匹配类型失去精确
 ```
 
 树形 key 是后续「失效一片」的前提（L2）；staleTime 5 分钟治「返回列表又转圈」（L2 误区关）。

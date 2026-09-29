@@ -44,12 +44,13 @@
 **同一份信息被复制成多份、再靠 watch/手动同步保持一致**，是一切 bug 之源。
 
 ```js
+// 目的：同一份真相只存一处——派生值用 computed，不用 watch 手动同步
 // ❌ 冗余 + 手动同步：全名和名、姓各存一份
 const first = ref('A'), last = ref('B'), full = ref('A B');
-watch([first, last], () => full.value = first.value + ' ' + last.value);
+watch([first, last], () => full.value = first.value + ' ' + last.value);   // ❌ 两处写入、易漏一个分支导致 full 与源不一致
 
 // ✅ 只存"真相"(first/last)，full 用 computed 派生
-const full = computed(() => `${first.value} ${last.value}`);
+const full = computed(() => `${first.value} ${last.value}`);   // ✅ 永远与源一致、自动缓存，无需手动维护
 ```
 准则：
 1. **派生值一律 computed/getter，不另存**（呼应 vue-reactivity 第四节、vue-watch interview 第 2 题、pinia getters）；

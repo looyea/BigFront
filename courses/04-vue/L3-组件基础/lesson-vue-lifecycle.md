@@ -8,18 +8,20 @@
 
 ```vue
 <script setup>
+// 目的：六个常用钩子沿"挂载→更新→卸载"时序依次触发，标出各自能不能碰 DOM
 import {
   onBeforeMount, onMounted,
   onBeforeUpdate, onUpdated,
   onBeforeUnmount, onUnmounted,
 } from 'vue';
 
-onBeforeMount(() => {});   // DOM 还没创建
+onBeforeMount(() => {});   // DOM 还没创建（读 ref 取不到元素）
 onMounted(() => {});       // ✅ 已挂载，可访问 DOM、初始化第三方库、发首屏请求
 onBeforeUpdate(() => {});  // 响应式变了、DOM 未更新前
 onUpdated(() => {});       // ⚠️ DOM 已更新；别在此改状态（易死循环）
 onBeforeUnmount(() => {}); // 仍可访问 DOM，做收尾
 onUnmounted(() => {});     // ✅ 清理定时器/事件/订阅（多数已被 Vue 自动清）
+// ❌ 在 onMounted 之前（如 setup 顶层）读 canvasRef.value → 此时为 null，DOM 未生成
 </script>
 ```
 
@@ -34,13 +36,14 @@ onUnmounted(() => {});     // ✅ 清理定时器/事件/订阅（多数已被 V
 ## 二、mounted：真正"接触 DOM / 起副作用"的地方
 
 ```js
+// 目的：成对的"初始化/清理"——全局监听、第三方实例必须手动回收，否则泄漏
 onMounted(() => {
   const chart = echarts.init(canvasRef.value);   // 第三方实例：这里建
   window.addEventListener('resize', onResize);    // 手动加的全局监听：要手动移
 });
 onUnmounted(() => {
   chart?.dispose();
-  window.removeEventListener('resize', onResize); // 防泄漏
+  window.removeEventListener('resize', onResize); // ✅ 不移除→组件没了但监听还在→泄漏+报错
 });
 ```
 
@@ -72,7 +75,8 @@ onUnmounted(() => {
 `v-if`/动态组件/路由切换默认会**销毁**组件、切回时**重新创建**（丢掉状态、重跑 mounted 取数）。`<KeepAlive>` 把组件实例**缓存**起来，切回时复用：
 
 ```vue
-<KeepAlive :include="/Article/" :max="10">
+<!-- 目的：缓存组件实例，切走不销毁（保留状态），切回复用而非重建 -->
+<KeepAlive :include="/Article/" :max="10">   <!-- include 按 name 正则只缓存匹配的；max=10 超出按 LRU 淘汰 -->
   <component :is="tab" />
 </KeepAlive>
 ```

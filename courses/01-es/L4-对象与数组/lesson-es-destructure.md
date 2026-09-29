@@ -9,8 +9,9 @@
 **解构（Destructuring）** 是一种**赋值语法左侧的「模式」**：右侧是一个可迭代对象或属性对象，左侧按**形状**把值分发到变量里。
 
 ```js
+// 目的：两种基本解构——数组按位置、对象按属性名
 const arr = [1, 2, 3];
-const [a, b, c] = arr;             // 数组解构：按下标
+const [a, b, c] = arr;             // 数组解构：按下标 a=1 b=2 c=3
 const obj = { x: 10, y: 20 };
 const { x, y } = obj;               // 对象解构：按 key
 ```
@@ -22,6 +23,7 @@ const { x, y } = obj;               // 对象解构：按 key
 ## 二、数组解构：位置 + 迭代器
 
 ```js
+// 目的：数组解构的跳过、rest 收集、默认值与交换
 const [first] = [1, 2, 3];               // first = 1
 const [, second] = [1, 2, 3];            // second = 2（跳过用逗号）
 const [a, ...rest] = [1, 2, 3, 4];      // rest = [2,3,4]
@@ -32,12 +34,14 @@ const [x, y] = [y, x];                   // 交换变量（配合 TDZ 会翻车�
 **依赖迭代器协议**：任何 `[Symbol.iterator]` 的都能数组解构——数组、字符串、Set、Map、NodeList、arguments、TypedArray、生成器。
 
 ```js
+// 目的：任何可迭代对象（字符串/Set/Map 等）都能数组解构
 const [a, b, c] = 'hi👋';               // 'h', 'i', '👋'（按 code point）
 const [k, v] = new Map([['a', 1]]).entries().next().value; // ['a', 1]
 ```
 
 **⚠️ 交换变量的 TDZ 陷阱**：
 ```js
+// 目的：❌ 交换变量时的 TDZ 陷阱——右侧引用了左侧尚未初始化的 let
 let x = 1, y = 2;
 [x, y] = [y, x];   // ✅
 let [a, b] = [1, 2];
@@ -49,6 +53,7 @@ let [a, b] = [1, 2];
 ## 三、对象解构：key + `[[Get]]`
 
 ```js
+// 目的：对象解构四种形态（同名/重命名/默认值/rest）
 const { host, port } = server;             // 同名简写
 const { host: h, port: p } = server;       // 重命名
 const { host = 'localhost', port = 80 } = {}; // 默认值（右侧 undefined 触发）
@@ -57,6 +62,7 @@ const { length, ...rest } = 'hello';       // rest 收集剩余可枚举自有�
 
 **⚠️ 顶层解构不能省 `;`**：
 ```js
+// 目的：❌ 顶层对象解构必须用括号包住，否则 { 被当代码块
 const a = 1
 { b } = { b: 2 }        // ❌ SyntaxError 或者被解析成块
 const c = 1
@@ -65,6 +71,7 @@ const c = 1
 
 **⚠️ 声明与赋值分离**：
 ```js
+// 目的：先声明后赋值——同样必须括号包住对象字面量
 let x;
 ({ x } = { x: 42 });      // 必须括号包住整个对象字面量
 console.log(x);            // 42
@@ -75,6 +82,7 @@ console.log(x);            // 42
 ## 四、嵌套解构（**工程最常用**）
 
 ```js
+// 目的：嵌套解构——对象套对象、对象套数组，逐层取到叶子变量
 const config = {
   server: { host: 'localhost', port: 8080 },
   db: { url: 'pg://...', pool: { min: 2, max: 10 } },
@@ -90,6 +98,7 @@ const {
 
 **关键**：`server: { host } = {}` 里的 `= {}` 是**整个嵌套模式**的默认值——避免 `server` 为 undefined 时报错。**这是 React Query / SWR 数据消费的必备写法**：
 ```js
+// 目的：两层默认值分别兑住不同层的 undefined
 const { data: { users = [] } = {} } = response;
 ```
 
@@ -98,6 +107,7 @@ const { data: { users = [] } = {} } = response;
 ## 五、参数解构：**函数签名的解构**
 
 ```js
+// 目的：参数解构 + 默认值（= {} 兑住“不传参”，否则解构 undefined 会抛 TypeError）
 function draw({ x = 0, y = 0, r = 1 } = {}) { /* ... */ }
 draw();               // 全默认
 draw({ x: 5 });       // x=5, y/r 默认
@@ -120,10 +130,11 @@ const [dark, toggleDark] = useToggle();
 ## 六、计算键与动态属性名
 
 ```js
+// 目的：计算键解构——用变量当 key 名从对象取值（常配合动态 action.type）
 const key = 'token';
 const obj = { [key]: 'abc', type: 'Bearer' };
-const { [key]: tokenValue } = obj;      // tokenValue = 'abc'
-console.log(tokenValue, obj.type);
+const { [key]: tokenValue } = obj;      // tokenValue = 'abc'（用 key 变量的值 'token' 去取）
+console.log(tokenValue, obj.type);      // 'abc' 'Bearer'
 ```
 
 **用途**：Redux 里根据 action.type 分发时；把接口返回的 id 直接取出。

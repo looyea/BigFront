@@ -22,13 +22,16 @@
 ## 二、getCurrentPages()：拿到"活的"页面实例
 
 ```js
+// 目的：getCurrentPages() 拿活页面实例——返回前调上一页方法（强耦合法，重构杀手）
 const pages = getCurrentPages();          // 页面栈数组，栈底在前
 const prev = pages[pages.length - 2];     // 上一页实例
 // 读写数据（注意：改 data 后仍需其自行 setData 才上屏）
-prev.setData({ needRefresh: true });
+prev.setData({ needRefresh: true });      // ✅ 走它的 setData 才能刷新上一页视图
 // 或直接调其方法
 prev.fetchList?.();
 wx.navigateBack();
+// ❌ 直接改 prev.data.xxx 不调 setData → 不上屏（呼应 mp-setdata：data 非响应式）
+// ❌ 不按 page.route 判等就依赖"上一页恰好是谁" → 产品插一页后栈序变、代码错乱
 ```
 
 能力很大、责任很大：
@@ -46,11 +49,12 @@ wx.navigateBack();
 场景：A 页 `navigateTo` B 页（如地址选择器），B 选好要**把结果带回 A**且 A 不重载。
 
 ```js
+// 目的：eventChannel 是官方为"B 返数据回 A 且 A 不重载"设计的唯一一等公民
 // A 页：跳转时挂监听
 wx.navigateTo({
   url: '/pages/address/pick',
   events: {
-    onPicked(addr) {            // B 回传的数据
+    onPicked(addr) {            // ✅ B 回传的数据，A 直接 setData 回写
       this.setData({ 'form.address': addr });
     },
   },
@@ -65,6 +69,8 @@ Page({
     // 也能监听 A 传来的：this.getOpenerEventChannel().on('preset', fn)
   },
 });
+// ❌ 通道只连 opener/opened 这一对；三页链式 A→B→C 回 A 需逐跳转发（否则拿不到，应换全局方案）
+// ❌ 把 navigateTo 的 events 与组件 triggerEvent 混用→作面不同（前者跨页、后者跨组件）
 ```
 
 要点：
@@ -81,21 +87,23 @@ Page({
 全局广播（例：任意页完成支付 → 首页/订单页/角标同时刷新），globalData 没有"变化通知"，用发布订阅补齐：
 
 ```js
+// 目的：小程序无内置事件总线，自裸 20 行 Emitter 补"变化通知"（全局广播刷新多页）
 // utils/bus.js —— 20 行迷你 Emitter
 const handlers = {};
 export const bus = {
-  on(evt, fn) { (handlers[evt] ??= new Set()).add(fn); return () => this.off(evt, fn); },
+  on(evt, fn) { (handlers[evt] ??= new Set()).add(fn); return () => this.off(evt, fn); },   // ✅ on 返回退订函数
   off(evt, fn) { handlers[evt]?.delete(fn); },
-  emit(evt, payload) { handlers[evt]?.forEach((f) => { try { f(payload); } catch (e) { console.error(e); } }); },
+  emit(evt, payload) { handlers[evt]?.forEach((f) => { try { f(payload); } catch (e) { console.error(e); } }); },   // 一个订阅报错不拖垮其余
 };
 
 // 发布者（支付成功页）
 bus.emit('pay:success', { orderId });
 // 订阅者（首页）
 Page({
-  onUnload() { this._offPay?.(); },              // 必须解绑！
+  onUnload() { this._offPay?.(); },              // ✅ 必须解绑！否则回调里 this 指向已销毁页面
   onLoad() { this._offPay = bus.on('pay:success', this.refresh); },
 });
+// ❌ on 不配对 off → 页面销毁后 emit 仍回调它、setData 报错/幽灵刷新（内存泄漏）
 ```
 
 纪律三条：**① on 必配对 off（onUnload/onHide 解绑，否则回调里 this 指向已销毁页面，setData 报错/幽灵刷新）；② 事件名常量化（散字符串迟早打错）；③ 别用它传大数据**——它传引用，但订阅者销毁时机不可控，数据归属仍要清晰。

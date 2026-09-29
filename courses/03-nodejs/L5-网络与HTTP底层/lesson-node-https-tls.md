@@ -22,6 +22,7 @@ HTTP 的字节不再直接写进 TCP socket，而是先交给 **TLS 层加密**�
 ## 二、HTTPS 服务器
 
 ```js
+// 目的：https.createServer 与 http 写法一致，只是多了 key/cert 两个证书文件
 import https from "node:https";
 import fs from "node:fs";
 
@@ -34,7 +35,7 @@ const options = {
 https.createServer(options, (req, res) => {   // 回调签名和 http 完全一样
   res.writeHead(200, { "Content-Type": "text/plain" });
   res.end("secure hello");
-}).listen(3443);
+}).listen(3443);   // 客户端用 https://localhost:3443 访问（自签证书会触发信任告警，见第五节）
 ```
 
 `req`/`res` 用法与 `http` 一模一样（本关因此是 node-http 的"加密皮"）。区别只在：底层连接被 TLS 包裹，`req.socket.getPeerCertificate()` 能拿到对端证书、`req.socket.authorized` 表示是否通过校验。Express 的 app 直接传给 `https.createServer(opts, app)` 即可跑 HTTPS（呼应 09-express、node-http interview 第 1 题）。
@@ -64,14 +65,15 @@ https.createServer(options, (req, res) => {   // 回调签名和 http 完全一�
 开发环境常自签证书（`openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes -subj "/CN=localhost"`）。客户端访问自签/内网 CA 证书会得到 `unable to verify the first certificate` / `self-signed certificate`——因为签发者不在信任根列表。
 
 ```js
+// 目的：访问自签/内网证书服务——对比"关掉校验"(危) 与"传入签发 CA"(正) 两种做法
 // ❌ 危险做法：关掉证书校验（等于放弃 MITM 防护，千万别带到生产）
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";   // 全局关掉所有 TLS 身份验证→任意证书都放行（中间人攻击可窃听）
 https.get(url, { rejectUnauthorized: false }, ...);
 
 // ✅ 正确做法：把【签发你证书的那个 CA】的证书作为 ca 传进去
 import https from "node:https";
 import fs from "node:fs";
-const agent = new https.Agent({ ca: fs.readFileSync("my-ca.crt") });
+const agent = new https.Agent({ ca: fs.readFileSync("my-ca.crt") });  // 只信你自己的 CA，其余仍拒
 await fetch(url, { duplex: undefined }, ...);   // 或 https.request({ agent })
 ```
 
@@ -88,13 +90,14 @@ await fetch(url, { duplex: undefined }, ...);   // 或 https.request({ agent })
 ## 七、HTTPS 客户端与 mTLS
 
 ```js
+// 目的：HTTPS 客户端——可传 ca 验证服务端，也可传 key/cert 做 mTLS 双向认证
 import https from "node:https";
 // 带 CA（验证服务端）、带客户端证书（mTLS 双向认证）
 const req = https.get("https://api.example.com/ping", {
-  // ca: fs.readFileSync("ca-bundle.pem"),   // 私有 CA
+  // ca: fs.readFileSync("ca-bundle.pem"),   // 私有 CA：用它验证服务端证书
   // key: clientKey, cert: clientCert,        // mTLS：向服务端证明"我"的身份
-}, (res) => { /* ... */ });
-req.on("error", console.error);
+}, (res) => { /* 收响应 */ });
+req.on("error", console.error);   // 证书校验失败/断连都走 error（不监听会崩）
 ```
 
 **mTLS（双向 TLS）**：不仅客户端验证服务器，服务器也要求客户端出示证书并验签——用于服务间/零信任内网（呼应 node-child-process 之外的微服务通信）。现代默认出站请求也可用 `fetch` + 自定义 `undici.Agent({ connect: { ca, key, cert } })`。

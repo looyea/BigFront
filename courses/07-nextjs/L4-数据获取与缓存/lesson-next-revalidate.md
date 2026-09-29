@@ -9,12 +9,14 @@
 段内任意 page/layout 顶部都可以放这些**导出的段配置**（对整段生效）：
 
 ```ts
-export const dynamic = 'auto';          // 默认：静态优先，遇动态反应物自动转动态
+// 目的：段配置旋钮——在 page/layout 顶部导出一行就改变整段的渲染与缓存策略
+export const dynamic = 'auto';          // ✅ 默认：静态优先，遇动态反应物自动转动态
                         // 'force-dynamic' 强制每次请求渲染
                         // 'force-static' 强制静态（cookies/headers 返回空桩！慎用）
-export const revalidate = 3600;         // 本段产物缓存 1h 后后台翻新（= ISR）
-export const fetchCache = 'default-cache' | 'force-no-store' | ...;  // 段内 fetch 默认姿态
-export const runtime = 'nodejs' | 'edge';   // 执行运行时（L5 middleware、L8 部署关联）
+export const revalidate = 3600;         // ✅ 本段产物缓存 1h 后后台翻新（= ISR）
+export const fetchCache = 'default-cache' | 'force-no-store' | ...;  // ✅ 段内 fetch 默认姿态
+export const runtime = 'nodejs' | 'edge';   // ✅ 执行运行时（L5 middleware、L8 部署关联）
+// ❌ 页里读了 cookies() 却设 dynamic='force-static' → cookies() 返回空桩，鉴权/个性化全失效
 ```
 
 优先级：`layout` 段配置向下层**继承**，子段可再覆盖——和 CSS 层叠一个味，排查"这页到底动没动"要沿目录向上看一圈（呼应 next-routing 布局持久化）。
@@ -53,20 +55,22 @@ revalidatePath/tag 主动失效 → 该条目立即标 stale（下次请求走�
 传统模型是"默认静态、动态例外"；`cacheComponents: true` 翻转为"**默认全静态 + 动态必须显式 Suspense 申报**"：
 
 ```ts
+// 目的：cacheComponents 新范式——默认全静态，动态部分必须显式装进 Suspense 申报为 hole
 // next.config.ts
-experimental: { ppr: true, cacheComponents: true }   // 版本演进中，名字/形态可能再变
+experimental: { ppr: true, cacheComponents: true }   // ⚠️ 版本演进中，名字/形态可能再变
 
 // app/time/page.tsx
 export default function Page() {
   return (
     <>
-      <h1>静态壳 —— 构建时就定稿</h1>
+      <h1>静态壳 —— 构建时就定稿</h1>   {/* ✅ 静态部分 CDN 秒发 */}
       <Suspense fallback={<Skeleton />}>
-        <ServerClock />   {/* 内部 connection()/cookies() → 动态 hole，请求时流式补 */}
+        <ServerClock />   {/* ✅ 内部 connection()/cookies() → 动态 hole，请求时流式补 */}
       </Suspense>
     </>
   );
 }
+// ❌ cacheComponents 下把动态读（cookies）直接写在 Page 本体而不在 Suspense 里 → 报错要求把动态包进 Suspense boundary
 ```
 
 - **PPR = 静态壳（CDN 秒发）+ 动态 hole（流式补齐）**——L1"模式四选一"彻底终结为"一页多模式并存"；
@@ -78,10 +82,12 @@ export default function Page() {
 ## 五、Router Cache 调优（浏览器那层）
 
 ```ts
+// 目的：Router Cache（浏览器那层）的两个旋钮——没有 revalidateTag 直达，靠 TTL/版本兑
 experimental: {
-  routerCacheLife: 60,        // payload 内存存活秒数（默认动态 2min/静态 5min 量级，版本有别）
-  routerCacheState: ...       // 导航返回时是否保留旧 payload
+  routerCacheLife: 60,        // ✅ payload 内存存活秒数（默认动态 2min/静态 5min 量级，版本有别）
+  routerCacheState: ...       // ✅ 导航返回时是否保留旧 payload
 }
+// ❌ routerCacheLife 设太长 → Link 预取后半小时再点仍拿旧 payload（回退数据新、前进数据旧）
 ```
 
 症状对应：Link 预取后半小时再点仍拿到旧 payload → routerCacheLife 过长或该页没进失效广播；SPA 感"回退数据新、前进数据旧"→ state 策略问题。**这层没有 revalidateTag 直达**——tag 失效管服务端，浏览器侧靠 TTL/版本兜（L2 面试 11 的跨标签页脏读同款根源）。

@@ -1,5 +1,6 @@
 // 示例 02：函数声明 vs 函数表达式 vs 箭头 + let 的提升差异
-// 运行：node courses/01-es/examples/es-hoisting/02-func-vs-expr.js
+// 目的：函数声明整体提升可先调用；var/let 函数表达式在赋值前调用分别报 TypeError / ReferenceError
+// 运行：node "courses/01-es/L1-变量与作用域/example-es-hoisting-02-func-vs-expr.js"
 
 console.log('—— function 声明：可以在最上方调用 ——');
 sayHi();

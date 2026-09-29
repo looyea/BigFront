@@ -3,10 +3,13 @@
 ## 一、import 即用：默认全局 store
 
 ```ts
+// 目的：模块导出的 atom 即全局单例——无 Provider、无 useContext，import 进来直接可读写
 // store/theme.ts
-export const themeAtom = atom('light');
+export const themeAtom = atom('light');      // 模块级导出一次，值挂在默认 store 上
 // 任意组件
-const [t, setT] = useAtom(themeAtom);
+const [t, setT] = useAtom(themeAtom);        // 任何文件 import themeAtom 都读写同一份，跨组件树共享
+// ✅ 省去 Context 三层包裹，import 即用；刷新即重置（要持久化显式上 atomWithStorage）
+// ❌ 以为 atom 值天然持久→刷新就没了；把“持久化”寄托在裸 atom 上会丢状态，须显式 atomWithStorage
 ```
 没有 Provider、没有 useContext——模块导出的 atom 就是全局可读写单例（呼应 za-context 的反面）。
 
@@ -26,8 +29,10 @@ const [t, setT] = useAtom(themeAtom);
 导出 `atomWithStorage('theme','light')` 即得一个自动读写 localStorage 的全局原子（呼应 jo-storage），比手写 effect 干净。
 
 ```ts
-// 手写 effect 版的对照组：
-useEffect(() => localStorage.setItem('theme', t), [t]); // 首帧闪、双真相源
+// 目的：手写 effect 持久化 vs atomWithStorage——对照组暴露手写的两宗罪
+useEffect(() => localStorage.setItem('theme', t), [t]); // 首帧闪、双真相源（初始还得另写读取逻辑）
+// ✅ 一行 atomWithStorage('theme','light') 替掉“初始读+变化写+JSON序列化”三件套
+// ❌ 手 useEffect 读写 localStorage→读在渲染期还是 effect 期决定首帧闪不闪，且 localStorage 与 atom 成了两份真相
 ```
 
 一行 atomWithStorage 替掉「初始读 + 变化写 + JSON 序列化」三件套，且仍然可派生、可被 Provider 隔离。

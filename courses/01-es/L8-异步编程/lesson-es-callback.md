@@ -9,6 +9,7 @@
 **回调 = 把一个函数当参数传给另一个函数，让它在未来某个时刻被调用**。
 
 ```js
+// 目的：回调的四种常见形态（同步数组/异步 I/O/事件/定时器）——同一机制不同时机
 [1, 2, 3].map(x => x * 2);        // 同步回调
 fs.readFile('a.txt', (err, data) => {});   // 异步回调
 button.addEventListener('click', () => {});  // 事件回调
@@ -35,6 +36,7 @@ setTimeout(() => {}, 1000);        // 定时器回调
 **规范**：回调第一个参数**永远是 error**，其它业务数据从第二位起；没有错误时第一位是 `null`。
 
 ```js
+// 目的：Error-First——成功 cb(null, result)，失败 cb(e)，调用方先判 err
 function doSomething(cb) {
   try {
     const result = hardWork();
@@ -66,6 +68,7 @@ doSomething((err, data) => {
 - 出错时怎么办？
 
 ```js
+// 目的：控制反转的信任危机——库代码抛错前不调 cb，用户那行 alwaysRunAfter 永远不执行
 // 用户代码
 getData((err, data) => {
   alwaysRunAfter();       // 如果 getData 抛错前不调 cb，这行永远不执行
@@ -79,6 +82,7 @@ function getData(cb) {
 
 **防御性写法**（`async` 库的思路）：
 ```js
+// 目的：safeGet 上四道保险—异步(setTimeout)+try/catch+只调一次(flag)+Error-First
 function safeGet(cb) {
   let called = false;
   const wrapper = (...args) => {
@@ -102,6 +106,7 @@ function safeGet(cb) {
 **"Don't release Zalgo"** —— 一个函数**有时候同步调用回调、有时候异步**调用回调——会导致极其隐蔽的 bug。
 
 ```js
+// 目的：Zalgo——缓存命中同步调、未命中异步调，导致 console.log 时机不确定
 function fetchOrCache(key, cb) {
   if (cache[key]) cb(cache[key]);        // 同步！
   else fetchData(key, d => { cache[key] = d; cb(d); });   // 异步
@@ -121,6 +126,7 @@ console.log(data);   // 有时是 d，有时是 undefined——灾难
 ## 六、Callback Hell（金字塔厄运）
 
 ```js
+// 目的：Callback Hell——N 层嵌套、每层重复 if(err)、纵向膨胀
 getUser(uid, (err, user) => {
   if (err) return handle(err);
   getOrders(user.id, (err, orders) => {
@@ -155,6 +161,7 @@ getUser(uid, (err, user) => {
 异步回调里抛错，`try/catch` 接不住：
 
 ```js
+// 目的：异步回调里抛错，新栈帧已脱离 try/catch，catch 块永远不执行
 try {
   setTimeout(() => { throw new Error('boom'); }, 0);
 } catch (e) {
@@ -188,6 +195,9 @@ try {
 理解回调的组合模式能加深「为什么 Promise 更好」。
 
 ```js
+// 目的：手写 async 库的两个组合子——parallel(并行) / waterfall(串行)，先备好 once 防多次回调
+const once = (fn) => { let done = false; return (...a) => { if (done) return; done = true; fn(...a); }; };
+
 // 并行跑一批异步任务，全部完成后回调
 function parallel(tasks, cb) {
   const results = new Array(tasks.length);
@@ -214,6 +224,31 @@ function waterfall(fns, cb) {
 ```
 
 **看完你就懂了 Promise 的价值**：`parallel` ≈ `Promise.all`，`waterfall` ≈ `.then().then()`。
+
+```js
+// ✅ 应用：先造两个伪异步任务（用 setTimeout 模拟），分别交给 parallel / waterfall
+const task1 = (cb) => setTimeout(() => cb(null, 'A'), 10);
+const task2 = (cb) => setTimeout(() => cb(null, 'B'), 5);
+
+parallel([task1, task2], (err, results) => {
+  console.log('parallel', results);   // ['A','B']（按索引回写，与完成先后无关）
+});
+
+// waterfall：上一步输出作为下一步输入（每个 fn 接 ...args, next）
+waterfall(
+  [
+    (cb) => cb(null, 1),
+    (prev, cb) => cb(null, prev + 10),
+    (prev, cb) => cb(null, prev * 2),
+  ],
+  (err, final) => { console.log('waterfall', final); }  // (1+10)*2 = 22
+);
+
+// ❌ 错误用例：任一任务报错→once 保证 cb 只触发一次，后续不再重复回调
+parallel([task1, (cb) => cb(new Error('boom')), task2], (err) => {
+  console.log('parallel err', err.message);   // 'boom'（且 cb 只会被调这一次）
+});
+```
 
 ---
 

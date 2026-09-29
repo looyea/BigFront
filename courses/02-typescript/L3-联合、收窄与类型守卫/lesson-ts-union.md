@@ -15,11 +15,13 @@ id = 123;       // ✓
 // id = true;   // ✗
 
 function pad(v: string | number) {
-  // 联合类型上，只能直接访问"所有成员共有"的成员
+  // 联合类型上，只能直接访问“所有成员共有”的成员
   // v.length;   // ✗ number 没有 length
   // v.toFixed(); // ✗ string 没有 toFixed
   return String(v).length;   // ✓ 先归一到共同类型
 }
+pad("abc");   // => 3
+pad(1234);    // => 4（String(1234)="1234"）
 ```
 
 **核心规则**：联合类型 `A | B` 上，只有 **A 和 B 都有的成员**才能直接访问；要访问某一支特有的成员，必须先**收窄**（下一关）。这与交叉正好相反。
@@ -60,6 +62,13 @@ const p: Person = { name: "Ada", age: 36 };   // 必须同时满足两者
 interface Serializable { serialize(): string }
 interface Loggable { log(): void }
 type Service = Serializable & Loggable & { name: string };
+// ✅ 应用：必须同时提供三个契约的所有成员
+const svc: Service = {
+  name: "db",
+  serialize: () => JSON.stringify({ name: "db" }),
+  log: () => console.log("db"),
+};
+// ❌ 缺 log 会报：Property 'log' is missing in type
 ```
 
 坑（呼应 ts-interface）：同名属性类型冲突会被再交叉——`{a:string} & {a:number}` 的 `a` 是 `string & number = never`。
@@ -83,6 +92,9 @@ function area(s: Shape): number {
     case "triangle": return (s.base * s.height) / 2;    // 收窄到 triangle
   }
 }
+area({ kind: "circle", r: 1 });                 // => 3.14159...（circle 只能带 r）
+area({ kind: "rect", w: 2, h: 3 });              // => 6
+// area({ kind: "circle", w: 2 });               // ❌ circle 无 w 且缺 r
 ```
 
 `kind` 就是判别标签（discriminant）。`switch (s.kind)` 每个 case 里，`s` 自动缩小到对应变体，**只有那一支的特有字段可访问**——这就是可辨识联合的威力：**把"不同状态下有不同数据"编码进类型**。

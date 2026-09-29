@@ -34,9 +34,10 @@ GET /user/42  →  Nginx 找不到 /user/42 文件  →  404
 ```
 解法——**回退到 index.html**，交给前端路由再解析：
 ```nginx
+# 目的：找不到真实文件时回退到 SPA 入口，交给前端路由再解析（修 history 刷新 404）
 location / {
   root  /var/www/dist;
-  try_files $uri $uri/ /index.html;   # 找不到文件就回退 SPA 入口
+  try_files $uri $uri/ /index.html;   # 找不到文件就回退 SPA 入口（❌ 不配这行，直链 /user/42 刷新直接 404）
 }
 ```
 用 `createWebHashHistory`（`/#/user/42`）则天然免回退，但 URL 丑、SEO 差——又一个 SPA/SSR 选型权衡（呼应 vue-router-basics 第一节、vue-deploy 第七节）。
@@ -46,7 +47,9 @@ location / {
 ## 四、环境变量 `VITE_`
 
 ```js
-const api = import.meta.env.VITE_API_BASE;   // 只有 VITE_ 前缀会注入客户端
+// 目的：读构建期内联的环境变量（只有 VITE_ 前缀会进客户端产物）
+const api = import.meta.env.VITE_API_BASE;   // ✅ 构建时被直连替换为字符串字面量
+// ❌ 把密钥写成 VITE_SECRET=xxx：会被反解从前端包拿到明文——秘密只能留后端
 ```
 - **只有 `VITE_` 开头的变量会被打进前端产物**、且**构建时内联**（非运行时读取）；
 - ⚠️ 前端代码 = 公开：密钥、内部地址**绝不能**放 `VITE_`（会被反解）；秘密留在后端，前端只调接口（呼应 node-config 密钥不外泄、exp-auth/exp-security）。

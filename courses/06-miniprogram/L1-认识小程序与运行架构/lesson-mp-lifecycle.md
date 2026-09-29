@@ -7,13 +7,16 @@
 ## 一、App 级生命周期（全局一次）
 
 ```js
+// 目的：全局仅一次的 App 生命周期——初始化放 onLaunch，前后台切换放 onShow/onHide
 App({
-  onLaunch(options) { /* 小程序初始化，冷启动只跑一次 */ },
-  onShow(options)   { /* 小程序从后台到前台 / 进入 */ },
-  onHide()          { /* 从前台到后台 */ },
-  onError(err)      { /* 全局 JS 报错、api 异常 */ },
+  onLaunch(options) { /* 冷启动只跑一次：读缓存/判登录态/拿系统信息 */ },
+  onShow(options)   { /* 后台→前台 / 进入，反复触发 */ },
+  onHide()          { /* 前台→后台，暂停计时器 */ },
+  onError(err)      { /* 全局 JS 报错、api 异常上报 */ },
   onPageRoute(...)  { /* 路由事件（新版本） */ }
 })
+// options 携带 path/query/scene/shareTicket → ✅ 据 scene 判断“从哪来”（扫码/分享/小程序消息）
+// ❌ 把"每次返回都要刷新"的逻辑放 onLaunch → 第二次进后台再回来不重跑 onLaunch，刷新失效（应放 onShow）
 ```
 - **onLaunch**：**冷启动**时触发、**全局仅一次**——做初始化：读缓存、判断登录态、拿系统信息（呼应 mp-login）；
 - **onShow/onHide**：小程序**前后台切换**时反复触发，比 onLaunch 频繁；用来暂停/恢复计时器、刷新角标等；
@@ -27,13 +30,16 @@ App({
 ## 二、Page 级生命周期（每页一组）
 
 ```js
+// 目的：每页一组的生命周期——区分 onLoad(仅一次) 与 onShow(每次显示)
 Page({
-  onLoad(query) {},     // 加载：解析参数、初始化数据，仅一次
-  onShow() {},          // 显示：每次进入该页都触发
-  onReady() {},         // 首次渲染完成：可安全操作节点/查询布局
+  onLoad(query) {},     // 加载：解析入参、初始 setData，仅一次
+  onShow() {},          // 显示：每次进入该页都触发（刷新逻辑放这）
+  onReady() {},         // 首次渲染完成：可安全查询节点/布局
   onHide() {},          // 隐藏：被切走(未销毁)时
-  onUnload() {},        // 卸载：navigateBack/被销毁时，清理
+  onUnload() {},        // 卸载：navigateBack/销毁时清理计时器、解绑
 })
+// ✅ 经典刷新：列表页→详情→返回列表，刷新写在 onShow 才生效（页面未重载，onLoad 不再跑）
+// ❌ 在 onLoad 里起了计时器却不在 onUnload 清 → 页面销毁后计时器泄漏（呼应 react useEffect  cleanup）
 ```
 
 触发顺序（进入一个页面）：`onLoad → onShow → onReady`（首绘完成）。离开：`onHide`（被压栈/切走，未销毁）或 `onUnload`（真正销毁）。
@@ -66,13 +72,15 @@ Page({
 ## 五、页面事件钩子
 
 ```js
+// 目的：页面事件钩子——下拉刷新/触底分页/转发，大多需在 json 里显式开启才生效
 Page({
   onPullDownRefresh() { /* 下拉刷新，处理完 wx.stopPullDownRefresh() */ },
   onReachBottom() { /* 触底：分页加载 */ },
-  onShareAppMessage() { return { title, path }; },  // 转发
-  onPageScroll(e) { /* 页面滚动 */ },
+  onShareAppMessage() { return { title, path }; },  // ✅ 返回分享标题与路径（❌ 不定义则无“转发”按钮）
+  onPageScroll(e) { /* 页面滚动 e.scrollTop */ },
   onTabItemTap() { /* 点 tabBar（仅 tab 页） */ }
 })
+// ❌ 未定义 onPullDownRefresh 或未在 json 开 enablePullDownRefresh → 下拉无反应/不触发
 ```
 - 需在 `json` 里开启才生效（如 `enablePullDownRefresh`、`onReachBottomDistance`）；
 - `onLoad/onShow/onReady` 只属于 Page，`Component` 用另一套（`created/attached/ready/detached`，见 mp-component-lifecycle）。

@@ -14,15 +14,18 @@
 ## 2. 骨架搭建
 
 ```bash
-i -D @nuxt/test-utils vitest happy-dom @playwright/test
+# 目的：装测试全家桶——test-utils + vitest + DOM 环境 + Playwright（e2e）
+npm i -D @nuxt/test-utils vitest happy-dom @playwright/test   # ✅ 全进 devDependencies，不进生产包
 ```
 
 ```ts
+// 目的：用 nuxt 环境跑 Vitest——自动装配 #imports/上下文，让自动导入的 API 在测试里可直接用
 // vitest.config.ts（或 package.json 的 test 脚本）
 import { defineVitestConfig } from '@nuxt/test-utils/config';
 export default defineVitestConfig({
-  test: { environment: 'nuxt' },   // 关键：'nuxt' 环境会装配 #imports/上下文
+  test: { environment: 'nuxt' },   // ✅ 关键：'nuxt' 环境装配 #imports/Nuxt 上下文
 });
+// ❌ 用默认 'node'/'happy-dom' 环境测依赖 useRuntimeConfig/useState 的组件 → "useRuntimeConfig is not defined"（没装配 auto-import）
 ```
 
 `package.json`：`"test": "vitest run"`，e2e 用 `"test:e2e": "playwright test"`。**CI 里在测试前先 `nuxt prepare`** 生成类型与 `.nuxt`（否则 `#imports` 解析失败，呼应 nuxt-modules 第 7 节）。
@@ -32,18 +35,20 @@ export default defineVitestConfig({
 ## 3. 单元：测一个 composable
 
 ```ts
+// 目的：mountSuspended 测依赖 Nuxt 上下文的 composable——它会 await 掉 setup 里的顶层 await
 // test/composables/useCart.spec.ts
 import { describe, it, expect } from 'vitest';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
-import UseCart from '../fixtures/UseCart.vue';   // 包一层宿主组件跑 setup
+import UseCart from '../fixtures/UseCart.vue';   // ✅ 包一层宿主组件，让 useCart 在真实 setup 上下文里跑
 
 describe('useCart', () => {
   it('计算总价与数量', async () => {
-    const wrapper = await mountSuspended(UseCart);
-    expect(wrapper.find('[data-test=total]').text()).toBe('¥60');
+    const wrapper = await mountSuspended(UseCart);   // ✅ await → 异步 setup 完成后再断言
+    expect(wrapper.find('[data-test=total]').text()).toBe('¥60');  // ✅ 断言渲染结果
     expect(wrapper.find('[data-test=count]').text()).toBe('2');
   });
 });
+// ❌ 直接 import useCart() 在纯 node 环境调用 → 内部用到 ref/useState/inject 时报 "inject() must be called inside setup()"
 ```
 
 纯逻辑（不碰 Vue/Nuxt 上下文的 utils）直接 `import` 测函数最省事（呼应 node-testing 的 vitest 基座）。一旦依赖 auto-import/注入/生命周期，就用 `mountSuspended`——它会 await 掉 setup 里的顶层 await（对应 vue-async-suspense 的异步 setup）。
@@ -51,16 +56,18 @@ describe('useCart', () => {
 ## 4. Mock：auto-import、$fetch、config 三件套
 
 ```ts
+// 目的：mock 三件套——替掉自动导入的 composable，把 IO（config/取数）挡在单元/组件层之外
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 
 // ① 替掉自动导入的 composable
-mockNuxtImport('useRuntimeConfig', () => () => ({ public: { apiBase: 'http://test' } }));
+mockNuxtImport('useRuntimeConfig', () => () => ({ public: { apiBase: 'http://test' } }));  // ✅ 注入测试配置，不依赖真实 nuxt.config
 
 // ② 替掉组件/接口数据（不想起真后端时）
 mockNuxtImport('useFetch', () => (url: string) => ({
   data: ref({ id: 1, title: '假数据' }), status: ref('success'), error: ref(null),
   refresh: vi.fn(),
 }));
+// ❌ 把所有层都 mock 光、真实 IO 契约不另测 → mock 与线上行为脱节，测试全绿线上照崩（IO 契约交给集成层）
 ```
 
 组件替换用 `mockComponent('#components/Foo', stub 工厂)`。原则：**单元/组件层 mock 掉 IO；IO 的真实契约交给集成层测**——否则 mock 与真实行为脱节，测试全绿线上照崩。
@@ -70,24 +77,26 @@ mockNuxtImport('useFetch', () => (url: string) => ({
 `@nuxt/test-utils` 的 e2e/运行时能起一个真实的 Nuxt/Nitro 实例，然后用 `$fetch` 打自己的接口，**测的是真实 HTTP 语义（状态码、payload、缓存头）**：
 
 ```ts
+// 目的：集成测试起真实 Nitro、用 $fetch 打自家接口——测的是真实 HTTP 语义（状态码/错误契约）
 // test/server/articles.spec.ts
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { setup } from '@nuxt/test-utils/e2e';
 
 describe('articles api', async () => {
-  await setup({ server: true });          // 启动构建后的服务端
+  await setup({ server: true });          // ✅ 启动构建后的真实服务端（含中间件/handler）
 
-  beforeAll(() => seedFixtures());        // 准备测试数据/隔离库
-  afterAll(() => cleanFixtures());
+  beforeAll(() => seedFixtures());        // ✅ 准备测试数据/隔离库
+  afterAll(() => cleanFixtures());        // ✅ 收尾清库，用例间不互相污染
 
   it('存在的文章返回 200 与正文', async () => {
-    const a = await $fetch('/api/articles/1');
+    const a = await $fetch('/api/articles/1');   // ✅ 内部短路直调本地 API，无需公网
     expect(a.title).toBeTruthy();
   });
   it('不存在返回 404（而非 500）', async () => {
-    await expect($fetch('/api/articles/999')).rejects.toMatchObject({ status: 404 });
+    await expect($fetch('/api/articles/999')).rejects.toMatchObject({ status: 404 });  // ✅ 断言 createError 的 404 契约
   });
 });
+// ❌ 只断言 200 happy path、不测 404/401/缓存头 → handler 把 not found 误写成 throw 落 500 也测不出
 ```
 
 把 nuxt-error-debug 的错误契约（404/401 用 createError）、nuxt-server-routes 的方法后缀、鉴权中间件的放行清单，都做成这种断言——比在页面里点要可靠得多（呼应 exp-testing 用 supertest 测 API 的思路）。
@@ -95,6 +104,7 @@ describe('articles api', async () => {
 ## 6. 端到端：Playwright 验 SSR 与关键流程
 
 ```ts
+// 目的：e2e 只验“真浏览器+真服务端才能证明”的行为——SSR 直出、鉴权引导
 // e2e/smoke.spec.ts
 import { test, expect } from '@nuxt/test-utils/playwright';
 
@@ -102,15 +112,16 @@ test('首页 SSR 直出标题与首屏文案', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('h1')).toContainText('NoteDeck-N');
 
-  // 关键：断言"源码"里就有内容，证明没靠水合补（SEO 回归，呼应 nuxt-seo-meta 第 10 题）
+  // ✅ 关键：断言 page.content()（原始 HTML）里就有内容，证明没靠水合补（SEO 回归）
   const html = await page.content();
   expect(html).toContain('首屏服务端文本');
 });
 
 test('未登录访问 /app 被引导到登录页', async ({ page }) => {
   await page.goto('/app');
-  await expect(page).toHaveURL(/\/login\?redirect=/);
+  await expect(page).toHaveURL(/\/login\?redirect=/);   // ✅ 断言 route/server middleware 真的拦下来跳转
 });
+// ❌ 只断言渲染后的 DOM（等水合完）→ 误把 CSR 补出来的内容当成 SSR，SEO 回归属于没测到
 ```
 
 e2e 只覆盖**转化关键路径 + "SSR/水合/鉴权/SEO"这类只有真浏览器真服务端才能证明的行为**（呼应 next-testing、vue-testing）。数量控制在"重要流程各一条"，否则跑不动也维护不了。

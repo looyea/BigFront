@@ -64,6 +64,7 @@ JS **单线程**——同一时刻只能跑一段代码。**并发**（网络、
 
 **Q1**：
 ```js
+// 目的：同步→微任务→宏任务的经典排序（答：1 → 4 → 3 → 2）
 console.log('1');
 setTimeout(() => console.log('2'), 0);
 Promise.resolve().then(() => console.log('3'));
@@ -73,6 +74,7 @@ console.log('4');
 
 **Q2**（async/await 版）：
 ```js
+// 目的：await 把后续切进微任务队列（答：script start → a1 start → a2 → promise1 → script end → a1 end → promise2 → timeout）
 async function async1() {
   console.log('a1 start');
   await async2();
@@ -96,6 +98,7 @@ console.log('script end');
 
 **语义等价**——但 `queueMicrotask` 更清晰、错误处理更规范（`throw` 会变成 uncaughtException 而不是 unhandledRejection）：
 ```js
+// 目的：queueMicrotask 与 Promise.then 同属微任务，按入队顺序执行
 queueMicrotask(() => console.log('qm'));
 Promise.resolve().then(() => console.log('p'));
 // 输出：qm → p（按入队顺序）
@@ -150,6 +153,7 @@ Promise.resolve().then(() => console.log('p'));
 ## 八、`process.nextTick` 的**插队**
 
 ```js
+// 目的：nextTick 比微任务队列更优先（浏览器无此 API）
 Promise.resolve().then(() => console.log('microtask'));
 process.nextTick(() => console.log('nextTick'));
 console.log('sync');
@@ -158,6 +162,7 @@ console.log('sync');
 
 **规范建议**：**新代码用 `queueMicrotask`**，别用 `nextTick`——**递归 nextTick 会饿死 I/O**：
 ```js
+// 目的：递归 nextTick 永不进入 poll 阶段，I/O 被饿死（❌ 反例，勿在生产使用）
 function spin() { process.nextTick(spin); }   // ❌ 事件循环永远进不了 poll 阶段
 spin();
 ```
@@ -179,6 +184,8 @@ Node 官方文档明确："Using `process.nextTick` recursively can starve the e
 ## 十、`async` 函数在事件循环里的位置
 
 ```js
+// 目的：await 之前同步跑、之后进微任务（bar 为任意异步函数）
+async function bar() {}        // 假设 bar 存在且返回 Promise
 async function foo() {
   console.log('1');
   await bar();
@@ -206,6 +213,7 @@ Vue `nextTick` / React 18 并发渲染都基于此：状态变化 → 排入微�
 ### 模式 2：**长任务切分**
 一次算 5 秒 → 拆 5000 个 1ms 微任务 → **浏览器每帧之间有空隙渲染**（不冻结 UI）。
 ```js
+// 目的：长任务切分——每 100 个让出一帧，避免主线程长时间冻结 UI
 async function chunked(items, work) {
   for (let i = 0; i < items.length; i++) {
     work(items[i]);
@@ -217,6 +225,7 @@ async function chunked(items, work) {
 ### 模式 3：**rAF 节流滚动**
 `scroll` 事件秒级触发上百次 → 用 rAF 合并到帧率频率。
 ```js
+// 目的：rAF 节流滚动——多次 scroll 合并到一帧只算一次
 let ticking = false;
 window.addEventListener('scroll', () => {
   if (ticking) return;
@@ -227,6 +236,7 @@ window.addEventListener('scroll', () => {
 
 ### 模式 4：**微任务里 throw**
 ```js
+// 目的：两种错误入口不同——queueMicrotask 的 throw 走 onerror，Promise reject 走 unhandledrejection
 queueMicrotask(() => { throw new Error('x'); });    // 触发 window.onerror / uncaughtException
 Promise.reject(new Error('x'));                      // 触发 unhandledrejection
 ```

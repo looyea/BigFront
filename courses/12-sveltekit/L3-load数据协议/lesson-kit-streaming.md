@@ -12,12 +12,15 @@
 
 ```ts
 // src/routes/blog/[slug]/+page.server.ts
+// 目的：流式编排心法“把 await 放最后”—快值进首块、慢 Promise 随 resolve 直播到浏览器
 export const load = (async ({ params }) => ({
-  // 慢且非首屏必需：Promise 原样下发，但调用在这里就起飞
+  // ✅ 慢且非首屏必需：Promise 原样下发，但调用在这里就起飞（对象字面量从左到右求值）
   comments: loadComments(params.slug),
-  // 快的：await 掉，保证首块 HTML 带正文
+  // ✅ 快的：await 掉，保证首块 HTML 带正文；两个查询真正并行
   post: await loadPost(params.slug)
 })) satisfies PageServerLoad;
+// ❌ 把 await loadPost 写在左边先等完 → 人为瀑布，comments 查询被压到 post 回来才起飞
+// ❌ 直接调 DB 驱动的 comments 不挂 noop .catch → 渲染前就 reject 且无人接，服务端 unhandled rejection 崩掉
 ```
 
 官方示例注释点破了编排心法：**把 await 放在最后**——对象字面量按从左到右求值，先登记 comments 的 Promise（查询立刻起飞）、再 await post，两个查询才真正并行；反过来写就制造了人为瀑布。返回对象里"未解析的 Promise 进后续块、已解析的值随首块出页"。
@@ -25,13 +28,15 @@ export const load = (async ({ params }) => ({
 模板侧消费靠 Svelte 5 的 `{#await}`：
 
 ```svelte
+<!-- 目的：模板侧用 {#await} 接流—骨架先出，resolve 后由流把真内容替换进来 -->
 {#await data.comments}
-  <p>Loading comments...</p>   <!-- 骨架层 -->
+  <p>Loading comments...</p>   <!-- ✅ 骨架层：SSR 首块就带，用户不等评论 -->
 {:then comments}
-  {#each comments as c}<p>{c.content}</p>{/each}
+  {#each comments as c}<p>{c.content}</p>{/each}   <!-- ✅ 评论 resolve 后流式替换骨架 -->
 {:catch error}
-  <p>error: {error.message}</p>
+  <p>error: {error.message}</p>   <!-- ✅ 覆水难收：状态码已出，错误只能在这兜 -->
 {/await}
+<!-- ❌ 把正文（首屏必需）也塞进 Promise → 无 JS 的爬虫/受限环境只剩骨架，SEO 翻车 -->
 ```
 
 SSR 阶段浏览器就先拿到"正文 + Loading comments 骨架"的 HTML，评论 resolve 后由流把真实内容替换进来——这正是 React 18 `Suspense` 流的 Svelte 表达，但控制面从组件树挪到了数据层。

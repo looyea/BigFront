@@ -9,10 +9,11 @@
 Node 的哲学是**事件驱动**：一个耗时操作（读文件、来连接、收到字节）不阻塞主线程，而是"在合适时机**发一个事件**"，你提前注册好监听器去响应（呼应 node-event-loop 的 poll 阶段回调）。`EventEmitter` 就是这套机制的通用实现：
 
 ```js
+// 目的：最小发布/订阅——on 注册、emit 同步触发所有监听
 import { EventEmitter } from "node:events";
 
 const ee = new EventEmitter();
-ee.on("greet", (name) => console.log("你好", name));   // 注册监听
+ee.on("greet", (name) => console.log("你好", name));   // 注册监听（尚未执行）
 ee.emit("greet", "小明");                                // 触发：同步按注册顺序调用所有监听
 // 输出：你好 小明
 ```
@@ -34,14 +35,15 @@ ee.emit("greet", "小明");                                // 触发：同步按
 | `eventNames()` | 已注册的事件名数组 | — |
 
 ```js
+// 目的：once 只触发一次；off 必须传同一函数引用才能移除
 function ready() { console.log("只打印一次"); }
 ee.once("ready", ready);
-ee.emit("ready");   // 打印
+ee.emit("ready");   // 打印（触发后自动移除）
 ee.emit("ready");   // 不再打印（once 已自动移除）
 
 ee.on("data", h);
 ee.off("data", h);  // ✓ 同一个 h 引用才能移除
-ee.off("data", (...a) => h(...a));  // ✗ 新箭头函数，移不掉 → 泄漏
+ee.off("data", (...a) => h(...a));  // ✗ 新箭头函数，引用不同→移不掉 → h 泄漏（每次 data 仍会触发）
 ```
 
 `removeListener` 在**当前这次 `emit` 中**移除的监听，若还没轮到它就不会被调用；`emit` 期间新增的监听，本次不会被调用（Node 在 emit 时对监听列表做了快照）。
@@ -53,9 +55,10 @@ ee.off("data", (...a) => h(...a));  // ✗ 新箭头函数，移不掉 → 泄�
 所有事件里，`'error'` 是**特殊**的：**`emit('error')` 时若没有任何 `'error'` 监听器，Node 不会安静返回，而是抛出一个未捕获异常，直接让进程崩溃**（呼应 node-async-errors 第四节 `uncaughtException`）：
 
 ```js
+// 目的：'error' 事件的专属语义——无监听者时 emit('error') 会抛未捕获异常直接崩进程
 const stream = getSomeStream();
 // ✗ 忘了挂 error 监听
-stream.emit("error", new Error("读盘失败"));   // → 抛出 → 进程崩溃
+stream.emit("error", new Error("读盘失败"));   // → 抛出 → 进程崩溃（不像普通事件那样静默返回 false）
 
 // ✓ 任何可能 emit('error') 的对象，务必先挂监听
 ee.on("error", (e) => logger.error(e));
@@ -94,6 +97,7 @@ require("node:events").EventEmitter.defaultMaxListeners = 20;  // 全局调（�
 Node 内置对象大多"是一个 EventEmitter"。你也可以 `class` 继承它，把"状态变化"暴露成事件，让使用者解耦订阅：
 
 ```js
+// 目的：class 继承 EventEmitter，把"状态变化"暴露成事件供外部解耦订阅
 import { EventEmitter } from "node:events";
 
 class Order extends EventEmitter {

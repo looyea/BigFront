@@ -8,16 +8,18 @@
 
 ```svelte
 <script>
+  // 目的：transition 指令—元素进出场不装任何库，内置 fade/slide/fly/scale/blur
   import { fade, slide, fly } from 'svelte/transition';
   let open = $state(true);
 </script>
 
 <button onclick={() => open = !open}>切换</button>
 {#if open}
-  <div transition:fade="{{ duration: 300 }}">进出场</div>
+  <div transition:fade="{{ duration: 300 }}">进出场</div>   {/* ✅ 翻 false 不立即消失，播完出场才移除 */}
   <div transition:slide>面板展开</div>
   <div transition:fly="{{ y: 20, duration: 250, delay: 50 }}">上浮进场</div>
 {/if}
+<!-- ❌ 把 transition 挂在 {#if} 外的常驻元素上→元素从不增删，过渡根本不触发 -->
 ```
 
 三个心智点：
@@ -27,7 +29,8 @@
 3. `in:` 与 `out:` 可拆开用不同过渡：
 
 ```svelte
-<p in:fly="{{ y: -10 }}" out:fade="{{ duration: 150 }}">进场上浮,出场淡出</p>
+{/* 目的：in:/out: 拆开—进场与出场用不同过渡 */}
+<p in:fly="{{ y: -10 }}" out:fade="{{ duration: 150 }}">进场上浮,出场淡出</p>   {/* ✅ 进 fly、出 fade 各自独立 */}
 ```
 
 - `local` 修饰符：`transition:slide|local`——只对本元素显隐做过渡，不再给**内部新插入的子元素**播进场。
@@ -41,12 +44,14 @@
 
 ```svelte
 <script>
+  // 目的：animate:flip—列表顺序变化时每个 item 物理位移到新位置（FLIP）
   import { flip } from 'svelte/animate';
   let todos = $state([...]);   // 排序/增删后顺序变化
 </script>
 {#each todos as todo (todo.id)}
-  <li animate:flip="{{ duration: 200 }}">{todo.text}</li>
+  <li animate:flip="{{ duration: 200 }}">{todo.text}</li>   {/* ✅ 靠 (todo.id) 认人，旧位→新位平滑移动 */}
 {/each}
+<!-- ❌ each 不写 key→flip 无法把“同一个元素”从旧位认到新位，位移动画乱跳 -->
 ```
 
 名字来自 **FLIP** 四步：First 记旧位 → Last 量新位 → Invert 用 transform 把元素"假移"回旧位 → Play 播放归零。Vue 的 `<TransitionGroup>` 开 `move` 是同一原理（呼应 vue 过渡动画）。
@@ -55,12 +60,13 @@
 
 ```svelte
 <script>
+  // 目的：crossfade—两容器间迁移元素时旧位淡出+新位淡入无缝衔接
   import { crossfade } from 'svelte/transition';
-  const [send, receive] = crossfade({ duration: 300, fallback: fade });
+  const [send, receive] = crossfade({ duration: 300, fallback: fade });   // ✅ send=出场、receive=入场
 </script>
 <ul>
   {#each todos as todo (todo.id)}
-    <li in:receive="{{ key: todo.id }}" out:send="{{ key: todo.id }}">{todo.text}</li>
+    <li in:receive="{{ key: todo.id }}" out:send="{{ key: todo.id }}">{todo.text}</li>   {/* ✅ key 一致才配对 morph */}
   {/each}
 </ul>
 ```
@@ -75,22 +81,26 @@
 
 ```js
 // 打字机:逐字显现
+// 目的：自定义过渡契约—(node, params) => { delay, duration, easing, css, tick? }
 export function typewriter(node, { speed = 1 } = {}) {
   const text = node.textContent;
-  const duration = text.length / (speed * 0.01);
+  const duration = text.length / (speed * 0.01);   // ✅ 按字数定总时长
   return {
     delay: 0,
     duration,
     tick: (t) => {
+      // ✅ tick 每帧拿到进度 0→1，手动改内容（只给 css 则交 CSS 插值）
       const i = Math.round(text.length * t);
-      node.textContent = text.slice(0, i);
+      node.textContent = text.slice(0, i);   // ✅ 逐字截断显现
     },
   };
 }
+// ❌ 既不给 css 也不给 tick → 返回空描述对象，过渡什么都不做
 ```
 
 ```svelte
-<p transition:typewriter>逐字出现</p>
+<!-- 目的：把自定义过渡函数当 transition: 用 -->
+<p transition:typewriter>逐字出现</p>   {/* ✅ typewriter 已在 script 里 import */}
 ```
 
 - 只给 `css` → 交给 CSS 插值（`css: t => \`opacity:${t}; transform: scale(${t})\``）；要**改内容/测量 DOM** 就上 `tick`。
@@ -105,15 +115,18 @@ export function typewriter(node, { speed = 1 } = {}) {
 
 ```svelte
 <script>
+  // 目的：class: 驱动 CSS 动画—循环/一次性效果（抖动）比 transition 更轻
   let shake = $state(false);
 </script>
-<div class:shake onanimationend={() => shake = false}>
-  <button onclick={() => shake = true}>错误!</button>
+<div class:shake onanimationend={() => shake = false}>   {/* ✅ 动画结束手动置回，下次才能再触发 */}
+  <button onclick={() => shake = true}>错误!</button>   {/* ✅ 置 true 加 .shake 类，播放抖动 */}
 </div>
 <style>
+  /* 目的：定义一次性 keyframes，只用 transform 不动布局属性 */
   .shake { animation: shake 0.4s; }
-  @keyframes shake { 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  @keyframes shake { 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }   /* ✅ 只动 transform，走合成层 */
 </style>
+<!-- ❌ 不写 onanimationend 置回 shake→shake 永为 true，第二次点击不再播放（类名未变不重触发） -->
 ```
 
 `use:animate`（内置 action）与"把过渡函数当 action 用"能对**已存在**的元素跑过渡（不依赖显隐），见下一课 actions。

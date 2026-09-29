@@ -9,21 +9,23 @@
 铁律是"客户端组件不能 import 服务端组件"，但有个优雅的侧门——**JSX 作为 props**：
 
 ```tsx
+// 目的：children 穿透术——客户端壳组件不 import 服务端件，内容全靠 children 传入
 // components/modal.tsx —— 'use client'，纯交互壳
 'use client';
 export default function Modal({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);   // ✅ 壳自己管开关/动画（客户端能力）
   return (/* 开关逻辑、动画，children 原样渲染 */ <dialog open={open}>{children}</dialog>);
 }
 
 // app/page.tsx —— 服务端页面
 import Modal from '@/components/modal';
-import ExpensiveTable from './expensive-table';   // 服务端组件！
+import ExpensiveTable from './expensive-table';   // ✅ 服务端组件！
 
 export default async function Page() {
-  const rows = await getRows();          // 服务端取数
-  return <Modal><ExpensiveTable rows={rows} /></Modal>;   // ← 关键
+  const rows = await getRows();          // ✅ 服务端取数
+  return <Modal><ExpensiveTable rows={rows} /></Modal>;   // ✅ 关键：服务端元素作为 children 递进去，Modal 不碰其实现
 }
+// ❌ 若改成在 modal.tsx 里直接 import ExpensiveTable → 违反“客户端不能 import 服务端件”铁律，报错
 ```
 
 `<ExpensiveTable/>` 这个元素在**父级（服务端）就已渲染完成**，传给 Modal 的只是渲染结果（序列化的 payload 片段）——Modal 虽是客户端组件，它的 children 里却可以坐着一整棵服务端树。
@@ -43,8 +45,10 @@ export default async function Page() {
 实践含义：**服务端边界处就是"海关"**。取到的 ORM 实体先 `.toPlain()`/解构瘦身再过海关——顺带治好 06-mp 里 setData 传整个大对象的同款病（序列化成本意识，呼应 mp-setdata 五步旅程）：
 
 ```tsx
+// 目的：跨边界就是“海关”——只带可序列化、且客户端真需要的字段过
 const user = await db.user.find();     // 20 字段的完整实体
-<ClientWidget user={{ id: user.id, name: user.name }} />   // 只带过海关需要的
+<ClientWidget user={{ id: user.id, name: user.name }} />   // ✅ 只带过海关需要的两个字段（不传函数/类实例/整个 ORM 实体）
+// ❌ 直接 <ClientWidget user={user} /> 把整个实体丢过去 → 含函数字段不可序列化，报错 "Only plain objects can be passed to Client Components"
 ```
 
 ---
@@ -54,17 +58,19 @@ const user = await db.user.find();     // 20 字段的完整实体
 客户端组件之间的 Context **照常使用**——Provider 放在客户端岛根部：
 
 ```tsx
+// 目的：Context 没死只是搬家——Provider 放客户端岛根部，靠 children 穿透挂到服务端根布局
 // providers/theme.tsx
 'use client';
 const ThemeCtx = createContext<Theme>(defaultTheme);
-export const ThemeProvider = ({ children }) => { ...useState...; return <ThemeCtx.Provider>{children}</ThemeCtx.Provider>; };
+export const ThemeProvider = ({ children }) => { ...useState...; return <ThemeCtx.Provider>{children}</ThemeCtx.Provider>; };   // ✅ 交互态活在岛内
 export const useTheme = () => useContext(ThemeCtx);
 
 // app/layout.tsx（服务端根布局）
 import { ThemeProvider } from '@/providers/theme';
 export default function RootLayout({ children }) {
-  return <html><body><ThemeProvider>{children}</ThemeProvider></body></html>;  // Provider 是客户端岛，children 穿透！
+  return <html><body><ThemeProvider>{children}</ThemeProvider></body></html>;  // ✅ Provider 是客户端岛，children 从服务端透传下来
 }
+// ❌ 想让服务端组件直接 useContext(ThemeCtx) 读请求作用域的 theme → 不支持；改用 cookies()/headers() 现取
 ```
 
 但"服务端组件消费 Context"（读请求作用域的 theme/locale）需要新工具：**`context()` API（实验）/ AsyncLocalStorage / 直接参数透传**。当前务实排序：① 请求态数据（session/locale）——服务端组件用 `cookies()/headers()` 现取，别造 Context；② 客户端交互态——经典 Context 活在岛内；③ 全站配置——构建期 env 或根 layout props 下发。全局结论：**Context 从"全局总线"退居"岛屿内总线"**（呼应 react-context 的"Context 是逃生舱"再进一步）。

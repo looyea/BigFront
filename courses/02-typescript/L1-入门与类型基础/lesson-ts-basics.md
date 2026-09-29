@@ -9,6 +9,7 @@
 TS 的原始类型基本对应 JS 的 `typeof` 结果，注意**大小写**：
 
 ```ts
+// 目的：列举常用原始类型标注（全小写，对应 JS 的 typeof 结果）
 let isDone: boolean = false;
 let count: number = 42;          // number 涵盖整数/浮点/NaN/Infinity
 let msg: string = "hi";
@@ -16,6 +17,9 @@ let empty: null = null;
 let notSet: undefined = undefined;
 let id: symbol = Symbol("id");
 let big: bigint = 10n;           // ES2020 大整数（target 需够新）
+// ❌ 错误用例：类型与初始值不匹配，tsc 直接拒
+// count = "42";                 // ✗ Type 'string' is not assignable to 'number'
+// big = 10;                     // ✗ 缺 n 后缀：不能把 number 赋给 bigint
 ```
 
 坑：
@@ -105,8 +109,12 @@ const status: "idle" | "loading" | "error" = "loading";   // ← 更推荐的"�
 - 现代风格更倾向 **字面量联合 + `as const` 对象**，纯类型无运行时负担：
 
 ```ts
-const Directions = { Up: 0, Down: 1 } as const;
-type Direction = typeof Directions[keyof typeof Directions];
+// 目的：用 as const 对象 + keyof/typeof 取到类型，得到“零运行时负担”的枚举替代
+const Directions = { Up: 0, Down: 1 } as const;   // 冻结为字面量类型 { readonly Up: 0; readonly Down: 1 }
+type Direction = typeof Directions[keyof typeof Directions];  // → 0 | 1
+// ✅ 应用：既能当值用，也能当类型标注
+const up: Direction = Directions.Up;   // Directions.Up=0，属于 0|1 ✓
+// const bad: Direction = 5;           // ✗ 5 不在 0|1 内
 ```
 
 ---
@@ -135,10 +143,14 @@ let notSure: unknown = 4;
 给任意类型起名字，可复用：
 
 ```ts
-type Point = { x: number; y: number };
-type Handler = (e: Event) => void;
-type ID = string | number;
-type Matrix = number[][];
+// 目的：type 给任意类型起可复用的名字
+type Point = { x: number; y: number };        // 对象形状
+function dist(p: Point): number { return Math.hypot(p.x, p.y); }  // ✅ 应用：当函数参数类型
+dist({ x: 3, y: 4 });                          // => 5
+type Handler = (e: Event) => void;             // 函数类型别名
+type ID = string | number;                     // 联合类型别名
+type Matrix = number[][];                       // 多维数组
+// ❌ dist({ x: 3 });                           // ✗ 缺 y：Property 'y' is missing
 ```
 
 `interface` vs `type` 的取舍见 ts-interface。基础阶段记住：`type` 更通用（能表达联合/交叉/映射），`interface` 擅长对象形状与可被实现/合并。
@@ -148,8 +160,13 @@ type Matrix = number[][];
 ## 八、函数基础签名
 
 ```ts
+// 目的：函数逐个参数标注 + 可选的返回类型
 function sum(a: number, b: number): number { return a + b; }
 const mul = (a: number, b: number): number => a * b;
+// ✅ 应用：正常调用
+sum(2, 3);   // => 5
+mul(2, 3);   // => 6
+// ❌ sum(2, "3");  // ✗ 第二参传入 string：not assignable to number
 
 // 返回类型通常可省略让推断算，除非要固化对外契约
 function divide(a: number, b: number) { return a / b; }   // 推断 number

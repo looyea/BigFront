@@ -7,6 +7,7 @@
 ## 一、v-if vs v-show：本质区别
 
 ```vue
+<!-- 目的：v-if 真销毁/创建（惰性），v-show 只切 display（节点一直在） -->
 <p v-if="ok">A</p>          <!-- ok=false 时：节点根本不存在于 DOM -->
 <p v-show="ok">B</p>        <!-- ok=false 时：display:none，节点一直在 DOM -->
 ```
@@ -25,9 +26,11 @@
 ## 二、v-else / v-else-if 与条件链
 
 ```vue
+<!-- 目的：条件链——v-else/v-else-if 必须紧跟前一 v-if 元素 -->
 <div v-if="type === 'A'">A</div>
 <div v-else-if="type === 'B'">B</div>
 <div v-else>其它</div>
+<!-- ❌ 在 v-if 与 v-else 之间插入无关节点 → 编译报 "v-else/v-else-if has no adjacent v-if" -->
 ```
 `v-else`/`v-else-if` 必须**紧跟**在前一个带 `v-if`/`v-else-if` 的元素之后（中间不能插入无关节点，空白/注释节点除外）。多根分支用 `<template v-if>…</template>` 包裹。
 
@@ -38,11 +41,12 @@
 `v-if` 系列切换时，Vue 会尽量**复用**相同结构的元素（含其内部表单状态）。要强制"各分支独立、切换即重建"，加不同的 `key`：
 
 ```vue
-<!-- 反面：登录/注册来回切，用户名输入框内容会残留 -->
+<!-- 目的：不加 key 时 Vue 会复用同结构元素，导致表单状态残留；用不同 key 强制各分支重建 -->
+<!-- ❌ 反面：登录/注册来回切，用户名输入框内容会残留（复用同一 DOM） -->
 <input v-if="mode==='login'" placeholder="账号" />
 <input v-else placeholder="邮箱" />
 
-<!-- 正确：用 key 区分，Vue 不再复用同一 DOM -->
+<!-- ✅ 正确：用 key 区分，Vue 不再复用同一 DOM -->
 <Input v-if="mode==='login'" key="login" />
 <Input v-else key="register" />
 ```
@@ -52,12 +56,13 @@
 ## 四、v-for：遍历的四种源
 
 ```vue
-<li v-for="item in list">{{ item }}</li>                <!-- 数组 -->
-<li v-for="(item, i) in list" :key="item.id">{{ i }}</li> <!-- 带索引 -->
-<li v-for="(v, k, i) in obj" :key="k">{{ k }}:{{ v }}</li> <!-- 对象 -->
-<li v-for="n in 5" :key="n">{{ n }}</li>                <!-- 整数区间 1..5 -->
+<!-- 目的：v-for 可遍历数组/对象/整数区间，还能解构 -->
+<li v-for="item in list">{{ item }}</li>                <!-- 数组元素 -->
+<li v-for="(item, i) in list" :key="item.id">{{ i }}</li> <!-- 带索引（i 从 0 起） -->
+<li v-for="(v, k, i) in obj" :key="k">{{ k }}:{{ v }}</li> <!-- 对象：顺序是 (值, 键, 索引) -->
+<li v-for="n in 5" :key="n">{{ n }}</li>                <!-- 整数区间：n 依次为 1..5（从 1 不是 0） -->
 
-<li v-for="{ id, name } in users" :key="id">{{ name }}</li>  <!-- 解构 -->
+<li v-for="{ id, name } in users" :key="id">{{ name }}</li>  <!-- 解构元素属性 -->
 ```
 `in` 也可写成 `of`（`v-for="x of list"`，兼容 JS `for...of`）。别名顺序：对象是 `(value, key, index)`。
 
@@ -74,7 +79,8 @@
 - **动画/焦点**跳到错误项。
 
 ```vue
-<!-- ❌ 反例 -->
+<!-- 目的：key 是 diff 识别"新旧节点谁对应谁"的身份牌 -->
+<!-- ❌ 反例：用 index 当 key，插入/删除/排序时 index 与数据错位→子组件状态串行、动画跳错项 -->
 <li v-for="(t, i) in todos" :key="i">...</li>
 <!-- ✅ 用稳定的唯一 id -->
 <li v-for="t in todos" :key="t.id">...</li>
@@ -89,6 +95,7 @@
 Vue 3 里 **`v-if` 优先级高于 `v-for`** 在同一元素上——此时 `v-if` 里**访问不到 `v-for` 的循环变量**（Vue 2 相反）。所以要"过滤式条件"时，**别把它们写在一个标签上**：
 
 ```vue
+<!-- 目的：Vue3 同元素上 v-if 优先于 v-for，v-if 里拿不到循环变量 -->
 <!-- ❌ 同元素：拿不到 item，且每项都跑一次条件 -->
 <li v-for="item in list" v-if="item.ok" :key="item.id">{{ item }}</li>
 
@@ -96,7 +103,8 @@ Vue 3 里 **`v-if` 优先级高于 `v-for`** 在同一元素上——此时 `v-i
 <li v-for="item in okList" :key="item.id">{{ item }}</li>
 ```
 ```js
-const okList = computed(() => list.value.filter(i => i.ok));  // 呼应 vue-reactivity 第四节
+// 目的：把过滤下沉到 computed，模板只负责渲染已过滤结果
+const okList = computed(() => list.value.filter(i => i.ok));  // ✅ 只含 ok 为真的项（呼应 vue-reactivity 第四节）
 ```
 
 若确需"对整体加条件"，用 `<template v-for>` 包一层、`v-if` 放内层；反之"整块开关"用外层 `<div v-if>` + 内层 `v-for`。

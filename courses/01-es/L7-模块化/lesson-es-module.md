@@ -19,6 +19,7 @@
 ## 二、`export` 的五种形式
 
 ```js
+// 目的：export 的五种形式（单值/批量/重命名/默认/再导出）
 // 1. 单值具名
 export const PI = 3.14;
 export function foo() { }
@@ -51,6 +52,7 @@ export * as ns from './other.js';   // 把整个模块打包成 ns
 ## 三、`import` 的六种形式
 
 ```js
+// 目的：import 的六种形式（具名/默认/命名空间/混合/副作用/动态）
 // 1. 具名
 import { readFile, writeFile as w } from 'node:fs/promises';
 
@@ -87,6 +89,7 @@ const { default: Chart } = await import('chart.js');
 
 打包器（Rollup / Vite / webpack 2+）**编译时**就能知道哪些导出被用：
 ```js
+// 目的：静态结构——打包器编译期就知道只用了 sum，math.js 其余导出可 tree-shake
 import { sum } from './math.js';   // 只用了 sum
 // math.js 里其它导出 mul / div 可被摇掉
 ```
@@ -98,6 +101,7 @@ CJS 做不到：`const m = require('./math.js')` 是**运行时值**，无法预
 ESM 导出的是**「绑定」**（引用），不是「值快照」。导出方改了，导入方看到的就是新值。
 
 ```js
+// 目的：live binding——导出的是"引用"而非值快照，导出方改、导入方看到新值
 // counter.js
 export let count = 0;
 export function inc() { count++; }
@@ -106,9 +110,9 @@ export function inc() { count++; }
 import { count, inc } from './counter.js';
 console.log(count);   // 0
 inc();
-console.log(count);   // 1 —— 不是 0！
+console.log(count);   // 1 —— 不是 0！导出方内部 count++，导入方同步看到
 
-count = 99;            // ❌ TypeError：count 是只读绑定（导入方不能改）
+// count = 99;          // ❌ TypeError：count 是只读绑定（导入方不能改）
 ```
 
 **对比 CJS**：`let { count } = require('./counter.js')` 拿到的是**值快照**——counter 里改了 count，你这边不变。
@@ -122,6 +126,7 @@ count = 99;            // ❌ TypeError：count 是只读绑定（导入方不�
 **每个模块都是一份单例**——第一次 import 时才执行，之后所有 import 共享同一份内存。
 
 ```js
+// 目的：模块是单例——第一次 import 才执行，之后多个 import 共享同一内存
 // singleton.js
 export const obj = { n: 0 };
 obj.n++;
@@ -142,6 +147,7 @@ import { obj } from './singleton.js';   // 不再打印，同一份 obj，n=3
 ## 六、路径规则与**扩展名**
 
 ```js
+// 目的：Node ESM 路径必须写全扩展名（与 CJS 自动补全不同）
 import x from './file.js';     // ✅ Node ESM 必须写扩展名
 import y from 'pkg';           // 从 node_modules 或 exports 字段解析
 import z from 'pkg/sub';        // 子路径需在 package.json exports 声明
@@ -202,10 +208,11 @@ ESM 独有的元信息对象：
 
 **常用套路**（Node ESM 版 `__dirname`）：
 ```js
+// 目的：ESM 没有 __dirname——用 import.meta.url + fileURLToPath 手动还原
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);   // 当前模块的绝对路径
+const __dirname = path.dirname(__filename);          // 所在目录（等价于 CJS 的 __dirname）
 ```
 
 ---
@@ -215,6 +222,7 @@ const __dirname = path.dirname(__filename);
 **ESM 允许循环 import**——但**执行顺序**决定你拿到的是「已初始化的绑定」还是「TDZ 中的空绑定」。
 
 ```js
+// 目的：循环依赖——执行顺序决定拿到"已初始化"还是"TDZ 空绑定"
 // a.js
 import { b } from './b.js';
 export const a = 1;

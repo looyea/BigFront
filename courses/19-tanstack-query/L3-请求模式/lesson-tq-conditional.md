@@ -3,11 +3,14 @@
 ## 一、enabled：让查询「装死」
 
 ```tsx
+// 目的：enabled 条件请求——id 就绪才发，空值时查询“装死”（paused）不取不重试
 useQuery({
   queryKey: ['user', id],
   queryFn: () => fetch('/api/user/' + id).then(r => r.json()),
-  enabled: !!id,          // id 为空串/undefined 时：不发请求、不重试
+  enabled: !!id,          // id 为空串/undefined 时：不发请求、不重试，翻 true 才补一发
 });
+// ✅ 开关式懒加载（点开 Tab 再取）、登录态守卫（有 token 才取）都靠这一行
+// ❌ 没搭 enabled 就拼未就绪的 id → 发出 '/api/user/undefined' 脏请求
 ```
 
 enabled:false 的查询 fetchStatus 进 paused——挂载不取、聚焦不取、invalidate 也不取，等 enabled 翻 true 才补一发。开关式懒加载（点开 Tab 再取）、登录态守卫（有 token 才取）都是这一行。
@@ -15,12 +18,15 @@ enabled:false 的查询 fetchStatus 进 paused——挂载不取、聚焦不取�
 ## 二、dependent queries：拿 A 的产物喂 B
 
 ```tsx
+// 目的：dependent queries——拿 A 的产物喂 B，key 带依赖值 + enabled 挡住 undefined 脏请求
 const { data: user } = useQuery({ queryKey: ['user'], queryFn: fetchUser });
 const { data: projects } = useQuery({
-  queryKey: ['projects', user?.teamId],
+  queryKey: ['projects', user?.teamId],   // 依赖值进 key：teamId 一变自动重取
   queryFn: () => fetchProjects(user.teamId),
-  enabled: !!user,        // 经典串联：B 等 A
+  enabled: !!user,        // 经典串联：B 等 A，user 到位才发
 });
+// ✅ 依赖驱动与 jo-dependencies 的 get 建边殊途同归：user 变→key 变→B 重取
+// ❌ 漏 enabled：user 尚 undefined 时 fetchProjects(user.teamId) 读空报错/发 undefined 参数
 ```
 
 key 里带上依赖值（user?.teamId），依赖一变自动重取；enabled 挡住「undefined 当参数」的脏请求。这是「依赖驱动」的 Query 版，与 jo-dependencies 的 get 建边殊途同归。
@@ -34,11 +40,14 @@ enabled 的语义是「暂停」——查询对象仍占着位置。v5 提供 `s
 翻页场景最痛的一下：page 变化 → key 变化 → 新 key 无缓存 → 整页闪回骨架。`placeholderData: (prev) => prev` 让新查询**先显示上一条查询的数据**，后台静默取新页：
 
 ```tsx
+// 目的：翻页不闪空——placeholderData 让新 key 先显示上一条查询数据，后台静默取新页
 useQuery({
   queryKey: ['todos', page],
   queryFn: fetchTodos,
-  placeholderData: keepPreviousData,   // v5 官方导出
+  placeholderData: keepPreviousData,   // v5 官方导出：上一页顶着，别整页回骨架
 });
+// ✅ page 变化时旧页数据占位，isPlaceholderData:true 期间 UI 置灰/打“旧数据”标
+// ❌ 把占位当真相照常可操作→用户在“上一页数据”上点删除，打的却是错行
 ```
 
 注意它是「占位」不是「真相」：`isPlaceholderData: true` 期间 UI 该置灰/打「旧数据」标，别让用户把上一页当本页操作。

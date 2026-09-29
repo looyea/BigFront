@@ -5,9 +5,10 @@ Next 用 build 日志的 ○●ƒ 告诉你每个路由的渲染形态（呼应 
 ## 1. 全局旋钮与逐路由旋钮
 
 ```ts
+// 目的：一张表按路径模式指派渲染与缓存策略（Nuxt 版混合渲染宪法）
 // nuxt.config.ts
 export default defineNuxtConfig({
-  ssr: true,                    // 全局默认服务端渲染；false=整站 SPA 化（no SSR 版 CSR）
+  ssr: true,                    // ✅ 全局默认服务端渲染；false=整站 SPA 化（no SSR 版 CSR）
   nitro: {
     prerender: { routes: ['/'] },          // SSG：构建期定格的路径清单
     // 或 crawlLinks: true 让爬虫从首页摸全站
@@ -16,11 +17,12 @@ export default defineNuxtConfig({
     '/':                { prerender: true },                 // ≈ Next SSG ○
     '/blog/**':         { swr: 3600 },                       // ≈ ISR ●（stale-while-revalidate）
     '/docs/**':         { isr: 600 },                        // 带平台缓存层的 isr 提示
-    '/app/**':          { ssr: false },                      // 登录后后台：只发壳，纯客户端渲染
-    '/old/**':          { redirect: '/' },                   // URL 治理（301 语义见 nuxt-dynamic D1）
-    '/api/**':          { cors: true },                      // 杂项旋钮
+    '/app/**':          { ssr: false },                      // ✅ 登录后后台：只发壳、纯客户端渲染，绝不被 HTML 缓存串号
+    '/old/**':          { redirect: '/' },                   // ✅ URL 治理：命中即 301 跳首页（302/307 语义见 nuxt-dynamic D1）
+    '/api/**':          { cors: true },                      // ✅ 杂项旋钮：给这批路由挂跨域头
   },
 });
+// ❌ 把读了 cookie/useRequestHeaders 的个性化页配 prerender/swr → A 的 HTML 被缓存喂给 B（串号事故，第 4 节红线）
 ```
 
 四种渲染姿势：
@@ -45,15 +47,17 @@ routeRules 的匹配走 Nitro 层，所以它能做渲染之外的事：`headers
 Next 在页面里写生成函数（呼应 next-dynamic 第 1 节），Nuxt 在配置里给清单：
 
 ```ts
+// 目的：动态页预渲染——generateStaticParams 的 Nuxt 答案：清单写在配置里、不写在页面里
 nitro: {
   prerender: {
     routes: async () => {
-      const { data } = await $fetch.raw('/api/posts');   // 构建期调自家 API
-      return data.map(p => `/blog/${p.slug}`);
+      const { data } = await $fetch.raw('/api/posts');   // ✅ 构建期调自家 API 拿到全部文章
+      return data.map(p => `/blog/${p.slug}`);           // ✅ 拼出待预渲染路径清单，逐条产出静态 HTML
     },
-    crawlLinks: true,          // 从入口沿 <a> 爬全站
+    crawlLinks: true,          // ✅ 或从入口沿 <a> 自动爬全站发现路径
   },
 },
+// ❌ 构建环境连不通 DB/上游 API → routes() 里的 $fetch 抛错、build 失败（本地能过、CI 挂，先查这条）
 ```
 
 思路差异：Nuxt 把"预渲染哪些"集中成部署关注点（CI 可注入不同清单），页面代码保持无关。构建期取数注意 API 可达性——本地 build 要连得通 DB/上游（或用已 mock 的 server/api，nuxt-server-routes 见其便利）。

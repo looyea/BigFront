@@ -10,25 +10,29 @@ store 不是语言特性，只是一个实现了可订阅接口的**普通对象
 
 ```js
 // stores.js
+// 目的：store 四件套—只是实现了 subscribe 接口的普通对象，非语言特性
 import { writable, readable, derived, get } from 'svelte/store';
 
-export const count = writable(0);                    // 可读写
-export const now  = readable(Date.now(), (set) => {  // 只在有订阅者时启动
+export const count = writable(0);                    // ✅ 可读写
+export const now  = readable(Date.now(), (set) => {  // ✅ 只在有订阅者时启动（惰性）
   const t = setInterval(() => set(Date.now()), 1000);
-  return () => clearInterval(t);                     // 清理函数
+  return () => clearInterval(t);                     // ✅ 返回清理函数，无人订阅时自动停表
 });
-export const isEven = derived(count, (c) => c % 2 === 0);  // 派生
+export const isEven = derived(count, (c) => c % 2 === 0);  // ✅ 派生：追 count
+// ❌ 把 store 值塞进 $state 再用 → 对象代理干扰 subscribe，响应语义会丢
 ```
 
 组件里用 **`$` 前缀**自动订阅/退订：
 
 ```svelte
 <script>
+  // 目的：$ 前缀自动订阅/退订—编译器隐式 subscribe，组件销毁自动退订
   import { count, now, isEven } from './stores.js';
 </script>
 
-<p>{$count} / {$isEven ? '偶' : '奇'} / {$now}</p>
-<button onclick={() => count.update((c) => c + 1)}>+1</button>
+<p>{$count} / {$isEven ? '偶' : '奇'} / {$now}</p>   {/* ✅ $x 直接当值读，无需手写 subscribe */}
+<button onclick={() => count.update((c) => c + 1)}>+1</button>   {/* ✅ update 函数式改值 */}
+<!-- ❌ 写 $count = 5 直接赋值 → 编译错误，$x 是订阅镜像不是本体，要 count.set(5) -->
 ```
 
 - `$count` 是编译器魔法：顶部隐式 `count.subscribe(v => count = v)`，**组件销毁自动退订**。
@@ -40,15 +44,17 @@ export const isEven = derived(count, (c) => c % 2 === 0);  // 派生
 ## 二、derived 的高级形态
 
 ```js
+// 目的：derived 高级形态—多输入、可写 derived（set 映射回上游）
 // 多输入
-const total = derived([price, qty], ([p, q]) => p * q);
+const total = derived([price, qty], ([p, q]) => p * q);   // ✅ 同时追 price、qty
 
 // 可写 derived：给 set 映射回上游
 const celsius = writable(25);
 const fahrenheit = derived({
-  get: (set) => celsius.subscribe((c) => set(c * 9 / 5 + 32)),
-  set: (v, get) => get(celsius).set((v - 32) * 5 / 9),
+  get: (set) => celsius.subscribe((c) => set(c * 9 / 5 + 32)),   // ✅ 正向：摄氏→华氏
+  set: (v, get) => get(celsius).set((v - 32) * 5 / 9),          // ✅ 反向：写华氏回推摄氏
 });
+// ❌ 误以为没人订阅也算→derived 惰性：无订阅者时上游变了也不算
 ```
 
 派生是**惰性**的：没人订阅 `$total` 时，上游变了也不算——与 `$derived` 的按需求值思路殊途同归（呼应 svelte-reactive-runes 第二节）。
@@ -72,9 +78,11 @@ Svelte 官方口径：**runes 是新的默认，store 不再推荐作为首选**
 混用桥（Svelte 5 提供）：
 
 ```js
+// 目的：混用桥—新代码 $state 与老组件 store 之间互转
 import { toStore, fromStore } from 'svelte/store';
-const count$ = toStore(count, get);      // $state → store(给老组件)
-const count2 = fromStore(count$);        // store → $state(给新代码)
+const count$ = toStore(count, get);      // ✅ $state → store（给老组件）
+const count2 = fromStore(count$);        // ✅ store → $state（给新代码）
+// ❌ 不搭桥直接把 $state 当 store 用 $ 前缀读 → 无 subscribe 方法，$ 魔法报错
 ```
 
 ---

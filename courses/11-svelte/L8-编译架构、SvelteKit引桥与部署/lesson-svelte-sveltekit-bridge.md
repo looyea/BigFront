@@ -11,15 +11,17 @@
 ```svelte
 <!-- App.svelte —— 手搓路由的冰山一角（注意：runes 只能出现在 .svelte/.svelte.ts 里） -->
 <script>
-  let page = $state(location.pathname);
+  // 目的：不经任何路由库，用最原始手段监听 URL 切换组件—体会“轮子多贵”
+  let page = $state(location.pathname);   // ✅ 当前路径入信号
   $effect(() => {
-    const sync = () => (page = location.pathname);
+    const sync = () => (page = location.pathname);   // ✅ 回退/前进时把新路径写回 page
     addEventListener('popstate', sync);
-    return () => removeEventListener('popstate', sync);   // L6 生命周期课的清理函数纪律
+    return () => removeEventListener('popstate', sync);   // ✅ L6 生命周期课的清理函数纪律，否则重复监听
   });
 </script>
 
-{#if page === '/'}<Home />{:else if page === '/about'}<About />{/if}
+{#if page === '/'}<Home />{:else if page === '/about'}<About />{/if}   {/* ✅ 手动映射路径→组件，无代码分割无预取 */}
+<!-- ❌ 忘写 return 清理→每跑一次 effect 叠一个 popstate 监听，回退一次多绑一份，内存泄漏 -->
 ```
 
 这只是**能跑**。生产级路由还差：链接拦截（SPA 内跳转不整页刷）、动态段（`/user/:id`）、代码分割（路由级懒加载）、滚动恢复、预取、`<svelte:head>` 的标题管理、404……社区路由器（历史上有 svelte-spa-router 等）能领一部分，但**每条路都不是官方亲儿子**——Svelte 官方对"应用框架"的回答就是 SvelteKit。

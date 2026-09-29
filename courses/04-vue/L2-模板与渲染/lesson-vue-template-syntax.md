@@ -8,9 +8,11 @@
 
 ```vue
 <template>
-  <p>{{ msg }}</p>                 <!-- 文本插值，自动转义 -->
-  <p>{{ msg.split('').reverse().join('') }}</p>  <!-- 可以是表达式 -->
-  <p v-once>{{ staticText }}</p>    <!-- 只渲染一次，之后不再更新 -->
+  <!-- 目的：{{ }} 插值只能是表达式不能是语句；v-once 只渲染一次 -->
+  <p>{{ msg }}</p>                 <!-- 文本插值，自动转义（< 会显为 &lt;） -->
+  <p>{{ msg.split('').reverse().join('') }}</p>  <!-- ✅ 表达式合法："abc"→"cba" -->
+  <p v-once>{{ staticText }}</p>    <!-- 只渲染一次，之后 staticText 再变也不更新 -->
+  <!-- ❌ {{ if (x) ... }} / {{ a; b }} 非法：编译报 "Interpolation does not accept statements" -->
 </template>
 ```
 
@@ -25,10 +27,11 @@
 ## 二、v-bind：把值绑到属性
 
 ```vue
+<!-- 目的：v-bind(:) 把 JS 表达式的值绑到属性；布尔属性取假值时自动移除 -->
 <img :src="url" :alt="text" />         <!-- v-bind: 缩写为 : -->
-<a :href="link" :target="blank ? '_blank' : null">…</a>
-<div :class="{ active: isActive }"></div>   <!-- class 特殊，见 L2 第三关 -->
-<input :disabled="isDisabled" />
+<a :href="link" :target="blank ? '_blank' : null">…</a>   <!-- blank=false 时 target 为 null → 不输出该属性 -->
+<div :class="{ active: isActive }"></div>   <!-- class 对象语法：isActive 真才加 active 类 -->
+<input :disabled="isDisabled" />            <!-- isDisabled=false → 自动移除 disabled（属性不会写 disabled="false"） -->
 ```
 
 - 值是 **JS 表达式**，能访问组件 setup 作用域里的所有绑定；
@@ -42,9 +45,11 @@
 指令名后 `:` 接的是**参数（argument）**，`v-bind:` 的 `:` 正是"参数分隔符"，所以缩写是 `:src`。参数还能**动态**：
 
 ```vue
+<!-- 目的：指令参数可动态——用 [expr] 把属性名/事件名本身变成变量 -->
 <a :[attrName]="value" />        <!-- attrName = 'href' → 渲染成 :href -->
 <button @[eventName]="doIt" />   <!-- eventName = 'click' → 绑定 click -->
 <input v-model:[mod]="text" />
+<!-- ❌ 动态参数不能含空格/未转义特殊字符，需要时用引号 :['my:attr'] -->
 ```
 
 动态参数值会被**自动转为小写**，且不能包含空格/特殊字符（需要时用引号 `:['my:attr']`）。
@@ -54,14 +59,15 @@
 ## 四、v-on 与修饰符
 
 ```vue
+<!-- 目的：v-on(@) 绑事件；修饰符 .prevent/.stop/.once 等串联且顺序有意义 -->
 <button @click="onClick">…</button>          <!-- v-on: 缩写为 @ -->
-<button @click="count++">…</button>           <!-- 内联表达式（语句）也允许 -->
-<form @submit.prevent="onSubmit">…</form>    <!-- 修饰符 .prevent 阻止默认 -->
+<button @click="count++">…</button>           <!-- v-on 内联语句也允许（区别于插值只能表达式） -->
+<form @submit.prevent="onSubmit">…</form>    <!-- .prevent 阻止表单默认提交（页面不再刷新） -->
 
-<input @keyup.enter="submit" />              <!-- 按键修饰符 -->
+<input @keyup.enter="submit" />              <!-- 按键修饰符：只在回车时触发 -->
 <input @keyup.esc="cancel" />
-<div @click.stop="handler"></div>            <!-- .stop 阻止冒泡 -->
-@click.once / .capture / .self / .passive   <!-- 常见修饰符 -->
+<div @click.stop="handler"></div>            <!-- .stop 阻止冒泡（stopPropagation） -->
+<!-- @click.once / .capture / .self / .passive 常见修饰符；串联如 @click.stop.prevent.once -->
 ```
 
 修饰符可**串联**且顺序有意义：`@click.stop.prevent.once`。`.passive` 告诉浏览器"不会 preventDefault"，提升滚动性能（呼应 DOM 事件、vue-performance）。
@@ -73,7 +79,8 @@
 ## 五、v-html 与 XSS 红线 ⚠️
 
 ```vue
-<p v-html="userInput"></p>    <!-- 危险：userInput 里的 <script>/onerror 会执行 -->
+<p v-html="userInput"></p>    <!-- ❌ 危险：userInput 里的 <script>/onerror 会被当代码执行（XSS） -->
+<!-- ✅ 安全默认：用 {{ userInput }}，<script> 会被转义成纯文本字面显示 -->
 ```
 
 `v-html` 直接插入原始 HTML，**不做转义**。若内容来自用户输入/URL/富文本未清洗，就是**存储型/反射型 XSS** 入口：
@@ -101,10 +108,12 @@
 ```
 编译后（简化）：
 ```js
+// 目的：揭开模板"魔法"——它会被编译成读 _ctx 的 render 函数
 function render(_ctx) {
   return { tag: 'p', props: { id: _ctx.a }, children: _ctx.b }
   // 真实 runtime-vdom 为 createVNode('p', { id }, toDisplayString(_ctx.b))
 }
+// ✅ 读 _ctx.a/_ctx.b 就触发 render effect 的依赖收集——这就是"改数据→重渲染"链路
 ```
 `_ctx` 就是组件实例的代理，读 `_ctx.a/_ctx.b` 即触发 **render effect 的依赖收集**（呼应 vue-reactivity-theory 第二节）——模板里的响应式依赖，是在这段 render effect 执行时收集到的。这就是"改数据→组件重渲染"的完整链路。
 

@@ -29,10 +29,12 @@ SSR/SSG 返回的 HTML 已可见，但此刻它只是"死"的 DOM——点击没
 3. 对上了 → 把事件监听"接管"挂上，页面从"能看"变"能用"。
 
 ```tsx
-// 典型水合崩溃：服务器和浏览器各算各的，结果对不上
+// 目的：重现最典型的水合崩溃——服务端与浏览器各算各的，两轮渲染结果对不上
 export default function Bad() {
-  return <p>现在是 {new Date().toLocaleTimeString()}</p>;  // ❌ Text content does not match
+  return <p>现在是 {new Date().toLocaleTimeString()}</p>;  // ❌ 服务端 12:00:00、浏览器水合时 12:00:03 → 文本对账失败
 }
+// React 报 "Warning: Text content did not match..."，并可能整树重建（性能更差）
+// ✅ 修复：把“只有浏览器才知道的值”延到 useEffect 里再 setState，首轮不渲染时间→两端 HTML 一致
 ```
 
 服务端渲染时 12:00:00、浏览器水合时 12:00:03——文本对账失败，React 报警并可能整树重建（性能更差）。**水合不一致 = 两端渲染结果不同**，修复思路：把"只有浏览器才知道的值"延迟到 `useEffect` 里再 setState（客户端专属数据不进首轮渲染，呼应 react-useeffect、vue-lifecycle 的 onMounted 类比）。
@@ -52,12 +54,14 @@ Next 13+ 不再让你显式喊"这页 SSR！"，而是**由代码行为推断**�
 | 组件是 `'use client'` 且数据在浏览器拿 | 该部分实际 CSR |
 
 ```tsx
+// 目的：App Router 里模式靠代码行为自动推断——声明数据新鲜度要求，而非手动喊 SSR
 // app/pricing/page.tsx —— 天然 SSG
-export const revalidate = 3600;   // 每小时后台翻新 → 这就是 ISR 的写法
-export default async function Pricing() {
-  const plans = await fetch('https://api.example.com/plans').then(r => r.json());
+export const revalidate = 3600;   // ✅ 每 3600s 后台重渲染一次 → 这就是 ISR 的写法（静态速度 + 定时翻新）
+export default async function Pricing() {   // ✅ async 组件，服务端 await 数据后直出 HTML
+  const plans = await fetch('https://api.example.com/plans').then(r => r.json());  // ✅ 构建时拉一次，结果缓存
   return <PlanList plans={plans} />;
 }
+// ❌ 若改成 export const dynamic = 'force-dynamic' 或在组件里读 cookies() → 自动转 SSR，不再是 SSG/ISR（每请求都现算）
 ```
 
 哲学转变：**从"选模式"到"描述数据的新鲜度要求"，模式是推导结果**（L4 next-revalidate 把这层讲透）。

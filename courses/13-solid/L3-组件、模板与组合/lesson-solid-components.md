@@ -7,10 +7,12 @@
 Solid 官方对组件层的定性：**"Components in Solid are plain functions that run once. Their reactive behaviour comes from the signals/memos/effects they read at render time, not from a re-render loop."**
 
 ```jsx
+// 目的：组件是只跑一次的普通函数—更新发生在返回的 DOM 绑定上，不在函数调用层
 function Greeting(props) {
-  console.log("Greeting 执行");      // 只打印一次
-  return <h1>Hello {props.name}</h1>; // name 变化时，只有这个文本节点更新，函数不再执行
+  console.log("Greeting 执行");      // ✅ 只打印一次：即便 name 变，函数也不再执行
+  return <h1>Hello {props.name}</h1>; // ✅ name 变化时只有这个文本节点更新（props.name 是惰性 getter）
 }
+// ❌ 按 React 惯性在函数体里写 if(props.x){...} 期望重渲再判 → 只在首跑求值一次，之后不再评估
 ```
 
 编译器把 `<Greeting name={x()} />` 变成 `createComponent(Greeting, props)`：它**新建一个子 Owner、把 props 包成 getter/Proxy、然后 `untrack(()=>Greeting(props))` 调用一次**。"更新"根本不发生在组件调用这一层，而在它返回的那些订阅了 signal 的 DOM 绑定上（solid-overview 的编译派心智落到组件层）。
@@ -20,11 +22,12 @@ function Greeting(props) {
 props 不是普通对象，编译器为**每个 prop 生成 getter**，这样组件内**读它的动作**才能订阅到上游 signal。由此推出 Solid 组件的第一号纪律：
 
 ```jsx
+// 目的：props 是 Proxy/getter 对象—读它的动作才订阅上游 signal，故定格值的写法都会断响应
 // ❌ 解构 = 在函数执行那一瞬把值定格，之后永远不更新
 function C({ title }) { return <h1>{title}</h1>; }
-// ❌ 提前存普通变量，同理冻结
+// ❌ 提前存普通变量，同理冻结（const t 拿到的是首读快照）
 function C(props) { const t = props.title; return <h1>{t}</h1>; }
-// ✅ 惰性读：在 JSX/effect/回调里用到时才 props.title()…… props 读起来不用加()，关键是"在用的地方读"
+// ✅ 惰性读：在 JSX 表达式里现读 props.title，用到时才触发 getter（props 读起来不用加 ()）
 function C(props) { return <h1>{props.title}</h1>; }
 ```
 
@@ -39,8 +42,10 @@ function C(props) { return <h1>{props.title}</h1>; }
 `props.children` 是父组件传进来的 JSX，**在父作用域里就已经求值**（作为 prop 传入）。所以子组件里 `{props.children}` 只是把它插入到 DOM 的某位置。若你要"子组件把某些值回填进 children"，React 那种 `props.children(item)` 克隆做法在这里不适用——Solid 用 **render props / 显式回调函数 prop** 表达：
 
 ```jsx
+// 目的：children 在父作用域已求值—子组件不能像 React 那样克隆 children 回填，改用 render prop
 <List items={data()} render={(item) => <Row item={item} />} />
-// List 内部：{props.render(item)}
+// ✅ List 内部调用 props.render(item)：把子组件的 item 传进父作用域定义的模板函数，实现"往上回填"
+// ❌ 试图 {props.children(item)} 像 React cloneElement 那样传参 → children 早已求值成静态 JSX
 ```
 
 ## 四、单向数据流：props 只读，往上走有两条路
@@ -51,10 +56,12 @@ Solid 官方鼓励 **one-way data flow**：props 是从父到子的**只读/不�
 2. **共享 signal/store**：把状态提升到共同父级，或用 Context 注入（下一关）。
 
 ```jsx
-function Counter({ onChange }) {
+// 目的：单向数据流—props 只读，子往上传靠回调 prop（或共享 signal/Context）
+function Counter({ onChange }) {   // ⚠️ 这里解构只取回调函数 onChange（稳定引用），不冻结响应式值，OK
   const [n, setN] = createSignal(0);
-  return <button onClick={() => { const v = n() + 1; setN(v); onChange?.(v); }}>{n()}</button>;
+  return <button onClick={() => { const v = n() + 1; setN(v); onChange?.(v); }}>{n()}</button>;   // ✅ 算新值→setN→回调把 v 报给父
 }
+// ❌ 写 props.count = 5 直接改 props → Proxy 只读，违背单向流（且改了父也不知情）
 ```
 
 绝不要写 `props.count = 5` 之类的改 props——Proxy 只读，且改了也不符合单向流。
@@ -64,14 +71,16 @@ function Counter({ onChange }) {
 普通对象展开 `{...props}` 会**立刻求值**所有 prop、丢掉 getter 的惰性。Solid 提供两个保住 Proxy 契约的工具：
 
 ```jsx
+// 目的：保住 props 的 Proxy 惰性契约—普通 {...props} 会立即求值所有 prop 丢响应
 import { mergeProps, splitProps } from "solid-js";
 
-// ① 合并默认值 / 多来源 props（后者优先，按逆序找到第一个有值即返回，且保持响应式）
+// ✅ ① 合并默认值 / 多来源 props：后者优先，按逆序找到第一个有值即返回，且保持响应式
 const merged = mergeProps({ size: "md" }, props);
 
-// ② 拆出你要用的，剩余转发给内部元素（等价 React 的 ...rest，但不丢响应）
+// ✅ ② 拆出要用的、剩余转发给内部元素（等价 React 的 ...rest，但不丢响应）
 const [local, rest] = splitProps(props, ["type", "onClick"]);
 return <input {...local} {...rest} />;
+// ❌ 用 const { ...rest } = props 或 {...props} 摊开转发 → 立即求值丢 getter，父级更新不再传到 input
 ```
 
 `splitProps` 常用于"组件想吃掉几个 prop、把其余原样 spread 到根 DOM 元素"。两者都返回 Proxy，维持惰性订阅。
@@ -85,9 +94,11 @@ return <input {...local} {...rest} />;
 - `ComponentProps<T>`：从组件反推它的 props 类型。
 
 ```tsx
+// 目的：组件类型标注—ParentComponent 自带可选 children，VoidComponent 禁 children
 const Greeting: ParentComponent<{ name: string }> = (props) => (
-  <h1>Hello {props.name}{props.children}</h1>
+  <h1>Hello {props.name}{props.children}</h1>   // ✅ props.children 可直接渲染（ParentComponent 允许）
 );
+// ❌ 给 VoidComponent 的组件塞 children → 类型报错，VoidComponent 明确禁 children
 ```
 
 ## 七、自检清单

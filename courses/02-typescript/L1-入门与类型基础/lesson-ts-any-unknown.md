@@ -67,16 +67,22 @@ function loop(): never { while (true) {} }
 ```
 2. **穷尽性检查**：可辨识联合被处理完后，剩余分支类型应是 `never`，用它兜底逼你处理所有情况（详见 ts-guards）：
 ```ts
+// 先定义可辨识联合 Shape（以 kind 作判别字段）
+type Shape =
+  | { kind: "circle"; r: number }
+  | { kind: "square"; side: number };
 function area(s: Shape): number {
   switch (s.kind) {
-    case "circle": return Math.PI * s.r ** 2;
-    case "square": return s.side ** 2;
+    case "circle": return Math.PI * s.r ** 2;   // 此分支内 s 收窄为 circle，可访 s.r
+    case "square": return s.side ** 2;           // s 收窄为 square，可访 s.side
     default: {
-      const _exhaustive: never = s;   // 若漏了某个 Shape，这里报错
+      const _exhaustive: never = s;   // ✅ 正确：两个分支都处理后 s 已穷尽为 never
       return _exhaustive;
     }
   }
 }
+area({ kind: "circle", r: 2 });   // => 12.566...
+// ❌ 若新增一个 kind 却忘了写 case，default 里 never = s 会报错，逼你补全
 ```
 3. **不可达/空交集**：`string & number` 是 `never`；某些条件类型的兜底分支。
 

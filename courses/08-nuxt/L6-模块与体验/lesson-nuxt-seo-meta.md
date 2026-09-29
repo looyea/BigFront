@@ -18,28 +18,32 @@
 ## 2. useHead / useSeoMeta：两套 API 各管一半
 
 ```ts
+// 目的：全站级 head——useHead 管“其它一切标签”（模板/图标/自定义 meta）
 // app.vue（全站级）
 useHead({
-  titleTemplate: '%s | NoteDeck-N',     // 模板函数更灵活：(title) => title ? `${title} · 笔记` : '笔记 · NoteDeck-N'
-  link: [{ rel: 'icon', href: '/favicon.svg' }],
-  meta: [{ name: 'theme-color', content: '#00dc82' }],
+  titleTemplate: '%s | NoteDeck-N',     // ✅ 页面 title 套模板；复杂逻辑可传函数 (title) => ...
+  link: [{ rel: 'icon', href: '/favicon.svg' }],          // ✅ 全站 favicon
+  meta: [{ name: 'theme-color', content: '#00dc82' }],    // ✅ 移动端浏览器主题色
 });
+// ❌ 把 useHead 放到 onMounted 或 await 之后 → 脱离组件实例、标签不生效（须在 setup 同步阶段调用）
 ```
 
 ```vue
 <!-- pages/articles/[slug].vue（页面级） -->
 <script setup>
+// 目的：useSeoMeta 管已知 SEO 语义——40+ 预设字段，写键名即可、有 TS 提示，SSR 直写 <head>
 const { data: a } = await useFetch(`/api/articles/${route.params.slug}`, { key: `art-${route.params.slug}` });
 
 useSeoMeta({
-  title: () => a.value?.title,                 // 传函数 = 响应式，数据回来自动更新
+  title: () => a.value?.title,                 // ✅ 传函数=响应式，数据回来自动更新（配 ?? '加载中' 兜底防空）
   description: () => a.value?.summary,
-  ogTitle: () => a.value?.title,
+  ogTitle: () => a.value?.title,               // ✅ 分享卡片标题（微信/Twitter 爬虫不执行 JS，靠 SSR 直出）
   ogDescription: () => a.value?.summary,
   ogType: 'article',
-  ogImage: () => `${base}/api/og?slug=${a.value?.slug}`,   // 绝对 URL！
+  ogImage: () => `${base}/api/og?slug=${a.value?.slug}`,   // ✅ 必须绝对 URL，相对路径分享爬虫读不到
   twitterCard: 'summary_large_image',
 });
+// ❌ ogImage 写成相对路径 /api/og?... → 分享平台拼不出图片 URL，卡片空白无图
 </script>
 ```
 
@@ -52,8 +56,10 @@ useSeoMeta({
 **① canonical —— 没有它就有重复内容。** 每个页面输出规范绝对地址：
 
 ```ts
-const base = useRuntimeConfig().public.siteUrl;   // 运行期注入，测试环境另配（呼应 nuxt-runtime-config）
-useHead({ link: [{ rel: 'canonical', href: () => base + route.path }] });
+// 目的：canonical——给每页输出规范绝对地址，避免重复内容稀释权重
+const base = useRuntimeConfig().public.siteUrl;   // ✅ 运行期注入绝对域名，测试环境用 NUXT_PUBLIC_SITE_URL 另配
+useHead({ link: [{ rel: 'canonical', href: () => base + route.path }] });   // ✅ 指向干净路径
+// ❌ canonical 指向带 ?utm_ 参数的 URL → 权重被参数页稀释，要把 href 写回无参干净路径
 ```
 
 **② 站点级 URL：`site.url`（Nuxt 3.10+ 的 `nuxt.config.site`）。** sitemap/OG/规范化都读它，且支持 `NUXT_PUBLIC_SITE_URL` 环境变量覆盖——一个 env 变量比满世界 `process.env.BASE_URL` 干净得多。
@@ -69,15 +75,17 @@ useSeoMeta({ robots: 'noindex, nofollow' });   // 私有页/搜索结果页/带�
 **④ sitemap。** `@nuxtjs/sitemap` 自动收集路由并输出 `/sitemap.xml`；带数据的站点用自定义端点：
 
 ```ts
+// 目的：带数据的站点自建 sitemap 端点——Nitro 路由输出 /sitemap.xml
 // server/sitemap.xml.ts （Nitro 路由，呼应 nuxt-server-routes）
 export default defineEventHandler(async (event) => {
-  const urls = await db.publishedUrls();
-  setHeader(event, 'Content-Type', 'application/xml');
+  const urls = await db.publishedUrls();          // ✅ 只取“已发布、可索引”的 canonical URL
+  setHeader(event, 'Content-Type', 'application/xml');   // ✅ 声明 XML，否则爬虫按 HTML 解析失败
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${
-    urls.map(u => `<url><loc>${base}${u}</loc></url>`).join('')
+    urls.map(u => `<url><loc>${base}${u}</loc></url>`).join('')   // ✅ loc 必须绝对 URL
   }</urlset>`;
 });
+// ❌ 把分页参数页/内部预览链接也塞进 urls → 爬虫抓到一堆低质/不可索引页，浪费配额还可能暴露预览内容
 ```
 
 sitemap 里只放 canonical 且可索引的 URL（不要把分页参数、内部预览链接塞进去）。
@@ -85,14 +93,16 @@ sitemap 里只放 canonical 且可索引的 URL（不要把分页参数、内部
 **⑤ 结构化数据 JSON-LD。** Google 唯一推荐的格式（微数据/microformats 已是历史）：
 
 ```ts
+// 目的：结构化数据 JSON-LD——Google 唯一推荐格式，用富媒体测试工具校验
 useHead({
-  script: [{ type: 'application/ld+json', innerHTML: JSON.stringify({
+  script: [{ type: 'application/ld+json', innerHTML: escapeHtml(JSON.stringify({   // ✅ 用户输入过 escapeHtml，防 </script> 提前闭合注入 XSS
     '@context': 'https://schema.org', '@type': 'Article',
     headline: a.value?.title, datePublished: a.value?.publishedAt,
     author: { '@type': 'Person', name: a.value?.author },
     image: `${base}/api/og?slug=${a.value?.slug}`,
-  }) }],
+  })) }],
 });
+// ❌ 直接 innerHTML: JSON.stringify(...) 不转义 → 标题里含 </script> 会提前闭合标签，把脚本注入页面（JSON-LD 是真实 XSS 路径）
 ```
 
 注意 `innerHTML` 里不能出现未转义的 `</script>`；序列化用户输入要过一遍 `escapeHtml`（这是 XSS 注入 JSON-LD 的真实路径）。

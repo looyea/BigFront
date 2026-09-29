@@ -23,10 +23,14 @@ SvelteKit 提供三件**应用级状态**：`page`、`navigating`、`updated`。
 
 ```svelte
 <script>
+  // 目的：$app/state 的 page 只读响应对象—点号直取，替代旧 $page 与一堆 export let 透传
   import { page } from '$app/state';
+  // ✅ page.url/page.error 等属性被细粒度追踪：只有读到该属性的模板/derived 才更新
+  // ❌ 写成旧式 $: id = page.params.id → 语法不报错但僵住，初始后永不更新（page 变化只能用 runes 感知）
 </script>
-<p>当前在 {page.url.pathname}</p>
+<p>当前在 {page.url.pathname}</p>   {/* ✅ 直接点号取，无需 $ 前缀订阅 */}
 {#if page.error}<span>出错了</span>{:else}<span>正常</span>{/if}
+<!-- ❌ 在 server 的 load 函数里读 page → 违规；load 内改用入参 event/params/data -->
 ```
 
 ## 三、navigating 与 willUnload：知道"正在跳、会不会卸载"
@@ -35,9 +39,11 @@ SvelteKit 提供三件**应用级状态**：`page`、`navigating`、`updated`。
 
 ```svelte
 <script>
+  // 目的：navigating 只读对象—导航进行中带 from/to/type，无导航与 SSR 期其字段全为 null
   import { navigating } from '$app/state';
+  // ❌ 想 import { willUnload } from '$app/state' → 顶层只导出 page/navigating/updated 三件，willUnload 是导航对象上的属性不是第四个导出
 </script>
-{#if navigating.to}<div class="bar" />{/if}
+{#if navigating.to}<div class="bar" />{/if}   <!-- ✅ to 非 null 即"正在跳转"，亮顶部进度条；空闲/SSR 时 to 为 null 自然不亮 -->
 ```
 
 `willUnload` 是挂在这条导航上的布尔**属性**（`navigation.willUnload`），含义是"若不取消，本次导航会导致文档卸载"——即 `type === 'leave'`，或 `type === 'link'` 但目标 `route === null`（要跳到非本应用管辖的 URL）。它与 `beforeNavigate` 配合来做"离开前拦截"（见下节）。注意：`$app/state` 对外只暴露 `page`/`navigating`/`updated` 三件，`willUnload` 不是第四个顶层导出，而是导航对象上的字段——别写成 `import { willUnload } from '$app/state'`。
@@ -64,11 +70,13 @@ SvelteKit 提供三件**应用级状态**：`page`、`navigating`、`updated`。
 
 ```svelte
 <script>
+  // 目的：updated 版本检测—轮询发现新版置 current=true，提示用户刷新（Kit 不自动重载）
   import { updated } from '$app/state';
   let show = $state(false);
-  $effect(() => { if (updated.current) show = true; });
+  $effect(() => { if (updated.current) show = true; });   // ✅ 用 runes 追踪 updated.current，变了才触发
+  // ❌ 用旧式 $: if (updated.current) ... → 追踪不到 $app/state 的变化，提示永不弹
 </script>
-{#if show}<button onclick={() => location.reload()}>有新版，点击刷新</button>{/if}
+{#if show}<button onclick={() => location.reload()}>有新版，点击刷新</button>{/if}   <!-- ✅ 让用户手动 reload，避免打断进行中操作 -->
 ```
 
 ## 六、刷新粒度：goto / invalidate / invalidateAll / preload 家族

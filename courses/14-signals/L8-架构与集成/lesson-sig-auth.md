@@ -17,13 +17,15 @@
 **Zustand 版**（约 15 行核心）：
 
 ```js
+// 目的：登录态—Zustand 版—一个对象三种用法（hook 订阅/getState 旁路/set 动作）
 const useAuth = create((set) => ({
   user: null, token: null,
-  login: (u, t) => set({ user: u, token: t }),
-  logout: () => { queryClient.clear(); useUIStore.getState().reset(); set({ user: null, token: null }); },
+  login: (u, t) => set({ user: u, token: t }),   // ✅ 登录：一次浅合并写入 user+token
+  logout: () => { queryClient.clear(); useUIStore.getState().reset(); set({ user: null, token: null }); },   // ✅ 登出清场：清服务端缓存+重置 UI+清 token，三步成对
 }));
-// 组件内：const user = useAuth(s => s.user)
-// 守卫/拦截器（树外）：useAuth.getState().token
+// 组件内：const user = useAuth(s => s.user)         // ✅ 树内：hook 订阅，user 变则重渲
+// 守卫/拦截器（树外）：useAuth.getState().token       // ✅ 树外同步读，守卫里等不了 hook
+// ❌ 登出只 set({token:null}) 不清 queryClient→ 下个用户登录读到上个用户的缓存（跨用户残留）
 ```
 
 心智：一个对象三种用法（hook 订阅/getState 旁路/set 动作）。守卫拿 `getState()` 同步读，教科书级贴合。

@@ -11,6 +11,7 @@
 Express 本身不带模板引擎，通过统一的 `app.set('view engine', ...)` + `res.render()` 接口对接任意符合约定的引擎（consolidate.js 做了适配层）。
 
 ```bash
+# 目的：安装模板引擎（任选其一）
 npm i ejs            # 或 pug / nunjucks / handlebars
 ```
 
@@ -19,29 +20,33 @@ npm i ejs            # 或 pug / nunjucks / handlebars
 ## 二、配置视图引擎
 
 ```js
+// 目的：配置视图引擎与模板目录，然后 res.render 把数据填入模板并自动发送 HTML
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));   // ✅ ESM 下需手动还原 __dirname
 const app = express();
 
-app.set('view engine', 'ejs');              // 默认扩展名
-app.set('views', path.join(__dirname, 'views'));  // 模板目录（默认 ./views）
+app.set('view engine', 'ejs');              // ✅ 默认扩展名，render 时可省 .ejs
+app.set('views', path.join(__dirname, 'views'));  // ✅ 模板目录（默认 ./views，拼 __dirname 防启动目录不同找错）
 
 app.get('/', (req, res) => {
   res.render('index', { title: '首页', user: { name: 'Alice' } });
-  // 查找 views/index.ejs → 用第二个参数作数据渲染 → 自动 res.send(html)
+  // ✅ 查找 views/index.ejs → 用第二参作数据渲染 → 自动 res.send(html)
 });
+// ❌ 未装 ejs 或未 set('view engine') → render 时报 “Cannot find module 'ejs'” 或 “No engine (js) for file index”
 ```
 
 `res.render` 第三参数是回调（拿渲染后的 HTML 字符串，用于邮件/拼接）：
 
 ```js
+// 目的：第三参为回调时不自动发送，而是拿到渲染好的 HTML 字符串（邮件/拼接场景）
 res.render('email', { name: 'Bob' }, (err, html) => {
-  if (err) return next(err);
-  mailer.send(html);
+  if (err) return next(err);   // ✅ 模板语法错会回调 err，必须转给错误中间件
+  mailer.send(html);            // ✅ html 是已渲染的完整字符串，自行处理发送
 });
+// ❌ 传了回调却忘记在成功分支自己发送响应（如又调 res.send）→ 不回调时才会自动 end，传回调后需自己收尾
 ```
 
 ---
@@ -51,6 +56,7 @@ res.render('email', { name: 'Bob' }, (err, html) => {
 EJS = Embedded JavaScript，模板里直接写 JS，最接近"HTML + `<% %>`"。
 
 ```html
+<!-- 目的：EJS 模板——区分转义输出/原始输出/控制流；用户内容一律走 <%= %> 防 XSS -->
 <!-- views/user.ejs -->
 <!DOCTYPE html>
 <html>
@@ -82,6 +88,7 @@ EJS = Embedded JavaScript，模板里直接写 JS，最接近"HTML + `<% %>`"。
 
 - `<%= %>` 输出（转义）；`<%- %>` 输出原始（不转义）；`<% %>` 控制流不输出；`<%# %>` 注释。
 - **XSS**：用户内容一律用 `<%= %>` 转义；`<%- %>` 只在渲染可信富文本（且已 sanitize）时用。
+- ❌ 把用户输入的 `<script>...</script>` 用 `<%- user.bio %>` 直接输出 → 脚本原样注入页面，形成存储型 XSS；改用 `<%= user.bio %>` 会被转义为可见文本。
 
 ---
 
@@ -90,16 +97,20 @@ EJS = Embedded JavaScript，模板里直接写 JS，最接近"HTML + `<% %>`"。
 EJS 原生不支持 layout，靠 `express-ejs-layouts`：
 
 ```bash
+# 目的：安装 EJS 布局插件（EJS 原生无 layout）
 npm i express-ejs-layouts
 ```
 
 ```js
+// 目的：启用布局中间件并指定主模板
 import expressLayouts from 'express-ejs-layouts';
-app.use(expressLayouts);
-app.set('layout', 'layouts/main');   // views/layouts/main.ejs
+app.use(expressLayouts);              // ✅ 必须在 render 之前注册，否则页面不被包裹
+app.set('layout', 'layouts/main');    // ✅ 指向 views/layouts/main.ejs
+// ❌ 未 app.use(expressLayouts) 就 set('layout') → 布局不生效，页面直接裸输出
 ```
 
 ```html
+<!-- 目的：布局主模板——用 <%- body %> 作为页面内容注入点 -->
 <!-- layouts/main.ejs -->
 <html>
   <head><title><%= typeof title !== 'undefined' ? title : '默认' %></title></head>
@@ -120,6 +131,7 @@ app.set('layout', 'layouts/main');   // views/layouts/main.ejs
 缩进式模板，简洁但"非 HTML"手感：
 
 ```pug
+//- 目的：Pug 缩进式模板——靠缩进表层级，= 输出转义值
 //- views/index.pug
 doctype html
 html
@@ -135,7 +147,9 @@ html
 ```
 
 ```js
+// 目的：切换视图引擎为 pug（render 时自动找 .pug）
 app.set('view engine', 'pug');
+// ❌ 装了 pug 但没 set('view engine','pug') → render('index') 仍按 ejs 找 index.ejs 而报错
 ```
 
 优点：简洁、无闭合标签、结构清晰；缺点：缩进敏感、设计稿难直接迁移、报错信息有时不直观。适合追求极简、且团队接受非 HTML 语法的项目。
@@ -147,10 +161,12 @@ app.set('view engine', 'pug');
 Mozilla 维护，语法接近 Python Jinja2，功能强大（继承、宏、过滤器、命名空间）：
 
 ```js
+// 目的：把 Nunjucks 接进 Express 引擎链——用 .html 作扩展名
 import { Environment } from 'nunjucks';
-const env = new Environment(new nunjucks.FileSystemLoader('views'));
-app.set('view engine', 'html');
-app.engine('html', nunjucks.render);
+const env = new Environment(new nunjucks.FileSystemLoader('views'));   // ✅ 从 views 目录加载模板
+app.set('view engine', 'html');                                          // ✅ 声明 .html 为默认视图类型
+app.engine('html', nunjucks.render);                                     // ✅ 把 .html 绑到 nunjucks 渲染器
+// ❌ 只 set('view engine','html') 却未 app.engine('html', ...) → render 时报 “No engine for file”
 ```
 
 ```jinja
@@ -193,7 +209,9 @@ app.engine('html', nunjucks.render);
 ## 八、渲染缓存
 
 ```js
-app.set('view cache', true);   // 生产默认开启（NODE_ENV=production）
+// 目的：渲染缓存——生产开启避免每次重编模板，开发关闭改了立即生效
+app.set('view cache', true);   // ✅ 生产默认开启（NODE_ENV=production）
+// ❌ 开发环境手动开 view cache → 改了 .ejs 刷新仍是旧内容，易误判“修改没生效”
 ```
 
 生产环境把编译后的模板函数缓存，避免每次请求重新 parse 模板。开发关闭（改了立刻生效）。表达式结果、局部数据可在应用层用 LRU cache 再缓存一层。
@@ -203,13 +221,15 @@ app.set('view cache', true);   // 生产默认开启（NODE_ENV=production）
 ## 九、res.locals 与全局变量
 
 ```js
+// 目的：把每页都要用的变量挂进渲染上下文—res.locals 请求级、app.locals 应用级
 // 每个请求都想传给模板的变量（如当前用户、站点配置）
 app.use((req, res, next) => {
-  res.locals.user = req.user;               // 请求级
-  res.locals.csrfToken = req.csrfToken?.();
+  res.locals.user = req.user;               // ✅ 请求级：仅本次响应可见（无串号）
+  res.locals.csrfToken = req.csrfToken?.();  // ✅ 可选链：未装 csrf 时为 undefined 不报错
   next();
 });
-app.locals.siteName = '大前端学院';          // 应用级（所有渲染共享）
+app.locals.siteName = '大前端学院';          // ✅ 应用级：所有渲染共享
+// ❌ 把 req.user 等用户数据挂到 app.locals（全局共享）→ 不同请求串号，A 看到 B 的信息
 ```
 
 模板里直接用 `user` / `siteName`，无需每次 render 手动传。呼应 L3 的 res.locals。

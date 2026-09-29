@@ -3,13 +3,16 @@
 ## 一、immer：写可变，产出不可变
 
 ```ts
+// 目的：immer 中间件——set 回调里写“可变”语法，产出结构共享的不可变更新
 import { immer } from 'zustand/middleware/immer';
 const useStore = create(
   immer((set) => ({
     nested: { list: [] },
-    add: (x) => set((s) => { s.nested.list.push(x); }),  // 直接“改”
+    add: (x) => set((s) => { s.nested.list.push(x); }),  // 直接“改” draft，immer 翻译成不可变更新
   }))
 );
+// ✅ push 直写深层可读性好，且未变分支（如 s.other）引用保留，不惊动其它 selector
+// ❌ 没套 immer 中间件却写 s.nested.list.push(x)→真 mutate 了 state，Object.is 相等、组件不重渲
 ```
 immer 把 `set` 换成 produce 版：回调里对 draft 的可变操作，被翻译成结构共享的不可变更新，未变分支引用保持不变（利于 selector）。
 
@@ -24,11 +27,15 @@ Proxy 有成本：读写深层属性比直接对象略慢，但对多数 UI 完�
 ## 三、devtools 中间件
 
 ```ts
+// 目的：devtools 中间件——挂 Redux DevTools，set 第三参给 action 命名便于时间旅行
 import { devtools } from 'zustand/middleware';
 const useStore = create(devtools((set) => ({
   count: 0,
-  inc: () => set((s) => ({ count: s.count + 1 }), false, 'inc'),  // 第三参 action 名
-}), { name: 'App', features: { jump: true, dispatch: true } }));
+  inc: () => set((s) => ({ count: s.count + 1 }), false, 'inc'),  // 第三参 action 名→面板显‘inc’而非匿名
+}), { name: 'App', features: { jump: true, dispatch: true } }));   // name 多 store 分组，features 控能力
+// ✅ 面板按命名 action 展示每次 set，可 jump 时间旅行、直接编辑 state 调试
+// ❌ 生产不关采集（enabled 不判环境常开）→每次 set 都序列化快照，白白耗性能
+// ❌ set 不传第三参名字→面板全显匿名 update，出问题无法归因到具体 action
 ```
 挂到 Redux DevTools：可看 action 列表、时间旅行、jump、编辑 state。第三参 `action` 字符串给每次 set 命名，调试面板更易读。
 
@@ -37,7 +44,10 @@ const useStore = create(devtools((set) => ({
 ## 四、两者一起用的顺序
 
 ```ts
+// 目的：immer+devtools 同用的固定顺序—devtools 在外记录最终更新，immer 在内产不可变
 create(devtools(immer((set) => ({ /* ... */ }))))
+// ✅ 套 curried 泛型时写 create<T>()(devtools(immer(...)))，顺序不变
+// ❌ 写反成 immer(devtools(...))→devtools 记的是 draft Proxy 快照，序列化/时间旅行乱套
 ```
 devtools 在外记录命名后的最终更新，immer 在内负责产出不可变。
 

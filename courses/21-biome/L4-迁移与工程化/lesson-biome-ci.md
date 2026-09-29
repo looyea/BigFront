@@ -13,8 +13,11 @@ Biome 提供 GitHub Action 模板（`biomejs/ci.yml`），核心是 `biome ci` �
 只检改动文件、快且聚焦：
 
 ```js
+// 目的：husky pre-commit + lint-staged 只检改动文件、safe fix 落盘并暂存
 // .lintstagedrc
-{ '*.{js,ts,jsx,tsx,json,css}': 'biome check --write --no-errors-on-unmatched' }
+{ '*.{js,ts,jsx,tsx,json,css}': 'biome check --write --no-errors-on-unmatched' }   // 命中类型的改动文件才跑，--write 落安全修复
+// ✅ 因 Biome 极快，提交前跑增量/全量都不卡，问题挡在 commit 之前
+// ❌ 漏 --no-errors-on-unmatched：暂存里有 Biome 不认的文件类型时直接报错中断提交
 ```
 
 husky 的 pre-commit 调 lint-staged，把 Biome 的 safe fix 落盘并暂存。因为 Biome 快，提交前跑全量或增量都不卡。

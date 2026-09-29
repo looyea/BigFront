@@ -9,8 +9,11 @@ Biome 的 **assist**（v1.9+ 逐步成型）是「非纯 lint、非纯格式」�
 和 ESLint 的 `eslint-disable` 对应，Biome 用行内注解抑制诊断：
 
 ```js
+// 目的：// biome-ignore 行内抑制诊断——对应 eslint-disable，但冒号后必须写理由
 // biome-ignore lint/suspicious/noExplicitAny: 迁移期临时容忍
-function legacy(x: any) { /* ... */ }
+function legacy(x: any) { /* ... */ }   // 注解紧贴在被豁免行上方，规则粒度精确到单规则单行
+// ✅ 每次压制都交代“为什么”，避免沦为藏问题的垃圾桶、可 grep 审计
+// ❌ 写裸 // biome-ignore 不带冒号理由→不符合语法要求，Biome 直接报错（这是刻意纪律）
 ```
 
 **语法要求：冒号后必须写理由。** 无「裸 ignore」——这是 Biome 刻意的纪律：每次压制诊断都得交代「为什么」，避免像 disable 那样沦为藏问题的垃圾桶。

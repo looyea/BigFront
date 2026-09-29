@@ -7,18 +7,20 @@
 React 世界没有内建流支持，桥必须自己搭。看似简单的三行 hook，每一行都有坑位：
 
 ```js
+// 目的：useObservable—把流桥进 React，看似三行、每行都有坑位
 function useObservable(obs$, initial) {
   const [state, setState] = useState(initial);
   const [, setError] = useState(null);
   useEffect(() => {
     const s = obs$.subscribe({
       next: setState,
-      error: (e) => setError(e),   // 坑1：不处理 error，流死得无声无息
+      error: (e) => setError(e),   // 坑1：不处理 error→ 流死得无声无息，UI 卡 loading
     });
-    return () => s.unsubscribe();  // 坑2：忘 cleanup = 每次重渲叠一条订阅
-  }, [obs$]);                      // 坑3：obs$ 引用稳定吗？
+    return () => s.unsubscribe();  // 坑2：忘 cleanup = 每次重渲叠一条订阅（泄漏）
+  }, [obs$]);                      // 坑3：obs$ 引用若不稳→ 每次重建流→重订阅→状态重置
   return state;
 }
+// ❌ 在组件体内 const v$ = interval(1000) 现造流：deps 每次都变→"无限重订阅"—流应放模块顶层或 useMemo
 ```
 
 三个坑逐个拆：
@@ -49,17 +51,19 @@ function useObservable(obs$, initial) {
 ES 的 `for await` 与 Observable 是同一问题的两种哲学（pull vs push），今天互相能转化：
 
 ```js
+// 目的：AsyncIterator 与 Observable 互转—from 拉转推、firstValueFrom/lastValueFrom 推转拉
 import { from, firstValueFrom, lastValueFrom } from 'rxjs';
 
 // AsyncGenerator → Observable：from 直接吃异步可迭代对象
 async function* ticks() {
   for (let i = 0; i < 5; i++) { await sleep(1000); yield i; }
 }
-from(ticks()).subscribe(console.log);        // 0,1,2,3,4（拉转推）
+from(ticks()).subscribe(console.log);        // ✅ 拉转推：依次打印 0,1,2,3,4
 
 // Observable → Promise：只取一个值时，流可以变回期货
-const first = await firstValueFrom(clicks$);  // 等下一个点击（推转拉的极限：单值）
-const all = await lastValueFrom(some$);      // 等 complete 拿最后一个值
+const first = await firstValueFrom(clicks$);  // ✅ 推转拉：等下一个点击（单值）
+const all = await lastValueFrom(some$);      // ✅ 等 complete 拿最后一个值
+// ❌ 对永不调 complete 的流用 lastValueFrom→ Promise 永远 pending；无界流用它会吊死
 ```
 
 两个方向都有标准桥，说明生态共识：**Promise/AsyncIterator 管『单值与顺序』，Observable 管『多值与关系』**——选型看你要表达的东西长什么样，而不是哪个更时髦。

@@ -14,19 +14,21 @@ SvelteKit 把最核心的逻辑都收敛成**"吃一个类 event 对象、吐一
 
 ```js
 // src/lib/server.test.js
+// 目的：吃 event 吐返回值的纯函数红利—手工构造 event 桩直接调 load，免渲染
 import { expect, test } from 'vitest';
 import { load } from '../routes/blog/[slug]/+page.server.js';
 
 test('load 把 slug 透传给仓储', async () => {
   const calls = [];
   const data = await load({
-    params: { slug: 'hello' },
-    fetch: async () => ({ json: async () => ({}) }),
-    depends: () => {},
+    params: { slug: 'hello' },                       // ✅ 只喂 load 真正读到的字段即可，其余留空
+    fetch: async () => ({ json: async () => ({}) }), // ✅ 桩掉 event.fetch，返回带 .json() 的假 Response
+    depends: () => {},                               // ✅ 桩掉 depends，避免调用时报 undefined 不是函数
     // 按需在桩里补齐用到的字段
   });
-  expect(data).toHaveProperty('post');
+  expect(data).toHaveProperty('post');   // ✅ 断言返回数据形状，不碰 DOM
 });
+// ❌ load 里用了 event.url.searchParams 却没在桩里给 url → 运行报 "Cannot read properties of undefined"
 ```
 
 这就是"纯函数化的可测性红利"：把取数、校验、鉴权判断写在这些导出函数里，而不是塞进组件的 `$effect`，测试成本骤降。官方也建议组件测试前先想清楚"到底是测组件还是测组件里的逻辑"，能抽成纯函数就抽出去单测、省掉渲染开销。
@@ -42,17 +44,20 @@ test('load 把 slug 透传给仓储', async () => {
 
 ```js
 // 组件测试骨架
+// 目的：Svelte 5 用 mount/unmount 渲染到 jsdom；DOM 更新异步，断言前 flushSync 拉齐
 import { mount, flushSync } from 'svelte';
 import { expect, test } from 'vitest';
 import Counter from './Counter.svelte';
 
 test('点击自增', () => {
-  mount(Counter, { target: document.body, props: { initial: 0 } });
+  mount(Counter, { target: document.body, props: { initial: 0 } });   // ✅ props 经 options.props 传入
   const btn = document.body.querySelector('button');
   btn.click();
-  flushSync();
+  flushSync();   // ✅ 强制同步 DOM，否则 $state 变更要等微任务，textContent 还是旧值
   expect(btn.textContent).toBe('1');
 });
+// ❌ 省掉 flushSync 直接断言 → 改动尚未刷到 DOM，textContent 仍是 '0'，测试假失败
+// ❌ mount 返回的 destroy 句柄不留、测完不清 → 组件泄到 document.body，下个用例查到上个用例的 button
 ```
 
 ## 三、mock `$app/*`：运行期模块在测试里不存在
@@ -60,13 +65,15 @@ test('点击自增', () => {
 `$app/environment`、`$app/server`、`$app/stores`、`$app/navigation` 是 **Kit 运行时注入的虚拟模块**，裸 Vitest（非 `@sveltejs/vite-plugin-svelte` + kit 的 vite 配置下）解析不到、或其行为依赖真实导航上下文。用 `vi.mock` 顶掉：
 
 ```js
+// 目的：$app/* 是运行期注入的虚拟模块，裸 Vitest 解析不到—用 vi.mock 顶掉
 import { vi } from 'vitest';
 
-// 想让代码走"浏览器分支"
+// ✅ 想让代码走"浏览器分支"：把 browser 置 true（真实 $app/environment 在 Node 里 browser=false）
 vi.mock('$app/environment', () => ({ browser: true, dev: false, producing: false, building: false }));
 
-// cookies / platform 由 $app/server 提供，单测里自造
+// ✅ cookies 等由 $app/server 的 getRequestEvent 提供，单测无请求上下文，自造桩
 vi.mock('$app/server', () => ({ cookies: { get: vi.fn(() => 'token'), set: vi.fn(), delete: vi.fn(), serialize: vi.fn() } }));
+// ❌ 能经 event 参数拿到的东西却去 mock 模块 → 背离"传桩优先"；且全局 mock 泄漏影响别的用例（记得 mockReset）
 ```
 
 经验法则：**能被测函数通过参数（event）拿到的东西，优先传桩、不要 mock 模块**（更符合"纯函数红利"）；只有那些"直接 `import` 了 `$app/*`"的既有代码才用 `vi.mock` 兜。若项目里大量要 mock `$app`，考虑改用 Vitest + `@sveltejs/vite-plugin-svelte` 让 Kit 的 vite 插件参与解析，能少写不少桩。
@@ -95,20 +102,24 @@ vi.mock('$app/server', () => ({ cookies: { get: vi.fn(() => 'token'), set: vi.fn
 
 ```js
 // playwright.config.js
+// 目的：让 e2e 跑在真实 build+preview 上，才测得到生产渲染路径（dev 不跑生产同一条链）
 export default {
-  webServer: { command: 'npm run build && npm run preview', port: 4173 },
+  webServer: { command: 'npm run build && npm run preview', port: 4173 },   // ✅ 起预览服务器并等它就绪再跑用例；4173 是 vite preview 默认端口
   testDir: 'tests',
-  testMatch: /(.+\.)?(test|spec)\.[jt]s/,
+  testMatch: /(.+\.)?(test|spec)\.[jt]s/,   // ✅ 只收 *.test.ts / *.spec.ts 命名的 e2e 文件
 };
+// ❌ command 写成 npm run dev → 跑的是开发态，hydration/生产优化路径没覆盖，白测
 ```
 
 ```js
 // tests/hello-world.spec.js
+// 目的：e2e 对框架无感—只操作浏览器、断言用户可见结果
 import { expect, test } from '@playwright/test';
-test('首页有预期的 h1', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.locator('h1')).toBeVisible();
+test('首页有预期的 h1', async ({ page }) => {   // ✅ page 是 Playwright 注入的受控浏览器页签
+  await page.goto('/');                          // ✅ 导航到 preview 服务的根路径
+  await expect(page.locator('h1')).toBeVisible();   // ✅ expect 自带自动重试轮询，元素稍晚出现也能过
 });
+// ❌ 用 e2e 断言一个纯格式化函数 → 该归单测；e2e 慢且脆，只留黄金用户旅程
 ```
 
 e2e 对框架无感——你只是操作 DOM、写断言。它是唯一能抓出"SSR HTML 与水合后不一致（hydration mismatch）""客户端导航后状态错乱""action 提交后重渲染"这类**跨端问题**的层。典型覆盖：登录全流程（含 cookie/重定向）、表单校验回显、流式页面逐段出现、404/错误边界渲染。

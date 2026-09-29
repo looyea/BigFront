@@ -7,13 +7,15 @@
 ## 一、受控组件：React 是唯一数据源
 
 ```jsx
+// 目的：受控——value 来自 state、onChange 回写，React 是唯一数据源
 function Controlled() {
   const [text, setText] = useState('');
   return (
     <input
       value={text}                          // 值由 state 决定
-      onChange={e => setText(e.target.value)}  // 每次输入回写 state
+      onChange={e => setText(e.target.value)}  // ✅ 每次输入回写 state（值在 e.target.value）
     />
+    // ❌ 只给 value 不给 onChange → 输入框锁死打不进字（React 警告 "You provided a `value` prop without an `onChange` handler"）
   );
 }
 ```
@@ -28,6 +30,7 @@ function Controlled() {
 ## 二、非受控组件：DOM 自己持有值
 
 ```jsx
+// 目的：非受控——值存 DOM，React 不拦截每次输入，只在提交时用 ref 读一次
 function Uncontrolled() {
   const ref = useRef(null);
   function submit(e) {
@@ -35,6 +38,7 @@ function Uncontrolled() {
     console.log(ref.current.value);   // 提交时一次性读
   }
   return <form onSubmit={submit}><input ref={ref} defaultValue="" /></form>;
+  // ❌ 非受控却写 value="" 而不配 onChange → 受控且永远为空，用户改不了
 }
 ```
 - 值存在 DOM 里，React 不拦截每次输入，只在需要时用 `ref` 读（呼应 **react-refs**）；
@@ -53,12 +57,14 @@ function Uncontrolled() {
 ## 三、多字段：一个对象 state + name
 
 ```jsx
+// 目的：多字段用一个对象 state + name 作键，一个 handler 管所有
 const [form, setForm] = useState({ user: '', email: '', agree: false });
 const onChange = e => {
   const { name, type, value, checked } = e.target;
-  setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value })); // 函数式更新
+  setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value })); // ✅ 函数式更新，不丢其它字段
 };
 // <input name="user" value={form.user} onChange={onChange} />
+// ❌ setForm({ ...form, [name]: … })（用旧 form 非 f）→ 连续输入时基于旧快照，会丢字段
 ```
 - **必须用函数式 `setForm(f => ...)`**：否则会丢掉其它字段（呼应 react-usestate 的"state 是旧快照"陷阱）；
 - `name` 属性作键，一个 handler 管所有字段；
@@ -71,8 +77,9 @@ const onChange = e => {
 ## 四、校验与提交
 
 ```jsx
+// 目的：提交前先 preventDefault 阻默认刷新，再手动校验
 function onSubmit(e) {
-  e.preventDefault();                 // 阻止浏览器默认提交/整页刷新
+  e.preventDefault();                 // ❌ 不加这行→原生 form 会整页刷新，React 状态全丢
   if (!form.user.trim()) { setError('用户名必填'); return; }
   // 通过后再 fetch/POST
 }
@@ -86,8 +93,9 @@ function onSubmit(e) {
 ## 五、React 19：action + FormData + useActionState
 
 ```jsx
+// 目的：React 19——给 form 传 action 函数，提交自动带 FormData，无需逐字段受控
 async function save(form) {
-  const name = form.get('name');       // FormData 直接取，无需 value=state
+  const name = form.get('name');       // ✅ FormData 直接取，无需 value=state
   const data = await api(name);
   return data;
 }

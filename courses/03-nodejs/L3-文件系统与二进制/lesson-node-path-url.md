@@ -9,10 +9,11 @@
 **永远不要手拼字符串**：
 
 ```js
+// 目的：用 path.join 代替手拼，自动适配平台分隔符
 import path from "node:path";
 
-// ✗ 硬编码分隔符，Windows 上炸
-const bad = "src" + "/" + "utils" + "/" + "index.js";
+// ✗ 硬编码分隔符，Windows 上部分工具不认 /
+const bad = "src" + "/" + "utils" + "/" + "index.js";   // 'src/utils/index.js'（在 Windows 语义不确定）
 
 // ✓ path.join 自动用当前平台正确分隔符、顺带 normalize
 const good = path.join("src", "utils", "index.js");     // win: src\utils\index.js  posix: src/utils/index.js
@@ -45,11 +46,12 @@ const cfg = path.join(__dirname, "config.json");   // 无论 cwd 是啥都对
 **ESM 没有 `__dirname`/`__filename`**，取而代之的是 `import.meta.url`——一个 `file://` URL 字符串（呼应 node-esm-cjs）。还原成路径：
 
 ```js
+// 目的：ESM 用 import.meta.url 还原出 __dirname，再基于脚本位置拼资源路径
 // ESM
 import { fileURLToPath } from "node:url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const cfg = path.join(__dirname, "config.json");
+const __filename = fileURLToPath(import.meta.url);   // 'file://' URL → 系统绝对路径
+const __dirname = path.dirname(__filename);          // 本文件所在目录
+const cfg = path.join(__dirname, "config.json");     // ✓ 无论 cwd 是啥都指向本文件旁的 config.json
 ```
 
 **记忆点**：`process.cwd()` = "进程从哪启动"（会变）；`__dirname`/`import.meta.url` = "这个文件在哪"（不变）。库/服务里定位**自身资源**永远用后者（呼应 node-fs 第 12 题）。
@@ -63,9 +65,10 @@ Node 的 `url` 模块有两套：老的 `url.parse`（遗留、别再学新代�
 ### 3.1 路径 ↔ `file://` URL 互转
 
 ```js
+// 目的：URL ↔ 文件路径互转（动态 import 本地变量路径时必需）
 import { pathToFileURL, fileURLToPath } from "node:url";
-pathToFileURL("src/a.js").href;   // 'file:///E:/Projects/BigFront/src/a.js'
-fileURLToPath("file:///E:/Projects/BigFront/src/a.js"); // 'E:\\Projects\\BigFront\\src\\a.js'
+pathToFileURL("src/a.js").href;   // 'file:///E:/Projects/BigFront/src/a.js'（相对→绝对 file URL）
+fileURLToPath("file:///E:/Projects/BigFront/src/a.js"); // 'E:\\Projects\\BigFront\\src\\a.js'（回到系统路径）
 ```
 
 动态 `import()` 一个"由变量拼出来的本地文件"时，必须先转成 `file://` URL（尤其 Windows，直接拼路径会解析失败）：`await import(pathToFileURL(p).href)`（呼应 node-esm-cjs 的动态 import）。
@@ -73,12 +76,14 @@ fileURLToPath("file:///E:/Projects/BigFront/src/a.js"); // 'E:\\Projects\\BigFro
 ### 3.2 用 WHATWG `URL` 解析查询串，别手搓
 
 ```js
+// 目的：用 WHATWG URL 解析查询串，自动处理编码/多值，不手动 split
 const u = new URL("https://api.x.com/search?q=node&page=2#top");
 u.protocol; u.host; u.pathname; u.hash;   // 'https:' 'api.x.com' '/search' '#top'
 u.searchParams.get("q");        // 'node'
-u.searchParams.set("page", "3");
-u.searchParams.append("tag", "es");
+u.searchParams.set("page", "3"); // 改写已有参数
+u.searchParams.append("tag", "es");  // 新增参数
 u.search;                     // '?q=node&page=3&tag=es'  ← 自动重编码
+// ❌ new URL("not a url") 会抛 TypeError: Invalid URL（校验用户输入时要 try/catch）
 ```
 
 `URLSearchParams` 帮你正确处理 `%` 编码、多值、`+`/空格——手撕 `split('&')/split('=')` 遇到编码、无值参数、重复 key 必错（呼应 node-http 解析 query）。解析**相对** URL 要传 base：`new URL('/foo', 'https://x.com')`；URL 构造失败会**抛错**，所以校验用户输入合法性时 try/catch 它。
@@ -86,10 +91,12 @@ u.search;                     // '?q=node&page=3&tag=es'  ← 自动重编码
 处理"服务器收到的原始 request URL"时，注意它只是 `/path?query` 这种相对形式，要配一个 base：
 
 ```js
+// 目的：把服务器收到的相对 req.url 配 base 补全为完整 URL
 import { IncomingMessage } from "node:http";
 function fullUrl(req) {
-  return new URL(req.url, `http://${req.headers.host}`);   // req.url 是相对路径
+  return new URL(req.url, `http://${req.headers.host}`);   // req.url 是相对路径，给个 base 才能解成绝对 URL
 }
+// ✅ 应用：fullUrl({url:'/u?id=1', headers:{host:'x.com'}}) → URL 'http://x.com/u?id=1'，可 .searchParams.get('id')
 ```
 
 ---
@@ -114,15 +121,16 @@ os.networkInterfaces(); // 网卡信息
 ## 五、综合：一个"定位与资源"的健壮模板
 
 ```js
+// 目的：路径、平台信息都不硬写——用 os/path 拼出跨平台健壮值
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // 定位包内资源：相对本文件，而非 cwd
-const dataFile = path.resolve(__dirname, "..", "..", "data", "sample.json");
+const dataFile = path.resolve(__dirname, "..", "..", "data", "sample.json");   // 绝对、确定的资源路径
 // 构造对外 URL 路径（Web 场景分隔符恒为 /）
-const webPath = "assets/images/logo.png".replaceAll(path.sep, "/");
+const webPath = "assets/images/logo.png".replaceAll(path.sep, "/");   // win 下把 \ 换成 /
 ```
 
 两条铁律收束本关：**① 文件系统路径一律走 `path`（跨平台）；② 定位自身资源用 `__dirname`/`import.meta.url`，绝不用裸相对路径 / `process.cwd()`。**

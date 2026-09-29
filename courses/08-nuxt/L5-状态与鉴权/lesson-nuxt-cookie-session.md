@@ -16,14 +16,16 @@
 ## 2. useCookie：一个 API 两种身份
 
 ```ts
+// 目的：useCookie 同构读写——服务端读请求头/写 Set-Cookie，客户端读写 document.cookie
 // composables/useTheme.ts
 export const useTheme = () =>
   useCookie<string>('theme', {
-    default: () => 'light',
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: 'lax',
-    path: '/',
+    default: () => 'light',                 // ✅ 必须传函数：值走 JSON 序列化，裸值会让所有用户共享同一初值
+    maxAge: 60 * 60 * 24 * 365,             // ✅ 一年过期（秒）
+    sameSite: 'lax',                        // ✅ 默认档，挡大部分 CSRF
+    path: '/',                              // ✅ 全站可带；删除时 path 要与此一致
   });
+// ❌ 写成 default: 'light'（裸值）→ Nuxt 3.10+ 告警，且初值按引用共享给所有请求
 ```
 
 `useCookie` 的巧妙在于**同一行代码在两侧做不同的事**：
@@ -41,9 +43,11 @@ export const useTheme = () =>
 ## 3. 删除、过期与作用域
 
 ```ts
+// 目的：删除 cookie——cookie 身份是“域名+名称+path”三元组，删除条件须与写入一致
 const token = useCookie('token');
-token.value = null;            // 过期删除（写 maxAge=0 / expires 过去）
-clearCookie('token', { path: '/' });  // Nuxt 3.x 显式清除
+token.value = null;                    // ✅ 置 null → 内部写 maxAge=0 让浏览器过期
+clearCookie('token', { path: '/' });  // ✅ Nuxt 3.x 显式清除，path 必须与写入时相同
+// ❌ 写入时 path:'/'、清除时漏写 path（默认当前页路径）→ 三元组对不上，“删了但还在”
 ```
 
 要点：cookie 的**身份是 `域名 + 名称 + path` 三元组**，删除时 path 必须与写入时一致，否则"删了但还在"。跨子域共享（`a.example.com` 与 `www.example.com` 同一登录态）要写 `domain: '.example.com'`，但这会让所有子域都能收到，安全性下降，且 `httpOnly` 与 `domain` 组合需后端统一签发。
@@ -76,19 +80,21 @@ clearCookie('token', { path: '/' });  // Nuxt 3.x 显式清除
 ## 5. 服务端怎么读写：Nitro 侧原生 API
 
 ```ts
+// 目的：服务端登录发会话 cookie——httpOnly 防 XSS 偷身份，响应体绝不带密码
 // server/api/login.post.ts
 export default defineEventHandler(async (event) => {
   const { account, password } = await readBody(event);
-  const user = await db.verify(account, password);      // 呼应 exp-validation 的时序安全
-  if (!user) throw createError({ statusCode: 401, message: '账号或密码错误' });
+  const user = await db.verify(account, password);      // ✅ 校验密码（呼应 exp-validation 的时序安全，防枚举）
+  if (!user) throw createError({ statusCode: 401, message: '账号或密码错误' }); // ✅ 模糊文案，不区分“账号不存在/密码错”
 
-  const sid = await createSession(user.id);             // 写存储，返回随机 id
+  const sid = await createSession(user.id);             // ✅ 写存储、返回随机 sid（可服务端吊销）
   setCookie(event, 'sid', sid, {
-    httpOnly: true, sameSite: 'lax', secure: true,
+    httpOnly: true, sameSite: 'lax', secure: true,      // ✅ 三件套：JS 读不到 + 抗 CSRF + 仅 HTTPS
     path: '/', maxAge: 60 * 60 * 24 * 7,
   });
-  return { ok: true, name: user.name };                 // 绝不返回密码/salt
+  return { ok: true, name: user.name };                 // ✅ 只回显昵称，绝不返回密码/salt
 });
+// ❌ setCookie 漏 httpOnly → 页面里任意脚本 document.cookie 就能盗走 sid（XSS 直接变身份窃取）
 ```
 
 `server/middleware/auth.ts` 里用 `getCookie(event, 'sid')` 查会话并 `event.context.user = ...`，下游 handler 直接取用——**注意 nuxt-server-routes 第 5 节的教训：middleware 要放行登录与健康检查路径，否则用户永远进不来**。

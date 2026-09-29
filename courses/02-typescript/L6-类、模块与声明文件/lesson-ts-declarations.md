@@ -9,11 +9,15 @@
 `.d.ts`（declaration file）只含**类型信息**：声明变量/函数/类/接口/模块/枚举"长什么样"，没有任何实现体（函数体写成 `;`）。它是编译器与 IDE 判断类型的唯一依据，运行时不存在（呼应 ts-intro 类型擦除）。
 
 ```ts
-// left-pad.d.ts —— 给无类型的 npm 包补一份形状
+// 目的：用 declare module 给无类型的 npm 包补一份形状（只声明、无实现）
 declare module "left-pad" {
   function leftPad(str: string, len: number, pad?: string): string;
   export default leftPad;
 }
+// ✅ 应用：补声明后，消费方就能类型安全地 import
+// import leftPad from "left-pad";
+// leftPad("x", 3);        // => 返回类型 string，参数错会报错
+// leftPad(1, 3);          // ❌ 第一参应为 string
 ```
 
 来源有三：① 社区 `@types/xxx`（DefinitelyTyped）；② 库自带（`package.json` 的 `types`/`typings` 或 `exports` 里的 types 条件）；③ 自己手写或用 `tsc --declaration` 生成（第四节）。
@@ -90,13 +94,18 @@ export {};
 ## 六、写声明的实战模式
 
 ```ts
+// 目的：声明文件的几种典型形状—重载、声明合并、可调用又带属性
 // 1. 函数重载 + 可选参数
 declare function on(ev: "click", cb: (x:number)=>void): void;
 declare function on(ev: string, cb: (…a:any[])=>void): void;
+on("click", (x) => x);    // ✅ 命中第一条，x: number
 
 // 2. 声明合并：同名 interface 分处声明会自动合并（呼应 ts-interface、ts-modules 模块增强）
 interface Config { host: string }
 interface Config { port: number }   // 合并成 { host; port }
+const cfg: Config = { host: "h", port: 80 };  // ✅ 两个字段都是成员
+cfg.port;   // ✓ 来自第二个声明
+// cfg.name; // ❌ 合并后也没有 name
 
 // 3. 描述带索引的对象 / 可调用又带属性
 interface Plugin {

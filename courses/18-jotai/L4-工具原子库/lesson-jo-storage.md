@@ -3,9 +3,12 @@
 ## 一、atomWithStorage：自动持久化
 
 ```ts
+// 目的：atomWithStorage——读写透明同步到存储，SSR 默认客户端读取（getOnInit 可配防闪烁）
 import { atomWithStorage } from 'jotai/utils';
-const themeAtom = atomWithStorage('theme', 'light');          // localStorage
-const sesAtom = atomWithStorage('sid', '', { getItem, setItem, removeItem }); // 自定义
+const themeAtom = atomWithStorage('theme', 'light');          // 默认 localStorage，key 'theme'，初值 'light'
+const sesAtom = atomWithStorage('sid', '', { getItem, setItem, removeItem }); // 传自定义 StateStorage（如 cookie/AsyncStorage）
+// ✅ 初始值“存储 > 默认”，之后每次 set 落盘；多标签页经 storage 事件互相同步，白嫖跨 tab 方案
+// ❌ 存的对象含函数/Date 却指望默认 JSON 序列化原样恢复→序列化丢不可克隆字段，读回结构缺东西
 ```
 读写透明同步到存储，SSR 下默认在客户端读取（可配 getOnInit 防闪烁，呼应 jo-ssr）。
 
@@ -18,16 +21,22 @@ const sesAtom = atomWithStorage('sid', '', { getItem, setItem, removeItem }); //
 - `createJSONStorage` 助拆包：给 getItem/setItem/removeItem 三个异步实现即可接 AsyncStorage/sessionStorage/加密存储，无需自己写 JSON.stringify。
 
 ```ts
+// 目的：createJSONStorage 助拆包——给三个异步实现即接 AsyncStorage/sessionStorage/加密，免手写 JSON.stringify
 import { createJSONStorage } from 'jotai/utils';
-const cookieish = atomWithStorage('sid', '', createJSONStorage(() => cookieLikeStorage), { getOnInit: true });
+const cookieish = atomWithStorage('sid', '', createJSONStorage(() => cookieLikeStorage), { getOnInit: true });   // 包一层 JSON 序列化，getOnInit 客户端立即读
+// ✅ createJSONStorage 负责序列化，storage 只需实现裸的 getItem/setItem/removeItem
+// ❌ getOnInit:true 又在 SSR 端读无 window 的存储→SSR 自动退回初值，误以为服务端也能读到会水合不一致
 ```
 
 ## 三、atomWithReducer：Redux 风格
 
 ```ts
+// 目的：atomWithReducer——dispatch 风格纯 reducer 更新，迁移旧 Redux reducer 零改写
 import { atomWithReducer } from 'jotai/utils';
-const counterAtom = atomWithReducer(0, (state, action) =>
-  action.type === 'inc' ? state + 1 : state);
+const counterAtom = atomWithReducer(0, (state, action) =>   // 初值 0 + 纯 reducer
+  action.type === 'inc' ? state + 1 : state);                // 按 action.type 分派，返回新值
+// ✅ useAtom(counterAtom) 得 [state, dispatch]，dispatch({type:'inc'}) 走 reducer 产出 state+1
+// ❌ 新代码默认上 reducer 风格→多一层 action.type 间接，Jotai 的 write atom 本就支持集中变更，反而更重
 ```
 用 dispatch 风格更新，适合纯 reducer 逻辑迁移。
 
@@ -37,9 +46,12 @@ const counterAtom = atomWithReducer(0, (state, action) =>
 提供默认值来源，调用其 write 可 reset 回默认（呼应 pinia $reset 语义）。
 
 ```ts
-const defaultFormAtom = atom({ name: '', age: 0 });
-const formAtom = atomWithDefault((get) => get(defaultFormAtom));
+// 目的：atomWithDefault——默认值本身是 atom，写 null 即 reset 回默认（可覆写的默认值）
+const defaultFormAtom = atom({ name: '', age: 0 });              // 默认值来源，可派生可切换模板
+const formAtom = atomWithDefault((get) => get(defaultFormAtom));  // 未被动过时读默认
 // 提交成功后：set(formAtom, null) —— null 是 reset 的信号值
+// ✅ set(formAtom, null) 复位到 defaultFormAtom；换 defaultFormAtom 则未改过的 formAtom 自动反映新模板
+// ❌ 传非 null 的其它“空值”当 reset 信号→只有 null 触发回落，写 undefined/{} 不 reset，反被当真实覆写值
 ```
 
 妙处在默认值本身可以是 atom：`defaultFormAtom` 变了（比如切换模板），formAtom 未被动过就自动反映新模板——「可覆写的默认值」这个常见需求（用户设置 > 系统默认）一行到位。

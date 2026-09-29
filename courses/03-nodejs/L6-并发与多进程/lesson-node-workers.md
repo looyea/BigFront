@@ -22,17 +22,18 @@
 
 ```js
 // main.js
+// 目的：把一段 fib(42) 重计算丢进 worker 线程，主线程全程空闲可接请求
 import { Worker } from "node:worker_threads";
 
 const w = new Worker("./fib-worker.js", { workerData: { n: 42 } }); // workerData 初始化只读传入
-w.on("message", (result) => console.log("worker 算完:", result));
-w.on("error", (e) => console.error("worker 出错", e));    // 呼应 node-async-errors
+w.on("message", (result) => console.log("worker 算完:", result));   // 收到回传的 fib(42)
+w.on("error", (e) => console.error("worker 出错", e));    // worker 内未捕获异常走 error（不会拖垮主线程）
 w.on("exit", (code) => code !== 0 && console.warn("异常退出", code));
 
 // fib-worker.js
 import { parentPort, workerData } from "node:worker_threads";
-function fib(n) { return n < 2 ? n : fib(n - 1) + fib(n - 2); }
-parentPort.postMessage(fib(workerData.n));   // 算完回传，主线程一直空闲可处理请求
+function fib(n) { return n < 2 ? n : fib(n - 1) + fib(n - 2); }   // 指数级重计算
+parentPort.postMessage(fib(workerData.n));   // 算完回传（阻塞的是本 worker 线程，不是主线程）
 ```
 
 - 主线程用 `worker.on('message')` 收结果，`postMessage` 发任务；worker 里用 `parentPort.postMessage`/`parentPort.on('message')`。
@@ -46,8 +47,10 @@ parentPort.postMessage(fib(workerData.n));   // 算完回传，主线程一直�
 `postMessage` 默认**拷贝**大 Buffer 很贵。对普通 `ArrayBuffer` 可以**转移所有权**（不拷贝，发送方立即失去访问）：
 
 ```js
+// 目的：把一块大 ArrayBuffer 的"所有权"零拷贝转移给接收方（发送方随即失去访问）
 const buf = new ArrayBuffer(1e8);
-parentPort.postMessage({ buf }, [buf]);   // 第二个参数 = transferList
+parentPort.postMessage({ buf }, [buf]);   // 第二个参数 = transferList：不拷贝、直接转移
+// ❌ 转移后再读原 buf会报 TypeError: This object was detached（所有权已不在本地）
 ```
 
 适用："把一块大数据交给对方处理、我这边不再用"。注意同一块 buffer 不能两处同时持有。
@@ -59,11 +62,12 @@ parentPort.postMessage({ buf }, [buf]);   // 第二个参数 = transferList
 `SharedArrayBuffer`（呼应 ES 包 TypedArray/SAB）可**跨线程同时读写同一块内存**，实现真正的共享：
 
 ```js
+// 目的：SharedArrayBuffer 传引用而非拷贝，主线程与 worker 同时读写同一块内存
 import { Worker } from "node:worker_threads";
 const sab = new SharedArrayBuffer(4);
 const i32 = new Int32Array(sab);
 new Worker("./worker.js", { workerData: { i32 } });   // 传引用，非拷贝
-i32[0] = 10;                                          // 主线程写，worker 立刻能看到
+i32[0] = 10;                                          // 主线程写，worker 立刻能看到（共享同一底层内存）
 ```
 
 - 多个线程同时写同一位置会**竞态**，必须用 **`Atomics`**（`add/load/store/compareExchange/wait/notify`）保证单操作原子性与线程同步（`Atomics.wait` 阻塞等待、`notify` 唤醒）。
@@ -83,9 +87,10 @@ i32[0] = 10;                                          // 主线程写，worker �
 `new Worker` 开销不小（起 isolate）。生产常见做法是**固定大小线程池 + 任务队列**，或用现成库（如 `piscina`）：提交任务、内部复用 N 个 worker、自动负载均衡。
 
 ```js
+// 目的：用 Piscina 固定大小线程池复用 worker，避免反复 new Worker 的 isolate 启动开销
 import Piscina from "piscina";
 const pool = new Piscina({ filename: "./worker.js", maxThreads: 4 });
-const result = await pool.run({ n: 42 });   // 队列 + 复用
+const result = await pool.run({ n: 42 });   // 内部排队 + 复用 4 个 worker，返回任务结果
 ```
 
 ---

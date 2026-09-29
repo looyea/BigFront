@@ -18,6 +18,7 @@
 **核心动机**：把「哈希表」从「对象」里剥出来——**Map 是数据结构，Object 是记录（record）**。
 
 ```js
+// 目的：Map 能用任意值作键（对象/NaN），保持插入序、size 为 O(1)
 const cache = new Map();
 cache.set(user1, 'profile1');    // 对象作键
 cache.set(NaN, 'yes');           // NaN 作键（SameValueZero 算法，能取回）
@@ -32,6 +33,7 @@ cache.get(user1);                 // 'override'
 ## 二、Map 的六个方法
 
 ```js
+// 目的：Map 六个核心方法 + 三种迭代器
 const m = new Map([['a', 1], ['b', 2]]);   // 构造接收可迭代 kv 数组
 m.set(k, v); m.get(k); m.has(k); m.delete(k);
 m.clear();
@@ -50,6 +52,7 @@ m.forEach((v, k) => console.log(k, v));   // 注意：value 在前，key 在后
 
 **⚠️ Map.get 未命中返回 undefined**——与「存了 undefined 值」无法区分。要判定「存在」用 `has`：
 ```js
+// 目的：get 未命中与“存了 undefined”分不开——判存在要用 has
 m.set('k', undefined);
 m.get('k');   // undefined
 m.has('k');   // true
@@ -57,6 +60,7 @@ m.has('k');   // true
 
 **⚠️ 键判等**：SameValueZero（≈ `===` 但 `NaN === NaN` 视为 true）。**对象键按引用**：
 ```js
+// 目的：对象键按引用判等——两个结构相同的空对象是两个不同键
 const m = new Map();
 m.set({}, 1).set({}, 2);
 m.size;   // 2 —— 两个不同空对象是两个不同键
@@ -67,6 +71,7 @@ m.size;   // 2 —— 两个不同空对象是两个不同键
 ## 三、Set：值唯一的有序集合
 
 ```js
+// 目的：Set 自动去重 + add 链式 + 集合运算
 const s = new Set([1, 2, 2, 3]);   // {1, 2, 3}
 s.add(4).add(4);                     // 链式；重复 add 无变化
 s.has(2);                             // true
@@ -76,14 +81,16 @@ s.size;                                // 2
 // 集合运算
 const A = new Set([1,2,3,4]), B = new Set([3,4,5,6]);
 const union     = new Set([...A, ...B]);
-const intersect = new Set([...A].filter(x => B.has(x)));
-const diff      = new Set([...A].filter(x => !B.has(x)));
+const intersect = new Set([...A].filter(x => B.has(x)));  // {3,4}
+const diff      = new Set([...A].filter(x => !B.has(x)));  // {1,2}（A 有、B 没有）
+// union={1,2,3,4,5,6} intersect={3,4} diff={1,2}
 ```
 
 **Set 内部就是「只有键的 Map」**（V8 源码 `js-collection.cc` 里两者共用哈希实现）。
 
 **⚠️ Set 的判等也是 SameValueZero**：
 ```js
+// 目的：Set 也用 SameValueZero——NaN 能去重、对象按引用
 new Set([NaN, NaN]).size;      // 1（Array 里 [NaN].indexOf 会失败，Set 不会）
 const s = new Set();
 s.add({}).add({});              // size = 2（引用不同）
@@ -91,8 +98,11 @@ s.add({}).add({});              // size = 2（引用不同）
 
 **去重经典**：
 ```js
-const uniq = [...new Set(arr)];
+// 目的：数组去重两种——整体去重 与 按 key 去重
+const uniq = [...new Set(arr)];                                   // 例：[...new Set([1,1,2])] → [1,2]
 const uniqBy = (arr, fn) => [...new Map(arr.map(x => [fn(x), x])).values()];
+// ✅ 应用：按 id 去重（Map 同键覆盖，保留最后一条）
+uniqBy([{id:1},{id:1},{id:2}], o => o.id);  // [{id:1},{id:2}]
 ```
 
 ---
@@ -105,6 +115,7 @@ const uniqBy = (arr, fn) => [...new Map(arr.map(x => [fn(x), x])).values()];
 - **没有 size / clear / keys / values / forEach**——因为「什么时候被 GC 掉你不知道」。
 
 ```js
+// 目的：WeakMap 以 DOM 元素为键挂元数据——元素移除且无其它引用时自动被 GC
 const meta = new WeakMap();
 const el = document.querySelector('#box');
 meta.set(el, { clicks: 0, focusTime: Date.now() });
@@ -115,11 +126,18 @@ meta.set(el, { clicks: 0, focusTime: Date.now() });
 
 1. **给对象附加私有数据**（在 class fields 普及前的老写法）：
    ```js
+   // 目的：用 WeakMap 以实例本身为键存私有数据（this 消失即被 GC）
    const privateData = new WeakMap();
    class Account {
      constructor(id) { privateData.set(this, { id, balance: 0 }); }
      deposit(x) { const d = privateData.get(this); d.balance += x; }
+     balance() { return privateData.get(this).balance; }
    }
+   // ✅ 应用：实例外部拿不到私有数据
+   const acc = new Account('A-1');
+   acc.deposit(100);
+   acc.balance();          // 100（balance 存在 WeakMap 里）
+   acc.privateData;        // undefined（私有数据不在实例属性上）
    ```
 2. **缓存 / 记忆化**：`memoize` 参数是对象时，用 WeakMap 缓存避免内存泄漏。
 3. **Vue 3 reactive 反向映射**：`reactiveMap: WeakMap<raw, proxy>` + `proxyToRaw: WeakMap<proxy, raw>`——raw 消失自动清理。
@@ -130,12 +148,17 @@ meta.set(el, { clicks: 0, focusTime: Date.now() });
 ## 五、WeakSet：只放对象、不阻止 GC
 
 ```js
+// 目的：WeakSet 标记"已访问"，防循环引用死循环
 const seen = new WeakSet();
 function walk(node) {
-  if (seen.has(node)) return;   // 循环引用保护
+  if (seen.has(node)) return;   // 已访问 → 直接返回（循环引用保护）
   seen.add(node);
   node.children?.forEach(walk);
 }
+// ✅ 应用：a→b→a 成环，walk(a) 也不会无限递归
+const a = { name:'a', children: [] }, b = { name:'b', children:[a] };
+a.children.push(b);
+walk(a);  // 访问 a→b→(a 已在 seen，跳过)，正常结束不爆栈
 ```
 
 **用途**：
@@ -165,6 +188,7 @@ function walk(node) {
 ## 七、`Object.fromEntries` ↔ `[...map]` 的互转
 
 ```js
+// 目的：Object ↔ Map 互转（entries/fromEntries 都是 kv 数组桥梁）
 const obj = { a: 1, b: 2 };
 const map = new Map(Object.entries(obj));    // Object → Map
 const back = Object.fromEntries(map);         // Map → Object
@@ -174,6 +198,7 @@ Object.fromEntries([['x', 1], ['y', 2]]);     // { x:1, y:2 }
 
 **用途**：`fromEntries + map + filter` 三步组合实现「对象版 map / filter」：
 ```js
+// 目的：用 entries+map+fromEntries 三步实现"对象版 map/filter"
 const doubled = Object.fromEntries(
   Object.entries(prices).map(([k, v]) => [k, v * 2]),
 );

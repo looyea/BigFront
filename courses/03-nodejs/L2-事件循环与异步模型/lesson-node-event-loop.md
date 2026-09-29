@@ -66,13 +66,15 @@ Node 启动后，主线程跑完同步代码，进入事件循环，一轮 tick 
 ## 四、顺序判断实战：nextTick > microtask > 阶段
 
 ```js
-console.log('1 同步');
-setTimeout(() => console.log('6 timer'), 0);
-setImmediate(() => console.log('5 immediate'));
-queueMicrotask(() => console.log('3 microtask'));
-Promise.resolve().then(() => console.log('4 promise'));
-process.nextTick(() => console.log('2 nextTick'));
-console.log('1 同步(末)');
+// 目的：一次性验证 nextTick > 微任务 > 阶段 的排空顺序（注释标出每个回调的输出序号）
+console.log('1 同步');                       // ① 同步栈，最先
+setTimeout(() => console.log('6 timer'), 0); // ⑥或⑤（宏任务，顶层与 immediate 顺序不定）
+setImmediate(() => console.log('5 immediate')); // ⑤或⑥（check 阶段）
+queueMicrotask(() => console.log('3 microtask')); // ③ 微任务层
+Promise.resolve().then(() => console.log('4 promise')); // ④ 同为微任务，按注册顺序排在 queueMicrotask 后
+process.nextTick(() => console.log('2 nextTick'));  // ② nextTick 队列，优先级高于微任务
+console.log('1 同步(末)');                   // ①' 同步栈末尾，仍在所有异步之前
+// 实际输出：1 同步 → 1 同步(末) → 2 nextTick → 3 microtask → 4 promise → (5/6 不定)
 ```
 
 输出：`1 同步` → `1 同步(末)`（同步先跑完）→ `2 nextTick` → `3 microtask` → `4 promise`（nextTick 队列先于微任务，且 promise/microtask 同属微任务层，按注册顺序）→ 进入事件循环后 `5 immediate`（check）与 `6 timer`（timers）——**这两者顶层顺序不确定**（取决于同步代码耗时是否越过 timer 的 1ms 阈值）。
@@ -89,8 +91,10 @@ console.log('1 同步(末)');
 `process.nextTick` 优先级高于微任务，若在回调里递归 `nextTick`，会**饿死事件循环**——永远排不空的 tick 队列让 poll/timer 再也轮不到，I/O 与定时器全停：
 
 ```js
-function spin() { process.nextTick(spin); }   // ✗ 事件循环永远进不了下一阶段
-spin();   // 服务假死：没有 I/O、没有 timer 能触发
+// 目的：演示递归 nextTick 如何"饿死事件循环"——回调队列永远排不空
+function spin() { process.nextTick(spin); }   // ✗ 每次回调又往 nextTick 队列塞一个，事件循环永远进不了下一阶段
+spin();   // 服务假死：没有 I/O、没有 timer 能触发（进程看起来活着却不响应）
+// ✓ 替代：需要"下一轮再让出"用 setImmediate(spin)，它在下一次 tick 的 check 阶段执行，中间会排空 I/O/timer
 ```
 
 Promise 递归（`Promise.resolve().then(spin)`）同理会饿死微任务之后的阶段。**准则**：需要"下一轮再让出给事件循环"用 `setImmediate`，而不是 nextTick 套 nextTick。nextTick 适合"当前操作完成后、马上要做的小尾巴"（如模拟错误优先回调的异步抛出）。

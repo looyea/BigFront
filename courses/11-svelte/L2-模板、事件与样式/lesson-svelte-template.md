@@ -10,7 +10,8 @@
 
 ```svelte
 <script>
-  let name = $state('world');
+  // 目的：插值—{ } 内是任意 JS 表达式，编译后只改这一处文本节点
+  let name = $state('world');   // ✅ name 变→只更新 Hello 那一处
 </script>
 <h1>Hello {name}!</h1>
 <p>{1 + 2}</p>
@@ -21,7 +22,9 @@
 - 想输出**原始 HTML**（会被转义时）用 `{@html expr}`——注意 XSS 风险（等价 React `dangerouslySetInnerHTML`，呼应 react-jsx）：
 
 ```svelte
-{@html userComment}   <!-- userComment 里的标签会被当真 HTML 渲染，需自行消毒 -->
+{/* 目的：输出原始 HTML—默认插值会转义，需真 HTML 时用 {@html} */}
+{@html userComment}   <!-- ⚠️ userComment 里的标签会被当真 HTML 渲染，需自行消毒 -->
+<!-- ❌ 直接 {@html 用户输入} 不消毒 → 内含 <script> 就是 XSS，与 React dangerouslySetInnerHTML 同险 -->
 ```
 
 ---
@@ -29,6 +32,7 @@
 ## 二、条件：`{#if}` / `{:else if}` / `{:else}`
 
 ```svelte
+{/* 目的：条件块—块级渲染，不会像 React 的 {cond && <A/>} 那样把 0/false 误渲染出来 */}
 {#if user.loggedIn}
   <p>欢迎，{user.name}</p>
 {:else if user.isNew}
@@ -45,10 +49,11 @@
 ## 三、列表：`{#each}` 与 keyed each
 
 ```svelte
+{/* 目的：列表渲染 + {:else} 空态—无需手写 length 判断 */}
 {#each todos as todo}
   <li>{todo.text}</li>
 {:else}
-  <p>暂无待办</p>
+  <p>暂无待办</p>   <!-- ✅ 数组为空时自动渲染这一块 -->
 {/each}
 ```
 
@@ -57,9 +62,11 @@
 - 括号里给 **key**（强烈推荐，等价 React `key`，决定复用/移动）：
 
 ```svelte
+{/* 目的：keyed each—括号里给稳定 key，告诉编译器哪个 DOM 对应哪条数据，只做移动而非销毁重建 */}
 {#each todos as todo (todo.id)}
-  <li>{todo.text}</li>
+  <li>{todo.text}</li>   <!-- ✅ todo.id 作 key，插入/删除/排序不会串状态 -->
 {/each}
+<!-- ❌ 不写 key 时退化为用索引作隐式 key → 开头插入一条，后续每项的局部输入框内容会“串位” -->
 ```
 
 - **对象**版 keyed each：`{#each map as [key, value] (key)}`。
@@ -72,12 +79,13 @@
 直接对 **Promise** 建模，天然覆盖 loading / success / error 三态：
 
 ```svelte
+{/* 目的：{#await} 直接对 Promise 建模—pending/then/catch 三态内建，无需额外库 */}
 {#await fetchUser(id) then user}
-  <p>{user.name}</p>
+  <p>{user.name}</p>   <!-- ✅ 解析前走本块（pending） -->
 {:then user}
-  <Profile {user} />
+  <Profile {user} />   <!-- ✅ 成功：拿到解析值 -->
 {:catch error}
-  <p style="color:red">加载失败：{error.message}</p>
+  <p style="color:red">加载失败：{error.message}</p>   <!-- ✅ 失败：拿到异常 -->
 {/await}
 ```
 
@@ -90,12 +98,14 @@
 
 - `{#key value}`：`value` 变化时**销毁并重建**内部块（强制重置组件/动画）：
   ```svelte
-  {#key userId}<Profile {userId} />{/key}
+  {/* 目的：{#key}—value 变则销毁重建内部块，强制重置组件/动画 */}
+  {#key userId}<Profile {userId} />{/key}   <!-- ✅ userId 变→Profile 整个重新创建 -->
   ```
 - `{@const}`：模板块内的局部常量（不污染脚本作用域）：
   ```svelte
+  {/* 目的：{@const}—模板块内的局部常量，不污染脚本作用域 */}
   {#each items as item}
-    {@const price = item.qty * item.unit}
+    {@const price = item.qty * item.unit}   <!-- ✅ 只在块内算中间量，避免全局变量 -->
     <li>{item.name} — {price}</li>
   {/each}
   ```
@@ -109,10 +119,12 @@
 
 ```svelte
 <script>
+  // 目的：bind:this 拿 DOM 节点引用—不触发渲染，只在挂载后可用
   let canvas;
-  $effect(() => { if (canvas) draw(canvas); }); // 挂载后 canvas 才有值
+  $effect(() => { if (canvas) draw(canvas); }); // ✅ 挂载后 canvas 才有值，用 effect 等它就绪
 </script>
 <canvas bind:this={canvas}></canvas>
+<!-- ❌ 在 $effect 里不判 canvas 就 draw(canvas) → 首次 canvas 为 undefined，报 Cannot read properties of undefined -->
 ```
 
 对标 Vue 模板 ref、React `useRef`（呼应 vue-refs-expose、react-refs）。取子组件实例则配合 `export function`（见 L3 svelte-component-composition）。

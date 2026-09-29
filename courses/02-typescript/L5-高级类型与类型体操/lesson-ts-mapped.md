@@ -9,8 +9,11 @@
 上一关每个工具类型里都出现了 `[K in keyof T]`，这就是映射类型。它像"对类型做一次遍历"：
 
 ```ts
+// 目的：映射类型遍历 T 的每个键，在“值位”任意变换
 type Clone<T> = { [K in keyof T]: T[K] };   // 逐键复制（等价 T 本身）
 type ValuesToString<T> = { [K in keyof T]: string };  // 所有值强设成 string
+type C1 = Clone<{ a: number; b: string }>;         // { a: number; b: string }
+type C2 = ValuesToString<{ a: number; b: string }>; // { a: string; b: string }（值全变 string）
 ```
 
 `K in keyof T` 读作"对 T 的每个键 K"。方括号里是**计算属性名**（呼应 ES 计算属性），值位可任意引用 `K`、`T[K]`。它把"一个已知键联合"展开成一整套对象类型的每个属性——这就是 TS 里唯一的"对类型做迭代"的机制。
@@ -40,10 +43,12 @@ type Handlers = { [P in Status]: () => void };  // { ok:()=>void; err:()=>void }
 映射类型可统一给所有属性加/减修饰符，用 `+?`/`-?`/`+readonly`/`-readonly`（`+` 可省略）：
 
 ```ts
-type Partial<T>  = { [K in keyof T]+?: T[K] };        // 全可选
-type Required<T> = { [K in keyof T]-?: T[K] };        // 去可选
-type Readonly<T> = { readonly [K in keyof T]: T[K] }; // 全只读
-type Mutable<T>  = { -readonly [K in keyof T]: T[K] };// 去只读
+// 目的：映射里统一给所有属性加/减修饰符（+可省略，- 表示去除）
+type MyPartial<T>  = { [K in keyof T]+?: T[K] };        // 全可选
+type MyRequired<T> = { [K in keyof T]-?: T[K] };        // 去可选
+type MyReadonly<T> = { readonly [K in keyof T]: T[K] }; // 全只读
+type MyMutable<T>  = { -readonly [K in keyof T]: T[K] };// 去只读
+type Opt = MyPartial<{ a: number; b: string }>;   // { a?: number; b?: string }
 ```
 
 TS 4.1 起还能**按 K 条件决定修饰符**（配合模板/条件类型）：

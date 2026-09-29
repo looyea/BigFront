@@ -16,15 +16,17 @@
 第 1 阶段里，SvelteKit 为了分析路由（谁 prerender、谁有 server load、依赖哪些块），会**加载并执行**你的 `+page/+layout(.server).js`（连同它们 import 的东西）。这意味着顶层代码在**构建机**上就会跑一次：
 
 ```js
+// 目的：building 守卫—构建期会跑一遍 load 文件顶层代码，副作用要包进 if (!building)
 import { building } from '$app/environment';
 import { initialiseDatabase } from '$lib/server/database';
 
 // 构建期 building === true，跳过连库这类副作用
 if (!building) {
-  initialiseDatabase();
+  initialiseDatabase();   // ✅ 仅在真正运行时（dev/preview/prod）连库，构建机不碰
 }
 
 export function load() { /* ... */ }
+// ❌ 顶层直接 initialiseDatabase() 不加守卫 → CI 构建机无数据库，vite build 当场崩（或偷偷连了生产库）
 ```
 
 忘加 `building` 守卫的后果：CI 构建机上没有数据库/网络，顶层 `new Client()`、`fetch()` 直接让 `vite build` 崩掉，或构建期偷偷连了生产库。**"任何不该在构建期执行的代码，都要包进 `if (!building)`"** 是 Kit 的铁律（预渲染期同样 `building` 为真，见下）。
@@ -45,17 +47,20 @@ export function load() { /* ... */ }
 这是"SSR 时 `render()` 的调用位点"引桥题的正面回答。适配器拿到的核心 API 是 `@sveltejs/kit` 导出的 **`Server`** 类：
 
 ```js
+// 目的：适配器接手的内核 API—Server 类三方法，respond 是 SSR 总入口
 import { Server } from '@sveltejs/kit';
 
-const server = new Server(manifest);   // 用第 3 节那份 SSRManifest 初始化
-await server.init({ env: process.env }); // 一次性异步初始化（读 $env/static、跑 setAdapter 等）
+const server = new Server(manifest);   // ✅ 用第 3 节那份 SSRManifest 初始化，服务器由此"认识"所有路由
+await server.init({ env: process.env }); // ✅ 进程启动时调一次：读 $env/static、跑 setAdapter、连库预热
 
 export async function fetch(request) {   // 每个请求
-  return server.respond(request, {       // ← SSR 的总入口，返回一个 Response
+  return server.respond(request, {       // ✅ 每请求调一次，handle+load+渲染全在这内部发生
     platform,
-    getClientAddress: () => { /* ... */ }
+    getClientAddress: () => { /* ... */ }   // ✅ 供 event.getClientAddress()（配 XFF_DEPTH 读真实 IP）
   });
 }
+// ❌ 把 init 放进 fetch 里每请求 await 一次 → 重复初始化，连接池/预热被反复触发
+// ❌ 忘 await server.init 就 respond → 尚未就绪，首请求可能读不到 $env/static、报未初始化
 ```
 
 - `constructor(manifest: SSRManifest)`：把 manifest 注入，服务器由此"认识"你所有路由。

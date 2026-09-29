@@ -9,12 +9,15 @@ SolidStart 是 SolidJS 官方元框架（meta-framework）：在 Solid 的细粒
 ## 二、从零起项目
 
 ```bash
-npm init solid     # 或 pnpm create solid / yarn create solid / bun create solid
+# 目的：脚手架起项目—选模板与是否 SSR/TS，团队项目建议一次选齐
+npm init solid     # ✅ 等价 pnpm/yarn/bun create solid，随后交互式选 basic/with-tailwind… 模板
+# ❌ 起完项目再手搬目录/自己拼 src/routes → 模板已含骨架，手搬易漏 entry/app 配置
 ```
 脚手架会让你**选模板**（basic、bare、with-tailwindcss、with-auth、with-drizzle、with-prisma、with-mdx…）以及是否 SSR/TS；随后：
 ```bash
+# 目的：装依赖并起开发服务器
 npm i
-npm run dev        # v1 文档：默认跑在 3000 端口
+npm run dev        # ✅ 默认 3000 端口（v1 文档口径）；v2 起 dev 走 vite.config.ts
 ```
 模板已含完整骨架，新项目不要手搬目录。
 > 细节备忘：v1 文档交代 `npm run dev` 默认跑在 **3000 端口**；脚手架还会追问是否用 SSR、是否 TypeScript——团队项目建议一次选齐，后续少改配置。
@@ -23,9 +26,11 @@ npm run dev        # v1 文档：默认跑在 3000 端口
 
 v2 的配置入口是 Vite 配置里的 `solidStart()` 插件：
 ```ts
+// 目的：v2 配置入口—solidStart() 插件挂在 vite.config.ts 的 plugins 里
 import { defineConfig } from "vite";
 import { solidStart } from "@solidjs/start/config";
-export default defineConfig({ plugins: [solidStart()] });
+export default defineConfig({ plugins: [solidStart()] });   // ✅ 无此插件则文件路由/SSR/服务端函数全不生效
+// ❌ 沿用 v1 的 app.config.ts/vinxi 写法→ v2 配置面已收敛到 vite.config.ts，旧入口不再被读
 ```
 - 已有中间件？`solidStart({ middleware: "./src/middleware/index.ts" })`；
 - 开发期有个**检查错误与服务端函数调用的 toolbar**，不进生产包；想藏掉：`solidStart({ devOverlay: false })`；
@@ -58,8 +63,10 @@ src/
 ## 六、类型支持
 
 环境类型随 `@solidjs/start/env` 提供，模板没配的话手动加进 tsconfig：
-```json
+```jsonc
+// 目的：补环境类型—让代码里类型安全地读环境变量等运行时信息
 { "compilerOptions": { "types": ["@solidjs/start/env"] } }
+// ❌ 模板没配又直接读运行时全局/process.env → TS 报找不到类型/undefined
 ```
 这让你在代码里类型安全地读环境变量等运行时信息。
 

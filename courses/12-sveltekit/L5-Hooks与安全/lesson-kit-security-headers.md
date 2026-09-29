@@ -19,13 +19,17 @@ L4 说过"同名 action 跨站提交挡不住"——那 Kit 到底防了什么�
 CSP 通过限制"资源能从哪些源加载"来压制 XSS。`svelte.config.js` 的 `kit.csp`：
 
 ```ts
+// svelte.config.js
+// 目的：kit.csp 一档—directives 真拦、reportOnly 只报，mode 定 Kit 自生成内联量怎么签名
 kit: {
   csp: {
-    mode: 'auto',                       // 'hash' | 'nonce' | 'auto'
-    directives: { 'script-src': ['self'] },
-    reportOnly: { 'script-src': ['self'], 'report-uri': ['/'] }  // 观察模式，只报不拦
+    mode: 'auto',                       // ✅ 'hash'固定内容算哈希 | 'nonce'每请求随机数 | 'auto'动态页 nonce、预渲染页 hash
+    directives: { 'script-src': ['self'] },   // ✅ 进 Content-Security-Policy 头，只允许同源脚本执行（拦截位）
+    reportOnly: { 'script-src': ['self'], 'report-uri': ['/'] }  // ✅ 进 Report-Only 头，只上报不拦；上线前先灰度观察误伤再转正式
   }
 }
+// ❌ 只写 reportOnly 不配 report-uri/report-to→浏览器无处发报告，观察模式白忙一场
+// ❌ 用了 svelte/transition 又强规定 style-src→它生成的内联 <style> 被 CSP 掐死，动画全挂（要略 style-src 或加 unsafe-inline）
 ```
 
 - **directives vs reportOnly**：前者进真正的 `Content-Security-Policy` 头（拦截），后者进 `Content-Security-Policy-Report-Only`（只上报不拦）——上线前先 reportOnly 灰度观察误伤，再转正式。reportOnly 必须配 `report-uri` 或 `report-to` 才有处收报告。
@@ -54,10 +58,14 @@ L4 挑战题的 `redirect(303, url)` 用 `$page.url`/查询串里的 next 直跳
 3. （更严）**host 白名单**——`new URL(loc, 'https://example.com').host === 'example.com'` 反解校验。
 
 ```ts
+// 目的：开放重定向加固—只允诺本站相对路径，挡住 ?next=https://evil.tld 钓鱼跳转
 function safeRedirect(loc: string | null): string | void {
+  // ✅ 三连判据：非空 + 以 / 开头（挡协议绝对 URL）+ 不含 //（挡 //evil.tld 协议相对 URL）
   if (loc && loc.startsWith('/') && !loc.includes('//')) return loc;
-  // 或严格版：new URL(loc, 'https://x').host === 本站
+  // ✅ 不合规→返回 void（不跳），回退默认安全路径；更严可换 new URL(loc, 'https://x').host === 本站 反解校验
 }
+// ❌ 直接 redirect(303, url.searchParams.get('next')) 不验→攻击者拼 evil.tld 把登录用户送钓鱼站
+// ❌ 只查 startsWith('/')不查 //→//evil.tld 仍是合法的协议相对跳转，等于没防住这一条
 ```
 配合 redirect 状态码语义（L4）与"303 把 POST 转 GET 防重放"，登录跳转才算闭环。`trustedOrigins` 管的是"谁能对我发表单"，开放重定向管的是"我把用户跳去哪"——两个方向，别混。
 

@@ -9,17 +9,18 @@
 ```vue
 <!-- 祖先 -->
 <script setup>
+// 目的：provide 一个依赖，任意后代 inject 直接拿，跳过中间层层 props 传递
 import { ref, provide } from 'vue';
 const theme = ref('dark');
-provide('theme', theme);            // 提供一个可注入的依赖（这里传的是 ref 本身）
+provide('theme', theme);            // ✅ 传的是 ref 本身（而非 theme.value），才能保持响应式
 </script>
 
 <!-- 任意后代（哪怕中间隔了多层不关心的组件） -->
 <script setup>
 import { inject } from 'vue';
-const theme = inject('theme');       // 拿到那个 ref
+const theme = inject('theme');       // 沿树向上找到最近的 provider，拿到那个 ref
 </script>
-<template><div :class="theme">…</div></template>
+<template><div :class="theme">…</div></template>   <!-- theme 变了这里自动重渲染 -->
 ```
 
 - 在** `<script setup>` / setup() 中同步调用**（依赖当前组件实例）；
@@ -33,14 +34,15 @@ const theme = inject('theme');       // 拿到那个 ref
 普通值 `provide('name', 'k')` 是**一次性快照**，之后不会更新。要保持响应式，两种正解：
 
 ```js
+// 目的：保持响应式的两种正解——直接供响应式源 / 供"读+改"封装
 // ① 直接提供响应式源
-provide('theme', theme);            // theme 是 ref/reactive
+provide('theme', theme);            // theme 是 ref/reactive（❌ provide('theme', theme.value) 就成一次性快照）
 
 // ② 提供"读 + 改"的封装（推荐给全局状态，避免后代乱改）
 const count = ref(0);
 provide('counter', {
   count,
-  inc: () => count.value++,         // 变更集中在这里，可加日志/校验
+  inc: () => count.value++,         // ✅ 变更集中在这里，可加日志/校验；后代调 counter.inc() 而非直改
 });
 ```
 > 传 reactive 对象给后代"就地修改"会破坏单向数据流；更稳妥的是**同时提供修改函数**，让变更可控可追踪（呼应 vue-component-basics interview 第 12 题、vue-state-patterns）。
@@ -52,20 +54,21 @@ provide('counter', {
 `provide('theme', …)` 用字符串做 key，**父子/兄弟库之间极易撞名**（都注入了 `'theme'`）。规避：
 
 ```js
-// 用 Symbol 保证唯一
+// 目的：用 Symbol 保证 key 全局唯一，避免不同库都注入 'theme' 撞名
 export const THEME_KEY = Symbol();
 provide(THEME_KEY, theme);
-const theme = inject(THEME_KEY);
+const theme = inject(THEME_KEY);    // 两个 Symbol() 永不相等，天生不撞车
 ```
 
 TypeScript 里用 **`InjectionKey`** 把 key 和值类型绑起来，注入端自动推断类型：
 
 ```ts
+// 目的：InjectionKey 把 key 与值类型绑定，注入端自动推断类型
 import type { InjectionKey, Ref } from 'vue';
 export const THEME: InjectionKey<Ref<string>> = Symbol('theme');
 
-provide(THEME, theme);                 // theme 必须是 Ref<string>
-const t = inject(THEME);               // t: Ref<string> | undefined，类型自动
+provide(THEME, theme);                 // ✅ theme 必须是 Ref<string>，传错类型编译报错
+const t = inject(THEME);               // t: Ref<string> | undefined，类型自动推出
 ```
 这就是 02-ts generics 的实战：`InjectionKey<T>` 本质是带类型标签的 unique symbol（呼应 02-ts、vue-sfc 类型化 props 同源）。
 
@@ -74,13 +77,16 @@ const t = inject(THEME);               // t: Ref<string> | undefined，类型自
 ## 四、注入默认值与"必须提供"
 
 ```js
+// 目的：inject 第三参给默认值降级，避免无 provider 时拿到 undefined
 // 找不到 provider 时用默认值，避免 undefined（第三个参数）
-const theme = inject('theme', 'light');
+const theme = inject('theme', 'light');   // ✅ 无 provider 时降级为 'light'（库组件单独用更健壮）
 
 // 需要"必须有"：给默认值 + 工厂，或直接断言
 const store = inject(STORE_KEY, () => createStore(), true);  // 第三参 true = 默认值可为工厂/允许函数
 
-if (!user) throw new Error('UserProvider 必须在上层 provide(user)');
+// ❌ 不传默认值且没有 provider → theme 为 undefined，后续 theme.value 报 Cannot read properties of undefined
+const user = inject(USER_KEY);
+if (!user) throw new Error('UserProvider 必须在上层 provide(user)');   // ✅ fail fast，拿到后判空抛错
 ```
 
 - 不传默认值且没有 provider → 返回 `undefined`（并可能告警）；

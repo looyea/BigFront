@@ -9,11 +9,14 @@
 Rolldown/Rspack/tsdown 这类新一代库打包工具，转译层可选 SWC 路线（或其等价的「去类型语法」处理）。你只需配三件事：
 
 ```js
+// 目的：新一代库打包器三件事——入口/外部依赖/双格式，外加另起 tsc 出类型
 // 心智示例（各工具字段名略有差异）
 { entry: 'src/index.ts',
-  external: ['react', 'vue'],   // 把 peer/宿主依赖排除出包
-  formats: ['es', 'cjs'],        // 双格式产出
-  dts: true }                    // 另起 tsc 生成 .d.ts
+  external: ['react', 'vue'],   // 把 peer/宿主依赖排除出包——库体积第一原则
+  formats: ['es', 'cjs'],        // 双格式产出，配 package.json exports 分别指过去
+  dts: true }                    // 类型仍交给 tsc/vue-tsc 生成（SWC 不产 d.ts）
+// ✅ external 排掉框架：库不再把 react/vue 打进产物，避免双实例与体积膨胀
+// ❌ 忘了 external→把 react 整个打包进库，下游出现两个 React 实例、hooks 报错
 ```
 
 `external` 决定什么留在包里——把框架/peerDep 排出去是库体积的第一原则。

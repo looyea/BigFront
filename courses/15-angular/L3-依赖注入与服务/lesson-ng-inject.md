@@ -5,10 +5,11 @@
 ## 一、inject() 的合法调用时机：注入上下文规则
 
 ```ts
+// 目的：inject() 的合法调用时机——只能在构造上下文里调
 @Injectable({ providedIn: 'root' })
 export class MyService {
   // ✅ 合法：field initializer（在注入上下文内执行）
-  private http = inject(HttpClient);
+  private http = inject(HttpClient);    // 创建实例时求值，当前 injector 已知
   private router = inject(Router);
 
   constructor() {
@@ -18,7 +19,7 @@ export class MyService {
 
   ngOnInit() {
     // ❌ 不合法：生命周期钩子不是注入上下文
-    const svc = inject(AuthService);  // 抛 NG0203 错误
+    const svc = inject(AuthService);  // 抛 NG0203 错误（上下文已丢失）
   }
 }
 ```
@@ -31,13 +32,17 @@ export class MyService {
 
 旧正统（v2-v17 文档）：
 ```ts
-constructor(private http: HttpClient, private auth: AuthService) {}
+// 目的：旧正统 constructor DI（仍合法，只是不再是新代码首选）
+constructor(private http: HttpClient, private auth: AuthService) {}   // TS 参数属性自动生成 this.http=this.auth=……
+// ❌ 隐患：constructor 参数位置敏感，重排/删参数易引入按位置传错的 reorder bug
 ```
 
 新推荐（v14+ signal 风格）：
 ```ts
-private http = inject(HttpClient);
-private auth = inject(AuthService);
+// 目的：新推荐 field initializer inject（v14+ signal 风格）
+private http = inject(HttpClient);      // 一行一依赖
+private auth = inject(AuthService);     // 删依赖只删这一行，不动 constructor 签名
+// ✅ 重构/测试友好：与 class 声明风格一致，new MyService() 不再依赖参数顺序
 ```
 
 **为什么换**（三条应用层理由）：
@@ -52,18 +57,21 @@ private auth = inject(AuthService);
 当你需要在**非构造时机**用 inject()（如在 effect 回调外手动 lazy 创建服务）：
 
 ```ts
+// 目的：runInInjectionContext——在非构造时机（如事件回调）手动构造注入上下文
 import { runInInjectionContext, Injector } from '@angular/core';
 
 @Component({...})
 export class App {
-  private injector = inject(Injector);
+  private injector = inject(Injector);   // field 里先把 Injector 注好，供回调里用
 
   onClick() {
     // 点击时才需要的服务——手动创建上下文
-    const svc = runInInjectionContext(this.injector, () => inject(ExpensiveService));
+    const svc = runInInjectionContext(this.injector, () => inject(ExpensiveService));  // 包上上下文，inject 才能合法工作
     svc.doWork();
   }
 }
+// ✅ 动态/延迟创建时靠 runInInjectionContext 重筑上下文，root 单例仍由 injector 缓存
+// ❌ 直接在 onClick() 里 inject(ExpensiveService)（无包裹）→方法体不是注入上下文→NG0203
 ```
 
 适用场景：动态创建组件（createComponent 传入 injector）、工厂内条件注入、一次性延迟加载。注意：runInInjectionContext 内 inject 的实例**不缓存**——每次调用都走 injector 查找，但 providedIn:'root' 的仍是单例（因为 injector 本身缓存了 root 实例）。
@@ -73,13 +81,16 @@ export class App {
 `Injector.create([...])` 可脱离组件树创建独立注入器：
 
 ```ts
+// 目的：Injector.create——脱离组件树建独立注入器（DI 体系的逃生舱）
 const injector = Injector.create({
   providers: [
-    { provide: AuthService, useValue: mockAuth },
-    { provide: HttpClient, useClass: HttpBackend },
+    { provide: AuthService, useValue: mockAuth },     // 自带 mock，不依赖 app 环境
+    { provide: HttpClient, useClass: HttpBackend },   // 用真实 class 实现
   ],
 });
-const svc = runInInjectionContext(injector, () => inject(MyService));
+const svc = runInInjectionContext(injector, () => inject(MyService));  // 在这个临时上下文里解析
+// ✅ 纯单元测试不想起完整 TestBed、脚本式 DI 组装时很轻
+// ❌ 日常业务滥用→绕过 app 的 injector 层级，root 单例语义丢失
 ```
 
 用途：纯单元测试里不想起 TestBed 完整环境、脚本式 DI 组装。这是 DI 体系的『逃生舱』——日常业务代码极少用到。
@@ -88,11 +99,14 @@ const svc = runInInjectionContext(injector, () => inject(MyService));
 
 两种获取依赖的方式：
 ```ts
+// 目的：两种获取依赖的方式——DI provider vs 手动 import，区别在可见性与可替换性
 // A：DI provider（运行时解析）
-private auth = inject(AuthService);
+private auth = inject(AuthService);   // 同一 token 不同 injector 层级可注入不同实现（可替换）
 
 // B：手动 import（编译期静态绑定）
-import { format } from './utils';
+import { format } from './utils';      // 编译期确定、tree-shaking 友好，但不可替换
+// ✅ 有状态/生命周期/副作用→DI（HttpClient/Router/业务 Service）；纯函数/常量→直接 import
+// ❌ 给无状态纯工具也走 DI→白多一层 injector 查找与间接性，还妨碍摇树
 ```
 
 **区别在可见性与可替换性**：
@@ -104,18 +118,21 @@ import { format } from './utils';
 ## 六、inject() 在 effect / computed 里的特殊行为
 
 ```ts
+// 目的：inject() 在 effect/computed 里的特殊行为——回调体不是注入上下文
 @Injectable({ providedIn: 'root' })
 export class DataComponent {
-  private http = inject(HttpClient);  // ✅ field initializer
+  private http = inject(HttpClient);  // ✅ field initializer：趁构造上下文先把服务注好
 
   constructor() {
     effect(() => {
       // ❌ inject(SomethingElse) 在 effect 回调里不合法（不是注入上下文）
       // 但 this.http 已经在 field 里 inject 了，effect 里直接用即可
-      const data = toSignal(this.http.get('/api'), { initialValue: [] });
+      const data = toSignal(this.http.get('/api'), { initialValue: [] });  // 闭包捕获 field 里的 this.http
     });
   }
 }
+// ✅ 需要服务引用？在 field 里提前 inject、effect/computed 里用 this 闭包捕获
+// ❌ 在 computed() 执行体里调 inject()→同样不在注入上下文→报错
 ```
 
 computed() 同理——它的执行体不在注入上下文里。需要服务引用？在 field 里提前 inject、闭包捕获 this。

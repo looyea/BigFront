@@ -3,13 +3,16 @@
 ## 一、InfiniteData：数据长什么样
 
 ```ts
+// 目的：useInfiniteQuery 一个 key 堆多页——data 是 { pages, pageParams } 结构约定
 const { data } = useInfiniteQuery({
   queryKey: ['feed'],
-  queryFn: ({ pageParam, signal }) => fetchFeed(pageParam, signal),
-  initialPageParam: 0,
-  getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  queryFn: ({ pageParam, signal }) => fetchFeed(pageParam, signal),   // pageParam 由 getNextPageParam 决定，透明塞回
+  initialPageParam: 0,                          // 第一页入参（0/null 等）
+  getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,   // 返 undefined = 没有下一页，hasNextPage 全靠它
 });
 // data: { pages: [page0, page1, page2], pageParams: [0, 'c1', 'c2'] }
+// ✅ 渲染即 data.pages.flat()，触底 fetchNextPage 加载下一批，isFetchingNextPage 只管底部骨架
+// ❌ getNextPageParam 恒返真值（如 0）→ hasNextPage 永远 true，滚到底还不停发请求
 ```
 
 一条查询、多页数组：`pages` 是各页响应原样收集的数组，`pageParams` 记录每页的游标。渲染就是 `data.pages.flat()`——没有魔法，只是「一个 key 下堆多页」的结构约定。

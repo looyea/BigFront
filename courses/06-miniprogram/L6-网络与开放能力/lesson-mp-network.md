@@ -17,6 +17,7 @@
 ## 二、wx.request 本体
 
 ```js
+// 目的：wx.request 连接自己服务器的唯一正门（域名白名单+https+并发限制三枷锁）
 const task = wx.request({
   url: 'https://api.example.com/v1/goods?id=5',
   method: 'GET',                        // GET/POST/PUT/DELETE/... 对应 exp-rest 动词
@@ -28,9 +29,11 @@ const task = wx.request({
     // res.data 响应体 | res.statusCode 状态码 | res.header
   },
   fail(err) { /* err.errMsg：'request:fail' 网络层错误，与业务码无关 */ },
-  complete() { /* 成败都跑：hideLoading 放这（呼应 mp-interaction finally） */ },
+  complete() { /* ✅ 成败都跑：hideLoading 放这（呼应 mp-interaction finally） */ },
 });
-task.abort();   // 取消在飞请求——竞态治理的原始武器（呼应 react-effect-patterns AbortController）
+task.abort();   // ✅ 取消在飞请求——竞态治理的原始武器（呼应 react-effect-patterns AbortController）
+// ❌ 以为 success 回调=请求成功 → 4xx/5xx 也走 success（必须看 statusCode，与 axios 按状态码 reject 不同）
+// ❌ 真机请求未登记的 http://localhost → 报 "url not in domain list"（白名单；工具勾"不校验"才可开）
 ```
 
 **success ≠ 成功**：只要网络层走通就进 success，**4xx/5xx 也在 success 里**（看 statusCode）；fail 只管"没摸到服务器"。这与 fetch 的语义一致、与 axios 不同（axios 按状态码 reject）——封装时必须补齐这层（呼应 react-data-fetching 的 fetch 教训）。
@@ -55,7 +58,8 @@ uploadFile 的 response 是**字符串**，记得自己 JSON.parse——它是"�
 ## 三、封装：一个带拦截器的 request.js
 
 ```js
-// utils/request.js —— 对标 axios 实例/exp-server 中间件的分层品味
+// 目的：封装对标 axios 实例/Express 中间件——URL集中→认证注入→状态码归一→错误人话化→loading闭环
+// utils/request.js
 const BASE = 'https://api.example.com/v1';
 let inflight = 0;
 
@@ -93,6 +97,8 @@ export const api = {
   goods: { list: (p) => request('/goods', { data: p }), detail: (id) => request(`/goods/${id}`) },
   orders: { create: (d) => request('/orders', { method: 'POST', data: d }) },
 };
+// ❌ 不写 interceptRes 的 statusCode 判断 → 4xx/5xx 被当成功 resolve（wx.request success≠成功）
+// ❌ 401 只清 token 不跳登录 → 后续页在无登录态下报错连锁
 ```
 
 分层点评：**URL 集中（BASE+api 命名空间）→ 认证注入 → 状态码归一 → 错误人话化 → loading 闭环**，五层职责与 Express 中间件链一一镜像——你在 09-express 写的每层，客户端都会遇到它的对称面（呼应 exp-patterns、react-data-fetching 的 service 层）。
@@ -110,9 +116,11 @@ export const api = {
 ## 五、WebSocket 一瞥
 
 ```js
+// 目的：WebSocket 用于直播弹幕/聊天/协同——onMessage 高频回传要节流后 setData
 const socket = wx.connectSocket({ url: 'wss://api.example.com/ws' });
 socket.onMessage((msg) => { /* JSON.parse(msg.data) → 节流后 setData（呼应 mp-setdata 高频红线）*/ });
 socket.onError / onClose; socket.send({ data }); socket.close();
+// ❌ 每条 onMessage 直接 setData 大对象 → 高频跨线程堵塞（应节流/只传变化）
 ```
 
 直播弹幕、聊天、协同都用它；断线重连（指数退避+心跳）自己写或用库——node 侧 ws 服务端的对端就是它（呼应 node-net-dns/exp 实时话题）。

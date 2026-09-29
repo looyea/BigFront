@@ -7,24 +7,26 @@
 MobX 2015 年发布，是前端『自动依赖追踪』的量产先驱（L1 sig-landscape 时间线上的平行宇宙）。它与 signal 系共享同一部宪法——**读到即订阅、惰性 computed、推通知**——但载体不同：signal 派用**显式容器**（signal/computed 对象），MobX 用 **Proxy 包装可变对象**：
 
 ```js
+// 目的：makeAutoObservable 十行造一个响应式领域对象—可变状态+自动追踪
 import { makeAutoObservable } from 'mobx';
 
 class TodoStore {
   todos = [];
   filter = 'all';
 
-  constructor() { makeAutoObservable(this); }
+  constructor() { makeAutoObservable(this); }   // ✅ 字段标 observable、getter 标 computed、方法标 action
 
-  get visibleTodos() {                      // computed：getter 即派生
+  get visibleTodos() {                      // ✅ computed：getter 即派生，惰性+缓存
     return this.todos.filter((t) =>
       this.filter === 'done' ? t.done : this.filter === 'active' ? !t.done : true
     );
   }
 
-  addTodo(text) {                           // action：方法默认成 action
-    this.todos.push({ text, done: false }); // 直接 push！可变风格是 MobX 的本体
+  addTodo(text) {                           // ✅ action：方法默认成 action，一个批处理事务
+    this.todos.push({ text, done: false }); // ✅ 直接 push！可变风格是 MobX 的本体
   }
 }
+// ❌ 组件外 const { todos } = store 解构→ 拷走引用、脱离 Proxy 追踪，todos 再变这个局部量不响应（丢追踪第一坑）
 ```
 
 `makeAutoObservable` 把类字段标 observable、getter 标 computed、方法标 action——**十行完成一个响应式领域对象**，这是 MobX 的招牌体验。哲学坐标（L1 sig-paradigms 三坐标落位）：粒度=属性级（Proxy 拦截到每个字段）、更新=**可变原地改**、传播=函数响应式（不生成新快照）。
@@ -41,17 +43,19 @@ class TodoStore {
 关键差异在 action：signal 派写入就是 `.set`，无需仪式；MobX 严格模式（`enforceActions: 'observed'`，6 版默认）下**在 action 之外改 observable 会告警**——因为一次 action 是一个『批量事务』：中途不发通知，结束时统一结算（这保证了 glitch-free 的同时，把批处理粒度交给了 action 边界）。
 
 ```js
+// 目的：reaction 家族—autorun 全量追踪、reaction 盯/做分离、when 一次性放闸
 import { autorun, reaction, when, runInAction } from 'mobx';
 
-autorun(() => console.log(store.visibleTodos.length));   // 立即跑+依赖变再跑
-const stop = autorun(...); stop();                        // 返回 disposer，signal 同款纪律
+autorun(() => console.log(store.visibleTodos.length));   // ✅ 立即跑+依赖变再跑
+const stop = autorun(...); stop();                        // ✅ 返回 disposer，signal 同款退订纪律
 
 reaction(
-  () => store.filter,                 // 数据函数：只有这里的读取建依赖
-  (f) => analytics.track(f),          // 效果函数：这里的读取【不】建依赖！
-);                                     // reaction 与 autorun 最大分岔：职责拆两段
+  () => store.filter,                 // ✅ 数据函数：只有这里的读取建依赖
+  (f) => analytics.track(f),          // ✅ 效果函数：这里的读取【不】建依赖（浅观察姿态）
+);                                     // ✅ reaction 与 autorun 最大分岔：职责拆两段
 
-when(() => store.todos.length > 0, () => hideSkeleton());  // 一次性：条件满足放闸即弃
+when(() => store.todos.length > 0, () => hideSkeleton());  // ✅ 一次性：条件满足放闸即弃
+// ❌ 把要追踪的读取写进 reaction 的效果函数里→ 那些字段变化不会重新触发（依赖只认数据函数）
 ```
 
 **autorun vs reaction 的选择**是 MobX 面试的保留曲目：autorun 全量追踪（回调里读啥订啥，易过度订阅）；reaction 显式分离『盯什么』与『做什么』，副作用段的读取不建依赖——**reaction 天生就是 tc39-control 说的那种『浅观察』姿态**。
@@ -67,14 +71,16 @@ MobX 没有依赖数组、没有显式订阅声明——谁在什么作用域里
 ## 四、严格模式与调试台
 
 ```js
+// 目的：configure 立团队纪律 + observe 做字段级审计
 import { configure, observe } from 'mobx';
 
 configure({
-  enforceActions: 'observed',   // 有观察者才强制 action（6+ 默认）
-  computedRequiresReaction: true, // 生产慎用：computed 无人读就告警，帮你抓死代码
+  enforceActions: 'observed',   // ✅ 有观察者才强制 action（6+ 默认）
+  computedRequiresReaction: true, // ⚠️ 生产慎用：computed 无人读就告警，帮你抓死代码
 });
 
-observe(store.todos, 0, (ch) => console.log('0 号位变了', ch.newValue)); // 字段级审计
+observe(store.todos, 0, (ch) => console.log('0 号位变了', ch.newValue)); // ✅ 字段级审计，不建订阅
+// ❌ 在 action 外直接 store.filter = 'done'→ enforceActions:'observed' 下告警，且通知时机不受批处理保护
 ```
 
 `configure` 三档 enforceActions（never/observed/always）对应团队纪律松紧；mobx-devtools 扩展可视化每次 action 改了什么、谁在订阅。与 Redux DevTools 的动作流水回放对比：MobX 记的是『字段变化账』（更像数据库触发器日志），Redux 记的是『action 事件账』（时间旅行的素材）——这个差异直接决定两派的调试与回放能力边界（mobx-stores 关的 patch/onSnapshot 会接手这条线）。

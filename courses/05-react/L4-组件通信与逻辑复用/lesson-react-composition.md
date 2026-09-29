@@ -7,10 +7,11 @@
 ## 一、children：默认插槽
 
 ```jsx
+// 目的：children 就是默认插槽——父留一个"洞"，调用方填内容
 function Panel({ title, children }) {
   return <section className="panel"><h3>{title}</h3>{children}</section>;
 }
-<Panel title="设置"><Form/></Panel>     {/* <Form/> 成为 children */}
+<Panel title="设置"><Form/></Panel>     {/* ✅ <Form/> 成为 children，填到上面 {children} 位置 */}
 ```
 最基础的组织方式：父组件留一个"洞"，调用方填内容（呼应 vue 默认插槽、react-component 第三节）。
 
@@ -19,12 +20,13 @@ function Panel({ title, children }) {
 ## 二、具名插槽 = 传元素 prop；作用域插槽 = render prop
 
 ```jsx
+// 目的：具名插槽=传元素 prop；作用域插槽=render prop（把内部数据回传给调用方渲染）
 // 具名插槽：用多个 prop 传不同的子元素
 <Layout header={<TopBar/>} sidebar={<Nav/>} main={<Content/>} />
 
-// 作用域插槽（render prop）：把内部数据"回传"给调用方渲染
+// 作用域插槽（render prop）：children 是个函数，父调用它并把内部状态作参数传回
 <DataLoader url="/api">
-  {({ data, loading }) => loading ? <Spin/> : <List items={data}/>}
+  {({ data, loading }) => loading ? <Spin/> : <List items={data}/>}   // ✅ loading 时用回传的 data 定制视图
 </DataLoader>
 ```
 - **具名插槽**：把子节点作为普通 prop（`header`/`footer`）传入，父决定渲染位置；
@@ -41,13 +43,15 @@ function Panel({ title, children }) {
 ## 四、HOC：高阶组件（理解为主）
 
 ```jsx
+// 目的：HOC——输入组件、返回包一层增强/守卫的新组件
 function withAuth(Wrapped) {                  // 输入组件、返回增强后的新组件
   return function Authenticated(props) {
     const user = useContext(AuthCtx);
-    return user ? <Wrapped {...props} /> : <Login/>;
+    return user ? <Wrapped {...props} /> : <Login/>;   // ✅ 未登录直接渲染 Login，挡掉鉴权页
   };
 }
 const Dashboard = withAuth(RawDashboard);
+// ❌ 忘记 {...props} 透传 → 外层传入的 props 全部丢失；连续包多层→嵌套地狱、来源不显式
 ```
 HOC 是"包一层复用逻辑/渲染守卫"的经典模式（redux `connect` 就是）。但缺点明显：**props 透传易忘、嵌套地狱、来源不显式**——这些正是自定义 Hook 要解决的（呼应 vue 里 mixin 的痛点被 composables 取代）。
 

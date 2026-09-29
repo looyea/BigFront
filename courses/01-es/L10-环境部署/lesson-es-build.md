@@ -50,13 +50,14 @@ dist/
 ### 2.1 入口与别名
 
 ```js
-// vite.config.js
+// 目的：配置路径别名与自动补全后缀，让 import 写起来更短、跨目录引用不脆弱
 export default {
   resolve: {
-    alias: { '@': '/src', 'components': '/src/components' },
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+    alias: { '@': '/src', 'components': '/src/components' },   // '@/' → 绝对路径，省 ../../../
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'], // import 时可省这些后缀
   }
 }
+// 效果：import Foo from '@/components/Foo' 直接被解析为 /src/components/Foo(.vue/.js...)
 ```
 
 ### 2.2 exports 条件解析（L7 es-module-deep 知识）
@@ -128,24 +129,26 @@ esbuild 内置 JSX/TS 转换——无需额外 loader；Vite 检测到 `.tsx` �
 ### 5.1 自动分割：动态 import
 
 ```js
-// 路由懒加载
-const Cart = () => import('./views/Cart.vue');
-// Vite 自动拆出独立 chunk，按需加载
+// 目的：动态 import 把路由组件拆成独立 chunk，只在真正访问时才拉取（代码分割）
+const Cart = () => import('./views/Cart.vue');   // 返回 Promise，Vite 自动拆出懒加载 chunk
+// 效果：首屏 bundle 不含 Cart 代码，用户点入购物车页才按需加载，首屏体积更小
 ```
 
 ### 5.2 手动分割（Rollup output.manualChunks）
 
 ```js
+// 目的：manualChunks 把稳如老狗的依赖圈进单独 vendor chunk，避免业务代码一变就把库重新打包
 build: {
   rollupOptions: {
     output: {
       manualChunks: {
-        vendor: ['vue', 'vue-router', 'pinia'],
-        charts: ['echarts'],
+        vendor: ['vue', 'vue-router', 'pinia'],   // 框架类稳依赖 → 单独 chunk，长期缓存不失效
+        charts: ['echarts'],                       // 重型库单独拆，只给用到它的页面加载
       }
     }
   }
 }
+// 效果：业务代码变更只影响入口 chunk，vendor chunk 的 contenthash 不变 → 用户命中强缓存
 ```
 
 ### 5.3 预加载

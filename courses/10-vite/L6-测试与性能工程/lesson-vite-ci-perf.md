@@ -10,14 +10,16 @@
 
 ```yaml
 # GitHub Actions 骨架
+# 目的：三层缓存—装包/任务/工具内缓存分别按 key 命中，削流水线耗时
 - uses: pnpm/action-setup@v4
 - uses: actions/setup-node@v4
-  with: { cache: pnpm, cache-dependency-path: pnpm-lock.yaml }   # 层1：依赖 store
-- run: pnpm turbo build test --cache-dir=.turbo                   # 层2：任务缓存（下节）
+  with: { cache: pnpm, cache-dependency-path: pnpm-lock.yaml }   # ✅ 层1：依赖 store，lockfile 哈希做 key
+- run: pnpm turbo build test --cache-dir=.turbo                   # ✅ 层2：任务缓存（未改动的包直接回放）
 - uses: actions/cache@v4
   with:
-    path: '**/node_modules/.vite'                                # 层3：Vite 预构建/转换缓存
+    path: '**/node_modules/.vite'                                # ✅ 层3：Vite 预构建/转换缓存
     key: vite-${{ hashFiles('pnpm-lock.yaml', 'vite.config.ts') }}
+# ❌ turbo outputs 声明漏写 dist/** → 缓存回放不全，命中了却拿不到产物，白搭
 ```
 
 - **层 1 依赖**：lockfile 哈希做 key，命中即跳过下载；
@@ -48,10 +50,12 @@ Vite 构建时间大头在 **transform + chunk 图计算 + 压缩**。可动的�
 
 ```json
 // size-limit（CI 门禁代表选手）
+// 目的：bundle 预算门禁—超阈值直接让 CI 变红，把体积回退拦在合并前
 "size-limit": [
-  { "path": "dist/assets/index-*.js", "limit": "180 KB", "gzip": true },
+  { "path": "dist/assets/index-*.js", "limit": "180 KB", "gzip": true },   // ✅ gzip 后真实传输体积作阈
   { "path": "dist/assets/vendor-*.js", "limit": "120 KB" }
 ]
+// ❌ 阈拍脑袋定得过高 → 门禁形同虚设，“顺手加个 600KB 库”照样绿，预算失控
 ```
 
 组合拳：①`vite-bundle-visualizer` 分析图进 PR 附件；②**预算门禁**（size-limit/bundlestats）让"顺手加个 600KB 库"在 CI 变红——把 review 从人肉自觉升级为机器纪律；③产物 diff 工具比对每 PR 的 chunk 增减清单；④阈值来源是 **vite-splitting** 建立的"首屏预算制"（如 gzip 后主包 ≤ 目标 CWV 换算值），不是拍脑袋。
@@ -61,9 +65,12 @@ Vite 构建时间大头在 **transform + chunk 图计算 + 压缩**。可动的�
 构建期一切优化，最终验收在**真实用户**（RUM）：
 
 ```js
+// 目的：web-vitals 线上监控—把 LCP/CLS/INP 从构建期延伸到真实用户（RUM）
 import { onLCP, onCLS, onINP } from 'web-vitals'
 for (const f of [onLCP, onCLS, onINP])
   f(m => navigator.sendBeacon('/vitals', JSON.stringify({ name: m.name, value: m.value, route: location.pathname })))
+// ✅ sendBeacon 保证页面卸载也送达；按 route 聚合才能定位哪个页面慢
+// ❌ 用 fetch 上报且在页面跳转时发送 → 请求常被中断丢数据，收尾指标采集不全
 ```
 
 - **Lab（Lighthouse CI）vs Field（真实用户）**：前者防回退、后者定基线，两条腿都要；

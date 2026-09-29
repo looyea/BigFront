@@ -29,13 +29,16 @@
 Vite HMR 默认在模块变更时替换模块——但 store 文件变了一次，store 实例会被重建、状态丢失。Pinia 提供 `acceptHMRUpdate` 解决：
 
 ```ts
+// 目的：acceptHMRUpdate——让 store 文件热更新时不重建实例、不丢 state
 // stores/counter.ts
 export const useCounterStore = defineStore('counter', () => { ... });
 
 // 文件末尾加：
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useCounterStore, import.meta.hot));
+if (import.meta.hot) {   // 仅 dev 下存在，构建时会摇掉
+  import.meta.hot.accept(acceptHMRUpdate(useCounterStore, import.meta.hot));  // patch 现有实例的 action/getter
 }
+// ✅ 改 store 文件→HMR 只换函数引用、state 值保持，组件无闪烁更新
+// ❌ 不加这段→改 store 后实例被重建、运行时累加的状态清零，得刷新重现
 ```
 
 效果：修改 store 文件 → Vite HMR 触发 → acceptHMRUpdate **patch 现有 store 实例**（更新 action/getter 引用）→ state 值保持不变 → 组件无闪烁更新。

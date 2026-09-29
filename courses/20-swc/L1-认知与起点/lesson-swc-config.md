@@ -5,10 +5,13 @@
 `@swc/cli` 提供 `swc` 命令：读入文件/目录，按配置转译，写到 outDir。
 
 ```bash
-npm i -D @swc/core @swc/cli
-npx swc src -d dist --delete-dir-on-start
-npx swc src -d dist --watch        # 边改边编
-npx swc src -d dist -C minify=true # 命令行临时覆盖配置
+# 目的：CLI 最小闭环——装核心+命令行，把 src 转译到 dist
+npm i -D @swc/core @swc/cli                              # core 是转译/压缩内核，cli 提供 swc 命令
+npx swc src -d dist --delete-dir-on-start              # 编整个目录，开始前清空 dist 防旧产物残留
+npx swc src -d dist --watch                            # watch：边改边增量编，建立“改配置→看产物”反馈
+npx swc src -d dist -C minify=true                     # -C 临时覆盖 .swcrc 的某项（此处强制压缩），不改文件试参数
+# ✅ 扩展名自动选 parser：.ts/.tsx/.js/.jsx/.mjs 各走对应语法，通常无需手配
+# ❌ 忘了 --delete-dir-on-start：上次编译的孤儿文件留在 dist，误以为还在被引用
 ```
 
 扩展名决定解析：`.ts`/`.tsx`/`.js`/`.jsx`/`.mjs` 各自走对应 parser，SWC 会按文件后缀自动选，通常无需手配。
@@ -18,16 +21,19 @@ npx swc src -d dist -C minify=true # 命令行临时覆盖配置
 放项目根，JSON（带注释需 `.swcrc` 支持或 `swcrc: true` 显式）。顶层三大区：
 
 ```jsonc
+// 目的：.swcrc 三大分区——jsc 管解析/降级、module 管产物格式、minify/env 各自正交
 {
   "jsc": {                         // 编译核心：parser / transform / target
-    "parser": { "syntax": "typescript", "tsx": true },
-    "transform": { "react": { "runtime": "automatic" } },
-    "target": "es2022"
+    "parser": { "syntax": "typescript", "tsx": true },   // 声明源是 TS + JSX 语法
+    "transform": { "react": { "runtime": "automatic" } }, // React 17+ 自动 JSX runtime，免 import React
+    "target": "es2022"             // 硬指定降级目标（被 env 覆盖时失效）
   },
-  "module": { "type": "es6" },     // 输出模块格式：es6/commonjs/umd
-  "minify": false,                 // 或对象细配
-  "env": { "targets": "> 0.25%, not dead" }  // browserslist 驱动降级
+  "module": { "type": "es6" },     // 输出模块格式：es6/commonjs/umd（与 jsc 正交）
+  "minify": false,                 // 或写成对象细配（compress/mangle 分控）
+  "env": { "targets": "> 0.25%, not dead" }  // browserslist 驱动降级并可选注入 polyfill，优先级高于 jsc.target
 }
+// ✅ 现代项目用 env.targets 交 browserslist，与 autoprefixer/stylelint 共享同一目标声明
+// ❌ 同一份 .swcrc 又写 jsc.target 又写 env 却不知 env 优先→jsc.target 被静默忽略，降级结果与预期不符
 ```
 
 `jsc` 管「怎么解析、语法降到哪」，`module` 管「产物是 ESM 还是 CJS」，两者正交。

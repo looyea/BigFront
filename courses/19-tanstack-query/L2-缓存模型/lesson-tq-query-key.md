@@ -5,8 +5,11 @@
 Query 的缓存是一张「hashKey(queryKey) → 查询」的 Map。**queryKey 就是这条数据的身份证**：去重、读写、失效、GC 全按它寻址。两个组件 key 相同即共享一份数据；key 不同即形同陌路——哪怕 queryFn 请求的是同一个 URL。
 
 ```tsx
+// 目的：key 即身份——两个组件 key 相同共享一份、不同形同陌路（哪怕请求同一 URL）
 useQuery({ queryKey: ['todos'], queryFn: fetchTodos });        // 组件 A
-useQuery({ queryKey: ['todos', { filter: 'done' }], queryFn }); // 组件 B——另一条缓存
+useQuery({ queryKey: ['todos', { filter: 'done' }], queryFn }); // 组件 B——filter 参与身份，是另一条缓存
+// ✅ 组件 A/B 都挂载时 ['todos'] 只发一次请求（同 key 去重共享）
+// ❌ 把同一 URL 的数据挂到不同 key（['todos'] 与 ['todo-list']）→ 两份缓存各取各的，去重形同虚设
 ```
 
 ## 二、数组结构与序列化
@@ -25,19 +28,25 @@ key 推荐数组：第一段是「表名/域」，后续段是参数。hashKey �
 这套树形 key 让「变更一条数据，精确失效一片缓存」成为一行代码：
 
 ```ts
+// 目的：树形 key + 前缀匹配——改一条数据，一行失效精确命中一片缓存
 queryClient.invalidateQueries({ queryKey: ['projects', id] });
 // 详情 + 该项目的 tasks 全部命中（前缀匹配，默认非 exact）
+// ✅ 层级化 key 让“变更联动”只需前缀，无需枚举每条子查询
+// ❌ 想只失效详情本身却忘写 exact:true→partial 会把 tasks 列表一起重取，超出预期
 ```
 
 ## 四、key 工厂：规模化项目的标配
 
 ```ts
+// 目的：key 工厂——字面量只在工厂出现一次，组件与 mutation 都引工厂（重命名安全、IDE 可跳转）
 // api/projects/keys.ts
 export const projectKeys = {
-  all: ['projects'] as const,
-  lists: () => [...projectKeys.all, 'list'] as const,
-  detail: (id: string) => [...projectKeys.all, id] as const,
+  all: ['projects'] as const,                        // 根前缀，as const 锁字面量类型供推导
+  lists: () => [...projectKeys.all, 'list'] as const,   // 列表层
+  detail: (id: string) => [...projectKeys.all, id] as const,   // 详情层，id 参与身份
 };
+// ✅ invalidateQueries({ queryKey: projectKeys.all }) 一行失效整个 projects 域，永不拼错字符串
+// ❌ 工厂返回不写 as const→类型退化成 string[]，丢失精确推导，前缀匹配处易埋类型错
 ```
 
 key 的字符串字面量只出现在工厂里一次，组件与 mutation 回调都引工厂——重命名安全、IDE 可跳转、invalidate 不再拼错。官方称之为 key 的最佳实践起点（essential-query-key 思想，v5 教程单列）。

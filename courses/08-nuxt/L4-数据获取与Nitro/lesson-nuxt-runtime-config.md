@@ -5,25 +5,28 @@
 ## 1. 双栏模型与 NUXT_ 注入
 
 ```ts
+// 目的：双栏配置——私密栏只服务端可读、public 栏随 payload 下发浏览器，类型层面就隔开
 // nuxt.config.ts
 export default defineNuxtConfig({
   runtimeConfig: {
-    databaseUrl: '',           // 私密栏：只有服务端代码读得到
-    openaiKey: '',
-    public: {                  // 公开栏：会内联进 payload，浏览器可见
+    databaseUrl: '',           // ✅ 私密栏：只有服务端代码读得到，不会进产物
+    openaiKey: '',             // ✅ 私密栏：密钥类一律放这里
+    public: {                  // ⚠️ 公开栏：会内联进 payload，浏览器可见
       apiBase: '/api',
       appName: 'NoteDeck',
     },
   },
 });
+// ❌ 把 openaiKey 写进 public → 构建后内联进前端 payload，任何人都能从源码拿到密钥
 ```
 
 ```ts
+// 目的：读配置——同一份代码，服务端拿到全量、客户端只拿到 public
 // 任意上下文
-const cfg = useRuntimeConfig(event);   // 服务端 handler / SSR 里传 event 更准
-await $fetch(cfg.databaseUrl);          // ✅ 服务端
+const cfg = useRuntimeConfig(event);   // ✅ 服务端 handler / SSR 里传 event 更准
+await $fetch(cfg.databaseUrl);          // ✅ 仅服务端能读到私密栏
 // cfg.public.apiBase                   // ✅ 双端可读
-// cfg.databaseUrl 在纯客户端 = undefined（Nitro 不把私密栏发往浏览器）
+// ❌ 在纯客户端读 cfg.databaseUrl → = undefined（Nitro 不把私密栏发往浏览器），拼出 undefined 请求地址
 ```
 
 环境变量覆盖规则：**`NUXT_` + 大写路径键**，下划线/连字符归一——`NUXT_DATABASE_URL`、`NUXT_PUBLIC_API_BASE` 分别覆盖两栏。部署侧只改环境变量不碰构建：一次 build 的产物在 dev/staging/prod 之间搬着跑（呼应 nuxt-overview B3、D1）。
@@ -43,11 +46,14 @@ await $fetch(cfg.databaseUrl);          // ✅ 服务端
 ## 3. 类型、默认值与缺失防御
 
 ```ts
+// 目的：给私密栏写 dev 友好默认值 + boot 断言，让错配置在启动期而不是首个请求爆
 runtimeConfig: {
   // 默认值写 dev 友好值，生产靠环境覆盖
-  databaseUrl: 'sqlite:./dev.db',
-  openaiKey: '',
+  databaseUrl: 'sqlite:./dev.db',   // ✅ 本地直接可跑
+  openaiKey: '',                    // ✅ 默认空串，生产靠 NUXT_OPENAI_KEY 注入
 }
+// ✅ Nitro 插件里加断言：if (!cfg.databaseUrl) throw new Error('missing config') → 启动即暴露
+// ❌ 既不写默认值又不断言 → 部署忘注环境变量时 boot 阶段静默过，直到首个请求才炸、难定位
 ```
 
 类型由 config 对象推导（cfg.databaseUrl 是 string，改不了形状）；默认值策略：**私密栏默认空串 + 启动断言**——Nitro 插件里 `if (!cfg.databaseUrl) throw new Error('missing config')`，让错配置在 boot 期炸而不是首个请求炸（呼应 node-config 的启动校验、nuxt-lifecycle B2）。可选进阶：zod 包一层 `parseRuntimeConfig()`——环境变量是外部输入这条纪律在配置域同样成立（呼应 nuxt-server-routes 第 2 节的校验观）。

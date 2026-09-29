@@ -9,8 +9,10 @@
 `sv create`（不选 Kit）生成的就是标准 Vite 工程（L7 接头理论的成果今天收获）：
 
 ```bash
-npm run build     # vite build → dist/
-npm run preview   # 本地起静态服务验产物（部署前冒烟，别直接甩生产）
+# 目的：纯 Svelte = 标准 Vite 工程—编译发生在 vite-plugin-svelte 的 transform 里
+npm run build     # ✅ vite build → dist/（index.html + assets 带内容 hash）
+npm run preview   # ✅ 本地起静态服务验产物（部署前冒烟，别直接甩生产）
+# ❌ 不 preview 直接上传→子路径/base 配错这类“产物引用 404”到生产才暴露
 ```
 
 `dist/` 里就三类东西：`index.html`（宿主）、`assets/*.js|css`（**文件名带内容 hash**）、静态资源。Svelte 编译发生在 vite-plugin-svelte 的 transform 里——**部署视角下没有一个"Svelte 专属环节"**，它就是普通 Vite 构建（呼应 10-vite-build）。这带来一个好消息：所有 Vite 部署知识（base/分包/缓存头/CDN）原样复用，本课只补 Svelte 特有的三小块。
@@ -35,19 +37,23 @@ bundle 分析（`rollup-plugin-visualizer`，10-vite 工具）里 Svelte 项目�
 
 ```js
 // vite.config.js
-export default { base: '/console/' };   // 产物里的资源引用全部带前缀
+// 目的：部署在子路径（如 https://x/console/）时配 base—资源引用全加前缀
+export default { base: '/console/' };   // ✅ 产物里 <script src> 变为 /console/assets/xxx.js
+// ❌ 配了 base 但服务端回退写的是 /index.html 而非 /console/index.html → 刷新仍 404
 ```
 
 history 路由刷新 404 的修复与缓存头纪律，与 04/05/10 包逐字同款（跨包反复出现的"部署三件套"，此处仍是唯一正解）：
 
 ```nginx
+# 目的：hash 产物 immutable + index.html no-cache + SPA 回退—部署三件套
 location /console/assets/ {
-  add_header Cache-Control "public, max-age=31536000, immutable";  # 带 hash 的产物
+  add_header Cache-Control "public, max-age=31536000, immutable";  # ✅ 带 hash 的产物，文件名变=内容变，长缓存安全
 }
 location /console/ {
-  try_files $uri $uri/ /console/index.html;                        # SPA 回退
-  add_header Cache-Control "no-cache";                             # index.html 必须再验证
+  try_files $uri $uri/ /console/index.html;                        # ✅ 任何子路由刷新都回退到 index.html（history 路由）
+  add_header Cache-Control "no-cache";                             # ✅ index.html 是“清单”，每次带 ETag 再验证
 }
+# ❌ 给 index.html 也上 immutable 长缓存 → 发版后浏览器拿旧 HTML，引用旧 chunk，跨 chunk runtime 不匹配直接白屏
 ```
 
 **为什么**：hash 变=文件变，immutable 才安全；index.html 是"清单"，缓存它就是发布失败的经典事故源（发新不上线、用户一半新一半旧——跨 chunk 的 runtime 不匹配直接白屏）。
@@ -67,13 +73,15 @@ location /console/ {
 
 ```yaml
 # 概念版，GitHub Actions / 任意 CI 同构
+# 目的：把类型/规范/测试/构建/扫描/部署/冒烟串成一道闸门，全绿才上行
 - npm ci
-- npx sv check && npm run lint          # 类型与规范闸门（L7）
-- npm test -- --run                      # Vitest（组件测试在浏览器/Node 双环境）
-- npm run build                          # vite build（产物含 hash）
-- 产物扫描（密钥/ sourcemap 策略检查）    # 呼应 exp-security、vite-ci-perf
-- 部署：rsync/S3 dist/ → CDN invalidate index.html
-- 冒烟：preview/生产域 curl 首页 + 关键路由回退验证
+- npx sv check && npm run lint          # ✅ 类型与规范闸门（L7 三件套顺序，sv check 挡模板类型错）
+- npm test -- --run                      # ✅ Vitest（组件测试在浏览器/Node 双环境）
+- npm run build                          # ✅ vite build（产物含 hash）
+- 产物扫描（密钥/ sourcemap 策略检查）    # ✅ 呼应 exp-security、vite-ci-perf（防密钥/完整 sourcemap 泄到公网）
+- 部署：rsync/S3 dist/ → CDN invalidate index.html   # ✅ 只刷清单，带 hash 的 assets 无需刷新
+- 冒烟：preview/生产域 curl 首页 + 关键路由回退验证   # ✅ 验证子路由刷新不 404
+# ❌ 省略 CDN invalidate index.html → 新用户仍拿旧清单，新旧 chunk 混用白屏
 ```
 
 发布纪律同款：**不可变版本目录 + 原子切换**（`releases/<git-sha>/` + 软链切 current），回滚=切回上一软链，十包部署课的公共收口。
