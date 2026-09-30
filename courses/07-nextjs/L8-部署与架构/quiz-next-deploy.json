@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "容器里 standalone 服务启动后外部一直连不上（curl 本机通、宿主机不通），最应先检查？",
       "options": [
+        "是否安装了 sharp",
         "node 版本是否为偶数版",
         "镜像是否超过 100MB",
-        "HOSTNAME 是否设为 0.0.0.0（默认只听回环地址）",
-        "是否安装了 sharp"
+        "HOSTNAME 是否设为 0.0.0.0（默认只听回环地址）"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "server.js 读 HOSTNAME 决定监听地址，容器内默认 127.0.0.1 时端口映射出去也无法访问（呼应 next-deploy 第 4 节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "Nginx 对 /_next/static/* 的正确缓存策略是？",
       "options": [
+        "public, max-age=31536000, immutable 长缓存",
         "no-store 保证最新",
         "max-age=300 短缓存",
-        "让浏览器每次都协商验证",
-        "public, max-age=31536000, immutable 长缓存"
+        "让浏览器每次都协商验证"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "文件名的构建哈希保证内容变则 URL 变，immutable 一年缓存零风险且大幅减回源（呼应 next-deploy 第 5 节、next-perf 第 4 节）。"
     },
     {
@@ -78,19 +78,19 @@
         "用 git 分支区分配置"
       ],
       "answer": 1,
-      "explanation": "NEXT_PUBLIC_ 是构建期内联的，改值必须重新构建——\"同一镜像多环境\"只能依赖运行期读取的服务端变量；选 A 就变成三个镜像了（呼应 next-deploy 第 4 节）。"
+      "explanation": "NEXT_PUBLIC_ 是构建期内联的，改值必须重新构建——\"同一镜像多环境\"只能依赖运行期读取的服务端变量；按三套构建期值分别打三个镜像，就违背了\"一份镜像\"的前提（呼应 next-deploy 第 4 节）。"
     },
     {
       "id": "q7",
       "type": "single",
       "prompt": "多实例自托管时，revalidateTag 失效不生效的典型原因是？",
       "options": [
+        "浏览器强缓存未过期",
         "tag 名大小写敏感写错了",
         "缓存层只存在于各实例内存，失效通知没有跨实例共享",
-        "sharp 未安装",
-        "浏览器强缓存未过期"
+        "sharp 未安装"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "实例 A 上的失效不会通知实例 B 的本地 Full Route Cache，需要平台缓存层或自建 cacheHandler/广播失效（呼应 next-deploy 第 1 节、next-revalidate 第 6 节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " output: standalone 解决的核心问题是？",
       "options": [
-        "静态导出上 CDN",
-        "产出只含运行依赖与追踪文件的最小 server.js 服务：镜像体积从 GB 到百 MB 级、构建环境与运行环境解耦（node_modules 不再全拷）",
         "自动优化图片",
-        "免配置上 K8s"
+        "免配置上 K8s",
+        "静态导出上 CDN",
+        "产出只含运行依赖与追踪文件的最小 server.js 服务：镜像体积从 GB 到百 MB 级、构建环境与运行环境解耦（node_modules 不再全拷）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "standalone 的文件追踪（nft/trace）把\"这个服务真正需要什么\"算出来；配合多阶段 Dockerfile：builder 构建、runner 只拷 .next/standalone + static + public 三件套。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 环境变量三类里，NEXT_PUBLIC_ 前缀的真实含义是？",
       "options": [
-        "生产环境专用变量",
         "构建期求值并内联进客户端 bundle——运行时再改环境变量对它无效，且它天然公开，放任何密钥都是泄露",
         "Node 服务不可见",
-        "仅 Edge 可用"
+        "仅 Edge 可用",
+        "生产环境专用变量"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "这是部署面试第一高频：\"构建时与运行时分离\"对 NEXT_PUBLIC 意味着必须重新构建才生效；同时它是\"会出现在 JS 里\"的同义词。"
     },
     {

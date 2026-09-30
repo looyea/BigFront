@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "要让后代注入到的值能随祖先更新，应该 provide 什么？",
       "options": [
-        "值的快照 obj.value",
         "JSON 字符串",
         "ref/reactive 本身（或含修改函数的对象）",
-        "普通字面量"
+        "普通字面量",
+        "值的快照 obj.value"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "传响应式源本身才保持更新；快照是一次性的（呼应 vue-provide-inject 第二节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "为什么推荐用 Symbol / InjectionKey 而不是字符串做 key？",
       "options": [
-        "Symbol 更快",
         "字符串不能用",
         "能自动响应式",
-        "避免不同库/组件间 key 撞名，InjectionKey 还能带类型"
+        "避免不同库/组件间 key 撞名，InjectionKey 还能带类型",
+        "Symbol 更快"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "字符串易冲突；Symbol 唯一、InjectionKey 绑定类型（呼应 vue-provide-inject 第三节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "inject(key) 找不到任何 provider 时（未给默认值）会？",
       "options": [
-        "抛异常",
-        "返回 undefined（并可能告警）",
         "自动创建",
-        "返回 null 且报错"
+        "返回 null 且报错",
+        "抛异常",
+        "返回 undefined（并可能告警）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "无 provider 且无默认值返回 undefined；给第三参可降级（呼应 vue-provide-inject 第四节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "provide/inject 与 props/emits、Pinia 的定位，正确的是？",
       "options": [
-        "全都一样，任选",
         "props/emits 父子直连、inject 跨多层、Pinia 跨兄弟/全局",
         "inject 应取代 props",
-        "Pinia 是 inject 的一种"
+        "Pinia 是 inject 的一种",
+        "全都一样，任选"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "各有分工，别把 inject 当全局变量垃圾桶（呼应 vue-provide-inject 第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "关于 provide 的响应式对象被后代直接改，稳妥做法是？",
       "options": [
+        "用 watch 同步回去",
         "随便改，反正是同一个对象",
         "同时提供修改函数、变更集中在 provider 里",
-        "改成 provide 快照",
-        "用 watch 同步回去"
+        "改成 provide 快照"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "暴露 inc() 等函数、别就地乱改，保持可追踪（呼应 vue-provide-inject 第二节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "祖先用 provide(key, readonlyState) 下发状态，后代 inject 后调用祖先一并 provide 下来的 setState 函数修改，这个模式的本质是：",
       "options": [
-        "反模式应该直接改",
-        "迷你 Flux/单向下行+显式上行——状态只读下发、变更集中回祖先函数，比「下发可变对象」多了单点拦截（校验/日志）且守住了数据主权（本关稳妥做法题的正解形态）",
         "等价于 Pinia",
-        "Vue 不支持"
+        "Vue 不支持",
+        "反模式应该直接改",
+        "迷你 Flux/单向下行+显式上行——状态只读下发、变更集中回祖先函数，比「下发可变对象」多了单点拦截（校验/日志）且守住了数据主权（本关稳妥做法题的正解形态）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "这 就 是 官方 「用 组合式 函数 封装 provide/inject」示例 背 后 的 思想：provide **API**（state+actions 打包）而 不 是 provide **裸 状态**；再 进 一 步 就 是 Pinia 的 「state 只读 + actions 变更」模 型（本关 定位 题 的 演进 链）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "inject 的默认值传了个对象且第三参 treatDefaultAsFactory=true，语义是：",
       "options": [
-        "默认值被冻结",
         "工厂函数模式：Vue 调用该函数取返回值作默认（每处 inject 独立生成），用于默认值是对象/需要惰性构造的场景，避免多注入方共享同一默认实例互相写脏",
         "默认值被深拷贝",
-        "抛类型错"
+        "抛类型错",
+        "默认值被冻结"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "不 开 工厂 时 `inject(key, {})` 的 那 个 字面量 对象 是 **同 一 个**（provider 缺失 时 所有 注入 方 拿 同 引用 互 踩）；工厂 还 省 掉 无需 默认 时 的 构造 开销（本关 三 参数 题 的 陷阱 面）。"
     },
     {

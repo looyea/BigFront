@@ -1,9 +1,9 @@
 # 大前端学院 · BigFront Academy 🚀
 
-一个**可运行、可打卡、可扩展**的大前端「打怪升级」学习平台。内置 **7 组主题**（3 深色 + 4 浅色，其中含「护眼豆绿 / 护眼米黄 / 柔和暗灰」三组护眼色），
-右下角 🎨 浮动按钮在**课文 / 小测 / 作业 / 面试题 / 地图任意位置**都能就地换肤并记住选择，专为「对大前端零概念、想在本地边学边往 GitHub 提交」的你而做。
+一个**可运行、可打卡、可扩展**的大前端「打怪升级」学习平台。内置 **7 组主题**（3 深色 + 4 浅色，其中含「护眼豆绿 / 护眼米黄 / 柔和暗灰」三组护眼色）与 **5 档正文字号**（特大 / 大 / 标准 / 小 / 紧凑，正文约 23/20/17/15/14px），
+右下角 🎨 浮动按钮在**课文 / 小测 / 作业 / 面试题 / 地图任意位置**都能就地换肤、改字号并记住选择（面板**首项就是字号**，按钮右上角 `A` 角标会跟着当前档位变大变小），专为「对大前端零概念、想在本地边学边往 GitHub 提交」的你而做。
 
-覆盖方向：JavaScript(ES6→ES2025) · TypeScript · Node.js · Express · Vue 3 · React · Svelte/SvelteKit · Solid · Angular · 微信小程序 · Next.js · Nuxt · Vite · Signals 状态管理 · 状态管理三强 Pinia/Zustand/Jotai · 工具链专题 SWC/Biome/Vitest（各包完成度见第九节）。
+覆盖方向：JavaScript(ES6→ES2025) · TypeScript · Node.js · Express · Vue 3 · React · Svelte/SvelteKit · Solid · Angular · 微信小程序 · Next.js · Nuxt · Vite · Signals 状态管理 · 状态管理三强 Pinia/Zustand/Jotai · 工具链专题 SWC/Biome/Vitest · **数据层（浏览器本地数据库 IndexedDB/OPFS → 服务端关系库 MySQL/Prisma）**（各包完成度见第九节）。
 
 ---
 
@@ -93,13 +93,22 @@ npm.cmd start
   想保留自己已有进度时则**不要覆盖** `progress.md`（或直接删掉 `progress.md`，服务下次启动会自动重建空档）。
 - **该文件故意纳入 Git 版本管理**：你每天学完 `git commit && git push`，
   GitHub 上就会出现逐日的提交/贡献记录（绿格子）。悬浮面板「📈 记录」标签可看打卡天数与条形图。
+- **外观（主题 + 字号）记两层**：`localStorage` 保证**当页即时生效**，后端 `data/appearance.json`（`GET/POST /api/appearance`）是**跨浏览器的权威值**。
+  动机：`localStorage` 按 origin（协议+主机+端口）隔离，dev 的 `:5173` 与 prod 的 `:3001`、`127.0.0.1` 与 `localhost` 互不相通，
+  清缓存/换浏览器就会被打回默认。前端启动时先读本地即时上色，再拉服务端值回灌；改动 400ms 防抖上报，
+  关闭页面时用 `navigator.sendBeacon` 兜底。该文件属个人本机状态，**不入 Git**（见 `.gitignore`）。
 
 ## 五、如何扩展课程（后续更新到哪儿）
 
 - **加深某关**：直接编辑 `courses/<包>/lessons/<id>.md`、`quizzes/<id>.json`、`homework/<级>.md`。
 - **新增一关**：在 `course.json` 对应 level 的 `lessons` 里加一项，并建同名 `lessons/<id>.md`（+ 可选 quiz/homework/examples）。
+  改完**需重启后端**：课程索引只在进程启动时扫一次，而 dev 的 `node --watch` 只盯 `server/` 自身，改 `courses/` 不会自动重启（跑 `run-prod.bat` 就 Ctrl+C 一次再双击）。
 - **新增一个包**：在 `courses/` 下建 `09-xxx/`，照抄结构。框架下次启动自动识别。
 - 悬浮按钮「🧭」→「📈 记录」底部有**课程包完整性自检**，缺文件会在此列出，边写边校对。
+- **题库体检探针**：`node tools/quiz-audit.cjs`（506 套 / 5066 题）查 JSON 可解、answer 越界、选项重复、``` 围栏奇数、题目 id 重复、题干为空；
+  额外报告「正确项位置偏斜」（同一位置占比 ≥60% 的套数——只蒙一个选项就能及格，小测失去意义），加 `--strict` 可把偏斜也当失败。
+- **题库位置均衡器**：`node tools/quiz-shuffle.cjs --dry-run` 先看计划、去掉 `--dry-run` 才落盘。它把每套题的正确项按 0/1/2/3 轮转分配（**选项整体循环移位，文字一个不改**），只动偏斜 ≥60% 的套题；
+  两道安全阀会跳过整套并交人工判：选项含「以上/上述/全都/都不对/A和B/①②③」等**靠位置指代**的表述、解析里用字母指代选项（「故选 B」）。假阳性写进脚本里的 `ALLOW` 清单放行（逐条带理由）。加 `--all` 连未偏斜的也一并均衡。
 - **示例程序规范**：每个例子（课文内嵌代码块与 `example-*.js`）都须带「目的注释」，逐行注释写出该语句当前的影响/结果；且对每个知识点给出「正确使用用例（注释写明正确结果）」与「错误用例（注释写明会产生什么结果 / 抛出什么异常）」——不能只给定义不给应用。
 
 ## 六、提交到 GitHub（首次）
@@ -118,10 +127,10 @@ git push -u origin main
 
 | 层 | 选型 |
 | --- | --- |
-| 前端外壳 | Vue 3 + Vite + vue-router + marked(Markdown 渲染) + highlight.js(代码高亮) |
-| 后端 | Node.js + Express 5（课程扫描、进度持久化、判分） |
-| 数据存储 | 纯文件 `data/progress.md`（Markdown 进度档案，零外部数据库依赖） |
-| 主题 | **7 组可切换主题**（CSS 变量 token 化）：深夜墨蓝（VS Code Dark+ 灵感，默认）/ Solarized 夜 / 柔和暗灰（GitHub Dark Dimmed）· 纸感浅色 / 冷雾蓝灰 / 护眼豆绿 / 护眼米黄；选择存 `localStorage`，`index.html` 内联脚本防首屏闪肤 |
+| 前端外壳 | Vue 3 + Vite + vue-router + marked(Markdown 渲染) + highlight.js(代码高亮)；小测题干/选项另走自研 `web/src/utils/rich.js`（只识 ``` 围栏 / 行内 `code` / **粗体**，不引入完整 markdown 引擎，避免 `<script setup>`、`defineProps<Props>()` 被当成未闭合 HTML 标签吞文） |
+| 后端 | Node.js + Express 5（课程扫描、进度持久化、外观偏好、判分；小测 schema 在出口处 `normalizeQuiz` 归一：旧式 `stem` 题干、缺 `id`/`type` 均可读） |
+| 数据存储 | 纯文件 `data/progress.md`（学习进度）+ `data/appearance.json`（主题与字号，不入 Git）——零外部数据库依赖 |
+| 主题与字号 | **7 组可切换主题 + 5 档正文字号**（均为 CSS 变量 token：主题靠 `html[data-theme=x]` 整组覆盖，字号靠 `--fs` 系数走 `zoom` 等比放大课文/小测/作业/面试题）；双层记忆：`localStorage` 即时 + `/api/appearance` 权威回灌；`index.html` 内联脚本防首屏闪肤 |
 
 ## 八、目录速览
 
@@ -138,8 +147,9 @@ BigFront/
 │     ├─ components/         # FloatingNav 悬浮导航 / ThemeSwitcher 悬浮换肤 / Quiz 小测组件
 │     ├─ router.js           # /p/:pkg、/l/:pkg/:lessonId（+/quiz、/interview、/homework）
 │     ├─ api.js              # 接口封装 + 进度 + 时长打点
-│     ├─ themes.js            # 主题清单（7 组 id/名称/色板）+ 应用与 localStorage 持久化
-│     └─ styles/theme.css    # 主题 token 层：:root 为默认暗色，html[data-theme=x] 整组覆盖
+│     ├─ themes.js            # 主题清单（7 组 id/名称/色板）+ 字号 5 档 + 应用与双层持久化（localStorage 即时 + 后端回灌）
+│     ├─ utils/rich.js        # 小测题干/选项的轻量富文本渲染（``` 围栏→高亮代码块、行内 code、粗体；不成对围栏降级为纯文本）
+│     └─ styles/theme.css    # 主题 token 层：:root 为默认暗色，html[data-theme=x] 整组覆盖；--fs 字号系数 + .rich 渲染样式
 ├─ courses/                  # 22 个课程包（内容层），全部已统一为扁平布局：
 │  └─ <包>/                  #   包根 = course.json + 每个阶段一个文件夹（如 L1-变量与作用域）
 │     ├─ lesson-<id>.md          # 课文正文
@@ -147,23 +157,24 @@ BigFront/
 │     ├─ interview-<id>.md       # 面试题（带来源）
 │     ├─ homework-<阶段id>.md    # 阶段作业（自学资料，无 UI 入口）
 │     └─ example-<id>-<名>.js    # 可运行示例（前缀带关卡 id 防重名；首批两包附带）
-├─ tools/                    # audit-probe.cjs 内容审计探针；theme-contrast-check.cjs 主题配色对比度自检
+├─ tools/                    # audit-probe.cjs 内容审计探针；theme-contrast-check.cjs 主题配色对比度自检；quiz-audit.cjs 题库体检（硬错误 + 正确项位置偏斜）；quiz-shuffle.cjs 题库正确项位置均衡器（循环移位，改前可 --dry-run）
 ├─ data/
 │  ├─ progress.md            # 当前学习进度（后端自动回写；手改须先停后端；纳入 Git）
 │  ├─ progress.initial.md    # 零进度空白模板（拷给别人/从零开始时复制为 progress.md）
+│  ├─ appearance.json        # 外观偏好（主题 + 字号），由后端回写；属个人本机状态，不入 Git
 │  └─ sample-progress.md     # 进度的字段含义与修改示例
 └─ audit-blueprint.txt       # 内容缺口审计蓝图记录（内部资料）
 ```
 
 ## 九、内容完成度说明
 
-> 截至本次更新：平台已扫描到 **22 个课程包**，且 **22 个已全部满配**；累计已产出 **504 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。既有 10 个满配包已完成一轮**内容缺口审计**：探针逐包扫描关键词覆盖，真空知识点酌情补建 **10 个新关**（三件套 + 所属阶段作业齐备），已足量内容一律不重复制品。`12-sveltekit`（SvelteKit）9 阶段 27 关、`13-solid`（SolidJS，含 SolidStart）9 阶段 27 关、`14-signals`（响应式状态管理实战：TC39 Signals / RxJS / MobX / Zustand）9 阶段 27 关、`15-angular`（Angular 实战：企业级框架的主流姿势）9 阶段 27 关均已交付；本轮又新增三个**状态管理专项包**——`16-pinia`（Vue 官方状态管理，5 阶段 15 关）、`17-zustand`（React 轻量 store，7 阶段 21 关）、`18-jotai`（原子化状态，6 阶段 18 关），共 +54 关；本轮再新增**服务端状态专项包** `19-tanstack-query`（React 生态事实标准的数据缓存层，6 阶段 18 关，+18 关）；本轮再新增**工具链专题三包** `20-swc` / `21-biome` / `22-vitest`（黄金·工具链专题，各 5 阶段 15 关，共 +45 关，均以简明为主、只走主流应用流程，不求穷尽官方文档）；本轮针对 `04-vue` **L1 响应式基础**前置补建 2 个零基础起步关——`vue-hello-world`（建工程 / Hello World / 项目结构 / SFC 三段 / 重要性分层）与 `vue-script-setup`（`<script setup>` 语法糖与编译器宏），让新手在碰 `ref/reactive` 前先会创建项目、读懂满屏的 `<script setup>`，`04-vue` 升至 **29 关**、累计 **504 关**；后端完整性自检 **22 包全零告警**。
+> 截至本次更新：平台已扫描到 **22 个课程包**，且 **22 个已全部满配**；累计已产出 **506 个关卡**（每关 = 课文 + 小测 + 面试题，每阶段末 + 作业）。既有 10 个满配包已完成一轮**内容缺口审计**：探针逐包扫描关键词覆盖，真空知识点酌情补建 **10 个新关**（三件套 + 所属阶段作业齐备），已足量内容一律不重复制品。`12-sveltekit`（SvelteKit）9 阶段 27 关、`13-solid`（SolidJS，含 SolidStart）9 阶段 27 关、`14-signals`（响应式状态管理实战：TC39 Signals / RxJS / MobX / Zustand）9 阶段 27 关、`15-angular`（Angular 实战：企业级框架的主流姿势）9 阶段 27 关均已交付；本轮又新增三个**状态管理专项包**——`16-pinia`（Vue 官方状态管理，5 阶段 15 关）、`17-zustand`（React 轻量 store，7 阶段 21 关）、`18-jotai`（原子化状态，6 阶段 18 关），共 +54 关；本轮再新增**服务端状态专项包** `19-tanstack-query`（React 生态事实标准的数据缓存层，6 阶段 18 关，+18 关）；本轮再新增**工具链专题三包** `20-swc` / `21-biome` / `22-vitest`（黄金·工具链专题，各 5 阶段 15 关，共 +45 关，均以简明为主、只走主流应用流程，不求穷尽官方文档）；本轮针对 `04-vue` **L1 响应式基础**前置补建 2 个零基础起步关——`vue-hello-world`（建工程 / Hello World / 项目结构 / SFC 三段 / 重要性分层）与 `vue-script-setup`（`<script setup>` 语法糖与编译器宏），让新手在碰 `ref/reactive` 前先会创建项目、读懂满屏的 `<script setup>`，`04-vue` 升至 **29 关**；本轮针对**数据库缺口**在 `01-es` L5 补 `es-local-db`（浏览器本地数据库）、在 `09-express` L5 补 `exp-mysql`（远程独立 MySQL 实操），累计 **506 关**；后端完整性自检 **22 包全零告警**（含新增两关的三件套 + 阶段作业）。
 
 - ✅ **已满配**（课文 + 小测 + 作业 + 面试题；可运行示例 `examples/` 为首批两包附带）。按下表**包编号顺序**排列，「生态层」列即首页地图的分层归类（与 `Home.vue` 的 `LAYERS` 一致）：
 
 | 课程包 | 生态层 | 阶段 | 关卡 |
 | --- | --- | --- | --- |
-| `01-es`（ES6→ES2025 逐年） | 基础语言层 | 10 | 35 |
+| `01-es`（ES6→ES2025 逐年） | 基础语言层 | 10 | 36 |
 | `02-typescript` | 基础语言层 | 8 | 25 |
 | `03-nodejs` | 服务端·运行时层 | 8 | 24 |
 | `04-vue`（Vue 3） | 视图框架层 | 8 | 29 |
@@ -171,7 +182,7 @@ BigFront/
 | `06-miniprogram`（微信小程序） | 跨端层 | 8 | 24 |
 | `07-nextjs`（Next.js） | 元框架·全栈层 | 8 | 25 |
 | `08-nuxt`（Nuxt 3） | 元框架·全栈层 | 8 | 25 |
-| `09-express`（Express 5） | 服务端·运行时层 | 8 | 21 |
+| `09-express`（Express 5） | 服务端·运行时层 | 8 | 22 |
 | `10-vite`（Vite） | 构建·编译层 | 6 | 17 |
 | `11-svelte`（Svelte 5） | 视图框架层 | 10 | 30 |
 | `12-sveltekit` | 元框架·全栈层 | 9 | 27 |
@@ -185,7 +196,7 @@ BigFront/
 | `20-swc`（SWC） | 构建·编译层 | 5 | 15 |
 | `21-biome`（Biome） | 质量·测试层 | 5 | 15 |
 | `22-vitest`（Vitest） | 质量·测试层 | 5 | 15 |
-| **合计 22 包** |   |   | **504 关** |
+| **合计 22 包** |   |   | **506 关** |
 
 <details>
 <summary>缺口审计本轮补建的 10 关（点开展开）</summary>
@@ -205,6 +216,13 @@ BigFront/
 
 `01-es`、`02-typescript`、`05-react`、`06-miniprogram` 审计判为已足量，未动。`10-vite` 因新增整个 **L6「测试与性能工程」** 阶段，同步补建 `homework/L6.md`。
 
+后续针对**数据库缺口**再补 2 关（同一口径：三件套 + 所属阶段作业，且新增两关的示例代码一开始就按 §十 五条规范写）：
+
+| 课程包 | 新关 | 落位 | 补建动机（盘点发现的真空点） |
+| --- | --- | --- | --- |
+| `01-es` | `es-local-db` | L5 尾 | 浏览器本地存储/IndexedDB/OPFS/浏览器 SQLite 全库只有面试对照题、无一手实操关 |
+| `09-express` | `exp-mysql` | L5 尾 | `exp-prisma` 只走 Postgres，远程独立 MySQL（连接池/连接账/方言差异/排障）无人讲 |
+
 </details>
 
  🎓 **四大框架全部收官**：`15-angular`（Angular 实战：企业级框架的主流姿势，9 阶段 27 关：L1 导论与全景 + L2 组件与模板 + L3 依赖注入与服务 + L4 响应式 signals 与 RxJS 交接 + L5 表单与 HTTP + L6 路由 + L7 状态管理与大型架构 + L8 生态与工程 + L9 收官与选型）**已全部交付**，以 v22 为事实底（standalone 默认、zoneless 默认、Signal Forms GA），主流应用为尺、不挖编译器源码，与 04/05/11/13/14 五包知识点两两对照。`14-signals`（响应式状态管理实战，9 阶段 27 关：L1 导论全景 + L2-L5 TC39 Signals/RxJS/MobX/Zustand 四强各自实战 + L6 横向对比 + L7 体积/调试/性能工程实践 + L8 服务端状态/迁移共存/登录态四实现 + L9 手写 mini-signal 内核·四实现对照终战选型·进阶路线）**已全部交付**，主流应用定位为尺、不深挖源码，口诀链（海关/两税/五碗）贯穿。`12-sveltekit`（SvelteKit，9 阶段 27 关）与 `13-solid`（SolidJS，9 阶段 27 关：L1–L6 响应式内核与组件/事件/异步/性能，L7–L8 SolidStart 文件路由、query+createAsync、服务端函数与部署测试，L9 内核收官 + React 迁移方法论 + 毕业项目）**已全部交付**，两包内容均基于官方文档全文精读做事实底（SolidStart 以 v2 文档为轴）。`11-svelte` 十阶段 30 关**已全部交付**（L8 编译架构/SvelteKit 引桥/部署 + L9 特殊元素/错误边界/Effect 深水区 + L10 Web Components/纯 Svelte SSR/4→5 迁移），对既有 10 个满配包的内容缺口审计**已完成**（见上方表格与明细，+10 关）。
@@ -218,14 +236,18 @@ BigFront/
  🎓 **Vue 起步地基补建**：本轮针对 `04-vue` **L1 响应式基础**，在 `ref/reactive` 之前前置新增两关（三件套齐备，并并入 `homework-L1` 的「第 0 部分·起步实操」）——`vue-hello-world`（从零 `npm create vue`/Vite 建工程、跑通 Hello World、认清项目结构与 SFC 三段式、给出🔴/🟡/🟢重要性分层）与 `vue-script-setup`（`<script setup>` 语法糖与 `defineProps/defineEmits/defineExpose/defineOptions/defineModel` 编译器宏）。旨在解决「新手进来不会建项目、看不懂满屏的 `<script setup>` 就被响应式淹没」的断档。本轮两关示例代码均已升级为「正确 + 错误（含后果）」带注释写法。**`04-vue` 现共 8 阶段 29 关，累计关卡达 504 关。**
 
  
- 🎓 **面试题**：上述 **504 关**均一一配有 `interview-<lessonId>.md`（面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前二十二包**零告警**）。
+ 🎓 **数据库专题补洞**：本轮全库盘点发现数据层只「点名不展开」——面试里讲过、实操为零，于是补两关并把四大框架接线。① `01-es/L5` 新增 `es-local-db`（**浏览器本地数据库**：四层数据地图谁是事实源 → localStorage 配额/阻塞/`storage` 事件坑 → 手写 IndexedDB（`onupgradeneeded`/索引/`IDBKeyRange`/游标、`TransactionInactiveError` 与 `DataCloneError`、`blocked`+`versionchange`）→ `idb-keyval`/Dexie → `navigator.storage.estimate()/persist()` 与驱逐 → OPFS（`FileSystemSyncAccessHandle` 只能开在 Worker）与 sql.js / wa-sqlite 选型 → 离线优先四步与幂等键）；② `09-express/L5` 新增 `exp-mysql`（**远程独立 MySQL 实操**：选型四条路 → `mysql2/promise` 连接池与 `query`/`execute` 差别 → 事务必须拿 `conn` 而非 `pool`、`affectedRows` 判超卖 → Prisma 换 `provider="mysql"` 的三处改动与 `db pull` → 远程实例的连接账（副本数×池 ≤ `max_connections`）与排障表（`caching_sha2_password`/SSL/时区/`wait_timeout` 空闲断连）→ 方言差异 9 条（无 RETURNING、反引号、`utf8mb4` 索引前缀 767/3072 与 `@db.VarChar(191)`、`ONLY_FULL_GROUP_BY`、`tinyint(1)`））；`lesson-exp-prisma` 加「方言分支」指针（Postgres 主线不变、MySQL 分支转 `exp-mysql`）；`04-vue`/`05-react`/`15-angular`/`11-svelte`/`12-sveltekit` 各加一节「**数据接线图**」（客户端只是缓存、事实源在服务端、浏览器里不该出现连接串，全栈框架的「直连」只发生在服务端那一侧），五处均回指 `es-local-db` 与 `exp-mysql`；两个阶段的 `homework-L5` 各补数据库题（分层判定/手写 IDB 封装/双层记忆与幂等键；mysql2 下单扣库存/Prisma 重写/连接账演算/索引前缀与断连）。**新增 2 关，累计 504 → 506 关。**
+
+ ⚠️ **题库质量隐患（已量化、已全部治理）**：新增探针 `tools/quiz-audit.cjs` 报出两件事——① **正确项位置偏斜**：506 套里 **238 套**同一位置占比 ≥60%（只蒙一个选项就能及格），已用 `tools/quiz-shuffle.cjs` **全库批量打乱 238 套**：选项数组整体循环移位、把正确项轮流分到 0/1/2/3，**选项文字与题干/解析一字不改**（落盘后逐文件比对 HEAD 版本验证：240 个变更文件中仅 1 处内容变动，是 `quiz-next-deploy.json` 解析里「选 A」的字母指代，已去字母化改写）；踩安全阀的 2 套经人工核为假阳性后放行；全库 md（课文/面试题/作业）也扫过一遍「选 A / A 项」这类按选项位置指代，5 处命中全为「To C 项目」「SWC 选项」这类假阳性，换位置不会弄坏文档里的引用。全库位置分布从 `{0:789, 1:2706, 2:883, 3:688}` 回到 `{0:1245, 1:1809, 2:1091, 3:921}`，**偏斜套数 238 → 0**；② **旧式 schema**：`16-pinia` 往后的包共 **1170 题**只写 `stem`、无 `id`/`type`，而前端按 `q.id` 建作答槽，造成这些小题**共用一个作答槽、实际无法作答**——已在后端 `normalizeQuiz` 统一抹平（补 id、`stem→prompt`、默认 single）。全库体检当前：**硬错误 0、偏斜 0**（JSON 可解 / answer 不越界 / 选项不重复 / ``` 围栏不奇数 / 题干不为空）。学习记录不受影响：`progress.md` 只存小测**最好分数**，不存当时选了哪个位置。
+
+ 🎓 **面试题**：上述 **506 关**均一一配有 `interview-<lessonId>.md`（面向就业、含真实来源与跨关呼应）。后续新增关卡若缺三件套，「🧭 → 📈 记录」底部的**课程包完整性自检**会实时列出待补文件（当前二十二包**零告警**）。
 
 ## 十、示例程序规范回改进度（进行中，分多轮）
 
 > 目标：全库所有出现程序的地方都统一为**严格注释规范**——**既包括独立 `example-*.js` 程序，也包括课文 `lesson-*.md` 里的内嵌代码块**（课程文件中的程序同样遵循此规则）。
 > 规范五条：①每个例子带「目的」注释；②逐行注释写出该语句当前的影响/结果；③不只给定义、必须给应用；④每个知识点给「正确用例（注结果）」；⑤同时给「错误用例（注会报什么异常/产生什么后果）」。
 > **例外**：`homework-*.md` 的「读代码写结果」题**故意不给答案**（给出就废了练习），不受②④⑤约束。
-> 因量极大（504 关），以**关卡**为最小单位纵向推进——一关内的 examples 与课文代码一起改完再进下一关，每轮更新此表。
+> 因量极大（现 506 关），以**关卡**为最小单位纵向推进——一关内的 examples 与课文代码一起改完再进下一关，每轮更新此表。
 
 | 批次 | 关卡 | 独立 example | 课文内嵌代码 | 备注 |
 | --- | --- | --- | --- | --- |
@@ -295,6 +317,7 @@ BigFront/
 | B43 | `22-vitest` L1~L5 认知与起跑/断言与数据/Mock与隔离/组件与集成/覆盖率与工程化 | —（本包无独立 example） | ✅ 全 15 篇 | 复用 Vite 管线免 Babel、Jest 兼容 API；describe/it/expect 三件套、toBe(Object.is)/toEqual(深比较忽undefined)/toStrictEqual(严格) 精度阶梯、globals:true 需 tsconfig types 否则报「找不到 expect」、environment node/jsdom/happy-dom + @vitest-environment per-file、include/exclude 收窄、watch vs run；异步必 await 防假绿、resolves/rejects、vi.useFakeTimers+advanceTimersByTime+afterEach useRealTimers、vi.setSystemTime、vi.waitFor；it.each 表格驱动 %d 插值、toMatchSnapshot 无脑 -u 警告、CI 禁 -u；钩子四件套作用域与清理栈式逆序、isolate:true 文件隔离、setupFiles/globalSetup/ctx；vi.fn 调用记录 toHaveBeenCalledWith、mockReturnValue/ResolvedValue/Implementation(Once)、vi.spyOn+mockRestore、clear/reset/restore 别盲配 resetAllMocks；vi.mock 自动提升、importOriginal 部分 mock、vi.hoisted 喂提升变量；MSW setupServer listen/resetHandlers/close(on-server)测网络边界；组件 RTL render/getByRole/userEvent/jest-dom、Vue mount+createPinia、findBy/waitFor/flushPromises 异步渲染；coverage provider v8/istanbul、all:true 防虚高、thresholds perFile 挡 CI；projects 拆 node/jsdom、typecheck expectTypeOf、--shard 并行；CI vitest run 禁 watch/-u + github-actions reporter；Jest 迁移 jest→vi、删 babel-jest：目的头+逐行效果+✅应用+❌报错（toBe 比对象引用不等、globals 忘 types 找不到 expect、jsdom 没装 Cannot find package、忘 await 假绿、忘 useRealTimers 污染后续、vi.mock 工厂引用后声明变量 undefined、漏 resetHandlers 覆盖泄漏、coverage 漏 all 假 100%/漏 perFile 拉平、CI 写 watch 卡死/加 -u 洗白 均补错误用例）；测试代码注释语法分层（ts/js 用 `//`、bash/yml 用 `#`）；overview/component（纯 prose·无代码块）免改 |
 | ✅ | **`22-vitest` L1~L5 已全部收口**（5 阶 15 关） | 无 example（全改课文内嵌代码） | ✅ 全 15 篇 lesson | TS/JS/bash/yml 代码块均带目的头+应用+错误用例 |
 | 🏁 | **全部 22 个课程包（504 关）示例注释改造已收口** | — | ✅ | 14-signals ~ 22-vitest 逐包逐关全部完成；仅回改注释未增删关卡，§九 504 总计不变 |
+| +1 | 本轮新增 2 关：`01-es/es-local-db`、`09-express/exp-mysql` | —（本两关无独立 example） | ✅ 2 篇新写 + 5 篇接线图小节 | 新增两关一开始就按五条规范写（目的注释 + 逐行结果 + ✅应用 + ❌后果）；四大框架接线图与两个 homework 同口径；**§九 总计 504 → 506** |
 
 ## 十一、平台功能与内容维护（非注释批次）
 
@@ -307,8 +330,15 @@ BigFront/
 | 本轮 | **`04-vue` vue-hello-world 内容补全** | `lesson-vue-hello-world.md` | ①新增 §三「HMR 原理」小节：Vite 开发服务器+WebSocket 推送→重编译变更模块→就地替换、整页不重载、状态保留（课文两处提及 HMR 却未讲原理）；②新增 §四「public vs src/assets 本质区别」对照表（原仅目录树一行注释、而小测/自检/作业均考） |
 | 本轮 | **术语“一笔带过”速查表** | `lesson-vue-hello-world.md` | §六后新增「术语速查」表，给 18 个扫过却没解释的词（脚手架/响应式/指令/props-emits/import-export/编译打包/别名代理/tree-shaking/hash/base64/CDN/WebSocket/编译器宏/patchFlag/虚拟滚动/SSR/scoped）各一句话大意 + 标注哪关细讲，不在首讲展开全部 |
 | 本轮 | **四个框架包第一关补“先跑起来”** | `05-react/lesson-react-jsx`、`11-svelte/lesson-svelte-overview`、`13-solid/lesson-solid-overview`、`06-miniprogram/lesson-mp-overview` | 全库审计发现这四个框架包的第一关直入概念/语法、从未带“建项目跑起来”（Next/Nuxt/Vite/Express/Angular/TS/SWC/Biome/Vitest 均自带起步，无需改）：React/Solid 新增 §〇 Vite 模板三行命令 + 代码写在哪；Svelte 新增 §〇 Playground/`npx sv create` 两入口；小程序新增 §〇“用微信开发者工具新建项目”（小程序无命令行脚手架）——均只求“有个能跑的地方”、完整部署指向后续关 |
+| 本轮 | **正文字号 5 档 + 入口前置** | `web/src/themes.js`、`web/src/components/ThemeSwitcher.vue`、`web/src/styles/theme.css`、`web/src/App.vue`、`web/index.html` | `FS_LEVELS` 五档（特大/大/标准/小/紧凑 ≈ 23/20/17/15/14px）写进 `--fs` 系数，靠 `zoom: var(--fs)` 把课文/小测/作业/面试题**等比放大**（`@supports not (zoom:1.1)` 走 calc 兜底；浮动面板在 `.wrap` 之外不吃 zoom，控件尺寸稳定）。用户反馈“找不到字号”——因字号区块原先排在 7 组主题清单之后、被面板首屏遮住；现前置为面板**首项**，🎨 按钮加 `A` 角标（字号随当前档位变大）、面板内加“当前档位≈多少 px、点一下就生效”说明 |
+| 本轮 | **外观双层记忆（主题 + 字号跨浏览器不丢）** | `server/index.js`、`data/appearance.json`、`.gitignore`、`web/src/api.js`、`web/src/themes.js` | 新增 `GET/POST /api/appearance`（临时文件 + 原子 rename、与进度同套串行化写入）；前端先读 `localStorage` 即时上色、再 `syncFromServer()` 以服务端值回灌（文件不存在时 `updatedAt=null`，反过来把本地值种上去而不是被默认值覆盖）；改动 400ms 防抖上报 + `beforeunload`/`visibilitychange` 时 `sendBeacon` 兜底 |
+| 本轮 | **小测题干/选项的 ``` 围栏渲染** | `web/src/utils/rich.js`（新建）、`web/src/components/Quiz.vue`、`web/src/styles/theme.css` | 题干原先 `{{ q.prompt }}` 纯文本插值，带代码块的题把三个反引号直接晒出来。现走自研轻量渲染（先转义再识围栏/行内 code/粗体，**不用 marked**，避开 `<script setup>`、`{{ msg }}` 被当成未闭合 HTML 标签吞文；不成对围栏降级为普通文本）；高亮选择器由双写长链改通用 `code .hljs-*`（特异性 0,1,1，与 import 顺序/容器无关）。全库 506 套 / 5066 题验证：**零奇数围栏、零残留围栏** |
+| 本轮 | **数据库两关 + 四大框架接线图** | `01-es/L5/lesson-es-local-db.md`(+quiz/interview)、`09-express/L5/lesson-exp-mysql.md`(+quiz/interview)、两个 `course.json`、两个 `homework-L5.md`、`lesson-exp-prisma.md`、五个框架关 | 见 §九「数据库专题补洞」段。**本条增 2 关（504 → 506），需重启后端才入地图**（课程索引只在启动时扫一次） |
+| 本轮 | **修旧式题库无法作答** | `server/index.js`（新增 `normalizeQuiz`） | 探针发现 `16-pinia` 往后的包共 1170 题只写 `stem`、无 `id`：前端按 `q.id` 建作答槽与 radio name，这些关**所有题共用一个作答槽**（点一题勾满全卷）、题干渲染为空→ 60% 基本过不去。现下发与判分两处统一归一（补 `q1..qN`、`stem→prompt`、默认 single、passRule 默认文案），不改课程内容文件 |
+| 本轮 | **题库体检探针** | `tools/quiz-audit.cjs`（新建）、`courses/01-es/…/quiz-es-local-db.json`、`courses/04-vue/…/quiz-vue-script-setup.json`、`server/index.js`（buildIndex 注释） | `node tools/quiz-audit.cjs` 查六类硬错误（当前 **0**）+ 报告 238 套正确项位置偏斜；两套 100% 偏斜的题库已循环移位打乱（选项内容不变，仅位置轮换）；顺手在 `buildIndex` 上方说清“改 courses/ 需重启”的缘由 |
+| 本轮 | **全库批量均衡 238 套题库** | `tools/quiz-shuffle.cjs`（新建）、238 个 `quiz-*.json`、`courses/07-nextjs/L8/quiz-next-deploy.json`（解析去字母化） | 先 `--dry-run` 看计划、再落盘；逐题把正确项轮换到 `序号 % 选项数` 的位置，选项数组整体循环移位、**文字零改动**（已逐文件对 HEAD 比对：选项文本集合与正确项内容全等，仅 next-deploy 一行为有意改写）；安全阀跳过的 4 套逐题定性：3 套假阳性（其中 2 套入 `ALLOW` 放行、1 套靠收紧 `RISK_LETTER` 的「应」字误匹配解决）、1 套真阳性改写解析。体检复跑：**偏斜 238 → 0、硬错误仍 0** |
 
-> 以上改动均**不增删关卡**，§九 504 总计与 §十 注释批次表不受影响。换肤属外壳样式层，也不影响课程内容与进度数据。
+> 上表除“数据库两关”一条新增 2 关外，其余均**不增删关卡**，§九 总计因此从 504 走到 **506**。换肤/字号属外壳样式层、`normalizeQuiz` 属接口出口兼容层、题库均衡只改选项顺序，都不影响课程内容与进度数据（但 **`normalizeQuiz` 与新增两关都需要重启后端才生效**）。
 
 
 ---

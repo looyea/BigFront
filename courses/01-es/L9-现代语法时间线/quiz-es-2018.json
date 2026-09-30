@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "以下代码 `publicUser` 里有什么？\n\n```js\nconst user = { id: 1, name: 'Ann', pwd: 'x' };\nconst { pwd, ...publicUser } = user;\n```",
       "options": [
+        "{ id: 1, name: 'Ann' }",
         "{ id: 1, name: 'Ann', pwd: 'x' }",
         "{ pwd: 'x' }",
-        "抛错",
-        "{ id: 1, name: 'Ann' }"
+        "抛错"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "rest 收集**剩余**可枚举自有键——pwd 被解构走，publicUser = { id, name }。这是**浅拷贝**。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "`for await...of` 消费的是：",
       "options": [
+        "只要实现了 `then` 的对象",
         "普通数组",
         "AsyncIterable（`Symbol.asyncIterator`）——每次 next 返回 Promise",
-        "同步 Generator",
-        "只要实现了 `then` 的对象"
+        "同步 Generator"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "for-await 每次 next() 得到 Promise<{value,done}>——自动 await。Node stream、fetch body、async generator 都符合。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "以下代码打印什么？\n\n```js\nPromise.resolve('ok')\n  .finally(() => console.log('F'))\n  .then(v => console.log(v));\n```",
       "options": [
-        "F → ok（finally 不吞值）",
         "只打 F",
         "只打 ok",
-        "抛错"
+        "抛错",
+        "F → ok（finally 不吞值）"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "finally **不接参数、不改变状态**——上游的 value 原样穿透。所以先打 F（清理），再打 ok。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "命名捕获组的值挂在哪个字段？\n\n```js\n/(?<y>\\d{4})/.exec('2026')\n```",
       "options": [
-        "`m[0]`",
         "`m.groups.y`",
         "`m.named.y`",
-        "`m.captures.y`"
+        "`m.captures.y`",
+        "`m[0]`"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "匹配结果的 `groups` 字段是所有命名捕获的容器；`m[1]` 依然能用（索引）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "`p.then(v => v).finally(() => { throw new Error(\"boom\") })` 的结果：",
       "options": [
-        "fulfilled 原值",
-        "rejected（boom 接管链条）",
         "uncaught 异常被忽略",
-        "finally 不执行"
+        "finally 不执行",
+        "fulfilled 原值",
+        "rejected（boom 接管链条）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "finally 回调抛错会让派生 promise 变 rejected——它**透传**前后值但抛错同样进错误通道；这是做「统一失败上抛」的合法技巧。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "`async function* gen() { yield 1 }` 调用后 `gen().next()` 返回：",
       "options": [
-        "{ value: 1, done: false }",
         "Promise<{value:1,done:false}>",
         "抛错",
-        "{ value: Promise<1> }"
+        "{ value: Promise<1> }",
+        "{ value: 1, done: false }"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "async 生成器的 next() 一律返回 Promise（值再包一层 await 语义），配合 for-await 消费——这是「异步迭代器协议」的形态。"
     },
     {

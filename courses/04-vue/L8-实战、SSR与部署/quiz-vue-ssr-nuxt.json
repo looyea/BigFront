@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "相比纯 CSR(SPA)，SSR 主要解决哪两个痛点？",
       "options": [
-        "服务器成本和数据库压力",
-        "打包体积和依赖冲突",
         "首屏白屏慢 与 SEO 不友好（爬虫看到空壳）",
-        "组件通信和状态管理"
+        "组件通信和状态管理",
+        "服务器成本和数据库压力",
+        "打包体积和依赖冲突"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "SSR 直出 HTML 加快首屏、利于收录（呼应 vue-ssr-nuxt 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "hydration（水合）指的是什么？",
       "options": [
-        "客户端把服务端 HTML 丢弃后重新渲染",
-        "服务端把数据写进数据库",
         "把 CSS 内联进 HTML",
-        "客户端 Vue 复用服务端产出的 DOM，绑定事件并建立响应式"
+        "客户端 Vue 复用服务端产出的 DOM，绑定事件并建立响应式",
+        "客户端把服务端 HTML 丢弃后重新渲染",
+        "服务端把数据写进数据库"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "水合是复用已有 DOM 而非重建（呼应 vue-ssr-nuxt 第二节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "出现 hydration mismatch 最常见的诱因是？",
       "options": [
-        "服务端与客户端渲染结果不一致（数据/时间不同、条件依赖浏览器 API）",
-        "CSS 优先级",
         "用了 computed",
-        "路由用了懒加载"
+        "路由用了懒加载",
+        "服务端与客户端渲染结果不一致（数据/时间不同、条件依赖浏览器 API）",
+        "CSS 优先级"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "两端输出必须一致，否则水合报错（呼应 vue-ssr-nuxt 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "SSR 里为什么 createApp/createPinia/createRouter 必须每请求新建？",
       "options": [
-        "为了性能",
-        "模块级单例会让 A 用户状态泄漏给 B 用户、污染水合",
         "Vue 强制要求",
-        "为了 tree-shaking"
+        "为了 tree-shaking",
+        "为了性能",
+        "模块级单例会让 A 用户状态泄漏给 B 用户、污染水合"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "跨请求隔离是 SSR 铁律（呼应 vue-ssr-nuxt 第四节、vue-pinia-advanced、vue-project-architecture 第七节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "需要在 SSR 应用中访问 window/document，正确做法是？",
       "options": [
-        "写在 setup 顶层直接访问",
         "放到 onMounted 或用 import.meta.client / typeof window 守卫",
         "写在服务端 entry",
-        "用 try/catch 包住即可"
+        "用 try/catch 包住即可",
+        "写在 setup 顶层直接访问"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "onMounted 只在客户端跑，服务端无浏览器 API（呼应 vue-ssr-nuxt 第四节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "SSR 场景下同构数据获取的关键目标是？",
       "options": [
+        "把数据写死在组件里",
         "让服务端和客户端各请求一次保证最新",
         "服务端取数渲染，客户端水合时复用已注入的初始状态、不重复请求",
-        "所有数据都在客户端取",
-        "把数据写死在组件里"
+        "所有数据都在客户端取"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "初始状态序列化注入、水合复用，避免二次请求（呼应 vue-ssr-nuxt 第三节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "hydration 阶段 Vue 对「服务端 HTML 与客户端渲染结果不一致」的生产构建处理是：",
       "options": [
-        "自动修复为服务端版本",
-        "开发模式警告+补丁（patch 不一致节点），生产默认信任服务端——不一致表现为局部内容错乱且无警告，所以 CI 里用 dev 构建跑 hydration 冒烟是防御手段",
         "整页重载",
-        "抛错中断挂载"
+        "抛错中断挂载",
+        "自动修复为服务端版本",
+        "开发模式警告+补丁（patch 不一致节点），生产默认信任服务端——不一致表现为局部内容错乱且无警告，所以 CI 里用 dev 构建跑 hydration 冒烟是防御手段"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "3.x 的 mismatch 策 略 调 整（从 整 树 重 渲 染 到 局 部 修 补 + 警告 分级）值 得 知 道；「生 产 看 不 见 = 最 危 险」，把 dev 警告 变 成 CI 资 产（本关 mismatch 排 查 题 的 工 程 化 出 口，配 置 水 合 错 误 捕 获 上 报 双 保 险）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "Nuxt 3 里「同一路由同一组件，服务端取数一次、客户端切回该页不重取」的官方机制是：",
       "options": [
-        "手动全局变量缓存",
         "useAsyncData 的 key 缓存 + payload 注水：服务端结果进 Nuxt payload，客户端导航命中同 key 直接复用（要强制刷新走 refresh 选项/钩子）",
         "useState 自动缓存所有请求",
-        "SWR 内置永远缓存"
+        "SWR 内置永远缓存",
+        "手动全局变量缓存"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "这 就 是 「同 构 数 据 获 取」的 系 统 化 答 案（本关 关 键 目 标 题 的 机 制 名）：key 决 定 共 享 粒 度，`pick` 减 payload 体 积（整 对象 注 水 是 TTFB 与 HTML 膨胀 常 见 源，本包 部署 关 体积 题 的 SSR 轴）。"
     },
     {

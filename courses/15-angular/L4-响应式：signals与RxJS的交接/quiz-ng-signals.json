@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Angular signal 读值的语法是？",
       "options": [
+        "s()",
         "s.value",
         "s.read()",
-        "s.get()",
-        "s()"
+        "s.get()"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "Angular signal 用调用式读：count()；与 TC39 提案的 .get() 和 Solid 的 s() 对比——Angular 选了最简洁的函数调用语法。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "asReadonly() 返回的类型不具备哪个方法？",
       "options": [
+        "valueOf()",
         "()（调用读取）",
         "set()",
-        "toString()",
-        "valueOf()"
+        "toString()"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "ReadonlySignal 类型没有 set/update/patch——只保留 .() 读能力；写操作只能通过原始 WritableSignal 或 action。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "patch() 解决了什么问题？",
       "options": [
-        "让 signal 支持 mutable 对象直接改内部属性就能触发通知",
         "替代 computed",
         "给 signal 加 event bus",
-        "让 signal 支持多个值"
+        "让 signal 支持多个值",
+        "让 signal 支持 mutable 对象直接改内部属性就能触发通知"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "signal 用 === 判变化——直接改对象属性不触发通知；patch 自动深合并产生新引用——免去手写 spread 嵌套。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "untracked(() => b()) 的效果是？",
       "options": [
-        "b 被删除",
         "在 computed/effect 里读 b 但不建立依赖——b 变了不触发外层重算",
         "强制 b 重新计算",
-        "阻塞 b 的所有订阅者"
+        "阻塞 b 的所有订阅者",
+        "b 被删除"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "untracked 屏蔽读取——常用于 effect 里只想因部分 signal 变化重跑、其他 signal 只取最新值不建依赖。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "effect() 的 onCleanup 回调什么时候执行？",
       "options": [
-        "只在组件销毁时",
-        "每次 effect 重跑前 + effect 所属上下文销毁时",
         "只在 set 同一 signal 时",
-        "onCleanup 不存在于 Angular 中"
+        "onCleanup 不存在于 Angular 中",
+        "只在组件销毁时",
+        "每次 effect 重跑前 + effect 所属上下文销毁时"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "effect 依赖变化需重跑时先执行上次的 onCleanup 再跑新回调；上下文销毁时也执行——与 Solid createEffect 的 onCleanup 同语义。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "与 Solid signals 相比，Angular signals 粒度上的传统差异是？",
       "options": [
-        "Angular 更细（每个 DOM 属性一个 signal）",
-        "Solid 更粗（组件级重渲染）",
         "传统上 Angular 组件级（signal 变→该组件所有相关绑定重算），Solid 表达式级",
-        "两者粒度完全一致"
+        "两者粒度完全一致",
+        "Angular 更细（每个 DOM 属性一个 signal）",
+        "Solid 更粗（组件级重渲染）"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "Solid 细到每个 createMemo/DOM text node；Angular zoneless 后也在趋向精确（模板绑定是独立订阅者）但传统描述为组件级。"
     },
     {

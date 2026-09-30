@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "build.sourcemap: 'hidden' 的效果是？",
       "options": [
-        "完全不生成 map 文件",
         "把 map 内联进 JS",
         "生成 .map 文件但 JS 末尾不写 sourceMappingURL 注释",
-        "加密 map 文件"
+        "加密 map 文件",
+        "完全不生成 map 文件"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "hidden = 生成 map 但不引用 → 上传到 Sentry 供错误还原，同时不随公开 JS 暴露给用户。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "Vite 默认的 JS 压缩器是什么，为什么选它？",
       "options": [
-        "Terser，因为压缩率最高",
         "UglifyJS，因为最老牌",
         "SWC，因为兼容 Babel",
-        "esbuild，因为用 Go 编写比 Terser 快 20-40 倍"
+        "esbuild，因为用 Go 编写比 Terser 快 20-40 倍",
+        "Terser，因为压缩率最高"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "esbuild（Go）极快。只有需要 Terser 特有的细粒度控制（drop_console 精细规则/法律注释保留）时才切 terser。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "assetsInlineLimit 默认 4096 的含义是？",
       "options": [
-        "超过 4KB 的文件被丢弃",
-        "小于 4KB 的资源内联为 base64 data URL",
         "所有资源都内联",
-        "单个 chunk 最大 4KB"
+        "单个 chunk 最大 4KB",
+        "超过 4KB 的文件被丢弃",
+        "小于 4KB 的资源内联为 base64 data URL"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "小资源内联减少 HTTP 请求数；大资源保持独立文件利于缓存（base64 会膨胀约 33%）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "产物文件名里的 [hash] 有什么作用？",
       "options": [
-        "防止文件被篡改",
         "内容哈希 → 内容不变文件名不变 → 配合 CDN 长缓存，发版只增量下载",
         "加密源码",
-        "压缩体积"
+        "压缩体积",
+        "防止文件被篡改"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "contenthash 让变动文件的哈希改变，未变的保持 → 浏览器 immutable 长缓存命中率最大化。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " build.reportCompressedSize: false 的意义是？",
       "options": [
+        "关闭 hash",
         "产物不压缩",
         "跳过构建结束时的 gzip 体积计算（大项目可省可观的 build 时间），压缩本身由 minify 流程照常完成——纯报表开关",
-        "禁用 sourcemap",
-        "关闭 hash"
+        "禁用 sourcemap"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "它只影响终端里那个\"gzip: xx kB\"报表；CI 追求构建时长时常关，本地看体积时再开。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 产物默认文件名里的 [hash] 基于什么计算？",
       "options": [
-        "文件修改时间",
-        "内容哈希（content hash）——同内容必同名，这是\"immutable 强缓存 + 发版即换名\"整套策略成立的根基",
         "构建随机数",
-        "git commit 号"
+        "git commit 号",
+        "文件修改时间",
+        "内容哈希（content hash）——同内容必同名，这是\"immutable 强缓存 + 发版即换名\"整套策略成立的根基"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "内容寻址让\"文件名即版本\"；换成时间戳或自增号，缓存失效体系当场失效。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " outDir 在项目 root 之外时，构建前清空目录的默认行为是？",
       "options": [
-        "总是清空",
         "默认不自动清空（防误删 outDir 指向重要目录），需 build.emptyOutDir: true 显式确认——CI 里 outDir 在 root 外还要记得处理陈旧产物残留",
         "报错拒绝构建",
-        "只删 JS 文件"
+        "只删 JS 文件",
+        "总是清空"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "安全默认与 CI 需求的冲突点：monorepo 里 dist 常被认为\"在 root 外\"，缓存层残留旧 hash 文件的事故来源。"
     },
     {

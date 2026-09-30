@@ -1,6 +1,6 @@
-# L5 作业：REST 设计 / 校验 / 鉴权 / 分页
+# L5 作业：REST 设计 / 校验 / 鉴权 / 分页 / 关系型数据库
 
-> 覆盖：exp-rest / exp-validation / exp-auth / exp-pagination
+> 覆盖：exp-rest / exp-validation / exp-auth / exp-pagination / exp-prisma / exp-mysql
 
 ---
 
@@ -89,11 +89,17 @@ const payload = jwt.verify(token, process.env.JWT_SECRET);
 
 ### 5. 写一个 `POST /refresh`：从 httpOnly cookie 取 refresh token，验证后用轮换（rotation）签发新 access + 新 refresh，旧 refresh 失效。
 
+### 6. 用 `mysql2/promise` 实现“下单扣库存”：连接池只建一次（进程级单例），事务内用 `UPDATE ... WHERE id = ? AND qty > 0` + `affectedRows` 判成败，插入订单后返回 `insertId`；要求任一步失败整体回滚，并保证**异常路径也归还连接**。写出你的 `finally` 里那一行为什么不能省。
+
+### 7. 把第 6 题改用 Prisma 重写（`provider = "mysql"`）：给出 `schema.prisma` 片段（包含 `@db.VarChar(191)` 与 `@db.Decimal(18,2)` 的选型理由）+ `$transaction(async (tx) => ...)` 写法，并说明为何回调里必须用 `tx` 而不是 `prisma`。
+
 ---
 
 ## 三、场景题（1 题）
 
 ### 1. 你的 API 被安全扫描报告三问题：① 普通用户改 URL 里的 id 就能看别人订单；② 登录接口可被暴力破解；③ 深度分页接口在 `?page=50000` 时 CPU 飙高。分别给出根因和修复方案。
+
+### 2. 服务凌晨低峰期一切正常，白天高峰期偶发 `Too many connections`，且新副本扩容后更频繁。已知 MySQL `max_connections=151`、每个 Node 副本的池上限 30。请：算出安全副本数上限、给出三种不必只靠“加 max_connections”的处置手段（至少含一个前置代理方案），并解释为何“把池调大”可能让 QPS 反而下降。
 
 ---
 
@@ -104,6 +110,10 @@ const payload = jwt.verify(token, process.env.JWT_SECRET);
 ### 2. Access Token + Refresh Token 双令牌机制解决了什么问题？
 
 ### 3. offset 分页和 cursor 分页分别适合什么业务？给出选型理由。
+
+### 4. MySQL 里为什么推荐 `VARCHAR(191)` 做索引列？说清 utf8mb4、767/3072 字节前缀上限、行格式三者关系；如果就是需要索引一个 `VARCHAR(2000)` 的列，你有哪两条路？
+
+### 5. “每天第一个请求报 `PROTOCOL_CONNECTION_LOST`，第二个就好了”——给出根因（提示：`wait_timeout`）与三种缓解手段；同时说明哪些写操作可以安全重试、哪些不行。
 
 ---
 

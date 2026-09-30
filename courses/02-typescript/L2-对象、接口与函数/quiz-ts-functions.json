@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "关于可选/默认/剩余参数，下列哪个是非法的？",
       "options": [
-        "function f(a?: number, b = 1) {}",
-        "function f(a: string, ...rest: number[]) {}",
         "function f(a: number, b?: string) {}",
-        "function f(a?: number, b: string) {}"
+        "function f(a?: number, b: string) {}",
+        "function f(a?: number, b = 1) {}",
+        "function f(a: string, ...rest: number[]) {}"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "可选参数(?)后不能再跟必选参数；有默认值的参数可省所以放后面合法。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "this: void 作为第一个'参数'的作用是？",
       "options": [
-        "让函数运行更快",
-        "约束该函数必须以不依赖 this 的方式（普通函数）调用，防止丢失 this 绑定",
         "把 this 变成 any",
-        "禁用箭头函数"
+        "禁用箭头函数",
+        "让函数运行更快",
+        "约束该函数必须以不依赖 this 的方式（普通函数）调用，防止丢失 this 绑定"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "this 参数仅编译期；this: void 表示调用不应依赖 this 上下文，避免被当作方法误用。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "关于函数重载，正确的是？",
       "options": [
-        "最后一个是对外可见的签名",
         "声明签名从上到下匹配、越具体越靠前；最后一个是调用者看不到的实现签名",
         "重载会生成多份运行时代码",
-        "重载参数必须完全相同"
+        "重载参数必须完全相同",
+        "最后一个是对外可见的签名"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "重载 = 多个声明签名 + 一个更宽的实现签名；按顺序匹配，实现签名对外不可见。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "开启 strictFunctionTypes 后，(a: Animal)=>void 能否被 (a: Dog)=>void 赋值？",
       "options": [
+        "永远都不能",
         "能，参数总是双向协变",
         "对函数类型属性不能——参数按逆变检查，Dog 比 Animal 窄不安全（方法声明语法则不受此约束）",
-        "取决于返回类型",
-        "永远都不能"
+        "取决于返回类型"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "strictFunctionTypes 收紧为参数逆变；'方法简写'语法历史上仍双向协变，是经典坑（见 ts-strict）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": ".tsx 文件里写泛型箭头函数为什么常见 `<T,>` 带尾逗号？",
       "options": [
-        "语法糖随喜好",
-        "避免 `<T>` 被解析成 JSX 元素开始标签",
         "TS 5 的新规范",
-        "为了 eslint 对齐"
+        "为了 eslint 对齐",
+        "语法糖随喜好",
+        "避免 `<T>` 被解析成 JSX 元素开始标签"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "JSX 语法开启时 `<T>(x)=>x` 与 `<T>x</T>` 歧义；尾逗号 `<T,>` 或约束 `<T extends unknown>` 都能打破——纯语法层，JS 文件无此问题。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "strictFunctionTypes 开启后，把 `(e: Event) => void` 赋给形参类型 `(m: MouseEvent) => void`：",
       "options": [
-        "报错（参数必须同型）",
         "合法——参数逆变：能处理所有 Event 必能处理其子 MouseEvent",
         "合法但只在运行时",
-        "取决于返回值类型"
+        "取决于返回值类型",
+        "报错（参数必须同型）"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "函数参数按**逆变**检查（只作用于函数属性写法）：宽入参可替窄入参；反向（窄处理函数塞给宽事件源）才是 bug——strictFunctionTypes 抓的就是它。"
     },
     {

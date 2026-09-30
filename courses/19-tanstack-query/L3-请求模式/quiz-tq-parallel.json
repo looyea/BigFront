@@ -4,56 +4,56 @@
     {
       "stem": "两个 useQuery 并排挂载，默认行为是？",
       "options": [
-        "串行（B 等 A）",
         "并行各发",
         "只发第一个",
-        "自动合并"
+        "自动合并",
+        "串行（B 等 A）"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "并行是默认，瀑布才是需要治理的。"
     },
     {
       "stem": "request-waterfalls 指南的处方不含？",
       "options": [
-        "尽早声明依赖",
         "用 prefetch 提前",
         "把 await 挪进渲染路径",
-        "拆掉伪依赖"
+        "拆掉伪依赖",
+        "尽早声明依赖"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "await 进渲染=制造瀑布的反面。"
     },
     {
       "stem": "动态 N 个资源一次取，用？",
       "options": [
+        "invalidate",
         "一个 queryFn 打包",
         "useQueries 数组",
-        "refetchInterval",
-        "invalidate"
+        "refetchInterval"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "每子查询独立 key 独立状态。"
     },
     {
       "stem": "prefetch 进来的数据遵守什么规则？",
       "options": [
-        "永久驻留",
-        "正常缓存规则（staleTime/gcTime）",
         "只存一次",
-        "跳过序列化"
+        "跳过序列化",
+        "永久驻留",
+        "正常缓存规则（staleTime/gcTime）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "预取即入册，消费按常理。"
     },
     {
       "stem": "hover 预取详情后点击秒出，前提是？",
       "options": [
-        "网络快",
         "prefetch 配了可用 staleTime 且 key 匹配",
         "同组件",
-        "开了 GC"
+        "开了 GC",
+        "网络快"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "stale 预取数据挂载照样重取。"
     },
     {
@@ -70,12 +70,12 @@
     {
       "stem": "「invalidate 只标脏+后台静默刷」的组合参数？",
       "options": [
-        "refetchType:none 配 prefetch",
-        "exact:true",
         "cancelRefetch",
-        "force"
+        "force",
+        "refetchType:none 配 prefetch",
+        "exact:true"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "预失效高级拳。"
     },
     {

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "用 $patch 一次性改多个字段，相比逐条赋值的好处是？",
       "options": [
-        "可以绕过响应式",
-        "能自动持久化",
         "更快且 devtools 只记一条、更新只触发一次",
-        "没有区别"
+        "没有区别",
+        "可以绕过响应式",
+        "能自动持久化"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "$patch 批量、单一记录、少几次触发（呼应 vue-pinia-advanced 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "想\"每次 state 变化都写 localStorage\"，应使用？",
       "options": [
-        "$onAction",
-        "watchEffect",
         "$reset",
-        "$subscribe"
+        "$subscribe",
+        "$onAction",
+        "watchEffect"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "$subscribe 订阅 state 变更做持久化（呼应 vue-pinia-advanced 第二节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "$onAction 适合做什么？",
       "options": [
-        "订阅 action 开始/成功/错误，做统一埋点与耗时统计",
-        "直接改 state",
         "水合 SSR",
-        "定义 getter"
+        "定义 getter",
+        "订阅 action 开始/成功/错误，做统一埋点与耗时统计",
+        "直接改 state"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "$onAction 提供 after/onError 钩子做日志/监控（呼应 vue-pinia-advanced 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "关于 $reset，下列正确的是？",
       "options": [
-        "setup 式 store 开箱即用",
-        "选项式开箱可用；setup 式需自己写 reset action",
         "会删除整个 store",
-        "只能重置一个字段"
+        "只能重置一个字段",
+        "setup 式 store 开箱即用",
+        "选项式开箱可用；setup 式需自己写 reset action"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "setup 式无默认 $reset，要手动赋回初值（呼应 vue-pinia-advanced 第三节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "把 auth token 持久化到 localStorage 的主要风险是？",
       "options": [
-        "占空间",
         "明文存储，XSS 一旦发生可被脚本读取窃取",
         "会让 store 变慢",
-        "无法水合"
+        "无法水合",
+        "占空间"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "localStorage 明文、易被 XSS 读，敏感 token 应走 httpOnly cookie（呼应 vue-pinia-advanced 第四节、exp-security）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "Pinia 插件（pinia.use）的能力是？",
       "options": [
-        "给每个 store 注入共享属性/方法、扩展行为",
-        "只能改 devtools 主题",
         "替代 action",
-        "自动路由守卫"
+        "自动路由守卫",
+        "给每个 store 注入共享属性/方法、扩展行为",
+        "只能改 devtools 主题"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "插件横切增强所有 store（持久化/日志等）（呼应 vue-pinia-advanced 第五节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "$subscribe 回调里拿到 { events, storeId, type: 'patchObject' }，mutation 式（直接赋值）改 state 时 events 字段是什么结构？",
       "options": [
-        "与 $patch 完全一致",
-        "直接赋值同样产出 patch 事件（子路径 events：{ type, path, value } 数组）；区别在粒度：$patch 一次调用一条记录、循环逐条赋值会产生多条——批量场景用 $patch 才配得上「一个逻辑变更一个事件」",
         "不触发 subscribe",
-        "只给新值快照"
+        "只给新值快照",
+        "与 $patch 完全一致",
+        "直接赋值同样产出 patch 事件（子路径 events：{ type, path, value } 数组）；区别在粒度：$patch 一次调用一条记录、循环逐条赋值会产生多条——批量场景用 $patch 才配得上「一个逻辑变更一个事件」"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "订阅 事 件 形状 与 devtools 同源：`path` 让 你 知 道 **哪 个 字段** 被 改（持 久 化 因 此 可 以 只 持 久 化 特 定 路 径，本关 持 久 化 题 的 精 致 版）；这 一 点 的 完 整 代 价 是 深 层 属 性 改 动 也 会 拆 子 路 径 事 件——订 阅 者 别 假 设 「一 次 赋 值=一 条」。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "$onAction 的 after/onError 参数机制提供的独特能力是：",
       "options": [
-        "拦截修改参数",
         "在 action 完成（含异步 resolve 后）/抛错时定点执行（after 收返回值），不改写执行本身——埋点「action 成功耗时」、失败上报、给特定 action 完成后触发副作用都靠它，这是「AOP 环绕」在 Pinia 的最小实现",
         "自动重试 action",
-        "把 action 变 computed"
+        "把 action 变 computed",
+        "拦截修改参数"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "onAction 回 调 收 `{ name, args, store, after, onError }`：after/onError 注 册 的 钩 子 处 理 异步 语 义（action 是 async 时 after 等 的 是 resolve 而 不 是 返 回 promise——「耗 时 埋 点 统计 的 是 什 么」的 关 键 辨 析），本 关 $onAction 题 的 深 水 区。"
     },
     {

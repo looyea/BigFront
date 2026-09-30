@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "为什么推荐 import assert from 'node:assert/strict'？",
       "options": [
-        "速度快一倍",
-        "支持更多断言方法",
         "能自动修复失败",
-        "strict 下 equal/deepEqual 采用严格比较(===)与深比较，避免 == 漏 bug"
+        "strict 下 equal/deepEqual 采用严格比较(===)与深比较，避免 == 漏 bug",
+        "速度快一倍",
+        "支持更多断言方法"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "老 assert 用宽松 ==，strict 模式强制严格+深比较更安全（呼应 node-testing 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "要断言一个异步函数会 reject 且错误 code 为 ENOENT，用？",
       "options": [
+        "assert.equal(fn(), undefined)",
         "assert.throws(fn, /ENOENT/)",
         "await assert.rejects(fn(), { code: 'ENOENT' })",
-        "try { fn() } catch {}",
-        "assert.equal(fn(), undefined)"
+        "try { fn() } catch {}"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "rejects 处理 Promise 拒绝并可校验错误对象；throws 只用于同步抛错（呼应 node-testing 第三节、node-fs 错误码）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "关于 t.mock.method(obj,'fn',impl)，错误的是？",
       "options": [
+        "测完自动还原",
         "可替换实现（stub）并跟踪调用（spy）",
         "可用 fn.mock.callCount()/calls 断言调用",
-        "会永久改变 obj.fn，影响后续所有测试文件",
-        "测完自动还原"
+        "会永久改变 obj.fn，影响后续所有测试文件"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "t.mock 在测试结束自动还原；且每文件独立子进程，不跨文件永久污染（呼应 node-testing 第五、七节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "给 HTTP 服务写集成测试时，listen(0) 的好处是？",
       "options": [
-        "启动更快",
         "让 OS 随机分配空闲端口，多个测试并行不抢占固定端口",
         "不需要关服务器",
-        "自动加密"
+        "自动加密",
+        "启动更快"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "端口 0 由系统分配，避免并发/CI 下固定端口冲突；仍需 after 里 close（呼应 node-testing 第六节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "开启测试覆盖率输出的标志是？",
       "options": [
+        "--report-coverage",
         "--coverage-only",
         "--experimental-test-coverage",
-        "--cov",
-        "--report-coverage"
+        "--cov"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "node --test --experimental-test-coverage 输出行/分支/函数覆盖，配 --test-reporter 选格式（呼应 node-testing 第七节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "node:test 里 test.concurrent 与默认串行的边界是：",
       "options": [
-        "可随意全开",
-        "并发粒度按「文件多进程 + 文件内用例」两层；共享外部状态（DB 表/端口/env）的用例并发跑=互踩，需 isolation 或用例内自造唯一键",
         "只能全串",
-        "并发生效于 CI 外"
+        "并发生效于 CI 外",
+        "可随意全开",
+        "并发粒度按「文件多进程 + 文件内用例」两层；共享外部状态（DB 表/端口/env）的用例并发跑=互踩，需 isolation 或用例内自造唯一键"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "并发提速的前提是无共享态：mock 计时器、改 process.env、固定端口（本关 listen(0) 题的存在理由）都是经典互踩源——按「纯函数用例并发、集成用例串行」分层。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "t.mock.timers 与 FakeTimers（@sinonjs）在测试里的共同职责是：",
       "options": [
-        "加速真实时间",
         "拦截 Date/setTimeout 等时间源，让「等 1 小时过期」「cron 每 5 分」类逻辑秒级可测——runAll/skip 手动推进虚拟时钟",
         "删除计时器",
-        "仅测性能"
+        "仅测性能",
+        "加速真实时间"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "时间是最隐形的全局依赖：不 mock 的 30s 重试退避测试=CI 里最慢最 flaky 的那条（本关 mock 滥用题的另一面：**该 mock 的是时钟不是协作者**）。"
     },
     {

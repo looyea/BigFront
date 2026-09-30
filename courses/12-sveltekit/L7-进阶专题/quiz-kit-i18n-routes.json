@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "要让 /about 与 /en/about 命中同一个页面，路由段应写成？",
       "options": [
-        "[...lang]/about",
         "[[lang]]/about",
         "[lang]/about",
-        "(lang)/about"
+        "(lang)/about",
+        "[...lang]/about"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "可选参数 [[lang]] 让 lang 可缺省，/about 与 /en/about 指向同一页面；[lang] 是必填、[...] 是 rest、(lang) 是布局组。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "关于可选段 [[optional]] 的一条硬约束，正确的是？",
       "options": [
+        "可选段必须搭配 matcher 才允许出现",
         "可选段不能跟在 rest 段之后，因为参数贪婪匹配会让它永远取不到值",
         "可选段只能出现在路由最后一段",
-        "一个路由里最多只能有一个可选段",
-        "可选段必须搭配 matcher 才允许出现"
+        "一个路由里最多只能有一个可选段"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "官方规则：[...rest]/[[optional]] 非法，因为参数按贪婪匹配、尾部可选段永远用不上。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "把 [[lang]] 收紧成'只认合法语言码'的正确做法是？",
       "options": [
-        "在 load 里 if 判断非法就 throw",
         "用 kit.paths 白名单限制",
         "在 handle 里正则改写 pathname",
-        "写 src/params/lang.js 导出 match，并在路由里用 [[lang=lang]]"
+        "写 src/params/lang.js 导出 match，并在路由里用 [[lang=lang]]",
+        "在 load 里 if 判断非法就 throw"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "param matcher：src/params 下一个模块即一个 matcher，导出 match(param) 返回布尔；路由写成 [名=matcher名]。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "matcher 的运行位置是？",
       "options": [
-        "仅在预渲染构建期",
-        "服务端和浏览器都会跑",
         "仅服务端",
-        "仅浏览器端"
+        "仅浏览器端",
+        "仅在预渲染构建期",
+        "服务端和浏览器都会跑"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "官方明确 matchers run both on the server and in the browser，客户端导航的非法前缀同样被拒。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "关于 reroute 静默重写与 handle+redirect 两条协商路线，正确的是？",
       "options": [
-        "reroute 会改变地址栏 URL，redirect 不改",
-        "两者都会在每次导航触发重定向环",
         "reroute 保持地址栏不变（URL 在匹配前被改写），redirect 显式改 URL、更利于规范化 SEO",
-        "只有 redirect 能读到 cookie 做协商，reroute 不能"
+        "只有 redirect 能读到 cookie 做协商，reroute 不能",
+        "reroute 会改变地址栏 URL，redirect 不改",
+        "两者都会在每次导航触发重定向环"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "reroute 在 URL 与路由匹配前运行、可返回新路径而地址栏不变；handle+redirect 会显式跳带前缀 URL、URL 唯一利于 SEO，但多一次往返。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "多语言 SEO 里 x-default 的 hreflang 通常指向？",
       "options": [
-        "必须指向 404 页以排除收录",
         "首页固定的英文页",
         "每个语言的 sitemap 条目",
-        "语言选择页或默认语言"
+        "语言选择页或默认语言",
+        "必须指向 404 页以排除收录"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "x-default 是约定，指向语言选择器或默认语言；hreflang 值要与实际可达 URL 一一对应，canonical 收敛重复内容。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 让 /about 与 /en/about 命中同一页且默认语言不带前缀，路由文件层做法是？ ",
       "options": [
-        " 复制两份页面 ",
-        " [[lang]] 可选段 + matcher 限定语言码，非语言值落到无匹配 ",
         " 双 layout ",
-        " redirect 硬写 "
+        " redirect 硬写 ",
+        " 复制两份页面 ",
+        " [[lang]] 可选段 + matcher 限定语言码，非语言值落到无匹配 "
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": " 可选段吸收空值实现无前缀默认语言，matcher 防它吞掉真实 404。 "
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 语言协商的推荐优先级顺序？ ",
       "options": [
-        " cookie > Accept-Language 探测 > URL 前缀 ",
         " URL 前缀为准（用户显式意图），cookie 记住选择用于无前缀入口，Accept-Language 只做首次兜底 ",
         " 仅 Accept-Language ",
-        " 随机轮询 "
+        " 随机轮询 ",
+        " cookie > Accept-Language 探测 > URL 前缀 "
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": " 可分享、可 SEO 的 URL 必须自解释；协商只决定入口跳转，落地后一切以路径语言为准。 "
     },
     {

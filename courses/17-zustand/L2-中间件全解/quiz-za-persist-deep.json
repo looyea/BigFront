@@ -15,45 +15,45 @@
     {
       "stem": "partialize 的用途是？",
       "options": [
-        "序列化格式",
         "版本迁移",
         "挑选哪些字段参与持久化",
-        "加密"
+        "加密",
+        "序列化格式"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "返回要持久化的子集，排除瞬态/敏感字段。"
     },
     {
       "stem": "存储结构里 version 字段作用是？",
       "options": [
-        "性能",
         "去重",
         "压缩",
-        "配合 migrate 做 schema 升级"
+        "配合 migrate 做 schema 升级",
+        "性能"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "记录写入时的版本，读取时决定是否需要迁移。"
     },
     {
       "stem": "migrate 函数的两个参数是？",
       "options": [
-        "(newState, oldState)",
-        "(persistedState, version)",
         "(set, get)",
-        "(name, storage)"
+        "(name, storage)",
+        "(newState, oldState)",
+        "(persistedState, version)"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "收到旧持久化数据与其版本号，返回新结构。"
     },
     {
       "stem": "默认 merge 策略是？",
       "options": [
-        "深合并",
         "浅合并（水合值覆盖初始值）",
         "替换整体",
-        "不合并"
+        "不合并",
+        "深合并"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "默认浅合并，新增字段可能丢初始值，需自定义 merge。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "React Native 上持久化需要？",
       "options": [
+        "用 Cookie",
         "无需改动",
         "createJSONStorage(()=>AsyncStorage)",
-        "用 localStorage",
-        "用 Cookie"
+        "用 localStorage"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "提供适配 AsyncStorage 的 storage 实现。"
     },
     {
       "stem": "把 loading 也持久化会导致？",
       "options": [
-        "更快",
-        "刷新后卡在假 loading 态",
         "报错",
-        "无影响"
+        "无影响",
+        "更快",
+        "刷新后卡在假 loading 态"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "瞬态不应持久化，否则水合出错误状态。"
     },
     {
       "stem": "自定义 storage 需实现哪些方法？",
       "options": [
-        "read/write",
         "getItem/setItem/removeItem",
         "get/set/delete",
-        "load/save/clear"
+        "load/save/clear",
+        "read/write"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "StateStorage 接口即这三个异步方法。"
     },
     {

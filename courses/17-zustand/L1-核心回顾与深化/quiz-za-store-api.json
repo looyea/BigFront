@@ -15,45 +15,45 @@
     {
       "stem": "getState 的特点是？",
       "options": [
-        "会订阅并触发重渲",
         "只能组件内用",
         "非响应式瞬时快照，不订阅",
-        "返回 Promise"
+        "返回 Promise",
+        "会订阅并触发重渲"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "getState 只读快照，不产生订阅。"
     },
     {
       "stem": "setState(partial, true) 第二参 true 含义？",
       "options": [
-        "触发深比较",
         "开启异步",
         "跳过订阅",
-        "整体替换而非浅合并"
+        "整体替换而非浅合并",
+        "触发深比较"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "replace=true 用 partial 完全替换 state。"
     },
     {
       "stem": "高频坐标更新不走渲染的优化是？",
       "options": [
-        "用 useState",
-        "transient subscribe 直接写 DOM",
         "加 Provider",
-        "轮询 getState"
+        "轮询 getState",
+        "用 useState",
+        "transient subscribe 直接写 DOM"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "subscribe 在 React 外消费，避免每帧重渲。"
     },
     {
       "stem": "subscribe 的 selector 形式作用是？",
       "options": [
-        "改变 state",
         "只在选中值变化时回调",
         "注销 hook",
-        "持久化"
+        "持久化",
+        "改变 state"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "带 selector 的 subscribe 减少无关回调。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "unsub 函数来自哪里、做什么？",
       "options": [
+        "React 提供",
         "getState 返回",
         "subscribe 返回，调用可取消订阅",
-        "setState 返回",
-        "React 提供"
+        "setState 返回"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "subscribe 返回取消函数，防内存泄漏。"
     },
     {
       "stem": "测试里初始化 store 状态常用？",
       "options": [
-        "render 组件",
-        "store.setState 直接注入",
         "mock React",
-        "setTimeout"
+        "setTimeout",
+        "render 组件",
+        "store.setState 直接注入"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "store 是纯 JS，测试可直接 setState 造场景。"
     },
     {
       "stem": "transient 更新思路与哪个库最像？",
       "options": [
-        "Redux",
         "MobX reaction",
         "Vuex mutation",
-        "Context"
+        "Context",
+        "Redux"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "把副作用移出渲染管线，与 MobX reaction 理念一致。"
     },
     {

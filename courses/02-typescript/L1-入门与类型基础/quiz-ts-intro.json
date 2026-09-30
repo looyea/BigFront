@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "关于泛型 <T>，因为类型擦除，运行时能做什么？",
       "options": [
-        "可以 if (T === string)",
         "可以用 T 创建实例",
         "拿不到 T，无法在运行时判断类型参数",
-        "T 会保留在 metadata 里默认可读"
+        "T 会保留在 metadata 里默认可读",
+        "可以 if (T === string)"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "Array<T> 运行时就是普通数组，T 消失——这与 Java/C# 泛型不同。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "`tsc --noEmit` 的作用是？",
       "options": [
-        "只编译不检查类型",
         "清空输出目录",
         "禁用 sourcemap",
-        "只做类型检查、报告错误，但不产出任何 JS 文件"
+        "只做类型检查、报告错误，但不产出任何 JS 文件",
+        "只编译不检查类型"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "--noEmit 是'只抓 bug 不产出'模式，CI 门禁常用。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "为什么'脚本能用 tsx/esbuild 跑起来'不代表没有类型错误？",
       "options": [
-        "因为 tsx 会隐藏所有错误",
-        "转译工具(esbuild/tsx)只删类型转 JS，根本不做类型检查",
         "因为浏览器会兜底",
-        "其实跑起来就等于类型正确"
+        "其实跑起来就等于类型正确",
+        "因为 tsx 会隐藏所有错误",
+        "转译工具(esbuild/tsx)只删类型转 JS，根本不做类型检查"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "'能跑'靠转译、'有没有类型错'靠 tsc，两者独立。要 tsc --noEmit 才知类型是否过关。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "tsconfig 里 target 和 lib 分别控制什么？",
       "options": [
-        "都控制输出路径",
         "target 控制输出 JS 的语法版本(降级到哪)，lib 控制可用的全局 API 类型(如 DOM)",
         "target 控制严格模式，lib 控制模块",
-        "两者等价"
+        "两者等价",
+        "都控制输出路径"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "target=语法降级目标；lib=注入哪些全局环境类型声明。写 Node 需 @types/node。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "以下关于 TS 的说法，正确的是？",
       "options": [
+        "TS 给 JS 增加了新的运行时能力",
         "TS 让程序运行更快",
         "TS 是 JS 的超集，任何合法 JS 都是合法 TS",
-        "TS 必须先全量重写才能用",
-        "TS 给 JS 增加了新的运行时能力"
+        "TS 必须先全量重写才能用"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "超集关系；TS 不提升运行速度、不改运行时行为、可渐进迁移。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "默认情况下 `tsc` 遇到类型错误的行为是：",
       "options": [
-        "拒绝产出任何 JS",
-        "报错但仍然 emit JS（除非开 noEmitOnError）",
         "只报错第一行就退出",
-        "自动修复后编译"
+        "自动修复后编译",
+        "拒绝产出任何 JS",
+        "报错但仍然 emit JS（除非开 noEmitOnError）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "类型检查与转译是两条线：tsc 默认带错也产出；而 esbuild/swc 等转译器根本不做类型检查——所以 CI 必须单独跑 tsc --noEmit。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "Node 22.6+ 的 `--experimental-strip-types` 能力是：",
       "options": [
-        "把 TS 编译成 V8 字节码",
         "直接运行 .ts：仅剥离类型标注，不做类型检查也不转换语法",
         "自动生成 .d.ts",
-        "类型检查加速模式"
+        "类型检查加速模式",
+        "把 TS 编译成 V8 字节码"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "原生 type stripping：不做转译（enum/namespace 等需改写的会拒绝），因此要求代码语法本身是可用 JS 子集——和「删掉类型就是合法 JS」的 erasable 纪律呼应。"
     },
     {

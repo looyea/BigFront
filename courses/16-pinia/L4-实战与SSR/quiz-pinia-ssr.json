@@ -15,45 +15,45 @@
     {
       "stem": "持久化插件在 SSR 中必须加什么守卫？",
       "options": [
-        "process.env.NODE_ENV",
         "try/catch",
         "import.meta.client（或 process.client）",
-        "if (window)"
+        "if (window)",
+        "process.env.NODE_ENV"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "服务端无 localStorage——不加守卫 SSR 崩溃。"
     },
     {
       "stem": "页面首屏关键数据（SEO）应该用什么获取？",
       "options": [
-        "Pinia action + onMounted",
         "$fetch in watchEffect",
         "axios in created()",
-        "useAsyncData / definePageMeta"
+        "useAsyncData / definePageMeta",
+        "Pinia action + onMounted"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "useAsyncData 在 SSR 阶段就 await，数据进 HTML。"
     },
     {
       "stem": "避免 SSR + 客户端双重请求的方法是？",
       "options": [
-        "关闭 SSR",
-        "action 里 if (data.value) return 判断已水合",
         "设置 cache-control",
-        "用 GET 不用 POST"
+        "用 GET 不用 POST",
+        "关闭 SSR",
+        "action 里 if (data.value) return 判断已水合"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "SSR 执行一次 action → 数据水合到客户端 → 客户端再调 action 时检测到已有数据则跳过。"
     },
     {
       "stem": "Nuxt 里推荐用什么替代 axios 做请求？",
       "options": [
-        "fetch() 原生",
         "$fetch（ofetch）",
         "XMLHttpRequest",
-        "got"
+        "got",
+        "fetch() 原生"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "$fetch 自动处理 baseURL、SSR 内部转发、错误格式化。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "SSR 中 Pinia 实例的生命周期是？",
       "options": [
+        "每路由一个",
         "全局一个（跨请求共享）",
         "每请求一个（避免数据串）",
-        "每组件一个",
-        "每路由一个"
+        "每组件一个"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Nuxt 保证每个请求创建独立 Pinia——服务端不存在跨请求泄漏。"
     },
     {
       "stem": "客户端水合后 setup 里的 fetch 还会执行吗？",
       "options": [
-        "会",
-        "不会——水合直接恢复 state，computed/action 按需",
         "取决于是否用 async setup",
-        "取决于 Nuxt 版本"
+        "取决于 Nuxt 版本",
+        "会",
+        "不会——水合直接恢复 state，computed/action 按需"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "水合只恢复 state 值，不重跑 fetch 请求。"
     },
     {
       "stem": "Nuxt plugin 里 await store.init() 的作用是？",
       "options": [
-        "预加载路由",
         "SSR 阶段就把数据拉好注入 state",
         "注册全局中间件",
-        "懒加载 store"
+        "懒加载 store",
+        "预加载路由"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "plugin 的 await 在 SSR render 之前完成——store 有数据再渲染 HTML。"
     },
     {

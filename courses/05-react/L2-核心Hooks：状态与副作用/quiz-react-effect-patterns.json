@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "effect 里除了 abort，还常用一个 `ignore` 布尔标志，目的是？",
       "options": [
-        "忽略错误",
-        "跳过依赖检查",
         "禁用严格模式",
-        "即使结果返回，也防止对已卸载/过期一轮的组件写 state"
+        "即使结果返回，也防止对已卸载/过期一轮的组件写 state",
+        "忽略错误",
+        "跳过依赖检查"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "双保险防过期写 state（呼应 react-effect-patterns 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "id 从 1 快速变到 2，请求1 比请求2 更晚返回导致界面显示 1 的数据，这是？",
       "options": [
+        "hydration mismatch",
         "内存泄漏",
         "竞态(race condition)",
-        "闭包陈旧值",
-        "hydration mismatch"
+        "闭包陈旧值"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "慢请求覆盖快请求，靠 cleanup abort/ignore 丢弃（呼应 react-effect-patterns 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "需要\"读元素尺寸后同步再改 DOM 且不让用户看到闪烁\"，用哪个 effect？",
       "options": [
+        "useMemo",
         "useEffect",
         "useInsertionEffect",
-        "useLayoutEffect",
-        "useMemo"
+        "useLayoutEffect"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "layout 在绘制前同步跑（呼应 react-effect-patterns 第四节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "关于 useInsertionEffect，正确的是？",
       "options": [
-        "是给业务组件写普通副作用用的",
         "专供 CSS-in-JS 在其它 effect 前注入样式，日常代码几乎不用",
         "等价于 useEffect",
-        "只在卸载时跑"
+        "只在卸载时跑",
+        "是给业务组件写普通副作用用的"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "insertion→layout→passive 三者时机不同（呼应 react-effect-patterns 第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "下面哪种不该用 useEffect，而应在 render 里直接算/useMemo？",
       "options": [
+        "初始化第三方图表实例",
         "订阅全局事件",
         "根据 props 计算列表总数展示",
-        "启动定时器",
-        "初始化第三方图表实例"
+        "启动定时器"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "派生值不是外部系统同步，别绕 effect+state（呼应 react-effect-patterns 第六节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "effect 里订阅一个外部事件源，回调需要读一个「每次都变」的 prop，但不想因它重订阅，惯用解法是？",
       "options": [
-        "把 prop 塞进依赖数组即可",
-        "用一个始终指向最新值的 ref（每次渲染 `latestRef.current = value`），订阅回调里读 `latestRef.current`，依赖数组保持空/稳定——订阅只建一次、回调永远拿最新",
         "用 useState 存回调",
-        "把订阅移到 render 里"
+        "把订阅移到 render 里",
+        "把 prop 塞进依赖数组即可",
+        "用一个始终指向最新值的 ref（每次渲染 `latestRef.current = value`），订阅回调里读 `latestRef.current`，依赖数组保持空/稳定——订阅只建一次、回调永远拿最新"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "这就是社区 useLatest 模式：ref 更新发生在 render（对 ref 的写不属于「可观察副作用」的禁区但要注意并发 purity，稳妥做法是放在 effect/事件中）。它把「订阅的生命周期」与「回调读取的数据」解耦，避免高频重订阅。对比把值加进依赖：会反复建立/销毁连接，WebSocket 类会明显出问题。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "集成一个非 React 的图表库：在挂载 effect 里 `new Chart(el)` 建实例、props.data 变化时要更新图形，正确组织是？",
       "options": [
-        "全塞进一个空依赖 effect，内部判数据",
         "实例用 ref 持有、只在挂载 effect 建/卸载 effect 销毁；数据变化用「另一个依赖 data 的 effect」调 `chartInstanceRef.current.setData(...)`；两者职责分离",
         "每次数据变都 new 一次",
-        "放进 useMemo 里建实例"
+        "放进 useMemo 里建实例",
+        "全塞进一个空依赖 effect，内部判数据"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "命令式库有两类副作用：① 建立/销毁（生命周期=挂载/卸载，依赖 []）；② 同步数据（依赖数据）。混在一个 effect 里要么漏更新、要么反复重建。实例存 ref 而非 state（不触发渲染、且跨帧持有）。这是本包 refs 关「useRef 存可变实例」与 effect 关的结合考点。"
     },
     {

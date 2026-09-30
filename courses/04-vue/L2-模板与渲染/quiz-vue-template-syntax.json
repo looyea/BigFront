@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "下面哪个能合法写进 {{ }} 插值？",
       "options": [
-        "if (ok) 'A'",
-        "var x = 1",
         "ok ? 'A' : 'B'",
-        "count++（作为语句块）"
+        "count++（作为语句块）",
+        "if (ok) 'A'",
+        "var x = 1"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "插值只能是表达式，三元合法；if/声明/多语句非法（呼应 vue-template-syntax 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": ":href 和 @click 分别是哪两个指令的缩写？",
       "options": [
-        "v-once / v-html",
-        "v-model / v-show",
         "v-if / v-else",
-        "v-bind / v-on"
+        "v-bind / v-on",
+        "v-once / v-html",
+        "v-model / v-show"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": ": 是 v-bind 缩写、@ 是 v-on 缩写（呼应 vue-template-syntax 第二、四节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "<input :disabled=\"isOff\"> 当 isOff 为 false 时，disabled 属性会？",
       "options": [
+        "变成 disabled=\"\"",
         "渲染成 disabled=\"false\"",
         "被自动移除",
-        "报错",
-        "变成 disabled=\"\""
+        "报错"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "布尔属性遇假值(false/null/undefined)自动移除（呼应 vue-template-syntax 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "要动态决定绑定的属性/事件名，用哪种语法？",
       "options": [
-        ":{name}",
-        ":[name] 和 @[name] 动态参数",
         "$:name",
-        "v-dynamic:name"
+        "v-dynamic:name",
+        ":{name}",
+        ":[name] 和 @[name] 动态参数"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "方括号是动态参数，值自动转小写（呼应 vue-template-syntax 第三节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "@submit.prevent 里的 .prevent 作用是？",
       "options": [
+        "使用捕获阶段",
         "阻止事件冒泡",
         "阻止表单默认提交行为",
-        "只触发一次",
-        "使用捕获阶段"
+        "只触发一次"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": ".prevent 调 preventDefault 阻止默认；.stop 才阻止冒泡（呼应 vue-template-syntax 第四节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "模板里 `@click=\"count++\"` 编译后的事件处理器是：",
       "options": [
-        "直接执行表达式",
-        "编译器包成内联函数 `$event => (count++)`——所以模板里能写语句、还能用 $event 变量",
         "报错",
-        "编译成 computed"
+        "编译成 computed",
+        "直接执行表达式",
+        "编译器包成内联函数 `$event => (count++)`——所以模板里能写语句、还能用 $event 变量"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "内联 处理器=自动 包 函数；这 决定 两 件事：`@click=\"doIt()\"` 是 **立即 执行 取 返回值**（要 传 函数 写 `@click=\"doIt\"`），以及 $event 可 用 于 内联 处。`v-on` 这个「表达式 不是 回调」的 反差 是 新手 高频 坑。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "动态参数 `:[dynamicName]=\"value\"` 与 `@:[evt]=\"handler\"` 的限制是：",
       "options": [
-        "只能用于事件",
         "动态参数值必须是字符串（null 会移除该绑定）；表达式含特殊字符（大小写敏感与浏览器 HTML 原生属性小写化）时可能失效——建议一律配 kebab-case 并用引号包裹绑定",
         "必须配 v-bind 对象",
-        "已废弃"
+        "已废弃",
+        "只能用于事件"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "「null 移除 绑定」是 官方 设计（v-bind 对象 展开 同款）；HTML 模板 里 动态 参数 会 被 浏览器 小写 化——`:[attr]` 中 attr 值 含 大写 在 DOM 内联 模板 翻车，SFC 编译 无 此 忧。本关 动态 参数 题 的 细则。"
     },
     {

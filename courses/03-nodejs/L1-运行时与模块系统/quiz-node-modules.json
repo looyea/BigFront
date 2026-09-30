@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "`require('./x')` 当 x 是一个目录时，Node 优先怎么找入口？",
       "options": [
+        "找 x/main.js",
         "直接找 x/index.js",
         "找 x/package.json 的 main 字段，没有再退到 x/index.js 等",
-        "报错，目录不能被 require",
-        "找 x/main.js"
+        "报错，目录不能被 require"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "目录解析先看其 package.json 的 main，其次 index.js/index.json/index.node。这就是发包用 main/exports 指向入口的原理。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "关于 CJS 的循环依赖，正确的描述是？",
       "options": [
+        "两个模块都会被忽略",
         "Node 会直接抛错终止",
         "会死锁",
-        "后加载方拿到的是对方“尚未执行完”的 module.exports 快照（可能不完整）",
-        "两个模块都会被忽略"
+        "后加载方拿到的是对方“尚未执行完”的 module.exports 快照（可能不完整）"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "CJS 循环依赖不死锁：正在加载的模块其 exports 会先返回给引用方，故可能拿到半成品。应打破环或把使用推迟到函数调用时。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "下列哪项是 CommonJS 相对 ESM 的特点？",
       "options": [
-        "静态结构、天然支持 tree-shaking",
         "同步、运行时、可条件/动态 require",
         "支持顶层 await",
-        "导出是 live binding 引用"
+        "导出是 live binding 引用",
+        "静态结构、天然支持 tree-shaking"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "CJS 的 require 是同步运行时、能放条件里、能拼路径；代价是工具难以静态分析做摇树。静态/treeshake/顶层await/live binding 都是 ESM 的特征。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "`require('node:fs')` 里 `node:` 前缀的作用是？",
       "options": [
+        "没有实际意义",
         "表示异步加载",
         "显式指定内置模块，避免与同名第三方包冲突",
-        "启用严格模式",
-        "没有实际意义"
+        "启用严格模式"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "node: 前缀明确“这是内置模块”，即便 node_modules 里有同名包也不会被误用，语义更清晰，官方推荐。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "条件执行中改写 module.exports 后，其他模块再 require 拿到的是：",
       "options": [
-        "永远拿旧引用",
         "缓存里 module.exports 的当前值——缓存存的是 module 对象，exports 被整体重指向后缓存跟着变（所以「先 require 后改 exports 属性」外部可见，重赋值则切断联系）",
         "每次重新执行模块",
-        "报循环依赖错"
+        "报循环依赖错",
+        "永远拿旧引用"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "缓存键下存 {exports: ...}；给 exports.foo 赋值=往 exports 对象上加属性（外部可见）；module.exports=新对象 是换指向——「导出快照 vs 导出引用」的分水岭在这里。"
     },
     {

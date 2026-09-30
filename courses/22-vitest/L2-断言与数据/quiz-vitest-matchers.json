@@ -4,23 +4,23 @@
     {
       "stem": "测两个对象内容相等用？",
       "options": [
-        "toBe",
         "toEqual",
         "toMatch",
-        "toContain"
+        "toContain",
+        "toBe"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "toEqual 深比较。"
     },
     {
       "stem": "toBe 判断对象依据是？",
       "options": [
-        "内容深比较",
         "JSON 字符串",
         "Object.is（同一引用）",
-        "长度"
+        "长度",
+        "内容深比较"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "原始值/引用相等。"
     },
     {
@@ -37,12 +37,12 @@
     {
       "stem": "断言字符串匹配正则用？",
       "options": [
-        "toBe",
-        "toMatch",
         "toContainEqual",
-        "in"
+        "in",
+        "toBe",
+        "toMatch"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "toMatch 支持串/正则。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "DOM 语义化断言 toBeInTheDocument 来自？",
       "options": [
+        "happy-dom",
         "Vitest 内置",
         "@testing-library/jest-dom/vitest",
-        "jsdom",
-        "happy-dom"
+        "jsdom"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "装扩展匹配器。"
     },
     {
       "stem": "扩展匹配器一般在哪注册？",
       "options": [
-        "每个测试文件",
-        "setupFiles",
         "package.json",
-        "命令行"
+        "命令行",
+        "每个测试文件",
+        "setupFiles"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "统一前置注入。"
     },
     {
       "stem": "强制本用例必须有断言用？",
       "options": [
+        "expect.assertions/hasAssertions",
         "vi.fn",
         "toPass",
-        "bail",
-        "expect.assertions/hasAssertions"
+        "bail"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "防假绿空断言。"
     },
     {

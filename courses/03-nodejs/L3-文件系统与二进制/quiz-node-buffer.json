@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Buffer.alloc(10) 与 Buffer.allocUnsafe(10) 的关键区别是？",
       "options": [
+        "alloc 清零（安全），allocUnsafe 不清零、可能含池里残留字节（有信息泄漏风险）",
         "前者更快",
         "两者完全等价",
-        "allocUnsafe 只能读不能写",
-        "alloc 清零（安全），allocUnsafe 不清零、可能含池里残留字节（有信息泄漏风险）"
+        "allocUnsafe 只能读不能写"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "allocUnsafe 从内存池取用且跳过初始化，快但可能残留上一次数据；若被回显给外部=信息泄漏，除非立刻全部覆盖否则用 alloc（呼应 node-buffer 第二节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "Buffer.from('h中','utf8').length 是多少？",
       "options": [
-        "2",
         "3",
         "4",
-        "5"
+        "5",
+        "2"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "h=1 字节 + 中(utf8)=3 字节 = 4。Buffer.length 数的是字节，不是字符（呼应 node-buffer 第四、一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "把一个 PNG 文件 readFile 后按 'utf8' 转成字符串再写回，会怎样？",
       "options": [
+        "抛 TypeError",
         "完全无损",
         "损坏——二进制字节按 utf8 解码出现非法序列被替换，往返不再相等",
-        "自动转成 base64",
-        "抛 TypeError"
+        "自动转成 base64"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "二进制不是合法 utf8 文本，非法字节被替换成 U+FFFD，解再编码回写数据已丢，文件损坏。二进制应保持 Buffer（呼应 node-buffer 第三节、node-fs 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "流式分块收到多字节 utf8 文本，为什么某块单独 toString 会乱码？怎么解决？",
       "options": [
-        "因为流会丢字节；重连即可",
-        "因为一个汉字的 3 字节可能被块边界切断；用 StringDecoder/TextDecoder 跨块暂存残缺字节",
         "因为 utf8 不稳定",
-        "改成 hex 编码就不会"
+        "改成 hex 编码就不会",
+        "因为流会丢字节；重连即可",
+        "因为一个汉字的 3 字节可能被块边界切断；用 StringDecoder/TextDecoder 跨块暂存残缺字节"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "按字节切分可能把多字节字符劈开，半截无法解码。StringDecoder 会攒着残缺字节等下一块补齐（呼应 node-buffer 第四节、node-streams）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "一个 4 字节头部用 writeUInt32BE 写入，却用 readUInt32LE 读出，结果会？",
       "options": [
-        "只是精度损失",
         "数值完全错乱（字节序反了），协议解析失败",
         "抛异常",
-        "自动纠正"
+        "自动纠正",
+        "只是精度损失"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "BE(网络序)写、LE 读会把字节顺序颠倒，得到完全不同的数（如 256 变 16777216）。读写端序必须一致（呼应 node-buffer 第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "要把一张图片塞进 JSON 字段传输，通常先把它？",
       "options": [
+        "直接放 JSON（Buffer 可 JSON 序列化）",
         "toString('utf8')",
         "toString('base64')，接收端 Buffer.from(str,'base64') 还原",
-        "toString('hex') 后再乘 2",
-        "直接放 JSON（Buffer 可 JSON 序列化）"
+        "toString('hex') 后再乘 2"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "base64 把任意字节映射进 ASCII 安全字符集，能塞进文本协议/JSON；utf8 不行、直接 JSON.stringify(Buffer) 得到的是 {type:'Buffer',data:[]} 结构（呼应 node-buffer 第三节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "buf.write(str, offset, length, encoding) 返回值是：",
       "options": [
-        "写入是否成功",
-        "实际写入的**字节数**（可能小于字符串字节长度——目标空间不够会截断，截断不留半个字符的边界处理是库层事）",
         "字符数",
-        "编码名"
+        "编码名",
+        "写入是否成功",
+        "实际写入的**字节数**（可能小于字符串字节长度——目标空间不够会截断，截断不留半个字符的边界处理是库层事）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "与 read 返回「实读字节数」对称——定长帧协议里「没写满」就是截断信号；配合 Buffer.byteLength 先算准（本关 byteLength 题的实操面）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "Buffer.compare(a, b) 与 a.equals(b) 的用途分界是：",
       "options": [
-        "可互换",
         "compare 给排序（返回 -1/0/1，字典序）、equals 给内容判等（短路长度不等）；签名校验判等还需 timingSafeEqual 防时序攻击",
         "compare 只比长度",
-        "equals 不比较内容"
+        "equals 不比较内容",
+        "可互换"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "三件套分工：判等（equals）、排序（compare）、**安全判等**（crypto.timingSafeEqual 常量时间）——webhook 验签用 ===/equals 都是隐患（本关 slice/拷贝题之外的高频实坑）。"
     },
     {
@@ -124,12 +124,12 @@
       "type": "single",
       "prompt": "new Uint8Array(1024).buffer 与对应 Buffer 的关系，正确的有：",
       "options": [
+        "Buffer 已废弃",
         "两者内存可互通（Buffer 即 TypedArray 子类，池化分配时 .buffer 是 8KB 池切片——byteOffset/length 必须看，不能假设从零开始）",
         "完全两种内存",
-        "Uint8Array 更快",
-        "Buffer 已废弃"
+        "Uint8Array 更快"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "poolAllocated 下 buf.buffer 是整个池：postMessage(buf.buffer) 会外泄邻近数据（CVE 常客）、subarray 后再取 .buffer 也泄漏——本关 pooling 题的安全面。"
     }
   ]

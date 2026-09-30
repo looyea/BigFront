@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "前端代码能通过 import.meta.env 访问 .env 里的哪些变量？",
       "options": [
-        "所有变量",
         "只有 MODE 和 DEV",
         "只有 VITE_ 前缀的变量",
-        "需要手动 export 的变量"
+        "需要手动 export 的变量",
+        "所有变量"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "安全设计——防止 DATABASE_URL 等密钥泄露到客户端。只有 VITE_ 开头的才被静态替换进产物。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "server.proxy 配置解决什么问题？",
       "options": [
-        "生产环境代理",
         "SSL 证书配置",
         "域名重定向",
-        "开发时避免 CORS——前端请求 /api 由 Vite 转发到后端"
+        "开发时避免 CORS——前端请求 /api 由 Vite 转发到后端",
+        "生产环境代理"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "dev 时前端 :5173 调后端 :8080 跨域 → proxy 让 Vite 拦截 /api 转发 → 浏览器视为同源 → 无 CORS。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "define: { __DEV__: true } 和 import.meta.env.DEV 的区别？",
       "options": [
-        "完全相同",
-        "define 是全局文本替换（可在 if 里 Tree Shake）；env.DEV 是内置的布尔对象属性",
         "define 只在 build 时生效",
-        "env.DEV 只在 dev 时存在"
+        "env.DEV 只在 dev 时存在",
+        "完全相同",
+        "define 是全局文本替换（可在 if 里 Tree Shake）；env.DEV 是内置的布尔对象属性"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "define 做编译期文本替换——if(false){...} 整块被删。env 是 Vite 预设的只读对象，也可 Tree Shake 但不如 define 灵活。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "vite build --mode staging 会加载哪些 .env 文件？",
       "options": [
-        "只 .env.staging",
         ".env + .env.staging + .env.staging.local + .env.local（优先级从低到高）",
         "只 .env 和 .env.local",
-        "所有 .env.* 文件"
+        "所有 .env.* 文件",
+        "只 .env.staging"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Vite 按 mode 加载：.env → .env.local → .env.staging → .env.staging.local。后者覆盖前者。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " vite.config 里配了 alias @ 指向 src，TS 里 import 报\"找不到模块\"，原因是？",
       "options": [
+        "Vite 不支持 @ 符号",
         "alias 语法错",
         "vite 的 alias 只影响打包解析，TS 语言服务/编译期要另配 tsconfig 的 paths——两处必须成对维护（或用插件生成保持同源）",
-        "要重启 IDE",
-        "Vite 不支持 @ 符号"
+        "要重启 IDE"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "两套解析器各管各的阶段：构建期 Vite、编辑/类型期 tsc——\"能跑但全是红波浪线\"的经典成因。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " server.host: true 的作用是？",
       "options": [
-        "绑定域名",
-        "监听 0.0.0.0——局域网内其他设备可用你的 IP 访问 dev server（真机调试入口），同时意味着暴露面扩大，需要配合网络环境判断",
         "开启 HTTPS",
-        "指定 HMR 主机"
+        "指定 HMR 主机",
+        "绑定域名",
+        "监听 0.0.0.0——局域网内其他设备可用你的 IP 访问 dev server（真机调试入口），同时意味着暴露面扩大，需要配合网络环境判断"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "真机调试标配，但在公共网络上等于把源码服务开放给整个子网——用完关或走隧道。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 新版 Vite 对访问 dev server 的 Host 头限制策略是？",
       "options": [
-        "全部放行",
         "默认只允许 localhost 系；自定义域名/局域网主机名访问被 403 拒绝，需显式配 server.allowedHosts 加白——防 Host 头攻击与同源绕过",
         "必须配 HTTPS",
-        "只校验端口"
+        "只校验端口",
+        "全部放行"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "allowedHosts 是对历史 host 校验 CVE 的制度化回应；内网穿透域名调试时记得精确加白而不是图省事全放。"
     },
     {

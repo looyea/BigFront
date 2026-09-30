@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "S3 预签名直传的核心优势是什么？",
       "options": [
-        "不需要前端代码",
         "自动压缩图片",
         "文件不经过服务器 → 减轻带宽/内存压力 → 支持超大文件",
-        "不需要 HTTPS"
+        "不需要 HTTPS",
+        "不需要前端代码"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "后端只生成有时效的 PUT URL → 前端直传 S3 → 服务器不受上传带宽限制 → 适合视频/大文件。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "分片上传中 merge 步骤最关键的问题是？",
       "options": [
-        "文件名太长了",
         "需要浏览器支持 WebAssembly",
         "必须用 WebSocket",
-        "保证分片顺序正确 + 处理缺片/乱片"
+        "保证分片顺序正确 + 处理缺片/乱片",
+        "文件名太长了"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "网络乱序/丢片 → merge 前必须验证所有 index 齐全且按序写入。tus 协议自动处理偏移续传。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "multer 的 memoryStorage vs diskStorage 如何选择？",
       "options": [
-        "永远用 diskStorage",
-        "文件小且后续要 buffer 处理（如 sharp 裁剪后传 S3）用 memory；文件大且直接落盘用 disk",
         "memoryStorage 性能一定比 disk 差",
-        "diskStorage 不支持多文件"
+        "diskStorage 不支持多文件",
+        "永远用 diskStorage",
+        "文件小且后续要 buffer 处理（如 sharp 裁剪后传 S3）用 memory；文件大且直接落盘用 disk"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "memoryStorage 把整个文件放 RAM → 适合 <10MB 需二次处理；大文件用 disk 防 OOM。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "上传文件为什么要用 UUID 重命名？",
       "options": [
-        "方便数据库存储",
         "防止同名覆盖 + 消除特殊字符/XSS 文件名 + 隐藏真实文件名",
         "加速文件系统读取",
-        "兼容 CDN 规则"
+        "兼容 CDN 规则",
+        "方便数据库存储"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "originalname 可能含 ../../、<script>、空格、中文 → 安全最佳实践 = 丢弃原文件名 + 用 randomUUID + 真实扩展。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " multer 的 limits.fileSize 超限报错后的正确收尾是？",
       "options": [
+        "把文件移到回收目录慢慢看",
         "直接返回 400 即可",
         "进入 multer 错误中间件后仍要清理已落盘的临时文件（diskStorage 已写入部分不会自动删），并回 413——不清理=磁盘被失败上传慢慢吃满",
-        "重启进程",
-        "把文件移到回收目录慢慢看"
+        "重启进程"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "\"失败路径上的资源清理\"是上传功能最常被漏掉的验收项，临时目录要配定时清扫兜底。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 上传接口防\"同一文件重复传\"的秒传实现核心是？",
       "options": [
-        "按文件名去重",
-        "客户端先算内容哈希（如 MD5/SHA-256）→ 服务端按哈希查存在性，命中直接返回既有地址——哈希即身份，还顺带完成完整性校验",
         "数据库唯一索引挡文件名",
-        "随机抽样比对"
+        "随机抽样比对",
+        "按文件名去重",
+        "客户端先算内容哈希（如 MD5/SHA-256）→ 服务端按哈希查存在性，命中直接返回既有地址——哈希即身份，还顺带完成完整性校验"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "秒传=哈希索引+引用计数的存储设计；MD5 作快筛可、作安全凭证不可（可碰撞构造），安全场景要 SHA-256。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 图片上传后\"服务端二次编码\"（解码→重压→转格式）的主要收益是？",
       "options": [
-        "文件更小而已",
         "一举三得：压掉体积与元数据（GPS/设备信息泄露）、剥掉嵌在图片尾部的附加载荷、统一格式与尺寸（防图片炸弹解码 OOM）",
         "加快上传",
-        "支持更多格式"
+        "支持更多格式",
+        "文件更小而已"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "二次编码是\"不信任输入\"在媒体上的落地：steg/尾载荷/解压炸弹都在重编码后归零，代价是 CPU，放异步任务池。"
     },
     {

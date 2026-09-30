@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "Svelte 5 中让 Thing 变量指向的组件随状态切换而更换，需要的写法是？",
       "options": [
-        "<svelte:component this={Thing} />（必须特殊标签）",
-        "<Thing />（组件标签本身已响应式）",
         "{@component Thing}",
-        "mount(Thing)（必须命令式）"
+        "mount(Thing)（必须命令式）",
+        "<svelte:component this={Thing} />（必须特殊标签）",
+        "<Thing />（组件标签本身已响应式）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Svelte 5 组件标签直接引用作用域变量，Thing 变了自动换——<svelte:component> 只为迁移兼容仍在；后两个是编造语法（mount 可用于命令式挂载但不是本题答案）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "{#each blocks as block} 里渲染 block.component 组件，Svelte 5 的合法写法是？",
       "options": [
+        "<block.component />（点号语法即组件）",
         "<Block.component />（必须大写开头）",
         "{@render block.component()}",
-        "<svelte:element this={block.component} />",
-        "<block.component />（点号语法即组件）"
+        "<svelte:element this={block.component} />"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "点号成员表达式即使小写也按组件解析（Svelte 4 会创建名叫 block.component 的元素——换代陷阱）；@render 只能调 snippet 不是组件；svelte:element 的 this 收标签名不收组件。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " <svelte:window>/<svelte:document>/<svelte:body> 的用途是？",
       "options": [
-        "布局组件",
-        "把事件监听与绑定挂到 window/document/body 这些组件外的全局节点上（组件销毁自动解绑，避免手动 addEventListener 泄漏）（对应既有全局元素用途题）",
         "渲染 head",
-        "条件块"
+        "条件块",
+        "布局组件",
+        "把事件监听与绑定挂到 window/document/body 这些组件外的全局节点上（组件销毁自动解绑，避免手动 addEventListener 泄漏）（对应既有全局元素用途题）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "专元素让\"全局节点的事件/绑定\"纳入组件生命周期管理（对应既有 window keydown/scrollY 题）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " <svelte:element this={tag}> 解决什么问题？",
       "options": [
-        "性能优化",
         "渲染\"标签名由变量决定\"的动态元素（this=h1/p/div），并可带这个标签合法或非法的属性（对应既有 svelte:element this 题）",
         "动态组件",
-        "注入 head"
+        "注入 head",
+        "性能优化"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "<svelte:element> 动态元素、<svelte:component>/{@render} 动态组件，两类动态别混（对应既有动态组件切换题）。"
     },
     {

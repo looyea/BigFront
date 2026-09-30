@@ -4,12 +4,12 @@
     {
       "stem": "transform / transformSync / transformFile 返回？",
       "options": [
-        "字符串",
         "同构的 { code, map }",
         "Buffer",
-        "undefined"
+        "undefined",
+        "字符串"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "三者一致。"
     },
     {
@@ -48,12 +48,12 @@
     {
       "stem": "@swc/core 怎么分发各平台二进制？",
       "options": [
-        "单一 JS 包",
         "optionalDependencies 平台包",
         "源码编译",
-        "CDN"
+        "CDN",
+        "单一 JS 包"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "按 os/cpu 装对应 native。"
     },
     {
@@ -70,23 +70,23 @@
     {
       "stem": "@swc-node/register 的定位？",
       "options": [
+        "minifier",
         "构建期转译",
         "运行时即时转译且读 tsconfig",
-        "打包器",
-        "minifier"
+        "打包器"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "让 node 直接跑 TS。"
     },
     {
       "stem": "--legacy 包用于？",
       "options": [
-        "新机器",
-        "旧 glibc 的纯 JS 回退",
         "Windows",
-        "浏览器"
+        "浏览器",
+        "新机器",
+        "旧 glibc 的纯 JS 回退"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "慢但兼容。"
     },
     {

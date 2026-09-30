@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "onSubmit 里 e.preventDefault() 的作用是？",
       "options": [
-        "阻止输入",
-        "阻止浏览器默认提交导致的页面刷新",
         "阻止冒泡",
-        "清空表单"
+        "清空表单",
+        "阻止输入",
+        "阻止浏览器默认提交导致的页面刷新"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "阻止原生提交刷新整页（呼应 react-forms 第四节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "关于 React 事件对象，正确的是？",
       "options": [
+        "它是合成的原生事件对象，值在 e.target.value",
         "它是 Vue 的 $event 包装",
         "只能拿到 key 拿不到 value",
-        "onChange 参数直接是字符串值",
-        "它是合成的原生事件对象，值在 e.target.value"
+        "onChange 参数直接是字符串值"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "React 事件参数是事件对象，值在 e.target.value（呼应 react-forms 第一、四节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "以下哪种更适合用非受控组件？",
       "options": [
-        "<input type=\"file\"> 或提交时一次性读值的简单表单",
-        "需要每次按键实时联动别的字段的输入框",
         "带实时校验的注册表单",
-        "受控下拉联动"
+        "受控下拉联动",
+        "<input type=\"file\"> 或提交时一次性读值的简单表单",
+        "需要每次按键实时联动别的字段的输入框"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "文件上传/提交时读一次适合非受控（呼应 react-forms 第二节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 受控 checkbox 应该绑定哪个属性、配什么 onChange？",
       "options": [
-        "value + onChange",
-        "checked + onChange——checkbox 的「值」语义在布尔 checked 上，value 对它表达的是「提交时的载荷」，受控必须驱动 checked",
         "defaultChecked",
-        "selected"
+        "selected",
+        "value + onChange",
+        "checked + onChange——checkbox 的「值」语义在布尔 checked 上，value 对它表达的是「提交时的载荷」，受控必须驱动 checked"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "不同控件的受控属性不同：文本类 value、checkbox/radio 用 checked、select 用 value（对应 option 的 value）。把 checkbox 去受控 value 是常见 bug（勾不上）。radio 的受控是 checked + 相同 name + 各自 value。这条与 select/file 的受控细节是本关高频冷知识。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " React 里能否用受控方式给 `<input type=\"file\">` 设置选中文件？",
       "options": [
-        "能，value 传路径",
         "不能——出于安全，file input 的 value 只能被用户交互改变、程序只能读不能写；React 里它本质只能非受控（用 ref 读 files），受控的是「用户选中的 File 对象」放进 state 而非回写 input",
         "传 accept 即可",
-        "用 defaultValue"
+        "用 defaultValue",
+        "能，value 传路径"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "浏览器禁止 JS 设定 file input 的值，所以没有「受控 file input」。惯用：ref/onChange 里读 `e.target.files` 存入 state 做预览与上传，但输入框本身保持非受控。这也是「哪类字段该走非受控」的典型例子（本关 Q7 的延伸）。"
     },
     {

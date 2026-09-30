@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "已经有 worker_threads 能治事件循环阻塞，为什么还需要任务队列？",
       "options": [
-        "worker_threads 比队列慢",
         "队列额外解决削峰、跨进程/跨机器分发、进程重启后任务不丢的可靠性",
         "队列不需要内存",
-        "worker_threads 不能跑异步代码"
+        "worker_threads 不能跑异步代码",
+        "worker_threads 比队列慢"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "worker 管\"一个请求内的重计算\"，队列管\"任务的持久化、调度与横向扩缩\"（呼应 node-queues-jobs 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "BullMQ 的任务状态与锁存在哪里？",
       "options": [
-        "Node 进程内存",
-        "MySQL",
         "本地文件",
-        "Redis"
+        "Redis",
+        "Node 进程内存",
+        "MySQL"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "Redis 是唯一状态存储，队列/锁/重试计数全在里面——Redis 高可用即队列高可用（呼应 node-queues-jobs 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "worker 处理完任务但在确认前进程宕机，BullMQ 默认会怎样？",
       "options": [
-        "任务自动标记完成",
-        "任务被重投给其他 worker——所以消费逻辑必须幂等",
         "任务永久丢失",
-        "Redis 自动回滚业务副作用"
+        "Redis 自动回滚业务副作用",
+        "任务自动标记完成",
+        "任务被重投给其他 worker——所以消费逻辑必须幂等"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "投递语义是 at-least-once，副作用可能执行两次；exactly-once 靠消费端幂等键（呼应 node-queues-jobs 第三节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "worker 进程收到 SIGTERM 时的优雅退出顺序应当是？",
       "options": [
+        "重启机器让 systemd 处理",
         "直接 process.exit(0) 最快",
         "先 worker.close() 停止拉新任务并等 active 跑完，超时再兜底暂停队列",
-        "先删 Redis 队列键再退出",
-        "重启机器让 systemd 处理"
+        "先删 Redis 队列键再退出"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "close=不再取新任务+等手上来活；硬退出会制造 stalled 重投甚至半途副作用（呼应 node-queues-jobs 第五节、node-deploy-perf）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "BullMQ 的「并发度」concurency 作用域正确的是：",
       "options": [
-        "全局一个数",
-        "每个 worker 进程各自计数（总并发=进程数×concurrency）——要全局限并发得靠外部配额（令牌桶/信号量服务）",
         "按队列名共享",
-        "仅测试有效"
+        "仅测试有效",
+        "全局一个数",
+        "每个 worker 进程各自计数（总并发=进程数×concurrency）——要全局限并发得靠外部配额（令牌桶/信号量服务）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "「4 实例各设 50 = 实际 200 并发」打爆下游 DB 连接池是本知识点的经典事故；下游敏感型任务用全局信号量（Redis 计数器带租约）或干脆调低单进程值。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "任务幂等键（deduplication key/jobId）在 BullMQ 里的正确用法是：",
       "options": [
-        "随便传",
         "add 时指定 id：同 id 存在（未完成/在保留期）即去重——键要取自「业务自然唯一键」（订单号+动作），并注意保留期（removeOnComplete）过后同键可再入队",
         "id 只影响排序",
-        "重复 id 直接报错崩 worker"
+        "重复 id 直接报错崩 worker",
+        "随便传"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "去重窗口=任务保留期，「终态后再来同键」需要业务层最终一致兜底；把 jobId 当幂等合同写进文档（本关 exactly-once 幻觉题的正解组件）。"
     },
     {

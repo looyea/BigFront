@@ -15,45 +15,45 @@
     {
       "stem": "slice 之间如何相互调用 action？",
       "options": [
-        "import 直接调",
         "emit 事件",
         "通过 get() 访问对方 action",
-        "不能互调"
+        "不能互调",
+        "import 直接调"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "共享同一 set/get，get().otherSliceAction() 即可。"
     },
     {
       "stem": "组合多个 slice 的常见写法是？",
       "options": [
+        "reduce",
         "Object.assign",
         "create((...a)=>({...sliceA(...a),...sliceB(...a)}))",
-        "merge 函数",
-        "reduce"
+        "merge 函数"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "把各 StateCreator 展开合并进一个 store。"
     },
     {
       "stem": "导出 selectXxx 的主要收益是？",
       "options": [
-        "提速",
-        "封装 store 结构，组件不依赖内部字段",
         "持久化",
-        "时间旅行"
+        "时间旅行",
+        "提速",
+        "封装 store 结构，组件不依赖内部字段"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "selector 当黑盒接口，结构改动不外溢。"
     },
     {
       "stem": "StateCreator 的四个泛型第一个表示？",
       "options": [
-        "本 slice 类型",
         "整个 store 的聚合 State",
         "中间件",
-        "Set 类型"
+        "Set 类型",
+        "本 slice 类型"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "第一参是整体 State，保证 get() 能拿到别的 slice。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "跨 slice action 调用要注意什么？",
       "options": [
+        "要用 thunk",
         "无",
         "对方 action 需存在于聚合 State 类型中",
-        "必须异步",
-        "要用 thunk"
+        "必须异步"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "类型上要声明，否则 get().xxx 取不到。"
     },
     {
       "stem": "组合 slice 时为什么 create<AppState>() 用 curried？",
       "options": [
-        "习惯",
-        "为将来加中间件保留正确类型推断",
         "性能",
-        "必须有两参"
+        "必须有两参",
+        "习惯",
+        "为将来加中间件保留正确类型推断"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "带 slice 组合常配中间件，curried 保证类型。"
     },
     {
       "stem": "slice 文件通常导出三样东西，不包括？",
       "options": [
+        "根 Provider",
         "切片 StateCreator",
         "slice 的 TS 接口",
-        "细粒度 selector",
-        "根 Provider"
+        "细粒度 selector"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "Zustand 无 Provider。导出 slice/接口/selector。"
     },
     {

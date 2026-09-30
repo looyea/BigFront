@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "SSR 主要解决纯客户端渲染（SPA）的哪些问题？",
       "options": [
-        "代码太长",
-        "包体积大",
         "首屏白屏、SEO 弱（爬虫拿到空 HTML）、慢网/低端机体验差",
-        "HMR 慢"
+        "HMR 慢",
+        "代码太长",
+        "包体积大"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "SSR 在服务器输出真实 HTML，首屏可见、可被爬，再靠 hydration 变交互。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "hydration（水合）指的是什么？",
       "options": [
-        "把 CSS 注入页面",
-        "把图片转 base64",
         "服务端压缩 HTML",
-        "浏览器加载 JS 后，框架接管服务端返回的已有 DOM，绑定事件/恢复状态"
+        "浏览器加载 JS 后，框架接管服务端返回的已有 DOM，绑定事件/恢复状态",
+        "把 CSS 注入页面",
+        "把图片转 base64"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "SSR 出静态 HTML，client JS 执行后'接管'这些 DOM 使其可交互，即 hydration。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "Vite SSR 开发模式里，在服务端加载并执行前端 SSR 入口模块用的是哪个 API？",
       "options": [
+        "loadEnv()",
         "import()",
         "vite.ssrLoadModule()",
-        "require()",
-        "loadEnv()"
+        "require()"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "ssrLoadModule 在 Node 里即时编译并执行 SSR 入口拿到 render()，配合 transformIndexHtml/middlewareMode。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "为什么 SSR 里通常要'每个请求新建一个应用实例'？",
       "options": [
-        "为了省内存",
-        "避免用户间状态串台（共享单例会把 A 的数据渲染给 B）",
         "加速渲染",
-        "框架强制语法"
+        "框架强制语法",
+        "为了省内存",
+        "避免用户间状态串台（共享单例会把 A 的数据渲染给 B）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "服务端并发共享实例会造成状态泄漏/错乱，须按请求隔离（呼应 Express L5 无状态）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "生产环境 SSR 应该怎么部署？",
       "options": [
-        "直接跑 dev server + ssrLoadModule",
         "构建 client + server 双产物，用常驻 Node 服务加载 server 产物渲染、client 产物做 hydration",
         "只上传 dist 静态文件即可",
-        "交给 CDN 执行 JS"
+        "交给 CDN 执行 JS",
+        "直接跑 dev server + ssrLoadModule"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "dev server/ssrLoadModule 为开发设计，慢且不安全；生产要预构建双产物 + Node 服务。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "把 SSR 的初始 state 注入 HTML 时，必须注意什么？",
       "options": [
+        "用 localStorage 传",
         "越大越好",
         "state 要可 JSON 序列化，且对内容做转义防 </script> 逃逸引发 XSS",
-        "直接拼字符串即可",
-        "用 localStorage 传"
+        "直接拼字符串即可"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "内联脚本里的 </script><script> 会逃逸执行 → XSS；且不可序列化值会坏 hydration（呼应 Express L6）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "出现 hydration mismatch（水合不匹配）的常见原因是？",
       "options": [
-        "网络太慢",
-        "服务端与客户端首次渲染结果不同（用了 Date.now/random/读 window/依赖客户端数据的条件渲染）",
         "CSS 太多",
-        "chunk 分太多"
+        "chunk 分太多",
+        "网络太慢",
+        "服务端与客户端首次渲染结果不同（用了 Date.now/random/读 window/依赖客户端数据的条件渲染）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "两端渲染必须一致；把仅客户端的渲染延后到挂载后，或用 ClientOnly/suppressHydrationWarning。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " Vite SSR 构建默认把 node_modules 里的包 externalize（不打包）的原因是？",
       "options": [
-        "减小产物体积",
         "SSR 跑在 Node，保留 import/require 原样交给 Node 解析最直接：省构建时间、避 ESM/CJS 互操作坑、原生模块与动态 require 不破坏——代价是包格式不对（裸 CJS/非 ESM 产物）时要 noExternal 特判",
         "Node 不支持 ESM",
-        "防止 XSS"
+        "防止 XSS",
+        "减小产物体积"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "externalize 是把\"模块解析\"外包给 Node；框架/路由类包还要防双实例，两条动机常一起考。"
     },
     {
@@ -124,12 +124,12 @@
       "type": "single",
       "prompt": " 一段只能浏览器跑的代码（访问 window）要在 SSR 项目里安全共存，最通用的隔离手段是？",
       "options": [
+        "写在 style 标签里",
         "包在 if (typeof window !== undefined) 或组件内用 import.meta.env.SSR 条件 + onMount 后执行",
         "放进 try/catch 即可",
-        "延迟 1 秒执行",
-        "写在 style 标签里"
+        "延迟 1 秒执行"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "SSR 期根本不该执行浏览器代码；typeof 判断与生命周期隔离（挂载后副作用）是两道标准闸。"
     }
   ]

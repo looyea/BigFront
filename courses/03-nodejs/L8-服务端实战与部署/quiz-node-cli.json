@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "让 `npm i -g mycli` 后能直接敲 `mycli`，依赖 package.json 的哪个字段 + 脚本首行的什么？",
       "options": [
-        "scripts + # comment",
         "main + use strict",
         "bin + shebang(#!/usr/bin/env node)",
-        "exports + import"
+        "exports + import",
+        "scripts + # comment"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "bin 登记命令→软链进 PATH，shebang 告诉 OS 用 node 执行（呼应 node-cli 第二节、node-npm interview 第 3 题）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "CLI 的常规约定：机器可读的结果和人类可读的错误分别写到？",
       "options": [
-        "都写 stdout",
         "都写 stderr",
         "写文件",
-        "结果→stdout，错误/诊断→stderr"
+        "结果→stdout，错误/诊断→stderr",
+        "都写 stdout"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "结果走 stdout 可被管道捕获，诊断走 stderr 不污染数据流（呼应 node-cli 第四节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "为什么推荐设 `process.exitCode = 1` 而不是直接 `process.exit(1)`？",
       "options": [
-        "两者完全等价",
-        "process.exit 会截断尚未 flush 的 stdout；设 exitCode 让事件循环自然结束、输出写完再退",
         "exitCode 更快",
-        "process.exit 不能传数字"
+        "process.exit 不能传数字",
+        "两者完全等价",
+        "process.exit 会截断尚未 flush 的 stdout；设 exitCode 让事件循环自然结束、输出写完再退"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "硬 exit 可能丢输出；设 exitCode 更优雅（呼应 node-cli 第五、七节、node-child-process 'exit' vs 'close'）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "`mycli | head` 时下游先关闭管道，你的 CLI 写 stdout 可能收到什么错误、应如何处理？",
       "options": [
-        "EACCES，需提权",
         "EPIPE，应忽略/优雅退出而非崩溃",
         "ENOENT，文件不存在",
-        "不用处理"
+        "不用处理",
+        "EACCES，需提权"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "下游关闭→写 stdout 抛 EPIPE，要挂 error 处理避免崩溃（呼应 node-cli 第七节、node-stream-pipeline error）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "不想引入第三方依赖、又要规范解析 --flag/位置参数，可用 Node 内置的？",
       "options": [
+        "path.parse",
         "child_process.parse",
         "util.parseArgs",
-        "querystring.parse",
-        "path.parse"
+        "querystring.parse"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "util.parseArgs（Node 18.3+）内置轻量解析器，适合小 CLI；复杂场景再上 commander/yargs（呼应 node-cli 第三节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "util.parseArgs 的 stopPositional 选项解决什么：",
       "options": [
-        "加速解析",
-        "第一个位置参数后的旗标不再解析（`mycli run -- --flag` 或 `mycli exec ls -la` 场景里把 -la 原样传给子命令，不被顶层 CLI 吞掉报错）",
         "禁止短旗标",
-        "大小写敏感"
+        "大小写敏感",
+        "加速解析",
+        "第一个位置参数后的旗标不再解析（`mycli run -- --flag` 或 `mycli exec ls -la` 场景里把 -la 原样传给子命令，不被顶层 CLI 吞掉报错）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "「转发参数给别的命令」的顶层 CLI 刚需（npm run 同款）；另一配套 -- 分隔符约定：解析器与业务层都认「-- 后全位置参」。本关 parseArgs 题的进阶项。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "CLI 输出的「约定俗成」红线里，与 pipes 直接相关的是：",
       "options": [
-        "彩色加粗更专业",
         "非 TTY（重定向/管道）自动关色与动画、进度条不往 stdout 写噪音、表格宽度退化——检测 process.stdout.isTTY 并尊重 NO_COLOR",
         "输出永远带 ANSI 码",
-        "交互提示打到 stdout"
+        "交互提示打到 stdout",
+        "彩色加粗更专业"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "ANSI 码进文件=下游 cat/grep 灾难；isTTY 检测 + NO_COLOR 标准 + stderr 承载交互提示（本关 stdout/stderr 分工题的 UX 面）三件套是「被管道消费友好」的及格线。"
     },
     {

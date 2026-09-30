@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "res.render('a', data) 和 res.send(html) 的核心区别是？",
       "options": [
-        "完全一样",
         "render 只能发 JSON",
         "render 用模板引擎把 data 编译成 HTML 再发送；send 直接发已有内容",
-        "send 会缓存模板"
+        "send 会缓存模板",
+        "完全一样"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "render 查 views 目录模板 → 引擎编译 + 注入数据 → 得到 HTML 字符串再响应。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "EJS 原生支持 layout（布局继承）吗？",
       "options": [
-        "支持，用 extends 关键字",
         "支持但只支持一层",
         "通过 include 等效且完全一样",
-        "不支持，需 express-ejs-layouts 等插件"
+        "不支持，需 express-ejs-layouts 等插件",
+        "支持，用 extends 关键字"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "EJS 只有 include，无原生布局继承。真正 layout（block 填充）需 express-ejs-layouts 插件。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "app.set('view cache', true) 应该在哪里开启？",
       "options": [
-        "开发环境，加速",
-        "生产环境，缓存编译后的模板函数避免重复 parse",
         "任何环境都强制开",
-        "只在测试开"
+        "只在测试开",
+        "开发环境，加速",
+        "生产环境，缓存编译后的模板函数避免重复 parse"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "生产开：模板只编译一次复用。开发关：改了模板立刻生效不用重启。NODE_ENV=production 默认自动开。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "Nunjucks 的 {% extends %} + {% block %} 相比 include 的优势是？",
       "options": [
-        "运行更快",
         "子模板只写差异部分填充父模板占位块，更 DRY、结构复用性强",
         "不需要文件",
-        "支持 JavaScript"
+        "支持 JavaScript",
+        "运行更快"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "模板继承让公共布局在父模板定义，子模板覆盖 block → 比复制粘贴 include 更 DRY。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " EJS 的 include 指令 <%- include(...) %> 传参的默认规则是？",
       "options": [
+        "参数必须走全局 app.locals",
         "自动继承全部变量",
         "默认不继承父模板变量，要显式传对象或用 include 选项（传统 <% include %> 老语法才全量隐式传递）——依赖隐式传递是\"换个局部就空一半\"的维护灾难",
-        "只能 include 静态 HTML",
-        "参数必须走全局 app.locals"
+        "只能 include 静态 HTML"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "局部组件的数据契约要显式（传参清单），这与函数不读全局变量是同一条纪律。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " app.locals 和 res.locals 的作用域差别是？",
       "options": [
-        "没有差别",
-        "app.locals 应用级（所有渲染可见，放站点名/工具函数），res.locals 请求级（放当前用户/权限标记），同名时 res.locals 在渲染中覆盖 app.locals",
         "res.locals 更快",
-        "app.locals 只能启动时设置"
+        "app.locals 只能启动时设置",
+        "没有差别",
+        "app.locals 应用级（所有渲染可见，放站点名/工具函数），res.locals 请求级（放当前用户/权限标记），同名时 res.locals 在渲染中覆盖 app.locals"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "\"全站常量上 app、请求上下文上 res\"是视图数据分层的两拍；res.locals 每请求新建所以中间件写它安全。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 模板里 {{ user.name }} 风格（未转义输出）在 XSS 语境下的正确姿势是？",
       "options": [
-        "所有输出都不转义更快",
         "默认全转义、仅对\"服务端生成且已清洗的 HTML 片段\"用显式的原始输出标记（EJS 的 <%- %> / Nunjucks autoescape 下 |safe）并配 sanitize 层——白名单反转义而不是全局关转义",
         "用 CSS 兜底",
-        "只防 script 标签"
+        "只防 script 标签",
+        "所有输出都不转义更快"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "\"默认安全+例外显式\"是所有转义体系的公理；富文本字段是唯一例外且必须过 DOMPurify 级清洗。"
     },
     {

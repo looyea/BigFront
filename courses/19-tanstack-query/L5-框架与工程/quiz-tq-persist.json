@@ -4,12 +4,12 @@
     {
       "stem": "persistQueryClient 持久的是什么？",
       "options": [
-        "整个应用 state",
         "已完成的查询缓存",
         "mutation 队列",
-        "组件树"
+        "组件树",
+        "整个应用 state"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "查询级缓存出院。"
     },
     {
@@ -26,12 +26,12 @@
     {
       "stem": "哪些查询值得持久化由谁决定？",
       "options": [
-        "shouldDehydrateQuery 钩子",
-        "gcTime",
         "maxAge",
-        "Devtools"
+        "Devtools",
+        "shouldDehydrateQuery 钩子",
+        "gcTime"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "白名单精挑，别整库搬。"
     },
     {
@@ -48,12 +48,12 @@
     {
       "stem": "broadcastQueryClient 依赖的浏览器机制？",
       "options": [
-        "WebSocket",
-        "Service Worker",
         "BroadcastChannel",
-        "SSE"
+        "SSE",
+        "WebSocket",
+        "Service Worker"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "同源标签页总线。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "服务端为什么不能跑 persist？",
       "options": [
+        "会死循环",
         "性能差",
         "无 window 且多用户共享存储会串数据",
-        "不支持异步",
-        "会死循环"
+        "不支持异步"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "安全+环境双重否决。"
     },
     {
       "stem": "改版后 queryKey 语义变化要警惕？",
       "options": [
-        "请求变慢",
-        "旧持久条目顶着老数据出现在新 UI",
         "内存暴涨",
-        "重试风暴"
+        "重试风暴",
+        "请求变慢",
+        "旧持久条目顶着老数据出现在新 UI"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "大变更升 key 或清 store。"
     },
     {
       "stem": "mutation 默认会被持久化吗？",
       "options": [
-        "会",
         "不会，写操作不可重放",
         "看配置必开",
-        "只持久 pending"
+        "只持久 pending",
+        "会"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "读缓存出院≠写操作排队。"
     },
     {

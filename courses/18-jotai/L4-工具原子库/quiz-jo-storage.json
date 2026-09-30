@@ -15,45 +15,45 @@
     {
       "stem": "自定义存储需实现哪些方法？",
       "options": [
-        "read/write",
         "get/set/delete",
         "getItem/setItem/removeItem",
-        "load/save"
+        "load/save",
+        "read/write"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "StateStorage 接口。"
     },
     {
       "stem": "atomWithReducer 的更新方式是？",
       "options": [
-        "直接 set 值",
         "splice",
         "push",
-        "dispatch 一个 action 给 reducer"
+        "dispatch 一个 action 给 reducer",
+        "直接 set 值"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "Redux 风格。"
     },
     {
       "stem": "atomWithDefault 主要提供？",
       "options": [
-        "异步",
-        "reset 回默认值能力",
         "持久化",
-        "派生"
+        "派生",
+        "异步",
+        "reset 回默认值能力"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "可写回默认。"
     },
     {
       "stem": "相比 Zustand persist，atomWithStorage 少了什么？",
       "options": [
-        "读写",
         "内建 version/migrate",
         "存储",
-        "类型"
+        "类型",
+        "读写"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "需自处理旧格式（呼应 za-persist-deep）。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "让 storage 支持异步返回，getItem 可返回？",
       "options": [
+        "void",
         "null",
         "Promise",
-        "number",
-        "void"
+        "number"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "允许 async storage。"
     },
     {
       "stem": "单原子持久化 vs 整 store 持久化的取舍？",
       "options": [
-        "前者更粗",
-        "前者细但迁移分散、后者集中带版本",
         "相同",
-        "都不能迁移"
+        "都不能迁移",
+        "前者更粗",
+        "前者细但迁移分散、后者集中带版本"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "粒度差异。"
     },
     {
       "stem": "atomWithReducer 适合什么迁移？",
       "options": [
-        "Vuex",
         "已有 Redux reducer 逻辑",
         "MobX",
-        "Context"
+        "Context",
+        "Vuex"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "reducer 直接复用。"
     },
     {

@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "为什么 typeof x === 'object' 之后通常还要 && x !== null？",
       "options": [
-        "因为 null 是对象",
-        "因为 TS 不认识 object",
         "没必要，多此一举",
-        "因为 typeof null === 'object'，不排除 null 后续访问属性可能运行时崩溃"
+        "因为 typeof null === 'object'，不排除 null 后续访问属性可能运行时崩溃",
+        "因为 null 是对象",
+        "因为 TS 不认识 object"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "JS 历史遗留：typeof null 返回 'object'，判对象必须额外排除 null。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "name 可能为 0 或 '' 也是合法值，想只排除 null/undefined，用哪个判断最稳？",
       "options": [
+        "if (typeof name)",
         "if (name)",
         "if (name != null)",
-        "if (!!name)",
-        "if (typeof name)"
+        "if (!!name)"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "truthiness 会误伤 0/'' ；!= null 只挡 null 与 undefined，保留合法的假值。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "要把 Cat | Dog 联合缩到含 meow 的那支，最合适？",
       "options": [
+        "as Cat",
         "typeof",
         "instanceof",
-        "\"meow\" in a",
-        "as Cat"
+        "\"meow\" in a"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "两支是结构相似的对象、无共同 class，用 in 探测独有属性收窄最自然。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "function isStr(x): boolean 返回后能收窄外部变量吗？要收窄该写成什么？",
       "options": [
-        "能，boolean 自动收窄",
         "不能；应写成类型谓词 x is string",
         "能，只要加 as",
-        "不能，只能内联 if"
+        "不能，只能内联 if",
+        "能，boolean 自动收窄"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "普通 boolean 返回不携带'谁是某类型'信息；返回类型谓词(is)才能让调用点收窄（详见 ts-guards）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "switch(action.type) 能收窄联合，前提是？",
       "options": [
+        "action 必须是数组",
         "action 是 any",
         "type 是各成员共有且互不相同的字面量判别字段（可辨识联合）",
-        "必须有 default 才能收窄",
-        "action 必须是数组"
+        "必须有 default 才能收窄"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "可辨识联合 + 对判别字段的 switch/相等比较触发收窄（呼应 ts-union）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "`const u: unknown` 过 `Array.isArray(u)` 后，u 的类型是：",
       "options": [
-        "`unknown[]`",
-        "`any[]`（数组守卫把 unknown 收敛为 any[]）",
         "`never[]`",
-        "仍是 unknown"
+        "仍是 unknown",
+        "`unknown[]`",
+        "`any[]`（数组守卫把 unknown 收敛为 any[]）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "lib 里 Array.isArray 签名 `(arg: any) => arg is any[]`——从 unknown 只能落到 any[]，成员仍需逐层收窄；想要元素类型请先 parse/guard。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "let 变量在 if 里收窄后，在之后注册的回调里使用：",
       "options": [
-        "收窄保持（CFA 全局有效）",
         "收窄失效——回调延迟执行，let 可能已被改写，TS 回退声明类型",
         "自动加锁",
-        "仅严格模式失效"
+        "仅严格模式失效",
+        "收窄保持（CFA 全局有效）"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "闭包/回调边界重置非 const 变量的收窄；`const` 锁或立即执行处用是解法——TS 5.x 起对 `const` 缓存判据（aliased conditions）有改进，但「回调里的可变捕获」依然要就地再判。"
     },
     {

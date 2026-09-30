@@ -4,12 +4,12 @@
     {
       "stem": "monorepo 里公共配置怎么给子包复用？",
       "options": [
-        "每包各写一份",
         "子包 extends 根配置",
         "复制粘贴",
-        "软链"
+        "软链",
+        "每包各写一份"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "继承 + 局部 override。"
     },
     {
@@ -37,23 +37,23 @@
     {
       "stem": "对测试文件放宽某些规则用？",
       "options": [
-        "overrides 按 glob 覆盖",
         "整仓关",
         "删测试",
-        "ignore 每个文件"
+        "ignore 每个文件",
+        "overrides 按 glob 覆盖"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "规则跟文件类型走。"
     },
     {
       "stem": "Biome 与 Turborepo/pnpm 的关系？",
       "options": [
+        "正交：check 可做成可缓存 task",
         "互斥",
         "互相替代",
-        "必须先上",
-        "正交：check 可做成可缓存 task"
+        "必须先上"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "编排与检查分工不同。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "就近配置的含义？",
       "options": [
+        "随机",
         "只认根配置",
         "靠近文件的 biome.json 对该目录生效",
-        "全部合并",
-        "随机"
+        "全部合并"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "子包只声明偏差。"
     },
     {
       "stem": "vcs.useIgnoreFile 的好处是？",
       "options": [
-        "多一层配置",
-        "复用 .gitignore、一处声明全工具共享",
         "更慢",
-        "无用"
+        "无用",
+        "多一层配置",
+        "复用 .gitignore、一处声明全工具共享"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "减少重复与漂移。"
     },
     {
       "stem": "对生成代码合适的处理是？",
       "options": [
-        "纳入统一 lint",
         "排除或用 overrides 差异化",
         "手写",
-        "全 error"
+        "全 error",
+        "纳入统一 lint"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "生成码别按人写码标准管。"
     },
     {

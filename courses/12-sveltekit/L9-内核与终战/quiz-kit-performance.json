@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "对 Kit 应用做性能测试，正确的方式是？",
       "options": [
-        "在 dev 模式测，最能反映真实加载",
-        "任何模式都行，无所谓",
         "build 之后用 vite preview（生产构建）测",
-        "只能上线后灰度测，本地无意义"
+        "只能上线后灰度测，本地无意义",
+        "在 dev 模式测，最能反映真实加载",
+        "任何模式都行，无所谓"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "dev 行为与生产不同，官方要求 vite build 后跑 vite preview 做性能测试（preview 非完美复刻，platform 对象不适用）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "开箱优化里的 request coalescing（请求合并）针对的是？",
       "options": [
-        "把多个 server load 的数据请求归并成一次 HTTP 往返",
-        "把 CSS 和 JS 合并成一个文件",
         "把所有图片合成雪碧图",
-        "合并多次 beforeNavigate 事件"
+        "合并多次 beforeNavigate 事件",
+        "把多个 server load 的数据请求归并成一次 HTTP 往返",
+        "把 CSS 和 JS 合并成一个文件"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "多个 server load 的数据拉取被归并成单次 HTTP 请求，这是 Kit 开箱就做的优化之一。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "要用上 Kit 的'数据内联'（SSR fetch 结果水合时复用），在 load 里应当？",
       "options": [
-        "直接用 window.fetch",
-        "使用 load 事件对象上的 fetch 代理发起请求",
         "用 axios 实例",
-        "用 new XMLHttpRequest"
+        "用 new XMLHttpRequest",
+        "直接用 window.fetch",
+        "使用 load 事件对象上的 fetch 代理发起请求"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "必须用 load 提供的 fetch（event.fetch），Kit 才能记录并在浏览器端内联复用；裸调 globalThis.fetch 会绕过、导致二次请求。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "@sveltejs/enhanced-img 的收益不包括以下哪项？",
       "options": [
+        "自动把后端 SQL 查询合并为一次 join",
         "构建期压缩并转现代格式",
         "生成正确 width/height 减少 CLS",
-        "生成多尺寸 srcset",
-        "自动把后端 SQL 查询合并为一次 join"
+        "生成多尺寸 srcset"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "enhanced-img 只管图片优化；把两次查询合成 join 属于后端/server load 的瀑布治理，与它无关。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "Vite 为缓存友好把代码切成很多小文件，这套策略要求部署环境满足什么？",
       "options": [
-        "必须用 HTTP/1.1",
         "必须禁用压缩",
         "只能本地托管",
-        "需 HTTP/2 或更高，以便并行加载这些小文件"
+        "需 HTTP/2 或更高，以便并行加载这些小文件",
+        "必须用 HTTP/1.1"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "大量小文件依赖并行加载，HTTP/1.1 队头阻塞会拖垮它，官方要求确保 host 用 HTTP/2+。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 对 Kit 应用做真实性能测试，正确口径是？ ",
       "options": [
-        " dev 模式跑 Lighthouse ",
-        " 生产 build + preview（或真实环境）下测，禁用缓存扩展并固定网络条件 ",
         " 只测首字节 ",
-        " 看本地体感 "
+        " 看本地体感 ",
+        " dev 模式跑 Lighthouse ",
+        " 生产 build + preview（或真实环境）下测，禁用缓存扩展并固定网络条件 "
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": " dev 与生产管线差异巨大，官方文档明确要求在生产构建上度量。 "
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " request coalescing（请求合并）解决的问题是？ ",
       "options": [
-        " 静态资源合并 ",
         " 并发相同 URL 的 SSR fetch 只发一次，多个 load 共享结果 ",
         " 合并 JS chunk ",
-        " 合并表单 "
+        " 合并表单 ",
+        " 静态资源合并 "
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": " 同一请求生命周期内 event.fetch 同 URL 自动去重，跨布局/页面重复引用不再放大。 "
     },
     {

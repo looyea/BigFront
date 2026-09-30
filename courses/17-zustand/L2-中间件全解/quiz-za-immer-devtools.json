@@ -15,45 +15,45 @@
     {
       "stem": "immer 未变的分支引用会？",
       "options": [
-        "全部新建",
         "被销毁",
         "保持引用不变（结构共享）",
-        "变 Proxy 永久"
+        "变 Proxy 永久",
+        "全部新建"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "结构共享让 selector 更精准判重。"
     },
     {
       "stem": "devtools 中间件给每次 set 命名的方式是？",
       "options": [
-        "第一个参数",
         "注释",
         "store id",
-        "set 的第三个参数 action 字符串"
+        "set 的第三个参数 action 字符串",
+        "第一个参数"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "set(fn, replace, action) 第三参作为 action 名。"
     },
     {
       "stem": "devtools + immer 推荐顺序？",
       "options": [
-        "immer(devtools(fn))",
-        "devtools(immer(fn))",
         "随便",
-        "只用一个"
+        "只用一个",
+        "immer(devtools(fn))",
+        "devtools(immer(fn))"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "devtools 最外记录最终态，immer 最内产出。"
     },
     {
       "stem": "immer 的主要成本来自？",
       "options": [
-        "深拷贝",
         "Proxy 读写拦截",
         "正则",
-        "GC"
+        "GC",
+        "深拷贝"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Proxy 拦截有开销，但对 UI 通常可忽略。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "何时可能不该用 immer？",
       "options": [
+        "需要 TS",
         "嵌套对象多",
         "超大数组每帧高频写",
-        "想少写代码",
-        "需要 TS"
+        "想少写代码"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "高频巨型结构下 Proxy 开销明显，退回函数式展开。"
     },
     {
       "stem": "不给 set 命名在 DevTools 里表现为？",
       "options": [
-        "报错",
-        "匿名 update 难归因",
         "不显示",
-        "自动命名"
+        "自动命名",
+        "报错",
+        "匿名 update 难归因"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "缺 action 名则显示匿名，排查困难。"
     },
     {
       "stem": "features 选项用于？",
       "options": [
-        "持久化",
         "开关 DevTools 面板功能（jump/dispatch 等）",
         "中间件",
-        "选择器"
+        "选择器",
+        "持久化"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "features 精细控制 DevTools 能力。"
     },
     {

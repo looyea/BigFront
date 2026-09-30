@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "错误处理中间件的特征是？",
       "options": [
-        "有 2 个参数 (req, res)",
-        "有 3 个参数 (req, res, next)",
         "名字必须叫 handleError",
-        "有 4 个参数 (err, req, res, next)"
+        "有 4 个参数 (err, req, res, next)",
+        "有 2 个参数 (req, res)",
+        "有 3 个参数 (req, res, next)"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "Express 通过参数个数识别错误中间件：必须 4 个形参 (err, req, res, next)，哪怕不用 next 也必须声明。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "helmet() 中间件做了什么？",
       "options": [
-        "HTTPS 重定向",
-        "设置一组安全相关的 HTTP 响应头（CSP/X-Frame-Options/HSTS 等）",
         "防 DDoS",
-        "加密 Cookie"
+        "加密 Cookie",
+        "HTTPS 重定向",
+        "设置一组安全相关的 HTTP 响应头（CSP/X-Frame-Options/HSTS 等）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "helmet 聚合十几个安全头：X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security, CSP 等，一行代码加固。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "中间件里忘记调用 next() 会导致什么？",
       "options": [
-        "报错崩溃",
         "请求永远挂起（客户端超时）",
         "自动跳到下一个",
-        "返回 500"
+        "返回 500",
+        "报错崩溃"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "如果中间件既不 next() 也不结束响应(res.send/json/end) → 请求卡在管道里 → 直到客户端/代理超时。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " app.disable('x-powered-by') 关掉的是什么，为什么要关？",
       "options": [
+        "关闭路由缓存",
         "关掉 ETag 生成",
         "去掉响应头 X-Powered-By: Express——它向攻击者广播技术栈与版本线索，减不了多少攻击面但白送侦察信息",
-        "禁用压缩",
-        "关闭路由缓存"
+        "禁用压缩"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "安全入门第一课：默认头里的技术栈指纹（X-Powered-By/Server）在生产都该清洗或改写，成本一行收益不对称。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 子路由文件（express.Router() 创建）的标准导出约定是？",
       "options": [
-        "导出 app 实例",
-        "module.exports = router，由主文件 app.use('/api/xxx', router) 挂载——路由文件不碰 app，依赖单向，测试可单独挂到空 app",
         "导出 handler 数组",
-        "必须默认导出配置对象"
+        "必须默认导出配置对象",
+        "导出 app 实例",
+        "module.exports = router，由主文件 app.use('/api/xxx', router) 挂载——路由文件不碰 app，依赖单向，测试可单独挂到空 app"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "\"谁 listen 谁拥有 app\"是唯一单向依赖线；router 文件里 import app 反向挂载是循环依赖事故的头号来源。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 启动时发现必需环境变量（如 DATABASE_URL）缺失，推荐的进程行为是？",
       "options": [
-        "打一条 warn 继续跑",
         "fail-fast：启动阶段校验完整即退出（crash），绝不带残缺配置服务流量——半瘫运行比快速死亡贵得多",
         "用默认值静默兜底",
-        "等第一个请求到来再报错"
+        "等第一个请求到来再报错",
+        "打一条 warn 继续跑"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "启动即死：编排系统会重启/换实例且告警清晰；半瘫运行：随机请求随机挂，排查半径大一个量级。"
     },
     {

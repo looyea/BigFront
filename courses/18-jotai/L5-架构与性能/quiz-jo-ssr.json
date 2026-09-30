@@ -4,12 +4,12 @@
     {
       "stem": "SSR 下 Jotai store 应如何创建？",
       "options": [
-        "全局单例复用",
-        "每组件一个",
         "每请求 createStore 一份",
-        "不用 store"
+        "不用 store",
+        "全局单例复用",
+        "每组件一个"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "防跨请求泄漏。"
     },
     {
@@ -26,23 +26,23 @@
     {
       "stem": "hydrateAtoms 在哪一端调用？",
       "options": [
+        "两者都不",
         "服务端",
         "客户端水合时",
-        "构建时",
-        "两者都不"
+        "构建时"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "客户端注入服务端值。"
     },
     {
       "stem": "async atom 在 SSR 传结果目的是？",
       "options": [
-        "加密",
-        "避免客户端重复取数与闪烁",
         "压缩",
-        "并行"
+        "并行",
+        "加密",
+        "避免客户端重复取数与闪烁"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "水合已 resolve 值。"
     },
     {
@@ -70,45 +70,45 @@
     {
       "stem": "server 组件读 atom 用什么？",
       "options": [
+        "Provider",
         "useAtom",
         "store.get 直读",
-        "useSetAtom",
-        "Provider"
+        "useSetAtom"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "非 hook 方式。"
     },
     {
       "stem": "Provider 放置原则？",
       "options": [
-        "尽量全局",
-        "放需要 store 的最小 client 子树根",
         "禁用",
-        "每次渲染新建"
+        "每次渲染新建",
+        "尽量全局",
+        "放需要 store 的最小 client 子树根"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "保留 RSC 收益。"
     },
     {
       "stem": "SSR 首屏无 store 值会？",
       "options": [
-        "更好",
         "内容跳动/mismatch",
         "报错崩溃",
-        "无影响"
+        "无影响",
+        "更好"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "需水合填充。"
     },
     {
       "stem": "下面哪项不属于 Jotai SSR 要点？",
       "options": [
-        "每请求 store",
-        "dehydrate/hydrate",
         "storage 防闪烁",
-        "immer 冻结"
+        "immer 冻结",
+        "每请求 store",
+        "dehydrate/hydrate"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "immer 与 SSR 无关。"
     }
   ]

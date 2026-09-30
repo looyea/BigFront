@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "infer 关键字用在哪里、起什么作用？",
       "options": [
-        "任意位置声明变量",
         "替代 as",
         "只能用在条件类型的 extends 子句里，声明一个'待推断'占位，让 TS 从匹配结构中反推类型",
-        "只在 class 里用"
+        "只在 class 里用",
+        "任意位置声明变量"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "infer 是模式匹配里的捕获变量，如 (...)=>infer R 提取返回类型。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "type Elem<T> = T extends (infer U)[] ? U : never; Elem<[1,2]> 结果是？",
       "options": [
-        "[1,2]",
         "never",
         "number[]",
-        "1 | 2"
+        "1 | 2",
+        "[1,2]"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "infer U 捕获元组/数组的元素类型联合，[1,2] → 1|2。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "分布式条件类型在什么条件下发生？如何关闭？",
       "options": [
-        "总是分发；无法关闭",
-        "当 extends 左侧是裸类型参数且实参为联合时分发到每个成员；用 [T] extends [U] 包元组关闭",
         "只在 class 分发",
-        "用 as const 关闭"
+        "用 as const 关闭",
+        "总是分发；无法关闭",
+        "当 extends 左侧是裸类型参数且实参为联合时分发到每个成员；用 [T] extends [U] 包元组关闭"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "裸类型参数 + 联合触发分发；把 T 包进元组即非裸参数，抑制分发。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "MyExclude<T,U> = T extends U ? never : T 为什么能'从联合里剔除'成员？",
       "options": [
-        "因为 never 会运行报错",
         "分发后匹配到的成员被替换成 never，而 never 在联合中'消失'，于是只剩不匹配的成员",
         "因为 U 是 any",
-        "它其实不能剔除"
+        "它其实不能剔除",
+        "因为 never 会运行报错"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "分发 + never 在联合里被吸收，是 Exclude/Extract/NonNullable 的共同机制。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "类型安全事件总线 on<K extends keyof Events>(name:K, cb:(e:Events[K])=>void) 靠什么让回调参数随事件名精确？",
       "options": [
+        "enum",
         "any 断言",
         "约束 K extends keyof Events + 索引访问类型 Events[K]，K 定则负载类型定",
-        "重载",
-        "enum"
+        "重载"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "keyof 约束 + 索引访问把'事件名'与'该事件负载类型'绑在一起（呼应 ts-generic-constraints）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "递归条件类型 Awaited<Promise<Promise<number>>> 得到？",
       "options": [
-        "Promise<number>",
-        "number",
         "Promise<Promise<number>>",
-        "unknown"
+        "unknown",
+        "Promise<number>",
+        "number"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "每命中一层 Promise 就 infer 出内层再递归，直到非 Promise 停止，得到 number。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "`type X = [never] extends [never] ? 1 : 2` 与 `never extends never ? 1 : 2` 的结果：",
       "options": [
-        "都是 1",
         "前者 1；后者**也是 1 但当输入是裸 never 联合分发时结果不同**——元组写法是「关分发」的标准闸",
         "都是 2",
-        "后者报错"
+        "后者报错",
+        "都是 1"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "裸 T=never 时分发条件类型对空联合直接返回 never（不跑分支）；[T] 裹住后 never 老老实实走 true 分支——Equal 测试与「整体判断」全靠这个闸。"
     },
     {

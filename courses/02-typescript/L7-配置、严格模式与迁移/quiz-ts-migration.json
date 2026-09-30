@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "allowJs: true 在迁移中的含义是？",
       "options": [
-        "把所有 JS 自动转成 TS",
-        "禁止检查 JS",
         "让 tsc 纳入 .js/.jsx 与 .ts 混编（默认只解析不深度检查其类型）",
-        "只处理 JS"
+        "只处理 JS",
+        "把所有 JS 自动转成 TS",
+        "禁止检查 JS"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "allowJs 允许 JS 进入编译程序、与 TS 共存；是否检查由 checkJs 决定（第三节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "想把 TS 引入项目、产物仍交给 babel/现有构建，自己只用 tsc 做类型检查，关键选项是？",
       "options": [
-        "declaration",
-        "isolatedModules",
         "skipLibCheck",
-        "noEmit: true"
+        "noEmit: true",
+        "declaration",
+        "isolatedModules"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "noEmit 让 tsc 只跑类型检查不产出 JS，转译交给既有构建链（双轨，呼应 ts-project 第9题）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "还没把 foo.js 改成 foo.ts，怎么就能享受类型检查？",
       "options": [
+        "关掉 strict",
         "不可能",
         "文件顶加 // @ts-check，配合 JSDoc 写类型即可检查该文件",
-        "加 // @ts-nocheck",
-        "关掉 strict"
+        "加 // @ts-nocheck"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "@ts-check + JSDoc 让单文件在不改后缀下获得类型检查（第三节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "迁移外部数据（JSON.parse 结果）时的推荐姿势是？",
       "options": [
-        "直接 as User 断言",
-        "先当 unknown，用类型守卫/zod 运行时校验后再当精确类型用",
         "存成 any",
-        "关掉 strictNullChecks"
+        "关掉 strictNullChecks",
+        "直接 as User 断言",
+        "先当 unknown，用类型守卫/zod 运行时校验后再当精确类型用"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "as 只是骗编译器、运行时不校验；unknown+守卫/校验才真正在边界建立信任（第五节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "单文件迁移（改名 .ts）时，在 moduleResolution: nodenext 下 import 路径要注意？",
       "options": [
-        "必须去掉扩展名",
         "相对导入要写编译产物名 ./foo.js（即便源是 foo.ts）",
         "必须写 .ts 后缀",
-        "改成绝对路径"
+        "改成绝对路径",
+        "必须去掉扩展名"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "nodenext 按运行时 ESM 规则解析，import 指向 emit 后的 .js 名（第四节，呼应 ts-modules）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "遇到无类型第三方 JS 库，第一步应？",
       "options": [
+        "把整库全部精确声明完",
         "fork 库源码加类型",
         "查有没有 @types/xxx；没有再写 declare module 覆盖用到的 API（先 any 兜底）",
-        "放弃该库",
-        "把整库全部精确声明完"
+        "放弃该库"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "优先现成 @types，再渐进手写最小声明覆盖用到的部分（第六节，呼应 ts-declarations）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "纯 JS 文件顶上加 `// @ts-check` 的效果：",
       "options": [
-        "该文件被 TS 编译器按 checkJs 规则检查，JSDoc 类型即时生效——零转译的 TS 体验",
         "文件自动重命名 .ts",
         "跳过编译",
-        "等价 @ts-nocheck"
+        "等价 @ts-nocheck",
+        "该文件被 TS 编译器按 checkJs 规则检查，JSDoc 类型即时生效——零转译的 TS 体验"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "@ts-check 是 checkJs 的**单文件开关**（全局配 checkJs 则反开关 @ts-nocheck）：JSDoc @type/@param 即类型源，迁移前侦察利器。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "@ts-nocheck 与逐行 @ts-expect-error 的债务差别：",
       "options": [
-        "没有差别",
         "nocheck=整文件黑箱（错误不可见也不收敛）；expect-error=逐行台账（错误消失时会反向报警，可清理）",
         "expect-error 更危险",
-        "nocheck 可被 lint 统计所以推荐"
+        "nocheck 可被 lint 统计所以推荐",
+        "没有差别"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "expect-error 自带「过期检测」（Unused @ts-expect-error directive），是**可回收**债务；nocheck 只进不出——迁移收尾阶段禁止新增，逐步换显式类型。"
     },
     {

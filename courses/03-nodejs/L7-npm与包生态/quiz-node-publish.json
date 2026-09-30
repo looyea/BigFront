@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "什么是 dual package hazard？",
       "options": [
-        "同时发两个包",
-        "版本号冲突",
         "锁文件损坏",
-        "同一包被以 ESM 和 CJS 各加载一份，导致单例/instanceof/内部状态出现两份实例"
+        "同一包被以 ESM 和 CJS 各加载一份，导致单例/instanceof/内部状态出现两份实例",
+        "同时发两个包",
+        "版本号冲突"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "双格式各加载一份→模块实例不唯一，含单例/注册表的包最易中招（呼应 node-publish 第三节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "一旦 package.json 定义了 exports 字段，未声明的子路径（如 my-lib/src/internal）会？",
       "options": [
+        "被打包器忽略",
         "照常可导入",
         "被拒绝/报错，强制公共 API 边界",
-        "自动指向 main",
-        "被打包器忽略"
+        "自动指向 main"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "exports 是白名单，未声明路径不可被外部访问，带来封装性（呼应 node-publish 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "想把发布内容限制为只含 dist 与 README，应该用？",
       "options": [
-        ".gitignore",
-        "files 白名单字段",
         "scripts",
-        "engines"
+        "engines",
+        ".gitignore",
+        "files 白名单字段"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "files 白名单只发必要产物；配 npm pack --dry-run 预览（呼应 node-publish 第五节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "npm version patch 的作用是？",
       "options": [
-        "升级依赖到最新",
         "把版本号补丁位 +1、改 package.json 并打 git tag",
         "发布到 npm",
-        "删除 lockfile"
+        "删除 lockfile",
+        "升级依赖到最新"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "npm version 负责改版本+打 tag（minor/major 同理），publish 才是发布（呼应 node-publish 第六节、node-npm 第三节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "\"sideEffects\": [\"*.css\"] 在库发布中的含义是：",
       "options": [
-        "声明所有代码都不安全",
-        "告诉打包器：CSS 等列出的文件「有运行时副作用不可摇树」，其余 JS 可安全 tree-shake；写成 false 是最激进声明（全部可摇），写 * 等于放弃摇树",
         "仅 webpack 生效故可忽略",
-        "控制安装时脚本"
+        "控制安装时脚本",
+        "声明所有代码都不安全",
+        "告诉打包器：CSS 等列出的文件「有运行时副作用不可摇树」，其余 JS 可安全 tree-shake；写成 false 是最激进声明（全部可摇），写 * 等于放弃摇树"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "sideEffects 是**给 bundler 的合同**：库作者确知「import 只为注册」的文件（polyfill、CSS）必须列出，否则被摇掉=运行时功能蒸发；副作用敏感模块混进「false」是线上玄学 bug 制造机。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "发布含 class 且用户会 instanceof 的库，双包形态最要注意的是：",
       "options": [
-        "体积",
         "同一 class 的 ESM/CJS 两份产物是不同类对象——实例跨形态 instanceof 失败；解法=单一真源（CJS 产物 re-export ESM 或反向聚合）或文档声明「instanceof 仅在同形态内有效」",
         "必须 CJS",
-        "禁止 class 导出"
+        "禁止 class 导出",
+        "体积"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "dual package hazard 的用户可见形态之一（本包 modules 关双实例题的库侧）：attw 查条件表、集成测试分别用 require 与 import 跑 instanceof 断言是唯一防线。"
     },
     {

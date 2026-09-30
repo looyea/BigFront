@@ -18,6 +18,19 @@ server load 的返回值要跨网络边界，**必须能被 devalue 序列化**�
 
 `src/lib/server/**` 是约定俗成的私有区：**浏览器侧代码一旦 import 到它，构建直接报错**，不是 lint 提醒而是打包器执法。这个机制让"这文件会不会泄漏到客户端"不需要人肉记忆——放对目录就安全。配套习惯：私有 env 的读取、DB client、密钥运算全部下沉到 `src/lib/server/`，路由文件只做编排。
 
+### 接线图：直连数据库的合法位置就这三处
+
+```
++page.server.ts / +layout.server.ts 的 load  →  src/lib/server/db.ts（Prisma / mysql2） →  MySQL / Postgres
++server.ts 的 API 端点            →  同上
+hooks.server.js 的 handle        →  同上（鉴权/会话查询）
+❌ +page.svelte / +page.js（universal load）/ 任何浏览器侧代码 → 一律只能走 HTTP
+```
+
+- **为什么只有这三处**：它们的代码只在服务端跑；`$lib/server` 则是打包器层面的强制隔离（写错位置不会“运行时才泄露”，而是 **build 直接失败**）——这比 Next 靠 `'use client'` 约定、Nuxt 靠 `runtimeConfig.public` 分区都更硬。私有连接串读 `$env/static/private`，千万别放进 `$env/static/public`（后者会被编译进公开 bundle）。
+- **进得去、出不来**：DB 返的原始对象不能直接当 server load 的返回值——**devalue 序列化契约**（§二）只收得下可序列化东西；Prisma 的行对象是普通对象所以能过，但函数、类实例、Proxy（未拆开的响应式对象）一律过不去，要先拍扁成纯数据。用 `select` 裁列既防字段泄露又防 N+1（09-express `exp-prisma`）。
+- **远程 MySQL 那一侧的账**：`connection_limit` 要算上实例数（serverless 扩容会静默打满 `max_connections`）、空闲连接会被 `wait_timeout` 掐断（表现为“隔一晚第一个请求报 `PROTOCOL_CONNECTION_LOST`”）、utf8mb4 索引前缀与 `@db.VarChar(191)`——全在 **09-express `exp-mysql`**；浏览器侧那四层数据地图见 **01-es `es-local-db`** §七。
+
 ## 四、event.fetch：长得像 fetch 的透传代理
 
 load 里解构出的 `fetch` 与浏览器原生 fetch 行为一致，但服务端执行时多了五层超能力：

@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "SemVer 中什么变更递增 MAJOR 版本？",
       "options": [
-        "修复 bug",
-        "新增向后兼容的功能",
         "更新依赖版本",
-        "破坏性变更（删除或修改已有 API）"
+        "破坏性变更（删除或修改已有 API）",
+        "修复 bug",
+        "新增向后兼容的功能"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "MAJOR = 不兼容变更（删 API / 改签名 / 改行为）。MINOR = 新增功能向后兼容。PATCH = bug fix。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "peerDependencies 的作用是什么？",
       "options": [
-        "声明开发时需要的依赖",
-        "声明宿主项目必须安装的依赖，防止重复打包",
         "声明可选的依赖",
-        "等同于 dependencies"
+        "等同于 dependencies",
+        "声明开发时需要的依赖",
+        "声明宿主项目必须安装的依赖，防止重复打包"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "如 UI 库声明 peerDependencies: { vue: '^3.0' }——vue 由 app 安装 → 库不打包 vue → 避免 bundle 里出现两份 vue。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "npm publish --tag next 的效果是？",
       "options": [
-        "发布最新版本号",
         "发布后用户 npm install my-pkg 默认拿不到这个版本，需 npm install my-pkg@next",
         "发布到测试服务器",
-        "自动标记为 deprecated"
+        "自动标记为 deprecated",
+        "发布最新版本号"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "默认 latest tag → npm install pkg 拿最新。--tag next/beta/rc → 不更新 latest → 用户需显式 @next 安装。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "npm Provenance 解决了什么问题？",
       "options": [
+        "压缩 npm 包体积",
         "加速 npm install",
         "通过 OIDC 身份链证明包确实由指定 GitHub repo + commit 发布，防供应链投毒",
-        "自动修复安全漏洞",
-        "压缩 npm 包体积"
+        "自动修复安全漏洞"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Provenance = 用 GitHub Actions 的 OIDC token 签名 → npm 记录\"这个包是从这个 repo 的这个 commit 构建的\"→ 用户可验证来源。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "`prepare` 脚本与 `prepublishOnly` 的差别：",
       "options": [
-        "完全相同",
-        "prepare 在本地 npm link/安装 git 依赖时也跑；prepublishOnly 只在 publish 前跑",
         "prepare 更快",
-        "后者已废弃"
+        "后者已废弃",
+        "完全相同",
+        "prepare 在本地 npm link/安装 git 依赖时也跑；prepublishOnly 只在 publish 前跑"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "构建产物逻辑放 prepublishOnly（只在发布跑）；本地开发钩子（husky install）放 prepare。写反 = 用户 git 装依赖也触发你的构建。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "pnpm 省磁盘的核心机制是：",
       "options": [
-        "压缩 tarball",
         "内容寻址硬链接：全局 store 一份，项目 node_modules 全是链接",
         "不装依赖",
-        "缓存 git 仓库"
+        "缓存 git 仓库",
+        "压缩 tarball"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "同一版本包 100 个项目只落盘一次；且非扁平 node_modules 让幽灵依赖（未声明就 import）从「能用」变成报错。"
     },
     {

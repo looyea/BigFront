@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "运行阶段用 `npm ci --omit=dev` 的收益是？",
       "options": [
-        "装得更快但功能不变",
         "会自动跑测试",
         "生产镜像不含 devDependencies，体积更小、攻击面更小",
-        "能装更多包"
+        "能装更多包",
+        "装得更快但功能不变"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "只装运行时依赖，镜像精简、少漏洞面（呼应 node-deploy-perf 第一节、node-npm 第五节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "graceful shutdown 收到 SIGTERM 后的正确第一步通常是？",
       "options": [
-        "process.exit(0)",
         "kill 所有子进程",
         "重启机器",
-        "server.close() 停止接受新连接、让在途请求 drain 完"
+        "server.close() 停止接受新连接、让在途请求 drain 完",
+        "process.exit(0)"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "先 close 停止接单再等在途完成，最后关资源退出（呼应 node-deploy-perf 第二节、node-cluster 第六节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "为什么 SIGKILL(-9) 不能做优雅收尾？",
       "options": [
-        "它太慢",
-        "SIGKILL 不可被捕获，进程被内核立即回收，没机会跑清理代码",
         "它只杀子进程",
-        "Node 收不到任何信号"
+        "Node 收不到任何信号",
+        "它太慢",
+        "SIGKILL 不可被捕获，进程被内核立即回收，没机会跑清理代码"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "SIGTERM 可捕获做收尾，SIGKILL/不可拦截；超时兜底才用强杀（呼应 node-deploy-perf 第二、三节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "容器里 PID 1 直接跑 `node app.js` 的经典问题是？",
       "options": [
-        "启动更慢",
         "可能不默认转发/处理 SIGTERM 且不回收僵尸子进程，导致 docker stop 超时被强杀",
         "无法联网",
-        "占用更多内存"
+        "占用更多内存",
+        "启动更慢"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "用 tini/--init 作 PID1 正确转发信号+回收僵尸（呼应 node-deploy-perf 第三节、node-child-process）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "容器内存受限时，Node 堆上限为什么要显式设置 `--max-old-space-size`？",
       "options": [
+        "没必要设置",
         "默认没有堆上限会无限增长",
         "Node 可能按物理内存估算堆、超过 cgroup 限额被 OOM-kill，设成小于容器限额更稳",
-        "为了加速 GC",
-        "没必要设置"
+        "为了加速 GC"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "受限 cgroup 下默认估算可能偏大→OOM；显式设小于限额（呼应 node-deploy-perf 第五节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "K8s 里 readiness 与 liveness 探针在 Node 服务中的正确分工是：",
       "options": [
-        "同一 URL 同检查",
-        "readiness=「现在能不能接流量」（依赖就绪/并发满载可临时 false）；liveness=「是否卡死」（检查事件循环活性探针，失败重启）——liveness 依赖外部 DB 会让 DB 抖动引发全量重启",
         "都可选即可省",
-        "仅 startup 需要鉴权"
+        "仅 startup 需要鉴权",
+        "同一 URL 同检查",
+        "readiness=「现在能不能接流量」（依赖就绪/并发满载可临时 false）；liveness=「是否卡死」（检查事件循环活性探针，失败重启）——liveness 依赖外部 DB 会让 DB 抖动引发全量重启"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "经典事故模板：liveness 探「/health 里 ping 了 MySQL」→ DB 闪断 → 全 Pod 重启潮 → 恢复时雪崩；活性探针只测「主循环还能转」（如 setImmediate 心跳计数器被 handler 读取）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "preStop hook + terminationGracePeriodSeconds 的组合用于：",
       "options": [
-        "加速镜像拉取",
         "SIGTERM 前给「从负载均衡摘除」留窗口（sleep 几秒/调注销接口），优雅退出总时长要 < 宽限期否则被 SIGKILL 腰斩——顺序：摘流→排空→退出",
         "滚动发布回滚",
-        "仅 debug 用"
+        "仅 debug 用",
+        "加速镜像拉取"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "K8s「杀进程」与「摘 Endpoint」是并行竞态：不等摘除就关服务=发布期 502 尖刺（本关 graceful 完整步骤题的编排侧补丁）。"
     },
     {

@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "多个 worker 都执行 listen(3000) 却不报 EADDRINUSE，本质原因是？",
       "options": [
-        "端口会自动分时复用",
         "OS 忽略了重复 bind",
         "监听 socket 由 primary 持有，通过 IPC 把句柄 transfer 给 worker，连接被分发",
-        "每个 worker 其实监听不同端口"
+        "每个 worker 其实监听不同端口",
+        "端口会自动分时复用"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "共享端口的本质是 primary 持句柄 + 连接分发（呼应 node-cluster 第三节、node-child-process interview 第 9 题）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "cluster.fork() 应该由谁调用？",
       "options": [
-        "任意 worker",
         "仅 worker",
         "操作系统",
-        "仅 primary(isPrimary)"
+        "仅 primary(isPrimary)",
+        "任意 worker"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "派生 worker 是 primary 的职责，用 cluster.isPrimary 分支判断（呼应 node-cluster 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "worker 因未捕获异常崩溃，让服务自愈最直接的做法是？",
       "options": [
-        "什么都不用做，Node 会自动重启 worker",
-        "primary 监听 'exit' 事件，在其中再 cluster.fork() 补一个",
         "把异常吞掉继续跑",
-        "重启整台机器"
+        "重启整台机器",
+        "什么都不用做，Node 会自动重启 worker",
+        "primary 监听 'exit' 事件，在其中再 cluster.fork() 补一个"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "在 primary 的 cluster.on('exit') 里 fork 补位；让崩的 worker fail fast、爆炸半径限于单 worker（呼应 node-cluster 第五节、node-async-errors）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "关于连接分发，下列说法正确的是？",
       "options": [
-        "同一 TCP 长连接的请求会被轮流分到不同 worker",
         "分发是连接级的：一条连接固定落在一个 worker，故不宜把会话状态放单进程内存",
         "round-robin 一定比 OS 调度差",
-        "worker 之间自动共享内存中的 session"
+        "worker 之间自动共享内存中的 session",
+        "同一 TCP 长连接的请求会被轮流分到不同 worker"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "cluster 按连接分发，一条连接归属固定 worker；会话要外置（如 Redis），round-robin 通常更均衡（呼应 node-cluster 第四节、Express session）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "关于 pm2 与 cluster 的关系，正确的是？",
       "options": [
+        "cluster 只能起 1 个 worker",
         "pm2 和 cluster 没有任何关系",
         "pm2 -i max 按核数起多实例并托管重启/reload/日志，封装了 cluster 思路且无代码侵入",
-        "用了 pm2 就不能用容器",
-        "cluster 只能起 1 个 worker"
+        "用了 pm2 就不能用容器"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "pm2 把多核、自愈、reload、日志封装成运维工具，理解 cluster 才懂其背后（呼应 node-cluster 第八节、node-deploy-perf）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "cluster 模式下 worker 崩溃后，primary 的标准自愈动作是：",
       "options": [
-        "重启机器",
-        "监听 worker \"exit\"，非优雅退出即按退避策略 fork 替补，并对「连环秒崩」设熔断（防 crash loop 打满 CPU）",
         "等人工",
-        "切流量到备用端口"
+        "切流量到备用端口",
+        "重启机器",
+        "监听 worker \"exit\"，非优雅退出即按退避策略 fork 替补，并对「连环秒崩」设熔断（防 crash loop 打满 CPU）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "无脑 respawn 在「启动即崩」（配置错误）时变成 Fork 炸弹——60s 内 N 次崩溃就停手告警；这是 pm2 默认 reboot 间隔存在的理由（本关 pm2 题的算法面）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "cluster 的端口共享在 Linux 上的默认实现机制是：",
       "options": [
-        "每个 worker 各自 bind 端口",
         "primary 持 listen fd，把 accept 到的连接 fd 经 IPC handle 传给 worker（SO_REUSEPORT 为可选模式）",
         "内核轮询",
-        "文件锁"
+        "文件锁",
+        "每个 worker 各自 bind 端口"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "fd 过继（本关 child-process IPC handle 题的实装）让「多进程同端口」成为可能；uv 的 SO_REUSEPORT 模式（Net.listen fd 复用）把 accept 交给内核，减少 primary 瓶颈与惊群——两档行为差异在连接风暴压测里可见。"
     },
     {

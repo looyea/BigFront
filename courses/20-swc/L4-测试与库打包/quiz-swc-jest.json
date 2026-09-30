@@ -4,12 +4,12 @@
     {
       "stem": "@swc/jest 替换的是 Jest 哪个环节？",
       "options": [
-        "reporter",
         "transform（转译）",
         "runner",
-        "watch"
+        "watch",
+        "reporter"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "换 babel-jest 为 SWC 转译。"
     },
     {
@@ -48,12 +48,12 @@
     {
       "stem": "Nest 测试里 provider 解析失败多半缺？",
       "options": [
-        "coverage",
         "decoratorMetadata 开关",
         "watch",
-        "snapshot"
+        "snapshot",
+        "coverage"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "元数据没发射。"
     },
     {
@@ -81,12 +81,12 @@
     {
       "stem": "换引擎前 snapshot 该怎么处理？",
       "options": [
-        "直接重录",
-        "先在旧引擎留基线再对比",
         "删光",
-        "禁用"
+        "禁用",
+        "直接重录",
+        "先在旧引擎留基线再对比"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "避免用错误基线掩盖真回归。"
     },
     {

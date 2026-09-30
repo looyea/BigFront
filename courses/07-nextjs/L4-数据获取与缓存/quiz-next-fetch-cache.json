@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "同一次渲染中，父子组件都调用了相同 URL 相同选项的 fetch，实际发出几个请求？",
       "options": [
+        "1 个（请求记忆化）",
         "2 个，各调各的",
         "不确定，取决于并发",
-        "0 个，全部命中磁盘",
-        "1 个（请求记忆化）"
+        "0 个，全部命中磁盘"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "同参数 fetch 在一次渲染中被去重，这是 React 级 memoization，作用域是单次渲染（呼应 next-fetch-cache 第二节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "要表达'这份数据最多 1 小时旧，到期后台翻新'，正确写法是？",
       "options": [
+        "setInterval 定时重新 fetch",
         "next: { revalidate: 3600 }",
         "cache: 'no-store'",
-        "cache: 'force-cache' 且无 revalidate",
-        "setInterval 定时重新 fetch"
+        "cache: 'force-cache' 且无 revalidate"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "revalidate 秒数=Data Cache 新鲜期，配合页面侧即 ISR 语义（呼应 next-fetch-cache 第二节、render-modes 的 SWR）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "哪种做法会造成'缓存串号'安全事故？",
       "options": [
-        "把 /api/feed 的公开响应缓存 60s",
-        "用带用户 token 的同一路径 fetch 可被缓存且响应随人不同",
         "给商品页打 tags 并按 tag 失效",
-        "购物车页用 no-store"
+        "购物车页用 no-store",
+        "把 /api/feed 的公开响应缓存 60s",
+        "用带用户 token 的同一路径 fetch 可被缓存且响应随人不同"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "进缓存的响应必须与请求者无关，否则 A 的数据喂给 B（呼应 next-fetch-cache 第四节口诀）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "直接 prisma 查询的结果想要跨请求缓存+按标签失效，应使用？",
       "options": [
-        "next: { tags } 加在 prisma 调用上",
         "unstable_cache(fn, keys, { tags })",
         "cache(fn) 即可",
-        "无解，只能 no-store"
+        "无解，只能 no-store",
+        "next: { tags } 加在 prisma 调用上"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "fetch 扩展只认 fetch；非 fetch 源用 unstable_cache 获得同等语义，cache() 只是请求内去重（呼应 next-fetch-cache 第五节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "fetch 对非 2xx 响应的行为是？",
       "options": [
-        "自动 reject",
         "自动重试一次",
         "正常 resolve，需手动检查 res.ok",
-        "抛 HTTP error"
+        "抛 HTTP error",
+        "自动 reject"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "404/500 都 resolve——忘查 ok 会把错误页 JSON 缓存成'正常数据'（呼应 next-fetch-cache 第一节、exp-rest 的响应约定）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "数据刚被后台修改，Next 侧让用户'马上看到新值'的正确机制是？",
       "options": [
+        "revalidate 设为 1",
         "让用户强刷浏览器",
         "在写操作处调用 revalidateTag/revalidatePath 使缓存过期",
-        "把所有页改成 no-store",
-        "revalidate 设为 1"
+        "把所有页改成 no-store"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "主动失效兼顾速度与新鲜；全员 no-store 等于放弃金字塔（呼应 next-fetch-cache 第三/四节、L5 会师）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " Next 15 起 fetch 的默认缓存语义是？",
       "options": [
-        "默认强制缓存到构建",
-        "默认 no-store（动态优先）——要缓存必须显式 options: { next: { revalidate: N } }（或 cache: force-cache/no-store）；这是对 Next 14\"默认无限缓存\"引发的普遍困惑的官方纠偏",
         "默认按 URL 自动 5 分钟",
-        "默认只缓存 GET"
+        "默认只缓存 GET",
+        "默认强制缓存到构建",
+        "默认 no-store（动态优先）——要缓存必须显式 options: { next: { revalidate: N } }（或 cache: force-cache/no-store）；这是对 Next 14\"默认无限缓存\"引发的普遍困惑的官方纠偏"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "从\"隐式全缓存\"回摆到\"显式才缓存\"，是因为默认缓存造成大量数据陈旧/串号事故；理解这次翻转才算理解 Next 缓存模型的当前形态。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 同一次渲染中父子组件对同一 URL 同一选项各调一次 fetch，结果是？",
       "options": [
-        "两次真实请求",
         "请求去重——React 在该次渲染范围内 memoize 相同调用（含跨 RSC 边界）；但去重只在本次渲染生命周期内，不是跨请求缓存，别当限流用",
         "自动合并成批量",
-        "报冲突错误"
+        "报冲突错误",
+        "两次真实请求"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "memoization（单次渲染内）与 cache（跨请求持久）是两回事；后者需显式 revalidate 且存于服务端数据缓存层。混淆两者是\"为什么我两个页面各请求了一次\"类问题的根因。"
     },
     {

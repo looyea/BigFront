@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "res.vary('Accept-Encoding') 的作用是什么？",
       "options": [
-        "强制压缩",
         "拒绝不支持 gzip 的客户端",
         "告诉中间缓存：不同 Accept-Encoding 要分别缓存响应变体",
-        "设置响应编码"
+        "设置响应编码",
+        "强制压缩"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "CDN/Proxy 看 Vary → 知道同一个 URL 要按 gzip/br/identity 分别存储 → 不会把压缩版发给不支持的客户端。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "SSE (Server-Sent Events) 的 Content-Type 是？",
       "options": [
-        "application/json",
         "text/plain",
         "multipart/mixed",
-        "text/event-stream"
+        "text/event-stream",
+        "application/json"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "SSE 用 text/event-stream + 每条消息 `data: xxx\\n\\n` 格式 → 浏览器 EventSource API 自动解析。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "res.locals 的用途是什么？",
       "options": [
-        "设置本地变量只在本文件可用",
-        "为当前请求的模板渲染提供上下文变量",
         "存储 session 数据",
-        "设置本地文件路径"
+        "设置本地文件路径",
+        "设置本地变量只在本文件可用",
+        "为当前请求的模板渲染提供上下文变量"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "res.locals.user = req.user → 后续 res.render('page') 时模板里直接用 user 变量。中间件里设 → 所有下游模板共享。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "res.on('finish') 什么时候触发？",
       "options": [
-        "请求处理完毕（进 handler 后）",
         "响应最后一字节已交给操作系统（不一定到达客户端）",
         "客户端收到完整响应",
-        "服务器关闭时"
+        "服务器关闭时",
+        "请求处理完毕（进 handler 后）"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "finish = res.end() 后所有缓冲已 flush 到 OS socket → 日志/morgan 用此时机记录 statusCode+时间。不代表客户端收到。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " 返回 204 No Content 时的协议约束是？",
       "options": [
+        "不能设缓存头",
         "可以带短 body",
         "不得有响应体也不应有 Content-Length——适合删除成功、轮询无新数据；Express 里 res.status(204).end() 即可，send(空串) 也是 204 语义但靠不住",
-        "必须带 Location",
-        "不能设缓存头"
+        "必须带 Location"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "204 是\"成功且无内容\"的精确语义，比返回 {code:0,data:null} 的 200 更 REST——语义化状态码是 API 自描述性的一部分。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 对 HEAD 请求，Express 的行为是？",
       "options": [
-        "自动 405",
-        "默认复用 GET handler 并剥离 body（只回头部）——若 GET 里做了计数/计费副作用，HEAD 会一起触发，需要时用 head 方法单独注册或短路",
         "需要手动注册 head 才支持",
-        "返回 200 空头"
+        "返回 200 空头",
+        "自动 405",
+        "默认复用 GET handler 并剥离 body（只回头部）——若 GET 里做了计数/计费副作用，HEAD 会一起触发，需要时用 head 方法单独注册或短路"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "HEAD 语义是\"只要元数据\"，自动支持是 connect router 的行为；副作用敏感接口（下载计数、按次计费）要显式审查。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " NDJSON 流式接口（逐行推送进度）里，让数据实时到达客户端的必要动作是？",
       "options": [
-        "提高 buffer 上限",
         "发送后显式 res.flush()（compression 中间件存在时）并确认代理层关闭响应缓冲（Nginx proxy_buffering off / X-Accel-Buffering: no 头）——否则首块前全被扣住",
         "用 chunked 编码即可自动实时",
-        "设置 Connection: close"
+        "设置 Connection: close",
+        "提高 buffer 上限"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "\"应用发了、代理攒着、客户端卡着\"是流式接口的头号联调问题，flush 与边缘缓冲配置要一起检查。"
     },
     {

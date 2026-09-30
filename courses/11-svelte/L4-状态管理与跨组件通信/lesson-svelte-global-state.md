@@ -80,6 +80,26 @@ $effect(() => {
 
 要点：`$effect` 在模块顶层是允许的（`.svelte.js` 中随首次求值注册，之后每次相关字段变化都执行）；写回是**副作用**所以放 `$effect`，读初始值放初始化代码。想要防抖/字段过滤，就 `import { debounce } from 'lodash-es'` 包一层——逻辑全在纯 JS 里，不需要任何库的 persist 插件（对比 Pinia 的 pinia-plugin-persistedstate，呼应 vue-state-patterns）。
 
+### 接线图：全局态、本地存储、数据库是三件事
+
+```
+组件/runes → .svelte.js 全局态（L0 内存） → $effect 写 localStorage / IndexedDB（L1 浏览器）
+                                    ↘ fetch/HTTP → 服务端 API → Prisma/mysql2 → MySQL（L2/L3 事实源）
+```
+
+```js
+// 目的：同一个 $effect 换后端——大对象/Blob 要离开 5MB 的 localStorage，就写 IndexedDB
+import { set } from 'idb-keyval';                 // 封装层细节见 01-es es-local-db §四
+$effect(() => {
+  const flat = $state.snapshot(settings);         // ✅ 先拍扁：未脱响应式的 Proxy 直接塞会 DataCloneError
+  set('settings', flat);                          // ✅ IDB 是异步的：不 await 则写失败不报错（要自己接错）
+  // ❌ 把 $state 对象直接 set 进去 → DataCloneError；❌ 在 SSR 路径上调 set → 无 indexedDB，要判环境
+});
+```
+
+- **判据**：丢了只影响这台设备的（主题、字号、面板宽度、草稿）→ L1；**换个设备也必须一样**的（订单、库存、用户资料）→ L3，浏览器侧只能当缓存。本平台的主题字号就是这套双层记忆（localStorage 即时 + 后端 JSON 兜底）。
+- **Svelte 没有内置持久化**，也没有 Next 那种“服务端组件”语义：真全局态只属于客户端单页语义（§四），要进库请去 **12-sveltekit `kit-server-modules`**（`+page.server.ts` 与 `$lib/server` 是合法的直连位置，写错目录 build 直接报错）；服务端连远程 MySQL 的具体坑在 **09-express `exp-mysql`**。
+
 ---
 
 ## 四、两个"全局态原罪"：HMR 与 SSR

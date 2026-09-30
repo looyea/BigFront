@@ -76,6 +76,17 @@ function AddTodo() {
 
 **别用 Redux/Pinia 手动缓存接口数据**——那是把服务端状态硬掰成客户端状态。UI 全局态才交给状态库（呼应 react-state-mgmt、vue-pinia-basics）。
 
+### 接线图：React 侧的四段链路（含“远程有一台独立 MySQL”）
+
+```
+组件 state / useQuery → HTTP（fetch/axios）→ 服务端 API（Express / Next Route Handler / Server Action）→ ORM（Prisma / mysql2）→ MySQL / Postgres
+   ↑ L0；缓存镜像                            ↑ L2/L3：事实源，只能在服务器进                                    ↑ 真库
+```
+
+- `queryKey` 是**缓存坐标**不是数据本身：`['orders', cursor]` 与服务端的游标分页对齐（exp-pagination）；`staleTime`/`invalidateQueries` 回答的是“何时再去取一次数”，不是“我有一份自己的库”。
+- **客户端持久化**（把缓存/偏好存本地）：TanStack Query 的 persistence、Zustand `persist` 都能换 IndexedDB 后端，写法与坑见 **01-es `es-local-db`** §四与 **19-tanstack-query `tq-persist`**、**17-zustand `za-persist-deep`**（换异步 storage 后首帧读到的是初始值 → 主题闪一下，同源于 SSR 水合不一致）。
+- **Next 里的直连只在服务端**：Server Component / Server Action / Route Handler 里可以 `import { db }`，但**客户端组件（`'use client'`）里 import ORM 就是把密码塞进公开 bundle**；Prisma 单例要挂 `globalThis` 防热重装载连爆（07-nextjs `next-fullstack-project`）；具体到 MySQL 方言、`connection_limit` 与 `wait_timeout` 的账在 **09-express `exp-mysql`**。
+
 ---
 
 ## 六、自检清单

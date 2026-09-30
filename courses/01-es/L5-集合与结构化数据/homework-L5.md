@@ -1,6 +1,6 @@
-# L5 作业：数据结构与序列化
+# L5 作业：数据结构、序列化与本地存储
 
-> 覆盖本阶段 2 关：`es-map-set`、`es-structured`。
+> 覆盖本阶段 3 关：`es-map-set`、`es-structured`、`es-local-db`。
 > 提交方式：读代码题直接答；手写实现放 `homework/L5.answers.js`。
 
 ---
@@ -126,7 +126,43 @@ const config = {
 
 ---
 
-## 五、拓展挑战（12 分，选做）
+## 五、数据分层与浏览器本地数据库（18 分）
+
+**T1（6 分）分层判定**：下面 8 项各属于哪一层（**L0 内存 / L1 浏览器持久 / L2 服务端存储 / L3 独立数据库**），并用一句话给出理由（判据：“谁是事实源”、“换个设备还得是同一份”）：
+
+1. 本页表单尚未提交的草稿文本
+2. 网站主题与正文字号偏好
+3. 用户已下单的订单记录
+4. 一个 40MB 的离线视频缓存
+5. 商品库存数量
+6. 列表接口的上一页结果（为了返回时不重新拉）
+7. 会话 token
+8. 服务端打点的学习进度（本平台用的 `data/progress.md`）
+
+> 要求：第 2/4/6 项额外写出“为什么不能只放某一层”的反例（例如只放 L1 会因 origin 隔离/被驱逐而丢）。
+
+**T2（8 分）手写一个 IndexedDB 封装**。要求：
+
+1. `openDB(name, version, upgrade)` 返回 Promise，`upgrade(db, tx)` 只在版本变大时被调；用 `db.close()` 与 `onversionchange` 处理“老标签页占住库”；
+2. `putAll(records)` 在**一个事务**里写完，中途抛错整体不入库（说清你靠哪个事件判定“真的落盘了”，而不是单个请求的 `onsuccess`）；
+3. `listByAuthor(author)` 走 `byAuthor` 索引且按 `createdAt` 倒序取前 20 条（**不允许**先 `getAll()` 再 `filter/sort`）；
+4. 说明为何下面这段会报错，并给两种修法：
+   ```js
+   // 目的：拉服务端汇率后把换算结果入库
+   const tx = db.transaction('note', 'readwrite');
+   const rate = await fetch('/api/rate').then((r) => r.json());   // 💥 事件循环转了一圈
+   tx.objectStore('note').put({ id: 'n9', rate });                 // TransactionInactiveError
+   ```
+
+**T3（4 分）双层记忆与离线写队列**：本平台的外观（主题 + 字号）同时写 `localStorage` 与后端 `data/appearance.json`。请回答：
+
+1. 只靠 `localStorage` 会在哪三种场景下“下次打开回到默认”？（提示：origin 包含协议+主机+**端口**）
+2. 合并规则为什么是“后端有 `updatedAt` 则后端赢并回灌本地，否则把本地值种上去”？说出一个反例（前端赢了会怎样）。
+3. 若把“离线写队列 + 重放”应用到笔记应用，幂等键必须存在哪一侧？为什么客户端自己记“这条发过了”不算？
+
+---
+
+## 六、拓展挑战（12 分，选做）
 
 写一个 `deepEqual(a, b)`（**不用 lodash**），要正确处理：
 - 基本类型 + `NaN`（`NaN` 与 `NaN` 相等）

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "App 的 onLaunch 什么时候触发、触发几次？",
       "options": [
-        "每次进入小程序都触发",
         "冷启动时触发、全局仅一次",
         "每次前后台切换",
-        "页面加载时"
+        "页面加载时",
+        "每次进入小程序都触发"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "onLaunch 冷启动仅一次（呼应 mp-lifecycle 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "\"从详情页返回列表页后要刷新列表\"，刷新逻辑应写在哪个钩子？",
       "options": [
-        "onLoad",
         "onReady",
         "onShow",
-        "onUnload"
+        "onUnload",
+        "onLoad"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "返回只触发 onShow，不重载 onLoad（呼应 mp-lifecycle 第三、四节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "进入一个页面的正确触发顺序是？",
       "options": [
-        "onLoad → onShow → onReady",
-        "onShow → onLoad → onReady",
         "onReady → onLoad → onShow",
-        "onLoad → onReady → onShow"
+        "onLoad → onReady → onShow",
+        "onLoad → onShow → onReady",
+        "onShow → onLoad → onReady"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "load→show→ready（首绘完成）（呼应 mp-lifecycle 第二节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "navigateBack 回到上一页时，上一页触发的是？",
       "options": [
-        "onLoad",
         "onShow",
         "onReady",
-        "都不触发"
+        "都不触发",
+        "onLoad"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "页面未销毁，只 onShow（呼应 mp-lifecycle 第四节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "下列哪个不是 Page 的生命周期而是需在 json 开启的页面事件钩子？",
       "options": [
-        "onLoad",
         "onShow",
         "onPullDownRefresh",
-        "onUnload"
+        "onUnload",
+        "onLoad"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "下拉刷新需 enablePullDownRefresh（呼应 mp-lifecycle 第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "关于 App.onShow，正确的是？",
       "options": [
+        "销毁时触发",
         "只在冷启动触发一次",
         "前后台切换/进入时反复触发",
-        "等价于 Page.onLoad",
-        "销毁时触发"
+        "等价于 Page.onLoad"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "App.onShow 随可见性反复（呼应 mp-lifecycle 第一节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 页面被 navigateTo 压栈后、再从上层页 navigateBack 回来，本页会触发的钩子顺序是？",
       "options": [
-        "onLoad → onShow",
-        "onShow（本页未被销毁，只重新显示，不再走 onLoad）",
         "onReady → onLoad",
-        "onUnload → onLoad"
+        "onUnload → onLoad",
+        "onLoad → onShow",
+        "onShow（本页未被销毁，只重新显示，不再走 onLoad）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "navigateTo 时本页进入隐藏（onHide）但实例仍在栈里；back 回来只 onShow/onHide 切换显隐，不重建。所以「返回刷新」写 onShow 而非 onLoad（后者只首次进页一次）。只有 redirectTo/navigateBack 真正销毁才 onUnload。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 首次查询节点信息/为 canvas 绑定上下文、「进入即要跑但只跑一次」的初始化，最适合放哪？",
       "options": [
-        "onLoad 顶部同步查节点",
         "onReady——此时初次渲染完成、视图层已就绪，能安全取节点布局/操作渲染后内容；onLoad 只保证 data 初始化、视图尚未渲染完成",
         "onShow",
-        "created"
+        "created",
+        "onLoad 顶部同步查节点"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "onLoad=数据与生命周期起点（页面参数在此拿），onReady=视图层首次渲染完毕（一次页只触发一次）。用 createSelectorQuery 量尺寸、初始化地图/canvas 这类「依赖真实节点」的活放 onReady 更稳。区分这两者能治好「onLoad 里查节点查不到」的常见 bug。"
     },
     {

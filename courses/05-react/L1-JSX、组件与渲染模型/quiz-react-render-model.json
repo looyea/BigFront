@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "React 一次更新的两个阶段及顺序是？",
       "options": [
-        "先 commit(改 DOM) 再 render(算 diff)",
-        "只有 render 一个阶段",
         "先 render(执行函数+diff 算变更) 再 commit(应用到真实 DOM)",
-        "mount 和 unmount"
+        "mount 和 unmount",
+        "先 commit(改 DOM) 再 render(算 diff)",
+        "只有 render 一个阶段"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "render 算变更、commit 改 DOM（呼应 react-render-model 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "React 的 diff 为什么能做到 O(n)？",
       "options": [
-        "它做了完整的树最小编辑距离计算",
-        "它不比较只重建",
         "因为虚拟 DOM 比真实 DOM 快",
-        "靠三条假设：同层比较、类型即身份、列表用 key 标识，做启发式而非最优"
+        "靠三条假设：同层比较、类型即身份、列表用 key 标识，做启发式而非最优",
+        "它做了完整的树最小编辑距离计算",
+        "它不比较只重建"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "用启发式假设换取线性复杂度（呼应 react-render-model 第三节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "把某组件的子节点换到另一层父节点下，React 会？",
       "options": [
+        "仅改 props",
         "智能移动复用",
         "视为跨层，销毁旧子树并重建（连带重置其 state）",
-        "忽略",
-        "仅改 props"
+        "忽略"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "React 不做跨层移动，只同层比较（呼应 react-render-model 第三节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "父组件重渲染时，子组件默认会？",
       "options": [
-        "一定不重渲染",
-        "也跟着重渲染(即使 props 没实质变化)",
         "只有用了 useState 才重渲染",
-        "取决于 key 存不存在"
+        "取决于 key 存不存在",
+        "一定不重渲染",
+        "也跟着重渲染(即使 props 没实质变化)"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "默认向下传播重渲染，可用 React.memo 阻止（呼应 react-render-model 第四节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "关于\"重渲染\"，正确的是？",
       "options": [
-        "重渲染必然产生 DOM 操作",
         "重渲染只是重跑函数+算 Element，diff 后无变化则不提交 DOM",
         "重渲染就是重新挂载",
-        "setState 后一定重渲染"
+        "setState 后一定重渲染",
+        "重渲染必然产生 DOM 操作"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "重渲染 ≠ 改 DOM；值未变还可能提前退出（呼应 react-render-model 第四、六节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "React 18 的自动批处理意味着？",
       "options": [
+        "只有事件处理器里才批处理",
         "多个 setState 合并为一次渲染，且 Promise/定时器里也生效",
         "setState 变成同步的",
-        "不再支持多次 setState",
-        "只有事件处理器里才批处理"
+        "不再支持多次 setState"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "18 起所有场景自动批处理（呼应 react-render-model 第六节、react-usestate）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "与 Vue 的更新机制相比，React 更需要你手动做的是？",
       "options": [
+        "手动 nextTick",
         "声明依赖收集",
         "用稳定 key 和 memo/useMemo 提示，避免多余重渲染",
-        "手写 patchFlag",
-        "手动 nextTick"
+        "手写 patchFlag"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "React 运行时全 diff，靠 key/memo 提示（呼应 react-render-model 第三节、vue-reactivity-theory 对照）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "diff 时同一位置的新旧节点「类型不同」（如 `<div>` 变 `<p>`，或组件函数引用变了），React 会？",
       "options": [
-        "尽量原地复用并改标签名",
-        "卸载旧子树（连同其 state 与 DOM）再挂载全新子树——类型不同视为不同元素，不做属性级修补",
         "只换 children",
-        "抛错中止渲染"
+        "抛错中止渲染",
+        "尽量原地复用并改标签名",
+        "卸载旧子树（连同其 state 与 DOM）再挂载全新子树——类型不同视为不同元素，不做属性级修补"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "两条协调假设之一：「不同类型的元素产生不同的树」。组件函数/类引用变化也被当作类型变化——所以把子组件定义在父组件函数体内（每次渲染都是新函数）会导致整棵子树反复卸载重挂，state 丢失、性能崩坏。这是「不要把组件定义在渲染里」经典坑的底层原因。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "关于 render 阶段与 commit 阶段的可中断性，正确的是？",
       "options": [
-        "两阶段都可被高优更新打断",
         "render（协调、算 diff）可被中断/放弃/重放，这是并发能力所在；commit（应用 DOM 变更、跑生命周期/effect）必须同步一次性完成，不能打断",
         "commit 可中断，render 不可",
-        "都不可中断"
+        "都不可中断",
+        "两阶段都可被高优更新打断"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "可中断 render 的前提正是「纯」——重放无副作用才安全。commit 之所以同步，是因为要一次性把一堆 DOM 变更刷上去并触发 useLayoutEffect，中间若被插入用户看到「半更新」状态或读到不一致 DOM 就坏了。这也解释了为什么生命周期/effect 被拆成 render 期(纯) 与 commit 期(可副作用) 两拨。"
     },
     {

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "毕业项目中 JWT token 注入到每个 HTTP 请求应该用什么机制？",
       "options": [
-        "每个 HttpClient.get 手动加 header",
         "函数式 HttpInterceptorFn 统一注入 Authorization header",
         "写在组件构造函数里",
-        "在 index.html 里配 meta 标签"
+        "在 index.html 里配 meta 标签",
+        "每个 HttpClient.get 手动加 header"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "provideHttpClient(withInterceptors([authInterceptor]))——拦截器统一加 Bearer token。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "毕业项目 SSR 配置中防止服务端 signal store 跨请求泄漏需要？",
       "options": [
+        "所有 store 改用 sessionStorage",
         "手动每个 handler reset",
         "provideServerRendering()（每请求独立 Injector）",
-        "不用 SSR",
-        "所有 store 改用 sessionStorage"
+        "不用 SSR"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "provideServerRendering() 保证每 HTTP 请求创建新的 root injector——service 实例不跨请求共享。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "毕业项目 budgets 门禁配置 500KB initial 的目的是？",
       "options": [
-        "确保主包体积可控防止无限膨胀",
         "限制后端 API 调用次数",
         "限制测试覆盖率",
-        "限制组件数量"
+        "限制组件数量",
+        "确保主包体积可控防止无限膨胀"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "budgets 是 CI 级性能纪律——构建产物超阈值直接失败——迫使团队保持懒加载和按需拆分。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "毕业项目中图表组件用 @defer (on idle) 的原因是？",
       "options": [
-        "图表不需要显示",
         "非首屏关键内容延迟加载——不阻塞 LCP 和交互",
         "图表只能 idle 时渲染",
-        "SSR 不支持图表"
+        "SSR 不支持图表",
+        "图表不需要显示"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "图表通常是 Dashboard 次要内容——on idle 让主线程先处理关键数据/表单，空闲时才加载 echarts 等重库。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "毕业项目 E2E 测试应覆盖哪些主流程？",
       "options": [
+        "CSS 样式正确性",
         "所有组件的渲染快照",
         "登录→导航→CRUD→登出的用户旅程",
-        "所有 service 方法的输入输出",
-        "CSS 样式正确性"
+        "所有 service 方法的输入输出"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "E2E 测完整用户旅程（跨页面、跨组件、含路由和后端交互）；单元/集成测 service 和组件。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "毕业项目里 signal store 与 NgRx 的选择结论是？",
       "options": [
-        "必须用 NgRx 才算企业级",
         "要求无 NgRx 验证 signal store 能否覆盖需求",
         "两者都不需要——全部写在组件里",
-        "用 Redux"
+        "用 Redux",
+        "必须用 NgRx 才算企业级"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "毕业项目明确要求用 signal store 实践——证明 80% 场景不需要 NgRx 的复杂度。"
     },
     {
@@ -124,12 +124,12 @@
       "type": "single",
       "prompt": "毕业记分卡中代码质量占多少分？",
       "options": [
-        "15%",
         "50%",
         "30%",
-        "10%"
+        "10%",
+        "15%"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "功能40%+代码质量30%+性能15%+测试15%——代码质量(架构/命名/lint通过)占 30%。"
     }
   ]

@@ -15,45 +15,45 @@
     {
       "stem": "getSnapshot 的核心契约是？",
       "options": [
-        "返回 Promise",
-        "同步副作用",
         "每次新建",
-        "无变化时返回相同引用"
+        "无变化时返回相同引用",
+        "返回 Promise",
+        "同步副作用"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "Object.is 判等，引用需稳定。"
     },
     {
       "stem": "Zustand 的 hook 内部依赖哪个 React API？",
       "options": [
+        "useRef",
         "useReducer",
         "useSyncExternalStore",
-        "useMemo",
-        "useRef"
+        "useMemo"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "v4+ 用它做订阅。"
     },
     {
       "stem": "selector 返回新对象会触发什么警告？",
       "options": [
-        "none",
-        "getSnapshot should be cached",
         "key warning",
-        "hooks order"
+        "hooks order",
+        "none",
+        "getSnapshot should be cached"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "快照不稳定，React 报警/死循环。"
     },
     {
       "stem": "getServerSnapshot 用于？",
       "options": [
-        "性能",
         "SSR/水合期间返回稳定值",
         "持久化",
-        "日志"
+        "日志",
+        "性能"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "水合时用它避免 mismatch。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "下列哪个是破坏快照稳定性的写法？",
       "options": [
+        "s=>s.flag",
         "s=>s.count",
         "s=>({a:s.a})",
-        "s=>s.arr.length",
-        "s=>s.flag"
+        "s=>s.arr.length"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "返回新对象引用不稳。"
     },
     {
       "stem": "useSyncExternalStore 出现在哪个 React 版本引入？",
       "options": [
+        "19",
         "16",
         "17",
-        "18",
-        "19"
+        "18"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "React 18 引入以支持并发。"
     },
     {
       "stem": "修复“返回新对象”最标准的手段？",
       "options": [
-        "JSON 比较",
         "useShallow 缓存",
         "set 强制",
-        "Provider"
+        "Provider",
+        "JSON 比较"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "useShallow 恢复引用稳定。"
     },
     {

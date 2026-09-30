@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "BrowserRouter 同步 URL 与 UI 依赖什么？对部署有何要求？",
       "options": [
-        "location.hash；无需服务端配置",
-        "iframe；需 CORS",
         "HTML5 History API；服务端需把未知路径回退到 index.html",
-        "WebSocket；需网关"
+        "WebSocket；需网关",
+        "location.hash；无需服务端配置",
+        "iframe；需 CORS"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "history 模式需服务端回退（呼应 react-router-basics 第一节、vue-router-basics）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "为什么 SPA 内部跳转要用 <Link> 而不是 <a href>？",
       "options": [
-        "<a> 会整页刷新、丢失 SPA state，Link 走 History API 无刷新",
-        "<a> 不支持样式",
         "Link 能自动 prefetch 数据",
-        "没有区别，只是习惯"
+        "没有区别，只是习惯",
+        "<a> 会整页刷新、丢失 SPA state，Link 走 History API 无刷新",
+        "<a> 不支持样式"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "a 触发浏览器导航刷新整页（呼应 react-router-basics 第二节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "<Route index element=...> 的作用是？",
       "options": [
+        "重定向到根路径",
         "定义首页为默认导出",
         "当只匹配到父路径本身时渲染的默认子路由",
-        "开启严格匹配",
-        "重定向到根路径"
+        "开启严格匹配"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "index 路由=父路径的默认子内容（呼应 react-router-basics 第四节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " React Router v6 里读 /user/1 到 /user/2 之间变化的 query（如 ?tab=info），最贴合的 Hook 是？",
       "options": [
-        "useParams",
-        "useSearchParams——它返回 [searchParams, setSearchParams]，语义对应 Vue 的 route.query 与写回 query 的导航，用于筛选/分页/标签这类可分享状态",
         "useLocation().pathname",
-        "useNavigate 的第二个参数"
+        "useNavigate 的第二个参数",
+        "useParams",
+        "useSearchParams——它返回 [searchParams, setSearchParams]，语义对应 Vue 的 route.query 与写回 query 的导航，用于筛选/分页/标签这类可分享状态"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "分工要拎清：useParams 取「路径动态段」（:id），useSearchParams 取「? 后的查询串」。把视图状态（页码、tab、筛选）放 searchParams 是「URL 即可分享状态」的落地；频繁改 search 时考虑 replace 防 history 轰炸（对齐 Vue Router 同款经验）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " `<Navigate to=\"/login\"/>`（组件）与 `useNavigate()`（函数）的区别是？",
       "options": [
-        "完全等价",
         "Navigate 是「声明式」——一旦渲染就执行重定向，常用于「登出后/鉴权不通过就渲染它跳走」的 UI 分支；useNavigate 是命令式，在事件/effect 里主动跳",
         "Navigate 只能跳 hash",
-        "useNavigate 不能带 state"
+        "useNavigate 不能带 state",
+        "完全等价"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "命令式导航（点按钮、提交后）用 useNavigate；把导航表达成「渲染的产物」（如守卫组件判定未登录就直接 return <Navigate/>）用 Navigate。Data Router 出现后，路由级鉴权更推荐在 loader 里 throw/return redirect（见 router-data 关），把「跳」前移到数据加载阶段而非渲染后。"
     },
     {

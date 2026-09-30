@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "<script setup> 的本质是什么？",
       "options": [
-        "一种新的 JavaScript 运行时",
-        "Vue 编译器的语法糖，编译时自动把顶层绑定变成 setup() 暴露给模板的内容",
         "只在浏览器运行时才生效的特性",
-        "等价于 Options API 的 data()"
+        "等价于 Options API 的 data()",
+        "一种新的 JavaScript 运行时",
+        "Vue 编译器的语法糖，编译时自动把顶层绑定变成 setup() 暴露给模板的内容"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "<script setup> 是编译时语法糖，约等于自动生成并接线 setup()（呼应 vue-script-setup 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "在 <script setup> 里 import 一个子组件后，模板中如何使用？",
       "options": [
-        "还要在 components:{} 里注册",
         "直接当标签用，无需再注册",
         "必须 app.component 全局注册",
-        "只能用 <component is>"
+        "只能用 <component is>",
+        "还要在 components:{} 里注册"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "import 进来的组件顶层绑定即自动注册，模板直接用（呼应第二节 规则2）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "关于 defineProps / defineEmits，正确的是？",
       "options": [
+        "是运行时才会被解析的普通函数",
         "要从 vue 里 import 才能用",
         "它们是编译器宏，不 import、只能在 <script setup> 顶层直接调用",
-        "可以在任意函数里调用",
-        "是运行时才会被解析的普通函数"
+        "可以在任意函数里调用"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "defineXxx 是编译器宏，编译期被替换，无需 import 且只能在顶层用（呼应第二、八节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "父组件通过模板 ref 拿到子组件实例，却调不到子组件里的方法，为什么？怎么解决？",
       "options": [
-        "ref 用错了，改用 $refs",
-        "<script setup> 默认封闭，子组件需显式 defineExpose({ 方法 }) 才对外可见",
         "Vue 不支持父访问子",
-        "把方法写成全局"
+        "把方法写成全局",
+        "ref 用错了，改用 $refs",
+        "<script setup> 默认封闭，子组件需显式 defineExpose({ 方法 }) 才对外可见"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "<script setup> 组件默认不暴露内部，需 defineExpose 按需开放（呼应第四节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "defineModel()（Vue 3.4+）省掉了哪两个手写东西？",
       "options": [
-        "ref 和 computed",
         "modelValue prop 与 update:modelValue 事件",
         "props 和 emits 声明本身",
-        "watch 和 watchEffect"
+        "watch 和 watchEffect",
+        "ref 和 computed"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "defineModel 一个宏替代手写的 modelValue prop + update:modelValue 事件，实现组件 v-model（呼应第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "需要给 <script setup> 组件加 name、inheritAttrs 这类组件选项，用哪个宏？",
       "options": [
+        "defineSlots",
         "defineProps",
         "defineOptions({ name, inheritAttrs })",
-        "defineExpose",
-        "defineSlots"
+        "defineExpose"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "defineOptions（3.3+）用于声明组件选项（呼应第六节）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "为什么 <script setup> 通常比普通 setup() 写法性能更好？",
       "options": [
-        "它运行时用更快的解释器",
-        "编译器掌握脚本+模板全量信息，可把稳定绑定直接内联引用、省去运行时查找与实例包袱",
         "它禁用了响应式",
-        "它会合并组件"
+        "它会合并组件",
+        "它运行时用更快的解释器",
+        "编译器掌握脚本+模板全量信息，可把稳定绑定直接内联引用、省去运行时查找与实例包袱"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "编译期已知稳定绑定 + 无实例 setup 作用域，产物更小更快（呼应第七节）。"
     },
     {
@@ -124,12 +124,12 @@
       "type": "single",
       "prompt": "关于从 props 解构取值 `const { title } = defineProps(...)`，正确的是？",
       "options": [
-        "永远保持响应性，随便解构",
         "在 Vue 3.5 的 propsDestructure 之前，解构会丢失响应性；应读 props.title 或用 toRef",
         "解构会报错禁止编译",
-        "解构会自动深拷贝"
+        "解构会自动深拷贝",
+        "永远保持响应性，随便解构"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "解构丢响应是老问题，3.5 才通过 propsDestructure 让解构保持响应（呼应第三节、vue-reactivity 解构坑）。"
     }
   ]

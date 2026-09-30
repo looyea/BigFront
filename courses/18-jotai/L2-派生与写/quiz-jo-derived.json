@@ -15,45 +15,45 @@
     {
       "stem": "派生 atom 的求值策略？",
       "options": [
-        "立即每次",
         "每帧",
         "惰性 + 缓存，依赖变才重算",
-        "手动"
+        "手动",
+        "立即每次"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "同 computed。"
     },
     {
       "stem": "与 Zustand selector 最大区别？",
       "options": [
-        "无",
         "都不能派生",
         "selector 更快",
-        "derived 有缓存、selector 每次重跑"
+        "derived 有缓存、selector 每次重跑",
+        "无"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "呼应 za-selectors-deep。"
     },
     {
       "stem": "依赖图中出现循环会？",
       "options": [
-        "自动断开",
-        "抛循环依赖错误",
         "死循环",
-        "忽略"
+        "忽略",
+        "自动断开",
+        "抛循环依赖错误"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Jotai 检测并报错。"
     },
     {
       "stem": "派生 atom 能否再被别的派生 atom 依赖？",
       "options": [
-        "不能",
         "能，构成 DAG",
         "只能一层",
-        "需异步"
+        "需异步",
+        "不能"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "可组合。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "源 atom 未变时读派生 atom？",
       "options": [
+        "触发渲染",
         "重新计算",
         "返回缓存结果",
-        "报错",
-        "触发渲染"
+        "报错"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "命中缓存。"
     },
     {
       "stem": "读取派生 atom 用什么 hook？",
       "options": [
-        "useSetAtom",
-        "useAtomValue",
         "useAtom 写",
-        "getState"
+        "getState",
+        "useSetAtom",
+        "useAtomValue"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "只读用 useAtomValue。"
     },
     {
       "stem": "可写派生 atom 需要几个函数？",
       "options": [
-        "0",
         "getter + setter 两个",
         "只 getter",
-        "只 setter"
+        "只 setter",
+        "0"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "atom(get,set)。"
     },
     {

@@ -145,6 +145,11 @@ function resolveExamplesDir(pkgDir, levelDir, no, lessonId) {
   return path.join(pkgDir, 'examples', lessonId);
 }
 
+/**
+ * 课程索引：只在进程启动时扫一次 courses/。
+ * 因此新增/改名关卡后须重启后端才生效——dev 的 `node --watch` 只盯 server/ 自身，
+ * 改 courses/ 不会自动重启；改 server/index.js 任意一行即可间接触发一次重扫。
+ */
 function buildIndex() {
   courseIndex.clear();
   scanWarnings.length = 0;
@@ -583,6 +588,25 @@ app.get('/api/packages/:pkgId', async (req, res) => {
   });
 });
 
+/**
+ * 小测 schema 归一：库内历史上有两套写法，在前端拿到数据之前一次抹平（免得每个消费点各写各的兼容）。
+ *  - 老库：{ title, passRule, questions:[{ id, type, prompt, options, answer, explanation }] }
+ *  - 新库（16-pinia 往后的状态/工具链包）：{ lessonId, questions:[{ stem, options, answer, explanation }] }，无 id / type，题干叫 stem
+ * 不归一的实际后果（都是静默的）：缺 id 时前端所有题共用 `answers[undefined]` 一个作答槽、radio 的 name 也同名，
+ * 点一题等于把同一选项勾满全卷，得分只能靠碰，60% 基本过不去；题干读 `prompt` 取到 undefined 则整道题只剩题号。
+ * 故：id 按位置补 q1..qN（顺须与判分端一致，题目不得中途插队）、type 默认 single、题干兼容 stem、passRule 给默认文案。
+ */
+function normalizeQuiz(full) {
+  const src = full && typeof full === 'object' ? full : {};
+  const questions = (Array.isArray(src.questions) ? src.questions : []).map((q, i) => ({
+    ...q,
+    id: q.id ?? `q${i + 1}`,
+    type: q.type ?? 'single',
+    prompt: q.prompt ?? q.stem ?? '',
+  }));
+  return { ...src, passRule: src.passRule ?? '答对 ≥60% 即通过', questions };
+}
+
 // 课文正文 + 小测（Markdown / JSON，已剔除答案）
 app.get('/api/packages/:pkgId/lessons/:lessonId', async (req, res) => {
   await loadProgress();
@@ -593,11 +617,11 @@ app.get('/api/packages/:pkgId/lessons/:lessonId', async (req, res) => {
   let quiz = null;
   const quizRaw = await readTextIfExists(meta.quizFile);
   if (quizRaw) {
-    const full = JSON.parse(quizRaw); // 解析失败由错误中间件兜底为 500
+    const full = normalizeQuiz(JSON.parse(quizRaw)); // 解析失败由错误中间件兜底为 500
     // 关键：下发给前端时剔除正确答案与解析，防止泄题
     quiz = {
       title: full.title, passRule: full.passRule,
-      questions: (full.questions ?? []).map((q) => ({
+      questions: full.questions.map((q) => ({
         id: q.id, type: q.type, prompt: q.prompt, options: q.options,
       })),
     };
@@ -702,9 +726,10 @@ app.post('/api/progress/quiz', async (req, res) => {
   const quizRaw = await readTextIfExists(meta.quizFile);
   if (!quizRaw) return res.status(404).json({ error: '本关没有小测' });
   let quiz;
-  try { quiz = JSON.parse(quizRaw); }
+  try { quiz = normalizeQuiz(JSON.parse(quizRaw)); }
   catch (e) { return res.status(500).json({ error: `测验 JSON 解析失败：${e.message}` }); }
-  const qs = Array.isArray(quiz.questions) ? quiz.questions : [];
+  // 归一已在 normalizeQuiz 里做完（补 id/type、stem→prompt），这里直接取，保证 graded 的 id 与下发时一致
+  const qs = quiz.questions;
   if (!qs.length) return res.status(404).json({ error: '本关小测没有题目' });
   const ans = Array.isArray(answers) ? answers : [];
   const graded = qs.map((q, i) => ({

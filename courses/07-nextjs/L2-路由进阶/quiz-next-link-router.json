@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Next 的 <Link> 默认在什么时机触发预取（prefetch）？",
       "options": [
-        "页面加载完成时预取全站所有链接",
-        "用户点击的瞬间",
         "链接进入视口时预取该页的 RSC Payload",
-        "只在 hover 时"
+        "只在 hover 时",
+        "页面加载完成时预取全站所有链接",
+        "用户点击的瞬间"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "视口驱动预取，拉的是 RSC Payload 进 Router Cache，真点击时秒开（呼应 next-link-router 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "App Router 服务端组件里做'未登录跳 /login'，最佳写法是？",
       "options": [
-        "useRouter().push('/login')",
         "返回一个 <Navigate to='/login'/> 组件",
         "res.writeHead(302) 后 return",
-        "if (!session) redirect('/login')"
+        "if (!session) redirect('/login')",
+        "useRouter().push('/login')"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "next/navigation 的 redirect() 在服务端直接发 3xx 中断渲染，无白屏闪烁；useRouter 是客户端钩子、Navigate 是 React Router 的东西（呼应 next-link-router 第三节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "关于 useSearchParams，下列说法正确的是？",
       "options": [
-        "服务端组件里也能直接调用",
-        "预渲染阶段其值为空，直接使用可能水合不一致",
         "它返回的是普通对象 {q: 'xx'}",
-        "它会自动触发重新取数"
+        "它会自动触发重新取数",
+        "服务端组件里也能直接调用",
+        "预渲染阶段其值为空，直接使用可能水合不一致"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "它是客户端钩子，SSR 首轮拿不到 query——要 Suspense 包裹或改用服务端 searchParams prop（呼应 next-link-router 第四节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "router.refresh() 的效果是？",
       "options": [
-        "等价于浏览器 F5 整页重载",
-        "清空所有客户端状态后重载",
         "重新执行当前路由的服务端渲染并合并数据，不重跑客户端逻辑",
-        "只刷新当前组件"
+        "只刷新当前组件",
+        "等价于浏览器 F5 整页重载",
+        "清空所有客户端状态后重载"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "refresh 重拉 RSC Payload：服务端数据更新、客户端 state/effect 不动（呼应 next-link-router 第五节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "小程序里 wx.redirectTo 在 Next 客户端 API 里的最贴近对应是？",
       "options": [
+        "router.prefetch",
         "router.replace",
         "router.push",
-        "router.back",
-        "router.prefetch"
+        "router.back"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "replace 替换当前历史条目，不能回退——与 redirectTo 换栈顶语义一致（呼应 next-link-router 第二节对照表、mp-route）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "为什么 <Link> 对 SEO 友好而某些 SPA 的 onClick 跳转不是？",
       "options": [
+        "Link 会预取所以爬虫喜欢",
         "Link 渲染速度更快",
         "Link 最终渲染真实 <a href>，无 JS 也能导航",
-        "Link 自动携带 meta 标签",
-        "Link 会预取所以爬虫喜欢"
+        "Link 自动携带 meta 标签"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "渐进增强的底色：真实 href 是爬虫与右键新开的基础（呼应 next-link-router 第一节、next-render-modes 的爬虫空壳问题）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " App Router 的 <Link> 默认预取时机是？",
       "options": [
-        "hover 才预取",
-        "目标链接进入视口时预取 RSC Payload（viewport-aware，默认）；视口外不预取以省带宽",
         "只在点击后预取",
-        "加载时预取所有链接"
+        "加载时预取所有链接",
+        "hover 才预取",
+        "目标链接进入视口时预取 RSC Payload（viewport-aware，默认）；视口外不预取以省带宽"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "App Router 的 prefetch 默认按视口触发（只预取\"可见的动态段链接\"），Pages Router 是 hover。对长列表用 prefetch={false} 关掉，避免把带宽花在\"根本不会点\"的项上——这正是列表页带宽风暴的治理开关。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 在 Server Component 里直接调用 useSearchParams() 会导致？",
       "options": [
-        "编译报错",
         "整页被强制转为动态渲染（因为 searchParams 只能在请求期从浏览器获得）——官方要求把用到它的子树包进 <Suspense> 或下推到客户端组件",
         "自动缓存",
-        "返回默认值"
+        "返回默认值",
+        "编译报错"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "searchParams 是浏览器运行时才有、静态预渲染时不存在的数据源——直接读会破坏 SSG/ISR，Next 选择\"降级为动态 + 提示\"。解法：把读它的组件包 Suspense（配合 PPR，静态部分仍能预渲染），或明确接受动态。"
     },
     {

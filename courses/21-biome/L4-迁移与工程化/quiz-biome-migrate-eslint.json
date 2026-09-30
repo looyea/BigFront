@@ -4,12 +4,12 @@
     {
       "stem": "官方迁移工具是？",
       "options": [
-        "eslint-to-biome",
         "@biomejs/migrate",
         "biome migrate-config",
-        "codemod"
+        "codemod",
+        "eslint-to-biome"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "近似翻译现有配置。"
     },
     {
@@ -26,67 +26,67 @@
     {
       "stem": "覆盖度最好的是哪个方向？",
       "options": [
+        "冷门 codemod",
         "ESLint 插件规则",
         "Prettier 格式化",
-        "框架专属 lint",
-        "冷门 codemod"
+        "框架专属 lint"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Prettier 近乎全吃。"
     },
     {
       "stem": "依赖插件的冷门 ESLint 规则通常？",
       "options": [
+        "报错",
         "Biome 全有对等",
         "自动删除",
-        "常无对等、保留 ESLint 共存",
-        "报错"
+        "常无对等、保留 ESLint 共存"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "别硬砍。"
     },
     {
       "stem": "Biome 与 ESLint 共存的关键是？",
       "options": [
-        "都跑全部",
         "职责切分防互相改同一行",
         "关一个",
-        "随机"
+        "随机",
+        "都跑全部"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "各管一段不打架。"
     },
     {
       "stem": "全接管后不需要清理的是？",
       "options": [
-        "prettier 依赖",
-        ".prettierrc",
         "编辑器的 Prettier 默认格式化设置",
-        "README 图片"
+        "README 图片",
+        "prettier 依赖",
+        ".prettierrc"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "前三项都要清。"
     },
     {
       "stem": "迁移收尾的验收标准是？",
       "options": [
+        "星数",
         "migrate 跑完就行",
         "针对产物的测试/构建全绿",
-        "删了 ESLint",
-        "星数"
+        "删了 ESLint"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "绿了才算迁完。"
     },
     {
       "stem": "monorepo 大仓推荐哪种节奏？",
       "options": [
-        "一次性全切",
-        "渐进：先一个包验证再推广",
         "不迁",
-        "只迁测试"
+        "只迁测试",
+        "一次性全切",
+        "渐进：先一个包验证再推广"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "降风险、让团队适应。"
     },
     {

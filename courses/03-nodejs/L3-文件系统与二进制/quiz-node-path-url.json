@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "为什么不应在代码里手写 `dir + '/' + file` 拼路径？",
       "options": [
-        "因为太慢",
         "因为字符串不能拼接",
         "因为分隔符跨平台不同（win 用 \\），应交给 path.join 自动处理",
-        "因为 path 会修改文件"
+        "因为 path 会修改文件",
+        "因为太慢"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "Windows 用 \\、POSIX 用 /，手拼在别的平台会出错；path.join 用平台正确分隔符并顺带规范化（呼应 node-path-url 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "在 ESM 模块里想拿到『当前文件所在目录』，正确写法是？",
       "options": [
-        "直接用 __dirname（ESM 也有）",
         "process.cwd()",
         "path.resolve('.')",
-        "path.dirname(fileURLToPath(import.meta.url))"
+        "path.dirname(fileURLToPath(import.meta.url))",
+        "直接用 __dirname（ESM 也有）"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "ESM 没有 __dirname，用 import.meta.url（file URL）经 fileURLToPath 还原再取 dirname（呼应 node-path-url 第二节、node-esm-cjs）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "动态 import() 一个由变量拼出的本地文件路径时，为什么要先 pathToFileURL(p).href？",
       "options": [
-        "为了加速加载",
-        "因为 import 需要合法 URL，Windows 裸路径会被误解析（盘符/反斜杠）",
         "因为 Buffer 不能 import",
-        "没必要，纯风格"
+        "没必要，纯风格",
+        "为了加速加载",
+        "因为 import 需要合法 URL，Windows 裸路径会被误解析（盘符/反斜杠）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "import() 接受模块 specifier/URL；本地文件须转成 file:// URL，否则 Windows 下路径解析失败（呼应 node-path-url 第三节、node-esm-cjs）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "解析 `?a=1&a=2&b=%E4%B8%AD` 这种查询串，最稳妥的是？",
       "options": [
-        "url.split('?')[1].split('&')",
         "new URL(...).searchParams（含 getAll、自动解码）",
         "正则匹配",
-        "JSON.parse"
+        "JSON.parse",
+        "url.split('?')[1].split('&')"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "URLSearchParams 正确处理 %编码、重复 key（getAll）、+与空格；手搓 split 遇到编码/无值/重复必错（呼应 node-path-url 第三节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "跨平台生成多行文本文件，为保证换行一致应使用？",
       "options": [
+        "URL 的 hash",
         "硬写 \\r\\n",
         "os.EOL",
-        "path.sep",
-        "URL 的 hash"
+        "path.sep"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "os.EOL 给出当前平台换行符（win \\r\\n / posix \\n），用它保证本地打开不错行（呼应 node-path-url 第四节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "path.posix 与 path.win32 的存在意义是：",
       "options": [
-        "废弃别名",
-        "两套实现同时暴露——在 Windows 上按 POSIX 语义处理（如解析 URL 风格/容器内路径），或反向测试跨平台行为，不必运行时 if 判断",
         "仅测试 mock 用",
-        "按 cwd 自动切换"
+        "按 cwd 自动切换",
+        "废弃别名",
+        "两套实现同时暴露——在 Windows 上按 POSIX 语义处理（如解析 URL 风格/容器内路径），或反向测试跨平台行为，不必运行时 if 判断"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "默认 path 跟随 process.platform；显式选实现处理「本机是 Win 但路径属于 Linux 容器」这类场景（Docker 工具链常见），配合 path.toNamespacedPath 处理 Win 长路径前缀。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "new URL(\"config.json\", import.meta.url) 这个用法的意图是：",
       "options": [
-        "拼接字符串省内存",
         "以「当前模块文件」为基址解析出 file: URL，等价旧的 path.join(__dirname,...)——动态 import、fetch 本地资源统一走 URL 族",
         "转义中文",
-        "校验合法文件名"
+        "校验合法文件名",
+        "拼接字符串省内存"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "URL 构造函数带 base 的语义照搬浏览器；配合 fileURLToPath 落回 fs，或以 URL 直接喂 import()/fetch——本关 pathToFileURL 题的「为什么」层。"
     },
     {

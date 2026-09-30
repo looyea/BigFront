@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "为什么带 content hash 的 JS 文件可以设 max-age=31536000（一年）？",
       "options": [
-        "因为文件很重要",
         "因为 JS 不会变",
         "内容变则 hash 变→文件名变，不会与旧文件冲突；未变则安全命中长缓存",
-        "因为浏览器不支持更短的时间"
+        "因为浏览器不支持更短的时间",
+        "因为文件很重要"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "文件名含内容哈希，不同内容必不同名 → 长缓存不会拿到错文件；发版时 index.html（no-cache）引用新名即可。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "协商缓存中精度最高、最推荐用的是哪一对头？",
       "options": [
-        "Last-Modified / If-Modified-Since",
         "Expires / Pragma",
         "Cache-Control / Age",
-        "ETag / If-None-Match"
+        "ETag / If-None-Match",
+        "Last-Modified / If-Modified-Since"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "ETag 是内容哈希，能捕捉秒内多次修改、内容回滚等 Last-Modified 误判的情况，优先级也更高。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "index.html 如果被强缓存，发版后会发生什么？",
       "options": [
-        "用户自动拿到新版本",
-        "浏览器仍用旧 HTML → 引用已删除的旧 hash 资源 → 白屏/404",
         "服务器自动刷新缓存",
-        "没有任何影响"
+        "没有任何影响",
+        "用户自动拿到新版本",
+        "浏览器仍用旧 HTML → 引用已删除的旧 hash 资源 → 白屏/404"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "入口 HTML 必须 no-cache，否则用户拿到旧 HTML 引用的旧资源（已删）→ 报错。这是经典线上事故。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "Cache-Control: immutable 的作用是？",
       "options": [
-        "文件变为只读",
         "告知浏览器 max-age 内连条件请求都免了，不再验证",
         "禁止压缩",
-        "只能被一个浏览器缓存"
+        "只能被一个浏览器缓存",
+        "文件变为只读"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "immutable 告诉浏览器这个 URL 内容永不改变 → 即使过期也不发协商请求，省 304 往返（配合 hash 文件名）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " express.static 默认 serve 目录里的 .git、.env 这类点文件吗？",
       "options": [
+        "只 serve 图片",
         "默认全部 serve",
         "默认 dotfiles 为 ignore（不 serve）——但 dotfiles: allow 一旦为图方便打开，源码库与环境文件就整目录裸奔，要开必须配具体路径白名单",
-        "报错拒绝加载",
-        "只 serve 图片"
+        "报错拒绝加载"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "静态目录的\"暴露面清单\"要显式审查：dotfiles、index 列表、follow symlinks 三个选项各是一个漏洞类别。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " SPA 用 history 路由时，Express 端的 fallback 应该怎么配？",
       "options": [
-        "每个前端路由注册一条 get",
-        "静态资源路由全部 miss 后，兜底中间件对\"GET 且非 API 路径且 Accept HTML\"的请求统一 sendFile(index.html)——并且要防把资源请求也回退成 HTML 的坑（按扩展名/Accept 判定）",
         "返回 404 让前端处理",
-        "用 redirect 到首页"
+        "用 redirect 到首页",
+        "每个前端路由注册一条 get",
+        "静态资源路由全部 miss 后，兜底中间件对\"GET 且非 API 路径且 Accept HTML\"的请求统一 sendFile(index.html)——并且要防把资源请求也回退成 HTML 的坑（按扩展名/Accept 判定）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "fallback 的判定条件是精髓：刷新深链接要 200+index，而缺图的 .png 请求回退成 HTML 会让 img 静默坏死。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " SPA 部署里 index.html 与带 hash 的 JS 资源各自的缓存策略应是？",
       "options": [
-        "都 no-cache",
         "index.html 用 no-cache（每次都协商，保证发版可达）或短 max-age，hash 资源用 max-age 一年 + immutable——入口可换、内容不可变",
         "都 max-age 一年",
-        "都 public"
+        "都 public",
+        "都 no-cache"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "\"入口协商、资产强缓存\"是 Content Hash 体系的另一半：入口永远新鲜，资产永远不可变，两把钥匙缺一不可。"
     },
     {

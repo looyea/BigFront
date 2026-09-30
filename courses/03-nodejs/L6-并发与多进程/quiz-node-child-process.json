@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "为什么把用户输入拼进 exec 的命令串有命令注入风险？更安全的替代？",
       "options": [
-        "没问题，exec 会自动转义",
-        "exec 只能跑系统命令",
         "加引号即可彻底安全",
-        "exec 经 shell 解析，; && | 等会被当命令执行；应改用 execFile + 参数数组（不经 shell）"
+        "exec 经 shell 解析，; && | 等会被当命令执行；应改用 execFile + 参数数组（不经 shell）",
+        "没问题，exec 会自动转义",
+        "exec 只能跑系统命令"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "exec 开 shell，用户输入里的 ; | && 会被 shell 当语法执行→注入；execFile 直接传数组参数、不经过 shell，输入只作普通参数（呼应 node-child-process 第二节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "child 的 'exit' 与 'close' 事件区别？想确保输出全读完再收尾该等哪个？",
       "options": [
+        "都拿不到退出码",
         "完全一样",
         "'exit' 进程终止即触发（stdio 可能未 flush 完）；'close' 在 stdio 流也关闭后触发——收尾用 close",
-        "close 先于 exit",
-        "都拿不到退出码"
+        "close 先于 exit"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "close 保证 stdio 已关闭、输出读完；exit 可能过早（呼应 node-child-process 第三节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "fork 与 spawn 的关键差别是？",
       "options": [
-        "fork 只能跑非 Node 程序",
-        "fork 启动另一个 Node 进程并自带 IPC 通道（send/message）",
         "spawn 不能传参",
-        "没有区别"
+        "没有区别",
+        "fork 只能跑非 Node 程序",
+        "fork 启动另一个 Node 进程并自带 IPC 通道（send/message）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "fork 是 spawn 特化：专用于 Node 子进程 + 建立 process.send/on('message') 的 IPC（呼应 node-child-process 第五节、node-cluster）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "child.kill() 之后发现命令的孙进程还活着，最可能原因是？",
       "options": [
-        "kill 无效",
         "只杀了直接子进程（如 shell:true 时 shell 是子），孙进程未进同一进程组、需按进程组杀",
         "Node 的 bug",
-        "孙进程会自动退出"
+        "孙进程会自动退出",
+        "kill 无效"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "kill 只作用于直接子进程；要清理整棵进程树需 detached 起新进程组、再 process.kill(-pid)（呼应 node-child-process 第四节、node-deploy-perf）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "spawn 的 stdio 选项写成 [\"ignore\",\"pipe\",\"inherit\"] 表示：",
       "options": [
-        "三段都管道",
-        "stdin 关闭、stdout 管道可读、stderr 直通父进程终端（日志实时可见但不进程序内解析）",
         "顺序反了",
-        "仅 Win 有效"
+        "仅 Win 有效",
+        "三段都管道",
+        "stdin 关闭、stdout 管道可读、stderr 直通父进程终端（日志实时可见但不进程序内解析）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "三元素按 0/1/2 对应 stdin/stdout/stderr；取值 inherit/pipe/ignore/ipc/fs fd——「子进程报错刷屏父终端」就是 stderr inherit 的效果（调试友好、生产日志混排的根源之一）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "execFile 与 exec 的本质区别是：",
       "options": [
-        "没区别",
         "execFile 不经过 shell（参数数组直传），免 shell 注入与引号地狱、也失去管道通配能力；exec=shell+缓冲输出",
         "exec 更快",
-        "execFile 只能同步"
+        "execFile 只能同步",
+        "没区别"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "「用户输入拼命令」的根治方案就是 execFile+args 数组（本关注入题的正解）；确需 shell 时自己引号转义（shell-quote）或 -- 分隔。"
     },
     {

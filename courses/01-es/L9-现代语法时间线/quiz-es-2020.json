@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "`user?.profile?.city` 里 profile 是 `null`，整个表达式的值：**",
       "options": [
-        "抛 TypeError",
-        "null",
         "空字符串",
-        "undefined"
+        "undefined",
+        "抛 TypeError",
+        "null"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "`?.` 遇到 null/undefined → 短路整个链返回 undefined（不是 null）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "`a || b ?? c` 的结果是：",
       "options": [
+        "自动 a || (b ?? c)",
         "按从左到右执行",
         "SyntaxError，需要加括号",
-        "等价 a ?? c",
-        "自动 a || (b ?? c)"
+        "等价 a ?? c"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "规范禁止 `||` / `&&` 与 `??` 直接混用——必须写 `(a || b) ?? c` 或 `a || (b ?? c)`。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "`Promise.allSettled([p1, p2])` 的返回结构：",
       "options": [
-        "[v1, v2]",
-        "[{status, value/reason}, ...]，**从不** reject",
         "任一 reject 立即 reject",
-        "第一个 fulfilled"
+        "第一个 fulfilled",
+        "[v1, v2]",
+        "[{status, value/reason}, ...]，**从不** reject"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "allSettled 等所有 Promise settle，返回 `{status: 'fulfilled' | 'rejected', value?, reason?}` 数组。批量场景必用。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "以下代码结果：\n\n```js\nlet x = 0;\nconst y = null;\ny?.foo(x++);\nconsole.log(x);\n```",
       "options": [
-        "1",
         "0",
         "抛错",
-        "undefined"
+        "undefined",
+        "1"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "`?.` **短路整个调用表达式**——y 是 null 时 `y?.foo(...)` 不执行调用，参数也不会求值，x++ **不发生**。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "`null?.toString()` 的结果是：",
       "options": [
-        "抛 TypeError",
-        "undefined——短路整个后续调用链",
         "‘null’",
-        "空字符串"
+        "空字符串",
+        "抛 TypeError",
+        "undefined——短路整个后续调用链"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "?. 遇到 null/undefined 短路**整个尾部表达式**（包括方法调用/下标），返回 undefined；`obj?.a.b.c` 后续点号也在短路范围内。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "`10n / 3n` 的结果是：",
       "options": [
-        "3.333...",
         "3n（整数除法截断）",
         "RangeError",
-        "Infinity"
+        "Infinity",
+        "3.333..."
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "BigInt 只有整数语义：除法向零截断；与 Number 混用算术除 `10n / 3` 才抛 TypeError。"
     },
     {

@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "manualChunks 函数对多个模块 id 返回同一个字符串，效果是？",
       "options": [
-        "报错",
-        "每个模块单独成 chunk",
         "被丢弃",
-        "这些模块被合并进同一个同名 chunk"
+        "这些模块被合并进同一个同名 chunk",
+        "报错",
+        "每个模块单独成 chunk"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "返回值即 chunk 名——返回相同字符串的模块归到同一 chunk（如都 return 'vendor' 则合并成一个 vendor.js）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "rel=\"modulepreload\" 相比普通 preload 的优势是？",
       "options": [
+        "支持跨域绕过 CORS",
         "体积更小",
         "专门预取 ES 模块：避免重复获取、可复用已解析的模块",
-        "只用于 CSS",
-        "支持跨域绕过 CORS"
+        "只用于 CSS"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "modulepreload 针对 module 语义优化——预取+解析，且浏览器能重用已在文档中加载过的相同模块。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "为什么 import { debounce } from 'lodash-es' 能 tree-shake 而 'lodash' 不能？",
       "options": [
+        "两者都能",
         "lodash-es 体积本来就小",
         "lodash 已废弃",
-        "lodash-es 是纯 ESM 无副作用可静态分析；lodash 是 CJS 无法 tree-shake",
-        "两者都能"
+        "lodash-es 是纯 ESM 无副作用可静态分析；lodash 是 CJS 无法 tree-shake"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "tree-shaking 依赖 ESM 静态 import/export。lodash 是 CommonJS require → 无法静态分析 → 全量打包。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "分析构建产物体积构成，最合适的工具是？",
       "options": [
-        "Chrome DevTools Network",
         "rollup-plugin-visualizer 生成 treemap",
         "eslint",
-        "npm ls"
+        "npm ls",
+        "Chrome DevTools Network"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "visualizer 输出 stats.html treemap，直观看每个依赖占比，据此决定分包/外链/替换。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " 多个入口（或懒路由）共同 import 一个模块时，Rollup/Vite 默认如何处理？",
       "options": [
+        "打进 vendor 固定名",
         "每个入口内联一份",
         "自动提取为共享 chunk（被多方引用的模块独立成块，避免重复打包）——手动 manualChunks 干预前先看默认产物是否已经合理",
-        "报错冲突",
-        "打进 vendor 固定名"
+        "报错冲突"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "默认拆块算法已是\"公共模块提取\"，多数 manualChunks 配置是在和默认行为打架而不是补缺。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " import(./locales/ + lang + .js) 这种含变量的动态导入在构建时的结果是？",
       "options": [
-        "直接报错",
-        "被静态分析展开为上下文 glob（该目录下所有匹配文件都可能成为候选 chunk）——\"看起来动态\"其实仍是构建期确定的有限集，目录越宽 chunk 越多",
         "完全原样保留运行时解析",
-        "只打包第一个匹配"
+        "只打包第一个匹配",
+        "直接报错",
+        "被静态分析展开为上下文 glob（该目录下所有匹配文件都可能成为候选 chunk）——\"看起来动态\"其实仍是构建期确定的有限集，目录越宽 chunk 越多"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Vite/Rollup 的动态导入分析以\"可枚举\"为前提；真动态（运行时任意路径）必须走配置映射表而不是赌路径拼接。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " modulepreload 提示会递归应用到间接依赖吗？",
       "options": [
-        "会，全图预载",
         "不会——只覆盖直接依赖层（入口 chunk 的 import graph 一跳），这是浏览器预载资源预算与\"预载风暴\"的折中",
         "取决于 crossorigin",
-        "只对 CSS"
+        "只对 CSS",
+        "会，全图预载"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "一跳是刻意设计：全递归预载等于回到瀑布的反面（一次轰炸并发），依赖深度优化交给链式 chunk 自身再带 hint。"
     },
     {

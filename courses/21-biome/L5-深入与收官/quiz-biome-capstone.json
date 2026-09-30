@@ -4,12 +4,12 @@
     {
       "stem": "只在意多语言统一格式、不需要 lint 的轻量选？",
       "options": [
-        "ESLint",
         "dprint",
         "Biome",
-        "oxlint"
+        "oxlint",
+        "ESLint"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "dprint 专精格式化。"
     },
     {
@@ -37,67 +37,67 @@
     {
       "stem": "oxlint 与 Biome 的竞争维度是？",
       "options": [
-        "lint（都做快 lint）",
         "格式化",
         "打包",
-        "类型"
+        "类型",
+        "lint（都做快 lint）"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "二者都覆盖 lint。"
     },
     {
       "stem": "20-swc/21-biome/22-vitest 分别管？",
       "options": [
-        "都管格式",
         "编译/代码质量/测试",
         "都管测试",
-        "打包"
+        "打包",
+        "都管格式"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Rust/TS 新工具链全景。"
     },
     {
       "stem": "它们共享的底层哲学是？",
       "options": [
-        "纯 JS 单线程",
-        "云端",
         "无解析",
-        "Rust/原生 + 快"
+        "Rust/原生 + 快",
+        "纯 JS 单线程",
+        "云端"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "蚕食 Babel/ESLint/Jest。"
     },
     {
       "stem": "重度定制框架 lint 又想要 Biome 速度？",
       "options": [
+        "忍着慢",
         "二选一硬来",
         "Biome 主干 + ESLint 补插件共存",
-        "全关",
-        "忍着慢"
+        "全关"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "共存取两者之长。"
     },
     {
       "stem": "本包刻意没展开、需回文档的是？",
       "options": [
-        "初始化",
-        "每条规则完整清单/vcs/LSP/插件 API",
         "退出码",
-        "install"
+        "install",
+        "初始化",
+        "每条规则完整清单/vcs/LSP/插件 API"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "主干优先、细节按需查。"
     },
     {
       "stem": "Biome 相对 ESLint+Prettier 最大的短板？",
       "options": [
-        "速度",
         "规则生态/可定制（插件弱）",
         "格式化",
-        "配置成本"
+        "配置成本",
+        "速度"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "广度与可定制仍逊。"
     },
     {

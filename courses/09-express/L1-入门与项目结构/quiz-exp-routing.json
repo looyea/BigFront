@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "Router({ mergeParams: true }) 解决什么问题？",
       "options": [
-        "合并多个 Router 实例",
         "合并 query 和 params",
         "让子 Router 能访问父级路由参数（如 /api/users/:userId/orders 中的 userId）",
-        "启用缓存"
+        "启用缓存",
+        "合并多个 Router 实例"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "默认 Router 不继承父级 params。mergeParams: true 后 req.params 包含父路由的 :userId + 子路由的 :orderId。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "router.param('userId', fn) 的触发时机是？",
       "options": [
-        "每次 app.use 时",
         "只在 POST 请求时",
         "只有手动调用时",
-        "任何匹配路径中含 :userId 参数时，在路由 handler 之前执行"
+        "任何匹配路径中含 :userId 参数时，在路由 handler 之前执行",
+        "每次 app.use 时"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "param 中间件相当于参数级 beforeEach：路径含 :userId → 先执行 param 回调加载数据/校验 → 再进路由 handler。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "req.originalUrl 和 req.url 的区别是？",
       "options": [
-        "完全相同",
-        "originalUrl 始终是完整请求 URL；url 在 Router 内被截去挂载前缀",
         "originalUrl 包含 query，url 不包含",
-        "url 是解码后的，originalUrl 是编码的"
+        "url 是解码后的，originalUrl 是编码的",
+        "完全相同",
+        "originalUrl 始终是完整请求 URL；url 在 Router 内被截去挂载前缀"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "如果 Router 挂在 /api 下，请求 /api/users → req.url = '/users'，req.originalUrl = '/api/users'。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "res.sendStatus(404) 的效果是？",
       "options": [
-        "只设状态码不设 body",
         "设 404 + body 是 'Not Found'（状态码文字）",
         "抛错",
-        "重定向到 /404 页面"
+        "重定向到 /404 页面",
+        "只设状态码不设 body"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "sendStatus 是 status + send 的快捷方式，body 自动填状态文字（如 404 → 'Not Found'）。Express 5 新增。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " app.use('/api') 挂载的中间件会被哪个路径命中？",
       "options": [
+        "全部请求都命中",
         "只有 /api 精确路径",
         "/api、/api/ 及 /api 开头的任意路径（含 /apifox——use 的前缀匹配不要求词边界），要边界感就用 router 内完整路径或具名参数收口",
-        "只有 /api/xxx 两段式",
-        "全部请求都命中"
+        "只有 /api/xxx 两段式"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "use 是\"前缀字符串匹配\"不是\"路径段匹配\"——/apifox 被 /api 的鉴权中间件误伤是经典 bug，记住没有词边界这回事。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " router.route('/posts').get(...).post(...) 链式写法的价值是？",
       "options": [
-        "性能更好（少一次匹配）",
-        "同一路径的多方法声明聚合在一处，路径只写一遍防拼写漂移，且链上可挂路径级中间件——组织性问题不是性能问题",
         "支持自动校验",
-        "能定义命名路由"
+        "能定义命名路由",
+        "性能更好（少一次匹配）",
+        "同一路径的多方法声明聚合在一处，路径只写一遍防拼写漂移，且链上可挂路径级中间件——组织性问题不是性能问题"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": " Express 没有路由名/反向构造，链式与常量化就是防\"路径字符串三处各拼一遍\"腐化的全部武器。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 在子 Router 里调用 next('router') 的效果是？",
       "options": [
-        "跳过当前中间件继续下一个",
         "跳出整个当前层 Router 的剩余中间件与路由，回到上层继续——做\"这个 router 到此为止\"的层级短路（如鉴权失败已响应后的止损）",
         "进入错误处理中间件",
-        "重新匹配路由表"
+        "重新匹配路由表",
+        "跳过当前中间件继续下一个"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "next(err) 跳错误链、next('route') 跳当前路由、next('router') 跳当前 router——三个逃逸层级要分得清。"
     },
     {

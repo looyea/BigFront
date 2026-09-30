@@ -4,12 +4,12 @@
     {
       "stem": "SSR 解决客户端取数的哪两个痛点？",
       "options": [
-        "包体积与内存",
         "白屏等待与 SEO 空壳",
         "重试与轮询",
-        "水合与序列化"
+        "水合与序列化",
+        "包体积与内存"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "首帧即内容、源码含数据。"
     },
     {
@@ -26,34 +26,34 @@
     {
       "stem": "dehydrate 的作用是？",
       "options": [
+        "压缩代码",
         "发请求",
         "把缓存序列化成可传输 JSON",
-        "清缓存",
-        "压缩代码"
+        "清缓存"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "复印原件带走。"
     },
     {
       "stem": "客户端把水合数据灌回缓存的组件是？",
       "options": [
+        "Suspense",
         "QueryClientProvider",
         "ErrorBoundary",
-        "HydrationBoundary",
-        "Suspense"
+        "HydrationBoundary"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "state=dehydratedState 一包即灌。"
     },
     {
       "stem": "prefetch 与「每请求 new client」的关系？",
       "options": [
+        "预热让缓存里有东西可复印",
         "无关",
         "prefetch 只在浏览器跑",
-        "prefetch 可以省略 new",
-        "预热让缓存里有东西可复印"
+        "prefetch 可以省略 new"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "不预热则 dehydrate 出来是空的。"
     },
     {
@@ -70,45 +70,45 @@
     {
       "stem": "useSuspenseQuery 数据未好时？",
       "options": [
+        "死循环",
         "返回 undefined",
         "suspend 挂起最近 Suspense 边界",
-        "报错",
-        "死循环"
+        "报错"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "suspense 版专用 hook。"
     },
     {
       "stem": "什么情况不该上 SSR？",
       "options": [
-        "SEO 敏感页",
-        "纯内部后台工具",
         "鉴权后台",
-        "内容在服务器才拿到"
+        "内容在服务器才拿到",
+        "SEO 敏感页",
+        "纯内部后台工具"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "首屏无指标要求就别为用而用。"
     },
     {
       "stem": "水合后首屏还会发请求吗（命中缓存时）？",
       "options": [
-        "会，双保险",
         "不会，直接命中复印数据",
         "取决于 staleTime 为 0 必发",
-        "报错"
+        "报错",
+        "会，双保险"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "这就是 SSR 取数的意义。"
     },
     {
       "stem": "dehydrate 默认会带走哪种查询？",
       "options": [
+        "paused 查询",
         "已完成的查询",
         "进行中的 mutation",
-        "所有 key",
-        "paused 查询"
+        "所有 key"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "没取完的自然没什么可复印。"
     }
   ]

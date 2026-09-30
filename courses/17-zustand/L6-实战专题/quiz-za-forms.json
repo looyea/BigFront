@@ -15,45 +15,45 @@
     {
       "stem": "把上百字段全放 store 会导致？",
       "options": [
-        "更快",
         "更安全",
         "渲染风暴",
-        "无影响"
+        "无影响",
+        "更快"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "每键触发订阅重渲。"
     },
     {
       "stem": "什么情况才把表单数据进 Zustand？",
       "options": [
-        "任何字段",
         "校验规则",
         "提交按钮",
-        "跨步骤/草稿/撤销需要"
+        "跨步骤/草稿/撤销需要",
+        "任何字段"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "需要跨页/恢复才进。"
     },
     {
       "stem": "草稿刷新恢复靠？",
       "options": [
-        "内存",
-        "persist 持久化 wizard data",
         "Cookie 轮询",
-        "全局变量"
+        "全局变量",
+        "内存",
+        "persist 持久化 wizard data"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "persist 存步骤与数据。"
     },
     {
       "stem": "dirty 检测常用？",
       "options": [
-        "手动 diff 全量",
         "RHF isDirty 或 subscribe 变化",
         "reload",
-        "setTimeout"
+        "setTimeout",
+        "手动 diff 全量"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "就近用库能力。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "提交时谁负责取值？",
       "options": [
+        "axios",
         "store",
         "RHF（getValues/handleSubmit）",
-        "DOM 查询",
-        "axios"
+        "DOM 查询"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "RHF 管理字段值。"
     },
     {
       "stem": "乐观提交展示可配合？",
       "options": [
-        "immer",
-        "React 19 useOptimistic",
         "persist",
-        "combine"
+        "combine",
+        "immer",
+        "React 19 useOptimistic"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "UI 先行，store 回滚。"
     },
     {
       "stem": "下面哪种是反模式？",
       "options": [
-        "字段用 RHF",
         "每击键 setState 全局 store",
         "草稿进 store",
-        "提交态进 store"
+        "提交态进 store",
+        "字段用 RHF"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "引发不必要重渲。"
     },
     {

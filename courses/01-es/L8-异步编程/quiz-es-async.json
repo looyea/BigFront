@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "以下代码有什么问题？\n\n```js\nconst a = await fetchA();\nconst b = await fetchB();\n```",
       "options": [
-        "语法错误",
-        "fetch 不能用 await",
         "没有问题",
-        "**无依赖却串行**——总耗时 = a + b，应用 Promise.all 并行"
+        "**无依赖却串行**——总耗时 = a + b，应用 Promise.all 并行",
+        "语法错误",
+        "fetch 不能用 await"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "两者不互相依赖 → 可并行：`const [a, b] = await Promise.all([fetchA(), fetchB()])`。有依赖才必须串行。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "`list.forEach(async x => { await doIt(x); })` 的结果是：",
       "options": [
+        "自动 Promise.all",
         "全部完成才继续",
         "forEach **不等** Promise——外面的 await/then 拿不到完成信号",
-        "报错",
-        "自动 Promise.all"
+        "报错"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "forEach 忽略回调返回值（包括 Promise）。修：`for...of` 串行；`await Promise.all(list.map(doIt))` 并行。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "`await 42` 的行为是：",
       "options": [
-        "语法错误",
-        "等价 `await Promise.resolve(42)`——**多等一个微任务**",
         "同步返回 42",
-        "抛 TypeError"
+        "抛 TypeError",
+        "语法错误",
+        "等价 `await Promise.resolve(42)`——**多等一个微任务**"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "await 一个非 Promise 会被隐式包装并让出一个 tick——不是零成本。热点路径注意。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "`for await...of` 用于消费：",
       "options": [
-        "普通数组",
         "**AsyncIterable**（每次 yield 一个 Promise）——如 Node Readable stream",
         "同步 generator",
-        "Map / Set"
+        "Map / Set",
+        "普通数组"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "for-await-of 是 AsyncIterable 的语法糖；每一项自动 await。真实场景：Node 流、fetch body、SSE。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "顶层 `await`（ES2022）的**限制**不包括：",
       "options": [
-        "只能在 ESM 模块顶层",
         "**会阻塞**整条依赖链上所有下游模块",
         "在 CJS 里可以使用",
-        "打包 target 通常要 esnext"
+        "打包 target 通常要 esnext",
+        "只能在 ESM 模块顶层"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "CJS 是同步语义——不支持顶层 await。ESM-only。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "`setTimeout(async () => { throw new Error() })` 能被外层 `try/catch` 抓住吗？",
       "options": [
+        "要 await 才行",
         "能——await 会冒泡",
         "不能——回调在**新栈帧**执行，原栈已退",
-        "只有 Node 能",
-        "要 await 才行"
+        "只有 Node 能"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "async 函数里的 throw 会变成它自己**返回的 Promise** 的 rejection，与外层同步栈无关。要接住得 `foo().catch(...)`。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "`await` 暂停的准确含义是：",
       "options": [
-        "阻塞主线程等待结果",
-        "只暂停**当前 async 函数**自身，外层同步代码继续跑到完",
         "暂停整个微任务队列",
-        "让出给下一个宏任务"
+        "让出给下一个宏任务",
+        "阻塞主线程等待结果",
+        "只暂停**当前 async 函数**自身，外层同步代码继续跑到完"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "await 之后的代码被编译成续体挂到 promise 上，函数立刻返回 pending promise——调用栈照常展开，外层毫无感知。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "async 函数里 `return p` 与 `return await p` 的差别是：",
       "options": [
-        "完全等价",
-        "return await 会多等一帧",
         "return await 的外层 try/catch 能捕获 p 的 rejection；直接 return p 则错误抛给调用方",
-        "return p 非法"
+        "return p 非法",
+        "完全等价",
+        "return await 会多等一帧"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "return p 时 promise 在函数边界外 reject，内部 catch 够不着；await 把 settle 拉回函数体内，try/catch 生效。性能差一 tick 可忽略，**语义**才是选择依据。"
     },
     {

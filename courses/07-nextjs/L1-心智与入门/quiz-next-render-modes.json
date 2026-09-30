@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "ISR 解决的核心矛盾是？",
       "options": [
-        "前端与后端的跨域矛盾",
-        "SSR 与 CSR 的水合矛盾",
         "打包体积与开发体验的矛盾",
-        "静态页面的速度与内容新鲜度的矛盾"
+        "静态页面的速度与内容新鲜度的矛盾",
+        "前端与后端的跨域矛盾",
+        "SSR 与 CSR 的水合矛盾"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "到期后台重渲染换页：平时享受静态 CDN 速度，内容按间隔翻新（呼应 next-render-modes 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "Hydration（水合）做的事情本质是？",
       "options": [
+        "压缩 HTML 减少传输",
         "把 CSS 注入页面",
         "浏览器端再跑一遍组件，与服务端 DOM 对账并挂上事件监听",
-        "把数据写进 cookie",
-        "压缩 HTML 减少传输"
+        "把数据写进 cookie"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "对账+接管的三步：内存渲染、diff、挂事件——页面从能看变能用（呼应 next-render-modes 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "页面组件顶层直接渲染 new Date().toLocaleTimeString()，常见后果是？",
       "options": [
-        "构建直接失败",
-        "水合文本不一致警告，服务端时间≠浏览器时间",
         "自动变成 SSR",
-        "没有任何影响"
+        "没有任何影响",
+        "构建直接失败",
+        "水合文本不一致警告，服务端时间≠浏览器时间"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "两端各算各的对不上账；应把浏览器专属值放 useEffect 后再渲染（呼应 next-render-modes 第二节、react-useeffect）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "App Router 页面里调用了 cookies()，该页面的渲染模式会？",
       "options": [
-        "保持 SSG 不变",
         "自动转为动态渲染（SSR），因为结果依赖请求",
         "转为纯 CSR",
-        "构建报错拒绝部署"
+        "构建报错拒绝部署",
+        "保持 SSG 不变"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "读取请求态数据使页面不可预渲染，Next 由代码行为推断模式（呼应 next-render-modes 第三节表）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 一个每 5 分钟刷新一次、要求全球秒开、可容忍几分钟旧的新闻首页，最合适的模式是？",
       "options": [
-        "纯 SSR 每请求现渲染",
-        "ISR：SSG 产物 + revalidate=300 + CDN 边缘缓存 + stale-while-revalidate——命中即返 stale、后台触发再生",
         "纯 CSR 客户端取数",
-        "只 SSG 永不更新"
+        "只 SSG 永不更新",
+        "纯 SSR 每请求现渲染",
+        "ISR：SSG 产物 + revalidate=300 + CDN 边缘缓存 + stale-while-revalidate——命中即返 stale、后台触发再生"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "ISR 解决的就是\"预渲染的快 + 数据要新\"这对矛盾。revalidate 秒数与业务容忍度匹配、CDN 层 stale-while-revalidate 把\"过期瞬间的第一位访客\"也不阻塞地喂旧页面 + 后台刷新，是内容型站点的甜点配置。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " Next 15 的 PPR（Partial Prerendering）本质是把哪些部分预渲染？",
       "options": [
-        "整页全部预渲染、动态部分靠 refresh",
         "把同一页面拆成\"可静态预渲染的 shell + 动态边界（await 非确定性数据/Suspense fallback）\"：shell 与静态段进构建产物、动态段运行时流式补齐——首字节立即到达、动态段稍后填充",
         "只预渲染 layout、page 全动态",
-        "把 SEO 元数据预渲染"
+        "把 SEO 元数据预渲染",
+        "整页全部预渲染、动态部分靠 refresh"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "PPR 把\"要么整页 SSG、要么整页 SSR\"的二选一升级成\"同页共存\"：静态壳提前给、动态区用 Suspense 边界占位、后续流式补。它同时改善 LCP 与首字节、也保留了个性化/实时数据。"
     },
     {

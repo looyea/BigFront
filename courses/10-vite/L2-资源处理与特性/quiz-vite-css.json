@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "css.preprocessorOptions.scss.additionalData 的作用是？",
       "options": [
-        "添加全局 CSS 变量",
         "编译后追加 CSS",
         "在每个 SCSS 文件顶部自动注入代码（如 @use 导入变量）",
-        "设置 sass 编译器选项"
+        "设置 sass 编译器选项",
+        "添加全局 CSS 变量"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "additionalData 在每个 .scss 编译前 prepend 字符串 → 免去每个文件手动写 @use \"@/vars\"。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "生产构建时 CSS 默认怎么处理？",
       "options": [
-        "内联到 JS 里",
         "不处理原样输出",
         "转成 Tailwind",
-        "提取成独立 .css 文件 + minify"
+        "提取成独立 .css 文件 + minify",
+        "内联到 JS 里"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "build 时 Rollup 提取所有 CSS → 独立文件 + Lightning CSS minify + contenthash → <link> 引用。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "dev 模式下 CSS 是怎么注入页面的？",
       "options": [
-        "<link> 标签",
-        "JS 动态创建 <style> 标签插入 DOM",
         "内联在 HTML 里",
-        "Service Worker"
+        "Service Worker",
+        "<link> 标签",
+        "JS 动态创建 <style> 标签插入 DOM"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Vite dev 把 CSS 当 JS 模块处理 → styleinject → 动态 <style> → 支持 HMR 热替换 CSS 内容无需刷新。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "cssCodeSplit: false 会导致什么？",
       "options": [
-        "CSS 不压缩",
         "所有路由的 CSS 合并成一个大文件（首屏全加载）",
         "CSS 内联到 HTML",
-        "报错"
+        "报错",
+        "CSS 不压缩"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "true(默认)：异步 chunk 有自己的 CSS → 按需加载。false：合并全部 → 首屏下载所有页面样式。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " Tailwind CSS v4 在 Vite 项目里的推荐接入方式是？",
       "options": [
+        "webpack  loader",
         "postcss.config.js 里挂 tailwindcss 插件",
         "官方 @tailwindcss/vite 插件——v4 架构下走原生 CSS 层叠与 @theme 配置，不再需要 postcss 配置文件与 tailwind.config.js（v3 才走 PostCSS 插件路线）",
-        "CLI 单独 watch",
-        "webpack  loader"
+        "CLI 单独 watch"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "两代接入方式的差异是 v4 迁移的第一道认知坎：引擎重写为 Rust（Oxide）后 PostCSS 依赖被剥离。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " CSS 原生 @layer 的作用是？",
       "options": [
-        "代码折叠注释",
-        "层叠层级声明——后声明的层优先于先声明的层，用于显式管理 reset/库/组件/工具的覆盖秩序，是 !important 文化病的结构化解药",
         "模块作用域",
-        "媒体查询嵌套"
+        "媒体查询嵌套",
+        "代码折叠注释",
+        "层叠层级声明——后声明的层优先于先声明的层，用于显式管理 reset/库/组件/工具的覆盖秩序，是 !important 文化病的结构化解药"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "作用域解决了\"选不中\"，@layer 解决\"选得中但比不过\"——两代 CSS 组织问题的正交解法。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 组件库里导入一个全局样式入口（import ./global.css）后 dev 生效、build 后出现样式覆盖错序，常见根因是？",
       "options": [
-        "浏览器兼容",
         "CSS 在不同 chunk 的注入/拆分顺序与模块 import 顺序不严格同构（懒加载 chunk 的 CSS 晚插入即后来居上）——库的全局样式与入口样式边界要显式排列或分离产物",
         "Vite bug",
-        "缓存污染"
+        "缓存污染",
+        "浏览器兼容"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "\"后插入的 CSS 赢\"是层叠默认行为——样式冲突在拆分后爆发，是 code splitting 的 CSS 侧暗面。"
     },
     {

@@ -4,12 +4,12 @@
     {
       "stem": "Biome 行内抑制诊断的注解是？",
       "options": [
-        "eslint-disable",
         "// biome-ignore",
         "@ts-ignore",
-        "// nolint"
+        "// nolint",
+        "eslint-disable"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "biome-ignore 系列。"
     },
     {
@@ -26,56 +26,56 @@
     {
       "stem": "文件级豁免整类诊断用？",
       "options": [
-        "biome-ignore-all",
-        "disable-all",
         "suppress-file",
-        "ignore-eof"
+        "ignore-eof",
+        "biome-ignore-all",
+        "disable-all"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "顶置 ignore-all。"
     },
     {
       "stem": "assist 与 action 的定位是？",
       "options": [
-        "纯格式化",
-        "安全改写代码结构的动作",
         "类型检查",
-        "打包"
+        "打包",
+        "纯格式化",
+        "安全改写代码结构的动作"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "如 import 整理等。"
     },
     {
       "stem": "能被 action 自动修的问题应该？",
       "options": [
-        "直接 ignore",
         "让它被修，而非压制",
         "关掉 linter",
-        "重写语言"
+        "重写语言",
+        "直接 ignore"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "能修就别藏。"
     },
     {
       "stem": "suppress 机制的价值是？",
       "options": [
-        "彻底禁规则",
         "加速",
         "让豁免可追溯、可搜索、可到期清理",
-        "免配置"
+        "免配置",
+        "彻底禁规则"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "记账式豁免。"
     },
     {
       "stem": "用 // biome-ignore 掩盖「不想守规则」的正确态度？",
       "options": [
+        "永久保留",
         "鼓励",
         "应把决策写进配置而非散落代码",
-        "无所谓",
-        "永久保留"
+        "无所谓"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "配置表达团队决策。"
     },
     {
@@ -92,12 +92,12 @@
     {
       "stem": "ignore 最合理的用途是？",
       "options": [
-        "绕过所有报错",
         "针对 Biome 误报精确豁免",
         "关掉格式化",
-        "跳过文件"
+        "跳过文件",
+        "绕过所有报错"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "误报才豁免、非逃避。"
     },
     {

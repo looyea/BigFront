@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "`node app.js foo bar` 时，process.argv 的内容是？",
       "options": [
-        "['foo', 'bar']",
         "['app.js', 'foo', 'bar']",
         "[node路径, app.js路径, 'foo', 'bar']",
-        "{'foo':'bar'}"
+        "{'foo':'bar'}",
+        "['foo', 'bar']"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "argv 前两项固定是 node 可执行路径与脚本路径，用户参数从索引 2 开始，所以常写 process.argv.slice(2)。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "process.cwd() 与 __dirname 的区别是？",
       "options": [
-        "两者完全等价",
         "__dirname 是全局对象属性，任何模块都能改",
         "cwd 只在 ESM 存在",
-        "cwd 是运行命令时所在目录，__dirname 是当前脚本文件所在目录"
+        "cwd 是运行命令时所在目录，__dirname 是当前脚本文件所在目录",
+        "两者完全等价"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "cwd 取决于“你在哪个目录敲命令”，__dirname 取决于脚本文件本身位置；读写项目内文件应基于 __dirname 拼路径。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "在 ESM 模块里想拿到“当前文件所在目录”，正确做法是？",
       "options": [
-        "直接用 __dirname",
-        "path.dirname(fileURLToPath(import.meta.url))",
         "process.__dirname",
-        "globalThis.dirname"
+        "globalThis.dirname",
+        "直接用 __dirname",
+        "path.dirname(fileURLToPath(import.meta.url))"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "ESM 没有 __dirname，需要用 import.meta.url（file:// URL）经 fileURLToPath 转成路径再取 dirname。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "关于“Node 单线程却适合高并发”，原因是？",
       "options": [
-        "Node 其实会自动开很多线程执行你的 JS",
         "JS 执行单线程，但靠事件循环 + libuv 异步 I/O，等待期间可处理别的请求",
         "单线程一定比多线程快",
-        "Node 把请求丢给数据库去并发"
+        "Node 把请求丢给数据库去并发",
+        "Node 其实会自动开很多线程执行你的 JS"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "I/O 交给底层异步，主线程不空等、事件回调排队调度，因此一根线程能扛大量并发；但 CPU 密集任务会卡住事件循环。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "以下哪类任务最不适合直接跑在 Node 主线程上？",
       "options": [
+        "查数据库返回结果",
         "读写文件的 API 请求",
         "对一张大图做同步像素级加密计算",
-        "转发 HTTP 请求",
-        "查数据库返回结果"
+        "转发 HTTP 请求"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "CPU 密集的同步长计算会阻塞整个事件循环，拖垮所有并发请求；应交给 worker_threads/cluster 或外部服务。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "关于 NODE_PATH 与环境变量对模块查找的作用，正确的有：",
       "options": [
-        "NODE_PATH 是官方推荐的依赖组织方式",
-        "require 查找顺序：node_modules 逐级上溯；NODE_PATH 仅作历史兜底且已不推荐（依赖应显式声明）",
         "NODE_PATH 会加速加载",
-        "环境变量只能靠 os 模块读取"
+        "环境变量只能靠 os 模块读取",
+        "NODE_PATH 是官方推荐的依赖组织方式",
+        "require 查找顺序：node_modules 逐级上溯；NODE_PATH 仅作历史兜底且已不推荐（依赖应显式声明）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "NODE_PATH 是遗留机制：绕过 package.json 的隐式依赖会让部署机「本地能跑线上崩」；现代方案是 workspaces/显式安装。env 统一在 process.env 下，不必靠 os 模块。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "脚本末尾调用 process.exit(0) 而输出重定向到文件时可能丢日志，原因是：",
       "options": [
-        "文件权限不足",
         "写文件时 stdout 是同步之外的场景（管道为异步写），exit 立即截断未刷完的缓冲区",
         "OS 缓存不回收",
-        "Node 不允许重定向"
+        "Node 不允许重定向",
+        "文件权限不足"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "stdout 接终端是同步写、接管道/文件是异步写——process.exit 不等 flush；「不硬退、自然退或设 exitCode」是脚本不丢输出的关键（与本关 console.log 后 exit 题同源纪律）。"
     },
     {

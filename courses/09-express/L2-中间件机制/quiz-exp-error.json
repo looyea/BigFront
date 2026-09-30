@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "uncaughtException 之后进程应该怎么做？",
       "options": [
-        "继续运行，catch 后忽略",
-        "调用 process.exit(0)",
         "重新注册路由",
-        "记录日志后尽快重启进程（状态不可靠）"
+        "记录日志后尽快重启进程（状态不可靠）",
+        "继续运行，catch 后忽略",
+        "调用 process.exit(0)"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "uncaughtException = 未知状态 → 内部数据可能损坏 → 正确做法：记 fatal log → close server → 让进程管理器(pm2/K8s)重启。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "404 处理推荐用哪种方式？",
       "options": [
+        "res.sendStatus(404)",
         "res.status(404).json({error:'Not Found'})",
         "next(HttpError.notFound('Cannot ' + req.method + ' ' + req.originalUrl))",
-        "throw new Error('404')",
-        "res.sendStatus(404)"
+        "throw new Error('404')"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "用 next(err) → 统一走 error handler（格式一致 + 日志记录 + 监控上报），不散落各处手写。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "Error handler 里为什么要区分 4xx 和 5xx 的日志级别？",
       "options": [
-        "节省磁盘",
-        "4xx = 用户/客户端问题（warn），5xx = 服务端 bug（error）→ 只有 5xx 才触发告警",
         "Express 要求",
-        "没有区别"
+        "没有区别",
+        "节省磁盘",
+        "4xx = 用户/客户端问题（warn），5xx = 服务端 bug（error）→ 只有 5xx 才触发告警"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "4xx 正常业务（用户输错密码）用 warn；5xx 非预期崩溃用 error → PagerDuty 只对 error 级别告警。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "以下错误中，哪个不应该被 catch？",
       "options": [
-        "数据库连接超时",
-        "用户提交了无效邮箱",
         "TypeError: Cannot read properties of undefined（代码 bug）",
-        "第三方 API 返回 503"
+        "第三方 API 返回 503",
+        "数据库连接超时",
+        "用户提交了无效邮箱"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "编程错误（TypeError/ReferenceError）= 代码 bug → 应该 crash + 报警 + 修复，不应该静默处理。操作错误才 catch。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " 错误中间件里写响应前，先判断 if (res.headersSent) return next(err)，这一行防的是？",
       "options": [
+        "兼容 Express 4",
         "防止客户端重复提交",
         "响应头已发出时再 res.status().json() 会抛 ERR_HTTP_HEADERS_SENT 二次错误——把无法补救的错误原路交还给默认处理器/上报层止损",
-        "防止错误被吞",
-        "兼容 Express 4"
+        "防止错误被吞"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "半截响应是 HTTP 的既成事实：headersSent 之后一切\"改写\"都失败，唯一正确动作是移交而不是重试表演。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " unhandledRejection 与 uncaughtException 的推荐处理差别是？",
       "options": [
-        "完全相同都直接退出",
-        "unhandledRejection 通常先收尾在途请求择机优雅重启；uncaughtException 状态已不可信，只能尽力记日志后尽快退出（官方明确\"只该用于崩溃前收尾\"）",
         "前者忽略后者退出",
-        "两者都忽略继续跑"
+        "两者都忽略继续跑",
+        "完全相同都直接退出",
+        "unhandledRejection 通常先收尾在途请求择机优雅重启；uncaughtException 状态已不可信，只能尽力记日志后尽快退出（官方明确\"只该用于崩溃前收尾\"）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "区别在状态可信度：Promise 拒绝多半局部可控，同步异常可能已把内部数据改到一半——\"继续跑\"的赌注大小不同。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 错误处理中间件里调用 next()（不带参数）会发生什么？",
       "options": [
-        "跳回业务中间件",
         "不会被下一个错误中间件接收而是回到普通中间件链继续——Express 靠四参数区分错误链，\"转发错误\"必须 next(err)，写错即静默越级",
         "自动重抛同一错误",
-        "终止请求"
+        "终止请求",
+        "跳回业务中间件"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "next() 在错误处理器的语义是\"我处理完了，回普通链\"，想交给下一个错误处理器必须 next(err)——签名即路由。"
     },
     {

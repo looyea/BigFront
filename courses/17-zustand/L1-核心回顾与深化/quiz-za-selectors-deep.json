@@ -4,12 +4,12 @@
     {
       "stem": "useStore(s => ({a:s.a})) 为什么危险？",
       "options": [
+        "每次返回新对象致 Object.is 恒不等，无谓/无限重渲",
         "语法错误",
         "会报 TS 错",
-        "无法拿到 state",
-        "每次返回新对象致 Object.is 恒不等，无谓/无限重渲"
+        "无法拿到 state"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "新对象引用不等，触发过度订阅甚至死循环。"
     },
     {
@@ -37,23 +37,23 @@
     {
       "stem": "React 报 \"getSnapshot should be cached\" 通常是？",
       "options": [
-        "selector 返回了不稳定的新引用",
         "store 未创建",
         "Provider 缺失",
-        "immer 冲突"
+        "immer 冲突",
+        "selector 返回了不稳定的新引用"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "selector 每帧返回新对象违反快照稳定契约。"
     },
     {
       "stem": "读取多个字段最省的重渲写法是？",
       "options": [
-        "一个 selector 返回大对象",
         "拆成多个只返回原始值的 selector",
         "直接订阅整个 store",
-        "用 getState 轮询"
+        "用 getState 轮询",
+        "一个 selector 返回大对象"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "多个原始值 selector 粒度最细，仅在对应字段变化时重渲。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "useShallow 对嵌套第二层对象会？",
       "options": [
+        "自动展开",
         "也深比较",
         "只比较第一层，嵌套对象仍按引用",
-        "报错",
-        "自动展开"
+        "报错"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "useShallow 是浅比较，第二层新对象仍判不等。"
     },
     {
       "stem": "需要真正深比较时较合理的做法是？",
       "options": [
-        "每帧 JSON.stringify",
-        "依赖 immer 保持未变分支引用稳定，或昂贵的自定义 equality",
         "放弃 selector",
-        "订阅整 store"
+        "订阅整 store",
+        "每帧 JSON.stringify",
+        "依赖 immer 保持未变分支引用稳定，或昂贵的自定义 equality"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "优先结构共享让未变部分引用不变；JSON 比较成本高。"
     },
     {
       "stem": "useShallow 从哪个包导入？",
       "options": [
-        "'zustand'",
-        "'zustand/shallow'",
         "'zustand/react/shallow'",
-        "'zustand/middleware'"
+        "'zustand/middleware'",
+        "'zustand'",
+        "'zustand/shallow'"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "React 场景用 zustand/react/shallow 的 useShallow。"
     },
     {

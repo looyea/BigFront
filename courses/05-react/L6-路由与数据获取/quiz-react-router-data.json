@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Data Router 的 loader 什么时候执行？",
       "options": [
-        "组件挂载后的 useEffect 里",
-        "只在表单提交时",
         "在匹配该路由、渲染组件之前用于取数",
-        "每次任意 setState 时"
+        "每次任意 setState 时",
+        "组件挂载后的 useEffect 里",
+        "只在表单提交时"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "loader 在进入路由前取数，组件拿到即就绪（呼应 react-router-data 第二、三节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "组件里如何拿到本路由 loader 返回的数据？",
       "options": [
-        "useParams()",
-        "useLocation()",
         "props.data",
-        "useLoaderData()"
+        "useLoaderData()",
+        "useParams()",
+        "useLocation()"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "useLoaderData 同步返回 loader 结果（呼应 react-router-data 第三节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "action 主要处理什么？",
       "options": [
-        "该路由上的写操作（POST/PUT），配 <Form method=post> 触发",
-        "读取 URL 参数",
         "缓存 GET 响应",
-        "定义错误界面"
+        "定义错误界面",
+        "该路由上的写操作（POST/PUT），配 <Form method=post> 触发",
+        "读取 URL 参数"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "action 处理数据变更（呼应 react-router-data 第四节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "action 成功后，相关列表数据为什么会自动更新？",
       "options": [
-        "手动调了 refetch",
-        "Router 在 action 完成后自动重跑受影响路由的 loader",
         "浏览器刷新了",
-        "WebSocket 推送"
+        "WebSocket 推送",
+        "手动调了 refetch",
+        "Router 在 action 完成后自动重跑受影响路由的 loader"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "写后自动重取是框架级机制（呼应 react-router-data 第四节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "在 loader 里做\"未登录就跳登录页\"，惯用写法是？",
       "options": [
-        "return <Navigate to=.../>",
         "throw redirect('/login')",
         "window.location = '/login'",
-        "返回 null"
+        "返回 null",
+        "return <Navigate to=.../>"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "loader 里 throw redirect 提前中断并跳转（呼应 react-router-data 第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "errorElement 的作用是？",
       "options": [
+        "缓存错误",
         "渲染加载骨架",
         "为该路由 loader/action/渲染抛出的错误提供兜底界面",
-        "定义重定向",
-        "缓存错误"
+        "定义重定向"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "路由级错误边界（呼应 react-router-data 第二节、react-render-control）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 在 Data Router 的 loader 里要把未登录用户「中止本次导航并跳登录」，正确写法是？",
       "options": [
-        "return <Navigate/>",
-        "throw redirect(\"/login\")（或 return redirect）——loader 里抛 redirect 会中断当前数据加载并把导航重定向；组件/渲染产物不能从 loader 返回",
         "调用 navigate(\"/login\")",
-        "window.location 跳转"
+        "window.location 跳转",
+        "return <Navigate/>",
+        "throw redirect(\"/login\")（或 return redirect）——loader 里抛 redirect 会中断当前数据加载并把导航重定向；组件/渲染产物不能从 loader 返回"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "loader 运行在渲染之前、不在组件上下文中，拿不到 useNavigate、也不能返回 JSX。重定向用从 react-router-dom 导入的 `redirect()`（throw 或 return 皆可）。这是 Data Router「路由级鉴权前移到数据层」的核心手法，取代 Vue 时代的 beforeEach。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " loader 返回的数据，组件默认怎么拿？跨路由/别的组件能直接读吗？",
       "options": [
-        "任何组件用 useLoaderData 都能读到全部 loader 数据",
         "useLoaderData 只返回「当前组件所匹配路由」自己 loader 的结果；要读祖先路由数据用 useLoaderData 的 {infer}/ 或 hook 参数定位，兄弟间不共享——共享要走 store 或再取一次",
         "靠 props 自动注入",
-        "存在 window 上"
+        "存在 window 上",
+        "任何组件用 useLoaderData 都能读到全部 loader 数据"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "loader 数据与「该 loader 所属的路由分支」绑定，不是全局缓存。嵌套路由里子组件用 `useRouteLoaderData(routeId)` 可读祖先 loader 数据，但两条平级路由的 loader 彼此不透明。这跟 Query 的「按 key 全局去重缓存」是两套模型——也正是「loader 之外还要不要 Query」的分界（见 data-fetching 关）。"
     },
     {

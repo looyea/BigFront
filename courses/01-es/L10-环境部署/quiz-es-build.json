@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "contenthash 的作用是什么？",
       "options": [
-        "用于 CDN 鉴权",
         "防止 XSS 攻击",
         "文件内容不变 → 文件名不变 → 浏览器命中强缓存；内容变 → 文件名变 → 缓存失效",
-        "标识构建者"
+        "标识构建者",
+        "用于 CDN 鉴权"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "contenthash 是\"永久缓存 + 即时更新\"策略的核心——JS/CSS 用 max-age=31536000, immutable，只有文件名变化才拉新资源。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "Vite dev 和 build 分别用什么做 JS 转换/打包？",
       "options": [
-        "都用 Webpack",
         "dev 用 Rollup；build 用 esbuild",
         "都用 Rollup",
-        "dev 用 esbuild 预构建 + 原生 ESM；build 用 Rollup 打包"
+        "dev 用 esbuild 预构建 + 原生 ESM；build 用 Rollup 打包",
+        "都用 Webpack"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "Vite 双模型：dev 时 esbuild 预打包依赖 + 原生 ESM 不 bundle（启动极快）；build 时 Rollup 全量打包+Tree Shake+代码分割（产物更优）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "Source Map 在生产环境的最佳实践是？",
       "options": [
-        "直接 public 目录放 .map 文件让人下载",
-        "生成 .map 并上传到 Sentry 等错误监控后，从部署产物中删除",
         "关闭 Source Map 节省空间",
-        "内联 Source Map 到 JS 文件里"
+        "内联 Source Map 到 JS 文件里",
+        "直接 public 目录放 .map 文件让人下载",
+        "生成 .map 并上传到 Sentry 等错误监控后，从部署产物中删除"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "hidden 模式：生成 .map → CI 上传到 Sentry → 部署只传 JS 不传 .map → 源码不暴露、但 Sentry 可反解错误堆栈。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "dynamic import() 在打包器中触发什么行为？",
       "options": [
-        "产生 HTTP 请求",
         "代码分割：把目标模块拆成独立 chunk 按需加载",
         "使目标模块变成全局变量",
-        "什么都不做"
+        "什么都不做",
+        "产生 HTTP 请求"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "打包器遇到 import() → 把被引用模块单独输出一个 chunk 文件 → 运行时才通过 <script>/fetch 加载 → 减少首屏体积。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "Brotli 比 Gzip 的优势是？",
       "options": [
+        "不需要服务端配置",
         "编码速度更快",
         "压缩率更高（尤其文本），通常再小 15-25%",
-        "所有浏览器都原生支持解压",
-        "不需要服务端配置"
+        "所有浏览器都原生支持解压"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Brotli 用更大的字典窗口（16MB vs 32KB）+ 前端专用上下文模型 → JS/CSS/JSON 文本压缩率明显优于 Gzip。现代 CDN 默认 Brotli。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "rollup/vite 的 `manualChunks` 用于：",
       "options": [
-        "合并 CSS",
-        "把 vendor 等大依赖拆成独立长效缓存 chunk",
         "压缩代码",
-        "拆 Worker"
+        "拆 Worker",
+        "合并 CSS",
+        "把 vendor 等大依赖拆成独立长效缓存 chunk"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "拆分策略：业务码频繁变、框架/依赖低频变——分开后用户更新时只需重下业务 chunk，vendor 长缓存命中。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "Vite dev 阶段 `optimizeDeps`（esbuild 预构建）解决的两个问题是：",
       "options": [
-        "压缩与加密",
         "CJS 依赖转 ESM + 合并碎模块减少上千个并行请求",
         "热更新与回滚",
-        "Tree Shaking 与摇树"
+        "Tree Shaking 与摇树",
+        "压缩与加密"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "浏览器 ESM 不能直接吃 CJS；且 lodash 这类包 import 碎成几千个模块请求——预构建一次转译+打包并缓存到 node_modules/.vite。"
     },
     {

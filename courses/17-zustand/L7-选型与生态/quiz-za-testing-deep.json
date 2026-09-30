@@ -4,56 +4,56 @@
     {
       "stem": "Zustand store 测试最大的便利？",
       "options": [
-        "必须 render",
-        "只能 E2E",
         "可脱离 React 纯 JS 测",
-        "无法测异步"
+        "无法测异步",
+        "必须 render",
+        "只能 E2E"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "getState/setState 直接测。"
     },
     {
       "stem": "避免用例间状态污染用？",
       "options": [
-        "共享单例",
-        "reload",
         "localStorage",
-        "工厂每用例新建 / beforeEach reset"
+        "工厂每用例新建 / beforeEach reset",
+        "共享单例",
+        "reload"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "隔离干净。"
     },
     {
       "stem": "测 async action 推荐 mock 工具？",
       "options": [
+        "nock 必须",
         "jest.fn 手写",
         "msw",
-        "sinon",
-        "nock 必须"
+        "sinon"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "msw 拦截 HTTP 贴近真实（呼应 pinia-testing）。"
     },
     {
       "stem": "测 selector 组件重渲用？",
       "options": [
-        "快照",
-        "renderHook + act",
         "截图",
-        "print"
+        "print",
+        "快照",
+        "renderHook + act"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "细粒度观察订阅。"
     },
     {
       "stem": "测 persist migrate 的要点？",
       "options": [
-        "必须浏览器",
         "注入内存 storage 测纯函数",
         "跳过",
-        "真实写盘"
+        "真实写盘",
+        "必须浏览器"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "自定义 StateStorage。"
     },
     {
@@ -70,23 +70,23 @@
     {
       "stem": "测错误回滚断言什么？",
       "options": [
+        "DOM 删除",
         "loading 变 true",
         "失败后 state 恢复快照",
-        "console",
-        "DOM 删除"
+        "console"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "验证回滚（呼应 za-crud）。"
     },
     {
       "stem": "beforeEach 里干净化常用？",
       "options": [
-        "store.setState(初始)",
         "新建 window",
         "删文件",
-        "重启"
+        "重启",
+        "store.setState(初始)"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "重置到初始态。"
     },
     {

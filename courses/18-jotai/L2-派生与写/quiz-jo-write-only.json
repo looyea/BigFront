@@ -15,45 +15,45 @@
     {
       "stem": "触发 write-only atom 用？",
       "options": [
-        "useAtomValue",
         "atom()",
         "useSetAtom",
-        "get"
+        "get",
+        "useAtomValue"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "拿 setter 调用（呼应 jo-use-atom）。"
     },
     {
       "stem": "write 函数的参数是？",
       "options": [
-        "(set,get)",
         "(get,set)",
         "(value)",
-        "(get,set,value)"
+        "(get,set,value)",
+        "(set,get)"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "get、set 与被传入的值。"
     },
     {
       "stem": "write-only atom 相当于哪个概念？",
       "options": [
-        "selector",
-        "action",
         "reducer state",
-        "middleware"
+        "middleware",
+        "selector",
+        "action"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "封装变更/副作用。"
     },
     {
       "stem": "一个 write 里连续 set 多个 atom 会？",
       "options": [
-        "多次渲染",
         "React 18 批量、一致快照",
         "报错",
-        "串行 await"
+        "串行 await",
+        "多次渲染"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "自动批处理。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "write 里能 await 做异步吗？",
       "options": [
+        "被忽略",
         "不能",
         "能，之后 set",
-        "会崩溃",
-        "被忽略"
+        "会崩溃"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "异步 write 编排数据加载。"
     },
     {
       "stem": "write-only atom 的读值有意义吗？",
       "options": [
-        "有",
-        "基本是占位，一般不读",
         "自动派生",
-        "会缓存"
+        "会缓存",
+        "有",
+        "基本是占位，一般不读"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "读为 null。"
     },
     {
       "stem": "给一个 logout write atom 的正确形态？",
       "options": [
-        "atom(0)",
         "atom(null,(get,set)=>{set(token,null);set(user,null)})",
         "atom(get=>...)",
-        "useAtom"
+        "useAtom",
+        "atom(0)"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "集中清多个源 atom。"
     },
     {

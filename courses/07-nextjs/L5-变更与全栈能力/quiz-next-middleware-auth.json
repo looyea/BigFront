@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "middleware.ts 的运行环境默认是？",
       "options": [
+        "Edge 轻量运行时（无 fs 等 Node API）",
         "Node.js 完整运行时",
         "浏览器主线程",
-        "Worker Threads 池",
-        "Edge 轻量运行时（无 fs 等 Node API）"
+        "Worker Threads 池"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "毫秒级 CPU 预算+Web API only，决定了它只能轻判断（呼应 next-middleware-auth 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "三层鉴权纵深中，middleware 这一层的合理职责是？",
       "options": [
+        "审计日志落库",
         "行级数据权限",
         "粗筛：有无效会话、是否该 redirect 去登录",
-        "密码哈希校验",
-        "审计日志落库"
+        "密码哈希校验"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "无库环境做不了精细权限；资源归属校验在第 3 层数据层（呼应 next-middleware-auth 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "Auth.js 的 session 策略在 edge middleware 里能秒验的原因是？",
       "options": [
-        "每次都会查库",
-        "JWT 自带签名与过期，验签无需 I/O",
         "靠 CDN 缓存",
-        "token 内容明文可信"
+        "token 内容明文可信",
+        "每次都会查库",
+        "JWT 自带签名与过期，验签无需 I/O"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "无状态验签是边缘可行的前提；database session 则要适配器（呼应 next-middleware-auth 第三节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "登录成功后的会话 cookie，防 XSS 偷 token 的关键参数是？",
       "options": [
-        "path=/",
         "maxAge",
         "httpOnly",
-        "domain"
+        "domain",
+        "path=/"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "httpOnly 让 document.cookie 读不到它；sameSite 防 CSRF 面、secure 防窃听（呼应 next-middleware-auth 第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "同事说：'middleware 已挡 /admin，Action 里不用重复查权限。' 你的判断？",
       "options": [
+        "加个注释即可免除校验",
         "对，重复校验浪费",
         "错：Action 可被直接 POST 调用，数据层校验是最终防线",
-        "取决于 Action 文件位置",
-        "加个注释即可免除校验"
+        "取决于 Action 文件位置"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "UI 路径防线挡不住端点直打，纵深缺一不可（呼应 next-middleware-auth 第二节误区、next-server-actions 安全课）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " middleware 用 Edge 运行时，对鉴权实现最直接的限制是？",
       "options": [
-        "不能读 cookie",
-        "不能用 Node 生态：jsonwebtoken/bcrypt 类依赖 Node API 的库不可用——会话校验要改 JWKS + Web Crypto（Edge 运行时 jose）或把验证挪到服务端组件/Action；middleware 只做\"有无会话、粗粒度跳哪\"的轻量判断",
         "不能 redirect",
-        "执行顺序在页面之后"
+        "执行顺序在页面之后",
+        "不能读 cookie",
+        "不能用 Node 生态：jsonwebtoken/bcrypt 类依赖 Node API 的库不可用——会话校验要改 JWKS + Web Crypto（Edge 运行时 jose）或把验证挪到服务端组件/Action；middleware 只做\"有无会话、粗粒度跳哪\"的轻量判断"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "middleware 的定位是\"请求路的门卫\"：快、轻、粗粒度。把\"这个人是谁、能不能做\"的重校验下推到 RSC/Action 层，才是三层纵深的正确分工。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 三层鉴权纵深（middleware / RSC+Action / 数据层）中，middleware 的合理职责边界是？",
       "options": [
-        "唯一鉴权点，其余层不用查",
         "体验层守门：未登录跳 /login、按路径前缀做粗粒度 RBAC 预检、避免把未授权页面的 shell 与数据渲染出去；但授权真相必须在 RSC/Action 再查（可绕过 middleware 直达 Action），数据层再兜一行（按 owner 过滤）",
         "负责签发 session",
-        "校验数据库约束"
+        "校验数据库约束",
+        "唯一鉴权点，其余层不用查"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "middleware 挡的是\"不该被渲染的东西\"，不是\"不该发生的事\"——后者归 Action 与数据层。问\"绕过 middleware 会怎样\"能答上来就懂纵深了。"
     },
     {

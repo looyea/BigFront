@@ -15,45 +15,45 @@
     {
       "stem": "atom 与 useState 的根本区别？",
       "options": [
-        "都能跨组件",
         "useState 可派生",
         "atom 模块级可跨组件共享、不依附组件",
-        "一样"
+        "一样",
+        "都能跨组件"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "useState 属于组件实例。"
     },
     {
       "stem": "Jotai 的建模范式是？",
       "options": [
+        "Provider 树",
         "自上而下大 store",
         "自下而上小原子组合",
-        "单例 store",
-        "Provider 树"
+        "单例 store"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "原子搭积木。"
     },
     {
       "stem": "atom((get)=>get(countAtom)*2) 是什么原子？",
       "options": [
-        "可写",
-        "只读派生",
         "异步",
-        "工具"
+        "工具",
+        "可写",
+        "只读派生"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "只有 getter 即只读派生。"
     },
     {
       "stem": "Jotai v2 使用前必须包 Provider 吗？",
       "options": [
-        "必须",
         "不必须，有全局默认 store",
         "每次都要",
-        "仅 v1"
+        "仅 v1",
+        "必须"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "import atom 即可用（呼应 jo-global）。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "多个组件 useAtom(同一 atom) 效果？",
       "options": [
+        "克隆",
         "各自独立",
         "共享同一份状态",
-        "报错",
-        "克隆"
+        "报错"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "atom 是共享单元。"
     },
     {
       "stem": "Jotai 相比 Zustand 的订阅粒度？",
       "options": [
-        "更粗",
-        "天然原子级细订阅",
         "相同",
-        "需手动"
+        "需手动",
+        "更粗",
+        "天然原子级细订阅"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "每组件只订阅用到的 atom。"
     },
     {
       "stem": "下列哪个不是 atom 的合法初值形态？",
       "options": [
+        "atom()无参且无 get 的读写",
         "atom(0)",
         "atom(\"s\")",
-        "atom(get=>get(a))",
-        "atom()无参且无 get 的读写"
+        "atom(get=>get(a))"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "atom 需初值或 getter。"
     },
     {

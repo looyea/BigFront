@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "setImmediate 的回调在事件循环哪个阶段执行？",
       "options": [
-        "timers",
         "poll",
         "check",
-        "close callbacks"
+        "close callbacks",
+        "timers"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "setImmediate 回调固定在 check 阶段执行，紧跟在 poll（I/O 回调）阶段之后。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "在回调里不断递归 process.nextTick(spin) 会导致什么？",
       "options": [
-        "性能提升，任务更快",
         "事件循环被“饿死”，poll/timer 等阶段再也轮不到、服务假死",
         "进程自动退出",
-        "只是打印变多"
+        "只是打印变多",
+        "性能提升，任务更快"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "nextTick 队列优先级高于事件循环阶段，且每个阶段之间都要排空它；递归填满它就永远进不了下一阶段。想让出循环应用 setImmediate。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "衡量“事件循环卡顿”最合适的工具/指标是？",
       "options": [
+        "process.memoryUsage.rss()",
         "console.time 打每一行",
         "loop lag（如 performance.eventLoopUtilization / monitorEventLoopDelay）",
-        "npm ls",
-        "process.memoryUsage.rss()"
+        "npm ls"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "事件循环利用率/延迟能量化 tick 间隔是否被拉长，直接反映“有同步任务霸占主线程”。RSS 只测内存、不测循环阻塞。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "timer.unref() 的作用是：",
       "options": [
-        "清除该 timer",
-        "让该句柄不计入「保持进程存活」的引用计数——事件循环排空时即便 timer 未触发也正常退出",
         "暂停事件循环",
-        "转移到线程池"
+        "转移到线程池",
+        "清除该 timer",
+        "让该句柄不计入「保持进程存活」的引用计数——事件循环排空时即便 timer 未触发也正常退出"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "unref 是「不再为这个 socket/timer 续命」：后台心跳/轮询器用它，退出逻辑不再被拖住；ref() 恢复；server 也支持——CLI 工具里后台保活连接不 unref 就是「进程挂住不退」的标准答案。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "timers 阶段同一轮里到期多个回调，执行特性是：",
       "options": [
-        "按注册顺序",
         "按登记队列 FIFO 全部跑完，但回调内的耗时让后续 timer「合并到期、一起补发」——100ms 与 105ms 同轮触发是常态",
         "并发执行",
-        "每个都要等下一轮"
+        "每个都要等下一轮",
+        "按注册顺序"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "阶段进入时快照到期集合依次执行，超时≠精度承诺（本关 setTimeout 精度题的另一面）；对时间敏感的调度用 worker/系统级定时器或校准时间戳差值，不用「回调次数」计数。"
     },
     {

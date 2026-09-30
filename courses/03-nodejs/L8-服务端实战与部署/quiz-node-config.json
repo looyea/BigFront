@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "关于 dotenv 与 .env 的正确做法是？",
       "options": [
-        "把 .env 提交进 Git 方便团队共享",
-        "把密钥写进 .env 再打进 Docker 镜像",
         "只能用 dotenv，Node 无法加载 env 文件",
-        "本地用 .env 并 gitignore，生产由平台注入真实环境变量"
+        "本地用 .env 并 gitignore，生产由平台注入真实环境变量",
+        "把 .env 提交进 Git 方便团队共享",
+        "把密钥写进 .env 再打进 Docker 镜像"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": ".env 含机密须忽略；生产用平台 secret 注入；Node 20.6+ 还能 --env-file 内置加载（呼应 node-config 第三节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "12-Factor 主张配置应？",
       "options": [
+        "全部放命令行参数",
         "硬编码在代码里按分支区分",
         "存储在环境变量中，与代码分离，一份构建多环境部署",
-        "写死在 config.json 提交仓库",
-        "全部放命令行参数"
+        "写死在 config.json 提交仓库"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "配置随环境变、外置到 env，实现构建与配置分离（呼应 node-config 第一节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "必需的配置项（如 DATABASE_URL）缺失时，推荐何时、如何反应？",
       "options": [
-        "运行到用到时再报 undefined",
-        "启动时集中校验、缺失即 fail fast 抛错退出",
         "给个假默认值继续跑",
-        "只在日志里 warn"
+        "只在日志里 warn",
+        "运行到用到时再报 undefined",
+        "启动时集中校验、缺失即 fail fast 抛错退出"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "单一 config 出口 + 启动即校验，让配置错误立刻暴露（呼应 node-config 第四节、node-async-errors）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "生产环境日志的最佳实践是？",
       "options": [
-        "大量 console.log 拼字符串写到本地文件并自行轮转",
         "结构化(JSON)日志、分级、输出到 stdout 交给平台收集、字段脱敏",
         "关掉所有日志省性能",
-        "把 secret 打进日志方便排查"
+        "把 secret 打进日志方便排查",
+        "大量 console.log 拼字符串写到本地文件并自行轮转"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "结构化+级别+stdout+redact 是 12-Factor 日志观（呼应 node-config 第五、六节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "关于密钥，下列哪项是错的？",
       "options": [
-        "不硬编码、不进 Git、不发进 npm 包",
         "从 Vault/K8s Secret/CI secrets 注入",
         "可以临时提交到私有仓库根目录里，反正不外露",
-        "日志里要脱敏、定期轮换"
+        "日志里要脱敏、定期轮换",
+        "不硬编码、不进 Git、不发进 npm 包"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "私有仓库也可能泄露/被爬、Git 历史难清除；密钥绝不进仓库（呼应 node-config 第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "debug 模块的核心价值是？",
       "options": [
+        "只做错误上报",
         "自动修复 bug",
         "用命名空间 + DEBUG 环境变量在运行时按需开关调试日志，避免留 console.log",
-        "替代 assert",
-        "只做错误上报"
+        "替代 assert"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "按 env 精细开合调试输出，生产不留噪声（呼应 node-config 第七节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "Node 20.6+ 的 --env-file=.env.production 与 dotenv 包的关系是：",
       "options": [
-        "完全替代且行为全同",
-        "运行时内置加载 .env（免依赖），但不做 dotenv 的「不覆盖已有 env」默认策略细节与多文件插值等扩展——重策略仍看 dotenv/dotenv-cli",
         "只能加载一个文件",
-        "仅生产可用"
+        "仅生产可用",
+        "完全替代且行为全同",
+        "运行时内置加载 .env（免依赖），但不做 dotenv 的「不覆盖已有 env」默认策略细节与多文件插值等扩展——重策略仍看 dotenv/dotenv-cli"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "内置 env-file 解决「小项目装 dotenv 杀鸡牛刀」；差异点（覆盖语义、注释/引号解析、shell 展开）要文档化——混用两种加载器时同一 .env 两次解析结果可能不同（本关 dotenv 题的版本演进）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "配置热更新在生产里的合理边界是：",
       "options": [
-        "所有配置都可热更",
         "只热更「无状态开关类」（日志级别、特性 flag、限流阈值）；连接串/池大小/端口类走重启（滚动发布已廉价）——热更协议要幂等+版本戳",
         "禁止任何变更",
-        "仅开发环境允许"
+        "仅开发环境允许",
+        "所有配置都可热更"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "热更引入「运行中语义漂移」调试黑洞：老日志级别+新连接池=现场不可复现。开关类变更带审计（谁/何时/旧新值进日志），结构类变更=发布事件（本包 deploy 关滚动重启的复用价值）。"
     },
     {

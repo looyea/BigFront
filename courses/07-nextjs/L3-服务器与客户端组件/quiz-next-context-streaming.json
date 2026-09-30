@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "流式 SSR 相比传统 SSR 的核心改进是？",
       "options": [
+        "HTML 分块随时可吐，慢数据不再阻塞第一个字节",
         "服务器不再执行 React",
         "不需要水合",
-        "接口响应变快",
-        "HTML 分块随时可吐，慢数据不再阻塞第一个字节"
+        "接口响应变快"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "传统 SSR 的 TTFB 等于最慢数据源，流式把等待变成局部（呼应 next-context-streaming 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "loading.tsx 的本质是？",
       "options": [
+        "替代 error boundary",
         "手动 new 一个进度条",
         "路由段级的自动 Suspense fallback，兼导航即时反馈",
-        "只用于 404 页",
-        "替代 error boundary"
+        "只用于 404 页"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "段级粗粒度兜底 + 点击 Link 瞬间先出骨架的体感优化（呼应 next-context-streaming 第三节、next-routing 表）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "慢组件在 shell 刷出前就就绪了，React 会？",
       "options": [
-        "仍然强制显示 fallback 至少 1 秒",
-        "直接显示内容，fallback 可能完全不出现",
         "整页延迟对齐后再出",
-        "触发重新水合"
+        "触发重新水合",
+        "仍然强制显示 fallback 至少 1 秒",
+        "直接显示内容，fallback 可能完全不出现"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "缓冲防闪烁设计——fallback 是'真慢才见'，不是仪式（呼应 next-context-streaming 第二节要点3、mp-interaction 的 loading 延迟）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "禁用 JavaScript 的访客访问流式渲染的页面，会看到？",
       "options": [
-        "空白页",
-        "只有 fallback 骨架",
         "完整最终 HTML（流结束时所有块都已追加）",
-        "报错页"
+        "报错页",
+        "空白页",
+        "只有 fallback 骨架"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "分块补齐靠内联脚本，但 HTML 本身逐段到达即渲染——最终文档是完整的，SEO 同理无损（呼应 next-context-streaming 第四节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "骨架屏与真实内容尺寸不一致，最直接的指标后果是？",
       "options": [
+        "预取失效",
         "CLS 升高，布局跳动",
         "LCP 消失",
-        "水合必崩",
-        "预取失效"
+        "水合必崩"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "高度/栅格不一致在内容到达瞬间引发位移（呼应 next-context-streaming 第五节、react-performance 指标篇）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "一个 3000ms 的慢面板在 Suspense 边界下抛错，用户看到什么？",
       "options": [
+        "自动无限重试",
         "整页 500 白屏",
         "该边界的 error.tsx 局部接管，其余内容正常",
-        "仅控制台报警页面不动",
-        "自动无限重试"
+        "仅控制台报警页面不动"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "错误沿树向上冒泡到最近的错误边界，流式让故障域缩小到面板级（呼应 next-context-streaming 第四节、L7 主讲）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 流式 SSR 相比传统 SSR 的核心改进是？",
       "options": [
-        "服务端少渲染了组件",
-        "把\"等整页数据齐全再吐 HTML\"变成\"shell 先 flush、慢数据就绪后流式补齐\"——TTFB/FCP 提前，总完成时间由最慢边界决定而非总和",
         "自动压缩 HTML",
-        "不需要水合"
+        "不需要水合",
+        "服务端少渲染了组件",
+        "把\"等整页数据齐全再吐 HTML\"变成\"shell 先 flush、慢数据就绪后流式补齐\"——TTFB/FCP 提前，总完成时间由最慢边界决定而非总和"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "流式的本质是\"渲染与数据传输的解耦\"：shell（静态+快数据）先行到达即可渲染与开始水合，慢边界以隐藏分块补进文档——这是 Suspense 在服务端的生产化。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " loading.tsx 与手写 <Suspense fallback> 的分工差异是？",
       "options": [
-        "完全等价",
         "loading.tsx 是路由段级 UI（主要优化客户端导航即时反馈 + 该段整体的流式 shell），手写 Suspense 精确控制\"哪块内容算一个流式边界\"，决定服务端 flush 粒度",
         "loading.tsx 只在错误时用",
-        "Suspense 不能包异步组件"
+        "Suspense 不能包异步组件",
+        "完全等价"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "刷新进入页面时 loading.tsx 在水合前对首字节无增量；它的独特价值在\"站内导航点击瞬间\"给出反馈。真正决定 HTML 分段 flush 的是页面内 Suspense 边界——两者常被混为一谈，是面试高频考点。"
     },
     {

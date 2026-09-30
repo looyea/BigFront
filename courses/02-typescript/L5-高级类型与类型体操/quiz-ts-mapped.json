@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "-? 修饰符在映射类型里的作用是？",
       "options": [
-        "加可选",
         "加只读",
         "移除可选（得 Required）",
-        "删属性"
+        "删属性",
+        "加可选"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "-? 去掉可选修饰符即 Required；+?/?: 加可选；-readonly 去只读。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "TS 4.1 的 as 子句在映射类型里能做两件关键事，是？",
       "options": [
-        "类型断言 + 定义枚举",
         "加装饰器 + 收窄",
         "导入类型 + 导出类型",
-        "改写键名（配合模板字面量）+ 把键映射成 never 以删除该属性"
+        "改写键名（配合模板字面量）+ 把键映射成 never 以删除该属性",
+        "类型断言 + 定义枚举"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "as 用于键重映射：改名（`get${K}`）或映射为 never 删键（PickByType）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "Getters<{name:string}> 若映射为 [K in keyof T as `get${Capitalize<string & K>}`]: ()=>T[K]，结果是？",
       "options": [
-        "{ name: ()=>string }",
-        "{ getName: ()=>string }",
         "{ getname: ()=>string }",
-        "{ get: ()=>string }"
+        "{ get: ()=>string }",
+        "{ name: ()=>string }",
+        "{ getName: ()=>string }"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "模板字面量把键改成 get+首字母大写的 Name，值变取值函数，得 { getName: ()=>string }。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "type ExtractRoute<T> = T extends `/api/${infer Id}` ? Id : never; ExtractRoute<'/api/42'> 得？",
       "options": [
-        "'/api/42'",
         "'42'",
         "never",
-        "'/api/'"
+        "'/api/'",
+        "'/api/42'"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "模板字面量类型可用 infer 反解出片段，'/api/42' 匹配出 Id='42'。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "PickByType<T,V> = { [K in keyof T as T[K] extends V ? K : never]: T[K] } 里 as never 的意义是？",
       "options": [
+        "关闭分发",
         "运行时报错",
         "让不匹配的键不出现在结果里（过滤删键）",
-        "把值变成 never",
-        "关闭分发"
+        "把值变成 never"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "as never 使该键被丢弃，从而只保留值类型匹配 V 的键——键重映射过滤的标准用法。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "映射类型 `as` 子句想把某个键从结果中删掉，需要把它映射为：",
       "options": [
-        "undefined",
-        "never——键类型映射到 never 即该键消失",
         "null",
-        "''"
+        "''",
+        "undefined",
+        "never——键类型映射到 never 即该键消失"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "4.1 key remapping 规则：`[K in keyof T as Filter extends ... ? never : K]` 过滤键，`as \\`get${Capitalize}\\`` 改名——never 是「无键」的代数元素。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "{ [K in keyof T]: F<T[K]> } 的输入是元组时，输出是：",
       "options": [
-        "普通对象",
         "仍是元组——同态映射对数组/元组特殊处理（逐元素+保 length/方法）",
         "数组（tuple 退化）",
-        "never"
+        "never",
+        "普通对象"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "同态映射（keyof T 原样）对 tuple/array 走「元素映射」通道：类型级 map 直接写 mapped type 就能保持元组形状——Awaited 的数组版即靠它。"
     },
     {

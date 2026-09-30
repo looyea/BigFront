@@ -4,12 +4,12 @@
     {
       "stem": "SWC 处理 TypeScript 的类型？",
       "options": [
-        "完整跨文件检查",
         "只擦除不检查",
         "报错",
-        "自动修类型"
+        "自动修类型",
+        "完整跨文件检查"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "isolatedModules 式删类型。"
     },
     {
@@ -26,34 +26,34 @@
     {
       "stem": "换 JSX 工厂来源用哪个字段？",
       "options": [
-        "importSource",
-        "factory",
         "pragma",
-        "jsxRuntime"
+        "jsxRuntime",
+        "importSource",
+        "factory"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "preact/solid 靠它。"
     },
     {
       "stem": "inlineSourcesContent 的意义？",
       "options": [
-        "加速编译",
-        "源码内联进 map，便于无源文件调试",
         "减包",
-        "删 map"
+        "删 map",
+        "加速编译",
+        "源码内联进 map，便于无源文件调试"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "库发布常用。"
     },
     {
       "stem": "target 越深会？",
       "options": [
-        "产物越小",
         "注入 helper 越多、包越大",
         "不变",
-        "报错"
+        "报错",
+        "产物越小"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "盲目降 es5 撑大包。"
     },
     {
@@ -70,45 +70,45 @@
     {
       "stem": "class field x=1 在 es2015 下？",
       "options": [
-        "原样",
         "变 getter",
         "丢弃",
-        "移进构造函数赋值"
+        "移进构造函数赋值",
+        "原样"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "看产物一目了然。"
     },
     {
       "stem": "async 函数降到 es2015 常见形态？",
       "options": [
-        "保留 await",
-        "生成器 + helper（regenerator 式）",
         "回调地狱",
-        "同步化"
+        "同步化",
+        "保留 await",
+        "生成器 + helper（regenerator 式）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "注入运行时 helper。"
     },
     {
       "stem": "类型错误谁会报？",
       "options": [
-        "SWC",
         "tsc / vue-tsc",
         "esbuild",
-        "打包器"
+        "打包器",
+        "SWC"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "SWC 只擦不查。"
     },
     {
       "stem": "sourceMaps 设为 inline 表示？",
       "options": [
-        "不生成 map",
         "单独 .map 文件",
         "map 以 dataURI 内联进产物",
-        "报错"
+        "报错",
+        "不生成 map"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "内联 vs 外链的选择。"
     }
   ]

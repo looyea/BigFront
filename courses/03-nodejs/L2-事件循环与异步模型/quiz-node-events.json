@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "ee.emit('x') 的行为是？",
       "options": [
+        "同步：当场按注册顺序调用完所有 x 监听才返回",
         "异步：把调用排进下一个微任务",
         "异步：排进宏任务队列",
-        "随机顺序调用",
-        "同步：当场按注册顺序调用完所有 x 监听才返回"
+        "随机顺序调用"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "emit 是同步的，它立即按注册顺序依次调用该事件的所有监听器；异步的只是『谁在何时 emit』（呼应 node-event-loop）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "要移除一个用 ee.on('data', fn) 注册的监听，正确做法是？",
       "options": [
+        "无法移除",
         "ee.off('data', () => fn())",
         "ee.off('data', fn) —— 传同一个函数引用",
-        "ee.removeListener('data')（不传 fn）",
-        "无法移除"
+        "ee.removeListener('data')（不传 fn）"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "removeListener/off 必须传入注册时同一个函数引用；传新建的箭头函数是不同引用，移不掉，会造成泄漏（呼应 node-events 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "on 与 once 的区别是？",
       "options": [
-        "once 同步、on 异步",
-        "once 触发一次后自动移除，on 会持续响应",
         "once 只能用于 error 事件",
-        "没有区别"
+        "没有区别",
+        "once 同步、on 异步",
+        "once 触发一次后自动移除，on 会持续响应"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "once 注册的监听在第一次 emit 后被自动移除，适合『就绪/关闭』这类一次性信号；on 会每次都响应（呼应 node-events 第二节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "出现 MaxListenersExceededWarning 最应先做什么？",
       "options": [
-        "立刻 setMaxListeners(0) 消除警告",
         "反思是否为『忘了 off』导致的监听器泄漏，用 once/成对 off/集中注册修正",
         "重启进程",
-        "忽略，它会让程序崩溃"
+        "忽略，它会让程序崩溃",
+        "立刻 setMaxListeners(0) 消除警告"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "默认同事件 >10 个监听会警告，通常是泄漏信号（每次请求都 on 却不移除）。应先排查真泄漏，确属正常再 setMaxListeners。警告本身不影响功能（呼应 node-events 第四节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "下面哪个『不是』 EventEmitter 的实例/用法范式？",
       "options": [
-        "http.Server 的 on('request')",
         "process.on('SIGTERM')",
         "fs.promises.readFile 返回的 Promise",
-        "stream 的 on('data')/on('error')"
+        "stream 的 on('data')/on('error')",
+        "http.Server 的 on('request')"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "readFile 返回的是 Promise，用 then/await 消费，不是 EventEmitter（呼应 node-async-errors）。Server/process/stream 都是 EventEmitter（呼应 node-http、node-basics）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "class 继承 EventEmitter 设计自定义事件的核心好处是？",
       "options": [
+        "取代 Promise",
         "让方法执行更快",
         "把状态变化广播出去，发布方无需知道谁关心，实现解耦",
-        "自动处理所有错误",
-        "取代 Promise"
+        "自动处理所有错误"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "继承 EventEmitter 后，对象在关键节点 emit 事件，关注方自行 on/once 订阅，双方解耦——这正是 http.Server、ws 的设计范式（呼应 node-events 第五节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "监听器执行中途调用 removeAllListeners/off 删除了后面的监听器，本轮 emit：",
       "options": [
-        "全停",
-        "不受影响——emit 对监听器数组做浅拷贝快照后遍历，删改只影响下次 emit",
         "报错",
-        "跳过被删的但仍跑完"
+        "跳过被删的但仍跑完",
+        "全停",
+        "不受影响——emit 对监听器数组做浅拷贝快照后遍历，删改只影响下次 emit"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "「emit 遍历快照」同时解释了 once 的实现（先自删再调用）与「emit 期间新 on 的监听器本轮收不到」——写插件系统时这是可依赖的语义。"
     },
     {

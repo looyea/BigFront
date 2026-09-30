@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "用户未登录访问受保护资源，应返回哪个状态码？",
       "options": [
-        "403 Forbidden",
         "404 Not Found",
         "401 Unauthorized",
-        "400 Bad Request"
+        "400 Bad Request",
+        "403 Forbidden"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "401 = 未认证（缺/错凭证，需登录）。403 = 已认证但无权限。'Unauthorized' 实为'未认证'的历史命名。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "POST 创建资源成功的规范响应是？",
       "options": [
-        "200 + 空 body",
         "204 No Content",
         "301 Moved",
-        "201 Created + Location 头指向新资源"
+        "201 Created + Location 头指向新资源",
+        "200 + 空 body"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "201 表示已创建，Location: /users/42 告诉客户端新资源 URI。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "注册时用户名已存在，最贴切的状态码是？",
       "options": [
-        "400",
-        "409 Conflict",
         "422",
-        "500"
+        "500",
+        "400",
+        "409 Conflict"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "409 = 请求与当前资源状态冲突（重复创建）。400 太泛，422 侧重格式对但语义校验失败。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "哪个 URL 更符合 REST 资源命名规范？",
       "options": [
-        "/getUsersByPage",
         "/users?page=2",
         "/fetchUserList",
-        "/user/listData"
+        "/user/listData",
+        "/getUsersByPage"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "REST 用复数名词表资源、query 参数表过滤/分页，动词交给 HTTP method。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " 资源创建成功但需要异步加工（如视频转码）才可读，最贴切的响应是？",
       "options": [
+        "301 到详情页",
         "同步 201 假装就绪",
         "201 + 资源表示（state: processing）+ 指向进度端点的 Link，或 202 Accepted——让状态可查询，别用字段骗客户端",
-        "200 空体",
-        "301 到详情页"
+        "200 空体"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "\"资源存在\"与\"资源就绪\"是两个时刻；把它们压进一个 201 是轮询风暴与\"半资源\"bug 的根源。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 删除一个正在被其他资源引用的记录，符合 REST 精神的处理是？",
       "options": [
-        "级联静默删光",
-        "冲突则 409 返回 machine-readable 原因（被哪些引用挡住），可选提供 force 查询参数或软删+异步清理——把决策权交还客户端",
         "直接 500",
-        "默默软删不告知"
+        "默默软删不告知",
+        "级联静默删光",
+        "冲突则 409 返回 machine-readable 原因（被哪些引用挡住），可选提供 force 查询参数或软删+异步清理——把决策权交还客户端"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "409 Conflict 是\"当前资源状态与该请求不兼容\"的精确语义；破坏性操作的影响面透明是 API 设计伦理。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " API 需要\"部分更新但清空某字段\"，PATCH 体系下的正确表达是？",
       "options": [
-        "传空字符串代表清空（无法与真空串区分）",
         "null 显式表示清空该字段（JSON Merge Patch 语义），并在文档定义 null 的语义——缺省=不动、null=清空，两种 PATCH（merge patch 与 JSON Patch）二选一别混用",
         "单独开 /clearField 接口",
-        "不支持清空"
+        "不支持清空",
+        "传空字符串代表清空（无法与真空串区分）"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "PATCH 的难点就是\"缺省与显式空\"的区分，选标准媒体类型（application/merge-patch+json）而不是自发明哨兵值。"
     },
     {

@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "TS 4.4+（useUnknownInCatchVariables）下 catch (e) 的 e 默认类型是？",
       "options": [
-        "any",
-        "Error",
         "void",
-        "unknown"
+        "unknown",
+        "any",
+        "Error"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "默认 unknown，需 if (e instanceof Error) 等收窄后才能安全取 message。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "关于类型断言 x as T，正确的说法是？",
       "options": [
-        "运行时会把 x 转换成 T",
-        "只是告诉编译器按 T 看待，运行时不做任何转换或校验",
         "它会触发一次运行时类型检查",
-        "它等价于类型守卫"
+        "它等价于类型守卫",
+        "运行时会把 x 转换成 T",
+        "只是告诉编译器按 T 看待，运行时不做任何转换或校验"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "断言不改运行时、不校验，滥用会让错误类型溜到运行时才炸。优先守卫/satisfies。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "satisfies 相比 as 的优势是？",
       "options": [
-        "能提速编译",
         "既校验值符合目标类型，又保留值本身的精确(字面量)类型，不像 as 会拓宽/丢信息",
         "可以替代所有类型注解",
-        "会在运行时做校验"
+        "会在运行时做校验",
+        "能提速编译"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "satisfies 做'校验 + 保留推断'；as 会把你指定的类型强加、丢失更精确推断。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "`const a: any[]` 与 `const u: unknown[]`，能直接写 `a[0].foo / u[0].foo` 的是：",
       "options": [
-        "两者都行",
-        "仅 any[]——unknown 成员访问一切操作都报错，必须先收窄",
         "都不行",
-        "仅 unknown（any 被限制）"
+        "仅 unknown（any 被限制）",
+        "两者都行",
+        "仅 any[]——unknown 成员访问一切操作都报错，必须先收窄"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "unknown 是「有类型但未知」：只许赋值/比较/存在性判断，属性访问与算术全禁；any 是「当它不存在」——这就是边界数据首选 unknown 的原因。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "unknown 与 any 的赋值方向正确的是：",
       "options": [
-        "unknown 可赋给任意类型",
         "任意类型都能赋给 unknown；unknown 要下行必须收窄或断言",
         "两者对称",
-        "any 反而更安全"
+        "any 反而更安全",
+        "unknown 可赋给任意类型"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "unknown=顶点（top）：人人都能进、它出不去；any=双向通道：进出自如但类型系统对你失明。把 API 返回标成 unknown 再逐步 parse，是边界建模的标准流。"
     },
     {

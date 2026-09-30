@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "以下哪个 lodash 功能**还没有**原生替代？",
       "options": [
-        "_.flatten",
-        "_.groupBy",
         "_.toPairs",
-        "_.debounce"
+        "_.debounce",
+        "_.flatten",
+        "_.groupBy"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "debounce / throttle 没有原生 API——仍需手写或引第三方。其余三项：flat / groupBy / Object.entries 都标准化了。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "ES2025 **Iterator Helpers** 的核心优势是：",
       "options": [
-        "语法糖而已",
-        "惰性链式——不创建中间数组，filter/map/take 串联后**一次遍历**",
         "只能用于数组",
-        "替代 for-of"
+        "替代 for-of",
+        "语法糖而已",
+        "惰性链式——不创建中间数组，filter/map/take 串联后**一次遍历**"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "对比 arr.filter().map().slice() 创建 3 个中间数组 vs 迭代器 .filter().map().take() 零额外内存。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "`structuredClone` 能替代 `_.cloneDeep` 吗？",
       "options": [
-        "完全能",
         "大部分能，但函数 / DOM 节点 / 类实例 / 不可克隆值（Error 的部分属性等）**会抛 DataCloneError**",
         "完全不能",
-        "只是浅拷贝"
+        "只是浅拷贝",
+        "完全能"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "structuredClone 走 HTML 结构化克隆算法——可序列化对象 OK，函数与 DOM 不行。纯 JSON 类数据完美。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "`arr.toSorted()` 与 `arr.sort()` 的关键差别：",
       "options": [
+        "sort 已废弃",
         "排序算法不同",
         "toSorted 返回新数组不改原数组（ES2023）",
-        "toSorted 更快",
-        "sort 已废弃"
+        "toSorted 更快"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "ES2023 不可变家族：toSorted/toReversed/toSpliced/with——React/Vue 状态更新不再需要 `[...arr].sort()` 两段式。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "脚本首行 `#!/usr/bin/env node` 从 ES2023 起在 JS 文件里：",
       "options": [
-        "依然报错",
-        "被规范合法化（引擎解析时剥离 hashbang）",
         "必须用注释包裹",
-        "仅 Node 支持"
+        "仅 Node 支持",
+        "依然报错",
+        "被规范合法化（引擎解析时剥离 hashbang）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Hashbang 语法标准化：CLI 脚本顶层 `#!` 行合法，浏览器/构建器统一剥离——此前各引擎私自容忍的历史债还清。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "`Intl.Segmenter` 解决的是哪类问题？",
       "options": [
-        "日期格式化",
         "按语言环境的文本切分：词、句子、字素簇（emoji 家族正确计数）",
         "数字本地化",
-        "排序比较"
+        "排序比较",
+        "日期格式化"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "ES2022 的 Segmenter 是「数一个 emoji 长度/中文分词」正解：`segmenter.segment(s)` 迭代字素簇——Array.from 只到码点，家族符号仍会被拆开。"
     },
     {

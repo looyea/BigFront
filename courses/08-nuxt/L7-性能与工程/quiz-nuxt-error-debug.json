@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "服务端 handler 里表达\"资源不存在\"最规范的是？",
       "options": [
-        "return { error: 'not found' }",
         "throw createError({ statusCode: 404, statusMessage: '未找到' })",
         "throw new Error('404')",
-        "return null"
+        "return null",
+        "return { error: 'not found' }"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "createError 带 HTTP 语义与可外露的 statusMessage，客户端能据 statusCode 分支；裸 Error 会变成 500（呼应 nuxt-error-debug 第 1 节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "局部可恢复的请求失败（比如列表加载出错想让用户点重试），首选？",
       "options": [
-        "用 useFetch 返回的 error ref + refresh() 就地处理",
-        "调 showError 弹全局错误页",
         "抛 createError({fatal:true})",
-        "reload 整个页面"
+        "reload 整个页面",
+        "用 useFetch 返回的 error ref + refresh() 就地处理",
+        "调 showError 弹全局错误页"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "能就地恢复的别升级成白屏；showError/fatal 是给不可恢复错误用的（呼应 nuxt-error-debug 第 2 节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "createError 的哪个字段在生产环境默认不会下发给浏览器？",
       "options": [
+        "data",
         "statusCode",
         "statusMessage",
-        "message（内部详情）",
-        "data"
+        "message（内部详情）"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "message 面向开发者、常含内部细节，h3/Nitro 生产不外露；细节应进服务端日志（呼应 nuxt-error-debug 第 1、5 节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "要在某个组件子树内捕获其抛出的错误并渲染兜底 UI（不影响全站），用？",
       "options": [
+        "onErrorCaptured（Vue 错误边界）",
         "window.onerror",
         "app/error.vue",
-        "onUnmounted",
-        "onErrorCaptured（Vue 错误边界）"
+        "onUnmounted"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "onErrorCaptured 是组件级错误边界，return false 阻止继续上抛；error.vue 是应用级 fatal 兜底（呼应 nuxt-error-debug 第 3 节、next-boundaries）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 全站错误要\"用户看得懂、监控分得类\"，错误设计的推荐结构是？",
       "options": [
-        "message 里写清中文就够",
-        "statusCode+业务错误码+可展示 message 三分离：createError 带 code 字段（如 ORDER_SOLD_OUT），error.vue/就地提示按 code 映射文案，监控按 code 聚合而不是匹配字符串",
         "错误码给前端自己翻译",
-        "只上报不展示"
+        "只上报不展示",
+        "message 里写清中文就够",
+        "statusCode+业务错误码+可展示 message 三分离：createError 带 code 字段（如 ORDER_SOLD_OUT），error.vue/就地提示按 code 映射文案，监控按 code 聚合而不是匹配字符串"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "message 是给人看的易变文本，code 是机器对齐的稳定契约——混用后改一句文案就打碎监控与前端映射。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 公开文章页上游超时导致 SSR 抛错，默认会返回什么、SEO 上的隐患是？",
       "options": [
-        "200 空页面对收录无害",
         "500 错误页——偶发无害，但持续 500 会被降权移出索引；且若错误页被 CDN 缓存住（故障期缓存了 500）就是\"缓存中毒\"，要给错误响应配短缓存/no-store",
         "自动重试到成功",
-        "返回 200 占位页"
+        "返回 200 占位页",
+        "200 空页面对收录无害"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "错误状态码是爬虫信号也是缓存键：500 的缓存策略、重试退避、降级占位三件事要在故障前设计好。"
     },
     {

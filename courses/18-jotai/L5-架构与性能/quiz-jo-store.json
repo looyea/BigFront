@@ -15,45 +15,45 @@
     {
       "stem": "createStore 返回的实例可脱离 React 用哪些方法？",
       "options": [
-        "render/use",
         "mount",
         "get/set/sub",
-        "dispatch"
+        "dispatch",
+        "render/use"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "vanilla API（呼应 za-store-api）。"
     },
     {
       "stem": "让同页多个相同组件各自独立状态用？",
       "options": [
+        "localStorage",
         "更多 atom",
         "各自 Provider 独立 store",
-        "useState",
-        "localStorage"
+        "useState"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "作用域隔离。"
     },
     {
       "stem": "Provider 的核心作用？",
       "options": [
-        "性能优化",
-        "注入一份作用域内 store",
         "持久化",
-        "异步"
+        "异步",
+        "性能优化",
+        "注入一份作用域内 store"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "绑定独立 store。"
     },
     {
       "stem": "测试隔离 atom 状态的推荐做法？",
       "options": [
-        "共享全局",
         "每测试新 store/Provider",
         "reload",
-        "clearStorage"
+        "clearStorage",
+        "共享全局"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "避免用例污染。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "store.sub 提供什么？",
       "options": [
+        "写值",
         "渲染",
         "命令式订阅 atom 变化回调",
-        "持久化",
-        "写值"
+        "持久化"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "vanilla 订阅。"
     },
     {
       "stem": "全局 atom 与 Provider 的关系？",
       "options": [
-        "互斥",
-        "同一 atom 可在不同 Provider 里有独立值",
         "Provider 禁用 atom",
-        "必须都用"
+        "必须都用",
+        "互斥",
+        "同一 atom 可在不同 Provider 里有独立值"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "atom 是 key，store 是容器。"
     },
     {
       "stem": "下面哪个不是默认 store 的问题？",
       "options": [
+        "类型太弱",
         "SSR 泄漏",
         "测试污染",
-        "多实例共享",
-        "类型太弱"
+        "多实例共享"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "类型不是 store 隔离问题。"
     },
     {

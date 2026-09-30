@@ -4,12 +4,12 @@
     {
       "stem": "correctness 组的整体建议是？",
       "options": [
-        "整组关掉",
         "整组保持 error 常开",
         "只留一条",
-        "降为 info"
+        "降为 info",
+        "整组关掉"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "成本最低收益最高。"
     },
     {
@@ -26,12 +26,12 @@
     {
       "stem": "管异步悬空 Promise 的代表规则是？",
       "options": [
+        "useAltText",
         "useConst",
         "noFloatingPromises",
-        "useTemplate",
-        "useAltText"
+        "useTemplate"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "强制处理每个 Promise。"
     },
     {
@@ -48,12 +48,12 @@
     {
       "stem": "Biome correctness 与 tsc 的关系？",
       "options": [
-        "完全重复其一即可",
         "互补：类型归 tsc、浅层错误+快反馈归 Biome",
         "互相冲突",
-        "Biome 替代 tsc"
+        "Biome 替代 tsc",
+        "完全重复其一即可"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "各管一段。"
     },
     {
@@ -81,23 +81,23 @@
     {
       "stem": "useAwaited 关心的是？",
       "options": [
-        "await 用在非 Promise 上等的正确用法",
         "缩进",
         "引号",
-        "命名"
+        "命名",
+        "await 用在非 Promise 上等的正确用法"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "await 语义正确性。"
     },
     {
       "stem": "类型错误该由谁报？",
       "options": [
-        "Biome correctness",
         "tsc",
         "organizeImports",
-        "formatter"
+        "formatter",
+        "Biome correctness"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Biome 不做类型检查。"
     },
     {

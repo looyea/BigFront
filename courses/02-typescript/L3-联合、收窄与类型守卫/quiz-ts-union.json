@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "交叉类型 A & B 与联合类型 A | B 的关系是？",
       "options": [
-        "完全一样",
         "交叉是联合的语法糖",
         "联合取'或'(值属于其一)，交叉取'且'(值同时具备两者所有成员)",
-        "联合成员更多、交叉成员更少"
+        "联合成员更多、交叉成员更少",
+        "完全一样"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "A|B 值可以是 A 或 B；A&B 值要同时满足 A 和 B（拥有全部成员）。方向相反。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "可辨识联合靠什么让 TS 在 switch 中自动收窄到某一支？",
       "options": [
+        "数组顺序",
         "属性数量",
         "每个成员共有的字面量'判别字段'(如 kind)",
-        "接口名字",
-        "数组顺序"
+        "接口名字"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "判别标签(discriminant)是共有且唯一的字面量字段，switch 它即可把 s 缩到对应变体。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "为什么 {kind:'circle', w:5} 在'全可选大对象'里能编译通过、在可辨识联合里不行？",
       "options": [
-        "编译器 bug",
-        "全可选对象允许任意字段组合(非法状态可表示)；可辨识联合的 circle 变体根本没有 w、必须 r，写错就报错",
         "可辨识联合允许更多字段",
-        "两者其实都能通过"
+        "两者其实都能通过",
+        "编译器 bug",
+        "全可选对象允许任意字段组合(非法状态可表示)；可辨识联合的 circle 变体根本没有 w、必须 r，写错就报错"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "这正是'make illegal states unrepresentable'：用判别联合把非法组合编码成不可构造。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "{a: string} & {a: number} 的属性 a 类型是？",
       "options": [
+        "never（string & number 无值满足）",
         "string",
         "number",
-        "string | number",
-        "never（string & number 无值满足）"
+        "string | number"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "交叉对同名属性再取交集，string & number 没有任何值满足，即 never——常见隐式陷阱。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "下面哪个是'字面量联合'的典型用途？",
       "options": [
+        "声明模块",
         "声明一个类",
         "把合法取值集合('on'|'off'、状态机 tag)锁进类型，充当轻量枚举",
-        "定义索引签名",
-        "声明模块"
+        "定义索引签名"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "字面量联合纯类型零运行时，是替代 enum、限定取值、做判别标签的常用手段。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "`type Flag = true | false` 的最终类型是：",
       "options": [
-        "`true | false` 两个成员",
-        "塌缩成 boolean",
         "never",
-        "`0 | 1`"
+        "`0 | 1`",
+        "`true | false` 两个成员",
+        "塌缩成 boolean"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "布尔在类型层就是 true|false 的全并：写成联合自动塌缩；反过来标注 `x: true` 才是窄。用布尔联合建模状态会丢掉穷举分支的可辨识度，状态机请用字面量字符串联合。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "`type X = \"a\" | string` 的显示结果是：",
       "options": [
-        "`\"a\" | string`",
         "string（字面量被基类型吸收）",
         "\"a\"",
-        "never"
+        "never",
+        "`\"a\" | string`"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "联合按「集合求并」：字面量 ⊂ string，被吸收。生成字面量联合的泛型（`K extends string`）若外部传宽 string 同样塌——想要「任意字符串但推荐这几个」用 `type Opt = Known | (string & {})` 保留提示。"
     },
     {

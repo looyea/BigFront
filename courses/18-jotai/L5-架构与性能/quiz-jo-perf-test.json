@@ -4,12 +4,12 @@
     {
       "stem": "Jotai 组件重渲的触发条件？",
       "options": [
-        "任何 atom 变",
-        "每秒",
         "仅其订阅的 atom 变",
-        "父组件变"
+        "父组件变",
+        "任何 atom 变",
+        "每秒"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "细粒度订阅（呼应 jo-atom）。"
     },
     {
@@ -26,23 +26,23 @@
     {
       "stem": "派生链过深的优化？",
       "options": [
+        "全局 store",
         "加更多层",
         "扁平化/落成稳定 atom/selectAtom",
-        "禁用派生",
-        "全局 store"
+        "禁用派生"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "减少整链重算（呼应 jo-dependencies）。"
     },
     {
       "stem": "高频坐标值最佳处理？",
       "options": [
-        "放主渲染 atom",
-        "独立 atom + transient 订阅",
         "useState",
-        "轮询"
+        "轮询",
+        "放主渲染 atom",
+        "独立 atom + transient 订阅"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "不接渲染（呼应 za-store-api）。"
     },
     {
@@ -70,45 +70,45 @@
     {
       "stem": "async atom 测试打桩工具？",
       "options": [
+        "cookie",
         "alert",
         "msw / vi.mock",
-        "setTimeout",
-        "cookie"
+        "setTimeout"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "拦截网络。"
     },
     {
       "stem": "组件级集成测 async atom 需加？",
       "options": [
-        "immer",
-        "Suspense 边界",
         "Provider 必须",
-        "localStorage"
+        "localStorage",
+        "immer",
+        "Suspense 边界"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "处理挂起。"
     },
     {
       "stem": "selectAtom 在性能上的作用？",
       "options": [
-        "更慢",
         "浅比较减少无谓重渲",
         "持久化",
-        "加密"
+        "加密",
+        "更慢"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "派生判等（呼应 jo-focus-select）。"
     },
     {
       "stem": "下面哪项不是性能关注点？",
       "options": [
-        "订阅粒度",
-        "派生深度",
         "高频隔离",
-        "文件命名"
+        "文件命名",
+        "订阅粒度",
+        "派生深度"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "命名属可读性。"
     }
   ]

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Vue 3 编译器里的\"静态提升(hoist)\"主要优化的是哪一步？",
       "options": [
-        "更新时跳过 diff",
-        "把 CSS 内联",
         "把不变的节点只创建一次、提到 render 外复用，避免每次渲染重新 createVNode",
-        "压缩打包体积"
+        "压缩打包体积",
+        "更新时跳过 diff",
+        "把 CSS 内联"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "静态提升优化 VNode 创建阶段（呼应 vue-performance 第一节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "patchFlag 的作用是什么？",
       "options": [
+        "控制事件冒泡",
         "给动态节点打标记，更新时只比对被标记的那一处而非全部 props",
         "标记组件边界",
-        "决定打包 chunk 划分",
-        "控制事件冒泡"
+        "决定打包 chunk 划分"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "patchFlag 让 patch 按需进行，正是 vue-reactivity-theory 按需更新思路的编译期体现（呼应 vue-performance 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "关于 v-memo，下列说法正确的是？",
       "options": [
+        "它只能用在 <transition> 里",
         "它让元素只渲染一次，永不更新",
         "按依赖数组缓存子树，依赖不变就复用上次的 VNode，常用于大 v-for",
-        "它等价于 v-cloak",
-        "它只能用在 <transition> 里"
+        "它等价于 v-cloak"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "v-memo 是子树级缓存、需配 :key；v-once 才是只渲染一次（呼应 vue-performance 第二节、vue-conditional-list key）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "对上万条只读明细数据，推荐用 shallowRef 而不是 reactive 的原因是？",
       "options": [
-        "shallowRef 渲染更快因为跳过了虚拟 DOM",
-        "避免对整棵嵌套对象做深度懒代理，减少代理与依赖收集开销",
         "reactive 不能用于数组",
-        "shallowRef 会自动虚拟滚动"
+        "shallowRef 会自动虚拟滚动",
+        "shallowRef 渲染更快因为跳过了虚拟 DOM",
+        "避免对整棵嵌套对象做深度懒代理，减少代理与依赖收集开销"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "深度代理开销大，shallowRef 只追踪 .value 替换（呼应 vue-performance 第三节、vue-reactivity-theory Proxy）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "用了 shallowRef 后，原地 push 了新元素但视图没更新，正确补救是？",
       "options": [
-        "改用 shallowReactive",
         "调用 triggerRef(list) 手动触发",
         "再包一层 ref",
-        "无法补救，只能整体替换"
+        "无法补救，只能整体替换",
+        "改用 shallowReactive"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "深层变更不追踪，需要 triggerRef；当然也可整体替换 .value（呼应 vue-performance 第三节、vue-reactivity-theory triggerRef）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "下列哪个不是组件级代码分割/预加载手段？",
       "options": [
-        "路由 component: () => import('...')",
         "defineAsyncComponent 延后加载重组件",
         "hover/空闲时预 import 下一路由 chunk",
-        "把所有页面都 import 进 main.js 顶部"
+        "把所有页面都 import 进 main.js 顶部",
+        "路由 component: () => import('...')"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "顶部全量 import 会进同一 chunk，抵消分包（呼应 vue-performance 第六节、vue-router-guard-lazy、10-vite）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "用 Devtools Performance 面板测「点 击 后 到 可 交 互」，Vue 应用特有的火焰图标记是：",
       "options": [
-        "无特有标记",
-        "vue 编译/运行时 函数 名（patch/renderComponent/flushJobs）+ 开发模式组件 render 包装（带组件名，生 产 无）——所 以 性 能 分析 必须 用 生 产 构建 复 测，dev 模式 本 身 就 慢 一 截 且 标 记 不 同",
         "只 有 浏 览 器 原生 标记",
-        "performance.mark 自动注入"
+        "performance.mark 自动注入",
+        "无特有标记",
+        "vue 编译/运行时 函数 名（patch/renderComponent/flushJobs）+ 开发模式组件 render 包装（带组件名，生 产 无）——所 以 性 能 分析 必须 用 生 产 构建 复 测，dev 模式 本 身 就 慢 一 截 且 标 记 不 同"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "配套 组 件：Perfetto/火 焰 图 里 `flushJobs` 聚 合 了 渲 染 调度（本包 响应式 关 批 处理 的 可 视 化 存 在）；「dev 快 生 产 慢」反向 情 况 大 多 是 未 压 缩 警告 开销 之 外 的 source-map/热 更 新 残 留——测 试 习 惯 即 环 境 纪律（本关 测 量 题 的 前 置）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "一个「每秒推数据的实时表格」组件（WebSocket 更新），最合 Vue 心智的降压组合是：",
       "options": [
-        "每个消息触发一次完整重渲染",
         "数据层合流：shallowRef 持数组 + 批量帧调度（rAF 或固定间隔 flush 合并多次 ws 消息）+ 行虚拟滚动——三层分别砍响应成本、渲染次数、节点数",
         "关掉 diff",
-        "用 setTimeout 轮询代替 ws"
+        "用 setTimeout 轮询代替 ws",
+        "每个消息触发一次完整重渲染"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Vue 的 性 能 公式 = **渲染 次数 × 单 次 成本** 两 因 子 分 头 降：合 流 降 次 数（消 息 到 达 频 率 ≠ 渲染 频 率）、浅 响 应+虚拟 降 单 次 成本（本关 shallowRef/虚拟 题 的 实时 场 景 组 合 拳）；「先 问 用 户 需 要 看 到 几 fps」是 产品 层 前置。"
     },
     {

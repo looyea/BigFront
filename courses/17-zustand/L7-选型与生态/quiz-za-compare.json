@@ -15,45 +15,45 @@
     {
       "stem": "超大团队要严格单向数据流最强 DevTools 首选？",
       "options": [
-        "Context",
         "useState",
         "Redux Toolkit",
-        "Jotai"
+        "Jotai",
+        "Context"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "RTK 规范化与工具链最全。"
     },
     {
       "stem": "服务端态最该交给？",
       "options": [
-        "Zustand",
         "immer",
         "Context",
-        "TanStack Query"
+        "TanStack Query",
+        "Zustand"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "缓存/竞态/失效专用库。"
     },
     {
       "stem": "Jotai 的建模单位是？",
       "options": [
-        "store",
-        "atom",
         "reducer",
-        "context"
+        "context",
+        "store",
+        "atom"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "原子级 + 派生依赖。"
     },
     {
       "stem": "Zustand 相比 Context 的订阅优势？",
       "options": [
-        "更粗",
         "selector 细粒度避免全量重渲",
         "一样",
-        "需 Provider"
+        "需 Provider",
+        "更粗"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Context 更新易触发子树整体重渲。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "表单字段级状态推荐？",
       "options": [
+        "Redux",
         "Zustand",
         "React Hook Form",
-        "Jotai",
-        "Redux"
+        "Jotai"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "非受控零重渲（呼应 za-forms）。"
     },
     {
       "stem": "“多库共存”的正确认识是？",
       "options": [
-        "必须选一个",
-        "按数据归属组合使用",
         "全部禁用",
-        "只用 Context"
+        "只用 Context",
+        "必须选一个",
+        "按数据归属组合使用"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "各司其职。"
     },
     {
       "stem": "需要脱离 React 读写状态时哪个更自然？",
       "options": [
-        "Context",
         "Zustand(vanilla)",
         "useState",
-        "useReducer"
+        "useReducer",
+        "Context"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "createStore vanilla（呼应 za-store-api）。"
     },
     {

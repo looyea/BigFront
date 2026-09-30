@@ -4,100 +4,100 @@
     {
       "stem": "@babel/preset-env 的 targets 直译成？",
       "options": [
-        "jsc.parser",
         "env.targets / jsc.target",
         "module.type",
-        "minify"
+        "minify",
+        "jsc.parser"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "browserslist 驱动降级。"
     },
     {
       "stem": "preset-react(automatic) 对应？",
       "options": [
+        "loose",
         "jsc.transform.react.runtime",
         "env.coreJs",
-        "importInterop",
-        "loose"
+        "importInterop"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "runtime 开关。"
     },
     {
       "stem": "preset-typescript 对应？",
       "options": [
+        "minify",
         "装 ts 插件",
         "jsc.parser.syntax=typescript",
-        "module 设 es6",
-        "minify"
+        "module 设 es6"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "自动擦类型。"
     },
     {
       "stem": "心智从什么转成什么？",
       "options": [
-        "装插件 → 配开关",
         "写代码 → 点鼠标",
         "CLI → API",
-        "同步 → 异步"
+        "同步 → 异步",
+        "装插件 → 配开关"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "正交开关组合替代预设堆叠。"
     },
     {
       "stem": "Babel-only 无对等插件的出路不含？",
       "options": [
+        "放弃编译",
         "等价改写",
         "混合管线",
-        "写 Wasm 插件",
-        "放弃编译"
+        "写 Wasm 插件"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "三选一而非放弃。"
     },
     {
       "stem": "迁移验收的第一步？",
       "options": [
-        "看 README",
         "改版本号",
         "典型模块两边编一遍 diff 产物",
-        "删 Babel"
+        "删 Babel",
+        "看 README"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "产物 diff 露差异。"
     },
     {
       "stem": "为什么测试要针对产物？",
       "options": [
+        "免 lint",
         "跑得快",
         "行为差异只体现在编译产物上",
-        "省内存",
-        "免 lint"
+        "省内存"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "源码测不出转译差异。"
     },
     {
       "stem": "monorepo 迁移的正确节奏？",
       "options": [
-        "必须一把梭",
-        "渐进：先易后难、瓶颈大且插件少的先上",
         "先迁库后迁应用",
-        "只迁测试"
+        "只迁测试",
+        "必须一把梭",
+        "渐进：先易后难、瓶颈大且插件少的先上"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "就近 .swcrc 友好。"
     },
     {
       "stem": "从 Babel 迁 SWC 后类型检查？",
       "options": [
-        "一起没了",
         "仍要 tsc --noEmit（本就不查）",
         "交给 esbuild",
-        "交给 minify"
+        "交给 minify",
+        "一起没了"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "别把甩 Babel 误解成甩类型。"
     },
     {

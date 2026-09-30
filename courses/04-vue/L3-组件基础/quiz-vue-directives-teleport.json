@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "自定义指令钩子里，'el 已插入真实 DOM、适合 focus/初始化第三方库'的时机是？",
       "options": [
+        "mounted",
         "created",
         "beforeMount",
-        "updated",
-        "mounted"
+        "updated"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "mounted 时元素已在文档中；created 时 DOM 还没挂（呼应 vue-directives-teleport 第一节钩子表）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "指令钩子 (el, binding) 里，v-tooltip:top.fade=\"text\" 的 binding.arg 与 binding.modifiers 是？",
       "options": [
-        "arg='top'，modifiers={ fade: true }",
-        "arg='fade'，modifiers={ top: true }",
         "arg='top.fade'",
-        "arg=text，modifiers 为空"
+        "arg=text，modifiers 为空",
+        "arg='top'，modifiers={ fade: true }",
+        "arg='fade'，modifiers={ top: true }"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "冒号后是参数 arg，点号后是修饰符对象（呼应 vue-directives-teleport 第二节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "'弹窗被父级的 overflow:hidden / transform / z-index 困住'，Vue 的声明式解法是？",
       "options": [
-        "把弹窗 ref 手动 appendChild 到 body",
-        "<Teleport to=\"body\"> 把 DOM 搬出、逻辑树不动",
         "提高弹窗 z-index 到最大",
-        "改用 v-if 延迟渲染"
+        "改用 v-if 延迟渲染",
+        "把弹窗 ref 手动 appendChild 到 body",
+        "<Teleport to=\"body\"> 把 DOM 搬出、逻辑树不动"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Teleport 让组件逻辑上仍在树内（props/events/inject 畅通），DOM 渲染到目标位置（呼应 vue-directives-teleport 第四节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "<Teleport :disabled=\"isMobile\"> 的作用是？",
       "options": [
-        "isMobile 时销毁弹窗",
-        "isMobile 时禁止点击弹窗",
         "isMobile 时停止传送、就地渲染在组件树位置",
-        "isMobile 时切换渲染目标为 body"
+        "isMobile 时切换渲染目标为 body",
+        "isMobile 时销毁弹窗",
+        "isMobile 时禁止点击弹窗"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "disabled 是热开关：断开传送后内容回到父级原位——小屏内联、大屏 portal 一个 prop 切换（呼应 vue-directives-teleport 第四节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "'无权限即不渲染该按钮'，关于 v-permission 指令方案的正确认识是？",
       "options": [
-        "只是 UI 遮眼法，真正的安全必须服务端鉴权兜底",
-        "足够安全，前端隐藏后接口也攻不破",
         "指令删 DOM 同时也删数据",
-        "应该用 CSS display:none 替代指令"
+        "应该用 CSS display:none 替代指令",
+        "只是 UI 遮眼法，真正的安全必须服务端鉴权兜底",
+        "足够安全，前端隐藏后接口也攻不破"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "指令只能移除元素，数据与接口仍在——前端隐藏≠安全（呼应 vue-directives-teleport 第三节、09-express 鉴权）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "指令与组件同在一个元素上，且组件根元素就是这个被指令标记的节点，指令作用的对象是：",
       "options": [
-        "setup 里的虚拟节点",
-        "组件实例渲染出的根 DOM 元素（指令挂在组件标签上时 el 解析为子组件根元素）——所以 v-focus 放 <MyInput> 上是作用于其内部真实 input 根节点，组件多层根时可能失效",
         "不生效",
-        "指令会复制进子组件每个节点"
+        "指令会复制进子组件每个节点",
+        "setup 里的虚拟节点",
+        "组件实例渲染出的根 DOM 元素（指令挂在组件标签上时 el 解析为子组件根元素）——所以 v-focus 放 <MyInput> 上是作用于其内部真实 input 根节点，组件多层根时可能失效"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "这 是 「v-focus 在 自定义 组件 上 不 灵」的 真 根因：el 指向 **渲染 后 的 根**，多根/fragment 根 时 无 唯一 落点（本关 编译 产物 题 的 组件 侧 镜像）。稳妥 做法：指令 打 在 原生 元素 上 或 组件 内 自行 处理。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "指令里给 el 挂了 addEventListener，正确的清理时机是：",
       "options": [
-        "updated",
         "unmounted（3.x 指令 周期 之一；配 updated 里 先 摘 再 挂 处理 绑定的 函数 引用 变化，或 干脆 把 监听 收 进  WeakMap 按 el 索引）",
         "全局 只 管 挂 不 管 摘，GC 会 收",
-        "app.unmount 才 清"
+        "app.unmount 才 清",
+        "updated"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "指令 是 「绕过 Vue 生命 周期 的 手 动 活」：监听/Observer 都 要 在 unmounted 显式 拆（本关 unmounted 题 的 操作 细则）；el 被 Vue 删 DOM 不 等于 事件 目标 上 的 引用 消失——闭包 把 整个 指令 上下文 拖 住。"
     },
     {

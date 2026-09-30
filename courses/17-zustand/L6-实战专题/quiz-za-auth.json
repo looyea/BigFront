@@ -15,45 +15,45 @@
     {
       "stem": "persist 存 token 时用 partialize 的目的是？",
       "options": [
-        "加速",
-        "压缩",
         "加密",
-        "只持久化必要字段、剔除瞬态/敏感"
+        "只持久化必要字段、剔除瞬态/敏感",
+        "加速",
+        "压缩"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "减少风险与体积。"
     },
     {
       "stem": "401 响应常见的统一处理？",
       "options": [
+        "alert",
         "忽略",
         "调用 logout 清态",
-        "重试",
-        "alert"
+        "重试"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "过期即登出复位。"
     },
     {
       "stem": "路由守卫判断登录用？",
       "options": [
-        "getState 一次性",
-        "useAuthStore(s=>!!s.token) 订阅",
         "localStorage",
-        "cookie 轮询"
+        "cookie 轮询",
+        "getState 一次性",
+        "useAuthStore(s=>!!s.token) 订阅"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "订阅式随登录态更新。"
     },
     {
       "stem": "登出必须做的两件事？",
       "options": [
-        "reload+alert",
         "setState 初始 + persist.clearStorage",
         "删 DOM",
-        "关浏览器"
+        "关浏览器",
+        "reload+alert"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "清内存与存储。"
     },
     {
@@ -70,45 +70,45 @@
     {
       "stem": "跨 tab 同步登出靠？",
       "options": [
+        "定时器",
         "Cookie",
         "storage 事件 / BroadcastChannel",
-        "WebSocket",
-        "定时器"
+        "WebSocket"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "同源广播一致。"
     },
     {
       "stem": "SSR 下 auth store 防首屏误判已登录用？",
       "options": [
-        "immer",
-        "skipHydration + 客户端 rehydrate",
         "devtools",
-        "combine"
+        "combine",
+        "immer",
+        "skipHydration + 客户端 rehydrate"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "避免水合期读到旧值。"
     },
     {
       "stem": "name 带用户维度的作用是？",
       "options": [
-        "美观",
         "防不同用户数据串号",
         "加密",
-        "提速"
+        "提速",
+        "美观"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "隔离不同账号存储。"
     },
     {
       "stem": "下面哪项不是登录态 store 职责？",
       "options": [
-        "存 token",
         "提供 login/logout",
         "渲染列表数据",
-        "暴露权限 selector"
+        "暴露权限 selector",
+        "存 token"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "列表数据归 Query（呼应 za-layers）。"
     }
   ]

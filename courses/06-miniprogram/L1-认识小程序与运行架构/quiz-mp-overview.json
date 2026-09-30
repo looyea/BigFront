@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "在小程序逻辑层里，下列哪个对象通常不存在？",
       "options": [
-        "wx",
-        "Date",
         "JSON",
-        "document"
+        "document",
+        "wx",
+        "Date"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "没有 DOM，document 不存在（呼应 mp-overview 第三、四节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "双线程架构下，为什么给 setData 传超大对象会导致卡顿？",
       "options": [
-        "JS 不支持大对象",
-        "逻辑层与渲染层通信是异步且有成本，大数据传输+diff 很重",
         "WebView 会崩溃",
-        "会触发重新编译"
+        "会触发重新编译",
+        "JS 不支持大对象",
+        "逻辑层与渲染层通信是异步且有成本，大数据传输+diff 很重"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "跨线程通信有开销（呼应 mp-overview 第四节、mp-setdata）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "相比 H5，小程序做\"禁止任意访问 DOM/BOM\"主要出于？",
       "options": [
-        "节省内存",
         "安全可控、可审核、体验一致",
         "因为技术做不到",
-        "为了兼容 IE"
+        "为了兼容 IE",
+        "节省内存"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "沙箱是安全与体验的地基（呼应 mp-overview 第四节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "小程序的\"更新\"方式和原生 App 相比最大特点是？",
       "options": [
+        "只能靠 URL 刷新",
         "必须重装",
         "静默热更新、无需走应用商店发版审核",
-        "不能热更",
-        "只能靠 URL 刷新"
+        "不能热更"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "平台托管、可热更新（呼应 mp-overview 第二节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 双线程模型里，逻辑线程（无 window/DOM）与多个渲染 WebView 的数量关系通常是？",
       "options": [
-        "一个页面一个逻辑线程，一一对应",
-        "所有页面共享一个逻辑线程（单 JS 运行环境），但每个页面各有一个渲染 WebView——所以逻辑层模块级变量跨页共享，而视图彼此隔离",
         "逻辑线程与 WebView 都在同一线程",
-        "渲染线程只有一个、被所有页面复用"
+        "渲染线程只有一个、被所有页面复用",
+        "一个页面一个逻辑线程，一一对应",
+        "所有页面共享一个逻辑线程（单 JS 运行环境），但每个页面各有一个渲染 WebView——所以逻辑层模块级变量跨页共享，而视图彼此隔离"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "这套「单逻辑 + 多渲染」结构解释了怪现象：app.js 里 `let count=0` 在所有页面间共享（是逻辑单例，不是 per-page），而 setData 只影响当前页 WebView。也解释了为什么逻辑层不能用 DOM、跨页状态要靠 globalData/事件而非「读别的页 data」。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 关于 setData 的数据在双线程间的旅程，正确的描述是？",
       "options": [
-        "直接改视图层 DOM",
         "逻辑线程把数据 JSON 序列化后经 Native 中转发给渲染线程，渲染线程 diff 更新 WXML——所以 setData 的值必须可序列化（函数/undefined/循环引用会出问题），且量大时序列化+跨线程序列通信就是卡顿源",
         "在同一内存里零拷贝共享",
-        "只在逻辑层生效"
+        "只在逻辑层生效",
+        "直接改视图层 DOM"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "「必须可序列化」这条直接推出实践约束：别往 setData 塞方法（方法挂 Page/组件实例上，不进 data）、别塞超大数据（列表全量）、避免频繁 setData。想优化就是「只传变更字段（路径 setData）、合并批量、大数据放视图层外或分页」。"
     },
     {

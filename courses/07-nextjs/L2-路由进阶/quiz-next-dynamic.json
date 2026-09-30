@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "Next 15 起，服务端组件页面接收的 params 正确用法是？",
       "options": [
+        "先 await：params 是 Promise",
         "直接同步解构 const { slug } = params",
         "类型写成 string",
-        "params 只能是单个下划线参数",
-        "先 await：params 是 Promise"
+        "params 只能是单个下划线参数"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "15 开始 params/searchParams 均为 Promise，同步解构会拿到 pending 对象（呼应 next-dynamic 第一节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "动态详情页不写 generateStaticParams 时，默认渲染模式是？",
       "options": [
-        "自动 SSR（请求时确定参数再渲染）",
-        "全部 404",
         "自动变成 SSG 枚举所有参数",
-        "纯 CSR"
+        "纯 CSR",
+        "自动 SSR（请求时确定参数再渲染）",
+        "全部 404"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "构建器无从枚举参数值，页面保持动态；写了生成函数才有预生成清单（呼应 next-dynamic 第二节、render-modes 的推断表）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "dynamicParams = false 的语义是？",
       "options": [
-        "禁用动态段",
-        "白名单外的参数值直接 404，不现渲",
         "页面不参与缓存",
-        "关闭路由级代码分割"
+        "关闭路由级代码分割",
+        "禁用动态段",
+        "白名单外的参数值直接 404，不现渲"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "generateStaticParams 给出的是白名单；false 拒绝名单外，防爬虫乱敲参数打爆现渲（呼应 next-dynamic 第二节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "并行路由 @analytics 目录会改变 URL 吗？",
       "options": [
-        "会，路径变成 /@analytics",
-        "会，作为查询参数附加",
         "不会，它只是布局上的渲染插槽",
-        "取决于是否配 default.tsx"
+        "取决于是否配 default.tsx",
+        "会，路径变成 /@analytics",
+        "会，作为查询参数附加"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "@slot 不进 URL，以同名 props 注入 layout——命名视图思想的路径无关版（呼应 next-dynamic 第三节、vue-router-nested-dynamic）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " Next 15 中动态段页面组件接收的 params 正确用法是？",
       "options": [
-        "直接同步解构 { params }: { params: { id: string } }",
-        "async function Page({ params }) { const { id } = await params; }——Next 15 起 params 是 Promise，需 await 后再解构，以配合异步渲染",
         "用 useSearchParams 拿",
-        "从 cookies 读"
+        "从 cookies 读",
+        "直接同步解构 { params }: { params: { id: string } }",
+        "async function Page({ params }) { const { id } = await params; }——Next 15 起 params 是 Promise，需 await 后再解构，以配合异步渲染"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "把 params/searchParams 变成 Promise 是 Next 15 为\"流式/异步渲染\"铺路：未 await 前不阻塞 shell 输出，能渲染得更快。老代码里同步解构要改成 await——这是升级到 15 的一处高频改动。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " generateStaticParams 返回 100 个 id 且 dynamicParams=false，用户访问第 101 个 id 时会？",
       "options": [
-        "自动 SSR 渲染并缓存",
         "直接 404——dynamicParams=false 表示\"仅允许预生成的参数值存在\"，未列出的值不再动态生成",
         "走 fallback loading",
-        "返回上一版缓存"
+        "返回上一版缓存",
+        "自动 SSR 渲染并缓存"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "dynamicParams 控制\"生成清单之外的参数要不要运行时按需生成\"：true（默认）→ 未预生成的走 SSR 再缓存；false → 只认 generateStaticParams 里的、其余 404。适合\"文章集合固定且需纯静态\"的场景，也常用于收紧 CDN 与避免为垃圾 URL 现渲染。"
     },
     {

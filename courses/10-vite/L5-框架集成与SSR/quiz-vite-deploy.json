@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "`vite preview` 的作用是？",
       "options": [
-        "启动开发服务器",
-        "生成 sourcemap",
         "跑单元测试",
-        "用真实构建产物在本地起服务，上线前自检 base/路由/缓存是否正常"
+        "用真实构建产物在本地起服务，上线前自检 base/路由/缓存是否正常",
+        "启动开发服务器",
+        "生成 sourcemap"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "preview 服务 dist（构建产物），不是 dev server，用来验证真实产物行为。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "SPA 用 history 路由，刷新 /about 出现 404，需要配置什么？",
       "options": [
+        "增加 base",
         "关掉路由",
         "服务端 SPA fallback：未知路径都返回 index.html（Nginx try_files / _redirects）",
-        "改用 hash 路由唯一解",
-        "增加 base"
+        "改用 hash 路由唯一解"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "/about 不是真实文件，服务器需回退到 index.html 让前端路由接管。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "静态资源的推荐缓存策略是？",
       "options": [
-        "全部 no-store 保证最新",
-        "带 contenthash 的资源 immutable 长缓存，index.html 用 no-cache",
         "全部强缓存一年",
-        "不设置缓存头"
+        "不设置缓存头",
+        "全部 no-store 保证最新",
+        "带 contenthash 的资源 immutable 长缓存，index.html 用 no-cache"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "hash 变则 URL 变可放心 immutable；HTML 必须协商缓存才能及时拿到新引用（呼应 Express L4）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "Monorepo 里希望改组件库源码时应用能即时 HMR、无需先 build，通常怎么做？",
       "options": [
-        "每次手动 npm run build 库",
         "让库的入口指向源码 src，并在应用里 optimizeDeps.exclude 该包、按源码编译",
         "把库复制进应用",
-        "禁用 HMR"
+        "禁用 HMR",
+        "每次手动 npm run build 库"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "源码直用（exports 指 src + exclude 预打包）让 Vite 把 workspace 依赖当源码编译，改即热更。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "一个项目要多个独立 HTML 入口（home.html / admin.html），应如何配置？",
       "options": [
+        "用 SSR 才行",
         "配多个 base",
         "build.rollupOptions.input 传多个 HTML 路径（MPA 多入口）",
-        "装多个 Vite",
-        "用 SSR 才行"
+        "装多个 Vite"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "多页面通过 rollupOptions.input 指定多个 html 入口，各自独立打包。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "前端构建产物里绝不应该出现什么？",
       "options": [
+        "压缩后的 JS",
         "contenthash 文件名",
         "只有 VITE_ 前缀、且非敏感的公开变量",
-        "数据库密码/内部密钥等敏感信息（前端代码人人可读）",
-        "压缩后的 JS"
+        "数据库密码/内部密钥等敏感信息（前端代码人人可读）"
       ],
-      "answer": 2,
+      "answer": 3,
       "explanation": "任何打进前端的字符串都可被查看；密钥绝不能进前端包，鉴权/密钥留服务端（呼应 Express L6）。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " Vite MPA（多 HTML 入口）生产的正确配置姿势是？",
       "options": [
-        "多份 vite.config 分别构建",
         "build.rollupOptions.input 列出各 HTML 入口（对象形态可命名 chunk）——一次构建共享依赖图，公共模块自动提取成共享 chunk，产物按入口名组织 HTML",
         "一个入口 + 前端路由伪造",
-        "在 index.html 里 iframe"
+        "在 index.html 里 iframe",
+        "多份 vite.config 分别构建"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "一次多入口构建的\"共享 chunk 自动提取\"是 MPA 优于多次单入口构建的核心（呼应 splitting 关的默认拆块）。"
     },
     {

@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "include/exclude/files 决定的是？",
       "options": [
-        "输出文件结构",
         "打包优化",
         "哪些源文件进入本次编译（输入范围）",
-        "运行顺序"
+        "运行顺序",
+        "输出文件结构"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "它们划定输入；输出目录由 outDir/rootDir 决定。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "strict: true 打开的是？",
       "options": [
-        "单一开关",
         "只关 any",
         "只影响 emit",
-        "一组 strict* 子开关的总闸（noImplicitAny/strictNullChecks 等），但个别更严开关需单独开"
+        "一组 strict* 子开关的总闸（noImplicitAny/strictNullChecks 等），但个别更严开关需单独开",
+        "单一开关"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "strict 是总闸；noUncheckedIndexedAccess、exactOptionalPropertyTypes 等不在其中要手动加。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "子配置 extends 父配置时，include 字段的合并规则是？",
       "options": [
-        "与父配置叠加",
-        "被子配置整体覆盖（不是合并）",
         "取交集",
-        "报错"
+        "报错",
+        "与父配置叠加",
+        "被子配置整体覆盖（不是合并）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "compilerOptions 逐键合并，但 include/exclude/files 是被子配置覆盖。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "只在 tsconfig 配了 paths 别名、没配打包器 alias，最可能出现？",
       "options": [
-        "编译直接失败",
         "tsc 不报错，但运行时 Cannot find module（paths 只解析类型、不改写产物 import 路径）",
         "自动生效",
-        "只是慢一点"
+        "只是慢一点",
+        "编译直接失败"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "paths 只管类型层解析，运行时路径要 Vite/webpack/Node imports 另行对齐。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "CI 里做纯类型检查、不产出 JS，最合适的命令/选项是？",
       "options": [
+        "tsc -b --clean",
         "tsc --declaration",
         "tsc --noEmit",
-        "tsc --watch",
-        "tsc -b --clean"
+        "tsc --watch"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "noEmit 只跑类型检查不落盘，是 CI 门禁标准做法（呼应 Express L7）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "子 tsconfig extends 父配置后，自己写了新的 paths：",
       "options": [
-        "与父 paths 深合并",
-        "对象类选项是**整键替换**——父 paths 全部失效；include/exclude/files 未写时才继承",
         "需要 includeParents 指令",
-        "自动冲突报错"
+        "自动冲突报错",
+        "与父 paths 深合并",
+        "对象类选项是**整键替换**——父 paths 全部失效；include/exclude/files 未写时才继承"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "extends 合并语义：标量与 compilerOptions 按顶层键覆盖（不深合并嵌套对象），文件域三件套「子未声明才继承父」。迁移陷阱：在父配置删 paths 或子配置合并两边。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "project references 指向的项目必须满足：",
       "options": [
-        "同仓库",
         "自身开启 composite: true（保证可增量 + 产出声明文件供引用方消费）",
         "ESM",
-        "target ≥ es2020"
+        "target ≥ es2020",
+        "同仓库"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "composite = 「可被引用的构建单元」契约：强制 declaration、生成 .tsbuildinfo、输出目录约束——references + tsc -b 才是「增量跨项目 DAG」。"
     },
     {

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "实现一个虚拟模块，最少需要哪两个钩子配合？",
       "options": [
-        "transform + renderChunk",
-        "config + transform",
         "resolveId（认领说明符）+ load（生成源码）",
-        "buildStart + closeBundle"
+        "buildStart + closeBundle",
+        "transform + renderChunk",
+        "config + transform"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "resolveId 把 'virtual:x' 解析成自定义 id，load 对该 id 返回生成的源码，业务即可 import。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "虚拟模块解析后的 id 加 \\0 前缀主要是为了？",
       "options": [
-        "跑得更快",
-        "加密源码",
         "兼容 IE",
-        "标记这不是真实文件路径、让其它插件默认跳过，避免被当文件读取或争抢"
+        "标记这不是真实文件路径、让其它插件默认跳过，避免被当文件读取或争抢",
+        "跑得更快",
+        "加密源码"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "\\0（null 字节）是 Rollup 生态惯例，表示虚拟/非文件 id，防止文件系统类插件误处理。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "写 transform 钩子时，最重要的性能习惯是？",
       "options": [
+        "总是返回新字符串",
         "对所有模块都跑完整逻辑",
         "先按 id/内容过滤，无关模块直接 return（没改时返回 null）",
-        "用正则匹配一切",
-        "总是返回新字符串"
+        "用正则匹配一切"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "dev 下每个请求模块都会过 transform；空跑或返回未变内容会浪费性能/制造无谓转换。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "只想在开发服务器生效、生产构建完全不挂载，应该用？",
       "options": [
-        "enforce: 'pre'",
-        "apply: 'serve'",
         "configureServer 里 try/catch",
-        "mode === 'test'"
+        "mode === 'test'",
+        "enforce: 'pre'",
+        "apply: 'serve'"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "apply:'serve' 让插件只在 dev 挂载；配合 configureServer 注册中间件，生产零成本、不把调试端点带上线。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "在 configureServer 里想让中间件跑在 Vite 内部转换之后，应怎么做？",
       "options": [
-        "直接 server.middlewares.use",
         "return (server) => { server.middlewares.use(...) }（返回后置函数）",
         "设 enforce: 'post' 即可",
-        "没法控制顺序"
+        "没法控制顺序",
+        "直接 server.middlewares.use"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "configureServer 返回的函数会在 Vite 内部中间件安装后调用，从而把自定义中间件插到其后。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "想做'构建守卫'（如禁止把某秘密打进产物，命中就让构建失败），最合适的钩子是？",
       "options": [
+        "resolveId",
         "transform",
         "generateBundle（遍历产物 chunk，必要时 this.error）",
-        "configureServer",
-        "resolveId"
+        "configureServer"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "generateBundle 能拿到最终产物集合，遍历 chunk.code 断言，用 this.error 让构建失败。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " transform 里要额外读取一个本地文件参与生成内容，让依赖变化能触发该模块重新转换的正确做法是？",
       "options": [
-        "用 fs 读了就行",
-        "this.load(id) 或 this.resolve 后读取——走 Rollup 模块图登记依赖，被读文件变化才会使当前模块缓存失效并重新 transform；裸 fs.readFile 是隐形依赖，热更与缓存都不感知",
         "在 buildStart 里读一次缓存起来",
-        "watch 里另起进程"
+        "watch 里另起进程",
+        "用 fs 读了就行",
+        "this.load(id) 或 this.resolve 后读取——走 Rollup 模块图登记依赖，被读文件变化才会使当前模块缓存失效并重新 transform；裸 fs.readFile 是隐形依赖，热更与缓存都不感知"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "插件里一切\"读了会影响输出\"的内容都应通过上下文 API 登记，这是 HMR 正确性的前提。"
     },
     {

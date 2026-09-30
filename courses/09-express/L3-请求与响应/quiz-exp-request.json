@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "req.fresh 为 true 意味着什么？",
       "options": [
-        "请求是新的",
         "响应没有缓存",
         "客户端缓存有效（If-None-Match/Modified 匹配），可返回 304",
-        "ETag 不存在"
+        "ETag 不存在",
+        "请求是新的"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "req.fresh 对比条件头（If-None-Match vs ETag / If-Modified-Since vs Last-Modified）→ 匹配 = 客户端有最新副本 = 304。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "req.url 和 req.originalUrl 的区别何时体现？",
       "options": [
-        "完全相同",
         "originalUrl 包含 query，url 不包含",
         "只有 POST 时不同",
-        "在挂载的 Router 内：url 截去 mount 前缀，originalUrl 保留完整"
+        "在挂载的 Router 内：url 截去 mount 前缀，originalUrl 保留完整",
+        "完全相同"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "Router 挂在 /api 下，请求 /api/users → req.url = '/users'，req.originalUrl = '/api/users'。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "req.accepts(['json','xml']) 返回什么？",
       "options": [
-        "boolean",
-        "客户端 Accept 头中最匹配的那个类型字符串，或 false",
         "数组",
-        "状态码"
+        "状态码",
+        "boolean",
+        "客户端 Accept 头中最匹配的那个类型字符串，或 false"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "按 q 值权重从 Accept 头里匹配——匹配到 'json' 返回 'json'，都不匹配返回 false。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "客户端上传中途关闭浏览器，Express 哪个事件触发？",
       "options": [
-        "req.on('end')",
         "req.on('aborted')",
         "res.on('finish')",
-        "server.on('close')"
+        "server.on('close')",
+        "req.on('end')"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "aborted = 请求未完整接收就断开（上传取消）。end = 正常读完 body。finish = 响应发完。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " ?tag=a&tag=b&tag=c 用默认 qs 解析后 req.query.tag 是？",
       "options": [
+        "解析报错",
         "字符串 a",
         "数组 [a, b, c]——重复键聚合为数组，受 arrayLimit（默认 20）约束，超限会被截断或转对象，接收方必须按\"可能来数组\"写校验",
-        "后者覆盖前者",
-        "解析报错"
+        "后者覆盖前者"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "同一参数可能是 string 也可能是 array——类型不稳定是 query 校验必用 union 或直接 z.array 的原因。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " 想拿到\"未被挂载路径改写前\"的完整请求路径（含查询串），应读？",
       "options": [
-        "req.path",
         "req.originalUrl——app.use 挂载会把 req.url 剥前缀，日志、签名校验、重定向构造这类需要全量路径的场景必须用 originalUrl",
         "req.pathname",
-        "req.baseUrl"
+        "req.baseUrl",
+        "req.path"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "三件套分工：originalUrl 全量、url 剥前缀、baseUrl 被剥部分；签名类中间件用错字段=偶发验签失败。"
     },
     {

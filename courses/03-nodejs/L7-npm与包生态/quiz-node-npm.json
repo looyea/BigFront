@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "字段 \"type\": \"module\" 的作用是？",
       "options": [
+        "决定 .js 文件按 ESM 解析（否则按 CJS）",
         "让项目只能用 TypeScript",
         "禁止安装依赖",
-        "开启严格模式",
-        "决定 .js 文件按 ESM 解析（否则按 CJS）"
+        "开启严格模式"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "type:module 让 .js 视为 ESM；单个文件可用 .cjs/.mjs 覆盖（呼应 node-npm 第一节、node-esm-cjs）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "typescript、eslint、vitest 一般应放哪里？",
       "options": [
-        "dependencies",
-        "devDependencies",
         "peerDependencies",
-        "optionalDependencies"
+        "optionalDependencies",
+        "dependencies",
+        "devDependencies"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "仅开发/构建期用、不进生产代码→devDependencies，生产安装可省略（呼应 node-npm 第五节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "peerDependencies 的典型用途是？",
       "options": [
+        "替代 devDependencies",
         "可选加速依赖",
         "声明\"由宿主提供\"的依赖（如插件需要 react），避免重复实例",
-        "锁定 Node 版本",
-        "替代 devDependencies"
+        "锁定 Node 版本"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "peer 期望宿主已装某包/版本，避免多份实例导致状态/单例问题（呼应 node-npm 第五节、Express 中间件）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "npm workspaces 与 pnpm workspace 在安装布局上的关键差异是：",
       "options": [
-        "没差异",
-        "npm 把依赖尽量提升到根 node_modules（幽灵依赖空间仍在）；pnpm 用硬链接虚拟store+严格非扁平 node_modules，未声明依赖直接 require 不到",
         "workspaces 只支持 TS",
-        "pnpm 不支持 lockfile"
+        "pnpm 不支持 lockfile",
+        "没差异",
+        "npm 把依赖尽量提升到根 node_modules（幽灵依赖空间仍在）；pnpm 用硬链接虚拟store+严格非扁平 node_modules，未声明依赖直接 require 不到"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "pnpm 的「严格」来自 .pnpm 目录+符号链接图——phantom dependency 被物理封杀（本关幽灵依赖题的机制终局）；提升式布局下「能 import 没声明的包」迟早在全新安装/缓存清理时爆雷。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "\"exports\": { \".\" : { require: \"./cjs/index.cjs\", import: \"./esm/index.js\" } } 这种条件导出的求值规则是：",
       "options": [
-        "按字母序",
         "按**声明顺序**自上而下取第一个匹配条件，\"default\" 兜底放最后；types 条件必须最前否则类型解析被短路",
         "Node 自动全兼容",
-        "仅 import 有效"
+        "仅 import 有效",
+        "按字母序"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "顺序即优先级是 exports 最易踩的规范（TS 的 types 在前、node>browser>default 惯例）；配 attw（Are The Types Wrong）与 publint 在 CI 校验条件表完整性。"
     },
     {

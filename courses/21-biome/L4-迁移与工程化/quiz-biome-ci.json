@@ -4,12 +4,12 @@
     {
       "stem": "面向 CI 的子命令是？",
       "options": [
-        "biome check",
         "biome ci",
         "biome format",
-        "biome init"
+        "biome init",
+        "biome check"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "非交互、输出便于机器消费。"
     },
     {
@@ -26,12 +26,12 @@
     {
       "stem": "CI 里应不应该带 --write？",
       "options": [
+        "必须",
         "应该",
         "不应该，CI 只校验不改仓库",
-        "看心情",
-        "必须"
+        "看心情"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "改仓库交给本地/提交前。"
     },
     {
@@ -59,45 +59,45 @@
     {
       "stem": "流水线判断成败的可靠信号是？",
       "options": [
-        "日志文本",
         "耗时",
         "退出码",
-        "文件数"
+        "文件数",
+        "日志文本"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "别去 parse 日志。"
     },
     {
       "stem": "Biome 通常还需额外缓存层吗？",
       "options": [
+        "禁用",
         "必须",
         "本身极快、通常不必",
-        "一定",
-        "禁用"
+        "一定"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "单二进制快是前提。"
     },
     {
       "stem": "vcs.useIgnoreFile 在 CI 的价值？",
       "options": [
-        "无用",
-        "复用 .gitignore 一处声明划范围",
         "加速构建",
-        "改端口"
+        "改端口",
+        "无用",
+        "复用 .gitignore 一处声明划范围"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "与本地/全工具共享。"
     },
     {
       "stem": "PR 评论模式的作用是？",
       "options": [
-        "挡合并",
         "把诊断贴成 comment 帮 review",
         "关 lint",
-        "自动合并"
+        "自动合并",
+        "挡合并"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "让开发者看到该修什么。"
     },
     {

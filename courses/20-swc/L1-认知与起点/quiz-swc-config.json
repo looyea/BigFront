@@ -4,12 +4,12 @@
     {
       "stem": ".swcrc 三大顶层分区？",
       "options": [
-        "parse/build/emit",
         "jsc/module/minify",
         "input/output/plugin",
-        "ts/js/css"
+        "ts/js/css",
+        "parse/build/emit"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "jsc 编译核心、module 产物格式、minify 压缩。"
     },
     {
@@ -26,34 +26,34 @@
     {
       "stem": "扩展名如何决定解析？",
       "options": [
-        "必须手配 parser",
         "永远按 TS",
         "看文件大小",
-        "按 .ts/.tsx/.js 后缀自动选"
+        "按 .ts/.tsx/.js 后缀自动选",
+        "必须手配 parser"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "后缀驱动，通常免配。"
     },
     {
       "stem": "命令行临时覆盖配置用什么？",
       "options": [
-        "-C key=val",
         "--force",
         "-x",
-        "--override-json"
+        "--override-json",
+        "-C key=val"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "swc -C minify=true。"
     },
     {
       "stem": "--delete-dir-on-start 的作用？",
       "options": [
-        "保留旧产物",
-        "跳过 watch",
         "构建前清空 outDir",
-        "删源码"
+        "删源码",
+        "保留旧产物",
+        "跳过 watch"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "防止旧文件残留。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "module.type 管什么？",
       "options": [
+        "是否产 map",
         "降级目标",
         "输出 ESM/CJS/UMD 格式",
-        "压缩强度",
-        "是否产 map"
+        "压缩强度"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "产物模块格式，与降级正交。"
     },
     {
       "stem": "watch 模式参数？",
       "options": [
-        "--live",
-        "--watch",
         "-w only",
-        "--dev"
+        "--dev",
+        "--live",
+        "--watch"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "swc src -d dist --watch。"
     },
     {
       "stem": "为什么推荐 env.targets 而非硬 target？",
       "options": [
-        "更快",
         "一处 browserslist 声明多工具共享、自动算降级",
         "产物更小一定",
-        "免装依赖"
+        "免装依赖",
+        "更快"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "统一目标来源。"
     },
     {

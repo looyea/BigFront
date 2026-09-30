@@ -4,56 +4,56 @@
     {
       "stem": "登录态 store 里 token 初始值从哪读？",
       "options": [
-        "后端接口",
-        "cookie 解析",
         "localStorage.getItem('token')",
-        "sessionStorage"
+        "sessionStorage",
+        "后端接口",
+        "cookie 解析"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "刷新后 Pinia 重新创建，需从 localStorage 恢复 token 保持登录态。"
     },
     {
       "stem": "axios 拦截器里 useAuthStore() 应注意什么？",
       "options": [
-        "无注意事项",
-        "需要手动传 pinia 实例",
         "必须用 await",
-        "必须在拦截器回调函数体内调用（延迟获取 store）"
+        "必须在拦截器回调函数体内调用（延迟获取 store）",
+        "无注意事项",
+        "需要手动传 pinia 实例"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "文件顶层调用时 pinia 可能未注册——放在回调函数体内执行时 pinia 已就绪。"
     },
     {
       "stem": "路由守卫里判断登录态的正确方式是？",
       "options": [
+        "Vue Router meta.token",
         "检查 localStorage",
         "useAuthStore().isLoggedIn",
-        "检查 cookie",
-        "Vue Router meta.token"
+        "检查 cookie"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "从 store 取派生的 isLoggedIn——单一数据源原则。"
     },
     {
       "stem": "登出时清所有 store 缓存可以用什么？",
       "options": [
-        "location.reload()",
-        "pinia.state.value = {} 重置所有",
         "逐个 store.$reset()",
-        "清除所有 DOM"
+        "清除所有 DOM",
+        "location.reload()",
+        "pinia.state.value = {} 重置所有"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Pinia 暴露 pinia.state（所有 store state 集合），赋空对象即全部重置。"
     },
     {
       "stem": "跨标签页同步登出用什么事件？",
       "options": [
-        "BroadcastChannel",
         "window storage 事件",
         "WebSocket",
-        "SharedWorker"
+        "SharedWorker",
+        "BroadcastChannel"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "一个 tab 清 localStorage 触发另一 tab 的 storage 事件——最轻量方案。"
     },
     {
@@ -70,23 +70,23 @@
     {
       "stem": "isLoggedIn 为什么用 computed 而不是 function？",
       "options": [
+        "没有区别",
         "function 性能更差",
         "computed 有缓存且可被 watch/模板直接使用",
-        "computed 可以带参数",
-        "没有区别"
+        "computed 可以带参数"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "computed 惰性+缓存+可响应式追踪；function 每次调用重执行且不能 watch。"
     },
     {
       "stem": "hasPerm('admin') 更适合放 getter 还是 action？",
       "options": [
-        "computed（缓存所有权限）",
-        "普通方法（按参数动态判断）",
         "$patch 改值",
-        "watch"
+        "watch",
+        "computed（缓存所有权限）",
+        "普通方法（按参数动态判断）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "带参数的权限判断用普通方法——computed 不能带参数。"
     },
     {
@@ -103,12 +103,12 @@
     {
       "stem": "登录成功后 redirect 回原页面怎么实现？",
       "options": [
+        "URL query 传",
         "store 里存 redirect 路径 + login 后 router.push",
         "localStorage 存",
-        "cookie",
-        "URL query 传"
+        "cookie"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "守卫里把 redirect 路径存到 query/store，登录成功后 push 回去。"
     }
   ]

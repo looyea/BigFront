@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "WXML 中想输出计算结果 {{ n + 1 }}，前提是？",
       "options": [
-        "n 必须在渲染层定义",
         "n 必须来自逻辑层 setData 进 data 的字段",
         "n 可以是任意全局变量",
-        "必须先声明 wxs 模块"
+        "必须先声明 wxs 模块",
+        "n 必须在渲染层定义"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "{{}} 只吃 data（含 properties）里的数据（呼应 mp-wxml 第二节）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "在 WXML 里直接调用 Page 中定义的 js 方法做格式化，结果？",
       "options": [
-        "正常执行",
         "编译报错中断构建",
         "不支持——模板里不能调 js 方法，需 setData 前算好或用 wxs",
-        "运行时自动转成 wxs 执行"
+        "运行时自动转成 wxs 执行",
+        "正常执行"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "WXML 表达式不是完整 JS，不能调方法（呼应 mp-wxml 第二、五节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "{{ rawHtml }} 输出 <b>hi</b>，页面显示？",
       "options": [
+        "报错",
         "加粗的 hi",
         "原样字符 <b>hi</b>（自动转义）",
-        "空白",
-        "报错"
+        "空白"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "插值默认转义防 XSS，与 JSX 同思路；富文本要用 rich-text（呼应 mp-wxml 第二节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "关于 wxs，错误的是？",
       "options": [
-        "wxs 运行在渲染层",
         "wxs 可以使用 let/const、箭头函数等 ES6 语法",
         "wxs 不能调用逻辑层的 js 方法",
-        "wxs 可以独立成 .wxs 文件用 src 引入"
+        "wxs 可以独立成 .wxs 文件用 src 引入",
+        "wxs 运行在渲染层"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "wxs 是 ES5 子集，没有 ES6 语法（呼应 mp-wxml 第五节）。"
     },
     {
@@ -72,12 +72,12 @@
       "type": "single",
       "prompt": "hidden=\"false\"（不带 {{}}）的效果是？",
       "options": [
+        "取决于组件类型",
         "元素不可见——字符串非空即真，属易错点",
         "元素正常显示",
-        "编译报错",
-        "取决于组件类型"
+        "编译报错"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "字符串 \"false\" 按存在即真处理，必须写 hidden=\"{{false}}\"（呼应 mp-wxml 第六节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 想在列表渲染时给每一项加序号「从 1 开始」，在不引入额外 data 字段的前提下最合适的做法是？",
       "options": [
-        "在 bindtap 里算",
-        "用 wx:key 配合 `{{ index + 1 }}`（wx:for 的默认索引变量 index 可直接参与表达式）——WXML 支持简单运算，比把序号预先塞进 data 更省 setData",
         "用 wxs 才能做",
-        "做不到"
+        "做不到",
+        "在 bindtap 里算",
+        "用 wx:key 配合 `{{ index + 1 }}`（wx:for 的默认索引变量 index 可直接参与表达式）——WXML 支持简单运算，比把序号预先塞进 data 更省 setData"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "`{{}}` 里允许算术/三元/逻辑等「表达式」（非语句），`index+1` 直接可用，无需为纯展示派生再走一遍 setData。真正复杂的格式化（日期、脱敏）才考虑 wxs 或在逻辑层预处理成字段。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " wxs 与其他语言的本质差异决定了它能做什么、不能做什么，下列正确的是？",
       "options": [
-        "wxs 运行在逻辑线程，可随便调 setData 和微信 API",
         "wxs 运行在渲染线程、不能调用逻辑层方法/setData、不能访问 Page data，只用于「渲染期纯计算/格式化」——正因独立在视图层才能避免跨线程往返",
         "wxs 就是 ES6",
-        "wxs 可 async/await"
+        "wxs 可 async/await",
+        "wxs 运行在逻辑线程，可随便调 setData 和微信 API"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "wxs 的价值恰在「离渲染更近」：在视图层就地做格式化（如根据值返回 class/文本），省去「为一点显示逻辑专门 setData 跨线程传一次」。代价是沙箱受限：不能反向影响逻辑层、不支持部分新语法、无 async。适合「高频但轻、只在渲染用」的转换，别拿它当业务逻辑容器。"
     },
     {

@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "官方最小实现里，signal 的 getter 除了返回值还做了什么关键动作？",
       "options": [
-        "每次都重跑组件",
         "把\"当前正在执行的 observer\"加进自己的订阅者集合",
         "清空订阅者",
-        "触发一次 batch"
+        "触发一次 batch",
+        "每次都重跑组件"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "读时登记 currentSubscriber 进 subscribers 集合，就是\"自动依赖收集\"的代码级真相。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "setter 什么时候不会通知订阅者？",
       "options": [
-        "新值是对象时",
-        "在事件回调里调用时",
         "没包在 batch 里时",
-        "value === newValue（相等短路）时"
+        "value === newValue（相等短路）时",
+        "新值是对象时",
+        "在事件回调里调用时"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "setter 先比较 `value === newValue`，相等直接 return 不通知——避免无谓更新的根。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "最小 createEffect 里 `const prev = currentSubscriber; ... currentSubscriber = prev` 是为解决什么？",
       "options": [
+        "实现异步追踪",
         "提升性能",
         "支持嵌套 effect：跑完恢复上一层 observer",
-        "防止内存泄漏",
-        "实现异步追踪"
+        "防止内存泄漏"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "保存/还原 currentSubscriber 让内层 effect 结束后外层登记仍正确，这正是\"嵌套 effect 互相隔离\"的实现。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "createMemo 相对普通 effect 在机制上的独特之处是？",
       "options": [
-        "它把计算结果再包成一个可被下游订阅的 signal，并缓存",
         "它不会自动追踪依赖",
         "它每轮都强制重算",
-        "它只在服务端运行"
+        "它只在服务端运行",
+        "它把计算结果再包成一个可被下游订阅的 signal，并缓存"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "官方：memo 像 effect 但\"返回一个 signal 并靠缓存优化计算\"，因此可作为源向下游传播。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "Owner 树的两大核心职责是？",
       "options": [
+        "生命周期回收（onCleanup）与 Context 解析",
         "决定 DOM 结构与 diff",
         "管理 CSS 作用域与事件委托",
-        "存 props 缓存",
-        "生命周期回收（onCleanup）与 Context 解析"
+        "存 props 缓存"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "computation 捕获 Owner：销毁沿 Owner 树逆序回收，useContext 也沿它向上找 Provider。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " signal 读取的内部动作最贴切的描述是？ ",
       "options": [
-        " 每次都重算 ",
-        " 读：把当前 observer 去重登记进订阅集并返回值；写：比较新旧，变化才沿订阅传播 ",
         " 轮询检查 ",
-        " 写时才登记 "
+        " 写时才登记 ",
+        " 每次都重算 ",
+        " 读：把当前 observer 去重登记进订阅集并返回值；写：比较新旧，变化才沿订阅传播 "
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": " 依赖收集发生在读、传播发生在写，两句构成 Solid 响应式的最小内核。 "
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " memo 的惰性体现在哪？ ",
       "options": [
-        " 从不重算 ",
         " 上游变化只标脏，读取时才沿依赖递归重算，版本号防止同轮重复求值 ",
         " 定时重算 ",
-        " 写上游即算所有下游 "
+        " 写上游即算所有下游 ",
+        " 从不重算 "
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": " push 标记+pull 计算：没人读的 memo 不花钱，读时保证即时一致，版本戳收敛菱形依赖。 "
     },
     {

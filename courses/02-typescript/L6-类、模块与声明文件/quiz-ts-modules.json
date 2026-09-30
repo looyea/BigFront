@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "import type { Config } 的作用与好处是？",
       "options": [
-        "运行时做一次类型检查",
         "等价于 require",
         "只导入类型、编译后完全擦除，避免把类型依赖带进运行时、防循环、利于单文件转译",
-        "会生成默认导出"
+        "会生成默认导出",
+        "运行时做一次类型检查"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "import type 明确纯类型依赖，产物里被删；配合 verbatimModuleSyntax 让删/留规则清晰。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "社区'优先命名导出而非 default'的主要理由是？",
       "options": [
-        "default 不能导出 class",
         "default 更快",
         "命名导出更少样板",
-        "命名导出利于 tree-shaking、IDE 重命名/追引用，避免导入名歧义"
+        "命名导出利于 tree-shaking、IDE 重命名/追引用，避免导入名歧义",
+        "default 不能导出 class"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "default 导入时可随便起名造成'同名不同物'，且聚合/重构工具支持更差；命名导出更友好。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "桶文件 barrel（index.ts 里 export * from 各子模块）的两大副作用是？",
       "options": [
-        "编译更慢 + 需要 import type",
-        "可能破坏 tree-shaking + 更易制造循环导入导致运行时 undefined",
         "无法导出类型 + 只能一个入口",
-        "必须配 commonjs"
+        "必须配 commonjs",
+        "编译更慢 + 需要 import type",
+        "可能破坏 tree-shaking + 更易制造循环导入导致运行时 undefined"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "barrel 会把整包拉进初始化影响摇树，且内部互引走 barrel 易成环取到未初始化值。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "esModuleInterop 与 allowSyntheticDefaultImports 的关键区别是？",
       "options": [
-        "两者完全一样",
         "前者生成运行时 __importDefault 辅助真正合成 default；后者只做类型层允许检查、不生成代码",
         "后者生成代码",
-        "前者只影响 class"
+        "前者只影响 class",
+        "两者完全一样"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "esModuleInterop 既改类型检查又 emit 帮助函数；allowSyntheticDefaultImports 仅放宽类型层 default 导入检查。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "verbatimModuleSyntax 打开后的效果是？",
       "options": [
+        "禁用命名导出",
         "自动删除所有 import",
         "保留你写下的 import/export 形式，不自动改写/擦除，是类型还是值由 import type 显式决定",
-        "强制用 commonjs",
-        "禁用命名导出"
+        "强制用 commonjs"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "它让编译器不再自作主张增删 import，配合 isolatedModules/打包器单文件转译避免猜错。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "开启 verbatimModuleSyntax 后，类型导入忘了写 import type：",
       "options": [
-        "自动 elide",
-        "报错——所有 import 按书写原样保留到产物，类型必须显式 import type（导出同理 export type）",
         "仅警告",
-        "行为不变"
+        "行为不变",
+        "自动 elide",
+        "报错——所有 import 按书写原样保留到产物，类型必须显式 import type（导出同理 export type）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "它的组合拳价值：消灭「elision 玄学」（isolatedModules 误删副作用导入等），配合 SWC/esbuild 逐文件转译零事故——TS5.0+ 新仓标配。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "想给「未建模的 CSS 导入」补类型（declare module \"*.css\"），声明文件要：",
       "options": [
-        "含 import/export 使其成为模块",
         "保持**非模块**（无顶层 import/export）——才是整体环境声明；带 import 时变成对已有模块的 augmentation",
         "放在 src 下",
-        "命名为 global.ts"
+        "命名为 global.ts",
+        "含 import/export 使其成为模块"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "同名语法的两种命运取决于文件是否模块：无导出=ambient 通配声明（新增模块）；有导出=模块增强（只能改已存在模块）。写反 = \"Cannot find module\" 依旧。"
     },
     {

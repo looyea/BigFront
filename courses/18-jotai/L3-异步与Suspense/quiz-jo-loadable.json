@@ -15,12 +15,12 @@
     {
       "stem": "loadable 返回对象的 state 不含哪个？",
       "options": [
-        "pending",
-        "hasData",
         "hasError",
-        "hasTimeout"
+        "hasTimeout",
+        "pending",
+        "hasData"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "三态无 hasTimeout。"
     },
     {
@@ -37,23 +37,23 @@
     {
       "stem": "想要局部 spinner 不用 Suspense 用？",
       "options": [
-        "async atom 直读",
-        "loadable + useAtomValue",
         "store.loading",
-        "alert"
+        "alert",
+        "async atom 直读",
+        "loadable + useAtomValue"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "显式判 pending。"
     },
     {
       "stem": "接 RxJS/EventSource 用什么？",
       "options": [
-        "atomWithStorage",
         "atomWithObservable",
         "loadable",
-        "useAtom"
+        "useAtom",
+        "atomWithStorage"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "推流转 atom。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "Suspense 风格 vs loadable 风格的核心取舍？",
       "options": [
+        "前者能拿错误",
         "无差",
         "声明式优雅 vs 命令式局部灵活",
-        "后者更快",
-        "前者能拿错误"
+        "后者更快"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "按 UI 选。"
     },
     {
       "stem": "loadable 需要额外安装吗？",
       "options": [
-        "要装插件",
-        "来自 jotai/utils 内置",
         "要 Query",
-        "要 Context"
+        "要 Context",
+        "要装插件",
+        "来自 jotai/utils 内置"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "官方 utils。"
     },
     {
       "stem": "observable atom 数据到达会？",
       "options": [
-        "不更新",
         "通知订阅者重渲",
         "报错",
-        "缓存不刷新"
+        "缓存不刷新",
+        "不更新"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "推流驱动 atom 更新。"
     },
     {

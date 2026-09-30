@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "读取一张 PNG 图片，正确的做法是？",
       "options": [
-        "readFile(path, 'utf8') 再转回来",
         "readFileSync(path, 'ascii')",
         "readFile(path) 不传 encoding，得到 Buffer",
-        "用 appendFile 读"
+        "用 appendFile 读",
+        "readFile(path, 'utf8') 再转回来"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "二进制文件不能按 utf8 文本解码（会乱码/损坏），不传 encoding 得到原始 Buffer（呼应 node-buffer、node-fs 第二节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "writeFile 与 appendFile 的关键区别是？",
       "options": [
-        "前者只能写文本，后者只能写 Buffer",
         "没有区别",
         "appendFile 会阻塞事件循环",
-        "writeFile 覆盖（清空重写），appendFile 追加到末尾"
+        "writeFile 覆盖（清空重写），appendFile 追加到末尾",
+        "前者只能写文本，后者只能写 Buffer"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "writeFile 打开即清空原内容重写；appendFile 在文件末尾追加，适合日志（呼应 node-fs 第三节）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "mkdir('a/b/c') 当 a、b 都不存在时会报错，加哪个选项可一次建多级目录？",
       "options": [
-        "{ force: true }",
-        "{ recursive: true }",
         "{ shallow: false }",
-        "{ encoding: 'utf8' }"
+        "{ encoding: 'utf8' }",
+        "{ force: true }",
+        "{ recursive: true }"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "recursive:true 会顺带创建缺失的中间目录且不因已存在而报错（呼应 node-fs 第四节）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "为什么『没关闭的文件描述符/watcher』是个隐患？",
       "options": [
-        "会让文件变大",
         "fd 是有限系统资源，未关会泄漏；且活跃句柄会让进程迟迟不退出",
         "会导致编码乱码",
-        "会触发 uncaughtException"
+        "会触发 uncaughtException",
+        "会让文件变大"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "fd/watcher 不关=资源泄漏；而且事件循环只要还有活跃句柄就不退出（呼应 node-event-loop、node-fs 第五六节）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "fs.promises.readFile 的调用若既不 await 也不 catch，一旦失败会？",
       "options": [
+        "返回 null",
         "静默失败无事发生",
         "变成 unhandledRejection，Node 15+ 默认使进程退出",
-        "自动重试",
-        "返回 null"
+        "自动重试"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Promise 版错误若无人接管会升级成未处理 rejection，Node 15+ 默认崩溃退出（呼应 node-async-errors 第三四节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "fs.open(path, \"wx\") 标志的含义是：",
       "options": [
-        "覆盖写",
-        "排他创建：文件已存在直接报 EEXIST——「不存在才写」的原子检查，锁文件/去重写入的标准姿势",
         "只读",
-        "同步模式"
+        "同步模式",
+        "覆盖写",
+        "排他创建：文件已存在直接报 EEXIST——「不存在才写」的原子检查，锁文件/去重写入的标准姿势"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "x=O_EXCL 由 OS 保证「检查+创建」原子（先 access 再 write 有竞态窗口）；配 a+ 则是「不存在才建、存在则追加」。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "o.close() 与 fsPromises open 后忘 close 的后果，除了 fd 泄漏还包括：",
       "options": [
-        "没有别的",
         "POSIX 下 fd 是进程级资源、泄漏到 EMFILE；且 Windows 上未 close 的文件被锁无法删除/重命名，watcher 还会持续持有事件句柄",
         "会自动 gc 回收",
-        "仅性能略降"
+        "仅性能略降",
+        "没有别的"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "Windows 文件锁是「打开即独占」语义（可配 share flags），Node 在 Win 上「读着删不掉」的报障九成是没 close——跨平台都要 finally close。"
     },
     {

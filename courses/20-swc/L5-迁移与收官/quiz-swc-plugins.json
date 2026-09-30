@@ -4,12 +4,12 @@
     {
       "stem": "插件系统的第一原则？",
       "options": [
-        "能写就写",
         "内置开关能解决就别写插件",
         "一律写 Wasm",
-        "一律写 JS"
+        "一律写 JS",
+        "能写就写"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "内置优先省兼容麻烦。"
     },
     {
@@ -37,23 +37,23 @@
     {
       "stem": "JS 插件的问题？",
       "options": [
-        "太慢且要跨 Rust/JS 序列化 AST、实验性",
         "太快",
         "不能改 AST",
-        "收费"
+        "收费",
+        "太慢且要跨 Rust/JS 序列化 AST、实验性"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "官方不推荐生产。"
     },
     {
       "stem": "Wasm 插件与 @swc/core 的关系？",
       "options": [
+        "版本强耦合，需对齐",
         "完全无关",
         "永远向后兼容",
-        "可跨大版本随意",
-        "版本强耦合，需对齐"
+        "可跨大版本随意"
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "AST 会变，v1.15 起 ABI 才稳。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "同项目各方应统一什么？",
       "options": [
-        "@swc/core 版本",
-        "Node 版本",
         "包名",
-        "注释风格"
+        "注释风格",
+        "@swc/core 版本",
+        "Node 版本"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "selecting-swc-core 强调版本一致。"
     },
     {
       "stem": "React Compiler 在 SWC 里？",
       "options": [
-        "完全不支持",
-        "有对应集成（configuration/react-compiler）",
         "必须 Babel",
-        "写 Wasm"
+        "写 Wasm",
+        "完全不支持",
+        "有对应集成（configuration/react-compiler）"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "有集成页。"
     },
     {
       "stem": "写 Wasm 插件的主要门槛？",
       "options": [
-        "会 CSS",
         "会 Rust + 懂 SWC AST",
         "会配 .swcrc",
-        "会 npm"
+        "会 npm",
+        "会 CSS"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "能力最强但门槛最高。"
     },
     {

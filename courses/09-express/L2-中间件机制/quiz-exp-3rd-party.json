@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "JWT 放在 Authorization header 里为什么天然防 CSRF？",
       "options": [
-        "JWT 有签名",
         "JWT 是加密的",
         "浏览器不会自动携带自定义 Header → 伪造请求带不上 Token",
-        "用了 HTTPS"
+        "用了 HTTPS",
+        "JWT 有签名"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "CSRF 攻击利用浏览器自动带 cookie 的特性。Authorization header 需要 JS 手动设置 → 跨站伪造的表单/请求无法携带 → 免疫 CSRF。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "multer fileFilter 里调用 cb(new Error('...')) 后错误如何传递？",
       "options": [
-        "自动返回 500",
         "需要手动 res.status(400).json()",
         "错误被静默忽略",
-        "multer 内部调 next(err) → 进入 Express error handler"
+        "multer 内部调 next(err) → 进入 Express error handler",
+        "自动返回 500"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "multer 是中间件，fileFilter cb(err) → multer 调 next(err) → 全局 error handler 捕获 → 统一返回 400。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "/healthz 和 /readyz 分别检查什么？",
       "options": [
-        "完全相同",
-        "healthz=进程存活(uptime)；readyz=依赖可用(DB/Redis连接正常)",
         "healthz=性能指标；readyz=错误率",
-        "healthz 给监控用；readyz 给前端用"
+        "healthz 给监控用；readyz 给前端用",
+        "完全相同",
+        "healthz=进程存活(uptime)；readyz=依赖可用(DB/Redis连接正常)"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Liveness(liveness probe=healthz): 进程是否活着 → 死了重启。Readiness(readyz): 是否能处理请求 → 暂时不可用时摘流量不重启。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "pino-http 的 genReqId 有什么用？",
       "options": [
-        "加速日志写入",
         "为每个请求生成唯一 ID → 日志中所有行可关联同一个请求（分布式追踪）",
         "防止日志重复",
-        "压缩日志体积"
+        "压缩日志体积",
+        "加速日志写入"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "有 requestId 后，用户报错反馈一个 ID → 在 Loki/ELK 搜这个 ID 看到该请求全链路所有日志行。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": " 生产环境用 express-session 时，会话数据存哪里是合理选择？",
       "options": [
+        "存 MySQL BLOB 每请求查一次无缓存",
         "就用 MemoryStore 加机器内存",
         "Redis（或兼容存储）——MemoryStore 单进程、重启全丢、内存泄漏警告三连，只配出现在教程里；会话外置后滚动发布不掉登录态",
-        "写进 localstorage",
-        "存 MySQL BLOB 每请求查一次无缓存"
+        "写进 localstorage"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "会话存储选型的第一判据是\"发布/重启会不会踢掉全体用户\"，第二是横向扩容下的共享。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": " 会话固定（session fixation）攻击的防御动作是？",
       "options": [
-        "加长 session id",
-        "登录成功后强制重新生成 session id（req.session.regenerate）并迁移旧会话数据——攻击者预埋的 id 在登录后即作废",
         "改用 JWT 就叫防御",
-        "对 cookie 加密"
+        "对 cookie 加密",
+        "加长 session id",
+        "登录成功后强制重新生成 session id（req.session.regenerate）并迁移旧会话数据——攻击者预埋的 id 在登录后即作废"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "签名防篡改、httpOnly 防窃取，但都不防\"攻击者预先种给你一个 id 再坐收你的登录态\"——regenerate 是唯一正解。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": " morgan 和 pino-http 同时挂上，常见的问题与取舍是？",
       "options": [
-        "日志更完整没有代价",
         "同一请求两份访问日志、双份 I/O 与存储成本——二者选一并统一格式；要结构化查询用 pino-http，只要人读的调试日志才用 morgan",
         "会互相死锁",
-        "morgan 必须放最后"
+        "morgan 必须放最后",
+        "日志更完整没有代价"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "第三方中间件叠加审查是\"清单即文档\"治理的一部分：功能重叠的中间件只留一个生产者。"
     },
     {

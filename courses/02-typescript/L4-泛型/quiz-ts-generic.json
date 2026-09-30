@@ -7,12 +7,12 @@
       "type": "single",
       "prompt": "泛型相对 any 的核心优势是？",
       "options": [
-        "运行更快",
-        "写法更短",
         "用类型变量保留'输入类型→输出类型'的关系，既复用又不丢类型信息",
-        "能访问任何属性"
+        "能访问任何属性",
+        "运行更快",
+        "写法更短"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "any 放弃类型；泛型把类型当参数传递，调用后仍精确（echo<T>(x:T):T）。"
     },
     {
@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "function identity<T>(x:T):T; identity(5) 里 T 是什么？需要手写 <number> 吗？",
       "options": [
-        "T=any，必须手写",
-        "T=unknown",
         "报错，必须显式",
-        "T 被推断为 number，通常无需显式指定"
+        "T 被推断为 number，通常无需显式指定",
+        "T=any，必须手写",
+        "T=unknown"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "类型参数推断从实参反推 T；只有推断不出或想覆盖时才显式写。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "为什么裸函数里 a.length 在 T 上会报错？",
       "options": [
+        "其实不报错",
         "length 不是合法属性名",
         "未约束的 T 可能是任何类型，编译器无法保证它有 length，需要 T extends { length: number }",
-        "因为 a 是 any",
-        "其实不报错"
+        "因为 a 是 any"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "裸 T 无任何成员保证；要访问成员必须先 extends 约束（下一关）。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "interface Response<T = unknown> 里默认用 unknown 而不是 any，好处是？",
       "options": [
-        "性能更好",
-        "不指定 T 时数据落 unknown，强制使用方收窄，避免 any 无声放弃检查",
         "unknown 能直接用",
-        "没区别"
+        "没区别",
+        "性能更好",
+        "不指定 T 时数据落 unknown，强制使用方收窄，避免 any 无声放弃检查"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "安全默认：unknown 逼你在用前证明类型，any 会让下游集体失去保护（呼应 ts-any-unknown）。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "class Stack<T> 在运行时能拿到 T 做 if (T === number) 判断吗？",
       "options": [
-        "能，泛型保留到运行时",
         "不能，泛型被类型擦除，运行时 T 不存在",
         "能，用 typeof T",
-        "只有加了约束才能"
+        "只有加了约束才能",
+        "能，泛型保留到运行时"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "类型擦除对泛型同样适用；要按类型分支得显式传构造器/工厂函数（呼应 ts-intro）。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "关于'什么时候显式写类型参数'，最合理的是？",
       "options": [
+        "只在类上写",
         "永远都写，防止推断错",
         "绝大多数靠推断省略；仅当推断不出、或想强制更宽/特定类型时显式指定",
-        "永远不写",
-        "只在类上写"
+        "永远不写"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "信任推断减少噪音，必要时显式覆盖——与'边界显式、内部宽松'一致（呼应 ts-basics）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "泛型函数调用时显式类型参数的规则是：",
       "options": [
-        "可以只显式一部分，其余继续推断",
         "要么全推断要么全显式——部分显式靠「默认类型参数」实现",
         "显式后必须再标返回值",
-        "只有 class 允许显式"
+        "只有 class 允许显式",
+        "可以只显式一部分，其余继续推断"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "TS 不支持「部分类型参数推断」（Haskell 式）， `<T=number>` 默认值 + 顺序是官方补偿；这也是 <T extends X = 兜底> 写法存在的理由。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "TS 对「类型的类型参数」（`Array<Array<T>>` 之外，把泛型本身当参数，即 HKT）的支持是：",
       "options": [
-        "原生支持 <F<_>>",
         "不支持——用 interface 模式（定义带泛型方法的接口再取用）模拟",
         "5.0 已加入",
-        "仅 class 可以"
+        "仅 class 可以",
+        "原生支持 <F<_>>"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "HKT 提案悬置多年；社区套路：`interface BoxHKT { readonly uri: <T>(x: T) => Box<T> }` 借方法级泛型模拟——valibot/fp-ts 的类型体操都绕不过它。"
     },
     {

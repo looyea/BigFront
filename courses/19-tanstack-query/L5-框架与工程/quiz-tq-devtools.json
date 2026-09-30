@@ -4,12 +4,12 @@
     {
       "stem": "devtools 面板每条查询能看到什么？",
       "options": [
-        "仅 key",
         "key/状态/data/重试等实时全景",
         "源码",
-        "SQL"
+        "SQL",
+        "仅 key"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "缓存的 X 光机。"
     },
     {
@@ -26,34 +26,34 @@
     {
       "stem": "生产环境应该带 devtools 面板吗？",
       "options": [
-        "不应该，构建时摇掉",
-        "应该，方便排查",
         "看 gcTime",
-        "只带只读版"
+        "只带只读版",
+        "不应该，构建时摇掉",
+        "应该，方便排查"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "体积与信息安全都不划算。"
     },
     {
       "stem": "测试里 retry:false 的收益？",
       "options": [
-        "更接近生产",
-        "失败断言秒回不等退避",
         "省内存",
-        "免 Provider"
+        "免 Provider",
+        "更接近生产",
+        "失败断言秒回不等退避"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "退避等待能把测试拖到地老天荒。"
     },
     {
       "stem": "测试间缓存零串扰靠哪个配置？",
       "options": [
-        "staleTime:0",
         "gcTime:0",
         "retry:0",
-        "enabled:false"
+        "enabled:false",
+        "staleTime:0"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "每个测试新 client+用完即弃。"
     },
     {
@@ -81,34 +81,34 @@
     {
       "stem": "测 mutation 最重要的两个断言？",
       "options": [
-        "渲染次数与快照",
-        "请求体正确与缓存联动",
         "内存与耗时",
-        "key 排序与 hash"
+        "key 排序与 hash",
+        "渲染次数与快照",
+        "请求体正确与缓存联动"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "variables 送达+invalidate 生效。"
     },
     {
       "stem": "乐观更新测试的必测路径？",
       "options": [
-        "成功路径",
         "失败注入看先变后滚回",
         "并发路径",
-        "序列化路径"
+        "序列化路径",
+        "成功路径"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "回滚才是乐观的阿喀琉斯之踵。"
     },
     {
       "stem": "官方测试三件套不含下列哪项？",
       "options": [
-        "每测试新 QueryClient",
-        "关重试",
         "MSW 网络拦截",
-        "快照测试缓存"
+        "快照测试缓存",
+        "每测试新 QueryClient",
+        "关重试"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "快照不是推荐项。"
     }
   ]

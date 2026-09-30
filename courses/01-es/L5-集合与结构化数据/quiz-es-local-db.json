@@ -6,16 +6,26 @@
       "id": "q1",
       "type": "single",
       "prompt": "执行下面两行后，localStorage 里 `cart` 的实际内容是什么？\n\n```js\nlocalStorage.setItem('cart', { a: 1 });\nconsole.log(localStorage.getItem('cart'));\n```",
-      "options": ["[object Object]", "{\"a\":1}", "undefined", "抛 TypeError"],
-      "answer": 0,
+      "options": [
+        "抛 TypeError",
+        "[object Object]",
+        "{\"a\":1}",
+        "undefined"
+      ],
+      "answer": 1,
       "explanation": "localStorage 只收字符串，传入对象会被隐式 ToString 成 '[object Object]'，原字段全丢。要存对象必须显式 JSON.stringify，读回再 parse。"
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": "读取一个从未写入过的 key：`localStorage.getItem('nope')` 的返回是：",
-      "options": ["null", "undefined", "''（空字符串）", "抛 KeyError"],
-      "answer": 0,
+      "options": [
+        "undefined",
+        "''（空字符串）",
+        "抛 KeyError",
+        "null"
+      ],
+      "answer": 3,
       "explanation": "不存在的 key 返回 null，所以判'没存过'只认 === null；写成 if (!v) 会把存过的空字符串、0、'false' 一并误判。"
     },
     {
@@ -36,12 +46,12 @@
       "type": "single",
       "prompt": "某个库当前版本是 2，此时执行 `indexedDB.open('notes-app', 1)`，会发生什么？",
       "options": [
-        "打开失败，onerror 收到 VersionError（不允许降级）",
-        "正常打开，但读不到 version 2 建的表",
         "触发 onupgradeneeded，旧数据被清空",
-        "自动升到 3"
+        "自动升到 3",
+        "打开失败，onerror 收到 VersionError（不允许降级）",
+        "正常打开，但读不到 version 2 建的表"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "请求版本低于已存版本 → VersionError，既不降级也不静默空库。要做'结构回退'只能删库重建（deleteDatabase）。"
     },
     {
@@ -49,12 +59,12 @@
       "type": "single",
       "prompt": "要在 IndexedDB 里新增一个 objectStore 或索引，代码只能写在：",
       "options": [
-        "open 请求的 onupgradeneeded 回调里",
         "onsuccess 里拿到 db 之后随时调用",
         "任意事务的 oncomplete 里",
-        "模块顶层，new Database() 之后"
+        "模块顶层，new Database() 之后",
+        "open 请求的 onupgradeneeded 回调里"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "结构变更需要 versionchange 事务，只在版本升级回调里可用；在 onsuccess 里 createObjectStore 抛 InvalidStateError。这也是'加字段索引要 bump 版本号'的原因。"
     },
     {
@@ -62,12 +72,12 @@
       "type": "single",
       "prompt": "主键 'n1' 已存在，此时执行 `store.add({ id: 'n1', text: 'x' })`，结果是：",
       "options": [
+        "自动生成新主键插入",
         "请求失败（ConstraintError），所在事务被 abort，本事务其他写也回滚",
         "覆盖原记录",
-        "静默忽略，事务照常提交",
-        "自动生成新主键插入"
+        "静默忽略，事务照常提交"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "add 遇重复主键抛 ConstraintError 并导致事务回滚（原子性）；想要'有则覆盖无则插入'用 put，想要'有则跳过'得先 get 判断或用 add + 捕获后忽略。"
     },
     {
@@ -75,19 +85,24 @@
       "type": "single",
       "prompt": "以下代码运行到哪一步会出问题？\n\n```js\nconst tx = db.transaction('note', 'readwrite');\nconst resp = await fetch('/api/price');\ntx.objectStore('note').put({ id: 'n3', price: await resp.json() });\n```",
       "options": [
-        "put 那一行：事务已闲置自动提交，抛 TransactionInactiveError",
-        "fetch 那一行：IndexedDB 禁止网络请求",
         "不报错，只是慢",
-        "第一行：readwrite 模式名写错"
+        "第一行：readwrite 模式名写错",
+        "put 那一行：事务已闲置自动提交，抛 TransactionInactiveError",
+        "fetch 那一行：IndexedDB 禁止网络请求"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "事务在没有排队请求时会自动提交；await 非 IDB 的 promise 让事件循环转开，事务已结束。正解：先取完异步数据再开事务，或用 Dexie 的事务包装（它保持事务存活）。"
     },
     {
       "id": "q8",
       "type": "single",
       "prompt": "`IDBKeyRange.lowerBound(100, false)` 表示的区间是：",
-      "options": [">= 100", "> 100", "<= 100", "仅等于 100"],
+      "options": [
+        ">= 100",
+        "> 100",
+        "<= 100",
+        "仅等于 100"
+      ],
       "answer": 0,
       "explanation": "第二个参数是 open（是否开区间）：false 含边界 → >=100；true → >100。四种形态 only/lowerBound/upperBound/bound，倒序配 prev 游标。"
     },
@@ -96,12 +111,12 @@
       "type": "single",
       "prompt": "下面哪个值**存不进** IndexedDB（会抛 DataCloneError）？",
       "options": [
-        "`const fn = () => 1`（箭头函数）",
         "`new Date()`",
         "`new Map([['k','v']])`",
-        "`new Blob(['x'])`"
+        "`new Blob(['x'])`",
+        "`const fn = () => 1`（箭头函数）"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "IDB 用结构化克隆：Date/Map/Set/Blob/ArrayBuffer/循环引用都能存；函数、DOM 节点、Proxy（含 Vue 响应式对象、Svelte $state）会被拒。这也正是 localStorage 与它的分界线——后者只能 JSON。"
     },
     {
@@ -109,12 +124,12 @@
       "type": "single",
       "prompt": "把 zustand 的 persist storage 从 localStorage 换成 idb-keyval 后，首屏闪了一下默认值再到真实值，原因是：",
       "options": [
+        "浏览器对 IDB 有 5MB 限制导致读取失败",
         "IndexedDB 是异步的，rehydrate 晚于首帧渲染，真值在 onFinishHydration 后才到",
         "idb-keyval 不支持 persist 中间件",
-        "必须再加 createJSONStorage 才会同步",
-        "浏览器对 IDB 有 5MB 限制导致读取失败"
+        "必须再加 createJSONStorage 才会同步"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "同步 storage 首帧即有值；换异步后首帧是初始 state。缓解：订阅 onFinishHydration 再渲染关键区，或'偏好类小值仍同步读 localStorage、大值走 IDB'的混合方案（SSR 水合不一致同源）。"
     },
     {
@@ -135,12 +150,12 @@
       "type": "single",
       "prompt": "关于'框架对接远程 MySQL'，下列哪条链路是正确的？",
       "options": [
-        "组件/store → 你的 HTTP API → 服务端 ORM（Prisma 等）→ MySQL；浏览器代码永不直连数据库",
-        "组件里 import PrismaClient 直连远程 MySQL，配好 DATABASE_URL 即可",
         "把 MySQL 端口开放给浏览器，用 mysql2 直连，省去一层 API",
-        "IndexedDB 建一个 mysql 引擎的 store 顶替服务端"
+        "IndexedDB 建一个 mysql 引擎的 store 顶替服务端",
+        "组件/store → 你的 HTTP API → 服务端 ORM（Prisma 等）→ MySQL；浏览器代码永不直连数据库",
+        "组件里 import PrismaClient 直连远程 MySQL，配好 DATABASE_URL 即可"
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "连接串与驱动只能留在服务端（打进公开 JS 等于把密码贴首页）。全栈框架的'直连'也只发生在服务端那一侧：RSC / Server Action / Nitro handler / +page.server.ts 的 load。"
     },
     {
@@ -148,12 +163,12 @@
       "type": "single",
       "prompt": "离线优先设计里，'幂等键必须落库'主要防的是：",
       "options": [
-        "重放时同一条写操作被执行两次（客户端不能保证只发一次）",
         "本地时间比服务器慢",
         "IndexedDB 事务过长被自动提交",
-        "localStorage 配额被写满"
+        "localStorage 配额被写满",
+        "重放时同一条写操作被执行两次（客户端不能保证只发一次）"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "网络重试、用户重复点击、多标签并发都会让同一操作到达多次；服务端按 opId 去重才是可靠边界，'客户端保证只发一次'是幻觉。"
     },
     {
@@ -161,12 +176,12 @@
       "type": "single",
       "prompt": "需要在浏览器里对用户上传的 CSV 做带 SQL 语法的复杂分析（几十 MB），最贴合的选型是：",
       "options": [
+        "必须上传到服务端建 MySQL 表，别在浏览器做",
         "wasm SQLite（sql.js 或 wa-sqlite + OPFS），数据留在本地算",
         "localStorage 存 CSV，前端手写 split 解析",
-        "把每一行写进 IndexedDB 再用游标模拟 JOIN",
-        "必须上传到服务端建 MySQL 表，别在浏览器做"
+        "把每一行写进 IndexedDB 再用游标模拟 JOIN"
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "'要 SQL 语法/FTS 且数据本就属于该用户本机'正是浏览器 SQLite 的适用面；注意 sql.js 要手动 export 落盘、OPFS VFS 方案可能要求跨源隔离。多端一致的业务事实源仍该在服务端。"
     }
   ]

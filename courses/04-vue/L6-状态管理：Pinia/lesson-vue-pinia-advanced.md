@@ -89,6 +89,17 @@ defineStore('user', {
 ```
 > **安全红线**：`localStorage` 是明文、易被 XSS 读取。**token 等敏感信息谨慎持久化**，优先 `httpOnly` cookie（呼应 exp-auth session、exp-security XSS、node-config 密钥不外泄）。
 
+### 接线图：Pinia 在整条数据链路的哪一段
+
+```
+组件 ref/computed → Pinia store（跨页共享的客户端态）→ action 里 fetch / vue-query → HTTP → 服务端 API（09-express）→ ORM（Prisma / mysql2）→ MySQL / Postgres
+                     ↑ L0/L1：只放“本设备私有”的东西                              ↑ L2/L3：业务事实源，唯一权威
+```
+
+- **store 不是数据库**：里面放的是「服务端数据的客户端缓存」或「本机 UI 态」。事实源在服务端库里；列表刷新后以接口返回为准，**同一条数据既有人调 action 写、又有组件直接 `$patch`**，两处就会漂移（呼应 vue-state-patterns 的单向数据流）。
+- **持久化层可以换**：`localStorage`（同步、约 5MB、不能查询）→ 数据大或要索引就换 IndexedDB（`useStorageAsync` 插异步 storage、或 `$subscribe` + `idb-keyval`）；写法、首帧闪默认值的成因都在 **01-es `es-local-db`** §二/§四（本平台自己的主题字号就是「localStorage 即时生效 + 后端 `data/appearance.json` 兜底」的双层记忆）。
+- **接远程 MySQL 时长什么样**：`useCartStore().load()` → `GET /api/cart` → Express（exp-rest / exp-validation）→ Prisma `provider = "mysql"`（exp-prisma + **exp-mysql**）→ 内网 MySQL。Vue 代码里**永远不该出现连接串或 SQL**；Nuxt 的 Nitro server route / `useAsyncData` 能直连库，但那仍然跑在服务端那一侧（见 08-nuxt L4）。
+
 ---
 
 ## 五、写一个插件

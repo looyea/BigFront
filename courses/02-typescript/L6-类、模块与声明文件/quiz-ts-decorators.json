@@ -20,12 +20,12 @@
       "type": "single",
       "prompt": "NestJS/TypeORM 为什么需要 experimentalDecorators + emitDecoratorMetadata？",
       "options": [
-        "为了性能",
         "为了支持泛型",
         "它们基于老版装饰器语义，且 DI 靠 emitDecoratorMetadata 把构造参数类型写进 design:paramtypes 元数据",
-        "只是习惯，不开也行"
+        "只是习惯，不开也行",
+        "为了性能"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "老版签名 + 反射类型元数据是其 DI 的地基；新版标准装饰器暂未含参数装饰器/类型反射（第二节）。"
     },
     {
@@ -33,12 +33,12 @@
       "type": "single",
       "prompt": "@register(\"user\") 这种带参数装饰器为什么写成'工厂返回装饰器'？",
       "options": [
-        "语法糖，等价于两个函数拼写",
         "为了异步",
         "其实不能带参数",
-        "因为 TS 要求 @ 后是表达式：先调用 @register(\"user\") 得到真正的装饰器函数再去装饰目标"
+        "因为 TS 要求 @ 后是表达式：先调用 @register(\"user\") 得到真正的装饰器函数再去装饰目标",
+        "语法糖，等价于两个函数拼写"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "带参装饰器=装饰器工厂：外层接收配置参数、返回真正的 (target)=>... 装饰器。"
     },
     {
@@ -46,12 +46,12 @@
       "type": "single",
       "prompt": "emitDecoratorMetadata 解决的核心难题是？",
       "options": [
-        "让 class 更快",
-        "泛型擦除下运行时本拿不到类型，它把类型主动写进元数据供 DI 读取",
         "自动补全",
-        "生成 .d.ts"
+        "生成 .d.ts",
+        "让 class 更快",
+        "泛型擦除下运行时本拿不到类型，它把类型主动写进元数据供 DI 读取"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "呼应 ts-generic-constraints 构造器令牌——类型信息需作为值/元数据显式携带，装饰器把它写入 Reflect 元数据。"
     },
     {
@@ -59,12 +59,12 @@
       "type": "single",
       "prompt": "@Column()、@Expose() 这类字段装饰器通常做什么？",
       "options": [
-        "直接给字段赋默认值",
         "只登记元数据（列名/序列化规则），真正行为由库运行时读元数据执行",
         "删除字段",
-        "把字段变私有"
+        "把字段变私有",
+        "直接给字段赋默认值"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "ORM/序列化字段装饰器是纯元数据标记，运行期反射驱动映射，不改变字段本身值。"
     },
     {
@@ -85,12 +85,12 @@
       "type": "single",
       "prompt": "下面哪种场景更该用普通高阶函数而非装饰器？",
       "options": [
+        "Angular 组件元数据",
         "NestJS 控制器路由声明",
         "对普通函数做一次性 memoize/once 包装（无 class、不想依赖装饰器开关）",
-        "TypeORM 实体列",
-        "Angular 组件元数据"
+        "TypeORM 实体列"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "纯函数场景 const memo=memoize(fn) 更清晰、无框架/编译开关锁定（第六节）。"
     },
     {
@@ -98,12 +98,12 @@
       "type": "single",
       "prompt": "标准（TC39/TS5）class 装饰器返回 void 的含义是：",
       "options": [
-        "装饰失败",
-        "保持原类——只有显式返回新构造器才替换；老版「返回值被忽略」的语义不同",
         "返回 undefined 报错",
-        "必须返回 class"
+        "必须返回 class",
+        "装饰失败",
+        "保持原类——只有显式返回新构造器才替换；老版「返回值被忽略」的语义不同"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "标准装饰器统一「返回替换物或不返回」：class/方法/字段都遵守；老实验版 class 装饰器返回值才被忽略——两套并存正是 NestJS 钉旧版的原因。"
     },
     {
@@ -111,12 +111,12 @@
       "type": "single",
       "prompt": "标准方法装饰器的第二个参数是：",
       "options": [
-        "property descriptor",
         "context 对象 { kind, name, static, private, addInitializer }",
         "原型对象",
-        "属性类型"
+        "属性类型",
+        "property descriptor"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "descriptor 反射被废，换 context + 「替换函数本身」的写法（装饰器收到 value 原方法，返回新的替代）——更安全（无 this 泄漏）且不依赖运行时元编程。"
     },
     {

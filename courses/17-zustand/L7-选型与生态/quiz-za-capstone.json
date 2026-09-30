@@ -15,45 +15,45 @@
     {
       "stem": "推荐的 action 更新方式是？",
       "options": [
-        "组件内 setState",
         "直接改 DOM",
         "store 内动词 action + 函数式 set",
-        "全局变量"
+        "全局变量",
+        "组件内 setState"
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "集中可追踪。"
     },
     {
       "stem": "selector 命名与导出建议？",
       "options": [
-        "随意内联",
         "不导出",
         "大写",
-        "selectXxx 集中导出做黑盒"
+        "selectXxx 集中导出做黑盒",
+        "随意内联"
       ],
-      "answer": 3,
+      "answer": 2,
       "explanation": "封装结构（呼应 za-slices）。"
     },
     {
       "stem": "应禁止的反模式是？",
       "options": [
-        "用 action",
-        "把 Query 数据拷进 store",
         "用 selector",
-        "用 persist"
+        "用 persist",
+        "用 action",
+        "把 Query 数据拷进 store"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "制造第二真相（呼应 za-layers）。"
     },
     {
       "stem": "跨 slice 协作规定走？",
       "options": [
-        "import 实例",
         "get().otherAction",
         "事件总线",
-        "localStorage"
+        "localStorage",
+        "import 实例"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "类型安全、单一入口（呼应 za-slices）。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "进阶的 proxy 可变路线指？",
       "options": [
+        "Context",
         "Redux",
         "Valtio",
-        "MobX only",
-        "Context"
+        "MobX only"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "Jotai 兄弟库（呼应 jo-valtio）。"
     },
     {
       "stem": "服务端态进阶推荐？",
       "options": [
-        "更多 useEffect",
-        "TanStack Query",
         "手写缓存",
-        "全局 store"
+        "全局 store",
+        "更多 useEffect",
+        "TanStack Query"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "专用缓存（呼应 za-layers）。"
     },
     {
       "stem": "统一 devtools 命名好处？",
       "options": [
-        "难查",
         "调试面板可读、可归因",
         "变慢",
-        "无"
+        "无",
+        "难查"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "action 名可见（呼应 za-immer-devtools）。"
     },
     {

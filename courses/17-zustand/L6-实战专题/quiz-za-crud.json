@@ -15,45 +15,45 @@
     {
       "stem": "乐观更新失败后靠什么回滚？",
       "options": [
-        "刷新页面",
-        "忽略",
         "alert",
-        "先前快照 setState 恢复"
+        "先前快照 setState 恢复",
+        "刷新页面",
+        "忽略"
       ],
-      "answer": 3,
+      "answer": 1,
       "explanation": "保存旧值 catch 时恢复。"
     },
     {
       "stem": "分页列表的服务端数据更该交给？",
       "options": [
+        "Context",
         "Zustand 深拷",
         "TanStack Query",
-        "localStorage",
-        "Context"
+        "localStorage"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "server 态归 Query（呼应 za-layers）。"
     },
     {
       "stem": "批量更新多个实体的好处是？",
       "options": [
-        "多次渲染",
-        "一次 set 单帧通知减少重渲",
         "更慢",
-        "无法 undo"
+        "无法 undo",
+        "多次渲染",
+        "一次 set 单帧通知减少重渲"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "单帧批量高效。"
     },
     {
       "stem": "整批操作想可撤销，用哪种中间件？",
       "options": [
-        "persist",
         "undo/redo 历史栈",
         "immer",
-        "devtools"
+        "devtools",
+        "persist"
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "快照入栈支持回退（呼应 za-middleware-chain）。"
     },
     {
@@ -70,34 +70,34 @@
     {
       "stem": "跨列拖拽需要改什么？",
       "options": [
+        "localStorage",
         "只改颜色",
         "task.columnId + ids 顺序",
-        "reload",
-        "localStorage"
+        "reload"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "归属列与顺序都要更新。"
     },
     {
       "stem": "updateTask 里 structuredClone 的目的是？",
       "options": [
-        "提速",
-        "存独立快照供回滚",
         "加密",
-        "序列化"
+        "序列化",
+        "提速",
+        "存独立快照供回滚"
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "避免引用同一对象。"
     },
     {
       "stem": "下列哪项不应放这个 store？",
       "options": [
-        "乐观覆盖",
-        "筛选/排序",
         "原始服务端分页数据",
-        "选中态"
+        "选中态",
+        "乐观覆盖",
+        "筛选/排序"
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "服务端数据归 Query。"
     },
     {

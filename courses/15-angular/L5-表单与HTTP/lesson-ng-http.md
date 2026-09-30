@@ -150,4 +150,15 @@ export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
 
 `provideHttpClient(withFetch())` 让 HttpClient 内部用 `fetch()` 替代 `XMLHttpRequest`。好处：SSR 兼容更顺（Node fetch polyfill）；支持 `AbortSignal`（与取消语义对齐）。对使用者透明——API 不变、仍返回 Observable。远期（社区 RFC）：可能有 `http.getSignal<T>()` 返回 Resource signal——2026 尚未实现。
 
+## 八、接线图：HttpClient 在整条数据链路的哪一段
+
+```
+组件 signal/rxjs → service（HttpClient + interceptor）→ HTTP → 后端 API（Express / Nest）→ ORM（Prisma / mysql2）→ MySQL / Postgres
+                      ↑ 客户端这一侧只有“请求与缓存”                ↑ 事实源；Angular 没有“服务端组件”语义，只能走 API
+```
+
+- Angular 的 `HttpClient` **只负责把请求发出去并把类型化响应带回来**：拦截器加 token、统一错误处理、retry/timeout 都在这一层；它不提供“缓存/失效”语义，要么自己写 service 缓存，要么接 NgRx Effects（ng-ngrx）或 signal 形态的 `httpResource()`（ng-signals）。
+- **浏览器侧持久化**：没有内置 persist，常见做法是在 service 里订阅状态写 IndexedDB/localStorage；原生 IDB、idb-keyval/Dexie 的能力边界与事务坑见 **01-es `es-local-db`**；另外三条红线：**SSR（Angular SSR）里没有 `window.indexedDB`**（要判平台）、循环引用的响应式对象不能直接 `JSON.stringify`（ng-state-services §四）、token 不落明文存储（exp-security）。
+- **“公司有一台独立 MySQL”时**：链路仍然是 `HttpClient → API → 库`，Angular 代码里**不会出现数据库连接串**（浏览器没有 TCP 能力，也不该有凭据）；服务端那一段的驱动、连接池、字符集与时区问题全在 **09-express `exp-mysql`**（远程实例白名单/SSL/`wait_timeout` 都在那一关）。
+
 > 🚀 下一站：L6 路由——全家桶里最后那条腿：嵌套/懒加载/函数式守卫/resolve。
