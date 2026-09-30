@@ -34,7 +34,20 @@ export const api = {
   setHomework: (pkg, id, done) => post('/progress/homework', { pkgId: pkg, lessonId: id, done }),
   complete: (pkg, id) => post('/progress/complete', { pkgId: pkg, lessonId: id }),
   integrity: () => get('/integrity'),
+  // 外观偏好（主题 + 正文字号）：读回上次选择 / 写入本次选择
+  // 存服务端是为了跨端口、跨浏览器也能带回来（localStorage 按 origin 隔离，见 themes.js 头注释）
+  getAppearance: () => get('/appearance'),
+  saveAppearance: (body) => post('/appearance', body),
 };
+
+/**
+ * 外观的「刚调完就关页面」兜底：走 sendBeacon，与下面时长打点同一套做法。
+ * 返回是否已投递；调用方不等结果（面板上已有同步状态提示）。
+ */
+export function appearanceBeacon(body) {
+  if (!navigator.sendBeacon) return false;
+  return navigator.sendBeacon(BASE + '/appearance', new Blob([JSON.stringify(body)], { type: 'application/json' }));
+}
 
 /* ---------------------------- 全局进度状态 ---------------------------- */
 export const store = reactive({

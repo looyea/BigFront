@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import FloatingNav from './components/FloatingNav.vue';
+import ThemeSwitcher from './components/ThemeSwitcher.vue';
 import { store, refreshProgress, fmtDuration } from './api.js';
 
 const router = useRouter();
@@ -25,5 +26,6 @@ onMounted(() => { refreshProgress(); });
     <router-view />
   </main>
 
+  <ThemeSwitcher />
   <FloatingNav />
 </template>

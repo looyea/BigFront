@@ -1,4 +1,9 @@
-/* theme.css —— 大前端学院暗色主题（借鉴 VS Code Dark+ / Solarized Dark） */
+/* theme.css —— 大前端学院多主题样式
+   主题架构：所有颜色都走 CSS 变量（token），:root 承载默认「深夜墨蓝」暗色；
+   其余主题在 html[data-theme="…"] 上整组覆盖 token（缺省即继承 :root，未写全的变量自动回落）。
+   深色 3 组：night 深夜墨蓝（VS Code Dark+ 灵感，data-theme 缺省）/ solarized Solarized Dark / dimmed 柔和暗灰（GitHub Dark Dimmed，暗色护眼）
+   浅色 4 组：paper 纸感浅色 / mist 冷雾蓝灰 / eyecare 护眼豆绿 / sepia 护眼米黄
+   新增主题 = 加一个 [data-theme] 块 + themes.js 清单登记，组件代码零改动。 */
 :root {
   --bg: #1e1e1e;
   --bg-elev: #252526;
@@ -8,7 +13,7 @@
   --border-soft: #333333;
   --text: #d4d4d4;
   --text-dim: #9d9d9d;
-  --text-faint: #6e6e6e;
+  --text-faint: #7d7d7d;
   --accent: #007acc;
   --accent-2: #4ec9b0;
   --gold: #d7ba7d;
@@ -22,6 +27,300 @@
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
   --mono: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace;
   --sans: -apple-system, 'Segoe UI', 'Microsoft YaHei', Roboto, sans-serif;
+  /* —— 各主题成套覆盖的派生 token —— */
+  --code-bg: #1a1a1a;                       /* 代码块底色（prose pre / code-view） */
+  --code-fg: #abb2bf;                       /* 代码块基准文字色 */
+  --on-accent: #ffffff;                     /* accent 实底上的文字色 */
+  --on-accent-2: #1e1e1e;                   /* accent-2 实底（阶段徽标）上的文字色 */
+  --on-ok: #08281f;                         /* ok 实底按钮上的文字色 */
+  --on-gold: #1e1e1e;                       /* gold 徽章（fab 计数）上的文字色 */
+  --brand-ink: 0%;                          /* 品牌色用作浅底文字时向正文墨色掺入的比例（暗色 0） */
+  --tint-alpha: 0.12;                       /* 语义色（ok/warn/danger）淡背景透明度 */
+  --tint-accent: 0.08;                      /* 引用块/当前项的 accent 淡背景透明度 */
+  --tint-surface: rgba(255, 255, 255, 0.02); /* 首页分层容器淡背景 */
+  --body-glow:                              /* body 顶部双色氛围光（暗色主题） */
+    radial-gradient(circle at 15% 0%, rgba(0, 122, 204, 0.08), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(78, 201, 176, 0.06), transparent 45%);
+  --scroll-thumb: #4a4a4a;
+  --scroll-thumb-hover: #5a5a5a;
+  /* 正文字号档位：1 = 标准（缺省）。悬浮面板选完由 themes.js 把系数写到 html 的 --fs 上，
+     数值清单见 themes.js 的 FS_LEVELS；[data-theme] 块不覆盖它，所以换肤不会带走字号 */
+  --fs: 1;
+  /* —— 代码高亮 token（默认 = atom-one-dark 原色，保证暗色观感与旧版一致） —— */
+  --hl-keyword: #c678dd;
+  --hl-string: #98c379;
+  --hl-number: #d19a66;
+  --hl-title: #61afef;
+  --hl-attr: #e06c75;
+  --hl-builtin: #e6c07b;
+  --hl-comment: #7f848e;
+  --hl-literal: #56b6c2;
+  --hl-doctag: #c678dd;
+}
+
+/* ============ 深色 · Solarized Dark ============ */
+html[data-theme="solarized"] {
+  --bg: #002b36;
+  --bg-elev: #073642;
+  --bg-elev2: #0a4050;
+  --panel: #063540;
+  --border: #0e4856;
+  --border-soft: #0a3f4c;
+  --text: #93a1a1;
+  --text-dim: #839496;
+  --text-faint: #6f8588;
+  --accent: #268bd2;
+  --accent-2: #2aa198;
+  --gold: #b58900;
+  --purple: #d3869b;
+  --blue: #7b8eda;
+  --green: #859900;
+  --ok: #2aa198;
+  --warn: #b58900;
+  --danger: #dc322f;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+  --code-bg: #052b34;
+  --code-fg: #93a1a1;
+  --on-accent: #fdf6e3;
+  --on-accent-2: #002b36;
+  --on-ok: #eefaf7;
+  --on-gold: #1c2c30;
+  --tint-alpha: 0.16;
+  --tint-accent: 0.12;
+  --tint-surface: rgba(255, 255, 255, 0.03);
+  --body-glow:
+    radial-gradient(circle at 15% 0%, rgba(38, 139, 210, 0.10), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(42, 161, 152, 0.08), transparent 45%);
+  --scroll-thumb: #0e4b56;
+  --scroll-thumb-hover: #12606e;
+  /* 高亮跟随 one-dark 基准即可，仅底色上的文字微调 */
+  --hl-keyword: #859900;
+  --hl-string: #2aa198;
+  --hl-number: #b58900;
+  --hl-title: #268bd2;
+  --hl-attr: #cb4b16;
+  --hl-builtin: #d3869b;
+  --hl-comment: #6f8a90;
+}
+
+/* ============ 深色 · 柔和暗灰（GitHub Dark Dimmed 系，暗色里最不刺眼） ============ */
+html[data-theme="dimmed"] {
+  --bg: #22272e;
+  --bg-elev: #2d333b;
+  --bg-elev2: #373e47;
+  --panel: #262c34;
+  --border: #444c56;
+  --border-soft: #363d45;
+  --text: #adbac7;
+  --text-dim: #909dab;
+  --text-faint: #768390;
+  --accent: #539bf5;
+  --accent-2: #6cb6a6;
+  --gold: #d9b371;
+  --purple: #b083f0;
+  --blue: #6cb6ff;
+  --green: #8ddb8c;
+  --ok: #57ab5a;
+  --warn: #d4a72c;
+  --danger: #e5534b;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  --code-bg: #1c2128;
+  --code-fg: #adbac7;
+  --on-accent: #1c2128;
+  --on-accent-2: #16202a;
+  --on-ok: #12251a;
+  --on-gold: #22272e;
+  --tint-alpha: 0.15;
+  --tint-accent: 0.10;
+  --tint-surface: rgba(255, 255, 255, 0.025);
+  --body-glow:
+    radial-gradient(circle at 15% 0%, rgba(83, 155, 245, 0.07), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(108, 182, 166, 0.05), transparent 45%);
+  --scroll-thumb: #4d5864;
+  --scroll-thumb-hover: #5b6774;
+  /* 高亮沿用 one-dark 原色（暗底可读），注释稍微加深 */
+  --hl-comment: #7f8c99;
+}
+
+/* ============ 浅色 · 纸感白（清透明亮的默认浅色） ============ */
+html[data-theme="paper"] {
+  --bg: #f7f8fa;
+  --bg-elev: #eceff3;
+  --bg-elev2: #e2e6ec;
+  --panel: #ffffff;
+  --border: #d8dee7;
+  --border-soft: #dde3ea;
+  --text: #2f3437;
+  --text-dim: #6b7280;
+  --text-faint: #737d88;
+  --accent: #2563eb;
+  --accent-2: #0d9488;
+  --gold: #a16207;
+  --purple: #9333ea;
+  --blue: #1d4ed8;
+  --green: #3f6212;
+  --ok: #0d9488;
+  --warn: #b45309;
+  --danger: #dc2626;
+  --shadow: 0 8px 30px rgba(15, 23, 42, 0.14);
+  --code-bg: #eef1f6;
+  --code-fg: #383a42;
+  --on-accent: #ffffff;
+  --on-accent-2: #ffffff;
+  --on-ok: #ffffff;
+  --on-gold: #ffffff;
+  --brand-ink: 24%;
+  --tint-alpha: 0.10;
+  --tint-accent: 0.07;
+  --tint-surface: rgba(255, 255, 255, 0.7);
+  --body-glow: none;
+  --scroll-thumb: #c3cbd6;
+  --scroll-thumb-hover: #a9b4c2;
+  /* 高亮换 one-light 系并针对本主题代码底色加深（One Light 原色在 #f0f3f7 上仅剩 2.3~2.9:1） */
+  --hl-keyword: #a626a4;
+  --hl-string: #3d7a33;
+  --hl-number: #986801;
+  --hl-title: #3860d0;
+  --hl-attr: #c93a30;
+  --hl-builtin: #8a5a00;
+  --hl-comment: #6f7076;
+  --hl-literal: #0a6a99;
+  --hl-doctag: #a626a4;
+}
+
+/* ============ 浅色 · 冷雾蓝灰（低饱和冷调，亮而不刺） ============ */
+html[data-theme="mist"] {
+  --bg: #eaeef2;
+  --bg-elev: #e1e7ed;
+  --bg-elev2: #d6dee6;
+  --panel: #f5f8fa;
+  --border: #ccd6e0;
+  --border-soft: #d3dce4;
+  --text: #2b333b;
+  --text-dim: #5f6c78;
+  --text-faint: #6f7c89;
+  --accent: #0b6b8f;
+  --accent-2: #1a7f6e;
+  --gold: #8a5a00;
+  --purple: #6b4fa0;
+  --blue: #1b5fa8;
+  --green: #3d6b1f;
+  --ok: #1a7f6e;
+  --warn: #9a6700;
+  --danger: #b3261e;
+  --shadow: 0 8px 30px rgba(30, 45, 60, 0.15);
+  --code-bg: #d9e2ea;
+  --code-fg: #2b333b;
+  --on-accent: #ffffff;
+  --on-accent-2: #ffffff;
+  --on-ok: #ffffff;
+  --on-gold: #ffffff;
+  --brand-ink: 24%;
+  --tint-alpha: 0.11;
+  --tint-accent: 0.08;
+  --tint-surface: rgba(255, 255, 255, 0.65);
+  --body-glow: none;
+  --scroll-thumb: #b9c6d2;
+  --scroll-thumb-hover: #a2b2c0;
+  --hl-keyword: #9a33a0;
+  --hl-string: #3f7f3a;
+  --hl-number: #8a5a00;
+  --hl-title: #2b5fd0;
+  --hl-attr: #c0392b;
+  --hl-builtin: #8a5a00;
+  --hl-comment: #5f6b78;
+  --hl-literal: #0b6f8c;
+  --hl-doctag: #9a33a0;
+}
+
+/* ============ 浅色 · 护眼绿（豆绿底色，长时间阅读首选） ============ */
+html[data-theme="eyecare"] {
+  --bg: #dceedd;
+  --bg-elev: #d2e3d1;
+  --bg-elev2: #c5d9c4;
+  --panel: #e8f2e6;
+  --border: #b9cfb8;
+  --border-soft: #b6cdb5;
+  --text: #2d3a2e;
+  --text-dim: #55684f;
+  --text-faint: #6d7c66;
+  --accent: #2f8a4c;
+  --accent-2: #10796f;
+  --gold: #8a6414;
+  --purple: #7c3f98;
+  --blue: #2c5d9b;
+  --green: #3b6b31;
+  --ok: #10796f;
+  --warn: #96700a;
+  --danger: #c0392b;
+  --shadow: 0 8px 30px rgba(45, 74, 45, 0.18);
+  --code-bg: #c9dcbf;
+  --code-fg: #2d3a2e;
+  --on-accent: #ffffff;
+  --on-accent-2: #ffffff;
+  --on-ok: #ffffff;
+  --on-gold: #ffffff;
+  --brand-ink: 26%;
+  --tint-alpha: 0.13;
+  --tint-accent: 0.10;
+  --tint-surface: rgba(255, 255, 255, 0.45);
+  --body-glow: none;
+  --scroll-thumb: #b0c6af;
+  --scroll-thumb-hover: #9bb99a;
+  --hl-keyword: #93339b;
+  --hl-string: #3f7a34;
+  --hl-number: #8a5a00;
+  --hl-title: #2f6bd8;
+  --hl-attr: #c93a30;
+  --hl-builtin: #7f5a00;
+  --hl-comment: #63745d;
+  --hl-literal: #0b7285;
+  --hl-doctag: #93339b;
+}
+
+/* ============ 浅色 · 护眼米黄（sepia 暖调，仿纸质书页） ============ */
+html[data-theme="sepia"] {
+  --bg: #f0e6d2;
+  --bg-elev: #e7d8bc;
+  --bg-elev2: #dcc9a6;
+  --panel: #f8f1e1;
+  --border: #d5c39e;
+  --border-soft: #d2c09a;
+  --text: #433a2c;
+  --text-dim: #7a6b52;
+  --text-faint: #7d6c52;
+  --accent: #b0702a;
+  --accent-2: #5c7d3a;
+  --gold: #8a6414;
+  --purple: #8a5a83;
+  --blue: #37628c;
+  --green: #5c7d3a;
+  --ok: #4c7a5b;
+  --warn: #a06000;
+  --danger: #b03e2e;
+  --shadow: 0 8px 30px rgba(96, 76, 46, 0.20);
+  --code-bg: #e2d3b2;
+  --code-fg: #5f5138;
+  --on-accent: #ffffff;
+  --on-accent-2: #ffffff;
+  --on-ok: #ffffff;
+  --on-gold: #ffffff;
+  --brand-ink: 20%;
+  --tint-alpha: 0.13;
+  --tint-accent: 0.10;
+  --tint-surface: rgba(255, 255, 255, 0.45);
+  --body-glow: none;
+  --scroll-thumb: #cbb68c;
+  --scroll-thumb-hover: #b8a177;
+  --hl-keyword: #8d3f86;
+  --hl-string: #4c7a2f;
+  --hl-number: #7d5200;
+  --hl-title: #2f5fb3;
+  --hl-attr: #b03528;
+  --hl-builtin: #856000;
+  --hl-comment: #7b7059;
+  --hl-literal: #0a6e7e;
+  --hl-doctag: #8d3f86;
 }
 
 * { box-sizing: border-box; }
@@ -32,9 +331,7 @@ body {
   font-family: var(--sans);
   font-size: 15px;
   line-height: 1.7;
-  background-image:
-    radial-gradient(circle at 15% 0%, rgba(0, 122, 204, 0.08), transparent 40%),
-    radial-gradient(circle at 90% 10%, rgba(78, 201, 176, 0.06), transparent 45%);
+  background-image: var(--body-glow);
   background-attachment: fixed;
 }
 a { color: var(--accent-2); text-decoration: none; }
@@ -45,7 +342,7 @@ a:hover { text-decoration: underline; }
   position: sticky; top: 0; z-index: 30;
   display: flex; align-items: center; gap: 16px;
   padding: 12px 22px;
-  background: rgba(30, 30, 30, 0.85);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
@@ -67,7 +364,7 @@ a:hover { text-decoration: underline; }
 .tier-chip { font-size: 12px; color: var(--text-dim); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; display: inline-flex; align-items: center; gap: 6px; }
 .cat-dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
 /* 生态分层容器：每层一个色点标题 + 卡片网格，层间用 ▼ 衔接 */
-.arch-layer { border: 1px solid var(--border-soft); border-radius: 14px; background: rgba(255, 255, 255, 0.02); padding: 14px 16px 16px; }
+.arch-layer { border: 1px solid var(--border-soft); border-radius: 14px; background: var(--tint-surface); padding: 14px 16px 16px; }
 .arch-head { font-size: 15px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .arch-head i { width: 10px; height: 10px; border-radius: 3px; background: var(--layer-color, var(--accent)); flex: none; }
 .arch-head small { color: var(--text-faint); font-weight: normal; font-size: 12px; }
@@ -84,7 +381,7 @@ a:hover { text-decoration: underline; }
 .pkg-head { display: flex; align-items: center; gap: 12px; }
 .pkg-icon { font-size: 26px; width: 42px; height: 42px; display: grid; place-items: center; background: var(--bg-elev2); border-radius: 10px; }
 .pkg-title { font-size: 17px; font-weight: 650; }
-.pkg-tier { font-size: 11px; color: var(--pkg-color, var(--accent)); letter-spacing: 0.5px; }
+.pkg-tier { font-size: 11px; color: color-mix(in srgb, var(--pkg-color, var(--accent)) calc(100% - var(--brand-ink)), var(--text)); letter-spacing: 0.5px; }
 .pkg-tag { color: var(--text-dim); font-size: 13px; margin: 12px 0 14px; min-height: 54px; }
 .pkg-foot { display: flex; align-items: center; gap: 10px; }
 .level-pips { display: flex; gap: 5px; flex: 1; }
@@ -96,7 +393,7 @@ a:hover { text-decoration: underline; }
 /* ------------------------------ 关卡列表 ------------------------------ */
 .level-block { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 18px; overflow: hidden; }
 .level-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--bg-elev); border-bottom: 1px solid var(--border); }
-.level-badge { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--bg); background: var(--accent-2); border-radius: 6px; padding: 2px 9px; }
+.level-badge { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--on-accent-2); background: var(--accent-2); border-radius: 6px; padding: 2px 9px; }
 .level-badge.locked { background: var(--text-faint); }
 .level-name { font-weight: 650; }
 .level-sub { font-size: 13px; color: var(--text-dim); margin-left: auto; }
@@ -133,9 +430,9 @@ a:hover { text-decoration: underline; }
 .prose p code, .prose li code, .prose td code {
   background: var(--bg-elev2); color: var(--gold); padding: 1px 6px; border-radius: 5px; font-family: var(--mono); font-size: 0.88em;
 }
-.prose pre { background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
+.prose pre { background: var(--code-bg); color: var(--code-fg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
 .prose pre code { font-family: var(--mono); font-size: 15.5px; line-height: 1.6; background: none; padding: 0; }
-.prose blockquote { border-left: 4px solid var(--accent); background: rgba(0, 122, 204, 0.08); margin: 16px 0; padding: 10px 16px; border-radius: 0 8px 8px 0; color: var(--text); }
+.prose blockquote { border-left: 4px solid var(--accent); background: color-mix(in srgb, var(--accent) calc(var(--tint-accent) * 100%), transparent); margin: 16px 0; padding: 10px 16px; border-radius: 0 8px 8px 0; color: var(--text); }
 .prose table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 16px; }
 .prose th, .prose td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
 .prose th { background: var(--bg-elev); }
@@ -149,30 +446,34 @@ a:hover { text-decoration: underline; }
 .card .hint { font-size: 15px; color: var(--text-dim); }
 
 /* ------------------------------- 按钮 ------------------------------- */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: filter 0.12s; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--accent); color: var(--on-accent); border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: filter 0.12s; }
 .btn:hover { filter: brightness(1.12); }
 .btn:disabled { background: var(--bg-elev2); color: var(--text-faint); cursor: not-allowed; }
 .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
-.btn.ok { background: var(--ok); color: #08281f; }
+.btn.ok { background: var(--ok); color: var(--on-ok); }
 .btn.sm { padding: 5px 10px; font-size: 12px; }
 .btn.block { width: 100%; }
 
 /* ------------------------------- 小测 ------------------------------- */
 .quiz-q { margin-bottom: 18px; font-size: 17px; }
-.quiz-q .q-title { font-weight: 600; margin-bottom: 8px; white-space: pre-wrap; }
+.quiz-q .q-title { font-weight: 600; margin-bottom: 8px; white-space: normal; }
+/* 题干里的代码块走正常字重（否则 ``` 围栏内的代码会被标题的 600 加粗）；
+   换行保留下放到 .rich-p（rich.js 产出的段落），标题层不再整块 pre-wrap */
+.quiz-q .q-title .rich-code { font-weight: 400; }
+.quiz-q .q-title .rich-p { white-space: pre-wrap; }
 .quiz-opt { display: block; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; margin: 6px 0; cursor: pointer; font-size: 17px; transition: background 0.12s, border-color 0.12s; }
 .quiz-opt:hover { background: var(--bg-elev); }
 .quiz-opt input { margin-right: 8px; }
-.quiz-opt.correct { border-color: var(--ok); background: rgba(78, 201, 176, 0.12); }
-.quiz-opt.wrong { border-color: var(--danger); background: rgba(241, 76, 76, 0.12); }
+.quiz-opt.correct { border-color: var(--ok); background: color-mix(in srgb, var(--ok) calc(var(--tint-alpha) * 100%), transparent); }
+.quiz-opt.wrong { border-color: var(--danger); background: color-mix(in srgb, var(--danger) calc(var(--tint-alpha) * 100%), transparent); }
 .quiz-result { padding: 12px 16px; border-radius: 8px; margin-top: 10px; font-size: 17px; }
-.quiz-result.pass { background: rgba(78, 201, 176, 0.12); border: 1px solid var(--ok); }
-.quiz-result.fail { background: rgba(204, 167, 0, 0.12); border: 1px solid var(--warn); }
+.quiz-result.pass { background: color-mix(in srgb, var(--ok) calc(var(--tint-alpha) * 100%), transparent); border: 1px solid var(--ok); }
+.quiz-result.fail { background: color-mix(in srgb, var(--warn) calc(var(--tint-alpha) * 100%), transparent); border: 1px solid var(--warn); }
 .explain { font-size: 15px; color: var(--text-dim); margin-top: 6px; padding-left: 12px; border-left: 2px solid var(--border); }
 
 .example-file { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; margin-bottom: 8px; font-family: var(--mono); font-size: 14.5px; }
 .example-file .run { color: var(--text-dim); font-family: var(--mono); font-size: 13px; word-break: break-all; }
-pre.code-view { max-height: 420px; overflow: auto; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: var(--mono); font-size: 15px; }
+pre.code-view { max-height: 420px; overflow: auto; background: var(--code-bg); color: var(--code-fg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: var(--mono); font-size: 15px; }
 
 .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--text-dim); }
 .badge.done { color: var(--ok); border-color: var(--ok); }
@@ -182,6 +483,61 @@ pre.code-view { max-height: 420px; overflow: auto; background: #1a1a1a; border: 
 .error-box { color: var(--danger); }
 
 ::-webkit-scrollbar { width: 11px; height: 11px; }
-::-webkit-scrollbar-thumb { background: #4a4a4a; border-radius: 6px; border: 2px solid var(--bg); }
-::-webkit-scrollbar-thumb:hover { background: #5a5a5a; }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 6px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------------- 代码高亮接管（theme token 化，浅色主题自动换组） ----------------
+   全局引入的 highlight.js/styles/atom-one-dark.css 只适配暗底；这里把 hljs 各语义组
+   统一改接到 --hl-* token 上，:root 值 = one-dark 原色（暗色主题观感不变），
+   浅色三主题 / Solarized 只在各自 [data-theme] 块里覆盖 token 值。 */
+/* 高亮库会给 code 挂上 .hljs（atom-one-dark 里它自带 #282c34 深底），先中和掉，
+   统一由主题的 --code-bg / --code-fg 接管，否则浅色主题下代码块仍是深底。
+   选择器一律带 code 前缀（特异性 0,1,1）压过库里的 .hljs / .hljs-xxx（0,1,0）：
+   靠特异性取胜而不是靠引入顺序，main.js 里两条 import 谁先谁后都不会翻车；
+   同时与容器无关——课文 .prose、小测题干 .rich、示例 pre.code-view、作业/面试题页都自动跟随主题。 */
+pre code.hljs { background: transparent; color: var(--code-fg); padding: 0; }
+pre code, pre.code-view { color: var(--code-fg); }
+code .hljs-comment, code .hljs-quote { color: var(--hl-comment); font-style: italic; }
+code .hljs-doctag, code .hljs-keyword, code .hljs-formula { color: var(--hl-keyword); }
+code .hljs-meta .hljs-doctag { color: var(--hl-doctag); }
+code .hljs-section, code .hljs-name, code .hljs-selector-tag, code .hljs-deletion, code .hljs-subst { color: var(--hl-attr); }
+code .hljs-literal { color: var(--hl-literal); }
+code .hljs-string, code .hljs-regexp, code .hljs-addition, code .hljs-attribute, code .hljs-meta .hljs-string { color: var(--hl-string); }
+code .hljs-attr, code .hljs-variable, code .hljs-template-variable, code .hljs-type,
+code .hljs-selector-class, code .hljs-selector-attr, code .hljs-selector-pseudo, code .hljs-number { color: var(--hl-number); }
+code .hljs-symbol, code .hljs-bullet, code .hljs-link, code .hljs-meta, code .hljs-selector-id, code .hljs-title { color: var(--hl-title); }
+code .hljs-built_in, code .hljs-title.class_, code .hljs-class .hljs-title { color: var(--hl-builtin); }
+
+/* ---------------- 小测题干 / 选项 / 解析的富文本（utils/rich.js 产出） ----------------
+   题库 JSON 里的题干带 ```js 围栏与 `行内码`，此前按纯文本插值所以围栏符号原样显示。
+   rich.js 先转义再识别围栏（题库里有 <script setup>、defineProps<Props>() 这类尖括号，
+   直接交给 Markdown 渲染器会被当成未闭合 HTML 标签吞掉后文），产出的结构就是下面这几类。 */
+.rich { font-size: inherit; line-height: 1.7; }
+.rich .rich-p { margin: 0 0 6px; white-space: pre-wrap; }
+.rich .rich-p:last-child { margin-bottom: 0; }
+.rich pre.rich-code {
+  margin: 8px 0; padding: 10px 12px; border-radius: 8px; overflow: auto; max-height: 320px;
+  background: var(--code-bg); color: var(--code-fg);
+  border: 1px solid var(--border); font-family: var(--mono); font-size: 0.92em; line-height: 1.55;
+}
+.rich pre.rich-code code { background: none; color: inherit; padding: 0; font-size: inherit; }
+.rich code { background: var(--bg-elev2); color: var(--text); padding: 1px 5px; border-radius: 4px;
+  font-family: var(--mono); font-size: 0.9em; }
+.rich b { color: var(--text); }
+
+/* ---------------- 正文字号档位（与主题并列的第二项外观设置，同样双层记忆） ----------------
+   用 zoom 而不是逐条 font-size × 系数：课文 / 小测 / 作业 / 面试题都是运行时渲染出来的结构，
+   整块等比放大（文字、行距、代码块一起变大）一处生效、零遗漏，语义等同浏览器缩放。
+   两个浮动面板（🎨 / 🧭）刻意留在缩放范围外：它们是操作控件，不随正文变，避免按钮撑大错位。 */
+html { background: var(--bg); }      /* 浅色主题下过滚/回弹区不再露浏览器默认黑底 */
+.wrap   { zoom: var(--fs); }
+.topbar { zoom: var(--fs); }
+/* 兜底：不支持 zoom 的旧内核（老版 Firefox）退化为只放大正文与代码字号 */
+@supports not (zoom: 1.1) {
+  body            { font-size: calc(15px * var(--fs)); }
+  .prose          { font-size: calc(17px * var(--fs)); }
+  .quiz-q         { font-size: calc(17px * var(--fs)); }
+  pre.code-view   { font-size: calc(15.5px * var(--fs)); }
+  .pkg-card, .lesson-row { font-size: calc(15px * var(--fs)); }
+}

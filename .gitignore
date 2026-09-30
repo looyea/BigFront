@@ -8,6 +8,15 @@ web/dist/
 *.log
 .DS_Store
 
+# 外观偏好（主题/字号）由后端回写，属个人本机状态，不须像进度那样打卡留痕
+data/appearance.json
+data/appearance.json.tmp
+
+# 浏览器验证截图之类的临时产物（落在仓库根目录时不入库）
+/*.png
+/*.jpg
+/*.webp
+
 # 注意：data/progress.md 学习进度【故意纳入版本管理】，
 # 这样每次 git push 到 GitHub 都会形成你的每日打卡记录。
 # 历史遗留：若你从 v1.1 升级上来，服务首次启动会自动把旧的 progress.json 迁移为

@@ -50,10 +50,11 @@
     {
       "id": "L5",
       "title": "集合与结构化数据",
-      "subtitle": "Map / Set / WeakMap / structuredClone",
+      "subtitle": "Map / Set / WeakMap / structuredClone / 浏览器本地数据库",
       "lessons": [
         { "id": "es-map-set", "title": "Map / Set / WeakMap / WeakSet", "goal": "为什么需要 Map；WeakMap 的常见工程用途" },
-        { "id": "es-structured", "title": "structuredClone 与深拷贝", "goal": "JSON 深拷贝 vs structuredClone vs 手写递归" }
+        { "id": "es-structured", "title": "structuredClone 与深拷贝", "goal": "JSON 深拷贝 vs structuredClone vs 手写递归" },
+        { "id": "es-local-db", "title": "浏览器本地数据库：localStorage / IndexedDB / OPFS", "goal": "四层数据（内存 / 浏览器 / 服务端 / 独立数据库）的分工与「谁是事实源」判据；IndexedDB 建库建索引、游标与事务失效坑；idb-keyval / Dexie 封装；容量与 navigator.storage；四大框架对接数据层（含远程独立 MySQL）的接线图" }
       ]
     },
     {

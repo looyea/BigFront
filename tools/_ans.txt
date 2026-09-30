@@ -1,0 +1,19 @@
+﻿鍙備笌缁熻鐨勯搴擄紙鈮? 棰橈級: 505
+鍗犳瘮鈮?0% 鐨勫鏁? 240
+鍗犳瘮=100% 鐨勫鏁? 2
+鏈€鍋忔枩鍓?15 濂?
+  100% @idx0  n=14  courses\01-es\L5-闆嗗悎涓庣粨鏋勫寲鏁版嵁\quiz-es-local-db.json
+  100% @idx1  n=10  courses\04-vue\L1-鍝嶅簲寮忓熀纭€\quiz-vue-script-setup.json
+  80% @idx1  n=10  courses\04-vue\L1-鍝嶅簲寮忓熀纭€\quiz-vue-hello-world.json
+  70% @idx1  n=10  courses\01-es\L10-鐜閮ㄧ讲\quiz-es-build.json
+  70% @idx1  n=10  courses\01-es\L10-鐜閮ㄧ讲\quiz-es-devtools.json
+  70% @idx1  n=10  courses\01-es\L10-鐜閮ㄧ讲\quiz-es-publish.json
+  70% @idx1  n=10  courses\01-es\L9-鐜颁唬璇硶鏃堕棿绾縗quiz-es-2018.json
+  70% @idx1  n=10  courses\01-es\L9-鐜颁唬璇硶鏃堕棿绾縗quiz-es-2020.json
+  70% @idx1  n=10  courses\01-es\L9-鐜颁唬璇硶鏃堕棿绾縗quiz-es-2022.json
+  70% @idx1  n=10  courses\01-es\L9-鐜颁唬璇硶鏃堕棿绾縗quiz-es-2024.json
+  70% @idx1  n=10  courses\01-es\L9-鐜颁唬璇硶鏃堕棿绾縗quiz-es-modern.json
+  70% @idx1  n=10  courses\02-typescript\L1-鍏ラ棬涓庣被鍨嬪熀纭€\quiz-ts-basics.json
+  70% @idx1  n=10  courses\02-typescript\L1-鍏ラ棬涓庣被鍨嬪熀纭€\quiz-ts-intro.json
+  70% @idx1  n=10  courses\02-typescript\L2-瀵硅薄銆佹帴鍙ｄ笌鍑芥暟\quiz-ts-functions.json
+  70% @idx1  n=10  courses\02-typescript\L2-瀵硅薄銆佹帴鍙ｄ笌鍑芥暟\quiz-ts-interface.json

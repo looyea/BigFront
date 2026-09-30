@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, watch } from 'vue';
 import { api } from '../api.js';
+import { renderRich, renderInline } from '../utils/rich.js';
 
 const props = defineProps({
   pkgId: { type: String, required: true },
@@ -53,6 +54,11 @@ function retry() {
 function gradedOf(qid) {
   return result.value?.graded.find((g) => g.id === qid);
 }
+
+// 题号写进富文本字符串里再渲染，这样「1.」和题干在同一个段落里（当纯文本插值会和题干分行）
+function promptHtml(q, qi) {
+  return renderRich(`${qi + 1}. ${q.prompt}`);
+}
 </script>
 
 <template>
@@ -60,7 +66,7 @@ function gradedOf(qid) {
     <div v-if="!result" class="quiz-form">
       <p class="hint" style="margin:0 0 12px;color:var(--text-dim);font-size:15px">{{ quiz.passRule }}</p>
       <div v-for="(q, qi) in quiz.questions" :key="q.id" class="quiz-q">
-        <div class="q-title">{{ qi + 1 }}. {{ q.prompt }}</div>
+        <div class="q-title rich" v-html="promptHtml(q, qi)"></div>
         <label
           v-for="(opt, oi) in q.options"
           :key="oi"
@@ -68,7 +74,7 @@ function gradedOf(qid) {
           :style="answers[q.id] === oi ? 'border-color:var(--accent)' : ''"
         >
           <input type="radio" :name="q.id" :checked="answers[q.id] === oi" @change="pick(q.id, oi)" />
-          {{ opt }}
+          <span class="rich" v-html="renderInline(opt)"></span>
         </label>
       </div>
       <div v-if="err" style="color:var(--danger);margin-bottom:8px">{{ err }}</div>
@@ -84,7 +90,7 @@ function gradedOf(qid) {
         —— {{ result.pass ? (result.autoCompleted ? '🏆 通过！已自动通关本关并解锁下一关' : '🎉 通过！本关已通关') : '未达标（需 ≥60%），看看解析再战' }}
       </div>
       <div v-for="(q, qi) in quiz.questions" :key="q.id" class="quiz-q" style="margin-top:16px">
-        <div class="q-title">{{ qi + 1 }}. {{ q.prompt }}</div>
+        <div class="q-title rich" v-html="promptHtml(q, qi)"></div>
         <div
           v-for="(opt, oi) in q.options"
           :key="oi"
@@ -94,11 +100,11 @@ function gradedOf(qid) {
             wrong: answers[q.id] === oi && gradedOf(q.id)?.answer !== oi,
           }"
         >
-          {{ opt }}
+          <span class="rich" v-html="renderInline(opt)"></span>
           <span v-if="gradedOf(q.id)?.answer === oi"> ✅</span>
           <span v-else-if="answers[q.id] === oi"> ❌</span>
         </div>
-        <div class="explain">💡 {{ gradedOf(q.id)?.explanation }}</div>
+        <div class="explain">💡 <span class="rich" v-html="renderRich(gradedOf(q.id)?.explanation)"></span></div>
       </div>
       <button class="btn ghost block" style="margin-top:10px" @click="retry">重做本关小测</button>
     </div>

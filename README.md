@@ -1,7 +1,7 @@
 # 大前端学院 · BigFront Academy 🚀
 
-一个**可运行、可打卡、可扩展**的大前端「打怪升级」学习平台。暗色主题（借鉴 VS Code Dark+ / Solarized），
-专为「对大前端零概念、想在本地边学边往 GitHub 提交」的你而做。
+一个**可运行、可打卡、可扩展**的大前端「打怪升级」学习平台。内置 **7 组主题**（3 深色 + 4 浅色，其中含「护眼豆绿 / 护眼米黄 / 柔和暗灰」三组护眼色），
+右下角 🎨 浮动按钮在**课文 / 小测 / 作业 / 面试题 / 地图任意位置**都能就地换肤并记住选择，专为「对大前端零概念、想在本地边学边往 GitHub 提交」的你而做。
 
 覆盖方向：JavaScript(ES6→ES2025) · TypeScript · Node.js · Express · Vue 3 · React · Svelte/SvelteKit · Solid · Angular · 微信小程序 · Next.js · Nuxt · Vite · Signals 状态管理 · 状态管理三强 Pinia/Zustand/Jotai · 工具链专题 SWC/Biome/Vitest（各包完成度见第九节）。
 
@@ -121,7 +121,7 @@ git push -u origin main
 | 前端外壳 | Vue 3 + Vite + vue-router + marked(Markdown 渲染) + highlight.js(代码高亮) |
 | 后端 | Node.js + Express 5（课程扫描、进度持久化、判分） |
 | 数据存储 | 纯文件 `data/progress.md`（Markdown 进度档案，零外部数据库依赖） |
-| 主题 | 暗色（VS Code Dark+ / Solarized 灵感） |
+| 主题 | **7 组可切换主题**（CSS 变量 token 化）：深夜墨蓝（VS Code Dark+ 灵感，默认）/ Solarized 夜 / 柔和暗灰（GitHub Dark Dimmed）· 纸感浅色 / 冷雾蓝灰 / 护眼豆绿 / 护眼米黄；选择存 `localStorage`，`index.html` 内联脚本防首屏闪肤 |
 
 ## 八、目录速览
 
@@ -134,11 +134,12 @@ BigFront/
 │  ├─ vite.config.js
 │  ├─ dist/                  # 构建产物（:3001 直接托管）
 │  └─ src/
-│     ├─ views/              # Home 课程地图 / Package 关卡列表 / Lesson 单栏课文 / LessonPart 小测・面试题
-│     ├─ components/         # FloatingNav 悬浮导航 / Quiz 小测组件
-│     ├─ router.js           # /p/:pkg、/l/:pkg/:lessonId（+/quiz、/interview）
+│     ├─ views/              # Home 课程地图 / Package 关卡列表 / Lesson 单栏课文 / LessonPart 小测・面试题・作业
+│     ├─ components/         # FloatingNav 悬浮导航 / ThemeSwitcher 悬浮换肤 / Quiz 小测组件
+│     ├─ router.js           # /p/:pkg、/l/:pkg/:lessonId（+/quiz、/interview、/homework）
 │     ├─ api.js              # 接口封装 + 进度 + 时长打点
-│     └─ styles/theme.css    # 暗色主题
+│     ├─ themes.js            # 主题清单（7 组 id/名称/色板）+ 应用与 localStorage 持久化
+│     └─ styles/theme.css    # 主题 token 层：:root 为默认暗色，html[data-theme=x] 整组覆盖
 ├─ courses/                  # 22 个课程包（内容层），全部已统一为扁平布局：
 │  └─ <包>/                  #   包根 = course.json + 每个阶段一个文件夹（如 L1-变量与作用域）
 │     ├─ lesson-<id>.md          # 课文正文
@@ -146,7 +147,7 @@ BigFront/
 │     ├─ interview-<id>.md       # 面试题（带来源）
 │     ├─ homework-<阶段id>.md    # 阶段作业（自学资料，无 UI 入口）
 │     └─ example-<id>-<名>.js    # 可运行示例（前缀带关卡 id 防重名；首批两包附带）
-├─ tools/                    # audit-probe.cjs 等内容审计探针脚本
+├─ tools/                    # audit-probe.cjs 内容审计探针；theme-contrast-check.cjs 主题配色对比度自检
 ├─ data/
 │  ├─ progress.md            # 当前学习进度（后端自动回写；手改须先停后端；纳入 Git）
 │  ├─ progress.initial.md    # 零进度空白模板（拷给别人/从零开始时复制为 progress.md）
@@ -299,12 +300,15 @@ BigFront/
 
 | 日期 | 改动 | 文件 | 说明 |
 | --- | --- | --- | --- |
+| 本轮 | **多主题体系（7 组）+ 全局 🎨 浮动换肤** | `web/src/styles/theme.css`、`web/src/themes.js`、`web/src/components/ThemeSwitcher.vue`、`web/src/App.vue`、`web/src/main.js`、`web/index.html` | 原写死的暗色拆为 **CSS 变量 token 层**：`:root` = 默认「深夜墨蓝」，其余主题各用一个 `html[data-theme="…"]` 块整组覆盖 token（组件代码零改动）。**深色**：深夜墨蓝 / Solarized 夜 / 柔和暗灰（护眼）；**浅色**：纸感浅色 / 冷雾蓝灰 / 护眼豆绿 / 护眼米黄。浮动 🎨 钮挂在 `App.vue`，因此课文/小测/作业/面试题/地图**任何页面任何滚动位置**都能就地切；选择存 `localStorage`，`index.html` 内联脚本在样式表前上色防首屏闪肤；与 🧭 导航面板**互斥**（任一侧打开自动收另一侧，不重叠）。新增主题 = theme.css 加一个块 + themes.js 登记一行 |
+| 本轮 | **代码高亮接入主题 token** | `web/src/styles/theme.css` | highlight.js 全局只引了 `atom-one-dark`（自带 `#282c34` 深底），现把各语义组改接到 `--hl-*` token：先中和 `.hljs` 自带底色，再由浅色系主题换上一套加深后的 one-light 配色，**修好了浅色下“字符串 1.6:1 几乎看不见”一类低对比问题** |
+| 本轮 | **主题对比度自检探针** | `tools/theme-contrast-check.cjs`、`.gitignore` | `node tools/theme-contrast-check.cjs` 直接解析 theme.css 各 token 块，按 WCAG 公式算「高亮色 vs 代码底」「正文色 vs 页面/卡片底」对比度，**低于 3:1 则 exit 1**；当前 7 组全部达标。调完颜色随手跑一遍，不用靠眼睛猜 | 
 | 本轮 | **三类资料页底部加「返回」** | `web/src/views/LessonPart.vue`、`web/src/views/Lesson.vue` | 小测/面试题/作业页（LessonPart）与课文+动手示例页（Lesson）正文最下方新增返回条：`📚 返回课程目录 · 选下一节`（跳 `/p/:pkgId`）+`← 回到课文`，免滚回顶部或退回菜单；`vite build` 验证编译通过 |
 | 本轮 | **`04-vue` vue-hello-world 内容补全** | `lesson-vue-hello-world.md` | ①新增 §三「HMR 原理」小节：Vite 开发服务器+WebSocket 推送→重编译变更模块→就地替换、整页不重载、状态保留（课文两处提及 HMR 却未讲原理）；②新增 §四「public vs src/assets 本质区别」对照表（原仅目录树一行注释、而小测/自检/作业均考） |
 | 本轮 | **术语“一笔带过”速查表** | `lesson-vue-hello-world.md` | §六后新增「术语速查」表，给 18 个扫过却没解释的词（脚手架/响应式/指令/props-emits/import-export/编译打包/别名代理/tree-shaking/hash/base64/CDN/WebSocket/编译器宏/patchFlag/虚拟滚动/SSR/scoped）各一句话大意 + 标注哪关细讲，不在首讲展开全部 |
 | 本轮 | **四个框架包第一关补“先跑起来”** | `05-react/lesson-react-jsx`、`11-svelte/lesson-svelte-overview`、`13-solid/lesson-solid-overview`、`06-miniprogram/lesson-mp-overview` | 全库审计发现这四个框架包的第一关直入概念/语法、从未带“建项目跑起来”（Next/Nuxt/Vite/Express/Angular/TS/SWC/Biome/Vitest 均自带起步，无需改）：React/Solid 新增 §〇 Vite 模板三行命令 + 代码写在哪；Svelte 新增 §〇 Playground/`npx sv create` 两入口；小程序新增 §〇“用微信开发者工具新建项目”（小程序无命令行脚手架）——均只求“有个能跑的地方”、完整部署指向后续关 |
 
-> 以上改动均**不增删关卡**，§九 504 总计与 §十 注释批次表不受影响。
+> 以上改动均**不增删关卡**，§九 504 总计与 §十 注释批次表不受影响。换肤属外壳样式层，也不影响课程内容与进度数据。
 
 
 ---

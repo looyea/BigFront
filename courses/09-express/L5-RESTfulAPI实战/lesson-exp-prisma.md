@@ -17,6 +17,8 @@
 
 Prisma 的杀手锏：`schema.prisma` 声明一次，`prisma generate` 生成的 **PrismaClient 让每个查询带完整 TS 类型**——表改名列删错，编译期就炸而不是上线后 500（生成器思想呼应 02-ts）。代价：查询语言是 Prisma 自己的 DSL，深度自定义 SQL 要走 `$queryRaw` 逃生舱。
 
+> **方言分支**：本文示例统一用 `provider = "postgresql"`。如果你面对的是**一台独立的 MySQL**（自建 5.7/8.0、云 RDS、内网实例），那么除了把 provider 改成 `"mysql"`、连接串换成 `mysql://`，还会多出一整串问题：utf8mb4 的**索引前缀 767/3072** 与 `@db.VarChar(191)`、**迁移历史不能复用**、`caching_sha2_password` 认证插件、`wait_timeout` 把空闲连接单方面掐断、`Too many connections`、没有 `RETURNING`。这些在**专关 `exp-mysql`** 里逐条讲（含 `mysql2` 裸 SQL 路线与远程实例的连接账）。
+
 ## 二、schema.prisma：建模即文档
 
 ```prisma
@@ -134,6 +136,7 @@ await prisma.$transaction(async (tx) => {
 - Prisma 生成器是 **02-ts** "类型来自代码生成"路线的 DB 版，与 zod（exp-validation）共享 schema 是 tRPC 式全栈类型的地基；
 - 游标分页的 cursor 写法与 **exp-pagination** 的 base64 不透明游标拼成完整列表接口；
 - `$queryRaw` 逃生舱里仍要参数化查询——SQL 注入防线见 **exp-security**（Prisma 默认帮你挡，raw 帮不了浪的人）；
-- 多进程连接账与 **exp-perf**、**node-cluster** 的扩容公式一致。
+- 多进程连接账与 **exp-perf**、**node-cluster** 的扩容公式一致；
+- 连的是 MySQL 而不是 Postgres？驱动选型、连接池、字符集与时区、方言差异、无 DDL 权限时的迁移路径，全在下一关 **exp-mysql**。
 
-L5 到此真正收官。下一关进入 **L6 exp-security**：Helmet、CORS、注入与限流——把 API 敞口全部过一遍安检。
+L5 的关系库主线到此。接下来进入 **exp-mysql**：把"远程有一台独立 MySQL"这条最常见的现实走通；之后再进 **L6 exp-security**：Helmet、CORS、注入与限流——把 API 敞口全部过一遍安检。

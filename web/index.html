@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>大前端学院 · BigFront Academy</title>
+    <script>
+      // 首屏防闪：样式表加载前先恢复上次选择的主题与字号（都读 localStorage，缺省 = night + --fs:1）
+      // 后端那份 data/appearance.json 要等 JS 跑起来才能拿，所以这里只做本地兜底，不让首屏等请求
+      try {
+        var t = localStorage.getItem('bigfront.theme');
+        if (t && t !== 'night') document.documentElement.setAttribute('data-theme', t);
+        var f = parseFloat(localStorage.getItem('bigfront.fs'));
+        if (f >= 0.7 && f <= 1.6) document.documentElement.style.setProperty('--fs', f);
+      } catch (e) { /* 无 localStorage 环境：保持默认外观 */ }
+    </script>
   </head>
   <body>
     <div id="app"></div>

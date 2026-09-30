@@ -16,6 +16,12 @@
  *  - 进度档案由 JSON 迁移为「人能读、人能改」的 Markdown（data/progress.md）；
  *    旧 progress.json 首启动自动迁移并改名为 .migrated。样例见 data/sample-progress.md。
  *  - 每个课程包新增 interviews/<lessonId>.md（面试题）；随课文一并下发给前端。
+ *
+ * v1.3 变更：
+ *  - 新增外观偏好接口 GET/POST /api/appearance（data/appearance.json）。
+ *    动机：前端主题与字号原先只存 localStorage，而 localStorage 按 origin（协议+主机+端口）隔离——
+ *    dev 的 :5173 与 prod 的 :3001 / 127.0.0.1 互不相通，清缓存或换浏览器也会丢，
+ *    用户体感就是「下次打开被调回默认」。故服务端再存一份，前端以它为准回灌。
  */
 import express from 'express';
 import cors from 'cors';
@@ -31,6 +37,8 @@ const DATA_DIR = path.join(ROOT, 'data');
 // 进度档案：改用「人能读、人能改」的 Markdown（详见 data/sample-progress.md）
 const PROGRESS_FILE = path.join(DATA_DIR, 'progress.md');
 const LEGACY_JSON = path.join(DATA_DIR, 'progress.json');
+// 外观偏好（主题 + 正文字号）：与进度分开存，因为它属个人本机状态、不须打卡留痕（见 .gitignore）
+const APPEARANCE_FILE = path.join(DATA_DIR, 'appearance.json');
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || '127.0.0.1';
 
@@ -484,6 +492,53 @@ function pushEvent(pkgId, lessonId, type) {
   if (progress.events.length > 500) progress.events = progress.events.slice(-500);
 }
 
+/* ------------------------------ 外观偏好（主题 + 字号） ------------------------------ */
+// 默认值 = 前端 theme.css 的 :root 暗色 + 标准字号（--fs: 1）
+const appearanceDefault = () => ({ theme: 'night', fs: 1, updatedAt: null });
+let appearance = appearanceDefault();
+
+/** 归一化：只校形状与区间，不复制前端的主题/档位清单，免得两边漂移 */
+function normalizeAppearance(obj) {
+  const d = appearanceDefault();
+  if (!obj || typeof obj !== 'object') return d;
+  // theme 只验形式（合法 id 清单在前端 themes.js；传了未知 id 前端会自行回落默认主题）
+  const theme = typeof obj.theme === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(obj.theme) ? obj.theme : d.theme;
+  // fs 用区间而非白名单：前端日后增删档位不必改后端；越界值一律回退标准档
+  const n = Number(obj.fs);
+  const fs = Number.isFinite(n) && n >= 0.7 && n <= 1.6 ? Math.round(n * 100) / 100 : d.fs;
+  const updatedAt = typeof obj.updatedAt === 'string' ? obj.updatedAt : null;
+  return { theme, fs, updatedAt };
+}
+
+let appearanceLoadPromise = null;
+function loadAppearance() {
+  if (!appearanceLoadPromise) {
+    appearanceLoadPromise = (async () => {
+      await fsp.mkdir(DATA_DIR, { recursive: true });
+      const raw = await readTextIfExists(APPEARANCE_FILE);
+      if (raw !== null) {
+        try { appearance = normalizeAppearance(JSON.parse(raw)); }
+        catch (e) { console.error('[appearance] 解析失败，已回退默认：', e.message); }
+      }
+    })().catch((e) => {
+      console.error('[appearance] 加载失败：', e.message);
+      appearanceLoadPromise = null;   // 失败允许下次重试
+    });
+  }
+  return appearanceLoadPromise;
+}
+
+// 低频关键写：沿用进度的「临时文件 + 原子 rename」惯例，读者永远看到完整文件
+let appearanceChain = Promise.resolve();
+function saveAppearance() {
+  appearanceChain = appearanceChain.then(async () => {
+    const tmp = APPEARANCE_FILE + '.tmp';
+    await fsp.writeFile(tmp, JSON.stringify(appearance, null, 2) + '\n', 'utf8');
+    await fsp.rename(tmp, APPEARANCE_FILE);
+  }).catch((e) => console.error('[appearance] 写入失败：', e.message));
+  return appearanceChain;
+}
+
 /* ---------------------------------- API ---------------------------------- */
 
 // 所有课程包列表（首页地图用）
@@ -734,6 +789,22 @@ app.get('/api/progress', async (req, res) => {
 // 完整性自检报告（自查课程包是否有缺文件）
 app.get('/api/integrity', (req, res) => {
   res.json({ packages: courseIndex.size, warnings: scanWarnings });
+});
+
+// 读外观偏好：文件不存在时返回默认值（updatedAt 为 null，前端据此把本地值种上来而不是被覆盖）
+app.get('/api/appearance', async (req, res) => {
+  await loadAppearance();
+  res.json(appearance);
+});
+
+// 写外观偏好：形状校验在 normalizeAppearance 里做，越界/非法值静默回退默认，不返 400
+// （偏好属体验类数据，写坏顶多回到默认外观，不值得让前端弹错误框）
+app.post('/api/appearance', async (req, res) => {
+  await loadAppearance();
+  const incoming = normalizeAppearance(req.body ?? {});
+  appearance = { theme: incoming.theme, fs: incoming.fs, updatedAt: new Date().toISOString() };
+  await saveAppearance();
+  res.json({ ok: true, ...appearance });
 });
 
 /* ---------------------------- 生产模式托管前端 ---------------------------- */

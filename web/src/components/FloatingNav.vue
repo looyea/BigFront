@@ -1,7 +1,10 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api, store, refreshProgress, refreshIntegrity, isDone, fmtDuration, fmtDate } from '../api.js';
+
+// 与主题面板互斥：任一浮层打开时关掉另一侧（面板位置相同，不可叠放）
+const CLOSE_OTHERS = 'bigfront:close-panel';
 
 const route = useRoute();
 const router = useRouter();
@@ -28,9 +31,16 @@ async function ensureTree() {
 function openPanel(t) {
   tab.value = t || 'nav';
   open.value = true;
+  window.dispatchEvent(new CustomEvent(CLOSE_OTHERS, { detail: 'nav' }));
   refreshProgress();
   refreshIntegrity();
   ensureTree();
+}
+
+onMounted(() => window.addEventListener(CLOSE_OTHERS, closeOthers));
+onBeforeUnmount(() => window.removeEventListener(CLOSE_OTHERS, closeOthers));
+function closeOthers(e) {
+  if (e.detail !== 'nav') open.value = false;
 }
 
 const current = computed(() => {
@@ -187,14 +197,15 @@ function go(path) {
 .fab {
   position: fixed; right: 24px; bottom: 24px; z-index: 50;
   width: 58px; height: 58px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #0a5a8c);
-  border: 1px solid #0a5a8c; color: #fff; cursor: pointer;
-  box-shadow: 0 6px 22px rgba(0, 122, 204, 0.5);
+  /* 亮暗两侧均由 accent 推导：深色端压暗、光晕掺透，换主题自动跟随 */
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 68%, #000));
+  border: 1px solid color-mix(in srgb, var(--accent) 68%, #000); color: var(--on-accent); cursor: pointer;
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--accent) 50%, transparent);
   display: grid; place-items: center; transition: transform 0.15s;
 }
 .fab:hover { transform: scale(1.08); }
 .fab-icon { font-size: 26px; }
-.fab-badge { position: absolute; top: -4px; right: -4px; background: var(--gold); color: #1e1e1e; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: grid; place-items: center; padding: 0 4px; }
+.fab-badge { position: absolute; top: -4px; right: -4px; background: var(--gold); color: var(--on-gold); font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: grid; place-items: center; padding: 0 4px; }
 .nav-panel {
   position: fixed; right: 24px; bottom: 92px; z-index: 50;
   width: 380px; max-width: calc(100vw - 32px); height: 60vh; max-height: 560px;
@@ -222,7 +233,7 @@ function go(path) {
 .nav-lessons { flex: 1; }
 .nav-lesson { display: flex; gap: 8px; align-items: center; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; }
 .nav-lesson:hover { background: var(--bg-elev2); }
-.nav-lesson.cur { background: rgba(0, 122, 204, 0.18); outline: 1px solid var(--accent); }
+.nav-lesson.cur { background: color-mix(in srgb, var(--accent) calc(var(--tint-accent) * 200%), transparent); outline: 1px solid var(--accent); }
 .nav-lesson-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav-search { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 10px; font-size: 14px; }
 .nav-result { padding: 8px 10px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-soft); margin-bottom: 6px; }

@@ -1,0 +1,162 @@
+{
+  "title": "exp-mysql 随堂题",
+  "passRule": "答对 ≥60% 即通过",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "关于 `pool.query('... WHERE author = ?', [name])` 与字符串拼接，正确的说法是：",
+      "options": [
+        "两者等价，只是可读性差别",
+        "拼接更安全，因为可以看到最终 SQL",
+        "占位符由驱动做值转义，拼接会把用户输入当语法解析（注入面）",
+        "mysql2 的占位符只支持数字类型"
+      ],
+      "answer": 2,
+      "explanation": "带 ? 时 mysql2 按类型转义（字符串加引号并转义、Date 格式化、null → NULL），参数永远是值；拼接则 name = \"' OR 1=1 -- \" 时整表泄露（课文 §二）。"
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": "`pool.execute()` 相对 `pool.query()` 的主要区别是：",
+      "options": [
+        "execute 走服务端预编译语句，参数与语法彻底分离，可复用执行计划",
+        "execute 会自动提交事务",
+        "query 不能带参数",
+        "execute 只支持 SELECT 语句"
+      ],
+      "answer": 0,
+      "explanation": "execute 用 PREPARE/EXECUTE 协议；mysql2 内部还有预处理语句缓存（约 10k 条），所以别在循环里制造大量不同形状的 SQL。"
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": "要在 MySQL 里拿到刚插入那一行的完整数据，正确做法是：",
+      "options": [
+        "INSERT ... RETURNING *",
+        "INSERT 后用 insertId 再 SELECT 一次（MySQL 没有 RETURNING）",
+        "SELECT 之前先 BEGIN",
+        "把 affectedRows 当主键用"
+      ],
+      "answer": 1,
+      "explanation": "RETURNING 是 Postgres 的能力；MySQL 的 INSERT 结果只给 insertId / affectedRows，要整行必须再查一次（课文 §六方言表）。"
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": "下面这段事务代码最致命的问题是？\n\n```js\nconst conn = await pool.getConnection();\nawait conn.beginTransaction();\nawait pool.execute('UPDATE stock SET qty = qty - 1 WHERE id = ?', [id]);\nawait conn.commit();\n```",
+      "options": [
+        "没有用 conn.query 而用了 conn.beginTransaction",
+        "commit 之前没有 rollback",
+        "UPDATE 走的是 pool 借出的另一条连接，根本不在这个事务里",
+        "缺少 LIMIT 1，会更新全表"
+      ],
+      "answer": 2,
+      "explanation": "事务绑定在连接上。用 pool 而不是 conn 执行语句 = 另开一条连接的自动提交操作，commit 只管住了空事务，回滚时那条 UPDATE 不会撤销（课文 §2.1）。"
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": "库存扣减写成 `UPDATE stock SET qty = qty - 1 WHERE id = ? AND qty > 0` 并检查 `affectedRows === 0`，目的是：",
+      "options": [
+        "让 SQL 执行更快",
+        "把\"是否有货\"的判断交给数据库原子完成，避免先 SELECT 再 UPDATE 的超卖竞态",
+        "防止 SQL 注入",
+        "兼容 MySQL 5.7"
+      ],
+      "answer": 1,
+      "explanation": "读-改-写两步之间会被并发插入；条件更新 + affectedRows 判定把判断压进一条语句，由行锁保证原子性（课文 §2.1）。"
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": "Prisma 从 `provider = \"postgresql\"` 切到 `\"mysql\"` 时，下列哪项**不是**必须处理的？",
+      "options": [
+        "重新 `prisma generate` 生成新的 Client",
+        "已有迁移历史与新数据库不同源，需重开历史或逐条 `migrate resolve`",
+        "列类型要用 `@db.VarChar/@db.Text/@db.DateTime(n)` 等 MySQL 口径微调",
+        "把 `datasource` 里的 url 换成 `postgresql://` 开头"
+      ],
+      "answer": 3,
+      "explanation": "MySQL 的连接串前缀是 mysql://，而不是把前缀改成 postgresql://；其余三项都是切方言时的真实动作（课文 §三）。"
+    },
+    {
+      "id": "q7",
+      "type": "single",
+      "prompt": "建索引时报 `Specified key was too long`，最可能的原因与解法是：",
+      "options": [
+        "索引名太长，改短索引名即可",
+        "utf8mb4 下 VARCHAR 长度超过索引前缀上限（767/3072 字节），降到 VarChar(191) 或改用前缀索引",
+        "磁盘满了，InnoDB 无法写索引文件",
+        "MySQL 不支持对字符串列建索引"
+      ],
+      "answer": 1,
+      "explanation": "utf8mb4 每字符按 4 字节算：191×4=764B 落在 767 之内；行格式 DYNAMIC + 大前缀则可到 3072。这是 MySQL 特有的建表坑（课文 §四）。"
+    },
+    {
+      "id": "q8",
+      "type": "single",
+      "prompt": "应用连不上远程 MySQL，报 `ER_ACCESS_DENIED_ERROR (using password: YES)`，最应先查的是：",
+      "options": [
+        "MySQL 的账号是 user@host 二元组，检查该用户是否允许当前来源主机",
+        "Node 版本是否过低",
+        "是否忘了 `prisma generate`",
+        "表的字符集是否为 utf8mb4"
+      ],
+      "answer": 0,
+      "explanation": "同一个用户名对不同来源主机可以是不同授权（甚至不存在）。`SELECT user, host FROM mysql.user;` 一看便知（课文 §四排障表）。"
+    },
+    {
+      "id": "q9",
+      "type": "single",
+      "prompt": "运行一段时间后偶发 `PROTOCOL_CONNECTION_LOST`，特征是\"空闲越久越容易复现\"。原因是：",
+      "options": [
+        "SQL 语句太长超过了 max_allowed_packet",
+        "连接池上限设太小导致排队",
+        "服务端按 wait_timeout 单方面关闭空闲连接，池里却仍持有这条死连接",
+        "MySQL 不支持长连接"
+      ],
+      "answer": 2,
+      "explanation": "云实例常把 wait_timeout 从默认 28800s 调到几百秒。缓解：enableKeepAlive、经代理回收、对幂等操作做重试（课文 §五）。"
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "prompt": "4 个服务副本、每进程连接池 20，MySQL `max_connections=151`。关于连接账，正确的说法是：",
+      "options": [
+        "余量还很多，应该把每进程池调到 100 以提速",
+        "4×20=80 已占去大半，还要给迁移任务/DBA 会话/脚本留余量；连接数过多反而更慢（每连接一线程）",
+        "只要 max_connections 够，池大小与性能无关",
+        "把 connection_limit 调到无限即可彻底避免等待"
+      ],
+      "answer": 1,
+      "explanation": "总连接数 = 副本数 × 每进程 connection_limit ≤ max_connections − 预留；MySQL 每连接一个线程，过多连接是负优化，需要复用应上 ProxySQL/RDS Proxy（课文 §五）。"
+    },
+    {
+      "id": "q11",
+      "type": "single",
+      "prompt": "从 Postgres 迁来的老 SQL 里有一句 `SELECT user_id, name, COUNT(*) FROM t GROUP BY user_id`，在 MySQL 5.7+ 上会：",
+      "options": [
+        "正常执行，name 取任意一行的值",
+        "自动按 name 一起分组",
+        "报 1055（ONLY_FULL_GROUP_BY）：非聚合列必须出现在 GROUP BY 或聚合函数中",
+        "被静默改写成 DISTINCT"
+      ],
+      "answer": 2,
+      "explanation": "MySQL 5.7 起默认开启 ONLY_FULL_GROUP_BY 严格模式；要么把 name 加进 GROUP BY，要么用 ANY_VALUE(name)（课文 §六）。"
+    },
+    {
+      "id": "q12",
+      "type": "single",
+      "prompt": "DBA 规定应用账号不得有 DDL 权限。此时 Prisma 的迁移该怎么走？",
+      "options": [
+        "让 DBA 把 root 账号借给 CI",
+        "照常 `migrate deploy`，Prisma 会自动跳过 DDL",
+        "把 schema 改动写进 README 等人工执行",
+        "用 `migrate diff` / `--create-only` 生成 SQL 交审批执行，应用账号只保留 DML"
+      ],
+      "answer": 3,
+      "explanation": "生成 SQL 走审批是权限分离环境下的标准路径；应用账号只需 SELECT/INSERT/UPDATE/DELETE，迁移用另一把钥匙（课文 §四）。"
+    }
+  ]
+}
