@@ -1,0 +1,204 @@
+{
+  "title": "Jotai · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "jo-atom",
+      "term": "Jotai",
+      "match": ["Jotai", "jotai"],
+      "level": "L1",
+      "tip": "React 原子化状态库：状态拆成最小 atom 按需组合派生，天然支持 async/Suspense",
+      "desc": "哲学是「自下而上的原子」——每个 atom 一个值，靠组合派生复杂状态，与 Zustand 的「自上而下大 store + selector」互补。导出一个 atom 即全局单例、无 Provider 开销。约 3KB。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-core", "term": "Zustand" }]
+    },
+    {
+      "id": "atom-primitive",
+      "term": "Atom 原语",
+      "match": ["atom"],
+      "level": "L1",
+      "tip": "atom(initialValue) 创建一个读/写基元；可跨组件共享、可派生——这是与 useState 的根本区别",
+      "desc": "useState 的状态锁在组件里、不能跨组件或派生；atom 是「提到组件外的一等状态」。基元 atom 有读有写，派生 atom 只有读（依赖别的 atom），写原子只有写。三者构成 Jotai 的全部模型。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "tc39-core", "term": "signal / computed / effect" }]
+    },
+    {
+      "id": "jo-use-atom",
+      "term": "useAtom / useAtomValue / useSetAtom",
+      "match": ["useAtomValue", "useSetAtom", "useAtom"],
+      "level": "L1",
+      "tip": "三钩子分别读写/只读/只写；只读用 useAtomValue 减重渲、useSetAtom 引用稳定免依赖数组",
+      "desc": "只要读值就别用 useAtom（它会连 setter 一起返回、可能多订阅）。useSetAtom 返回稳定的写函数，适合放进 action/回调不当依赖。想做「选一部分订阅」用派生读或 selectAtom。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-selectors-deep", "term": "Selector 进阶" }]
+    },
+    {
+      "id": "jo-global",
+      "term": "全局原子与模块作用域",
+      "match": ["模块作用域", "单例", "atomWithStorage"],
+      "level": "L1",
+      "tip": "导出 atom 即全局单例（无 Provider 开销）；需要隔离时才用 Provider + 自定义 store",
+      "desc": "对比 Context：只有订阅了该 atom 的组件才更新，没有 Provider 树重渲问题，这是 Jotai 的性能优势来源。需要持久化全局态用 atomWithStorage。"
+    },
+    {
+      "id": "jo-derived",
+      "term": "Derived Atom",
+      "match": ["derived", "派生"],
+      "level": "L2",
+      "tip": "atom(get => get(a)+get(b)) 惰性计算 + 缓存；源 atom 变则派生自动通知订阅者",
+      "desc": "和 computed/Memo 一族：只在依赖变化时重算。与 Zustand selector（每次渲染重算、不缓存）、MobX computed（缓存）对照。依赖自动追踪（读即订阅），别造循环依赖。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "create-memo", "term": "createMemo" }]
+    },
+    {
+      "id": "jo-write-only",
+      "term": "Write-only Atom",
+      "match": ["write", "只写", "action"],
+      "level": "L2",
+      "tip": "atom(null, (get,set,arg)=>{...}) 创建纯写原子：无读值、只执行——用它封装副作用/action",
+      "desc": "第一个参数 null 表示「不可读」，第二个是写函数。useSetAtom 触发它。等价于 Zustand 里把 action 写进 store，但更解耦：一个动作就是一个可组合的原子。批量 set 有原子性保证。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-store-api", "term": "Store 外部 API" }]
+    },
+    {
+      "id": "jo-dependencies",
+      "term": "依赖图与 Batching",
+      "match": ["依赖图", "batching", "unstable_batchedUpdates"],
+      "level": "L2",
+      "tip": "atom 依赖自动追踪（读即订阅）；同帧多 atom 变更由 React 18 自动 batching 合并渲染",
+      "desc": "深层派生链会影响性能与诊断——链越长越难定位「谁触发了重算」。批量更新避免中间态抖动。理解依赖图是调优 Jotai 的前提。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "subscription-graph", "term": "订阅图与过度订阅" }]
+    },
+    {
+      "id": "jo-async",
+      "term": "Async Atom",
+      "match": ["async", "throw", "Suspense"],
+      "level": "L3",
+      "tip": "atom(get => fetch(...)) 天然异步（Jotai 内部 throw Promise），配 Suspense boundary 做 loading fallback",
+      "desc": "声明式 vs 命令式：不用手搓 isLoading 标志，读一个 async atom 时组件挂起、数据到了再渲染。这是 Zustand 做不到的（它不支持 throw Promise）——异步取数是 Jotai 与 Query 的交界地带。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-suspense", "term": "Suspense 边界里的 store" }]
+    },
+    {
+      "id": "jo-loadable",
+      "term": "loadable / unwrap",
+      "match": ["loadable", "unwrap", "hasData"],
+      "level": "L3",
+      "tip": "loadable(atom) 返回 {state:'loading'|'hasData'|'hasError'}——不用 Suspense 也能处理异步态",
+      "desc": "解 Suspense 黑盒：想在原地渲染局部 spinner/error 而不包边界时用 loadable。useAtomValue + loadable 做局部加载 UI。atomWithObservable 则把 RxJS/EventSource 接成 atom。"
+    },
+    {
+      "id": "jo-race",
+      "term": "异步竞态与取消",
+      "match": ["race", "AbortController", "竞态"],
+      "level": "L3",
+      "tip": "async atom 自动忽略过时请求（新依赖值触发重取、旧 Promise 结果被丢弃）；可手动集 AbortController",
+      "desc": "快速切参时 Jotai 天然只认最新一次。retry 策略可封装成 atomWithRetry 工具。与 TanStack Query 的分工线：Jotai 管「一次声明式取数 + 组件生命周期」，Query 管「缓存/失效/去重/后台刷新」。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-cancel", "term": "请求取消与竞态" }]
+    },
+    {
+      "id": "jo-storage",
+      "term": "内置工具原子",
+      "match": ["atomWithStorage", "atomWithReducer", "atomWithDefault"],
+      "level": "L4",
+      "tip": "jotai/utils 三大工具：storage 持久化、reducer 做 Redux 风格、default 支持 reset 回初值",
+      "desc": "atomWithStorage 支持 localStorage/sessionStorage/自定义序列化，SSR 要配跳过策略。与 Zustand persist 对比：Jotai 是「按原子持久化」、Zustand 是「按整个 store 持久化」。"
+    },
+    {
+      "id": "jo-family",
+      "term": "atomFamily",
+      "match": ["atomFamily", "family"],
+      "level": "L4",
+      "tip": "按参数动态创建并缓存原子；v2 中内置 atomFamily 被废弃，改为手动 Map memo 的解法",
+      "desc": "列表/表格行级状态常需要「每行一个 atom」。为何废弃内置版：内存泄漏防控（缓存无限增长）与失效策略复杂——官方建议用 Map 手写 + 明确 key 释放。这是 Jotai 升级必踩的坑。"
+    },
+    {
+      "id": "jo-focus-select",
+      "term": "focusAtom / selectAtom / splitAtom",
+      "match": ["focusAtom", "splitAtom", "selectAtom"],
+      "level": "L4",
+      "tip": "focusAtom 聚焦对象子字段（lens）、selectAtom 派生选择（shallow 比较）、splitAtom 数组 atom 拆成子 atom 列表",
+      "desc": "字段级订阅的性能利器：ToDo 每项一个 atom（splitAtom）、表单某字段一个视角（focusAtom），改一项只重渲一项。selectAtom 做「只在选中部分变化时才更新」的浅比较订阅。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-selectors-deep", "term": "Selector 进阶" }]
+    },
+    {
+      "id": "jo-store",
+      "term": "Store 隔离",
+      "match": ["createStore", "Provider", "隔离"],
+      "level": "L5",
+      "tip": "全局默认 store 的问题：SSR 跨请求泄漏、测试不隔离 → createStore() 独立实例 + <Provider store> 作用域注入",
+      "desc": "弹窗/向导/多标签页需要各自独立状态时用隔离 store。「无 Provider」是默认便利，但一旦要多实例/SSR/测试就得显式 createStore 并提供。理解默认 store 是模块级单例这件事是关键。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-factory", "term": "Store 工厂与多实例" }]
+    },
+    {
+      "id": "jo-ssr",
+      "term": "Jotai SSR / Next 集成",
+      "match": ["dehydrate", "hydrateAtoms", "getOnInit", "SSR"],
+      "level": "L5",
+      "tip": "服务端每请求 createStore + 水合传递；Provider 包 layout 隔离；atomWithStorage + getOnInit 防闪烁",
+      "desc": "dehydrateStore/hydrateAtoms 把服务端设的原子值传到客户端复原。useAtomValue 在 RSC（服务端组件）不可用——要划到 Client Component 边界内。与 Zustand SSR 方案对照着看差异。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "ssr-next", "term": "SSR 与水合" }]
+    },
+    {
+      "id": "jo-perf-test",
+      "term": "性能调优与测试",
+      "match": ["Profiler", "重渲"],
+      "level": "L5",
+      "tip": "用 React DevTools Profiler 分析 atom 重渲粒度；避免派生链过深；测试用 createStore 隔离 + set 注入初值",
+      "desc": "Jotai 的默认性能来自「细粒度订阅」——但派生链过深会放大计算。测试里 vi.mock 处理 async atom，组件集成用 Provider + Suspense。别在多个测试共享默认 store。"
+    },
+    {
+      "id": "jo-compare",
+      "term": "选型矩阵",
+      "match": ["原子粒度", "选型矩阵", "四库"],
+      "level": "L6",
+      "tip": "原子粒度(Jotai) vs 整 store(Zustand)；async 原生支持；体积 jotai 3KB/zustand 1.2KB；DevTools 成熟度",
+      "desc": "适合场景：Jotai——组件树状态密集/表单/依赖图多/要 Suspense；Zustand——全局业务逻辑、大对象；Redux——超大型团队标准化。共存策略常见：Query 管服务端 + Jotai/Zustand 管客户端。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-compare", "term": "Zustand 选型" }]
+    },
+    {
+      "id": "jo-valtio",
+      "term": "Valtio：proxy 路线",
+      "match": ["Valtio", "valtio", "proxy"],
+      "level": "L6",
+      "tip": "同作者兄弟库：proxy(obj) 用 Proxy 做可变对象、组件自动订阅；valtio 像 MobX、jotai 像 signals",
+      "desc": "互补关系：深层嵌套对象多用 valtio（像改普通对象）、离散原子多用 jotai。valtio 的 `state` 是可变代理，读它的组件按需订阅——省样板但心智更「黑盒」。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "mobx-core", "term": "MobX 四件套" }]
+    },
+    {
+      "id": "jo-capstone",
+      "term": "原子化看板",
+      "match": ["看板", "毕业"],
+      "level": "L6",
+      "tip": "综合演练：列表 atomFamily + 过滤 derived + 异步 async atom + 持久化 storage + 乐观 write-only + Suspense",
+      "desc": "把每种原子各用在它最擅长的地方，再和 Zustand 版逐行对照，体感「大 store + selector」与「多原子 + 组合」两种世界观。进阶方向：与 TanStack Query 协作、编译器优化路线。"
+    },
+    {
+      "id": "atom-value-ref",
+      "term": "atom 的 get/set 签名",
+      "match": ["get =>", "set(", "getter"],
+      "level": "L2",
+      "tip": "读函数 (get)=>... 声明依赖并算值；写函数 (set,get,arg)=>... 定义如何改；这是所有 atom 的骨架",
+      "desc": "基元 atom 内部其实就是 getter 返回值、setter 存值。派生 atom 只给 getter（写会报错）、write-only 只给 setter。看懂这两个函数签名就看懂了 Jotai 全部机制。"
+    },
+    {
+      "id": "jo-reset",
+      "term": "reset 原子",
+      "match": ["reset", "atomWithDefault"],
+      "level": "L4",
+      "tip": "把写函数的 arg 设为 undefined 即回初始值；atomWithDefault 支持基于异步/条件算默认值",
+      "desc": "`const [, setCount] = useAtom(countAtom); setCount(undefined)` 就复位。登出清场、表单重置常用。理解「写 undefined = reset」这条约定。"
+    },
+    {
+      "id": "jo-error-boundary",
+      "term": "async atom 与错误边界",
+      "match": ["ErrorBoundary"],
+      "level": "L3",
+      "tip": "async atom 抛错不会自动兜住——要包 ErrorBoundary 或用 loadable 把错误转成可读状态",
+      "desc": "React 的 ErrorBoundary 捕获子树渲染错误，async atom reject 时读它的组件会抛。要么边界兜住、要么 loadable 把 hasError 摊开自己画 UI。retry 逻辑放取数层。"
+    },
+    {
+      "id": "jo-observable",
+      "term": "atomWithObservable",
+      "match": ["atomWithObservable", "Observable"],
+      "level": "L3",
+      "tip": "把 RxJS Observable / EventSource 等可观察源接成 atom，纳入 Jotai 的订阅模型",
+      "desc": "桥接流世界与原子世界：一个持续推值的源变成一个可读的 atom，配 loadable 处理 loading/error。这是「signal 与 stream 分工」在 Jotai 里的落点。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "rx-basics", "term": "Observable / subscribe / teardown" }]
+    }
+  ]
+}

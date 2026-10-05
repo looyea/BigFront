@@ -1,0 +1,279 @@
+{
+  "title": "Angular · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "ng-landscape",
+      "term": "Angular",
+      "match": ["Angular"],
+      "level": "L1",
+      "tip": "Google 的企业级全家桶框架：强约定 + 内置路由/HTTP/DI/表单，v17 起默认栈大改版",
+      "desc": "从 AngularJS 的 $digest 到 Ivy 再到 v17 overhaul：standalone 默认、模板新控制流、signals + zoneless、v22 Signal Forms 转正。它的『全家桶+强约定』路线与 React 库组合、Vue 渐进、Svelte 编译是四种本质分歧。真实主场是企业大型 SPA 与长期维护项目。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-map", "term": "四强定位" }]
+    },
+    {
+      "id": "ng-standalone",
+      "term": "standalone 组件",
+      "match": ["standalone", "bootstrapApplication"],
+      "level": "L1",
+      "tip": "v17 默认：组件不再包在 NgModule 里，bootstrapApplication 直接以组件为入口",
+      "desc": "读懂新项目骨架：bootstrapApplication(AppComponent) 起、imports 数组直接声明依赖、app.config.ts 里 provideRouter/provideHttpClient 组装提供者树。识别旧教程信号：NgModule、HttpClientModule、*ngIf。",
+      "seeAlso": [{ "pkg": "15-angular", "id": "ngmodule-legacy", "term": "NgModule（遗留）" }]
+    },
+    {
+      "id": "ngmodule-legacy",
+      "term": "NgModule（遗留栈）",
+      "full": "NgModule",
+      "match": ["NgModule", "declarations"],
+      "level": "L1",
+      "tip": "v17 之前的组织单元：declarations/imports/exports 声明一批组件归属；standalone 时代基本退役",
+      "desc": "存量项目仍满地都是，读懂它是接手老代码的前提。SharedModule/forRoot() 那套模式今天被 standalone + provideXxx 取代。看到 NgModule 就该警觉这是旧姿势教程。"
+    },
+    {
+      "id": "ng-version-map",
+      "term": "版本演进地图",
+      "match": ["v17", "v18", "v19", "v20", "v21", "v22"],
+      "level": "L1",
+      "tip": "v17 standalone/控制流 → v18 signal 稳定/inject 上下文 → v19 增量 hydration → v20 signals 收尾 → v21 zoneless 默认/Karma→Vitest → v22 Signal Forms 转正",
+      "desc": "一张表钉住「该信哪份教程」。本包以 v22 为事实底。Angular 迭代快但向后兼容好，代价是同一功能常有多代写法并存——识别版本信号是读 Angular 代码的第一课。"
+    },
+    {
+      "id": "ng-templates",
+      "term": "模板与新控制流",
+      "match": ["@if", "@for", "@switch", "@defer", "ngIf", "ngFor"],
+      "level": "L2",
+      "tip": "@if/@for/@switch/@defer 内置控制流取代 *ngIf/*ngFor——编译进模板、类型安全、无星号指令",
+      "desc": "四种绑定：插值 `{{}}`、属性 `[prop]`、事件 `(event)`、双向 `[(ngModel)]`。`@for` 必须写 `track`（性能命门）。#模板引用变量、@let 模板变量、content projection 的 `<ng-content>` 与 slot 同心智。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "template-syntax", "term": "模板语法" }]
+    },
+    {
+      "id": "ng-comp-signals",
+      "term": "函数式组件 API",
+      "match": ["input(", "output(", "model(", "viewChild("],
+      "level": "L2",
+      "tip": "input()/output()/model()/viewChild() 取代 @Input/@Output 装饰器：类型推断、required、默认值、model() 双向",
+      "desc": "signal 时代的组件 API：`count = input(0)` 声明带默认值的输入、`model()` 做双向绑定、`viewChild()` 查询子元素为信号。装饰器写法仍在但新代码首选函数式。DestroyRef 取代部分 ngOnDestroy 做清理。",
+      "seeAlso": [{ "pkg": "15-angular", "id": "ng-signals", "term": "Angular signals" }]
+    },
+    {
+      "id": "ng-onpush",
+      "term": "ChangeDetectionStrategy.OnPush",
+      "match": ["OnPush", "变更检测", "脏检查"],
+      "level": "L2",
+      "tip": "组件只在输入引用变化/事件/显式 markForCheck 时重检；zoneless 下职责进一步收窄",
+      "desc": "过去 OnPush 是性能开关，zoneless + signals 普及后『默认就精确通知』让它的边际变小，但大型树的显式边界仍有价值。markForCheck 是手动兜底：告诉 Angular『这个分支脏了』。",
+      "seeAlso": [{ "pkg": "15-angular", "id": "ng-zoneless", "term": "zoneless" }]
+    },
+    {
+      "id": "ng-directives",
+      "term": "自定义指令",
+      "match": ["@Directive", "结构指令", "host"],
+      "level": "L2",
+      "tip": "Angular 的『无组件复用』原语：host 绑定监听事件/加类/改属性，inject(TemplateRef/ViewContainerRef) 造结构指令",
+      "desc": "属性指令改元素行为、结构指令增删 DOM（@for 本质是结构指令）。指令继承与 composition API。判据：只是给宿主元素加行为→指令；有自己模板和状态→组件。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "template-syntax", "term": "模板语法与指令" }]
+    },
+    {
+      "id": "ng-di-core",
+      "term": "依赖注入体系",
+      "full": "DI",
+      "match": ["DI", "injector", "InjectionToken", "provider"],
+      "level": "L3",
+      "tip": "注入器树（root/平台/组件/路由）决定单例归属；provider 四形态 useValue/useClass/useFactory/useExisting",
+      "desc": "这是 React 没有的框架级能力——不用手工用 Context 组装。standalone 时代 providers 写在 component 或 app.config。InjectionToken 承载配置型/接口型 provider（无类实现的注入令牌）。",
+      "seeAlso": [{ "pkg": "15-angular", "id": "ng-services", "term": "服务与业务分层" }]
+    },
+    {
+      "id": "ng-services",
+      "term": "服务与业务分层",
+      "match": ["@Injectable", "providedIn", "Service"],
+      "level": "L3",
+      "tip": "『状态就是服务』：@Injectable({providedIn:'root'}) 单例，signal 封装私有状态对外只读暴露",
+      "desc": "Service 是业务逻辑与共享状态的默认容器。从 BehaviorSubject 时代迁移到 signal 时代：私有 writable + 公开 asReadonly。服务拆分粒度与循环依赖用 forwardRef 谨慎规避。",
+      "seeAlso": [{ "pkg": "15-angular", "id": "ng-state-services", "term": "signal store 模式" }]
+    },
+    {
+      "id": "ng-inject",
+      "term": "inject() 与注入上下文",
+      "match": ["inject(", "runInInjectionContext", "NodeInjector"],
+      "level": "L3",
+      "tip": "inject() 只能在注入上下文调用；构造器注入在新代码退役（与 TS 参数属性、测试替身有关）",
+      "desc": "越界调用会报错，补救口是 runInInjectionContext。为什么弃 constructor DI：字段更清晰、可注入到非类（函数/字段初始化器）、测试易替换。provider 与手动 import 的取舍本质是「依赖关系可见性」。"
+    },
+    {
+      "id": "ng-signals",
+      "term": "Angular signals",
+      "match": ["signal(", "untracked", "patch("],
+      "level": "L4",
+      "tip": "signal()/computed()/effect()/untracked()/patch() 全 API 与写保护模型——与 TC39 提案同语义的独立实现",
+      "desc": "三处关键差异：未标提案阶段即生产可用、writable 与 readonly 分离、effect 走调度而非同步。官方判据：需要「随读自动更新 + 精确通知」才用 signal，一次性计算用普通属性/函数。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "tc39-core", "term": "signal / computed / effect" }]
+    },
+    {
+      "id": "ng-rx-bridge",
+      "term": "toSignal 桥与 AsyncPipe 退场",
+      "match": ["toSignal", "toObservable", "AsyncPipe"],
+      "level": "L4",
+      "tip": "HttpClient/路由事件仍是 Observable 的现实；toSignal()/toObservable() 双向桥，DestroyRef 清订阅",
+      "desc": "AsyncPipe 在新项目地位下滑（signals 直接读）。判据：复杂异步编排（合并、竞态、重试）留 RxJS；纯状态用 signals 更顺。两套并存时用桥函数互转，别在模板里手搓 subscribe。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-vs-streams", "term": "signal vs stream" }]
+    },
+    {
+      "id": "ng-zoneless",
+      "term": "zoneless 与变更检测",
+      "match": ["zoneless", "zone.js", "provideZonelessChangeDetection", "markForCheck"],
+      "level": "L4",
+      "tip": "过去 zone.js 拦截异步→触发变更检测→遍历组件树；v21 起 zoneless 默认，signal 精确通知取代脏检查",
+      "desc": "理解 zone.js 到底替你做了什么，才知道 zoneless 拿掉了什么。切换后必须靠 signals 或显式 markForCheck 通知更新，否则改了不重渲。effect/afterNextRender 的调度时机也随之变化。性能与调试都更可控。",
+      "seeAlso": [{ "pkg": "01-es", "id": "microtask", "term": "微任务" }]
+    },
+    {
+      "id": "ng-forms",
+      "term": "Reactive Forms",
+      "match": ["FormBuilder", "valueChanges", "FormArray", "FormGroup"],
+      "level": "L5",
+      "tip": "FormBuilder 类型化表单、同步/异步校验器、valueChanges 流、patch 与脏检查状态、FormArray 动态行",
+      "desc": "v22 之前它仍是企业默认，存量表单代码必须会读。模板驱动表单（ngModel）只在小表单才用。核心是「formGroup 命令式建模 + Observable 流」，样板多但控制力强。",
+      "seeAlso": [{ "pkg": "05-react", "id": "controlled", "term": "受控表单" }]
+    },
+    {
+      "id": "ng-signal-forms",
+      "term": "Signal Forms",
+      "match": ["Signal Forms", "form("],
+      "level": "L5",
+      "tip": "v22 转正的新官配：字段级错误/脏/禁用状态直接是 signal，无 valueChanges 订阅、无 formGroup 树操作",
+      "desc": "signalInput()/form() 建模，样板大幅下降。迁移判断：新表单可上、存量别急着搬——API 仍处快速演进期，标注风险。以官方文档为唯一事实底，别信过时教程。",
+      "seeAlso": [{ "pkg": "15-angular", "id": "ng-forms", "term": "Reactive Forms" }]
+    },
+    {
+      "id": "ng-http",
+      "term": "HttpClient 与函数式拦截器",
+      "match": ["HttpClient", "provideHttpClient", "withInterceptors", "HttpErrorResponse"],
+      "level": "L5",
+      "tip": "provideHttpClient(withInterceptors([...])) 函数式拦截器取代 HttpInterceptor 类；强类型响应<T> 与错误判别",
+      "desc": "函数式拦截器链式执行、更易组合测试。与 RxJS 操作符协作（retry/timeout）。fetch 化趋势：fetchBackend provider 让 HttpClient 底层可选走 fetch。全局鉴权/日志/错误都放拦截器。",
+      "seeAlso": [{ "pkg": "09-express", "id": "jwt", "term": "JWT" }]
+    },
+    {
+      "id": "ng-router-core",
+      "term": "路由核心",
+      "match": ["Routes", "RouterOutlet", "loadComponent", "loadChildren"],
+      "level": "L6",
+      "tip": "Routes 配置树 + RouterOutlet 渲染链；loadComponent/loadChildren 懒加载分包",
+      "desc": "对照 Next/Nuxt 的路由级 code splitting。routerLinkActive、重定向、通配 404、withRouterConfig 默认值与 URL 策略。懒加载是大型 Angular 应用首屏体积的生命线。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "router-basics", "term": "路由" }]
+    },
+    {
+      "id": "ng-router-guards",
+      "term": "函数式守卫",
+      "match": ["CanMatch", "CanActivate", "CanDeactivate", "FunctionalGuard"],
+      "level": "L6",
+      "tip": "FunctionalGuard（CanMatchFn/CanActivateFn/CanDeactivateFn）取代旧类守卫；返回 boolean|UrlTree 表达放行/跳转",
+      "desc": "注入 service 判断登录态；守卫可返回 Observable/Promise 做异步判断。CanMatch 在路由匹配阶段就拦（更适合鉴权，连组件都不下载）。把「登录态+守卫+登出清场」需求在此用 Angular 走一遍。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-auth", "term": "登录态实战" }]
+    },
+    {
+      "id": "ng-router-data",
+      "term": "路由数据流",
+      "match": ["withComponentInputBinding", "ResolveFn", "resolve"],
+      "level": "L6",
+      "tip": "withComponentInputBinding 让路由参数直达 input()；ResolveFn 预取数据；data 元数据配 title 策略",
+      "desc": "resolve 仍是 Observable，SSR 时在服务端执行点跑。scrollPositionRestoration/锚点滚动、Route Recognizer 与预编译路由的边角。把「进页面前取好数据」交给 resolve，组件只管渲染。"
+    },
+    {
+      "id": "ng-state-services",
+      "term": "signal store 模式",
+      "match": ["asReadonly", "writable", "signal store"],
+      "level": "L7",
+      "tip": "私有 writable signal + 公开 asReadonly + action 方法的标准封装；派生 computed 放 store",
+      "desc": "多数 Angular 应用一个 service 够、不需要状态库——对照 Zustand 的『对象三用法』心智迁移过来。跨路由共享/持久化（sessionStorage 拦截）。判据：状态复杂到需要时间旅行/多人协作规范才上 NgRx。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-core", "term": "Zustand 最小 store" }]
+    },
+    {
+      "id": "ng-ngrx",
+      "term": "NgRx 与信号派",
+      "match": ["NgRx", "Reducer", "Selector", "SignalStore", "ComponentStore"],
+      "level": "L7",
+      "tip": "Store/Action/Reducer/Effect/Selector 五件套 + DevTools 时间旅行；NgRx SignalStore/ComponentStore 是新派",
+      "desc": "对照 Redux 家族。官方立场『多数应用不需要 NgRx』——它是超大型团队标准化的产物，代价是样板爆炸。nx 生态常与它搭配。选型判据放在团队规模与协作纪律上，不是技术上。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "za-middleware", "term": "中间件三件套" }]
+    },
+    {
+      "id": "ng-arch",
+      "term": "库分层与边界纪律",
+      "match": ["barrel", "features", "monorepo"],
+      "level": "L7",
+      "tip": "core/shared/features 三层库 + barrel 禁令的官方风格；延迟 feature 边界（路由处才 import）",
+      "desc": "nx monorepo 是 Angular 圈常见形态；模块边界的依赖图纪律用 @angular-eslint 强制。对照 Nuxt/SvelteKit 目录分层收企业级架构一课。barrel（index 汇总导出）滥用会破坏懒加载与 tree-shaking。",
+      "seeAlso": [{ "pkg": "08-nuxt", "id": "layer", "term": "目录分层" }]
+    },
+    {
+      "id": "ng-ssr",
+      "term": "SSR 与 hydration",
+      "match": ["hydration", "TransferState", "STATE_KEY", "prerender"],
+      "level": "L8",
+      "tip": "ng add @angular/ssr 后 server.ts 引擎；增量 hydration 非破坏式；@defer 与 SSR 配合；STATE_KEY 服务端预取防双请求",
+      "desc": "provideClientHydration 带 fetch caching；SSR 下 DI 每请求隔离（防止单例跨请求泄漏——这是 Angular 对『模块单例债』的答案）。prerender 做站点生成。对照 Kit load / Nuxt 渲染模式。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "ssg", "term": "SSG" }]
+    },
+    {
+      "id": "ng-testing",
+      "term": "测试（Vitest 默认时代）",
+      "match": ["TestBed", "Vitest", "configureTestingModule", "Karma"],
+      "level": "L8",
+      "tip": "v21 起 Karma→Vitest/ng test 新默认；standalone 组件测试免 NgModule；service（signal store）纯单测",
+      "desc": "TestBed.configureTestingModule 是经典写法；HttpClient 测试用 provideHttpClientTesting。快照慎用、E2E 留给 Playwright 的分工。为测试专题包（22-vitest）打薄基座。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-overview", "term": "Vitest" }]
+    },
+    {
+      "id": "ng-lib-ui",
+      "term": "UI 生态：Material 与 CDK",
+      "match": ["Material", "CDK", "ViewEncapsulation"],
+      "level": "L8",
+      "tip": "Angular Material（v22 MDC 原生控件新线）与 CDK 的 headless 能力（a11y/overlay/拖拽）",
+      "desc": "样式封装四档 ViewEncapsulation（Emulated 默认/None/ShadowDom）+ 主题 CSS 变量。集成无框架绑定的第三方组件（headless/webcomponents 出口）。对照各框架组件库生态的锁定度——Angular 锁定度最高。"
+    },
+    {
+      "id": "ng-perf",
+      "term": "性能实战",
+      "match": ["budgets", "@defer", "ng inspect", "懒加载"],
+      "level": "L9",
+      "tip": "angular.json budgets 预算门禁；@defer 按需加载块（on viewport/idle/prefetch）配路由级懒加载",
+      "desc": "zoneless+signals 给了默认性能面，剩余热点在 @for track、OnPush、不可变数据。DevTools 与 ng inspect 做渲染取证。包体积量级对照 14 包 sig-size 的账。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-size", "term": "打包体积" }]
+    },
+    {
+      "id": "ng-defer",
+      "term": "@defer 延迟块",
+      "match": ["defer", "prefetch", "viewport"],
+      "level": "L9",
+      "tip": "模板内置的按需渲染：@defer (on viewport/idle/prefetch) 把块拆成懒加载 chunk",
+      "desc": "编译器自动生成动态 import + 触发器逻辑，配合 withComponentInputBinding/路由懒加载做代码分割。@placeholder/@loading/@error 声明三种过渡态。是 Angular 版『Suspense + 懒加载』的语法糖。"
+    },
+    {
+      "id": "ng-compare",
+      "term": "四框架合龙",
+      "match": ["全家桶", "装饰器", "拼装"],
+      "level": "L9",
+      "tip": "响应式各家采纳 signals、组件模型（装饰器 vs 宏 vs 编译 vs hooks）、DI 是 Angular 独家框架级能力、模板控制流趋同",
+      "desc": "全家桶 vs 拼装是路线本质分歧。企业选型、招聘市场、遗留栈（NgModule 存量）三轴给结论。四强收官判词：Angular 提供最完整的『一个选择做完所有决定』体验，代价是自由度与体积。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "solid-overview", "term": "Solid" }]
+    },
+    {
+      "id": "ng-afternextrender",
+      "term": "afterNextRender 与副作用调度",
+      "match": ["afterNextRender", "调度"],
+      "level": "L4",
+      "tip": "在组件渲染稳定后跑一次性副作用（如接入第三方库、读 DOM）；zoneless 下调度时机变化",
+      "desc": "取代部分 useEffect/AfterViewInit 的『等一等再干』场景，且 SSR 安全（可配只客户端跑）。与 effect() 的区别：effect 随依赖反复跑、afterNextRender 渲染后一次。理解它才不被『什么时候触发重检』困扰。"
+    },
+    {
+      "id": "ng-injector-tree",
+      "term": "注入器层级",
+      "match": ["injector", "root", "Injector"],
+      "level": "L3",
+      "tip": "平台/根/模块/组件/路由各级注入器构成树，决定 provider 的单例作用域与可见范围",
+      "desc": "providedIn:'root' 是树根单例；写进 component.providers 则每组件一实例；路由级 provider 界定子树共享。这是 Angular 管理依赖与生命周期比 Context 更结构化的地方——排查『为什么拿到的是另一个实例』就看层级。"
+    }
+  ]
+}

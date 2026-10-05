@@ -1,0 +1,217 @@
+{
+  "title": "Zustand · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "za-core",
+      "term": "Zustand",
+      "match": ["Zustand"],
+      "level": "L1",
+      "tip": "React 极简外部状态库：1.x KB、零 Provider、底层 useSyncExternalStore",
+      "desc": "2024–2026 React 社区增速最快的状态库。一个 create 出一个既是 hook 又带 getState/setState/subscribe 的 store。哲学是「自上而下的大 store + selector 订阅」，与 Jotai 的原子化互补。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "za-core", "term": "Zustand 最小 store" }]
+    },
+    {
+      "id": "za-create",
+      "term": "create 精析",
+      "match": ["create", "createStore"],
+      "level": "L1",
+      "tip": "create(set,get)=>({...}) 返回一个 hook，同时暴露 getState/setState/subscribe 供组件外使用",
+      "desc": "v4→v5 的 breaking：combine 类型推断变化、默认 equality 收紧。create 返回的既是 React hook（useStore）又是原生 store 句柄——一份状态、两种入口。与 Redux createStore 的心智对比见正文。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-store-api", "term": "Store 外部 API" }]
+    },
+    {
+      "id": "za-selectors-deep",
+      "term": "Selector 进阶",
+      "match": ["selector", "useShallow", "selectors"],
+      "level": "L1",
+      "tip": "selector 决定组件订阅哪部分状态；返回引用用 Object.is 判等，新对象会致重渲",
+      "desc": "多字段用 useShallow 做浅比较、或自定义 equality fn。核心红线：getSnapshot 必须返回稳定引用，否则并发 React 下死循环重渲。用 Profiler 定位过度订阅。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-equality", "term": "equality 判等" }]
+    },
+    {
+      "id": "za-store-api",
+      "term": "Store 外部 API",
+      "match": ["getState", "setState", "subscribe"],
+      "level": "L1",
+      "tip": "组件外非响应式用：getState()（事件回调/拦截器读）、setState()（测试/初始化注入）、subscribe()（transient）",
+      "desc": "axios 拦截器里 `useStore.getState().token` 拿最新值而不订阅；subscribe 做「不触发渲染」的 transient 更新（动画、日志高频场景）。与 MobX reaction 是同类能力。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "za-patterns", "term": "大 store 拆分与模式" }]
+    },
+    {
+      "id": "za-middleware-chain",
+      "term": "中间件链",
+      "match": ["middleware", "compose", "chain"],
+      "level": "L2",
+      "tip": "链式 wrap：(fn)=>(set,get,store)=>init；顺序影响 set 行为（devtools→immer→persist 的排法有讲究）",
+      "desc": "zustand/middleware 把功能叠在 set 前后。手写一个 logger middleware（包 set 打印前后态）最能看懂机制。顺序错会导致 devtools 看不到 immer 产物、或 persist 存了中间态。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "za-middleware", "term": "中间件三件套" }]
+    },
+    {
+      "id": "za-persist-deep",
+      "term": "persist 深入",
+      "match": ["partialize", "skipHydration", "migrate", "storage"],
+      "level": "L2",
+      "tip": "version+migrate 做 schema 升级、partialize 选字段、merge 控深合并/浅覆盖、skipHydration 防 SSR 闪烁",
+      "desc": "localStorage/ AsyncStorage（RN）可插拔。持久化数据是「用户可篡改的外部输入」——读回要校验/给默认，别盲信。skipHydration 处理 SSR 首屏无值与客户端复原的时序。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-hydration", "term": "Hydration 模式" }]
+    },
+    {
+      "id": "za-immer-devtools",
+      "term": "immer + devtools 中间件",
+      "match": ["immer", "devtools"],
+      "level": "L2",
+      "tip": "immer 让你写可变风格却产出不可变；devtools 挂 Redux DevTools 时间旅行",
+      "desc": "immer 用 Proxy 跟踪修改，深层更新不再手写展开，但有 Proxy 开销（与嵌套深度相关）。两个一起用时顺序要对：通常 `devtools(immer(persist(...)))`，让 DevTools 看到 immer 的最终产物。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-mutability", "term": "可变与不可变" }]
+    },
+    {
+      "id": "za-slices",
+      "term": "Slices Pattern",
+      "match": ["slices", "slice", "StateCreator"],
+      "level": "L3",
+      "tip": "把大 store 拆成多个 slice 工厂再合并进一个 create；跨 slice action 用 get().otherAction 调用",
+      "desc": "`StateCreator<Store, [...mws], [...mws], AnimalsSlice>` 定义切片。每个 slice 导出自己的 selector 做黑盒封装，组件只依赖 selector 不依赖 store 结构。是 Zustand 组织大型状态的标准姿势。",
+      "seeAlso": [{ "pkg": "15-angular", "id": "ng-arch", "term": "库分层与边界纪律" }]
+    },
+    {
+      "id": "za-factory",
+      "term": "Store 工厂与多实例",
+      "match": ["factory", "多实例", "StoreProvider"],
+      "level": "L3",
+      "tip": "工厂函数封装统一 middleware；弹窗/向导/表格等需要隔离时用 Context 注入独立 store",
+      "desc": "默认 Zustand 是模块级单例（Providerless），但同页多个表格实例需要各自状态时，用 createStore + React Context 提供隔离实例。Providerless 的便利与「需要隔离时的 Provider 模式」两条路都掌握。"
+    },
+    {
+      "id": "za-layers",
+      "term": "状态分层",
+      "match": ["layers", "uiStore", "serverCache"],
+      "level": "L3",
+      "tip": "三层分 store：uiStore（主题/侧栏）、bizStore（购物车/表单）、serverCache（交给 TanStack Query）",
+      "desc": "每层更新频率、持久化需求、测试策略都不同；红线是禁止跨层直写。服务端缓存态不要拷进 Zustand「再同步」——那是两份真相反模式。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-division", "term": "三层分工" }]
+    },
+    {
+      "id": "za-sync-external",
+      "term": "useSyncExternalStore 底层",
+      "match": ["useSyncExternalStore", "torn", "getServerSnapshot"],
+      "level": "L4",
+      "tip": "解决并发渲染下的撕扯（torn reads）；契约是 subscribe + getSnapshot 返回稳定引用",
+      "desc": "Zustand v4+ 完全建在这个钩子上。selector 返回新对象 = getSnapshot 不稳定 = React 认为总在变 → 无限重渲。缓存引用或 useShallow 是解药。getServerSnapshot 保证 SSR 返回稳定值防闪烁。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-external-store", "term": "外部 store 与 useSyncExternalStore" }]
+    },
+    {
+      "id": "za-transition",
+      "term": "Transition 与批量更新",
+      "match": ["startTransition", "transition", "useOptimistic", "批量"],
+      "level": "L4",
+      "tip": "startTransition 里 setState 标为非紧急；Zustand 的 set 天然同帧批量；useOptimistic + store 做乐观 UI",
+      "desc": "一帧内多次 set 只渲染一次（自动 batching）。并发安全要点：snapshot 一致性——在 transition 里读 store 要拿到同一时刻的值。乐观 UI 用 useOptimistic 或手动「改-发-失败回滚」。",
+      "seeAlso": [{ "pkg": "05-react", "id": "batching", "term": "渲染批处理" }]
+    },
+    {
+      "id": "za-suspense",
+      "term": "Suspense 边界里的 store",
+      "match": ["Suspense", "throw Promise"],
+      "level": "L4",
+      "tip": "Zustand 本身不支持 throw Promise（不像 Jotai async atom）：数据获取放 Query + Suspense，store 只留 UI 态",
+      "desc": "别把异步取数硬塞 Zustand 去配 Suspense——那是 Jotai/Query 的模型。store 与错误边界联动指「边界触发时清理脏状态」；retry 逻辑归属取数层不是 store。",
+      "seeAlso": [{ "pkg": "18-jotai", "id": "jo-async", "term": "Async Atom" }]
+    },
+    {
+      "id": "za-next-app",
+      "term": "Next.js App Router 集成",
+      "match": ["App Router", "per-request", "RSC"],
+      "level": "L5",
+      "tip": "全局单例在 SSR 会跨请求泄漏 → 每请求 createStore（useRef）；persist + skipHydration 防水合不匹配",
+      "desc": "layout/useEffect 初始化 store，画出 SSR+store 的时序。RSC（服务端组件）不能直接 import 用 Zustand 的组件——要在 Client Component 边界内。并行 SSR 与 store 的时序是 Next 集成最难对齐的一点。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "app-router", "term": "App Router" }]
+    },
+    {
+      "id": "za-rsc-boundary",
+      "term": "RSC 与 Client Component 边界",
+      "match": ["Client Component", "Server Action"],
+      "level": "L5",
+      "tip": "RSC 不能 import zustand（server/client 分离）；Server Action 里可 getState 操作；server 下发 → effect 注入 store",
+      "desc": "跨边界的模式：服务端取到的数据作为 props 传给客户端组件，客户端组件在 effect 里灌进 store。useSyncExternalStore 的 server 分支返回稳定值防 hydration 闪烁。"
+    },
+    {
+      "id": "za-hydration",
+      "term": "Hydration 模式与跨端持久化",
+      "match": ["hydration", "mismatch", "skeleton", "BroadcastChannel"],
+      "level": "L5",
+      "tip": "SSR 首屏 store 无值 → 客户端 hydrate 填充：用 loading skeleton 策略；跨标签页靠 storage/BroadcastChannel 同步",
+      "desc": "hydration mismatch 的典型来源就是 persist 从 localStorage 恢复的值与服务端渲染不一致。skipHydration + 手动 rehydrate + skeleton 是标准解。跨 tab 同步有 storage 事件与 BroadcastChannel 两条路。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "ssr-hydration", "term": "SSR 水合" }]
+    },
+    {
+      "id": "za-auth",
+      "term": "登录态 store 实战",
+      "match": ["auth", "logout", "token"],
+      "level": "L6",
+      "tip": "token 存 store + persist；axios 拦截器 getState().token；路由守卫 canAccess selector；登出 reset + 清 storage",
+      "desc": "跨 tab 用 storage event 同步登录态。把「当前用户/权限」做成 selector 暴露给守卫，登出走 $reset 语义清干净。与 Pinia/NgRx 的 auth 实战同题对照。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "pinia-auth", "term": "登录态与权限 store" }]
+    },
+    {
+      "id": "za-forms",
+      "term": "表单分工",
+      "match": ["RHF", "React Hook Form", "beforeunload"],
+      "level": "L6",
+      "tip": "字段级零渲染靠 React Hook Form 的 ref；跨步骤/草稿/undo 才进 Zustand；dirty 检测配 subscribe + beforeunload",
+      "desc": "反模式：每个 keystroke 都写进全局 store 触发重渲。正解是 RHF 管字段级、Zustand 只管「要跨页/跨步骤存活」的表单宏观状态。提交走 loading + 乐观 + rollback 模板。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "pinia-form", "term": "表单状态与分工" }]
+    },
+    {
+      "id": "za-crud",
+      "term": "CRUD 看板",
+      "match": ["entities", "normalize", "归一化", "infiniteQuery"],
+      "level": "L6",
+      "tip": "entities+ids 归一化 store；乐观增改删 + 失败回滚快照；分页 loadingMore 与 infiniteQuery 互补；批量 patch 多 id",
+      "desc": "归一化（{ids, entities}）让增删改 O(1)、避免嵌套深层更新。乐观操作先改本地、失败用快照恢复。列表数据的分页/无限滚动交给 TanStack Query，store 只管「用户改了什么」。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-infinite", "term": "无限与分页查询" }]
+    },
+    {
+      "id": "za-compare",
+      "term": "Zustand 选型",
+      "match": ["Redux Toolkit", "RTK"],
+      "level": "L7",
+      "tip": "四象限（心智/体积/DevTools/生态）：RTK 超大型标准化、Zustand 中小快速、Jotai 原子拆分、Context 低频注入",
+      "desc": "共存策略最常见：服务端数据用 TanStack Query、客户端 UI/业务态用 Zustand。迁移成本与团队熟悉度是现实约束。别为「只有一个 Context 就够」的小应用上重型库。",
+      "seeAlso": [{ "pkg": "18-jotai", "id": "jo-compare", "term": "选型矩阵" }]
+    },
+    {
+      "id": "za-testing-deep",
+      "term": "Zustand 测试",
+      "match": ["renderHook", "resetState", "act("],
+      "level": "L7",
+      "tip": "store.getState()/setState() 直接测无需 render；resetState 工厂每用例干净；msw mock async action",
+      "desc": "store 是纯外部对象，测试面比组件小得多。组件级用 renderHook + act 测 selector 订阅。persist 要 mock storage、async 用 msw。别在测试间共享单例 store——每个用例重置。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-mock-fn", "term": "vi.fn 与 vi.spyOn" }]
+    },
+    {
+      "id": "za-capstone",
+      "term": "团队规范",
+      "match": ["命名规范", "lint", "边界"],
+      "level": "L7",
+      "tip": "封装 createStore 统一挂 middleware + 命名（useXxxStore/selectXxx）；lint 禁组件内 getState；store 分层 import 边界",
+      "desc": "把约定固化成规范：谁读 selector、谁管 action、跨层怎么防直写。毕业检查清单 + 进阶路线（Valtio/Jotai/TanStack Query 各自补什么）。好规范让 Zustand 的「自由」不变成「散乱」。"
+    },
+    {
+      "id": "za-equality-objectis",
+      "term": "Object.is 与稳定引用",
+      "match": ["Object.is", "稳定引用", "新对象"],
+      "level": "L1",
+      "tip": "selector 判等的底层是 Object.is——每次返回新建对象/数组都被判为「变了」，触发重渲",
+      "desc": "这是 Zustand 第一大坑的根：`useStore(s => ({a:s.a, b:s.b}))` 每帧新对象 → 永远重渲。解药：拆成多个 selector、useShallow 浅比较、或 useMemo 稳定引用。理解引用相等才懂 selector 纪律。"
+    },
+    {
+      "id": "za-vanilla",
+      "term": "vanilla store（框架无关）",
+      "match": ["vanilla", "框架无关"],
+      "level": "L3",
+      "tip": "zustand/vanilla 提供不依赖 React 的 createStore，给 Vue/Svelte/原生 JS 或 Node 用",
+      "desc": "React 版的 create 只是 vanilla store + useSyncExternalStore 的绑定。理解了 vanilla 层就懂「store 本体是框架无关的订阅对象、hook 只是适配」。多框架共存或 SSR 服务端的场景有用。"
+    }
+  ]
+}

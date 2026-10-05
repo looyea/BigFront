@@ -1,0 +1,159 @@
+{
+  "title": "Biome · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "biome-overview",
+      "term": "Biome",
+      "match": ["Biome"],
+      "level": "L1",
+      "tip": "单个 Rust 二进制同时接管格式化 + Lint：快、零配置起手、一个配置文件管住两件事",
+      "desc": "前身 Rome 的 fork，定位是「一个二进制替代 Prettier 与 ESLint 的大部分日常」。与 Prettier/ESLint 的差异在性能、单工具、以及规则覆盖度的取舍。你不该指望它逐条复刻 ESLint 全部插件。",
+      "seeAlso": [{ "pkg": "21-biome", "id": "biome-migrate-eslint", "term": "从 ESLint + Prettier 迁移" }]
+    },
+    {
+      "id": "biome-install",
+      "term": "三条核心命令",
+      "match": ["check", "format", "lint"],
+      "level": "L1",
+      "tip": "check 一把梭（format+lint+organizeImports）；format 只管格式；lint 只管规则；--write 落盘",
+      "desc": "`biome init` 生成 biome.json、`biome check ./src` 体检。退出码非 0 用于 CI 拦截。check 是日常主力、单独 format/lint 用于分工场景。VS Code 扩展设为默认格式化器后即可保存即格式化。",
+      "seeAlso": [{ "pkg": "21-biome", "id": "biome-ci", "term": "CI 与提交前检查" }]
+    },
+    {
+      "id": "biome-config",
+      "term": "biome.json 结构",
+      "match": ["biome.json", "$schema", "extends"],
+      "level": "L1",
+      "tip": "四大分区 formatter / linter / organizeImports / javascript；files 划范围；defaultRules 定基线",
+      "desc": "$schema 给编辑器补全；files.include/exclude/ignoreUnknown 定处理范围；enabled 与 defaultRules(recommended/all) 起手，extends 复用预设。配置优先级 CLI > 文件。一个能跑的最小团队配置值得背下来。"
+    },
+    {
+      "id": "biome-formatter",
+      "term": "格式化选项",
+      "match": ["indentStyle", "lineWidth", "quoteStyle", "trailingCommas", "formatter"],
+      "level": "L2",
+      "tip": "indentStyle/indentWidth/lineWidth/quoteStyle/bracketSpacing/trailingCommas 逐项对照 Prettier 同名项",
+      "desc": "对 Prettier 用户几乎一一对应，迁移心理预期是「选项名基本同名、行为高度一致」。tabIndent 与 EditorConfig 关系要理清。单文件可用 formatter.include 范围控制或关闭。`biome format --write` 全量落地。",
+      "seeAlso": [{ "pkg": "21-biome", "id": "biome-migrate-eslint", "term": "从 ESLint + Prettier 迁移" }]
+    },
+    {
+      "id": "biome-organize-imports",
+      "term": "import 自动整理",
+      "match": ["organizeImports", "natural order", "auto-import"],
+      "level": "L2",
+      "tip": "按自然排序（natural order）整理并去重 import；对照 eslint-plugin-import / simple-import-sort",
+      "desc": "apply 与 check 两种模式。和 IDE auto-import 可能打架——定了谁是格式化器就要一致。@import 注解辅助控制分区。它是 Biome「assist」能力里最省心的一项。"
+    },
+    {
+      "id": "biome-assist",
+      "term": "注解控制与 suppress",
+      "match": ["biome-ignore", "suppress", "assist"],
+      "level": "L2",
+      "tip": "// biome-ignore lint/...:<rule> 单点豁免（理由必填）；biome-ignore-all 文件级；suppress 更持久",
+      "desc": "v1.9+ 的 assist/actions（source.organizeImports、ignoredNodes）细化辅助行为。纪律：注解掩盖真问题要警惕——豁免要写清「为什么」，别用它把该修的代码藏起来。"
+    },
+    {
+      "id": "biome-linter-rules",
+      "term": "规则分组与 recommended",
+      "match": ["recommended", "defaultRules", "group", "nursery"],
+      "level": "L3",
+      "tip": "规则命名 group/ruleName；recommended/all/disabled 三档默认；六大 group 各有定位",
+      "desc": "correctness/suspicious/style/complexity/security/performance/nursery。defaultRules 起手 + 单条 severity(off/info/warn/error) 微调。`biome explain <rule>` 查规则文档，别凭猜关规则。"
+    },
+    {
+      "id": "biome-correctness",
+      "term": "correctness 组",
+      "match": ["correctness", "noUnusedVariables", "noFloatingPromises", "useAwaited"],
+      "level": "L3",
+      "tip": "会直接指向真 bug 的规则：noUnusedVariables/noUndeclaredVariables/noConstAssign/useAwaited/noFloatingPromises",
+      "desc": "为什么 correctness 全开成本最低、收益最高——它报的多是「运行就会错」的问题（悬空 Promise、未定义变量、常量重新赋值）。与 tsc 检查有重叠但互补：tsc 管类型、Biome 管这些运行时陷阱。",
+      "seeAlso": [{ "pkg": "20-swc", "id": "type-erase", "term": "类型擦除 vs 类型检查" }]
+    },
+    {
+      "id": "biome-style-complexity",
+      "term": "style / complexity / a11y",
+      "match": ["useConst", "complexity", "a11y", "suspicious"],
+      "level": "L3",
+      "tip": "style（useConst/useTemplate/useImportType）、complexity（useWhile 等）、a11y（useAltText）、suspicious 偏主观按需关",
+      "desc": "这些偏风格/主观判读，团队按偏好微调、别硬套默认全开。与 ESLint 风格规则有迁移映射表。a11y 组（缺 alt、点击无键盘等价）值得尽早开——修复成本低、包容性收益高。"
+    },
+    {
+      "id": "biome-migrate-eslint",
+      "term": "从 ESLint + Prettier 迁移",
+      "match": ["migrate", "eslintrc", "prettierrc", "codemod"],
+      "level": "L4",
+      "tip": "@biomejs/migrate 把 .eslintrc/.prettierrc 转 biome.json；映射覆盖度现实：Prettier 几乎全吃、ESLint 大部分",
+      "desc": "插件类规则（React Hooks、import 边界等）仍需 ESLint 共存——「ESLint 只管 Biome 未覆盖的插件规则」是稳态。移除 Prettier 有清理清单。渐进式 vs 一次性切换按团队风险偏好定。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-migrate", "term": "迁移与共存" }]
+    },
+    {
+      "id": "biome-ci",
+      "term": "CI 与提交前检查",
+      "match": ["husky", "lint-staged", "staged", "pre-commit"],
+      "level": "L4",
+      "tip": "GitHub Action 官方模板（--error-on-warnings、评论模式）；husky+lint-staged 只检改动；--changed --since=main 增量",
+      "desc": "`biome ci` 子命令专为流水线；缓存与退出码用法要门清。pre-commit 全量 vs 增量是取舍：monorepo 大仓增量（--changed --since=main）才跑得动。PR 评论模式让失败可定位。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-capstone", "term": "CI 与迁移" }]
+    },
+    {
+      "id": "biome-monorepo",
+      "term": "monorepo 与多语言",
+      "match": ["monorepo", "overrides", "useIgnoreFile", "Turborepo"],
+      "level": "L4",
+      "tip": "根 biome.json + 子包 extends/overrides 分层；files.include 划 workspace；JSON/CSS/GraphQL 多语言支持",
+      "desc": "vcs.useIgnoreFile 复用 .gitignore 划定范围；overrides 按 glob 覆盖（如 tests 关某规则）。与 Turborepo/pnpm workspace 配合。多语言格式化（CSS/GraphQL）部分是 experimental，用前查成熟度。",
+      "seeAlso": [{ "pkg": "10-vite", "id": "monorepo-vite", "term": "monorepo" }]
+    },
+    {
+      "id": "biome-performance",
+      "term": "为什么这么快",
+      "match": ["daemon", "LSP", "冷启动", "并行"],
+      "level": "L5",
+      "tip": "Rust 单二进制、并行处理、无 Node 冷启动、增量——万文件 check 秒级",
+      "desc": "对照 ESLint+Prettier 的大仓实测差距往往是数量级。「快」改变工程习惯：保存即格式化、CI 秒级不再是负担。daemon/LSP 让编辑器内近零延迟。何时性能是必需而非卖点：monorepo、pre-commit 高频路径。"
+    },
+    {
+      "id": "biome-plugins-css",
+      "term": "自定义规则现状",
+      "match": ["experimental", "plugin", "CSS"],
+      "level": "L5",
+      "tip": "Biome 插件系统（Wasm）仍 experimental——诚实边界是「别指望」；真实缺口用保留个别 ESLint 插件绕过",
+      "desc": "把「无法自定义」视为设计哲学而非缺陷：配置即策略。CSS/GraphQL formatter 成熟度看版本；关注 nursery 组演进。这一节的核心是「认清能力边界、别硬迁移不兼容的部分」。"
+    },
+    {
+      "id": "biome-capstone",
+      "term": "工具选型收官",
+      "match": ["dprint", "oxlint", "能力矩阵"],
+      "level": "L5",
+      "tip": "四方能力矩阵（格式化/lint/性能/规则生态/可定制）：谁该全切、谁该共存、谁该留 ESLint",
+      "desc": "Biome vs ESLint+Prettier vs dprint（纯格式化）。与 20-swc / 22-vitest / oxlint 组成 Rust/TS 新工具链全景。毕业自查 12 条；没讲但该知道：linter 全规则清单、vcs 深挖、编辑器协议——官方文档入口。",
+      "seeAlso": [{ "pkg": "20-swc", "id": "swc-capstone", "term": "工具链选型" }]
+    },
+    {
+      "id": "biome-severity",
+      "term": "severity 分级",
+      "match": ["severity", "warn", "off", "error"],
+      "level": "L3",
+      "tip": "每条规则可调 off/info/warn/error；defaultRules 定基线后单条微调，比整组开关更精准",
+      "desc": "推荐起手：correctness 保 error、style/complexity 按需降 warn 或 off。--error-on-warnings 让 CI 把警告也当失败。粒度控制是团队落地的关键——一刀切全 all 会被噪音淹没。"
+    },
+    {
+      "id": "biome-vcs",
+      "term": "vcs 配置",
+      "match": ["vcs", "useIgnoreFile", ".gitignore"],
+      "level": "L4",
+      "tip": "vcs 段配客户端根、useIgnoreFile 复用 .gitignore——避免对生成物/依赖目录重复处理",
+      "desc": "开 useIgnoreFile 后 Biome 读 .gitignore 决定跳过哪些文件，省得另维护一份排除清单。增量检查 `--since` 也依赖 vcs 的默认分支配置。是 monorepo 落地的隐形基础设施。"
+    },
+    {
+      "id": "biome-rules-groups",
+      "term": "六大规则组",
+      "match": ["nursery", "security", "performance", "suspicious"],
+      "level": "L3",
+      "tip": "correctness/suspicious/style/complexity/security/performance 定位不同，nursery 是未稳定的实验规则池",
+      "desc": "correctness 默认全开（都是真错）；suspicious 偏可疑但未必错；style/complexity 主观；security/performance 按项目开。nursery 里的规则随时可能移出或改 severity——谨慎依赖。",
+      "seeAlso": [{ "pkg": "21-biome", "id": "biome-linter-rules", "term": "规则分组与 recommended" }]
+    }
+  ]
+}

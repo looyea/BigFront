@@ -1,0 +1,444 @@
+{
+  "title": "TypeScript · 术语表",
+  "intro": "TS 课程出现的专业缩写、编译器黑话与配置文件术语速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "typescript",
+      "term": "TypeScript",
+      "zh": "TS",
+      "match": ["TypeScript"],
+      "level": "L1",
+      "tip": "JS 的超集：在 JS 之上加一套静态类型，编译回 JS；微软维护，4.9 版本后由 TC39 流程外的年度路线图驱动",
+      "desc": "TypeScript = JavaScript + 静态类型。任何合法 JS 都是合法 TS；`tsc` 检查完类型后把类型全部擦除，产出普通 JS 运行。类型只在「编译期」存在，这是理解一切 TS 行为（包括它防不住的运行时错误）的前提。",
+      "seeAlso": [{ "pkg": "01-es", "id": "ecmascript", "term": "ECMAScript" }, { "pkg": "02-typescript", "id": "type-erasure", "term": "类型擦除" }]
+    },
+    {
+      "id": "type-erasure",
+      "term": "类型擦除",
+      "full": "type erasure",
+      "match": ["类型擦除"],
+      "level": "L1",
+      "tip": "编译后类型注解一行不剩：运行时没有任何类型信息，校验全靠编译期与 zod 这类库",
+      "desc": "TS 编译器把类型标注、interface、泛型参数全部删除，产物 JS 里不存在「这个变量是 User 类型」这件事。所以：`instanceof` 只对值有效、运行时校验接口数据要靠 zod/valibot、`enum` 反而是少数会留下运行时代码的结构。"
+    },
+    {
+      "id": "tsc",
+      "term": "tsc",
+      "full": "TypeScript Compiler",
+      "match": ["tsc"],
+      "level": "L1",
+      "tip": "官方编译器命令行：tsc 检查+发射，tsc --noEmit 只检查不产出（CI 标配）",
+      "desc": "TypeScript 官方编译器。日常两用法：`tsc` 按 tsconfig 检查并输出 JS/d.ts，`tsc --noEmit` 只做类型检查。SWC/esbuild 等快工具「只删类型不检查」，所以项目里 tsc 的检查角色无法被它们替代。"
+    },
+    {
+      "id": "annotation",
+      "term": "类型标注",
+      "full": "type annotation",
+      "match": ["类型标注"],
+      "level": "L1",
+      "tip": "冒号后面写类型：let x: number = 1。能推断出来的地方可以不写",
+      "desc": "在变量、参数、返回值后面用 `: T` 声明类型。原则：函数签名（参数与返回值）显式标注当文档，局部变量信任推断；从 JS 迁移时也优先只补函数边界。"
+    },
+    {
+      "id": "inference",
+      "term": "类型推断",
+      "full": "type inference",
+      "match": ["类型推断", "推断"],
+      "level": "L1",
+      "tip": "不写类型时编译器自己算：const 推字面量类型，let 推宽类型",
+      "desc": "编译器从初始值/调用现场反推类型。经典分叉：`const a = 'x'` 推出字面量类型 `'x'`，`let b = 'x'` 推出 `string`。泛型实参推断、上下文类型（回调参数不用标）都属这套机制；推断不出时才需要显式标注或泛型参数。"
+    },
+    {
+      "id": "any",
+      "term": "any",
+      "match": ["any"],
+      "level": "L1",
+      "tip": "类型系统的逃生舱：对它的任何操作都不检查——等于退回 JS，慎用",
+      "desc": "标注 `any` 后编译器对该值完全放行，任何属性方法都不报错。隐式 any（`noImplicitAny` 会禁止）与 `@ts-ignore` 是 TS 项目腐化的两大来源；接外部数据宁可用 `unknown` 再收窄。"
+    },
+    {
+      "id": "unknown",
+      "term": "unknown",
+      "match": ["unknown"],
+      "level": "L1",
+      "tip": "「知道有值但不知道是什么」：赋值随便接，使用必须先收窄——安全的 any",
+      "desc": "所有类型的父类型。与 any 的关键差别：unknown 不经过类型守卫/断言不能做任何操作。JSON.parse、catch 变量、未定型第三方数据的正确落点都是它。"
+    },
+    {
+      "id": "never",
+      "term": "never",
+      "match": ["never"],
+      "level": "L1",
+      "tip": "「永远不会发生」的类型：throw 的函数、穷尽检查的兜底分支",
+      "desc": "空类型，没有值属于它。两大用法：永不正常返回的函数（无限循环/必 throw）标 `never`；配合可辨识联合做穷尽检查——新增分支忘处理时，`default: const x: never = v` 立刻编译报错。"
+    },
+    {
+      "id": "void",
+      "term": "void",
+      "match": ["void"],
+      "level": "L1",
+      "tip": "「没有返回值」：函数不 return 时的类型；回调参数位置它接受任何返回值的函数",
+      "desc": "标注无返回值函数（`=> void`）。有个反直觉的兼容性特例：期望 `() => void` 的回调可以传 `() => number` 的函数（返回值被忽略），这让 `array.forEach` 传任何函数都不报错。"
+    },
+    {
+      "id": "literal-type",
+      "term": "字面量类型",
+      "full": "literal type",
+      "match": ["字面量类型"],
+      "level": "L1",
+      "tip": "把值本身当类型：'red' | 'blue'、3 | 404——枚举之外的轻量选择",
+      "desc": "TS 允许单个具体值当类型，多个用 `|` 联合。它是「联合 + 收窄 + 穷尽检查」组合拳的弹药：状态机、事件名、HTTP 状态码都能用字面量联合精确表达，编译期就挡住非法值。"
+    },
+    {
+      "id": "structural",
+      "term": "结构化类型",
+      "full": "structural typing",
+      "match": ["结构化类型", "结构类型"],
+      "level": "L1",
+      "tip": "「长得像就是」：只看成员形状，不看出身——与 Java 名义类型的根本分歧",
+      "desc": "TS 判断类型兼容的规则：只要目标类型的成员你都有，就算你符合，不需要 extends 声明血缘。这带来极大的互操作便利（两个库各自定义的 User 可以互传），也带来「多余属性检查」这类特例规则。"
+    },
+    {
+      "id": "interface",
+      "term": "interface",
+      "match": ["interface"],
+      "level": "L2",
+      "tip": "给对象形状命名；可继承可重开合并，描述公共 API 的首选",
+      "desc": "声明对象/类形状的关键词。与类型别名的大半场景可互换，差异在：interface 可同名重开自动合并（扩展第三方库类型的正解）、只能描述对象形状；type 能玩联合、映射、条件这些高级玩法。"
+    },
+    {
+      "id": "type-alias",
+      "term": "类型别名",
+      "full": "type alias",
+      "match": ["类型别名"],
+      "level": "L2",
+      "tip": "type X = 任意类型：给联合/函数/元组等任何类型起名字",
+      "desc": "`type Point = { x: number }` 给任意类型起别名——包括 interface 表达不了的联合、元组、映射类型。匿名对象类型就地复用、复杂类型分步拆解都靠它。"
+    },
+    {
+      "id": "optional-prop",
+      "term": "可选属性",
+      "full": "optional (?)",
+      "match": ["可选属性"],
+      "level": "L2",
+      "tip": "x?: T 表示「可以没有这个键」，类型自动变成 T | undefined",
+      "desc": "属性名后加 `?`。注意 `exactOptionalPropertyTypes` 打开后「不存在」与「值为 undefined」是两回事；函数参数可选同理（`a?: number` 允许少传参）。"
+    },
+    {
+      "id": "index-signature",
+      "term": "索引签名",
+      "full": "index signature",
+      "match": ["索引签名"],
+      "level": "L2",
+      "tip": "[key: string]: T——「任意键都映射到 T」的字典形状",
+      "desc": "描述键名未知的对象：`Record<string, User>` 的本质就是索引签名。副作用是访问任意字符串键都被认为合法，拼错键名不再报错，常与 `key in obj` 守卫或 satisfies 搭配收紧。"
+    },
+    {
+      "id": "union",
+      "term": "联合类型",
+      "full": "union type (|)",
+      "match": ["联合类型"],
+      "level": "L3",
+      "tip": "A | B：值是其中之一。使用前必须收窄到具体分支才能访问共有外成员",
+      "desc": "「或」类型，如 `string | number`、可空的 `User | null`。联合类型上只允许访问所有分支共有的成员（`string | number` 只能用 toString），想调 `.length` 必须先收窄——这是 TS 新手第一大坎。"
+    },
+    {
+      "id": "intersection",
+      "term": "交叉类型",
+      "full": "intersection type (&)",
+      "match": ["交叉类型"],
+      "level": "L3",
+      "tip": "A & B：成员取并集「我全都要」，混入 mixin 与组合 props 常用",
+      "desc": "`A & B` 同时满足两个类型，形状合并。与 extends 继承效果近似，但同名属性类型冲突时会得到 `never` 而非报错提示。对象合并用交叉，联合分支的区分用可辨识标签。"
+    },
+    {
+      "id": "narrowing",
+      "term": "类型收窄",
+      "full": "narrowing",
+      "match": ["类型收窄", "收窄"],
+      "level": "L3",
+      "tip": "在分支里把联合类型缩小到具体成员：if typeof、in、判别字段、truthiness 都能触发",
+      "desc": "控制流分析：`if (typeof v === 'string')` 分支内 v 自动变成 string。收窄靠「类型守卫」触发，出了分支不递归成立（回调里要重新收窄是经典坑）。收窄过头变 never 时，报错信息会提醒你分支已穷尽。"
+    },
+    {
+      "id": "type-guard",
+      "term": "类型守卫",
+      "full": "type guard",
+      "match": ["类型守卫"],
+      "level": "L3",
+      "tip": "运行时返回布尔、编译期告诉编译器「是哪种类型」的判断函数",
+      "desc": "能触发收窄的判断：内置的 `typeof`/`instanceof`/`in`/真值判断，以及自定义的 `x is T` 谓词函数。写库、写公共 API 时把散落的 if 收敛成一个守卫函数，类型与逻辑一次维护。"
+    },
+    {
+      "id": "predicate",
+      "term": "类型谓词",
+      "full": "x is T",
+      "match": ["类型谓词", "is 谓词", "谓词"],
+      "level": "L3",
+      "tip": "函数返回类型写 `pet is Fish`：告诉编译器「返回 true 即证明它是 Fish」",
+      "desc": "自定义守卫的签名格式：`(x): x is T => …`。谓词函数体内必须真的做运行时检查，否则就是骗编译器——类型系统不验证谓词逻辑，这是它最强的假设。"
+    },
+    {
+      "id": "discriminated",
+      "term": "可辨识联合",
+      "full": "discriminated union",
+      "match": ["可辨识联合"],
+      "level": "L3",
+      "tip": "每个分支带同名字面量标签（kind/status），switch 标签即自动收窄——状态建模第一模式",
+      "desc": "给联合每个成员加 `kind: 'circle' | 'rect'` 这类唯一字面量字段，switch(kind) 的分支里成员类型自动精确。Redux action、API 响应（`{ok:true,data}|{ok:false,error}`）、状态机全用它，配合 never 穷尽检查万无一失。"
+    },
+    {
+      "id": "generic",
+      "term": "泛型",
+      "full": "generics <T>",
+      "match": ["泛型"],
+      "level": "L4",
+      "tip": "「类型的函数」：先立参数 T，调用时由实参/标注代入——一份逻辑适配所有类型",
+      "desc": "把类型做成可参数化的占位符：`function first<T>(arr: T[]): T | undefined`。调用处显式传入或由实参推断。没有泛型，identity 函数只能写 any——泛型是「复用且不丢类型信息」的唯一解。",
+      "seeAlso": [{ "pkg": "01-es", "id": "hof", "term": "高阶函数" }]
+    },
+    {
+      "id": "constraint",
+      "term": "泛型约束",
+      "full": "extends constraint",
+      "match": ["泛型约束", "extends 约束"],
+      "level": "L4",
+      "tip": "<T extends { id: number }>：给 T 划底线，才敢在函数体里访问 id",
+      "desc": "裸 T 什么都不能做（`.length` 都报错），用 `extends` 声明 T 至少长什么样。约束还能引用前面的类型参数（`<T, K extends keyof T>`），这是工具类型 Pick/Omit 的骨架。"
+    },
+    {
+      "id": "variance",
+      "term": "协变与逆变",
+      "full": "covariance / contravariance",
+      "match": ["协变", "逆变"],
+      "level": "L4",
+      "tip": "子类型能否沿容器方向传递：数组协变（TS 的历史性宽松），函数参数逆变",
+      "desc": "Dog 是 Animal 的子类型，则 `Dog[]` 可当 `Animal[]` 用（协变，TS 对数组故意放松、有写入风险）；函数参数方向相反：`(a: Animal)=>void` 可以顶替 `(d: Dog)=>void`（逆变）。`strictFunctionTypes` 才会检查后者。"
+    },
+    {
+      "id": "utility-types",
+      "term": "工具类型",
+      "full": "Partial / Pick / Omit / Record / ReturnType…",
+      "match": ["工具类型", "Partial", "Pick", "Omit", "Record", "ReturnType", "Awaited"],
+      "level": "L5",
+      "tip": "编译器内置的「类型变换函数」：Partial 全可选、Pick 挑键、Omit 剔键、Record 建字典",
+      "desc": "TS 预置的一批泛型类型变换，全部用映射类型实现。高频：`Partial<T>` `Required<T>`（表单草稿）、`Pick/Omit`（从大模型裁出接口入参）、`Record<K,V>`（字典）、`ReturnType<typeof fn>`（取函数返回类型）。自己写泛型前先来这查有没有现成的。"
+    },
+    {
+      "id": "conditional-type",
+      "term": "条件类型",
+      "full": "A extends B ? X : Y",
+      "match": ["条件类型"],
+      "level": "L5",
+      "tip": "类型世界的三元表达式；分发到联合成员上逐个计算是它最强大的性质",
+      "desc": "`T extends U ? X : Y` 按类型关系选结果，配合 infer 提取内部类型。裸类型参数会「分发」：`'a'|'b' extends string` 对联合每个成员单独算——Exclude/Extract/NonNullable 全靠这个行为。"
+    },
+    {
+      "id": "infer",
+      "term": "infer",
+      "match": ["infer"],
+      "level": "L5",
+      "tip": "条件类型里的「捕获」：extends Array<infer E> 把元素类型抓出来命名",
+      "desc": "在条件类型的 extends 右侧声明占位符，让模式匹配顺便把子结构绑到类型参数上。`ReturnType` = `T extends (...a:any)=>infer R ? R : never`；Promise 拆包、元组取头尾都是这套「类型级模式匹配」。"
+    },
+    {
+      "id": "mapped-type",
+      "term": "映射类型",
+      "full": "{ [K in Keys]: … }",
+      "match": ["映射类型"],
+      "level": "L5",
+      "tip": "对键集合循环生成新对象类型：Partial 就是 { [K in keyof T]?: T[K] }",
+      "desc": "「遍历一组键、按键生成属性」的类型级 for 循环。`in keyof` 是标准搭配；`as` 子句可改键名（键重映射，如 `to`→`from` 字符串替换），模板字面量类型当键名就是「类型级代码生成」。"
+    },
+    {
+      "id": "template-literal-type",
+      "term": "模板字面量类型",
+      "full": "`${A}_${B}`",
+      "match": ["模板字面量"],
+      "level": "L5",
+      "tip": "把字符串模板搬进类型层：type Key = `on${Capitalize<Event>}`，还能推导与拆解",
+      "desc": "类型里也能写 `` `click${number}` ``，联合类型会自动做笛卡尔积展开。反向用法更妙：条件类型 + infer 可以从字符串类型里「正则式拆包」（如解析 CSS 值、路由参数字符串）。"
+    },
+    {
+      "id": "type-gymnastics",
+      "term": "类型体操",
+      "match": ["类型体操"],
+      "level": "L5",
+      "tip": "在类型系统里写函数式编程的戏称——库作者炫技用，业务代码点到为止",
+      "desc": "利用条件/映射/infer 的图灵完备性在类型层解算法题。读库源码需要它，写业务不需要：能用可辨识联合 + 工具类型解决的，不要手写递归类型。"
+    },
+    {
+      "id": "assertion",
+      "term": "类型断言",
+      "full": "as T / <T>expr",
+      "match": ["类型断言", "断言"],
+      "level": "L5",
+      "tip": "as T：「编译器你信我，它是这个类型」——只骗编译期，不做运行时转换",
+      "desc": "覆盖推断结果的逃生口：`const el = document.getElementById('x') as HTMLCanvasElement`。它不检查也不转换值（与 Java 强转不同），断言错 = 运行时炸；`as unknown as T` 双重断言是「我在硬来」的信号，`!` 非空断言同理慎用。"
+    },
+    {
+      "id": "satisfies",
+      "term": "satisfies",
+      "full": "satisfies operator",
+      "match": ["satisfies"],
+      "level": "L5",
+      "tip": "既校验形状又保留精确推断：const styles = {...} satisfies Record<string,Style>",
+      "desc": "TS 4.9 的 `表达式 satisfies 类型`：校验值符合类型，但变量类型仍是推断出的精确字面量类型——补上 as 做不到「校验不粗化」的缺口。配置对象的黄金写法：`satisfies` 类型 + `as const`。"
+    },
+    {
+      "id": "as-const",
+      "term": "as const",
+      "match": ["as const"],
+      "level": "L5",
+      "tip": "整体冻结推断：数组变 readonly 元组、值变字面量类型",
+      "desc": "`as const` 把对象的属性全变 readonly、字符串数组变 readonly 元组字面量类型。用途：枚举替代品（`const Directions = ['N','S'] as const`）、给配置最精确的类型、配合 satisfies 双保险。"
+    },
+    {
+      "id": "dts",
+      "term": ".d.ts",
+      "full": "declaration file",
+      "zh": "声明文件",
+      "match": [".d.ts", "声明文件"],
+      "level": "L6",
+      "tip": "只有类型没有实现的「接口说明书」：库发布时随 JS 一起给，编辑器提示全靠它",
+      "desc": "描述 JS 库类型的纯声明文件。三来源：库自带（package.json `types` 字段指路）、`@types/xxx` 社区包、自己 `declare` 手写。`tsc --declaration` 可从源码生成；发布库时 d.ts 与 ESM/CJS 产物同权重重要。"
+    },
+    {
+      "id": "declare",
+      "term": "declare",
+      "match": ["declare"],
+      "level": "L6",
+      "tip": "「别处存在，编译器记一下」：声明全局变量、AMD 模块、第三方无类型库的形状",
+      "desc": "告诉编译器某值存在但不由本文件实现：`declare global` 补 window 上的挂件的、`declare module 'xxx'` 给无类型库手写形状、`declare const __DEV__: boolean` 声明构建注入量。"
+    },
+    {
+      "id": "declaration-merging",
+      "term": "声明合并",
+      "full": "declaration merging / module augmentation",
+      "match": ["声明合并", "模块增强"],
+      "level": "L6",
+      "tip": "同名 interface 自动合并成员——给第三方库类型「打补丁」的官方通道",
+      "desc": "同名 interface/namespace 声明会被编译器合并成一个类型。模块增强（`declare module 'express' { interface Response { user?: User } }`）就是它的工程应用：给框架类型加自己的字段，全项目自动可见。"
+    },
+    {
+      "id": "enum",
+      "term": "枚举",
+      "full": "enum",
+      "match": ["枚举"],
+      "level": "L6",
+      "tip": "TS 少数会生成运行时对象的语法；社区推荐用 as const 对象或字面量联合替代",
+      "desc": "`enum Direction { Up, Down }` 编译后真的生成双向映射对象（有运行时开销、不利于 tree-shaking）。现代风格：字面量联合（`'up'|'down'`）或 `as const` 对象 + 派生联合类型；`const enum` 会内联但有 isolatedModules 兼容问题。"
+    },
+    {
+      "id": "namespace",
+      "term": "namespace",
+      "match": ["namespace"],
+      "level": "L6",
+      "tip": "TS 自己的老式代码组织单位，ESM 时代基本只出现在声明文件里",
+      "desc": "生成 IIFE 包装的命名对象，是 ESM 普及前 TS 的模块化方案。如今只在 `.d.ts` 里声明全局形状时还常见；业务代码请直接用 ESM 的 import/export。",
+      "seeAlso": [{ "pkg": "01-es", "id": "iife", "term": "IIFE" }, { "pkg": "01-es", "id": "esm", "term": "ESM" }]
+    },
+    {
+      "id": "decorator",
+      "term": "装饰器",
+      "full": "decorators",
+      "match": ["装饰器"],
+      "level": "L6",
+      "tip": "挂在类/成员上的「包装函数」：Angular/NestJS 的元数据注册语法；分 legacy 与 TC39 两套",
+      "desc": "`@Component({...})` 在类定义时拦截并增强它。注意有两套语义：TS 实验版（legacy，配 Angular/Nest 现状）与 TC39 Stage 3 标准版（`experimentalDecorators` 开关决定用哪套），SWC/Babel 转译时也要对齐开关。"
+    },
+    {
+      "id": "tsconfig",
+      "term": "tsconfig.json",
+      "zh": "编译器说明书",
+      "match": ["tsconfig.json", "tsconfig"],
+      "level": "L7",
+      "tip": "编译选项 + 文件范围：compilerOptions 定行为，include/exclude 定范围，extends 可分层",
+      "desc": "tsc 的项目配置：`include` 圈文件、`compilerOptions` 定严格度与产物。常见分层：`tsconfig.base.json` 共享 + 各环境 extends；`paths` 做导入别名；Vue/Next 项目里它同时是 IDE 行为的真相源。"
+    },
+    {
+      "id": "strict",
+      "term": "strict",
+      "full": "strict mode family",
+      "match": ["strict"],
+      "level": "L7",
+      "tip": "一组严格检查的总开关（noImplicitAny、strictNullChecks 等全开）——新项目必开",
+      "desc": "`\"strict\": true` 一键打开 strictNullChecks、noImplicitAny、strictFunctionTypes 等全套。TS 的价值一半在类型一半在 strict：不开 strict 的项目里 null 与隐式 any 会悄悄吃掉所有保障。"
+    },
+    {
+      "id": "strict-null",
+      "term": "strictNullChecks",
+      "match": ["strictNullChecks"],
+      "level": "L7",
+      "tip": "null/undefined 不再能混进其他类型——TS 最有价值的一个开关",
+      "desc": "关掉时 `string` 可以等于 null（null 炸弹全放行）；打开后必须写成 `string | null`，所有解引用点强制处理。`?.` `??` 非空断言 `!` 这些语法都是围着它转的。"
+    },
+    {
+      "id": "no-implicit-any",
+      "term": "noImplicitAny",
+      "match": ["noImplicitAny"],
+      "level": "L7",
+      "tip": "推断不出类型的参数直接报错而不是偷偷给 any——渐进迁移第一道闸",
+      "desc": "隐式 any 报错开关（strict 组成员）。老项目迁移时常先单独关掉它跑通，再逐目录打开——`@ts-nocheck` 文件头 + 逐文件删除是标准渐进策略。"
+    },
+    {
+      "id": "isolated-modules",
+      "term": "isolatedModules",
+      "match": ["isolatedModules"],
+      "level": "L7",
+      "tip": "保证每个文件能被单独转译——用 SWC/esbuild/Vite 编译时的必开项",
+      "desc": "快工具逐文件删类型、看不到全项目，于是 TS 里有些写法（重新导出类型不带 `type`、非模块文件的全局声明）会破坏单文件转译。`isolatedModules: true` 让 tsc 提前把这些写法报错，保证「tsc 过的代码 SWC 也能安全擦」。"
+    },
+    {
+      "id": "verbatim-modules",
+      "term": "verbatimModuleSyntax",
+      "match": ["verbatimModuleSyntax"],
+      "level": "L7",
+      "tip": "import 写法所见即所得：类型导入必须显式 import type，杜绝运行时偷偷加载",
+      "desc": "TS 5.0 起取代 `importsNotUsedAsValues` 的严格模式：不带 `type` 的 import 一定原样保留在产物里（可能触发副作用加载），纯类型导入必须 `import type { X }`。ESM/CJS 混用项目用它把模块语义钉死。"
+    },
+    {
+      "id": "import-type",
+      "term": "import type",
+      "match": ["import type"],
+      "level": "L7",
+      "tip": "只进类型不进产物的导入：编译后被整行删除，零运行时开销",
+      "desc": "明确告诉编译器「这个导入只用于类型位置」：产物里这行消失，避免把值加载与循环依赖带进运行时；在 `isolatedModules` 下重新导出类型也必须 `export type`。"
+    },
+    {
+      "id": "module-resolution",
+      "term": "模块解析",
+      "full": "moduleResolution: node16 / bundler",
+      "match": ["模块解析", "moduleResolution", "bundler"],
+      "level": "L7",
+      "tip": "import 路径按什么规则找文件：bundler（Vite 类工具）/ node16（严格对齐 Node）/ node10（legacy）",
+      "desc": "`moduleResolution` 决定 `./x` 会不会试 `.ts`、`/index`、exports 字段。Vite/webpack 项目用 `bundler`；纯 Node 跑 tsx 用 `node16` + `module: nodenext`。选错的症状：编辑器红线与运行结果互相矛盾。"
+    },
+    {
+      "id": "at-types",
+      "term": "@types / DefinitelyTyped",
+      "full": "@types/* (DefinitelyTyped)",
+      "match": ["@types", "DefinitelyTyped"],
+      "level": "L8",
+      "tip": "社区给无类型 JS 库补 d.ts 的仓库：npm i -D @types/lodash 即得提示",
+      "desc": "微软维护的 DefinitelyTyped 仓库，发布为 `@types/包名`。规则：库自带类型优先（package.json types 字段）；`@types/node` 这类是环境类型。版本要对上真实包大版本，装错会出现「类型与运行时行为不符」。"
+    },
+    {
+      "id": "ts-node",
+      "term": "ts-node / tsx",
+      "match": ["ts-node", "tsx"],
+      "level": "L8",
+      "tip": "让 Node 直接跑 .ts：ts-node 走完整编译慢，tsx 用 esbuild 秒级启动",
+      "desc": "开发期免编译直跑 TS 的运行器。tsx（esbuild 内核）启动快、不检查类型，适合脚本与 dev；ts-node 可配 type-check，适合要「跑前必须类型正确」的 CI 脚本。生产部署仍应先 tsc/打包再跑 JS。"
+    },
+    {
+      "id": "migration",
+      "term": "渐进式迁移",
+      "full": "JS → TS migration",
+      "match": ["渐进式迁移", "迁移到 TS", "迁移"],
+      "level": "L7",
+      "tip": "allowJs 共存 → @ts-nocheck 圈地 → 逐文件解锁 → strict 收尾的标准四步",
+      "desc": "把已有 JS 项目变成 TS 的工程流程：`allowJs + checkJs` 混编起步、`@type` 注释或逐文件改名、`ts-baseline`/分目录开 strict。核心心态：TS 检查是棘轮——只许变严不许变松。"
+    }
+  ]
+}

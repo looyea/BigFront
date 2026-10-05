@@ -1,0 +1,209 @@
+{
+  "title": "TanStack Query · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "tq-server-state",
+      "term": "服务器状态",
+      "full": "server state",
+      "match": ["服务器状态", "server state", "只读镜像"],
+      "level": "L1",
+      "tip": "别人数据的只读镜像：存在服务器上、会过期、跨页跨用户共享——需要的是缓存系统，不是又一个 store",
+      "desc": "与客户端状态（modal 开没开、主题、草稿，你说了算）相对。手写 fetch+useState 有七大坑：不去重、无缓存、竞态、过期靠猜、聚焦不刷新、回收没人管。Query 的定位是分工而非替代状态库。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-server", "term": "客户端状态 vs 服务端状态" }]
+    },
+    {
+      "id": "tq-use-query",
+      "term": "useQuery",
+      "match": ["useQuery", "queryFn"],
+      "level": "L1",
+      "tip": "声明式取数两要素：queryKey（缓存身份）+ queryFn（怎么取）；返回 data/status/错误等一整套",
+      "desc": "声明一次即得去重/缓存/过期重取/竞态忽略旧值/聚焦后台刷新/无人订阅自动回收。v5 语义坑：isLoading = isPending && isFetching，别把 isPending 当 isLoading 用。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-status", "term": "status 家族" }]
+    },
+    {
+      "id": "tq-query-client",
+      "term": "QueryClient 与 Provider",
+      "match": ["QueryClient", "QueryClientProvider", "defaultOptions"],
+      "level": "L1",
+      "tip": "QueryClient 是缓存容器 + 全局配置中心；QueryClientProvider 把缓存所有权交给组件树",
+      "desc": "defaultOptions 设 staleTime/retry 全局默认。一个应用一个 client（纯 CSR 用模块级单例）——别把 new QueryClient() 写进组件体，那会每次渲染新建、缓存永空。useQueryClient 命令式访问。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-lifecycle", "term": "数据生命周期" }]
+    },
+    {
+      "id": "tq-query-key",
+      "term": "queryKey",
+      "match": ["queryKey", "缓存键", "缓存身份"],
+      "level": "L2",
+      "tip": "缓存键即身份：数组结构被 hashKey 序列化，对象属性顺序无关；层级化 key 支持前缀失效",
+      "desc": "设计 `['users']` / `['users', id]` 层级，invalidate 可按前缀批量命中。key 工厂模式（queryKeys.users.byid(id)）防手抖。反模式：漏掉参与身份的变量（userId 落进 `['user']`）→ 换 id 仍命中旧缓存、数据永不更新。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-crud", "term": "CRUD 看板" }]
+    },
+    {
+      "id": "tq-lifecycle",
+      "term": "数据生命周期",
+      "match": ["staleTime", "gcTime", "fresh", "stale"],
+      "level": "L2",
+      "tip": "fresh→stale→garbage collected 状态机；staleTime 定「多久算过期」、gcTime 定「无人订阅多久回收缓存」",
+      "desc": "staleTime:0（默认）意味着一挂载就视为过期、配合 refetchOnMount 立刻重取。gcTime 默认 5 分钟回收订阅归零的缓存。想少请求就调大 staleTime；两时间是 Query 性能的总开关。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-refetch", "term": "失效与后台重取" }]
+    },
+    {
+      "id": "tq-refetch",
+      "term": "失效与后台重取",
+      "match": ["invalidate", "refetch", "refetchOnWindowFocus", "removeQueries"],
+      "level": "L2",
+      "tip": "invalidateQueries 前缀/精确匹配标脏并重取；refetchOnWindowFocus/reconnect 是产品级默认；手动 refetch",
+      "desc": "「数据脏了」就 invalidate——不刷新页面、只重跑相关 query。background fetching indicators 显示后台刷新中。networkMode 控离线暂停策略。invalidateAll 太重、优先精确失效。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "invalidate-kit", "term": "invalidate 与依赖失效" }]
+    },
+    {
+      "id": "tq-conditional",
+      "term": "条件与依赖请求",
+      "match": ["enabled", "placeholderData", "initialData", "skipToken"],
+      "level": "L3",
+      "tip": "enabled 暂停请求；dependent queries 拿 A 的 id 再取 B；placeholderData 与 initialData 语义不同",
+      "desc": "skip 场景要用 enabled 修正 isLoading（否则一直 loading）。placeholderData 是「先显示旧/占位数据再被真数据替换」、initialData 是「已有可信初始值」。依赖链：queryB 的 key 含 queryA 的 data、配 enabled: !!queryA.data。",
+      "seeAlso": [{ "pkg": "18-jotai", "id": "jo-dependencies", "term": "依赖图与 Batching" }]
+    },
+    {
+      "id": "tq-parallel",
+      "term": "并行请求与预取",
+      "match": ["useQueries", "prefetch", "Promise.all", "瀑布流"],
+      "level": "L3",
+      "tip": "useQueries 批量并行；顶层 await 会退化成瀑布流；prefetchQuery/usePrefetchQuery 做路由预取",
+      "desc": "多个 await 顺序执行 = 瀑布（慢）。useQueries 并发跑同类多请求。「预失效 + prefetch」组合拳：进列表页就把详情数据提前取好，点进去秒开。这是 Query 提升体感的关键技巧。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "advanced-apis", "term": "进阶 API 群" }]
+    },
+    {
+      "id": "tq-mutation",
+      "term": "useMutation",
+      "match": ["useMutation", "mutate", "mutateAsync", "onSettled"],
+      "level": "L3",
+      "tip": "写操作用 mutation：onMutate/onSuccess/onError/onSettled 生命周期；成功后 invalidateQueries 刷新列表",
+      "desc": "query 是「读」、mutation 是「写」。mutate 火并忘、mutateAsync 可 await。从响应取数用 setQueryData 直接写缓存；useMutationState 读跨组件 pending 态（做按钮 loading）。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-optimistic", "term": "乐观更新与回滚" }]
+    },
+    {
+      "id": "tq-infinite",
+      "term": "无限与分页查询",
+      "match": ["useInfiniteQuery", "fetchNextPage", "hasNextPage", "pageParam"],
+      "level": "L4",
+      "tip": "useInfiniteQuery 的 pageParam 契约；InfiniteData.pages 结构；fetchNextPage/isFetchingNextPage 驱动翻页",
+      "desc": "翻页保留旧页靠 placeholderData（keepPreviousData）。偏移分页（page=1,2,3）vs 游标无限（cursor）——后者适合时间线。虚拟列表（react-window）双排配合做超长列表。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-crud", "term": "CRUD 看板" }]
+    },
+    {
+      "id": "tq-cancel",
+      "term": "请求取消与竞态",
+      "match": ["AbortSignal", "signal", "CancelledError", "abort"],
+      "level": "L4",
+      "tip": "v5 内置 signal: AbortSignal；依赖变化/失效触发 abort；CancelledError 不再算错误",
+      "desc": "queryFn 收到 {signal} 传给 fetch 即可取消。与 Jotai、Pinia 的竞态三家对比：Query 靠「key 变即重取 + 忽略旧结果」天然防竞态。retry 策略要与取消交互（取消的不该重试）。",
+      "seeAlso": [{ "pkg": "18-jotai", "id": "jo-race", "term": "异步竞态与取消" }]
+    },
+    {
+      "id": "tq-optimistic",
+      "term": "乐观更新与回滚",
+      "match": ["乐观", "回滚", "cancelQueries", "setQueryData"],
+      "level": "L4",
+      "tip": "onMutate 快照 + cancelQueries + setQueryData 三件套；onError 回滚快照；onSettled 失效重取",
+      "desc": "标准模式：改前 getQueryData 存快照 → setQueryData 立即改本地 → 请求失败 setQueryData 用快照回滚。适用边界：低冲突、要即时反馈的操作。UX 风险：乐观与服务端最终不一致要能兜住。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "optimistic", "term": "乐观更新与回滚" }]
+    },
+    {
+      "id": "tq-ssr",
+      "term": "SSR 与水合",
+      "match": ["dehydrate", "HydrationBoundary", "shouldDehydrateQuery"],
+      "level": "L5",
+      "tip": "每请求一 client；dehydrate + HydrationBoundary 把服务端结果传客户端；streaming 与 usePrefetchQuery",
+      "desc": "服务端先取好数据、脱水序列化进 HTML、客户端 HydrationBoundary 复原缓存——避免「客户端再取一次」的双请求闪烁。Next App Router 骨架。与 Zustand/Jotai 的 SSR 同题三家解法对照。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "app-router", "term": "App Router" }]
+    },
+    {
+      "id": "tq-persist",
+      "term": "持久化与跨标签同步",
+      "match": ["persistQueryClient", "persister", "broadcastQueryClient"],
+      "level": "L5",
+      "tip": "persistQueryClient 插件存缓存；createSync/AsyncStoragePersister；broadcastQueryClient 跨 tab 同步",
+      "desc": "把缓存写进 localStorage 下次秒开；BroadcastChannel 让多标签共享一份缓存。粒度对比：Query 持久化的是「服务端缓存」，与 zustand persist（客户端态）、atomWithStorage（单原子）不同层。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-persist-deep", "term": "persist 深入" }]
+    },
+    {
+      "id": "tq-devtools",
+      "term": "Devtools 与测试",
+      "match": ["Devtools", "DevTools", "retry: false"],
+      "level": "L5",
+      "tip": "React Query Devtools 面板读写缓存；测试中 retry:false + timer 处理；setQueryData 手动造数据",
+      "desc": "看得见缓存状态才好调。测试里关 retry、快进 gcTime/staleTime 定时器；组件测用 QueryClientProvider 包一个测试专用 client、mock queryFn 或走 msw。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-network", "term": "网络层 mock" }]
+    },
+    {
+      "id": "tq-vs-swr",
+      "term": "Query vs SWR vs RTK Query",
+      "match": ["SWR", "RTK"],
+      "level": "L6",
+      "tip": "官方 comparison 表：SWR 极简双 API、RTK Query 与 Redux 一体化、Query 缓存控制力最强",
+      "desc": "选择判据是「缓存控制力 vs 上手速度」。SWRV/Vue Query 等跨框架生态说明「服务端状态管理」已是独立品类。别把 Query 当唯一答案——小项目 SWR 更轻。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-scenarios", "term": "状态分层与选型树" }]
+    },
+    {
+      "id": "tq-division",
+      "term": "异步状态三层分工",
+      "match": ["三层分工", "分工", "服务端缓存"],
+      "level": "L6",
+      "tip": "服务端缓存(Query) / 客户端状态(Zustand·Jotai·Pinia) / 表单局部(RHF·VeeValidate)；URL 态归路由",
+      "desc": "把四包知识串成一张架构图：谁负责什么、边界在哪、反模式是什么（把接口数据拷进全局 store 再同步 = 两份真相）。这是整个状态管理专题的总决算。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-layers", "term": "状态分层" }]
+    },
+    {
+      "id": "tq-capstone",
+      "term": "影视浏览数据层",
+      "match": ["防抖", "无限滚动", "收藏"],
+      "level": "L6",
+      "tip": "综合：列表+详情+搜索防抖+无限滚动+收藏乐观+路由预取+SSR 水合全链路",
+      "desc": "每个特性都对应 Query 的一个核心能力，串起来就是真实应用的数据层。与 Zustand/Jotai 版对照的毕业清单；后续路径：Query v5 生态、Router/Table。"
+    },
+    {
+      "id": "tq-status",
+      "term": "status 家族",
+      "match": ["isPending", "isFetching", "fetchStatus", "isLoading"],
+      "level": "L1",
+      "tip": "status(pending/success/error) + fetchStatus(fetching/paused) 两维；isLoading = isPending && isFetching",
+      "desc": "v5 把状态拆成「有没有数据」和「在不在请求」两个正交维度。想区分「首屏 loading」和「后台刷新」用 isInitialLoading / isPlaceholderData。混淆 isPending 与 isLoading 是高频 bug。"
+    },
+    {
+      "id": "tq-setquerydata",
+      "term": "setQueryData",
+      "match": ["setQueryData", "getQueryData"],
+      "level": "L4",
+      "tip": "直接读写缓存：不重新请求就把一份数据塞进指定 queryKey（乐观更新、从响应局部更新）",
+      "desc": "`queryClient.setQueryData(['todos',id], fn)` 函数式改缓存项。是乐观更新与「mutation 返回后精确更新单条」的主力 API。手改缓存要维护数据形状一致，否则读组件崩。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-query-key", "term": "queryKey" }]
+    },
+    {
+      "id": "tq-placeholder",
+      "term": "placeholderData / keepPreviousData",
+      "match": ["keepPreviousData", "placeholder"],
+      "level": "L4",
+      "tip": "翻页/切 key 时先显示上一次的旧数据占位，避免白屏——v5 用 placeholderData: keepPreviousData",
+      "desc": "与 initialData 区别：placeholder 会被真实结果覆盖且标记 isPlaceholderData。分页体验的关键：数据在途仍显示上一页。注意 placeholder 参与渲染时 status 不是 pending 的判读差异。"
+    },
+    {
+      "id": "tq-predicate",
+      "term": "失效精确匹配",
+      "match": ["predicate", "exact"],
+      "level": "L2",
+      "tip": "invalidateQueries 可用 exact 精确匹配或 predicate 函数筛出要失效的 query，避免过度刷新",
+      "desc": "粗粒度 invalidate `['todos']` 会命中所有子 key（列表+详情各取一次）；配 type:'all'/'active' 与 refetchType 控「立即重取还是仅标脏」。精准失效是性能与正确性的平衡。"
+    },
+    {
+      "id": "tq-networkmode",
+      "term": "networkMode",
+      "match": ["networkMode", "offline", "paused"],
+      "level": "L2",
+      "tip": "离线策略：online（默认，断网暂停）、offlineFirst（先当在线跑）、always",
+      "desc": "断网时 fetchStatus 变 paused、恢复后自动重取。移动/弱网应用要理解这个开关——它决定「离线时请求是排队、暂停还是照发失败」。配合 refetchOnReconnect 使用。"
+    }
+  ]
+}

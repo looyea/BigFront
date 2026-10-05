@@ -1,0 +1,165 @@
+{
+  "title": "Vitest · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "vitest-overview",
+      "term": "Vitest",
+      "match": ["Vitest", "vitest"],
+      "level": "L1",
+      "tip": "复用 Vite 转换管线的即时测试框架：Jest 兼容 API、原生 ESM/TS 免 babel、改一行自动重跑",
+      "desc": "Vite 项目的自带最优解——共享 vite 配置/转换/别名，watch 是 HMR 式的即时反馈。与 Jest 关系是「兼容 API 但原生跑 ESM/TS」。快照、mock、覆盖率、组件测试、UI 模式一应俱全。",
+      "seeAlso": [{ "pkg": "10-vite", "id": "vitest-bridge", "term": "Vitest" }]
+    },
+    {
+      "id": "vitest-setup",
+      "term": "vitest.config 与 environment",
+      "match": ["vitest.config", "environment", "jsdom", "globals"],
+      "level": "L1",
+      "tip": "独立 vitest.config.ts 或 vite.config 的 test 字段；environment 选 node（默认）或 jsdom；tsconfig types 配 vitest/globals",
+      "desc": "scripts 三件套：vitest（watch）/ vitest run（一次性）/ ui。include/exclude 定哪些文件算测试。globals:true 免每文件 import describe/it，但要配 types 让 TS 认识。第一条 pass 的测试建立信心。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-jsdom", "term": "浏览器环境" }]
+    },
+    {
+      "id": "vitest-first-test",
+      "term": "describe / it / expect",
+      "match": ["describe", "expect", "watch"],
+      "level": "L1",
+      "tip": "describe 分组 + it/test 用例 + expect 断言；核心几个 matcher 就够用；watch 即时反馈",
+      "desc": "文件命名 __tests__ / *.test.ts / *.spec.ts 皆可。全局 API vs 显式 import 二选一（globals）。run 用于 CI、watch 用于开发——理解两者适用场景。别一上来追求覆盖率，先把「红→绿」循环跑顺。"
+    },
+    {
+      "id": "vitest-matchers",
+      "term": "断言工具箱",
+      "match": ["toBe", "toEqual", "toStrictEqual", "toThrow", "matcher"],
+      "level": "L2",
+      "tip": "toBe(引用/原始值 ===) vs toEqual(结构深比较) vs toStrictEqual(含类型/undefined 键)；.not 取反",
+      "desc": "数字/字符串 toBeCloseTo/toMatch、异常 toThrow 匹配。别背清单——按需查文档。@testing-library/jest-dom 扩展出 toBeInTheDocument 等 DOM 断言。expect.assertions(n) 锁断言条数防「异步没跑到」。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-component", "term": "组件测试" }]
+    },
+    {
+      "id": "vitest-async",
+      "term": "异步与定时器测试",
+      "match": ["useFakeTimers", "advanceTimersByTime", "runAllTimers", "setSystemTime"],
+      "level": "L2",
+      "tip": "async/await 直接断言；rejects/resolves 断 Promise；vi.useFakeTimers + advance 假定时器；setSystemTime 冻结时间",
+      "desc": "轮询/防抖/退避这类「等时间」的逻辑用假定时器秒测，测完 useRealTimers 回退。hookTimeout/testTimeout 控超时。假定时器与真实 Promise 微任务混用要小心（advance 要配 await 冲刷）。",
+      "seeAlso": [{ "pkg": "01-es", "id": "microtask", "term": "微任务" }]
+    },
+    {
+      "id": "vitest-param-snapshot",
+      "term": "参数化与快照",
+      "match": ["toMatchSnapshot", "describe.each", "it.each", "表格驱动"],
+      "level": "L2",
+      "tip": "describe.each/it.each 表格驱动；快照 toMatchSnapshot 存 __snapshots__，-u 更新、CI 禁更新",
+      "desc": "快照适用于「序列化稳定的输出」，无脑 -u 更新 = 没测。inline 快照写在测试体内联。文件快照 withFileSnapshots 存外部文件。参数化 + 快照组合覆盖多输入矩阵。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-mock-fn", "term": "vi.fn 与 vi.spyOn" }]
+    },
+    {
+      "id": "vitest-mock-fn",
+      "term": "vi.fn 与 vi.spyOn",
+      "match": ["spyOn", "mockReturnValue", "toHaveBeenCalledWith", "mockRestore"],
+      "level": "L3",
+      "tip": "vi.fn 造回调（mockReturnValue/mockResolvedValue/模拟实现）；vi.spyOn 监听既有对象方法",
+      "desc": "断言调用家族 toHaveBeenCalled/toHaveBeenCalledWith/次数。mockRestore 还原 spyOn 原方法。mock 清理有坑：clearAllMocks（清调用记录）vs resetAllMocks（连实现一起 reset）放 setup 里配错会致诡案。第一原则：能不 mock 就不 mock。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-mock-module", "term": "模块 mock" }]
+    },
+    {
+      "id": "vitest-mock-module",
+      "term": "模块 mock",
+      "match": ["vi.mock", "importOriginal", "vi.hoisted", "__mocks__"],
+      "level": "L3",
+      "tip": "vi.mock 自动提升到文件顶；工厂函数定制；部分 mock 用 importOriginal；vi.hoisted 解决引用提升",
+      "desc": "__mocks__ 目录约定自动匹配。mock 环境变量/网络层要配合 msw 划边界。ESM 下 mock 比 CommonJS 更微妙（顶层 await 与 mock 顺序）。vi.hoisted 让「先建 mock 引用、再被提升的 vi.mock 用」成立。"
+    },
+    {
+      "id": "vitest-lifecycle",
+      "term": "钩子与用例隔离",
+      "match": ["beforeEach", "afterEach", "setupFiles", "fileParallelism", "isolate"],
+      "level": "L3",
+      "tip": "beforeAll/afterAll/beforeEach/afterEach；文件间默认隔离（isolate/threads）；setupFiles 注入全局前置",
+      "desc": "共享状态的陷阱来自并行（fileParallelism）与隔离边界——跨文件别依赖执行顺序。testContext（ctx）在用例间传数据。suite 作用域与清理顺序要门清，否则 teardown 漏放致资源泄漏。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "pinia-testing", "term": "store 单元测试" }]
+    },
+    {
+      "id": "vitest-jsdom",
+      "term": "浏览器环境与 DOM",
+      "match": ["happy-dom", "environmentOptions", "matchMedia", "ResizeObserver"],
+      "level": "L4",
+      "tip": "environment: jsdom vs happy-dom 选型；per-file @vitest-environment 注解；environmentOptions 配 url/userAgent",
+      "desc": "matchMedia/ResizeObserver 等浏览器 API 常缺失，要在 setup 里 polyfill。cleanup 保证组件卸载、防用例串扰。DOM 断言心法：断言「用户可见」而非实现细节。"
+    },
+    {
+      "id": "vitest-component",
+      "term": "组件测试",
+      "match": ["test-utils", "render", "screen", "userEvent", "flushPromises"],
+      "level": "L4",
+      "tip": "@vue/test-utils 与 React Testing Library 集成；挂载 props/事件/插槽断言；异步渲染配 flushPromises",
+      "desc": "RTL 的 render/screen/userEvent 三件套按「用户视角」查询交互。Pinia/Zustand 状态在测试里注入（配好的 store 传进挂载选项）。组件快照要克制——锁死了重构就疼。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "pinia-testing", "term": "store 单元测试" }]
+    },
+    {
+      "id": "vitest-network",
+      "term": "网络层 mock 与集成",
+      "match": ["MSW", "handlers", "axios", "拦截"],
+      "level": "L4",
+      "tip": "MSW（Mock Service Worker）在请求层拦截：setupFiles 起 server、定义 handlers、per-test 覆盖",
+      "desc": "比 mock 掉 axios 更真实——它拦的是网络本身，业务代码不用知道被 mock。测 TanStack Query 组件的完整链路靠它。fetch/axios 拦截取舍：MSW 一套通吃。何时该端到端而非单测，是边界的判断。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-devtools", "term": "Devtools 与测试" }]
+    },
+    {
+      "id": "vitest-coverage",
+      "term": "覆盖率",
+      "match": ["coverage", "thresholds", "provider", "branches"],
+      "level": "L5",
+      "tip": "@vitest/coverage-v8 配 provider/lines/百分比阈值 thresholds；include/exclude 圈定统计范围",
+      "desc": "分支/函数覆盖率解读比行覆盖率更有信息量。纪律：coverage 是探针不是目标——为凑数字写的断言毫无价值。reporter 家族（verbose/json/github-actions）按需选。per-target 报告定位薄弱模块。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-capstone", "term": "CI 与迁移" }]
+    },
+    {
+      "id": "vitest-ui-workspace",
+      "term": "UI 模式与 workspace",
+      "match": ["in-source", "workspace", "projects", "expectTypeOf", "shard"],
+      "level": "L5",
+      "tip": "--ui 浏览器看用例耗时；in-source testing 源码内联测试；workspace/projects 配多环境；typecheck 用 expectTypeOf",
+      "desc": "monorepo 各包/node+jsdom 同仓用 projects 分环境。typecheck 做「类型层面断言」（编译期错=测试失败）。并发与分片（shard）加速大仓；debug/inspect 挂调试器。",
+      "seeAlso": [{ "pkg": "21-biome", "id": "biome-monorepo", "term": "monorepo 与多语言" }]
+    },
+    {
+      "id": "vitest-capstone",
+      "term": "CI 与从 Jest 迁移",
+      "match": ["GitHub Actions", "迁移", "测试金字塔", "Playwright"],
+      "level": "L5",
+      "tip": "CI 跑 Vitest（缓存/reporter/失败重跑）；Jest→Vitest 迁移（globals、jest→vi、mock 差异、快照格式、transform）",
+      "desc": "测试金字塔与选型：Vitest（单测/组件）vs Jest（存量）vs Playwright（E2E）分工。与 20-swc/21-biome 组成 Rust/TS 新工具链全景收官。没讲但该知道：browser mode、快照解析器全表——官方文档入口。",
+      "seeAlso": [{ "pkg": "21-biome", "id": "biome-ci", "term": "CI 与提交前检查" }]
+    },
+    {
+      "id": "vitest-esm-native",
+      "term": "原生 ESM 免 babel",
+      "match": ["ESM", "transform", "esbuild"],
+      "level": "L1",
+      "tip": "Vitest 复用 Vite 的 esbuild 转换直接跑 TS/ESM，不像 Jest 要 babel-jest 预转",
+      "desc": "这是它比 Jest 省心的核心：无需 transform 配置就能 import TS/ESM/别名。也意味着 ESM 语义（顶层 await、mock 提升）与 CommonJS 时代经验不同。理解转换管线才懂配置为何能这么少。",
+      "seeAlso": [{ "pkg": "20-swc", "id": "swc-jest", "term": "swc-jest" }]
+    },
+    {
+      "id": "vitest-run-watch",
+      "term": "run vs watch vs ui",
+      "match": ["run", "ui", "覆盖率"],
+      "level": "L1",
+      "tip": "vitest（watch 即时重跑）、vitest run（CI 一次性）、--ui（可视化）三种运行姿态",
+      "desc": "watch 靠 Vite 模块图只重跑受影响用例——这是「即时反馈」的来源。CI 用 run + coverage + github-actions reporter。本地排障用 ui 看每用例耗时与错误栈。",
+      "seeAlso": [{ "pkg": "10-vite", "id": "hmr", "term": "HMR" }]
+    },
+    {
+      "id": "vitest-cleanup",
+      "term": "cleanup 与串扰",
+      "match": ["cleanup", "串扰", "泄漏"],
+      "level": "L4",
+      "tip": "组件测试后必须卸载 DOM（cleanup），否则上一个用例的节点泄漏进下一个造成假绿/假红",
+      "desc": "RTL 通常自动 cleanup，但配了 globals/自定义 render 或 happy-dom 边界可能要手动。共享 store/单例没重置也是串扰源。用例隔离不仅是 Vitest 的 threads 机制，也是你代码里「每用例建干净环境」的纪律。",
+      "seeAlso": [{ "pkg": "18-jotai", "id": "jo-store", "term": "Store 隔离" }]
+    }
+  ]
+}

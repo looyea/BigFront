@@ -1,0 +1,263 @@
+{
+  "title": "微信小程序 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "mp-overview",
+      "term": "小程序",
+      "full": "Mini Program",
+      "match": ["小程序"],
+      "level": "L1",
+      "tip": "跑在微信等宿主 App 里的轻量应用：无需安装、扫码即用、随时更新",
+      "desc": "本质是「宿主 App 内嵌的 WebView + JS 引擎 + 原生渲染层」：开发者写 WXML/WXSS/JS，运行时翻译成界面。与 H5 的区别在能力（支付、扫码、订阅消息）与管控（审核上架、包体积限制）。"
+    },
+    {
+      "id": "dual-thread",
+      "term": "双线程架构",
+      "match": ["渲染层", "逻辑层"],
+      "level": "L1",
+      "tip": "视图跑在渲染线程、你的 JS 跑在逻辑线程，两线程通过 Native 中转通信",
+      "desc": "微信这么做是为了安全（逻辑层摸不到 DOM）与可控（统一渲染管线）。副作用：两线程通信是异步且有成本的——setData 大对象、频繁调用都贵，这是小程序性能问题的总根源。",
+      "seeAlso": [{ "pkg": "01-es", "id": "event-loop", "term": "事件循环" }]
+    },
+    {
+      "id": "basic-config",
+      "term": "app.json 配置",
+      "full": "全局配置",
+      "match": ["app.json", "app.wxss", "project.config.json"],
+      "level": "L1",
+      "tip": "声明页面列表 pages、窗口样式 window、tabBar、权限；页面同名 .json 可覆盖局部配置",
+      "desc": "`pages` 数组第一项是启动页；`window` 定导航栏颜色/下拉刷新；`tabBar` 配底部导航（最多 5 个，图标要本地图）。每页四件套：wxml/wxss/js/json，路径在 pages 里注册过才能访问。"
+    },
+    {
+      "id": "wxml",
+      "term": "WXML",
+      "full": "WeiXML",
+      "match": ["WXML"],
+      "level": "L2",
+      "tip": "小程序的模板语言：类似 HTML，但只有 {{插值}}、wx:指令、<block> 这几样",
+      "desc": "`{{a.b}}` 插值、`wx:if/wx:elif/wx:else`、`wx:for`（默认 item/index）、`wx:key`、`<template>` 片段复用、`<import>/<include>` 文件引入。不能写任意 JS 表达式——复杂逻辑放 JS 或 WXS。"
+    },
+    {
+      "id": "wxss-rpx",
+      "term": "WXSS 与 rpx",
+      "match": ["WXSS", "rpx"],
+      "level": "L2",
+      "tip": "CSS 超集；rpx 是响应式单位：750rpx = 屏幕宽度，一套样式适配所有机型",
+      "desc": "iPhone6 上 1rpx=0.5px。支持 @import，不支持 CSS Modules 等构建期特性；选择器不能跨组件、别用 * 通配（性能）。字号场景混用：布局用 rpx，文字要兼顾系统字体缩放时考虑 px+媒体查询。"
+    },
+    {
+      "id": "databind",
+      "term": "数据绑定",
+      "match": ["数据绑定", "{{"],
+      "level": "L2",
+      "tip": "WXML 里 {{msg}} 绑 data，改变 data 靠 setData 驱动视图更新",
+      "desc": "data 是页面/组件的响应式仓库，但机制不是 Proxy 而是「显式提交」：setData 后框架 diff 数据、只把变化部分发给渲染层。直接 this.data.x = 1 视图不动。"
+    },
+    {
+      "id": "setdata",
+      "term": "setData",
+      "match": ["setData"],
+      "level": "L3",
+      "tip": "小程序第一性能大户：跨线程传数据 + 触发渲染更新，能小就小、能少就少",
+      "desc": "三个优化方向：① 只传变化字段（支持 `'list[0].text'` 路径更新）；② 频率合并（滚动监听里狂调必卡）；③ 不需要驱动视图的数据（大数组缓存、配置）干脆不放 data，挂 this 上就完事。"
+    },
+    {
+      "id": "events-dataset",
+      "term": "事件与 dataset",
+      "match": ["bindtap", "catchtap", "dataset", "currentTarget", "target"],
+      "level": "L3",
+      "tip": "bind 绑定、catch 阻止冒泡；data-xxx 属性自动挂到 e.currentTarget.dataset 回传",
+      "desc": "事件流=捕获（capture 前缀）→ 到达目标 → 冒泡（bind 沿路触发，catch 截停）。target 是事件源、currentTarget 是当前绑定元素，列表项里取 dataset 认准 currentTarget。touch 系列事件带 touches 坐标数组。"
+    },
+    {
+      "id": "page-lifecycle",
+      "term": "页面生命周期",
+      "match": ["onLoad", "onShow", "onReady", "onHide", "onUnload", "onPullDownRefresh"],
+      "level": "L3",
+      "tip": "onLoad 接参数取数据 → onShow 每次可见刷新 → onHide/onUnload 停表放锁",
+      "desc": "onLoad 只跑一次且收 query 参数；onShow/onHide 随可见性反复触发（计时器、播放器在这成对管理）；onUnload 释放资源。页面栈上限 10 层，触底 onReachBottom、下拉 onPullDownRefresh 要在 json 开启。"
+    },
+    {
+      "id": "route-api",
+      "term": "路由 API",
+      "match": ["navigateTo", "redirectTo", "switchTab", "reLaunch", "navigateBack"],
+      "level": "L4",
+      "tip": "压栈跳转、替换当前页、切 Tab、清栈重启、回退——五种姿势对应不同栈操作",
+      "desc": "navigateTo 入栈（可返回）、redirectTo 替换栈顶（不留痕）、switchTab 只能去 tabBar 页且清空非 Tab 栈、reLaunch 关一切去任意页。页面实例在栈里保活：返回不重新 onLoad，刷新数据的活放 onShow。"
+    },
+    {
+      "id": "route-params",
+      "term": "路由传参",
+      "match": ["eventChannel", "query 传参"],
+      "level": "L4",
+      "tip": "URL query 只能带字符串；大数据用 eventChannel 事件通道回传给上一页",
+      "desc": "`navigateTo({url:'/p?id=1'})` 在 onLoad options 接。传递对象/图片路径这类不能进 URL 的：目标页 `this.getOpenerEventChannel().emit('msg', data)`，上一页 navigateTo 的 success 里 `eventChannel.on('msg')` 收。"
+    },
+    {
+      "id": "custom-component",
+      "term": "自定义组件",
+      "match": ["properties", "Component(", "usingComponents"],
+      "level": "L5",
+      "tip": "四件套 + properties 收、triggerEvent 发；使用前必须 in usingComponents 注册",
+      "desc": "组件样式默认隔离（加 styleIsolation 可调）、看不到 app.wxss（除非声明 addGlobalClass）。properties 支持类型校验与 observer；数据流仍是单向：props 下、事件上，和 Vue/React 同构。"
+    },
+    {
+      "id": "comp-lifecycle",
+      "term": "组件生命周期",
+      "match": ["attached", "detached", "ready", "observer"],
+      "level": "L5",
+      "tip": "created 不能碰节点 → attached 进树（取数据/初始化）→ ready 布局完成 → detached 清理",
+      "desc": "组件没有 onShow，页面可见性变化靠 `pageLifetimes: { show, hide }`。lifetimes 写法优先于旧版顶层钩子；properties 的 observer 负责「外部传值进来时联动」，别拿它当 mounted 用。"
+    },
+    {
+      "id": "slot-comp",
+      "term": "slot 插槽",
+      "match": ["slot", "插槽"],
+      "level": "L5",
+      "tip": "组件挖坑父填土；具名 slot 多个坑，WXML 里没有作用域插槽（用 template 传参替代）",
+      "desc": "`<slot name=\"header\">` 配父层 `<view slot=\"header\">`。数据回传技巧：组件把数据塞进绑给插槽的 template is/data，或干脆 props 传渲染模板名。多 slot 时 wx:key 失效是已知坑。"
+    },
+    {
+      "id": "behavior",
+      "term": "behavior",
+      "full": "behaviors",
+      "match": ["behavior"],
+      "level": "L5",
+      "tip": "组件的混入包：把 properties/methods/生命周期打包复用，多 behavior 可叠加",
+      "desc": "`behaviors: ['wx://form-field', myMixin]` ——前者让自定义组件接入表单体系（form 提交能带上它）。冲突规则：后声明的覆盖前者。跨页面逻辑复用还可以抽 JS 模块，behavior 专管「带组件生命周期」的那类。"
+    },
+    {
+      "id": "select-query",
+      "term": "节点查询",
+      "match": ["selectComponent", " createSelectorQuery", "boundingClientRect"],
+      "level": "L5",
+      "tip": "小程序没有 document：用 this.createSelectorQuery() 在组件内量尺寸、拿节点",
+      "desc": "`this.createSelectorQuery().select('#box').boundingClientRect(rect=>{}).exec()`；自定义组件节点要 `.in(this)`。操作输入框焦点用 `this.selectComponent('#input').focus()`（组件自己暴露方法）。"
+    },
+    {
+      "id": "wxs",
+      "term": "WXS",
+      "full": "WeiScript",
+      "match": ["wxs"],
+      "level": "L2",
+      "tip": "运行在渲染层的脚本：模板里做格式化的唯一合法出口，不经过逻辑层",
+      "desc": "WXS 语法是 ES 子集（无 new、无 Date 构造等），与 JS 线程不同、不能调 wx API。用于列表项实时格式化（toFixed、日期裁剪）避免 setData 往返；高频交互（拖拽跟随）写在 WXS 响应事件里比回逻辑层快得多。"
+    },
+    {
+      "id": "request-api",
+      "term": "wx.request",
+      "match": ["wx.request", "request("],
+      "level": "L6",
+      "tip": "唯一合法的网络请求口：必须 HTTPS、必须配域名白名单，超时/拦截器都要自己包",
+      "desc": "后台「开发设置→服务器域名」登记后才能请求；data 自动序列化，header 里 Content-Type 决定 body 形态。工程实践：包一层 requestUtil 统一 baseURL、token 注入、错误 toast、401 重登。"
+    },
+    {
+      "id": "domain-whitelist",
+      "term": "域名白名单",
+      "match": ["request 合法域名", "域名白名单"],
+      "level": "L6",
+      "tip": "五类域名（request/socket/uploadFile/downloadFile/webview）各 200 个上限，开发者后台配置",
+      "desc": "开发工具可勾「不校验合法域名」本地畅通，但真机预览与线上强制校验。域名必须 ICP 备案 + HTTPS；频繁换域名会被审核盯上。web-view 打开的 H5 还要单独配业务域名。"
+    },
+    {
+      "id": "login-flow",
+      "term": "登录流程",
+      "match": ["wx.login", "code2Session"],
+      "level": "L6",
+      "tip": "wx.login 拿临时 code → 服务器换 openid/session_key → 自造 token 发回小程序",
+      "desc": "会话凭证 session_key 绝不能下发到小程序端，也不能透出给第三方。`wx.getUserProfile` 头像昵称要用户主动点（2022 年整改后 button open-type=chooseAvatar 采集）。整个链条是 OAuth 的微信变体。"
+    },
+    {
+      "id": "openid",
+      "term": "openid / unionid",
+      "match": ["openid", "unionid", "session_key"],
+      "level": "L6",
+      "tip": "openid 是「某人在某小程序里」的唯一 ID；同一开放平台账号下多应用用 unionid 认人",
+      "desc": "同一微信用户：小程序 A 和公众号 B 里 openid 不同、unionid 相同（需绑定同一开放平台）。手机号要 `button open-type=getPhoneNumber` 且企业主体申请额度。身份体系一切以 openid 为主键。"
+    },
+    {
+      "id": "open-apis",
+      "term": "开放能力",
+      "match": ["wx.scanCode", "wx.getLocation", "chooseImage", "订阅消息", "微信支付"],
+      "level": "L6",
+      "tip": "扫码、定位、支付、订阅消息等设备与平台能力：多数需声明用途并通过审核",
+      "desc": "隐私接口从 2023 起必须在后台配置「用户隐私保护指引」并弹窗授权；定位类接口还需资质。订阅消息分一次性/长期，一次性要点一次发一条——营销触达设计要提前规划。"
+    },
+    {
+      "id": "storage-mp",
+      "term": "Storage 存储",
+      "match": ["setStorage", "getStorage", "Storage"],
+      "level": "L7",
+      "tip": "key-value 本地盘：单 key ≤1MB、总量 ≤10MB，同步/异步两套 API",
+      "desc": "`wx.setStorage({key,data})` 自动 JSON 序列化，data 直接放对象。小程序删除后清空；缓存 token、草稿、列表分页游标都靠它。超 10MB 需求（文件、图片）走临时文件目录 `wx.env.USER_DATA_PATH`。",
+      "seeAlso": [{ "pkg": "01-es", "id": "local-storage", "term": "localStorage" }]
+    },
+    {
+      "id": "global-data",
+      "term": "globalData 与状态管理",
+      "match": ["globalData", "mobx-miniprogram"],
+      "level": "L7",
+      "tip": "getApp().globalData 是最粗暴的全局共享；正经项目用 mobx/zustand 适配层做响应式状态",
+      "desc": "globalData 改了页面不自动更新（无订阅机制）。mobx-miniprogram + bindPageStore 补齐响应式；或学 Pinia 思路自建「store + 订阅 setData」小封装。跨页通信也可用事件总线（emit/on 的自建版）。"
+    },
+    {
+      "id": "subpackage",
+      "term": "分包",
+      "full": "subpackage",
+      "match": ["分包", "subpackages"],
+      "level": "L7",
+      "tip": "主包 ≤2MB 装首页与公共件，其他页面拆子包（单个 ≤2MB、总 ≤30MB）按需下载",
+      "desc": "app.json `subpackages` 声明 root/pages；分包预下载 `preload_rule` 让用户进首页就开始下高频分包。公共组件/工具放主包被引用是常见错误点——分包间不能互相引用，公共代码要么提升到主包要么复制。"
+    },
+    {
+      "id": "mp-performance",
+      "term": "性能清单",
+      "match": ["骨架屏", "长列表"],
+      "level": "L7",
+      "tip": "骨架屏首屏、setData 节流减量、recycle-view 长列表、图片懒加载与压缩、体验评分工具",
+      "desc": "微信「开发-性能诊断」与体验评分小程序给报告。核心指标：首屏渲染完成时间、setData 频率与载荷大小、FPS。最见效三招：砍 setData 数据量（只传 diff）、列表虚拟滚动（recycle-view）、图片走 CDN+懒加载。"
+    },
+    {
+      "id": "skyline",
+      "term": "Skyline 渲染后端",
+      "match": ["Skyline"],
+      "level": "L7",
+      "tip": "替代 WebView 的新渲染引擎：原生绘制、更接近 Flutter 体验，需显式开启",
+      "desc": "app.json `renderer: \"skyline\"` 切换（组件用 `componentFramework: glass-easel`）。优势在滚动容器（grid-view/list-view 原生复用）、手势响应；兼容仍有边界，老项目渐进迁移，新项目可直接吃。"
+    },
+    {
+      "id": "cloud-dev",
+      "term": "云开发",
+      "full": "WeChat Cloud Development",
+      "match": ["云函数", "云开发"],
+      "level": "L8",
+      "tip": "免服务器方案：云函数 + 文档型云数据库 + 对象存储 + CDN，微信侧直接调",
+      "desc": "`wx.cloud.callFunction` 直连后端逻辑，openid 自动注入免登录；数据库支持小程序端带权限规则直写。适合 MVP 与中小项目，流量大后迁移自建服务要注意数据模型不兼容。"
+    },
+    {
+      "id": "publish-review",
+      "term": "提审上架",
+      "match": ["提审", "审核"],
+      "level": "L8",
+      "tip": "上传→设为体验版→提交审核（1-7 天）→发布；类目资质、隐私指引、诱导分享是四大拒因",
+      "desc": "版本分开发/体验/线上三色；审核红线：收集信息不声明、需资质类目（医疗、金融）缺证、测试账号不提供、虚拟支付绕 iOS 规则。被拒会写明条款号，申诉入口在版本详情。"
+    },
+    {
+      "id": "taro",
+      "term": "Taro 与 uni-app",
+      "match": ["Taro", "uni-app", "uniapp"],
+      "level": "L8",
+      "tip": "跨端编译器：React 语法（Taro）或 Vue 语法（uni-app）一套代码编译出小程序/H5/RN",
+      "desc": "原理是运行时适配层 + 组件映射 + 条件编译（process.env.TARO_ENV）。跨端红利伴随三处妥协：平台 API 要条件调用、CSS 单位两套、性能天花板略低。双端以下需求不建议为跨端而跨端。"
+    },
+    {
+      "id": "h5-bridge",
+      "term": "web-view 与 JSAPI",
+      "match": ["web-view", "JSAPI", "jssdk"],
+      "level": "L8",
+      "tip": "小程序内嵌 H5 的容器；H5 里通过 JSSDK 与小程序通信（navigateTo、分享、支付回调）",
+      "desc": "web-view 占满整页、层级最高，业务域名需上传校验文件。H5→小程序：`wx.miniProgram.postMessage/navigateTo`；小程序→H5 无直接通道，靠 URL 参数或后端中转。公众号 H5 另有一套 JS-SDK（签名机制）。"
+    }
+  ]
+}

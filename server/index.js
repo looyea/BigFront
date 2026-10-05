@@ -22,6 +22,12 @@
  *    动机：前端主题与字号原先只存 localStorage，而 localStorage 按 origin（协议+主机+端口）隔离——
  *    dev 的 :5173 与 prod 的 :3001 / 127.0.0.1 互不相通，清缓存或换浏览器也会丢，
  *    用户体感就是「下次打开被调回默认」。故服务端再存一份，前端以它为准回灌。
+ *
+ * v1.4 变更：
+ *  - 课程包可选文件 glossary.json（术语表）：启动时随大纲一并读入内存索引。
+ *    新接口 GET /api/glossary/:pkgId（单包术语表）与 GET /api/glossary-index（全库术语索引，供课文 Tooltip 悬停查词）。
+ *    术语表是「随时可查的词典」而非「关卡」：两个接口都不做解锁/进度校验，任何时候都开放。
+ *    缺 glossary.json 不记完整性告警（属选配文件，各包陆续补齐即可）。
  */
 import express from 'express';
 import cors from 'cors';
@@ -146,6 +152,35 @@ function resolveExamplesDir(pkgDir, levelDir, no, lessonId) {
 }
 
 /**
+ * 术语表归一：glossary.json 形如 { title, intro, terms:[{ id, term, full, zh, match[], level, tip, desc, seeAlso[] }] }。
+ * 只校形状不猜内容：id 是锚点主键（缺失的条目直接丢弃）、match 缺省回退 [term]、seeAlso 只留形状合法的引用。
+ * 前端拿 match 短语表在课文 DOM 上做术语识别，拿 tip 做悬停提示，拿 id 拼锚点跳术语表页。
+ */
+function normalizeGlossary(raw) {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.terms)) return null;
+  const terms = [];
+  for (const t of raw.terms) {
+    if (!t || typeof t.id !== 'string' || !isSafeSegment(t.id) || typeof t.term !== 'string') continue;
+    const match = (Array.isArray(t.match) ? t.match : [t.term])
+      .filter((m) => typeof m === 'string' && m.length > 0).slice(0, 20);
+    if (!match.length) match.push(t.term);
+    const seeAlso = (Array.isArray(t.seeAlso) ? t.seeAlso : [])
+      .filter((s) => s && typeof s.pkg === 'string' && typeof s.id === 'string')
+      .map((s) => ({ pkg: s.pkg, id: s.id, term: typeof s.term === 'string' ? s.term : s.id }));
+    terms.push({
+      id: t.id, term: t.term,
+      full: typeof t.full === 'string' ? t.full : '',
+      zh: typeof t.zh === 'string' ? t.zh : '',
+      match, level: typeof t.level === 'string' ? t.level : '',
+      tip: typeof t.tip === 'string' ? t.tip : '',
+      desc: typeof t.desc === 'string' ? t.desc : t.tip || '',
+      seeAlso,
+    });
+  }
+  return { title: typeof raw.title === 'string' ? raw.title : '', intro: typeof raw.intro === 'string' ? raw.intro : '', terms };
+}
+
+/**
  * 课程索引：只在进程启动时扫一次 courses/。
  * 因此新增/改名关卡后须重启后端才生效——dev 的 `node --watch` 只盯 server/ 自身，
  * 改 courses/ 不会自动重启；改 server/index.js 任意一行即可间接触发一次重扫。
@@ -203,10 +238,21 @@ function buildIndex() {
         scanWarnings.push(`[${manifest.id}] 阶段 ${level.id} 缺少作业文件 ${levelDir}/homework-${level.id}.md (或 homework/${level.id}.md)`);
       }
     }
+    // 术语表：选配文件，存在则读入；解析失败记告警但不阻断建索引（与 course.json 同口径）
+    let glossary = null;
+    const glossaryFile = path.join(pkgDir, 'glossary.json');
+    if (fs.existsSync(glossaryFile)) {
+      try {
+        glossary = normalizeGlossary(JSON.parse(fs.readFileSync(glossaryFile, 'utf8')));
+        if (!glossary) scanWarnings.push(`课程包 ${manifest.id || dirEntry.name} 的 glossary.json 缺少 terms 数组，已忽略`);
+      } catch (e) {
+        scanWarnings.push(`课程包 ${manifest.id || dirEntry.name} 的 glossary.json 解析失败：${e.message}`);
+      }
+    }
     if (manifest.id !== dirEntry.name) {
       scanWarnings.push(`课程包目录名 ${dirEntry.name} 与 manifest.id "${manifest.id}" 不一致`);
     }
-    courseIndex.set(manifest.id, { manifest, lessonMap, pkgDir });
+    courseIndex.set(manifest.id, { manifest, lessonMap, pkgDir, glossary });
   }
   console.log(`[courses] 已加载 ${courseIndex.size} 个课程包：`, [...courseIndex.keys()].join(', '));
   if (scanWarnings.length) {
@@ -585,7 +631,42 @@ app.get('/api/packages/:pkgId', async (req, res) => {
     id: manifest.id, title: manifest.title, tagline: manifest.tagline,
     icon: manifest.icon, color: manifest.color, tiers: manifest.tiers,
     levels, unlockedLevels: computeUnlockedLevels(manifest.id),
+    // 术语表入口是否展示（目录页红框按钮）：只取决于有没有 glossary.json，与进度无关
+    hasGlossary: Boolean(entry.glossary),
   });
+});
+
+/* ------------------------------ 术语表（永远开放） ------------------------------
+ * 术语表是词典不是关卡：以下两个接口都不做解锁/进度校验，任何时候可访问。
+ * ------------------------------------------------------------------------- */
+
+// 单个课程包的术语表（术语表页 /g/:pkgId 用）
+app.get('/api/glossary/:pkgId', (req, res) => {
+  const entry = courseIndex.get(req.params.pkgId);
+  if (!entry) return res.status(404).json({ error: `课程包 ${req.params.pkgId} 不存在` });
+  if (!entry.glossary) return res.status(404).json({ error: '该课程包尚未配备术语表' });
+  const { manifest } = entry;
+  res.json({
+    pkgId: manifest.id, pkgTitle: manifest.title, icon: manifest.icon, color: manifest.color,
+    levels: (manifest.levels ?? []).map(({ id, title }) => ({ id, title })),
+    ...entry.glossary,
+  });
+});
+
+// 全库术语索引（课文 Tooltip 用）：一次拉齐所有已配备术语包的短语表，前端缓存后在 DOM 上识别术语
+// 跨包推荐（本包没讲、别的包有）也靠这份索引兜住，不必每篇课文逐个请求
+app.get('/api/glossary-index', (req, res) => {
+  const packages = [];
+  const withGlossary = [];
+  for (const [pkgId, { manifest, glossary }] of courseIndex) {
+    if (!glossary) continue; // 只收录真正配备了术语表的包：前端据此渲染互跳条、解析 seeAlso，混入无术语包会造出死链
+    withGlossary.push(pkgId);
+    packages.push({
+      pkg: pkgId, pkgTitle: manifest.title, icon: manifest.icon,
+      terms: glossary.terms.map(({ id, term, full, zh, match, level, tip }) => ({ id, term, full, zh, match, level, tip })),
+    });
+  }
+  res.json({ withGlossary, packages });
 });
 
 /**

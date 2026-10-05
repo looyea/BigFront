@@ -1,0 +1,201 @@
+{
+  "title": "Pinia · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "pinia-overview",
+      "term": "Pinia",
+      "match": ["Pinia", "pinia"],
+      "level": "L1",
+      "tip": "Vue 3 官方状态库，取代 Vuex：无 mutation、setup 写法、TS 一流、模块扁平",
+      "desc": "Vuex 三大痛点（mutation 冗余、module 割裂、TS 差）被 Pinia 逐条解决。两种写法：setup store（Composition 风格）与 options store。app.use(pinia) 注册后即可在组件里用。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "pinia-store", "term": "Pinia" }]
+    },
+    {
+      "id": "define-store",
+      "term": "defineStore",
+      "match": ["defineStore"],
+      "level": "L1",
+      "tip": "定义一个 store：defineStore(id, setupFn | optionsObj)，返回一个 useXxxStore 钩子",
+      "desc": "setup 写法里 ref 即 state、computed 即 getter、function 即 action，类型自动推断零标注。options 写法用 state/getters/actions 字段。约定命名 useXxxStore、模块顶层导出。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "setup-store", "term": "Setup Store" }]
+    },
+    {
+      "id": "setup-store",
+      "term": "Setup Store",
+      "match": ["setup store", "storeToRefs", "Setup"],
+      "level": "L1",
+      "tip": "Composition API 风格的 store：ref/computed/function 直接就是 state/getter/action",
+      "desc": "解构会丢响应性——用 storeToRefs(store) 保留 ref 的响应式解构，方法可直接从 store 上取。这是 Pinia 主推写法，和 Vue 组合式心智无缝衔接。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "composition-api", "term": "组合式 API" }]
+    },
+    {
+      "id": "options-store",
+      "term": "Options Store",
+      "match": ["Options", "state()", "getters"],
+      "level": "L1",
+      "tip": "对象式的 state/getters/actions 三段定义，Vuex 迁移者眼熟；setup 更推荐",
+      "desc": "state 用函数返回初始对象、getters 是计算属性、actions 里 this 访问 store。功能等价 setup store，只是风格不同。新项目一般选 setup。"
+    },
+    {
+      "id": "pinia-mutations",
+      "term": "状态变更",
+      "match": ["$patch", "$subscribe", "$reset"],
+      "level": "L1",
+      "tip": "三种粒度：store.count++ 直接改、$patch 批量改、action 封装；$subscribe 监听、$reset 复位",
+      "desc": "Pinia 没有 mutation——直接赋值或 $patch 就是改状态。$patch 一次改多个字段并合并成一次记录；$reset 回到初始状态（登出清场常用）；$onAction 钩子在 action 前后插日志/错误处理。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "on-action", "term": "$onAction 钩子" }]
+    },
+    {
+      "id": "patch-batch",
+      "term": "$patch",
+      "match": ["$patch"],
+      "level": "L2",
+      "tip": "批量/函数式改状态：store.$patch({a:1,b:2}) 或 store.$patch(s => {...})，DevTools 记为一次变更",
+      "desc": "比逐字段赋值更清晰、可被插件/订阅一次性捕获。数组等复杂结构用函数式 $patch。乐观更新回滚常配合 $patch 快照恢复。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "optimistic", "term": "乐观更新与回滚" }]
+    },
+    {
+      "id": "pinia-getters",
+      "term": "Computed Getters",
+      "match": ["getter", "computed"],
+      "level": "L2",
+      "tip": "用 computed() 做惰性派生缓存；getter 返回函数可实现带参筛选",
+      "desc": "和 Vue computed 一致：只在依赖变化时重算。`getById: (state) => (id) => state.list.find(...)` 这种返回函数的 getter 支持传参，但注意它不再自动缓存。getter 之间可互相引用，别造循环。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "computed", "term": "computed" }]
+    },
+    {
+      "id": "pinia-async",
+      "term": "Async Actions",
+      "match": ["async", "AbortController", "竞态", "useFetch"],
+      "level": "L2",
+      "tip": "action 直接 async/await（无 thunk）；loading/error 内置在 store；AbortController 取消竞态",
+      "desc": "把 HTTP 写进 action 是最自然的用法：进入设 loading=true、catch 记 error、finally 复位。快速切参的竞态用 AbortController 取消旧请求。Nuxt 里和 useFetch/useAsyncData 互补。",
+      "seeAlso": [{ "pkg": "08-nuxt", "id": "usefetch", "term": "useFetch / useAsyncData" }]
+    },
+    {
+      "id": "optimistic",
+      "term": "乐观更新与回滚",
+      "match": ["乐观", "回滚", "重试"],
+      "level": "L2",
+      "tip": "$patch 快照 + catch 恢复：先本地改、失败回滚；重试退避；全局错误捕获转 toast",
+      "desc": "标准三段：改前存快照 → 应用乐观变更并发请求 → 失败用快照 $patch 回滚。离线队列是进阶形态。乐观更新要标清适用边界（低冲突操作），别到处用。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-optimistic", "term": "乐观更新与回滚" }]
+    },
+    {
+      "id": "pinia-compose",
+      "term": "Store 组合",
+      "match": ["useOtherStore", "跨 store"],
+      "level": "L3",
+      "tip": "action 里调另一个 store（useOtherStore()）；跨 store 派生 getter 有响应性陷阱要修",
+      "desc": "拆分粒度判据：按领域而非按类型切。跨 store 组合时，在一个 store 的 getter 里读另一个 store 的 state 要保证响应链正确（用 setup store 直接读 ref 最稳）。避免循环依赖。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "define-store", "term": "defineStore" }]
+    },
+    {
+      "id": "pinia-plugins",
+      "term": "插件系统",
+      "match": ["createPinia", "plugin", ".use("],
+      "level": "L3",
+      "tip": "createPinia().use(fn) 给所有 store 注入能力：插件签名 (context) => partialState",
+      "desc": "典型插件：persist（localStorage 持久化）、日志、撤销/重做。插件在 store 创建时执行，可往 store 加新属性、订阅 $subscribe、包装 action。注意插件与 $subscribe 的时序。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "za-middleware", "term": "中间件三件套" }]
+    },
+    {
+      "id": "persist-plugin",
+      "term": "持久化",
+      "match": ["localStorage", "persist", "sessionStorage"],
+      "level": "L3",
+      "tip": "pinia-plugin-persistedstate 等把 store 存进 localStorage；SSR 下要跳过或在客户端水合",
+      "desc": "配置 pick/paths 选字段持久化、version 做迁移。Nuxt SSR 里持久化逻辑要 process.client 守卫，否则服务端无 window。跨标签页同步靠 storage 事件。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-persist-deep", "term": "persist 深入" }]
+    },
+    {
+      "id": "pinia-devtools",
+      "term": "DevTools 与 HMR",
+      "match": ["HMR", "acceptHMRUpdate", "时间旅行"],
+      "level": "L3",
+      "tip": "Vue DevTools Pinia 面板支持时间旅行/编辑；Vite HMR 不丢状态靠 acceptHMRUpdate",
+      "desc": "改 store 代码热替换而不重置状态：在 store 文件里配 import.meta.hot.acceptHMRUpdate。对比 Vuex DevTools 的大幅改进。dev-only 严格模式能提示非法状态变更。",
+      "seeAlso": [{ "pkg": "10-vite", "id": "hmr", "term": "HMR" }]
+    },
+    {
+      "id": "pinia-auth",
+      "term": "登录态与权限 store",
+      "match": ["token", "拦截器", "登出"],
+      "level": "L4",
+      "tip": "token + axios 拦截器联动；路由守卫用 useAuthStore；登出 $reset + 清 storage；跨标签页同步",
+      "desc": "把用户信息与 token 收在一个 auth store，暴露 isLoggedIn/role getter 给路由守卫判权。登出务必 $reset 复位并清持久化，避免脏状态残留。storage 事件做多标签页一致。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-auth", "term": "登录态实战" }]
+    },
+    {
+      "id": "pinia-form",
+      "term": "表单状态与分工",
+      "match": ["vee-validate", "向导", "dirty", "beforeunload"],
+      "level": "L4",
+      "tip": "跨步骤向导才进 store；字段校验交 vee-validate/zod；局部表单态留组件内",
+      "desc": "反模式是把每个字段都塞全局 store——单表单字段属于组件局部态。只有「跨步骤/草稿/离开页保留」才值得进 store。dirty 检测配 beforeunload 防丢数据。reset 语义要与初始值对齐。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-forms", "term": "表单分工" }]
+    },
+    {
+      "id": "pinia-ssr",
+      "term": "Nuxt SSR 状态水合",
+      "match": ["水合", "process.client", "序列"],
+      "level": "L4",
+      "tip": "Nuxt 自动序列化/水合 Pinia；plugin 里 process.client 跳过持久化；SSR 期取数放 action",
+      "desc": "服务端建 store、跑取数、把状态序列化进 payload、客户端复原——避免「服务端渲染有值、客户端水合后闪空」。等价于 Next 的 TransferState / RSC Payload 问题域。defineNuxtRouteMiddleware 做服务端守卫。",
+      "seeAlso": [{ "pkg": "08-nuxt", "id": "payload-nuxt", "term": "payload 水合" }]
+    },
+    {
+      "id": "pinia-testing",
+      "term": "store 单元测试",
+      "match": ["setActivePinia", "createPinia", "mock"],
+      "level": "L5",
+      "tip": "createPinia + setActivePinia 让 store 脱离组件测；action 改 state 后直接断言 getter；HTTP mock",
+      "desc": "store 是纯逻辑、测起来比组件简单得多：每个用例 setActivePinia(createPinia()) 建干净环境，调 action、断言状态。HTTP 用 msw/vi.mock 拦截。组件集成则 mount({global.plugins:[pinia]})。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-overview", "term": "Vitest" }]
+    },
+    {
+      "id": "pinia-migration",
+      "term": "Vuex 迁移",
+      "match": ["codemod", "namespaced", "mutations"],
+      "level": "L5",
+      "tip": "官方 codemod 起步；module→store 1:1、mutations→直接赋值/$patch、getters→computed",
+      "desc": "namespaced module 拆成独立 store、dispatch/commit 换成直接调 action。分阶段灰度 + 检查清单：mutation 全消、mapState 换 storeToRefs、TS 类型重推。别指望一键——语义差异要人工过。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-migrate", "term": "迁移与共存" }]
+    },
+    {
+      "id": "pinia-ecosystem",
+      "term": "选型收官",
+      "match": ["Composables", "colada", "composable"],
+      "level": "L5",
+      "tip": "跨组件共享+持久化+时间旅行=Pinia；局部=composable；数据拉取缓存=@pinia/colada / TanStack Query",
+      "desc": "三问判据：需要全局唯一？需要持久化/DevTools？是服务端缓存吗？Vue 生态定位图——Pinia 管客户端共享态，服务端态交给 Query/Colada，别混。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-division", "term": "三层分工" }]
+    },
+    {
+      "id": "on-action",
+      "term": "$onAction 钩子",
+      "match": ["onAction", "after", "onError"],
+      "level": "L2",
+      "tip": "在每个 action 触发时插钩子：after/onError 回调，做日志、全局错误转 toast、埋点",
+      "desc": "context 给你 name/store/args/after/onError。插件常用它统一包一层错误处理或审计。比在 action 里散落 try/catch 更集中。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "pinia-mutations", "term": "状态变更" }]
+    },
+    {
+      "id": "root-state",
+      "term": "跨 store 派生",
+      "match": ["rootState", "派生"],
+      "level": "L3",
+      "tip": "options store 的 getter 第二参是 rootState（拿别的 store），setup store 里直接 use 别的 store",
+      "desc": "跨 store 派生要小心响应性：setup store 里 `const other = useOtherStore(); computed(() => other.list.length)` 天然响应。避免两个 store 互相引用成环。"
+    },
+    {
+      "id": "store-instance",
+      "term": "store 实例与调用时机",
+      "match": ["useStore", "实例"],
+      "level": "L1",
+      "tip": "useXxxStore() 必须在 setup/事件回调里调（要有激活的 pinia 上下文），别在模块顶层裸调",
+      "desc": "SSR 下 pinia 是每请求新建的，模块顶层 useStore 会拿到错误实例或报「no active pinia」。需要组件外访问（拦截器）时传入 pinia 或在已初始化后取。"
+    }
+  ]
+}

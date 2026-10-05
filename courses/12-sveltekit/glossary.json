@@ -1,0 +1,312 @@
+{
+  "title": "SvelteKit 2 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "kit-overview",
+      "term": "SvelteKit",
+      "match": ["SvelteKit"],
+      "level": "L1",
+      "tip": "Svelte 官方元框架：Vite 之上叠文件路由、load 数据协议、hooks、adapter 部署体系",
+      "desc": "对标 Next.js / Nuxt：路由由 src/routes 目录生成，SSR 默认开、按页可关，server hooks 让你拦截每个请求。体量比 Next 小、约定更克制（没有 RSC 那套），心智是「Svelte + HTTP」。",
+      "seeAlso": [{ "pkg": "11-svelte", "id": "svelte-kit-bridge", "term": "SvelteKit" }, { "pkg": "07-nextjs", "id": "meta-framework", "term": "元框架" }]
+    },
+    {
+      "id": "kit-vs-svelte",
+      "term": "Svelte 与 Kit 的分工",
+      "match": ["src/routes", "+page"],
+      "level": "L1",
+      "tip": "Svelte 管组件怎么写；Kit 管 URL 到组件的整条链路：路由、数据、鉴权、部署",
+      "desc": "Kit 不造组件模型，只做应用骨架：+page/+layout 文件协议、load 取数、form actions、hooks 中间件、adapter 产物。用裸 Svelte 也能 SPA，但 SEO/数据/部署全自己扛。"
+    },
+    {
+      "id": "routing-kit",
+      "term": "文件路由",
+      "match": ["路由", "fallback"],
+      "level": "L2",
+      "tip": "src/routes 下文件夹=URL 段；+page.svelte 渲染页面、+layout.svelte 包共享外壳",
+      "desc": "约定文件族：+page（页面）、+layout（布局）、+error（错误 UI）、+loading 已并入 +page.svelte 的 data 待定位（Kit 2 用 snooze/deferred 处理）。嵌套布局沿路由链层层包裹。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "file-routing", "term": "文件路由" }]
+    },
+    {
+      "id": "rest-optional",
+      "term": "rest 与 matchers",
+      "match": ["rest 段", "matchers", "兜底段"],
+      "level": "L2",
+      "tip": "[...files] 吃掉多段；params/xxx.ts 写正则约束动态段（只匹配数字 id 等）",
+      "desc": "`src/params/uuid.js` 导出 match 函数，路由段写 `[id=uuid]`。rest 段常做 catch-all 与 CMS 页；重命名路由段要同步改 load 里的 params 取值。"
+    },
+    {
+      "id": "named-routes",
+      "term": "命名路由段",
+      "match": ["分组", "命名插槽", "可选段"],
+      "level": "L2",
+      "tip": "(group) 分组不进 URL；@slot 命名插槽段、[lang] 类可选段与 Next 同族语法",
+      "desc": "`(marketing)` 括号段共享布局不占路径；`@modal` 前缀做并行插槽（拦截路由式弹层）。Kit 的路由语法刻意与 Next 靠拢，跨框架迁移者眼熟即可。"
+    },
+    {
+      "id": "universal-load",
+      "term": "universal load",
+      "match": ["universal load", "+page.js"],
+      "level": "L3",
+      "tip": "+page.ts/js 里 export function load：SSR 与客户端都会跑的通用取数层",
+      "desc": "入参 EventUtilities（params/url/fetch/depends/data）；返回对象进 `data`。SSR 阶段在服务端执行、结果序列化进 HTML，客户端导航再本地执行——`prerender` 与 `ssr` 设置决定何时在哪跑。"
+    },
+    {
+      "id": "server-load",
+      "term": "server load",
+      "match": ["server load", "+page.server.js", "+page.server.ts"],
+      "level": "L3",
+      "tip": "+page.server.ts 的 load 只在服务器跑：带 credentials 查库、藏密钥，返回值序列化下发",
+      "desc": "服务端专属数据源（DB、内部 API、cookie 校验）放这里；客户端拿不到实现只拿结果。actions 也只能定义在 .server 文件——「谁能执行」由文件名声明。"
+    },
+    {
+      "id": "load-event",
+      "term": "load 事件对象",
+      "match": ["event.fetch", "event.params", "event.url", "event.depends", "event.data"],
+      "level": "L3",
+      "tip": "load(context) 的口袋：params/url 定请求、fetch 带凭证且登记依赖、data 拿父级与失效后的新值",
+      "desc": "关键点：`event.fetch` 在 SSR 直连上游并把结果去重缓存进页面载荷；客户端导航时 load 重跑、fetch 走正常网络。`event.depends('resource:x')` 声明依赖供 invalidate 精准触发。"
+    },
+    {
+      "id": "streaming",
+      "term": "流式 load 与 @render",
+      "match": ["await data", "streaming", "@render"],
+      "level": "L3",
+      "tip": "load 返回未 await 的 Promise：外壳先出、数据到了再填——配合 {#await}/@render 片段渐进呈现",
+      "desc": "`const msg = event.fetch('/api/slow')` 不 await，模板里 `{#await msg}` 或 snippet 渐进渲染。布局流式：+layout 里 return { slow: promise }，各子页按需 await。SSR 下才有意义，CSR 退化成本地 await。"
+    },
+    {
+      "id": "invalidate-kit",
+      "term": "invalidate 与依赖失效",
+      "match": ["invalidate", "invalidateAll"],
+      "level": "L3",
+      "tip": "告诉 Kit「这份数据脏了」：invalidate(url/依赖键) 重跑相关 load 且不刷新页面",
+      "desc": "表单提交成功后 `invalidate('/api/todos')` 让当前页 load 重取。depends 自定义键（`data:xyz`）做粗粒度分组；invalidateAll 重载整个页面数据并重置状态。"
+    },
+    {
+      "id": "form-action",
+      "term": "Form Actions",
+      "match": ["Action", "form action", "action 函数"],
+      "level": "L4",
+      "tip": "+page.server.ts 的 actions: { save: async (event) => {...} }——<form method=post> 直接调用的服务端函数",
+      "desc": "渐进增强正统路线：无 JS 时原生 POST 也能走通。返回值进 `form` prop（校验错误/成功消息），抛 redirect 跳转、抛 error 落错误边界。与 API Route 的分工：页面自用的变更用 action，对外接口用 route。"
+    },
+    {
+      "id": "superforms",
+      "term": "校验与 Superforms",
+      "match": ["superForm", "zod 校验"],
+      "level": "L4",
+      "tip": "schema 校验（zod/valibot）+ 服务端失败数据回填 + 客户端即时反馈——super-svelte-forms 是事实标准",
+      "desc": "官方演示直接 `z.object(...).safeParse` 手回 `status: 400 + data + error`。Superforms 把这圈循环（提交→失败回填→焦点/脏值跟踪→schema 双端共享）打包成一个钩子。"
+    },
+    {
+      "id": "use-enhance",
+      "term": "use:enhance",
+      "match": ["use:enhance"],
+      "level": "L4",
+      "tip": "一个动作接管表单提交：拦截 fetch 化、乐观更新、reset/焦点恢复都在回调里控制",
+      "desc": "`<form use:enhance={({data, form, cancel}) => { ... return async ({form}) => {} }>` 提交前/后双阶段钩子。不用它 form 走原生整页导航——「能用 HTML 就用 HTML，要用 JS 再增强」是 Kit 表单哲学。"
+    },
+    {
+      "id": "maybe-error",
+      "term": "maybe(result) 与显式错误",
+      "match": ["maybe(", "脱轨式控制流"],
+      "level": "L4",
+      "tip": "Kit 2 新 API：action 返回 { type:'failure' } 不再靠抛异常，maybe(result) 一行判成败",
+      "desc": "`const result = await actions.submit(data); if (result.type === 'failure') ...`。旧式 redirect/error 抛出仍可用；新代码偏好返回值风格，控制流不再「脱轨」。"
+    },
+    {
+      "id": "error-handling-kit",
+      "term": "+error 与 +page 错误流",
+      "match": ["+error.svelte", "handleError", "expected"],
+      "level": "L4",
+      "tip": "status 驱动的错误页（+error.svelte 读 $page.status）；预期错误设 status/可 message，非预期落 500",
+      "desc": "`error(404, '找不到')` 抛预期错误（message 可见）；未捕获异常走 hooks.server 的 handleError（生产只回脱敏的 Internal Error）。$page.error 与 $page.status 在错误页展示；`isExpectedError` 风格开关控制堆栈暴露。"
+    },
+    {
+      "id": "redirect-kit",
+      "term": "redirect",
+      "match": ["redirect("],
+      "level": "L4",
+      "tip": "load/action 里 `redirect(307, '/login')`——抛控制流异常，别被自己的 try/catch 吞掉",
+      "desc": "307/308 保留方法重定向（POST 后跳），303 见其他。redirect 是 throw：包在 try 里要 `if (isRedirect(e)) throw e`。客户端导航用 `goto('/x')`（返回 Promise，await 后才完成）。"
+    },
+    {
+      "id": "hooks-server",
+      "term": "hooks.server.ts",
+      "match": ["handle(", "hooks.server"],
+      "level": "L5",
+      "tip": "每个请求的总入口：export async function handle({event, resolve}) —— 鉴权、日志、注入 locals 全在这",
+      "desc": "洋葱模型：resolve(event) 之前是前置（读 cookie、验 session），之后拿 Response 做后置（加头、计时）。可以改 URL 路由（rewrite）、换响应、甚至短路返回。文件必须放 src/ 根，名字固定。"
+    },
+    {
+      "id": "sequence",
+      "term": "sequence",
+      "match": ["sequence"],
+      "level": "L5",
+      "tip": "@sveltejs/kit 官方中间件组装器：sequence(auth, i18n, handler) 把拆散的 handle 串回洋葱",
+      "desc": "把横切关注点写成 `(event, next) => ...` 的小函数再 sequence——比手写巨型 handle 可测试可复用。parallel 则并发执行多个 handle（慎用，副作用顺序不定）。"
+    },
+    {
+      "id": "handle-client",
+      "term": "hooks.client.ts",
+      "match": ["client 侧 hooks"],
+      "level": "L5",
+      "tip": "客户端钩子：handleLink（导航前改写/拦截）、onError、onNavigate——埋点与导航守卫的家",
+      "desc": "handleLink 可异步判断后再放行点击（未保存确认）；`onNavigate` 监听导航生命周期做滚动恢复/过渡。与 server hooks 对称，但只在浏览器跑。"
+    },
+    {
+      "id": "locals-kit",
+      "term": "locals 与用户上下文",
+      "match": ["locals", "cookies.get"],
+      "level": "L5",
+      "tip": "server handle 里 event.locals.user = 解析结果——下游 load/action 全程可信拿用户，不再碰 cookie",
+      "desc": "locals 是请求作用域的白板：只存服务端（不落客户端）、每请求新建所以安全。`event.cookies.get('session')` 只在该文件用，下游一律 locals——凭证边界清晰是 Kit 鉴权的主线设计。"
+    },
+    {
+      "id": "cookies-kit",
+      "term": "event.cookies",
+      "match": ["cookies.set", "httpOnly", "sameSite"],
+      "level": "L5",
+      "tip": "SSR 期 Set-Cookie 直写响应头；httpOnly+Secure+SameSite 三件套，session id 随机足够长",
+      "desc": "`event.cookies.set('session', id, {path:'/', httpOnly:true, secure:true, sameSite:'lax', maxAge})`。读用 get/getAll；delete 即过期。load 里 set 的 cookie 随 SSR 响应一起下发——客户端 JS 看不到 httpOnly 值。"
+    },
+    {
+      "id": "csp-kit",
+      "term": "CSP",
+      "full": "Content-Security-Policy",
+      "zh": "内容安全策略",
+      "match": ["CSP", "default-src"],
+      "level": "L5",
+      "tip": "响应头声明「哪些脚本/样式/连接可加载」；Kit 的 csp.directives + nonce 自动注入",
+      "desc": "`kit.csp: { mode:'auto', directives:{ scriptSrc:['self'] } }`——auto 给内联脚本发 nonce。report-only 先观察再收紧；inline 样式（Svelte 默认 style 标签）要 styleSrc 放行或改 external。",
+      "seeAlso": [{ "pkg": "09-express", "id": "xss-csrf", "term": "XSS / CSRF" }]
+    },
+    {
+      "id": "csrf-kit",
+      "term": "CSRF 防护（内置）",
+      "match": ["CSRF", "Origin 校验"],
+      "level": "L5",
+      "tip": "Kit 对非 GET 请求校验 Origin 与 sec-fetch-site，伪造跨站表单提交默认被 403",
+      "desc": "无需配置：表单 POST 带不上合法 Origin 就被拒。例外要 `allowlist` 放行（服务端回调类 API 慎用）。这也是 action 端点不暴露给第三方 POST 的原因。"
+    },
+    {
+      "id": "adapter-kit",
+      "term": "adapter",
+      "match": ["adapter", "适配器"],
+      "level": "L6",
+      "tip": "构建后的「翻译层」：adapter-node 出 Node 服务、adapter-static 出纯静态站、vercel/cloudflare 出平台产物",
+      "desc": "`svelte.config.js` 的 kit.adapter 指定。adapter-static 需配 prerender（否则动态页 404）；SPA 模式 fallback:'index.html'。adapter 决定你的产物能否跑在目标平台——选型即部署选型。",
+      "seeAlso": [{ "pkg": "08-nuxt", "id": "preset", "term": "部署预设 preset" }]
+    },
+    {
+      "id": "adapter-static",
+      "term": "adapter-static 与 fallback",
+      "match": ["adapter-static", "SPA 模式"],
+      "level": "L6",
+      "tip": "全站预渲染或退化为 SPA fallback 壳；无服务端才用它，鉴权与 secret 全要挪客户端",
+      "desc": "纯静态部署（GitHub Pages）路线：`prerender=true` + `paths.base` 配子目录。代价：没有 server load/actions（或仅构建期执行）、httpOnly cookie 无从谈起。需要 API 时走 server-only 的 BFF 或三方后端。"
+    },
+    {
+      "id": "ssr-switch",
+      "term": "ssr 开关与 csr",
+      "match": ["ssr = false", "csr"],
+      "level": "L6",
+      "tip": "+layout/+page 的 export const ssr=false：该子树纯客户端渲染（window 随便用）；csr=false 关客户端 JS",
+      "desc": "SSR=false 时 server load 仍跑、universal load 只在客户端跑。`csr=false`（全站）做「零 JS 服务端渲染站」——渐进增强极端形态。per-route 的 `export const prerender` 与 ssr/csr 三角决定每个 URL 的渲染形态。"
+    },
+    {
+      "id": "prerender-kit",
+      "term": "prerender",
+      "match": ["prerender", "预渲染"],
+      "level": "L6",
+      "tip": "构建期把页面烤成 .html：export const prerender=true 逐页声明，crawlLinks 自动爬",
+      "desc": "依赖：预渲染页不能读 cookie（个性化内容天生与静态化互斥）。动态站混合用：公开页 prerender、用户页 SSR/ISR（平台支持时）。`prerender.entries` 加手工清单、`origin` 设规范域名。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "ssg", "term": "SSG" }]
+    },
+    {
+      "id": "cdn-caching",
+      "term": "cdn 与缓存头",
+      "match": ["cdn", "Cache-Control"],
+      "level": "L6",
+      "tip": "kit.cdn.assets/path 给静态产物挂 CDN 域名；cdn.maxAge 控制带 hash 资源的强缓存时长",
+      "desc": "内容 hash 文件名 + `Cache-Control: immutable` 是标准组合；HTML 文档不缓存（no-store）。依赖安装/构建产物缓存（pnpm store、.svelte-kit）加速 CI 同理。"
+    },
+    {
+      "id": "manifest-kit",
+      "term": "manifest",
+      "match": ["manifest", "映射表"],
+      "level": "L6",
+      "tip": ".svelte-kit/output/server/manifest.js：路由→模块的编译期映射表；adapter 按它装货",
+      "desc": "理解它有助于排障（为何某些模块被 externalized）与写自定义 adapter/插件。`$app/manifest`（运行时 stores：nodes、dictionary、匹配当前路由）是同名不同物的客户端侧接口。"
+    },
+    {
+      "id": "env-kit",
+      "term": "$env 模块",
+      "match": ["static/public", "static/private", "dynamic/public", "PUBLIC_"],
+      "level": "L1",
+      "tip": "静态编译期常量 $env/static/public|private、动态运行期 $env/dynamic/public；$ 前缀是 Vite 别名",
+      "desc": "private 只在 server 代码可用（进客户端 bundle 会构建报错）；PUBLIC_ 前缀变量才能进 static/public。SvelteKit 用 Vite 的 env 模式 + alias 实现——同一机制见 10-vite 的 import.meta.env。"
+    },
+    {
+      "id": "store-app",
+      "term": "$app 内置模块",
+      "match": ["app/stores", "app/navigation", "app/state"],
+      "level": "L1",
+      "tip": "框架注入的命名空间：$app/stores（$page/$navigating）、$app/navigation（goto/invalidate/prefetch）、$app/state（$derived 化新 API）",
+      "desc": "$page 携带 url/params/data/form/status/error；$derived 化的 $app/state（Kit 2.12+）逐步替代 stores。import 时别手贱改成相对路径——$ 前缀由构建器解析。"
+    },
+    {
+      "id": "devalue-serial",
+      "term": "devalue 与序列化边界",
+      "match": ["devalue"],
+      "level": "L7",
+      "tip": "load/action 返回值不是 JSON.stringify——devalue 支持循环引用/Map/Set/Date/undefined，但不传函数与 class 实例",
+      "desc": "服务端产出的数据序列化进 HTML、客户端复原。传 class 实例会丢原型（用 plain object + 客户端重建）；大 payload 是首屏毒药，裁剪字段。与 RSC Payload、Nuxt payload 同一问题域。"
+    },
+    {
+      "id": "advanced-apis",
+      "term": "进阶 API 群",
+      "match": ["reroute", "setHeaders", "preloadCode", "entry generator"],
+      "level": "L7",
+      "tip": "reroute 改写 URL→路由映射；setHeaders 控制响应缓存头；preloadCode 预载模块；自定义 entry 生成器",
+      "desc": "reroute 做多语言前缀剥离/旧链兼容；`setHeaders({'cache-control':'public, max-age=60'})` 在 load 里给页面挂 CDN 缓存；`preloadCode(['/x'])` 悬停预载路由 chunk。"
+    },
+    {
+      "id": "head-kit",
+      "term": "<svelte:head>（Kit 侧）",
+      "match": ["svelte:head"],
+      "level": "L7",
+      "tip": "SSR 时 Kit 把各组件的 head 内容收集渲染进响应 HTML；data.title 可让 load 返回标题",
+      "desc": "OG/SEO 在 universal/server load 拼好后 `{#await data}{@html ...}` 进 head，或直接组件里 `<svelte:head>` 绑定响应式值。sitemap/robots 做成 route.ts + prerender。",
+      "seeAlso": [{ "pkg": "11-svelte", "id": "head-meta", "term": "svelte:head" }]
+    },
+    {
+      "id": "platforms",
+      "term": "平台差异与 Edge",
+      "match": ["Cloudflare", "Vercel", "Netlify"],
+      "level": "L6",
+      "tip": "adapter-cloudflare 走 Workers（无 Node API：fs/net 不可用）、vercel/netlify 混合平台函数",
+      "desc": "写跨平台 server 代码的纪律：只用 Web Standard API（fetch/Request/Response/crypto），Node 专属（child_process、Buffer）留在自托管。平台 context 经 `event.platform`（KV/D1、env）取用。"
+    },
+    {
+      "id": "testing-kit",
+      "term": "测试策略（Playwright 默认）",
+      "match": ["Playwright", "test type"],
+      "level": "L8",
+      "tip": "create-svelte 默认发 Playwright e2e + Vitest 单测双模板；路由级测试用 $app/stores 的 mock 替身",
+      "desc": "load/actions 是纯函数最好测（mock event）；组件测 @testing-library/svelte；e2e 守关键旅程。Vitest 环境跑 jsdom 需 alias $app 模块（vitest + mock 或 @testing-library/svelte 自带方案），详见 22-vitest 包。",
+      "seeAlso": [{ "pkg": "10-vite", "id": "vitest-bridge", "term": "Vitest" }]
+    },
+    {
+      "id": "typescript-kit",
+      "term": "类型生成（$types）",
+      "match": ["$types", "svelte-kit sync"],
+      "level": "L8",
+      "tip": ".svelte-kit/types 生成每路由的 Params/EventData/Actions 类型，import 自 './$types' 即得完美推断",
+      "desc": "`import type { PageServerLoad, Actions } from './$types'` 让 load/action 入参出参全类型化——路径敏感类型是 Kit 工程化招牌。`npx svelte-kit sync` 手动重生成；IDE 报错先跑它。",
+      "seeAlso": [{ "pkg": "02-typescript", "id": "dts", "term": ".d.ts 声明文件" }]
+    }
+  ]
+}

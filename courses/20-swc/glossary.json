@@ -1,0 +1,191 @@
+{
+  "title": "SWC · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "swc-overview",
+      "term": "SWC",
+      "full": "Speedy Web Compiler",
+      "match": ["SWC"],
+      "level": "L1",
+      "tip": "Rust 写的转译 + 压缩器：比 Babel 快数十倍、比 tsc 转译快二十倍量级，潜伏在 Next/Rspack/Jest 背后",
+      "desc": "定位是「转译 + minifier」，不是打包器。你很可能已经在用它（Next.js 默认、Rspack 内核、swc-jest）。与 esbuild（Go、偏快但语义较浅）同属新一代编译工具。",
+      "seeAlso": [{ "pkg": "10-vite", "id": "esbuild", "term": "esbuild 与依赖预构建" }]
+    },
+    {
+      "id": "swc-config",
+      "term": ".swcrc 配置",
+      "match": ["swcrc", ".swcrc"],
+      "level": "L1",
+      "tip": "顶层分区 jsc / minify / module / env；parse 类型 ts/tsx/js/esm；browserslist 决定降级目标",
+      "desc": "npx @swc/cli + @swc/core 是最小工作流。jsc 区放 parser/transform，env.targets 放浏览器目标，module.type 定 ESM/CJS。outDir 与 --delete-dir-on-start 管产物目录。改一行配置看产物变化是最好的入门实验。",
+      "seeAlso": [{ "pkg": "20-swc", "id": "swc-transform", "term": "转译内核" }]
+    },
+    {
+      "id": "swc-transform",
+      "term": "转译内核",
+      "match": ["transform", "jsc", "parser"],
+      "level": "L1",
+      "tip": "jsc 区三要素 parser / syntax / transform；env.targets 决定降级深度",
+      "desc": "把 TS/JSX 源码按目标产出 JS。sourceMaps + inlineSourcesContent 保证可调试。看同一份源码在 es5/es2015/esnext 三种 targets 下的输出差异，最能建立「转译=按目标降级」的直觉。",
+      "seeAlso": [{ "pkg": "20-swc", "id": "type-erase", "term": "类型擦除 vs 类型检查" }]
+    },
+    {
+      "id": "type-erase",
+      "term": "类型擦除 vs 类型检查",
+      "match": ["tsc", "擦除", "类型检查"],
+      "level": "L1",
+      "tip": "SWC 只做类型擦除（删掉类型注解产出 JS），不做类型检查——报错仍要靠 tsc --noEmit",
+      "desc": "这是关键分工：SWC 快是因为它不验证类型对不对、只机械剥离。所以用了 SWC 转译，CI 里仍要有独立 tsc 步骤把类型错误挡下来。混淆两者会「构建过了但类型全错」。",
+      "seeAlso": [{ "pkg": "02-typescript", "id": "type-erasure", "term": "类型擦除" }]
+    },
+    {
+      "id": "jsx-runtime",
+      "term": "JSX 运行时",
+      "match": ["automatic", "classic", "jsx", "importSource"],
+      "level": "L1",
+      "tip": "jsx runtime automatic（无需 import React、走 jsx()）vs classic（React.createElement）；jsxImportSource 指定来源",
+      "desc": "对应 @babel/preset-react 的 runtime:'automatic'。automatic 产物更小、React 版本要求 17+；classic 兼容老代码。Solid/Next 各自有专属 importSource（如 solid-js）。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "solid-typescript", "term": "Solid 的 TypeScript 集成" }]
+    },
+    {
+      "id": "swc-core-api",
+      "term": "@swc/core 程序化调用",
+      "match": ["transformSync", "transformFile", "@swc/core"],
+      "level": "L2",
+      "tip": "transform / transformSync / transformFile 三形态；选项对象与 .swcrc 有合并优先级",
+      "desc": "返回 {code, map} 自行落盘。npm 上 SWC 是平台二进制包结构——靠 optionalDependencies 按 os/cpu 装对应原生模块。跨平台锁文件（不同机器算出不同 optional 集）是经典坑，要配正确的 lockfile 策略。",
+      "seeAlso": [{ "pkg": "03-nodejs", "id": "lockfile", "term": "锁文件" }]
+    },
+    {
+      "id": "swc-bundlers",
+      "term": "打包器与框架里的 SWC",
+      "match": ["swc-loader", "Rspack", "babel-loader"],
+      "level": "L2",
+      "tip": "webpack 用 swc-loader 替换 babel-loader；Rspack 以 SWC 为 transform 内核；Next.js 默认启用 SWC",
+      "desc": "Rollup/Vite 项目里通常轮不到 SWC（esbuild 占位）——交代清楚生态位。Next 内置 SWC、检测到自定义 .babelrc 才让位给 Babel。理解「谁在什么时候调用 SWC」比记 API 更重要。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "meta-framework", "term": "Next 集成" }]
+    },
+    {
+      "id": "swc-minify",
+      "term": "压缩（minify）",
+      "match": ["minify", "terser", "compress", "mangle"],
+      "level": "L2",
+      "tip": "jsc.minify 或 cli -m；选项分区 compress（化简）/ mangle（改名）/ format（排版）；对照 terser",
+      "desc": "compress 做死代码消除与等价化简、mangle 缩短标识符名。keep_classnames 等豁免防止运行时靠名字反射的代码被压坏。实测：同一 bundle 分别走 terser / swc minify，比字节数与构建耗时。"
+    },
+    {
+      "id": "swc-decorators",
+      "term": "装饰器双版本",
+      "match": ["decoratorMetadata", "legacyDecorator", "decorators"],
+      "level": "L3",
+      "tip": "legacy（2017-08 旧版，NestJS/Angular 用）vs current（TC39 提案版）；配置要与应用框架匹配",
+      "desc": "legacyDecorator + decoratorMetadata 组合服务老 Ember/Nest 生态；新 TS 装饰器提案语义不同，选错会导致运行期元数据缺失。class 私有字段、顶层 await、import attributes 各有目标支持矩阵。",
+      "seeAlso": [{ "pkg": "15-angular", "id": "ng-comp-signals", "term": "函数式组件 API" }]
+    },
+    {
+      "id": "swc-polyfill",
+      "term": "polyfill 注入",
+      "match": ["coreJs", "polyfill", "browserslist"],
+      "level": "L3",
+      "tip": "env.coreJs 注入所需 polyfill；env.targets 或 browserslist 决定降级与 polyfill 范围",
+      "desc": "SWC 能按目标自动补 helper，但「运行时 API 的 polyfill（如 Promise.allSettled）」边界要清楚——不是 core-js 全文都搬。targets 写太宽=产物肥大、写太窄=老浏览器炸。",
+      "seeAlso": [{ "pkg": "01-es", "id": "polyfill", "term": "polyfill" }]
+    },
+    {
+      "id": "swc-correctness",
+      "term": "正确性边界：loose 与 interop",
+      "match": ["loose", "interop", "esModule"],
+      "level": "L3",
+      "tip": "SWC「够快且基本够对」；commonjs interop 的 esModule marker、default 导入细节、loose 对 class 展开的影响",
+      "desc": "有已知差异清单的意识：与 Babel 输出可能有微妙不同。排查方法论是「同一入口两边各编一遍 diff 产物」。「基本够对」意味着极端语义场景仍要用 Babel 兜底。",
+      "seeAlso": [{ "pkg": "01-es", "id": "cjs", "term": "CommonJS" }]
+    },
+    {
+      "id": "swc-cache-perf",
+      "term": "缓存与增量构建",
+      "match": ["buildDependencies", "persistent cache", "增量"],
+      "level": "L3",
+      "tip": "swc-loader 缓存层配 webpack persistent cache；cli 并发 vs --sync 取舍；识别真正瓶颈（I/O、类型检查占大头）",
+      "desc": "大规模仓库转译实测三组对照（SWC/esbuild/tsc）。关键认知：转译往往不是瓶颈——当类型检查或磁盘 I/O 占大头时，换更快的转译器收益有限。buildDependencies 让缓存能感知配置文件变化失效。"
+    },
+    {
+      "id": "swc-jest",
+      "term": "swc-jest",
+      "match": ["swc-jest", "Jest", "c8"],
+      "level": "L4",
+      "tip": "把 Jest 的 transform 从 babel-jest 换成 @swc/jest，五分钟提速；TS/JSX 项目尤其明显",
+      "desc": "与 22-vitest 的关系要交代（Vitest 走 esbuild，两者何时并存）。覆盖率配 c8/v8 provider。常见报错：装饰器元数据缺失、snapshot 序列化差异——多与正确性边界有关。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-overview", "term": "Vitest" }]
+    },
+    {
+      "id": "swc-tsdown",
+      "term": "tsdown 库打包",
+      "match": ["tsdown", "Rolldown", "dts"],
+      "level": "L4",
+      "tip": "Rolldown 生态里的库打包器；transform 可选 SWC（untransform 路线）；entry/external/dts 三配置",
+      "desc": "产出 ESM+CJS 双格式配 exports 字段。「转译用 SWC、类型用 tsc/vue-tsc 生 d.ts」的分工——isolatedDeclarations 是前瞻方向（无需全量类型检查也能出 d.ts）。",
+      "seeAlso": [{ "pkg": "10-vite", "id": "lib-mode", "term": "库模式" }]
+    },
+    {
+      "id": "swc-lib-publish",
+      "term": "发包视角",
+      "match": ["typesVersions", "sideEffects", "optionalDependencies"],
+      "level": "L4",
+      "tip": "package.json exports/typesVersions 与产物目录对齐；sideEffects:false 促 tree-shaking；多平台二进制分包",
+      "desc": "source map 上传/随包发布是取舍。npm pack --dry-run 验收产物清单。借鉴 SWC 自身发版思路：CI 多平台矩阵构建、按 os/cpu 用 optionalDependencies 分发原生二进制。",
+      "seeAlso": [{ "pkg": "01-es", "id": "exports-field", "term": "exports 字段" }]
+    },
+    {
+      "id": "swc-plugins",
+      "term": "插件系统",
+      "match": ["Wasm", "StructVisitor", "plugin"],
+      "level": "L5",
+      "tip": "JS plugin（实验、进程内）与 Wasm plugin（Rust/StructVisitor 生产路线）两条路",
+      "desc": "styled-components/styled-jsx 等官方内置 transform 已备，React Compiler 类一句带过。判断纪律：内置开关能解决就别写插件。Wasm 插件性能好但开发门槛高（Rust）。"
+    },
+    {
+      "id": "swc-babel-migrate",
+      "term": "从 Babel 迁移",
+      "match": ["preset-env", "preset-react", "preset-typescript"],
+      "level": "L5",
+      "tip": "@babel/preset-env→env.targets、preset-react(automatic)→jsc.transform.react.runtime、preset-typescript→parser.ts+擦除",
+      "desc": "预设对照表直译。没有对等物的 Babel 插件怎么办：保留 Babel 混合管线、或换内置开关。迁移验收双保险——diff 产物 + 跑全量测试，别只看「能跑」。",
+      "seeAlso": [{ "pkg": "20-swc", "id": "type-erase", "term": "类型擦除 vs 类型检查" }]
+    },
+    {
+      "id": "swc-capstone",
+      "term": "工具链选型",
+      "match": ["Oxc", "esbuild", "Babel"],
+      "level": "L5",
+      "tip": "四方对照：速度/正确性/生态/可编程性。现状——Vite 用 esbuild+Rollup、Next 用 SWC、老项目留 Babel",
+      "desc": "Oxc（Rust linter/parser 新势力）与 Biome（21 包）代表 Rust 工具链的另一翼。理解「谁在什么生态位」比站队重要。本包没讲但该知道：Wasm 插件深水区、swc css 实验、ast 包。",
+      "seeAlso": [{ "pkg": "21-biome", "id": "biome-overview", "term": "Biome" }]
+    },
+    {
+      "id": "swc-targets",
+      "term": "降级目标 targets",
+      "match": ["targets", "es5", "esnext", "es2015"],
+      "level": "L1",
+      "tip": "env.targets（或 browserslist 配置）决定语法降级与 polyfill 范围的总开关",
+      "desc": "写 es5 会把 arrow/class 全降级、产物大；写 esnext 几乎原样输出、最快最小。目标定错要么兼容性炸、要么体积白胖。这是理解 SWC 产物差异的第一把钥匙。"
+    },
+    {
+      "id": "swc-esm-cjs",
+      "term": "module 格式 ESM/CJS",
+      "match": ["ESM", "CJS", "module.type"],
+      "level": "L2",
+      "tip": "module.type 决定产出 ESM 还是 CommonJS；配合 interop 处理 default/namespace 导入差异",
+      "desc": "发包常要双格式（ESM + CJS）。跨格式边界的 default 导入、`__esModule` marker 是「运行时报 xx is not a function」的常见根因。与 01-es 的模块互操作是同一问题域。",
+      "seeAlso": [{ "pkg": "01-es", "id": "esm", "term": "ESM" }]
+    },
+    {
+      "id": "swc-helper",
+      "term": "helper 注入",
+      "match": ["helper", "externalHelpers"],
+      "level": "L3",
+      "tip": "降级语法会注入辅助函数（_extends/_defineProperty 等）；externalHelpers 把它们抽到 @swc/helpers 去重",
+      "desc": "默认每个文件内联所需 helper，重复多。开 externalHelpers 改从 @swc/helpers 导入——库发包时省体积、应用靠 tree-shaking。理解 helper 才看懂「为什么降级后代码变多了」。"
+    }
+  ]
+}

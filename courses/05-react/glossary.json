@@ -1,0 +1,336 @@
+{
+  "title": "React 18/19 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "jsx",
+      "term": "JSX",
+      "match": ["JSX"],
+      "level": "L1",
+      "tip": "JS 里直接写 HTML 样子的语法糖，编译成 createElement 调用",
+      "desc": "`<div className=\"x\">{name}</div>` 编译为 `jsx('div',{className:'x',children:name})`（React 17+ 自动导入，无需手写 import React）。class/for 要写成 className/for，子节点插值用 {}，条件与循环用 JS 表达式而不是指令。",
+      "seeAlso": [{ "pkg": "02-typescript", "id": "tsconfig", "term": "tsconfig.json" }]
+    },
+    {
+      "id": "element-vdom",
+      "term": "React 元素",
+      "match": ["元素", "React Element"],
+      "level": "L1",
+      "tip": "描述「要渲染什么」的轻量 JS 对象，不是真实 DOM",
+      "desc": "JSX 产出的 `{type, props, key}` 对象叫 React Element；它便宜、可随意重建，昂贵的 DOM 操作由协调器按最小差异执行。元素可以当变量传来传去、装进数组、条件渲染——因为它只是描述。"
+    },
+    {
+      "id": "render-model",
+      "term": "渲染模型",
+      "match": ["重新渲染", "re-render", "渲染模型"],
+      "level": "L1",
+      "tip": "状态变化 → 整个组件函数重新执行 → 新 JSX 与旧的比对后最小更新",
+      "desc": "React 心智：UI = f(state)。每次更新组件函数从头再跑一遍（不是只改变化那行），所以函数体内的变量每次都是新的。子组件默认跟着重渲染，memo/稳定引用用来止损。"
+    },
+    {
+      "id": "vdom",
+      "term": "虚拟 DOM",
+      "full": "Virtual DOM / reconciliation",
+      "zh": "协调 / diff",
+      "match": ["虚拟 DOM", "协调", "reconcil"],
+      "level": "L1",
+      "tip": "用 JS 对象树描述 UI，更新时同层比对找差异再改真实 DOM",
+      "desc": "协调器（Reconciler）按三条启发式规则工作：不同类型的元素整棵重建；同类型则比对 props 打补丁；列表靠 key 识别移动。它放弃了理论最优 O(n³) diff，换 O(n) 实用性能。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "vdom-diff", "term": "虚拟 DOM 与 diff" }]
+    },
+    {
+      "id": "fragments-strict",
+      "term": "Fragment 与 StrictMode",
+      "match": ["Fragment", "StrictMode"],
+      "level": "L1",
+      "tip": "<>...</> 不产生 DOM 节点的包装；StrictMode 开发期双调用组件函数帮你暴露副作用问题",
+      "desc": "返回值只能一个节点，多根用 `<></>`（有 key 时用 `<Fragment key=…>`）。StrictMode 在开发模式下故意挂载→卸载→再挂载，检验 effect 清理是否完备；生产构建无此行为，双调用不是 bug 是体检。"
+    },
+    {
+      "id": "usestate",
+      "term": "useState",
+      "match": ["useState", "setState"],
+      "level": "L2",
+      "tip": "声明组件状态：返回 [值, 更新函数]；更新函数传新值或 updater，调用后安排重渲染",
+      "desc": "`setCount(c => c + 1)` 用函数式更新拿到最新值，避免闭包读到旧 state。传相同值（Object.is 相等）则跳过重渲染。state 不合并——对象要 `setUser({...user, ...patch})` 自己展开。"
+    },
+    {
+      "id": "batching",
+      "term": "批处理",
+      "full": "automatic batching",
+      "match": ["批处理", "batch"],
+      "level": "L2",
+      "tip": "一次事件里多次 setState 只触发一次渲染（React 18 起连 setTimeout/Promise 里也批）",
+      "desc": "更新在事件结束后统一 flush，所以连续 `setA; setB` 不会渲染两次、也读不到中间态。急着要中间 DOM（极少）用 flushSync。读到「旧值」是正常的——渲染快照语义，不是异步失败。"
+    },
+    {
+      "id": "useeffect",
+      "term": "useEffect",
+      "match": ["useEffect", "副作用"],
+      "level": "L2",
+      "tip": "渲染提交到 DOM 之后同步外部世界的出口：订阅、请求、手动改 DOM",
+      "desc": "依赖数组是「契约」：省略=每次渲染都跑；[]=只挂载后跑一次；[a,b]=a 或 b 变了再跑。回调里 return 清理函数（退订/取消请求）。ESLint 的 exhaustive-deps 必须听，「用空数组压警告」是埋雷。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "lifecycle", "term": "生命周期" }]
+    },
+    {
+      "id": "effect-cleanup",
+      "term": "依赖数组与清理",
+      "match": ["依赖数组", "cleanup"],
+      "level": "L2",
+      "tip": "每次重跑 effect 前先执行上次的清理函数——泄漏都发生在「没清理」",
+      "desc": "StrictMode 下挂载→清理→再挂载，专治「定时器/监听器忘摘」。effect 里发起请求要处理竞态：cleanup 里 abort 或标记忽略旧响应。依赖漏写 → 闭包捕获旧值 → 数据错乱，是 React 头号 bug 来源。"
+    },
+    {
+      "id": "uselayout",
+      "term": "useLayoutEffect",
+      "match": ["useLayoutEffect"],
+      "level": "L2",
+      "tip": "DOM 已更新但浏览器还没画之前同步跑——量尺寸、改布局防闪烁",
+      "desc": "普通 effect 在绘制后异步跑；需要「读布局→立刻改样式」（工具提示定位、滚动位置恢复）用 useLayoutEffect，否则用户看到跳帧。它会阻塞绘制，平时别默认使用。SSR 下会警告。"
+    },
+    {
+      "id": "deriving-state",
+      "term": "派生状态",
+      "match": ["派生状态"],
+      "level": "L2",
+      "tip": "能从现有 state 算出来的值不要再存一份 state——渲染期直接算或用 useMemo",
+      "desc": "把派生值塞进 setState 会造成「双份真相 + 更新顺序 bug」。正确姿势：组件体内直接 `const total = items.reduce(...)`，昂贵计算再包 useMemo。需要「根据 prop 变化重置 state」时也别用 useEffect 绕，用 key 重挂载。"
+    },
+    {
+      "id": "useref",
+      "term": "useRef",
+      "match": ["useRef", "current"],
+      "level": "L3",
+      "tip": "一个跨渲染存值的盒子：改 .current 不触发重渲染；也用来抓 DOM 引用",
+      "desc": "三个用途：存定时器/实例等可变值（不参与渲染）、`ref={el}` 拿 DOM、配合 effect 做「上一次的值」。渲染期间读写 ref 是禁忌（破坏纯函数假设），只有事件与 effect 里随便用。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "refs-expose", "term": "模板 refs 与 expose" }]
+    },
+    {
+      "id": "fwdref",
+      "term": "forwardRef 与 useImperativeHandle",
+      "match": ["forwardRef", "useImperativeHandle"],
+      "level": "L3",
+      "tip": "父要把 ref 伸进子组件的 DOM，子还能只暴露一个受限命令 API",
+      "desc": "React 19 起 ref 可直接当 prop 用，forwardRef 成为兼容写法。`useImperativeHandle(ref, () => ({focus}), [deps])` 让子组件交出精简句柄（如 Input.focus()），别把整个 DOM 裸露出去。"
+    },
+    {
+      "id": "memo",
+      "term": "memo",
+      "match": ["memo"],
+      "level": "L3",
+      "tip": "浅比较 props 相同则跳过子组件重渲染——默认全量渲染的止血带",
+      "desc": "`const Row = memo(RowFn)`。props 里有对象/函数/数组时浅比较必失败（每次渲染都是新引用），要配合 useCallback/useMemo 稳定引用，否则 memo 白包。别全组件无脑 memo：比较本身也有开销。"
+    },
+    {
+      "id": "usememo",
+      "term": "useMemo",
+      "match": ["useMemo"],
+      "level": "L3",
+      "tip": "缓存一次昂贵计算的结果，依赖不变不重算；也用来稳定引用喂给 memo",
+      "desc": "`const sorted = useMemo(() => heavy(items), [items])`。React 理论上可丢弃缓存（内存压力），把它当性能优化而非语义保证。默认值对象/数组要 memo 住，否则子组件 effect 依赖它时无限循环。"
+    },
+    {
+      "id": "usecallback",
+      "term": "useCallback",
+      "match": ["useCallback"],
+      "level": "L3",
+      "tip": "缓存函数本身：`() => fn` 依赖不变时返回同一引用，给 memo 子组件和 effect 依赖用",
+      "desc": "`const onClick = useCallback(() => {...}, [deps])` ≡ `useMemo(() => () => {...}, [deps])`。只有「函数作为依赖或被传进 memo 化组件」时才值得包；普通内联箭头函数不用怕。"
+    },
+    {
+      "id": "hook-rules",
+      "term": "Hooks 规则",
+      "match": ["Rules of Hooks", "规则"],
+      "level": "L3",
+      "tip": "只在组件/自定义 Hook 顶层调用，不进条件、循环、try——Hook 靠调用顺序识别",
+      "desc": "React 用链表按顺序存每个 Hook 的状态，中间少调一次全部错位。所以 `if (x) useState(...)` 直接禁止，ESLint 插件 react-hooks 会拦。组件名必须大写开头且像组件一样被调用。"
+    },
+    {
+      "id": "usereducer",
+      "term": "useReducer",
+      "match": ["useReducer", "reducer"],
+      "level": "L3",
+      "tip": "多状态转换逻辑集中到一个纯函数：dispatch(action) → reducer(state, action) → 新 state",
+      "desc": "state 分支多、几个字段联动、需要时间旅行调试时换 useReducer。reducer 必须纯（不做副作用、不生成随机/id），action 是普通对象。React 官方 store 模式（Redux/Zustand）就是它的放大版。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "zustand", "term": "Zustand" }]
+    },
+    {
+      "id": "usedebug",
+      "term": "useDebugValue 与自定义展示",
+      "match": ["useDebugValue", "useId", "useDeferredValue", "useTransition"],
+      "level": "L3",
+      "tip": "useId 生唯一 id 喂表单 a11y；useTransition 标记非紧急更新让输入不卡；useDeferredValue 延迟旧值渲染",
+      "desc": "`const [isPending, startTransition] = useTransition()` 把大列表重渲染标为可打断，保持输入响应；useDeferredValue 把慢列表的更新推迟一拍。这些是 React 18 并发特性的人机接口，先记场景再记 API。"
+    },
+    {
+      "id": "lifting",
+      "term": "状态提升",
+      "match": ["状态提升", "lifting"],
+      "level": "L4",
+      "tip": "两个组件要共享一份数据，就把 state 提到最近共同父级，props 下发回调上传",
+      "desc": "React 数据单向流动。提升过头变成 props drilling（钻五六层传一个函数），再换 Context 或外部 store；「组件私有 → 共享」两级跳是常规演化路径，不必一上来就全局状态。"
+    },
+    {
+      "id": "context",
+      "term": "Context",
+      "match": ["Context", "createContext", "useContext"],
+      "level": "L4",
+      "tip": "跨组件树传「广播型」数据：主题、当前用户、路由——Provider 供、useContext 取",
+      "desc": "Context 值变化会让所有消费者重渲染，高频变化的数据放里面是性能灾难（拆 Provider、或配 memo）。适合「很少变的依赖注入」，不当状态管理库用——需要 actions/选择器请上 Redux/Pinia 式方案。"
+    },
+    {
+      "id": "hoc",
+      "term": "HOC 高阶组件",
+      "full": "Higher-Order Component",
+      "match": ["高阶组件", "HOC"],
+      "level": "L4",
+      "tip": "接收组件返回加强版的函数——Hooks 之前的复用主力，现多被自定义 Hook 替代",
+      "desc": "`withAuth(Page)` 包裹一层处理登录态、`React.memo`/`connect` 本身也是 HOC。剩余价值：class 组件生态、按条件包 Provider/错误边界、codemod 旧代码。新代码优先自定义 Hook（无嵌套层级、无 ref 转发烦恼）。"
+    },
+    {
+      "id": "render-props",
+      "term": "Render Props",
+      "match": ["render prop", "渲染属性"],
+      "level": "L4",
+      "tip": "组件把「要渲染的东西」作为函数 prop 让调用方决定——逻辑在我这、UI 在你那",
+      "desc": "`<Mouse pos={p => <div>{p.x}</div>} />`。Headless UI 库（下拉、虚拟列表、表单）的经典扩展点。children-as-function 是它的变体；简单场景一个自定义 Hook 就够了。"
+    },
+    {
+      "id": "custom-hook",
+      "term": "自定义 Hook",
+      "match": ["自定义 Hook", "useLocalStorage", "useCustom"],
+      "level": "L4",
+      "tip": "以 use 开头的函数，把组件逻辑（state/effect）打包复用——React 复用代码的第一方式",
+      "desc": "`useWindowSize()`、`useFetch()`：命名约定 + ESLint 让 React 追踪内部 Hook 调用。它不是 API 而是模式——只要遵守 Hooks 规则，任何组合都合法。多个相关状态打包返回对象，调用方解构。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "composable", "term": "composable 组合函数" }]
+    },
+    {
+      "id": "composition",
+      "term": "组合而非继承",
+      "match": ["children", "组合"],
+      "level": "L4",
+      "tip": "用 children 与插槽式 props 拼组件，像搭积木；class 继承在 React 里几乎不用",
+      "desc": "`<Card header={<Title/>}>` 通过 children/具名 props 接收任意内容，比继承链灵活。设计组件时先想「需要什么内容槽」，再想「需要什么状态」。"
+    },
+    {
+      "id": "controlled",
+      "term": "受控与非受控",
+      "match": ["受控", "非受控"],
+      "level": "L5",
+      "tip": "输入值由 state 说了算=受控（:value+onChange）；DOM 自己存值、你只读=非受控（defaultValue+ref）",
+      "desc": "受控：每次按键走渲染，可校验/格式化/联动，但大表单渲染开销大。非受控：注册表单/文件上传等「提交时才收账」场景省事。库组件常双模式：传 value 走受控，不传走非受控。"
+    },
+    {
+      "id": "list-key",
+      "term": "列表 key",
+      "match": ["key"],
+      "level": "L5",
+      "tip": "diff 认人的身份证：稳定、唯一、别用 index（列表会重排时）",
+      "desc": "key 帮 React 判断「这个节点还是刚才那个吗」。删除中间项时 index 作 key 会让剩余项全部错位重渲染（且输入框内容跟错人）。key 只在同层兄弟间唯一，不必全局唯一。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "v-for-key", "term": "v-for 与 key" }]
+    },
+    {
+      "id": "conditional-render",
+      "term": "条件渲染与提前返回",
+      "match": ["&&", "&& 短路"],
+      "level": "L5",
+      "tip": "cond && <X/> 短路渲染注意 0 会被渲染出来；if return 守卫式写法更清晰",
+      "desc": "`{count && <Badge/>}` 当 count=0 页面出现孤零零的「0」——改成 `count > 0 && ...` 或三元。同一组件根据 props 渲染完全不同的内容时，直接 if/return 提前退出，别套三层三元。"
+    },
+    {
+      "id": "rr-basics",
+      "term": "React Router",
+      "match": ["Routes", "Route ", "NavLink", "Outlet", "useNavigate"],
+      "level": "L6",
+      "tip": "声明式路由：<Routes> 里配 <Route element>，嵌套路由用 <Outlet/> 挖坑",
+      "desc": "v6 核心：`useNavigate()` 编程跳转、`useParams()` 动态段、`useSearchParams()` 查询串、`<NavLink>` 自带激活态。data router（createBrowserRouter + loader/action）把数据获取搬进路由层，是 6.4+ 推荐形态。"
+    },
+    {
+      "id": "data-fetching",
+      "term": "数据获取与竞态",
+      "match": ["AbortController", "竞态"],
+      "level": "L6",
+      "tip": "useEffect 手搓 fetch 要处理三件事：加载/错误态、竞态（旧响应后到）、取消（abort）",
+      "desc": "快速切换 id 时先发的请求可能后回来覆盖新数据。标准解法：effect cleanup 里 `controller.abort()` 或用 ignore 标记。生产项目直接用 TanStack Query 托管缓存、重试、失效，别自己发明。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "query-cache", "term": "Query 缓存" }]
+    },
+    {
+      "id": "swr",
+      "term": "stale-while-revalidate",
+      "zh": "先旧后新",
+      "match": ["stale-while-revalidate", "staleTime"],
+      "level": "L6",
+      "tip": "缓存先顶（stale 可用）+ 后台拉新数据替换——TanStack Query 的核心策略",
+      "desc": "界面秒开旧数据，请求完成后无感刷新；staleTime 控制多久内算新鲜不重发。它解决的是 UX 感知速度，与 HTTP 缓存头同名不同层。"
+    },
+    {
+      "id": "zustand-redux",
+      "term": "Redux 与 Zustand",
+      "match": ["Redux", "Zustand", "Immer", "dispatch"],
+      "level": "L7",
+      "tip": "全局 store 三板斧：state 单树、action 派发动作、纯函数 reducer 产出新 state；Zustand 是极简版",
+      "desc": "Redux 要求一切更新走 dispatch + 不可变数据（展开或 Immer 代笔）；Zustand 砍掉 Provider 和样板，`create` 一个 store、`useStore(selector)` 订阅切片。选择器订阅是性能关键：只重渲染你取的那块变了。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "zustand", "term": "Zustand" }, { "pkg": "16-pinia", "id": "pinia", "term": "Pinia" }]
+    },
+    {
+      "id": "server-state",
+      "term": "服务端状态",
+      "match": ["服务端状态", "client state"],
+      "level": "L7",
+      "tip": "缓存在客户端的远程数据（列表、用户信息）：真相在服务端，需要同步策略；客户端状态（弹窗开关）不需要",
+      "desc": "把两者混进一个 store 是复杂度之源。服务端状态交给 React Query/SWR/Suspense 资源管理（缓存、失效、重连都是它的事）；全局 UI 状态才用 Zustand/Context。"
+    },
+    {
+      "id": "profiler",
+      "term": "Profiler 与渲染次数",
+      "match": ["Profiler", "bailout", "Profiler 面板"],
+      "level": "L7",
+      "tip": "React DevTools 数「为什么又渲染了」；Profiler API 记录提交耗时；bailout 指 memo 挡住的跳过",
+      "desc": "DevTools 高亮重渲染组件并给出触发源（props 变了/state 变了/父渲染）。优化顺序：先减少重渲染范围（状态下放、children 传入、memo），再降低单次成本（列表虚拟化、计算 memo）。"
+    },
+    {
+      "id": "error-boundary",
+      "term": "错误边界",
+      "full": "ErrorBoundary",
+      "match": ["错误边界"],
+      "level": "L7",
+      "tip": "包住子树捕获渲染期异常的组件，崩了出兜底 UI 而不是白屏；目前仍需 class 实现",
+      "desc": "`componentDidCatch`/`static getDerivedStateFromError` 两钩子组成边界。它抓渲染、生命周期、构造器里的错，抓不到事件处理器和 SSR 的错（那些自己 try/catch）。路由级 + 关键模块级各放一个，配 react-error-boundary 库省事。"
+    },
+    {
+      "id": "react-compiler",
+      "term": "React Compiler",
+      "match": ["Compiler"],
+      "level": "L7",
+      "tip": "官方自动记忆化编译器：编译期推断依赖，手写 memo/useMemo/useCallback 大多可退役",
+      "desc": "编译器给「响应式依赖」的代码自动插入记忆化。遵守 Rules of Hooks 与不可变数据是它的前提。当前处于渐进采用阶段：老项目可按目录开启，理解原理仍要学手写 memo。"
+    },
+    {
+      "id": "lazy-suspense",
+      "term": "代码分包与 Suspense",
+      "match": ["lazy", "import("],
+      "level": "L7",
+      "tip": "React.lazy + <Suspense fallback> 按需加载 chunk，加载期间显示兜底 UI",
+      "desc": "`const Admin = lazy(() => import('./Admin'))` 让构建器切出独立 chunk；Suspense 可嵌套分层，就近的 fallback 接管。路由、低频弹窗、重型图表是分包三板斧。"
+    },
+    {
+      "id": "rsc",
+      "term": "Server Components",
+      "full": "React Server Components (RSC)",
+      "match": ["Server Components", "use client", "Server Component"],
+      "level": "L8",
+      "tip": "只在服务器跑、不进客户端 bundle 的组件——Next.js App Router 的默认形态",
+      "desc": "RSC 直接 async 查库渲染，产物是序列化的 UI 指令流；交互部分标 `'use client'` 切到客户端组件，边界处只能传可序列化 props。React 库本身不含 RSC 运行时，落地靠 Next.js 等框架。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "rsc", "term": "RSC" }]
+    },
+    {
+      "id": "next-bridge",
+      "term": "Next.js",
+      "match": ["Next.js"],
+      "level": "L8",
+      "tip": "React 官方倾向的元框架：路由、SSR/RSC、打包部署一体，本课的终点站",
+      "desc": "裸 React 只是 UI 库；Next 补上路由（文件式）、渲染模式（SSR/SSG/ISR/streaming）、数据与部署。Vue 阵营对位 Nuxt。学到 L8 再回头补术语也来得及。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "app-router", "term": "App Router" }]
+    }
+  ]
+}

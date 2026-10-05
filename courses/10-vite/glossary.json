@@ -1,0 +1,280 @@
+{
+  "title": "Vite 6 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "vite",
+      "term": "Vite",
+      "full": "法语「快」，读 /vit/",
+      "match": ["Vite"],
+      "level": "L1",
+      "tip": "下一代前端构建工具：开发时用浏览器原生 ESM 免打包直连源码，构建时用 Rollup/esbuild 产物打包",
+      "desc": "两大法宝对应两种模式：**dev server** 按请求转换模块（启动 O(1)，HMR 只更新改动模块）；**build** 调 Rolldown/Rollup 全量打包出优化产物。Vue 作者尤雨溪发起，现已框架中立。",
+      "seeAlso": [{ "pkg": "01-es", "id": "esm", "term": "ESM" }]
+    },
+    {
+      "id": "bundler",
+      "term": "打包器",
+      "full": "bundler",
+      "match": ["打包器", "Bundler", "Webpack"],
+      "level": "L1",
+      "tip": "把散落的模块拼成少量优化产物的工具：Webpack 全量打包起步，Vite 开发期绕开打包",
+      "desc": "打包要「全量构建 → 起服务器」，项目越大冷启动与 HMR 越慢——这是 Vite 换赛道的出发点。同类新工具：esbuild（Go，极速但只做转换）、Turbopack、Rspack（Rust，Webpack 兼容路线）。"
+    },
+    {
+      "id": "dev-server",
+      "term": "dev server",
+      "match": ["dev server", "开发服务器"],
+      "level": "L1",
+      "tip": "Vite 起的本地 HTTP 服务：按 URL 请求实时编译对应源文件返回模块，还有 WebSocket 通道推热更新",
+      "desc": "浏览器请求 `/src/main.ts` 时服务器才转换这一个文件——源码树即模块图。附带能力：静态资源处理、代理、预构建依赖、HMR 推送。`vite` 命令一键起跑。"
+    },
+    {
+      "id": "native-esm",
+      "term": "原生 ESM 服务",
+      "match": ["原生 ESM", "按需编译"],
+      "level": "L1",
+      "tip": "不做打包、直接让浏览器 import 散文件，靠 dev server 逐文件转译——Vite 快的根本",
+      "desc": "模块图在浏览器里现场建立，冷启动与项目规模几乎解耦。代价是请求数量多（瀑布流），由预打包与 HTTP 缓存（max-age + 强缓存 ETag）缓解。生产环境不用这套：仍需 Rollup 合并压缩。"
+    },
+    {
+      "id": "hmr",
+      "term": "HMR",
+      "full": "Hot Module Replacement",
+      "zh": "模块热替换",
+      "match": ["HMR"],
+      "level": "L1",
+      "tip": "改代码不刷新页面：只有改动的模块及其消费者被替换，应用状态保留",
+      "desc": "依赖 WebSocket 推送「哪个文件变了」，浏览器运行时按 importer 链向上冒泡，模块自己 `import.meta.hot.accept` 声明可接住更新，接不住就整页 reload（full-reload）。框架插件（vue/react）把组件级替换实现了，日常无感。"
+    },
+    {
+      "id": "full-reload",
+      "term": "full-reload",
+      "match": ["full-reload", "整页刷新"],
+      "level": "L1",
+      "tip": "HMR 失效兜底：模块不可热更、循环依赖断链、或 import.meta.hot 主动 invoke 时整页重载",
+      "desc": "看到页面「一言不合就刷新」查三处：改动文件是否在 HMR 边界外（如 .ts 纯逻辑默认冒泡到入口）、是否含副作用模块、控制台是否打印了 decline/invalidate 链。`import.meta.hot.on('vite:afterUpdate')` 可观察。"
+    },
+    {
+      "id": "esbuild",
+      "term": "esbuild",
+      "match": ["esbuild"],
+      "level": "L1",
+      "tip": "Go 写的超快 TS/JS 转换器：Vite 用它做依赖预构建、TS 转译、CSS 压缩",
+      "desc": "快在原生语言 + 并行 + 零 AST 拷贝。局限也是定位：只逐文件转译、不做类型检查（tsc 另跑）、不支持装饰器等部分语法实验。 Rolldown（Rust）正在接替它承担更多打包侧工作。"
+    },
+    {
+      "id": "optimize-deps",
+      "term": "依赖预构建",
+      "full": "optimizeDeps",
+      "match": ["optimizeDeps", "预构建"],
+      "level": "L2",
+      "tip": "dev 启动把 node_modules 依赖用 esbuild 打成一包 ESM：减请求瀑布、兼容 CJS 包",
+      "desc": "缓存在 `node_modules/.vite`，依赖变化自动重跑；`include/exclude` 手动干预「猜漏了」的 CJS/动态引用包。dev 页偶发「504 Outdated Optimize Dep」= 预构建与页面请求竞态，刷新或补 include。"
+    },
+    {
+      "id": "entry-html",
+      "term": "HTML 入口",
+      "match": ["index.html", "入口 HTML"],
+      "level": "L2",
+      "tip": "Vite 以 index.html 为构建入口（不是 JS）：解析其中的 script/link 标签顺藤摸出模块图",
+      "desc": "`<script type=\"module\" src=\"/src/main.ts\">` 被当作模块图根；`%VITE_XXX%` 与 `<%= %>` 模板变量、`base` 路径重写都在 HTML 转换阶段完成。MPA 配 rollupOptions.input 多入口。"
+    },
+    {
+      "id": "asset-handling",
+      "term": "静态资源处理",
+      "match": ["?url", "?raw", "assetsInlineLimit", "import.meta.glob"],
+      "level": "L2",
+      "tip": "import 图片/字体返回处理后的 URL；?raw 拿文本、?url 强制 URL、小文件自动转 base64 内联",
+      "desc": "`assetsInlineLimit`（默认 4KB）以下内联减请求；`import.meta.glob('./imgs/*.png', {eager:true})` 批量导入。public/ 目录原样拷贝、不参与构建，引用用绝对路径 /logo.png。"
+    },
+    {
+      "id": "glob-import",
+      "term": "import.meta.glob",
+      "match": ["import.meta.glob"],
+      "level": "L2",
+      "tip": "模式匹配批量生成动态 import 映射：自动注册路由、批量挂组件的官方姿势",
+      "desc": "`const pages = import.meta.glob('./views/**/*.vue')` 返回 `{path: () => import(path)}` 懒加载表；`{ eager: true }` 直接取值、`import: 'default'` 只取默认导出。是 Vite 特有 API（Webpack 对应 require.context）。"
+    },
+    {
+      "id": "css-pipeline",
+      "term": "CSS 管线",
+      "match": ["PostCSS", "CSS Modules", "scoped"],
+      "level": "L2",
+      "tip": "内置预处理（ Sass 直装即用）→ PostCSS（autoprefixer）→ CSS Modules（*.module.css）→ 构建时合并提取",
+      "desc": "dev 下样式经 style 标签注入支持 HMR，build 时抽成独立 .css 文件（cssCodeSplit 按 chunk）。`:export`、`composes` 属 CSS Modules 规范；全局样式入口 import 一个 .css 即可。"
+    },
+    {
+      "id": "alias-resolve",
+      "term": "解析与别名",
+      "match": ["resolve.alias", "extensions", "preserveSymlinks"],
+      "level": "L2",
+      "tip": "resolve.alias 配 @→src；extensions 省后缀；主字段/条件导出决定包入口选哪个文件",
+      "desc": "Vite 遵循 package.json 的 `exports`/`module` 字段，与 Node/tsconfig paths 需三方对齐（别名一处配、tsconfig paths 一份、vitest 再一份是常见痛点，用 vite-tsconfig-paths 插件收敛）。"
+    },
+    {
+      "id": "env-mode",
+      "term": "环境变量与模式",
+      "match": ["import.meta.env", "VITE_", "mode", ".env"],
+      "level": "L3",
+      "tip": "只有 VITE_ 前缀注入客户端；loadEnv 读服务端变量；mode（development/production/自定义）决定加载哪个 .env.[mode]",
+      "desc": "`import.meta.env.MODE / DEV / PROD / SSR` 编译期常量替换。密钥放无前缀变量只在构建机可读——**任何进客户端包的变量都等于公开**。`define` 也能注入全局常量。"
+    },
+    {
+      "id": "build-rollup",
+      "term": "build 与 Rollup",
+      "match": ["Rollup", "rollupOptions"],
+      "level": "L3",
+      "tip": "生产打包委托给 Rollup：tree-shaking、code splitting、产物 hash 都它做",
+      "desc": "`build.rollupOptions` 可改 output（文件名模式）、input（多入口）、外部化 external。Vite 6 起 Rolldown（Rust 实现、Rollup 兼容 API）可 `--experimentalRolldown` 试用，未来统一 dev/build 双引擎。"
+    },
+    {
+      "id": "chunk-split",
+      "term": "chunk 与分包",
+      "match": ["chunk", "manualChunks"],
+      "level": "L3",
+      "tip": "产物切成多个可并行缓存的 JS 文件；manualChunks 把大依赖单独成包提高缓存命中",
+      "desc": "动态 import() 自动切分；共享模块由 Rollup 归入公共 chunk。策略：vendor（react 等大库）、按路由、按「改动频率」分包——把不常变的圈进长期缓存。`chunkSizeWarningLimit` 只是提醒别当真指标。"
+    },
+    {
+      "id": "minify",
+      "term": "压缩与混淆",
+      "match": ["minify", "esbuild 压缩", "terser"],
+      "level": "L3",
+      "tip": "默认 esbuild minify（快）；terser 可删注释/保留名字但慢数倍；gzip/brotli 在服务器或 CI 再压一层",
+      "desc": "压缩=去空白短变量名，传输压缩=gzip/br，两层叠加。`build.minify:'terserOptions'` 场景极少（如需 `drop_console`）。产物体积看 `--reportSize` 或 rollup-plugin-visualizer 的 treemap。"
+    },
+    {
+      "id": "target-browserslist",
+      "term": "target 与兼容",
+      "match": ["target", "browserslist", "legacy"],
+      "level": "L3",
+      "tip": "build.target 决定语法降级线（默认 baselines-widely-available）；要兼容老浏览器上 @vitejs/plugin-legacy",
+      "desc": "esbuild 做语法降级但不转译 API（Promise.finally 这类要 polyfill）。legacy 插件双产物：modern 走 `<script type=module>`、legacy 经 SystemJS。browserslist 是 Babel/Autoprefixer 生态的兼容声明，Vite 只在 PostCSS 侧尊重它。"
+    },
+    {
+      "id": "base-publicpath",
+      "term": "base 与部署路径",
+      "match": ["base:", "publicPath"],
+      "level": "L3",
+      "tip": "网站不在根目录（GitHub Pages /sub/）时配 base，产物里的资源引用自动带前缀",
+      "desc": "`base: '/sub/'` 或 `'https://cdn.example.com/'`（直链 CDN）。`--base` 命令行可临时覆盖；运行时改 base 不可能（编译期已替换）。配错的表现：页面 200 但资源全 404。"
+    },
+    {
+      "id": "sourcemap-vite",
+      "term": "sourcemap",
+      "match": ["sourcemap"],
+      "level": "L3",
+      "tip": "压缩产物↔源码的对照表；build.sourcemap 可选 true/'inline'/'hidden'，线上报错靠它还原堆栈",
+      "desc": "hidden 模式生成但不写引用注释——上传 Sentry 后删除文件是主流姿势。链条越长（TS→esbuild→bundle）map 越易断，`esbuild.sourcemap` 与 rollup 两级都要开透传。",
+      "seeAlso": [{ "pkg": "01-es", "id": "sourcemap", "term": "sourcemap" }]
+    },
+    {
+      "id": "plugin-hooks",
+      "term": "插件钩子",
+      "match": ["Plugin", "resolveId", "load", "transform", "handleHotUpdate"],
+      "level": "L4",
+      "tip": "兼容 Rollup 插件接口：名字解析 resolveId → 取内容 load → 转代码 transform → HMR 定制 handleHotUpdate",
+      "desc": "Vite 扩展两层：Rollup 钩子负责构建期，dev server 专属钩子（configureServer、transformIndexHtml、handleHotUpdate）负责开发期。`apply:'serve'|'build'` 分阶段注册。"
+    },
+    {
+      "id": "virtual-module",
+      "term": "虚拟模块",
+      "match": ["virtual:", "虚拟模块"],
+      "level": "L4",
+      "tip": "插件现场造出来的模块：resolveId 认领 virtual:xxx 前缀，load 返回代码字符串——不落盘的 import",
+      "desc": "自动导入、配置注入、运行时常量都靠它（unplugin-auto-import 生成的 `#virtual:icons` 类）。前缀协议 `virtual:<name>:<id>` 是社区约定；\\0 前缀告诉其他插件「私有 id 别碰」。"
+    },
+    {
+      "id": "enforce-order",
+      "term": "插件执行顺序",
+      "match": ["enforce", "pre", "post"],
+      "level": "L4",
+      "tip": "enforce:'pre'|'post' 加普通插件插队；pre 在 Vite 核心转换前跑，post 在其后",
+      "desc": "完整链：alias 解析 → pre 插件 → Vite 核心（容器/worker/HTML）→ normal 插件 → post → build 钩子。同层按数组顺序。transform 想拿到未编译源码放 pre，想改 Vite 产物放 post。"
+    },
+    {
+      "id": "unplugin",
+      "term": "unplugin 与兼容生态",
+      "match": ["unplugin"],
+      "level": "L4",
+      "tip": "一套插件适配 Vite/Rollup/Webpack/esbuild/Rspack 的抽象层——用插件前先看有没有 unplugin 版",
+      "desc": "unplugin-icons、unplugin-vue-components 等跨构建工具通吃。写自家工具时优先遵守 Rollup 插件规范（少碰 Vite 私有钩子），生态复用率最高。"
+    },
+    {
+      "id": "framework-plugins",
+      "term": "官方框架插件",
+      "match": ["plugin-vue", "plugin-react", "plugin-vue-jsx"],
+      "level": "L5",
+      "tip": "@vitejs/plugin-vue 编译 SFC、plugin-react 接 Fast Refresh 与自动 JSX 运行时——框架集成靠它们",
+      "desc": "插件把框架能力映射到 Vite 钩子：SFC 拆成 .vue?vue&type=script/style 子请求、JSX 走 esbuild/babel、编译期产物带 HMR 边界。自定义元素/SSR 各自还有专属选项。"
+    },
+    {
+      "id": "ssr-vite",
+      "term": "Vite SSR",
+      "match": ["ssr", "SSR"],
+      "level": "L5",
+      "tip": "同一套 dev server 给 Node 端模块图供电：Vite 负责编译与外部化，框架负责渲染",
+      "desc": "`vite.createServer({middlewareMode:true})` 被 Nuxt/Next 开发模式复用；产物 `ssr: true` 输出 Node 可 import 的 ESM。外部化（不打包 node_modules 服务端依赖）是构建正确性的关键开关 `ssr.noExternal`。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "ssr-hydration", "term": "SSR 与水合" }]
+    },
+    {
+      "id": "environment-api",
+      "term": "Environment API",
+      "match": ["Environment", "environments"],
+      "level": "L5",
+      "tip": "Vite 6 新抽象：client/ssr/自定义环境（edge、vitest 各算一个）统一一套运行时",
+      "desc": "以前 ssr/web 双轨配置与钩子各跑各的；新 API 让插件按 environment 注册转换规则，dev 与 build 共用同一模型。第三方框架迁移进行时，普通应用无感。"
+    },
+    {
+      "id": "lib-mode",
+      "term": "库模式",
+      "full": "build.lib",
+      "match": ["lib 模式", "build.lib"],
+      "level": "L6",
+      "tip": "把 Vite 当组件库/工具库打包器：externals 排除依赖、多入口、输出 ESM/CJS/UMD",
+      "desc": "`build.lib.entries` + `rollupOptions.external` + `globals`（UMD）；配 d.ts 生成（vite-plugin-dts）与 exports 字段是完整发布链。CSS 库另有 cssCodeSplit:false 出整包。"
+    },
+    {
+      "id": "vitest-bridge",
+      "term": "Vitest",
+      "match": ["Vitest"],
+      "level": "L6",
+      "tip": "复用 Vite 转换管线的测试运行器：同一份 vite.config，测试与源码看到同样的别名/env/HMR 级 watch",
+      "desc": "Vite 官方推荐测试方案，天然支持 ESM/TS/JSX。jsdom/happy-dom 环境、coverage（v8）、UI 模式按需装包。深度内容见 22-vitest 专包。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest", "term": "Vitest" }]
+    },
+    {
+      "id": "monorepo-vite",
+      "term": "monorepo 与 workspace",
+      "match": ["monorepo", "workspace", "Turborepo"],
+      "level": "L6",
+      "tip": "一个仓库多包：pnpm workspace 软链内部依赖，Turborepo/Nx 排任务图增量构建",
+      "desc": "内部包直链源码时 Vite 要把它们排除出 optimizeDeps（`preserveSymlinks`、fs.allow 范围）。Vite 仓库自身就是 pnpm workspace + 多包的示范样本。"
+    },
+    {
+      "id": "ci-vite",
+      "term": "CI/CD 与缓存",
+      "match": ["CI", "缓存", "turbo"],
+      "level": "L6",
+      "tip": "CI 上缓存 node_modules/.vite 与 dist：restore-keys 按 lockfile 哈希命中，构建时间砍半",
+      "desc": "GitHub Actions 的 actions/cache 三段 key；`npm ci` 保证可复现。Vite 6 的 build 结果确定性（同输入同 hash）让长效缓存真正可行——这是「改一行全站重传」的解药。"
+    },
+    {
+      "id": "rolldown",
+      "term": "Rolldown 与未来",
+      "match": ["Rolldown", "Lightning"],
+      "level": "L6",
+      "tip": "Rust 写的 Rollup 兼容打包器：Vite 的未来默认引擎，dev/build 同一内核",
+      "desc": "`@vitejs/rolldown-vite` 已可替换体验；统一后预构建、transform、minify 全走原生速度。Lightning CSS（SWC 系）也提供 `css.transformer` 选项。工具链整体从 JS/Go 向 Rust 迁移。"
+    },
+    {
+      "id": "security-vite",
+      "term": "依赖安全",
+      "match": ["audit", "supply chain", "供应链"],
+      "level": "L6",
+      "tip": "lockfile 审计 + 白名单源 + 定期 npm audit / socket / Renovate 盯依赖——构建工具也是攻击面",
+      "desc": "Vite dev server 曾有文件任意读取漏洞（fs.allow 绕过系列），锁小版本并跟安全公告。CI 里 `npm audit --omit=dev` 设阈值；postinstall 脚本默认禁（pnpm 白名单制）。"
+    }
+  ]
+}

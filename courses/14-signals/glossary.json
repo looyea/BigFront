@@ -1,0 +1,276 @@
+{
+  "title": "响应式状态管理 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "sig-landscape",
+      "term": "状态管理简史",
+      "match": ["Flux", "Redux", "单向数据流"],
+      "level": "L1",
+      "tip": "十年演进：Flux 单向数据流 → Redux 单一 store+不可变 → MobX 自动追踪 → Hooks 碎片化 → 外部 store 复兴 → signals 标准化",
+      "desc": "每一代都在解决上一代的问题又引入新的：Flux/Redux 换来可控但样板多，MobX 换来省事但心智黑盒，Hooks 局部化却带来碎片化，于是 Zustand/Jotai 外部 store 复兴，最终 signals 试图统一原语。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-core", "term": "Zustand 最小 store" }]
+    },
+    {
+      "id": "sig-paradigms",
+      "term": "signal 与 stream",
+      "match": ["signal", "stream", "流"],
+      "level": "L1",
+      "tip": "signal 表达「当下的值」、stream 表达「随时间变化的事件序列」——本包的核心透镜",
+      "desc": "三组坐标系：推/拉模型、细粒度/粗粒度订阅、可变/不可变更新。signal 擅长「状态的最新快照」、stream 擅长「事件间的关系」；两者正互相借鉴（toRawSignals / firstValueFrom）。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "fine-grained", "term": "细粒度响应式" }]
+    },
+    {
+      "id": "sig-map",
+      "term": "四强定位",
+      "match": ["TC39", "RxJS", "MobX", "Zustand"],
+      "level": "L1",
+      "tip": "TC39 Signals（语言级原语）、RxJS（流处理库）、MobX（业务域对象 store）、Zustand（React 极简外部 store）各有边界",
+      "desc": "别把 TC39 Signals 当状态库（它是提案原语）、别拿 RxJS 处理一次性 Promise、别用 MobX 做无对象建模的散状态、别在 React 之外硬套 Zustand。认清各家「解决什么问题、又引入什么问题」。"
+    },
+    {
+      "id": "tc39-core",
+      "term": "signal / computed / effect",
+      "match": ["computed", "proposal-signals", "惰性求值"],
+      "level": "L2",
+      "tip": "TC39 提案核心三件套：signal() 建源、computed() 派生缓存、effect() 跑副作用；惰性求值 + 即时一致",
+      "desc": "提案标准化的是「原语语义」而非唯一实现。各家对应：Solid createSignal/Memo/Effect、Svelte runes、Vue ref/computed/watchEffect、Preact @preact/signals 与提案同形。理解「什么被标准化了、什么没有」。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "create-signal", "term": "createSignal" }]
+    },
+    {
+      "id": "tc39-control",
+      "term": "watch / untrack / equality",
+      "match": ["watch", "untrack", "equals"],
+      "level": "L2",
+      "tip": "订阅控制三招：watch 观察而不建细粒度依赖、untrack 屏蔽读取、自定义 equals 控制变化判定",
+      "desc": "「读即订阅」带来过度订阅的风险，这三者是治理手段。untrack 用于「我只想拿一次当下值」；自定义 equals 用于对象/数组判等（默认 Object.is 对每次新对象都判为变化）。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "batch-untrack", "term": "batch / untrack / on" }]
+    },
+    {
+      "id": "tc39-frameworks",
+      "term": "提案在各框架的近况",
+      "match": ["Preact", "runes", "interop"],
+      "level": "L2",
+      "tip": "Angular 高度对齐提案语义、Preact 与提案同形、Svelte 5 runes 是编译器变体、Vue 自成体系",
+      "desc": "别被「都叫 signal」忽悠——语义相近但实现/调度/生命周期各异。跨库 interop（一个 signal 在另一库用）目前仍非标准，是前景而非现状。选型时看「语义契合」而非「名字相同」。"
+    },
+    {
+      "id": "rx-basics",
+      "term": "Observable / subscribe / teardown",
+      "match": ["Observable", "subscribe", "teardown", "next"],
+      "level": "L3",
+      "tip": "流三要素：Observable 把「订阅+退订」收进一个对象；next/error/complete 三通道；订阅返回 teardown",
+      "desc": "从 addEventListener 手工账本讲起——Observable 把事件源、订阅者、清理函数归一。of/from/fromEvent/interval 是入口构造器；理解冷流（每订阅各自产出）与热流（共享产出）的区别。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "rx-operators", "term": "操作符" }]
+    },
+    {
+      "id": "rx-operators",
+      "term": "操作符",
+      "match": ["switchMap", "debounceTime", "distinctUntilChanged", "combineLatest", "mergeMap"],
+      "level": "L3",
+      "tip": "日常够用的：map/filter/scan、debounceTime/distinctUntilChanged、switchMap/mergeMap/concatMap、catchError/retry/tap",
+      "desc": "打字机搜索是 switchMap 的经典例：每次新输入取消上一个在途请求，只认最新。mergeMap 并发保留全部、concatMap 串行排队、switchMap 抛弃旧的——三者选型是 RxJS 面试必考。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-cancel", "term": "请求取消与竞态" }]
+    },
+    {
+      "id": "cold-hot",
+      "term": "冷流与热流",
+      "match": ["冷流", "热流", "multicast"],
+      "level": "L3",
+      "tip": "冷流每个订阅者触发各自的生产（如 fromEvent 每次重新监听）；热流多订阅者共享同一产出",
+      "desc": "Subject/shareReplay 把冷流转热。判据：数据源是「订阅时才产生」还是「本就独立在跑」。这决定了副作用会不会重复执行、多订阅者看到的是不是同一份。"
+    },
+    {
+      "id": "rx-inapp",
+      "term": "RxJS 在现代前端的位置",
+      "match": ["useObservable", "AbortController", "AsyncIterator"],
+      "level": "L3",
+      "tip": "React 桥接靠 useObservable 类 hook；与 fetch/AbortController/AsyncIterator 有分工；Angular 里 RxJS 是官方常客",
+      "desc": "别为一次性 Promise 或简单事件引入整个 RxJS——那是内存泄漏与心智负担的来源。它真正的价值在「复杂异步编排」：多源合并、限流、竞态、时间关系。给出「什么时候不该用 RxJS」的清单。"
+    },
+    {
+      "id": "mobx-core",
+      "term": "MobX 四件套",
+      "match": ["makeAutoObservable", "observable", "autorun", "action"],
+      "level": "L4",
+      "tip": "observable 建可观察状态、action 里改、computed 派生自动缓存、reaction/autorun 跑副作用",
+      "desc": "makeAutoObservable 一键把对象变可观察，起步最省事。心智是「自动追踪的读时订阅」：谁读了哪个字段、谁就订阅了它。严格模式（enforceActions）约束「改必须在 action 里」。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "ref-reactive", "term": "reactive" }]
+    },
+    {
+      "id": "mobx-react",
+      "term": "observer 组件",
+      "match": ["observer", "mobx-react-lite"],
+      "level": "L4",
+      "tip": "observer 让组件只随「渲染时读到的值」重渲——细粒度、少重渲",
+      "desc": "常见事故三件套：解构后丢追踪、在组件外读、忘记包 action。mobx-react-lite 的 observer 用 useSyncExternalStore 式订阅补上 React 本身的粗粒度重渲。与 Solid/Svelte 的细粒度殊途同归。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "over-subscribe", "term": "过度订阅" }]
+    },
+    {
+      "id": "mobx-stores",
+      "term": "业务域建模",
+      "match": ["RootStore", "fromJS", "toJS", "onSnapshot"],
+      "level": "L4",
+      "tip": "以对象图建模业务域：多 store 互相引用、fromJS/toJS 做边界、patch/onSnapshot 做持久化",
+      "desc": "和「扁平不可变 store」（Redux/Zustand）的建模哲学差异：MobX 让你写「活的领域对象」（有方法、有引用、可变），代价是引用关系与序列化边界要小心。disposer 管理 reaction 生命周期。"
+    },
+    {
+      "id": "za-core",
+      "term": "Zustand 最小 store",
+      "match": ["create", "getState", "setState"],
+      "level": "L5",
+      "tip": "十行写一个 store：set 合并、selector 订阅、action 写在 store 里、组件外 getState/setState/subscribe",
+      "desc": "底层靠 useSyncExternalStore 让外部 store 安全接入 React，零 Provider。5.x 的 useShallow 处理「selector 返回新对象」的重渲问题。是「React 外部 store 极简赢家」的代表。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-create", "term": "create 精析" }]
+    },
+    {
+      "id": "za-middleware",
+      "term": "中间件三件套",
+      "match": ["persist", "immer", "devtools"],
+      "level": "L5",
+      "tip": "persist 做 localStorage 持久化、immer 写可变风格但产不可变、devtools 挂 Redux DevTools",
+      "desc": "中间件是 `(fn)=>(set,get,store)=>init` 的链式 wrap，组合顺序影响行为（常见 devtools→immer→persist）。persist 的 version+migrate 做 schema 升级、partialize 选字段。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-middleware-chain", "term": "中间件链" }]
+    },
+    {
+      "id": "za-patterns",
+      "term": "大 store 拆分与模式",
+      "match": ["slices", "transient", "slice"],
+      "level": "L5",
+      "tip": "slices 分片组织、transient 订阅（subscribe 不走渲染）、原子化 selector 守性能边界",
+      "desc": "transient 更新是 Zustand 的隐藏利器：store.subscribe 直接拿值、不触发 React 重渲（高频动画/日志场景）。与 Redux Toolkit 的分工：谁管状态谁管异步，别混。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-slices", "term": "Slices Pattern" }]
+    },
+    {
+      "id": "sig-vs-streams",
+      "term": "signal vs stream",
+      "match": ["firstValueFrom", "toRawSignals", "快照"],
+      "level": "L6",
+      "tip": "同一需求（去抖/合并/限流）两写：stream 擅长事件间关系、signal 擅长状态最新快照",
+      "desc": "搜索去抖用 signal+async 也能写，但「事件时间关系」密集时 RxJS 操作符表达力更强；反之「就是想要个当前值随便读」时 signal 更直接。选型看你的数据更像「值」还是「事件流」。"
+    },
+    {
+      "id": "sig-mutability",
+      "term": "可变与不可变",
+      "match": ["不可变", "可变", "Immer"],
+      "level": "L6",
+      "tip": "MobX（代理可变+路径通知）与 Redux/Zustand（不可变+快照比较）两条更新哲学",
+      "desc": "可变路线更新局部、心智直观，但要守住「改走 action」纪律；不可变路线纯函数好测好时间旅行，但深层更新啰嗦、引用一变全家比较。Immer 用 Proxy 让你写可变风格却产出不可变，是两边和事佬。React 历史上选不可变是为了「引用比较触发重渲」。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-immer-devtools", "term": "immer + devtools" }]
+    },
+    {
+      "id": "sig-scenarios",
+      "term": "状态分层与选型树",
+      "match": ["决策树", "状态分层", "URL 态"],
+      "level": "L6",
+      "tip": "组件局部态/跨组件共享态/业务域模型/服务端缓存态/URL 态各归谁管——写进团队规范",
+      "desc": "决策树落法：局部→useState/signals；跨组件共享→Zustand/MobX/Pinia；服务端缓存→Query/SWR；表单局部→RHF/VeeValidate；URL 态→路由。四强 + React Query + 框架内置的分工矩阵。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-division", "term": "三层分工" }]
+    },
+    {
+      "id": "sig-size",
+      "term": "打包体积",
+      "full": "bundle size",
+      "match": ["gzip", "bundlephobia", "摇树"],
+      "level": "L7",
+      "tip": "四家各要多少钱：RxJS 可按需 import 摇树、MobX 偏整体、Zustand/Jotai 极小",
+      "desc": "可摇树性差异巨大——RxJS 只用几个操作符不必背上全部。用 bundlephobia 与构建产物分析建立「先测量再优化」习惯。依赖传递成本也算进账。",
+      "seeAlso": [{ "pkg": "10-vite", "id": "chunk-split", "term": "分包与体积" }]
+    },
+    {
+      "id": "sig-debug",
+      "term": "调试工具链",
+      "match": ["DevTools", "marble", "why-did-update"],
+      "level": "L7",
+      "tip": "Redux DevTools（时间旅行）、MobX 的 why-did-update、Preact/Angular signal 调试、RxJS marble 测试",
+      "desc": "统一心法：让「谁改了状态、为什么重渲」可见。Zustand devtools 中间件复用 Redux DevTools 协议；RxJS 用 marble 图单测时序。看不见状态流就全是玄学。",
+      "seeAlso": [{ "pkg": "01-es", "id": "devtools", "term": "DevTools" }]
+    },
+    {
+      "id": "over-subscribe",
+      "term": "过度订阅与漏订",
+      "match": ["glitch", "过度订阅", "漏订"],
+      "level": "L7",
+      "tip": "四类高频坑：selector 每次返回新对象致重渲风暴、observer 没读到字段、流没退订的泄漏、深层可变对象引用相等失效",
+      "desc": "每坑给「症状-定位-修法」三段。核心两类是「过度订阅」（订了不该订的）和「漏订」（该订的没订，值变了不更新）。解药：稳定 selector 引用、渲染期真正读字段、订阅配对 teardown、路径访问而非整体读。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "subscription-graph", "term": "订阅图与过度订阅" }]
+    },
+    {
+      "id": "sig-server",
+      "term": "客户端状态 vs 服务端状态",
+      "match": ["服务端状态", "客户端状态", "失效"],
+      "level": "L8",
+      "tip": "React Query/SWR 的「缓存+失效」模型，比把接口数据塞进 Zustand 更合理",
+      "desc": "两条状态的职责边界：缓存/失效/加载态/乐观更新谁负责。服务端状态是「别人数据的只读镜像、会过期」，天生要缓存系统而非又一个 store。与 Kit load、Solid resource 的框架内置方案对照。",
+      "seeAlso": [{ "pkg": "19-tanstack-query", "id": "tq-server-state", "term": "服务器状态" }]
+    },
+    {
+      "id": "sig-migrate",
+      "term": "迁移与共存",
+      "match": ["渐进迁移", "双写桥", "共存"],
+      "level": "L8",
+      "tip": "Redux→Zustand 渐进迁移（双写桥、按 feature 切）；MobX 与 Zustand 同应用共存的分工与反模式",
+      "desc": "在已有 Context 应用里引外部 store 要划清边界；迁移的安全网是先加验证（对照双跑）再切读取。别把两套状态库指向同一份真相——两份真相迟早不一致。"
+    },
+    {
+      "id": "sig-auth",
+      "term": "登录态实战",
+      "match": ["登录态", "BehaviorSubject", "路由守卫"],
+      "level": "L8",
+      "tip": "同一需求（跨页共享+守卫+登出清理）四种实现：Zustand store / MobX store / signals+context / RxJS BehaviorSubject",
+      "desc": "比较四法的代码量、心智负担与框架锁定度。BehaviorSubject 是 RxJS 里「有当前值的可观察」的代表，适合登录态这类「有初始值 + 会变 + 多订阅者要最新」的场景。登出务必清 token + 存储 + 缓存。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-auth", "term": "登录态 store" }]
+    },
+    {
+      "id": "sig-internals",
+      "term": "手写 mini-signal",
+      "match": ["mini-signal", "手写"],
+      "level": "L9",
+      "tip": "60 行实现 signal/computed/effect 最小闭环：当前观察者、订阅集、通知传播",
+      "desc": "亲手做一遍就懂「读即订阅」：一个 currentSubscriber 栈 + 每个 signal 的订阅 Set + 写时遍历通知。你的简版会缺批处理与循环检测——这正是提案语义与玩具的距离。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "effect-tracking", "term": "createEffect 与自动追踪" }]
+    },
+    {
+      "id": "sig-capstone",
+      "term": "用数据选型",
+      "match": ["记分卡", "渲染次数", "代码量"],
+      "level": "L9",
+      "tip": "同一看板用 MobX/Zustand/signals/RxJS 各实现一份，产出代码量、渲染次数、包体积、调试体验对照报告",
+      "desc": "把「感觉哪个好用」变成「量出来谁在哪个维度赢」。这类对照演练的价值不在结论绝对正确，而在逼你把每个维度定义清楚、测法统一。"
+    },
+    {
+      "id": "sig-glitch",
+      "term": "glitch 与即时一致",
+      "match": ["即时一致", "glitch"],
+      "level": "L2",
+      "tip": "glitch 指一次更新中派生值短暂读到不一致的中间态；glitch-free 是 signals 系统的关键保证",
+      "desc": "菱形依赖（A→B、A→C、B+C→D）下，朴素实现会让 D 先基于「新 B 旧 C」算一次再纠正。Solid、TC39 提案靠拓扑排序/延迟求值避免。理解它才懂为什么 computed 要惰性 + 即时一致。"
+    },
+    {
+      "id": "sig-equality",
+      "term": "equality 判等",
+      "match": ["Object.is", "判等", "equality"],
+      "level": "L2",
+      "tip": "signal 写值默认 Object.is 比较，同值不通知——但每次新建的对象/数组引用都不同会被判为变化",
+      "desc": "这是「selector 返回新对象导致重渲风暴」的根因：默认判等对 `{...}` 永远为「变了」。解药：稳定引用、useShallow、自定义 equals、或返回原始值。不可变路线里判等就是靠引用比较。"
+    },
+    {
+      "id": "sig-fine-vs-coarse",
+      "term": "细粒度与粗粒度",
+      "match": ["细粒度", "粗粒度"],
+      "level": "L1",
+      "tip": "细粒度：只更新真正依赖变化的那一小块；粗粒度：状态一变就重跑整个订阅单元（如组件）",
+      "desc": "Solid/MobX/Svelte 走细粒度；React 默认粗粒度（重渲组件树，靠 memo 局部缓解）。细粒度省渲染但心智复杂（要理解谁订阅了什么），粗粒度心智简单但要防多余渲染。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "no-vdom", "term": "无虚拟 DOM" }]
+    },
+    {
+      "id": "sig-external-store",
+      "term": "外部 store 与 useSyncExternalStore",
+      "match": ["useSyncExternalStore", "外部 store"],
+      "level": "L5",
+      "tip": "React 18 提供的「安全订阅外部 store」钩子，解决并发渲染下的撕扯（torn reads）",
+      "desc": "Zustand/Jotai/Redux 都靠它接入 React。契约是 subscribe + getSnapshot（+ getServerSnapshot），getSnapshot 必须返回稳定引用否则死循环重渲。这是「外部 store 复兴」能与并发 React 共存的技术底座。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-sync-external", "term": "useSyncExternalStore" }]
+    }
+  ]
+}

@@ -1,0 +1,301 @@
+{
+  "title": "Svelte 5 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "compile-vs-runtime",
+      "term": "编译器框架",
+      "match": ["编译器", "编译时"],
+      "level": "L1",
+      "tip": "Svelte 把框架逻辑在构建期做完，运行时只剩小得多的 JS——与 React/Vue「运行时框架」的根本分歧",
+      "desc": "组件代码编译成操作真实 DOM 的 imperative JS：没有虚拟 DOM diff、没有组件树 reconcile。代价：运行时魔法少（一切要显式）、SSR/工具链都要跟着编译器走。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "compiler", "term": "模板编译器" }, { "pkg": "05-react", "id": "vdom", "term": "虚拟 DOM" }]
+    },
+    {
+      "id": "runes",
+      "term": "runes",
+      "full": "Runes",
+      "zh": "符文",
+      "match": ["runes", "符文"],
+      "level": "L1",
+      "tip": "Svelte 5 的响应式原语族：$state/$derived/$effect/$props/$bindable，以 $ 前缀命名故称「符文」",
+      "desc": "取代 v4「编译器猜 `let count = 0` 就是响应式」的魔法：v5 一切显式调用、可在 .svelte 与 .svelte.js/ts 里通用、可条件创建。学 Svelte 5 从认五个符文开始。"
+    },
+    {
+      "id": "state-rune",
+      "term": "$state",
+      "match": ["state rune"],
+      "level": "L1",
+      "tip": "声明响应式状态；对象/数组被 deep proxy 代理，改属性也触发更新",
+      "desc": "`let count = $state(0)` 之后任何读取它的 effect/模板都会订阅。`$state.raw()` 跳过深层代理（整体替换才触发，装大列表/第三方实例用）。class 字段可用 `#count = $state(0)` 成为响应式成员。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "signal", "term": "Signal" }]
+    },
+    {
+      "id": "derived-rune",
+      "term": "$derived",
+      "match": ["derived"],
+      "level": "L1",
+      "tip": "惰性派生值：读时才算、依赖不变走缓存；传函数即得只读 derived",
+      "desc": "`let double = $derived(count * 2)`。需要「可外部触发重算」用异步形态 `$derived.by(async () => ...)`。派生链自动追踪：A→B→C 只改 A，下游按需重算。"
+    },
+    {
+      "id": "effect-rune",
+      "term": "$effect",
+      "match": ["effect rune", "effect root"],
+      "level": "L1",
+      "tip": "响应式世界的副作用出口（写 DOM 外的事、同步外部系统）；运行在渲染后，内部读取自动追踪",
+      "desc": "`$effect(() => { document.title = count })`。铁律：effect 里不要写自己读的东西（自触发循环）；`$effect.root()` 创建不受组件生命周期约束的独立作用域（返回清理函数）。多数场景 onMount/事件/派生值更好，少写 effect 是成熟标志。"
+    },
+    {
+      "id": "untrack-flush",
+      "term": "untrack 与 flushSync",
+      "match": ["untrack", "flushSync", "tick"],
+      "level": "L1",
+      "tip": "untrack 里读状态不建依赖；flushSync 同步执行待处理更新（量 DOM 前）；tick/onMount 等渲染完成",
+      "desc": "`untrack(() => total)` 偶尔读一下但不订阅。DOM 更新默认批处理到微任务：要立刻读布局用 `flushSync()`，常规「等 DOM 好」用 `await tick()` 或 onMount。`createEffectRoot` 家族细分作用域。"
+    },
+    {
+      "id": "legacy-mode",
+      "term": "legacy 模式",
+      "match": ["legacy", "compatibility"],
+      "level": "L1",
+      "tip": "v5 里的 v4 兼容层：保留 `export let`、$: 标签、store $ 前缀；新代码别开（性能与体积双输）",
+      "desc": "`compilerOptions: { legacy: true }` 让老组件与新 runes 共存，是迁移期桥梁。`reactive()` 与 `mutable()` 是 legacy 状态对应的 v5 显式替代品。终局目标是删掉 legacy 编译。",
+      "seeAlso": [{ "pkg": "11-svelte", "id": "reactive-statement", "term": "$: 响应式语句" }]
+    },
+    {
+      "id": "reactive-statement",
+      "term": "$: 响应式语句",
+      "match": ["$", "标签语句"],
+      "level": "L6",
+      "tip": "Svelte 4 及以前的魔法：`$: doubled = a * 2` 声明式派生/副作用，v5 被 runes 取代",
+      "desc": "编译器从 $: 语句自动推导依赖并重跑。优雅但隐式——依赖靠扫描、作用域靠位置。v5 用 $derived/$effect 显式化同一能力；读老代码先认识它。"
+    },
+    {
+      "id": "sfc-svelte",
+      "term": ".svelte 文件",
+      "match": [".svelte"],
+      "level": "L2",
+      "tip": "模板 + <script> + <style> 三段式组件文件；script 默认实例级、context=module 为组件级",
+      "desc": "Svelte 2020 年就是 SFC 的发明者（Vue 借鉴了形态）。`.svelte.js/.svelte.ts` 是 v5 新增：无模板的纯 runes 逻辑模块，导出 class/函数做状态封装。"
+    },
+    {
+      "id": "template-syntax-sv",
+      "term": "模板语法",
+      "match": ["{#if}", "{#each}", "{#await}", "{@html}", "{@const}", "{#snippet}", "{@render}", "{#if}"],
+      "level": "L2",
+      "tip": "花括号控制块：条件/列表/异步/原始 HTML/局部常量；表达式级 JS 而非指令体系",
+      "desc": "`{#each items as item, i (item.id)}` 第三括号是 keyed diff 声明；`{#await p then v}` 内置 pending/error 分支（配合 svelte:boundary 可重试）。`{@html}` 等同 v-html——XSS 责任自负。"
+    },
+    {
+      "id": "each-keyed",
+      "term": "keyed each",
+      "match": ["keyed", "each as"],
+      "level": "L2",
+      "tip": "`{#each list as x (x.id)}` 让 Svelte 按 id 复用 DOM 而不是整段重建——输入框错位类 bug 的解药",
+      "desc": "不写括号键时列表重排=全量重建（状态丢、动画断）。key 必须唯一且稳定；对象字面量键会被警告（每次都新引用）。`{#each ... }` 里 index 作键同样有重排问题。"
+    },
+    {
+      "id": "event-sv",
+      "term": "事件绑定",
+      "match": ["onclick", "oninput", "EventHandler"],
+      "level": "L2",
+      "tip": "v5 直接 `onclick={fn}`（DOM 属性式小写），废弃旧的 on:click 指令冒泡语法",
+      "desc": "事件即属性：`onclick={(e) => ...}`、修饰符没了（用 `onfocusin` 或委托手写）。`createEventDispatcher` 仍负责组件自定义事件，父层 `onxxx` 接。迁移重点：旧的 on: 指令改写成 on 属性直绑。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "template-syntax", "term": "模板语法" }]
+    },
+    {
+      "id": "binding-sv",
+      "term": "bind: 双向绑定",
+      "match": ["bind:", "bindable"],
+      "level": "L2",
+      "tip": "bind:value/bind:checked/bind:this 绑表单值与组件实例；组件侧 $bindable() 才能被外面 bind",
+      "desc": "v5 把双向绑定显式化：`let { value = $bindable(0) } = $props()` 声明可双向，否则 props 只进不出。`bind:this={el}` 拿 DOM 节点引用，配合 onMount 量尺寸。"
+    },
+    {
+      "id": "style-scoped",
+      "term": "scoped 样式",
+      "match": ["scoped", "global("],
+      "level": "L2",
+      "tip": "组件 <style> 默认编译期作用域化（未使用的 CSS 直接不打包）；:global() 逃逸、css 变量可穿透",
+      "desc": "作用域靠改类名实现（h-xx 哈希）。子组件根元素也吃父样式（便于外部定制）；`--heading-color: red` 自定义属性是官方「从外改内」通道。未用选择器会警告——死 CSS 清零。"
+    },
+    {
+      "id": "snippet",
+      "term": "Snippet",
+      "match": ["snippet", "render prop"],
+      "level": "L3",
+      "tip": "{#snippet} + {@render} 的模板片段传参体系，取代 v4 slot；可带 props、可传给组件 prop",
+      "desc": "定义：`{#snippet header(title)}<h2>{title}</h2>{/snippet}`，渲染：`{@render header('hi')}`。组件 API 层：`let { children } = $props()` 收默认 snippet，`<slot>` 体系退役。children 作为「最后参数」可隐式传入（`<Card>...</Card>` 的中间内容）。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "slotted", "term": "slot 插槽" }]
+    },
+    {
+      "id": "children-prop",
+      "term": "children prop",
+      "match": ["children prop"],
+      "level": "L3",
+      "tip": "组件 props 里的 children 是一个 snippet——标签写法嵌套的内容自动打包进来",
+      "desc": "`<Card><p>body</p></Card>` 编译为 `children: $.snippet(...)`。判断有没有传：`if (children)` 做条件 UI。可 `@render children?.()` 安全调用。"
+    },
+    {
+      "id": "props-sv",
+      "term": "$props 与 restProps",
+      "match": ["$props", "restProps", "$props.id"],
+      "level": "L3",
+      "tip": "解构赋值即 props 声明：`let { a = 1, b } = $props()`；...rest 收剩余属性转发到元素",
+      "desc": "v5 不再用 export let。解构是 live binding（父改子随动）。restProps spread 到根元素实现 class/onclick 自动透传；`children ?? fallback` 给插槽默认值。`$props.id()` 生成组件实例唯一 id（表单 label 关联）。"
+    },
+    {
+      "id": "spread",
+      "term": "spread 展开属性",
+      "match": ["spread", "rest pattern"],
+      "level": "L3",
+      "tip": "{...props} 把对象铺成元素属性；剩余解构 {...rest} 收集未声明属性",
+      "desc": "属性合并顺序：spread 覆盖前面写的静态属性。事件、class、style 都能 spread——转发层组件（按钮包装、表单控件）的核心机制。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "attrs-inherit", "term": "attribute 透传" }]
+    },
+    {
+      "id": "stores-sv",
+      "term": "store 与 $ 前缀",
+      "match": ["writable", "readable", "derived store"],
+      "level": "L4",
+      "tip": "可观察对象（subscribe/unsubscribe 协议）：writable 可写、readable 只读、derived 派生；$store 自动订阅解包",
+      "desc": "`$count` 在组件里读 store 值并自动订阅/退订。store 是跨组件共享状态的 v4 方案，v5 推荐 runes（class 封装状态 + 导出实例）；两套可互转（`fromStore`/`getContext` 桥）。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "signal", "term": "Signal" }]
+    },
+    {
+      "id": "context-sv",
+      "term": "setContext / getContext",
+      "match": ["setContext", "getContext", "hasContext"],
+      "level": "L4",
+      "tip": "依赖注入：祖先 setContext(key, value)，任意后代 getContext 取——封装复合组件（标签页、表单组）的骨架",
+      "desc": "key 用 Symbol 防冲突；context 在挂载时确定，之后不可变。配合 runes：把 class 实例（带 $state 字段）放 context 里即得到「响应式跨组件状态」。"
+    },
+    {
+      "id": "lift-state",
+      "term": "状态提升与模块状态",
+      "match": ["提升"],
+      "level": "L4",
+      "tip": ".svelte.js 模块顶层的 $state 是模块级共享单例：import 即用，天然全局 store",
+      "desc": "`export const cart = $state({ items: [] })` + 导出操作函数 = 最简全局状态（SSR 注意跨请求共享泄漏，服务端要 per-request 工厂）。组件状态放不进模块时再走 props/context/store。"
+    },
+    {
+      "id": "form-sv",
+      "term": "forms 与 use:enhance",
+      "match": ["use:enhance", "FormData", "渐进增强"],
+      "level": "L5",
+      "tip": "<form method=\"post\"> 原生提交 + 动作（actions）+ use:enhance 无刷新接管——JS 挂了表单仍可用",
+      "desc": "form actions 在 SvelteKit 层定义；组件侧 `use:enhance(({data,form}) => { ... return async ({result}) => {...} })` 接管提交（乐观更新、reset、焦点管理）。invalid/`$page.form` 回填校验失败数据。"
+    },
+    {
+      "id": "transition-sv",
+      "term": "transition / animate",
+      "match": ["transition:", "animate:", "local:", "global:"],
+      "level": "L5",
+      "tip": "进离场 transition:、列表重排 animate:flip、跨路由/跨组件共享元素 transition:local|global",
+      "desc": "内置 fade/slide/scale/fly 及参数；自定义过渡就是「返回 {css,tick} 的函数」。local: 作用于单个元素、global: 跨组件边界（配合 {#key} 做页面转场）。FLIP：First-Last-Invert-Play 重排动画。"
+    },
+    {
+      "id": "action-sv",
+      "term": "action（use:）",
+      "match": ["use:", "action"],
+      "level": "L5",
+      "tip": "元素级行为复用：use:clickOutside、use:tooltip——带 node 参数、返回 {update,destroy} 的生命周期",
+      "desc": "action 在节点挂载时拿到真实 DOM，是「操作 DOM 但不污染组件」的官方出口（第三方 tooltip、拖拽、焦点陷阱）。`use:xx={opts}` 参数变化自动调 update。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "use-enhance", "term": "use:enhance" }]
+    },
+    {
+      "id": "onmount-sv",
+      "term": "onMount / onDestroy",
+      "match": ["onMount", "onDestroy"],
+      "level": "L6",
+      "tip": "挂载后跑（客户端才执行，SSR 被跳过）/ 销毁前清理；onMount 返回函数等价于自动 onDestroy",
+      "desc": "初始化第三方库（地图、图表、CodeMirror）在 onMount——此时 DOM 就绪。返回清理函数处理 removeEventListener/销毁实例。`getContext('svelte:lifecycle')` 类高级钩子在 $effect 里补。"
+    },
+    {
+      "id": "derived-store-sv",
+      "term": "class 与响应式字段",
+      "match": ["class 字段", "$state 字段"],
+      "level": "L6",
+      "tip": "v5 的领域建模主力：class 私有字段 `#count = $state(0)` + getter $derived，实例即状态包",
+      "desc": "`export class Counter { #count = $state(0); get count(){return this.#count} inc(){this.#count++} }`——封装、可实例化、SSR 安全（工厂函数每请求 new）。比 store 更直观， runes 时代的默认选择。"
+    },
+    {
+      "id": "proxy-rules",
+      "term": "代理规则",
+      "match": ["代理", "fine-grained"],
+      "level": "L6",
+      "tip": "$state 对象被 Proxy 包装：只有「被读取过的属性」变化才通知；脱离代理的副本会失联",
+      "desc": "坑位：`const {a} = obj` 解构丢响应性（用 rest 或整体读）；`structuredClone`/JSON 序列化产物是裸对象。`$state.snapshot()` 拿可序列化的原始快照——post 到 worker、写 localStorage 前必过它。",
+      "seeAlso": [{ "pkg": "01-es", "id": "proxy", "term": "Proxy" }]
+    },
+    {
+      "id": "granularity",
+      "term": "细粒度更新",
+      "match": ["细粒度", "fine-grained"],
+      "level": "L6",
+      "tip": "编译器把模板拆成最小更新单元：改一个文本节点只动那个节点，不重跑组件函数",
+      "desc": "与 React「状态变=函数重执行=diff 找差异」对照：Svelte 编译期已知谁依赖谁，运行时 O(1) 直达目标节点。这也是 Svelte 组件通常比同规模 React 组件少一层 memo 焦虑的底层原因。",
+      "seeAlso": [{ "pkg": "05-react", "id": "render-model", "term": "渲染模型" }]
+    },
+    {
+      "id": "html-part",
+      "term": "{@html} 与 SVG/MathML",
+      "match": ["{@html}", "svg:", "math:"],
+      "level": "L9",
+      "tip": "{@html} 注入已消毒的 HTML 字符串；svg:/math: 命名空间前缀让模板里放矢量/公式元素",
+      "desc": "{@html} 不做 XSS 防护也不触发子级响应式（富文本编辑注意）。`<svg>` 自动命名空间、`<math>` 用 math: 前缀；特殊元素 `svelte:html/svelte:head/svelte:body/svelte:window/svelte:document` 把属性挂到根节点。"
+    },
+    {
+      "id": "boundary-sv",
+      "term": "svelte:boundary",
+      "match": ["boundary", "ErrorBoundary"],
+      "level": "L9",
+      "tip": "模板级错误边界与 pending 边界：子树抛错/挂起时渲染 failed/pending 片段，可 retry",
+      "desc": "`<svelte:boundary failed={(e) => ...}>` 捕获渲染错误；子组件 await 时显示 #pending。`<svelte:component this={dynamic}>` 动态组件（v5.36+）。特殊元素补上了「整页崩 vs 局部崩」的选择权。",
+      "seeAlso": [{ "pkg": "05-react", "id": "error-boundary", "term": "错误边界" }]
+    },
+    {
+      "id": "mount-sv",
+      "term": "mount / hydrate",
+      "match": ["mount", "hydrate", "unmount"],
+      "level": "L10",
+      "tip": "v5 新应用入口：mount(Component, {target, props}) / hydrate（接管 SSR 产物）/ unmount",
+      "desc": "取代 new App({target}) 构造器式挂载；SSR 场景必须 hydrate 否则事件不接、重建 DOM。`compile()` API 与自定义元素 `customElement: true`（v5 改为 wrapper 函数注册）供嵌入与非构建流场景。"
+    },
+    {
+      "id": "head-meta",
+      "term": "svelte:head",
+      "match": ["svelte:head"],
+      "level": "L9",
+      "tip": "组件里声明 <svelte:head><title>… → 渲染时合并进文档 head；SSR 下由框架负责提取",
+      "desc": "SEO 与 OG 标签的组件化入口。v5 还有 `<svelte:window>`（全局事件/样式绑定）、`<svelte:document>`。同名标签冲突时按组件树顺序合并。",
+      "seeAlso": [{ "pkg": "08-nuxt", "id": "head-seo", "term": "useHead / SEO" }]
+    },
+    {
+      "id": "svelte-kit-bridge",
+      "term": "SvelteKit",
+      "match": ["SvelteKit"],
+      "level": "L8",
+      "tip": "Svelte 的元框架：路由、load 数据、服务端、adapter 部署——本课只搭引桥，专包在 12",
+      "desc": "对标 Next/Nuxt：vite 插件形态的编译器 + 文件路由 + load 协议 + hooks + adapter 部署体系。学完 Svelte 核心后按 12-sveltekit 包顺序推进。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "kit-overview", "term": "SvelteKit 全景" }]
+    },
+    {
+      "id": "adapter-sv",
+      "term": "adapter",
+      "match": ["adapter", "适配器"],
+      "level": "L8",
+      "tip": "SvelteKit 的部署翻译插件：adapter-node/vercel/static/cloudflare…决定产物形态",
+      "desc": "`kit.adapter` 指定；static 出纯静态站（SSG）、node 出标准服务器、平台 adapter 出对应 runtime 产物。详见 12-sveltekit L6。"
+    },
+    {
+      "id": "vs-react-vue",
+      "term": "与 React/Vue 的选型对照",
+      "match": ["对比", "选型"],
+      "level": "L10",
+      "tip": "心智差异：React 函数重跑+不可变、Vue 双形态响应式、Svelte 编译器+显式 runes；生态 Vue/React 大、Svelte 精而快",
+      "desc": "迁移成本视角：Svelte 代码量最少但会者少；招聘市场 React 最大；Vue 模板接近 HTML。性能量级三者同一档（都远超 jQuery 时代），选型看团队与生态，不看 benchmark。"
+    }
+  ]
+}

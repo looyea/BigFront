@@ -1,0 +1,310 @@
+{
+  "title": "Next.js 14/15 App Router · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "meta-framework",
+      "term": "元框架",
+      "full": "metaframework",
+      "match": ["元框架"],
+      "level": "L1",
+      "tip": "架在 React 之上、把路由/渲染/构建/部署全包了的框架——Next 是 React 界的元框架",
+      "desc": "裸 React 只管 UI；Next 替你决定：路由怎么配（文件系统）、代码怎么打包（Turbopack/webpack）、页面何时渲染（SSR/SSG/ISR/RSC）、往哪部署（Vercel 一键）。Vue 对位是 Nuxt。"
+    },
+    {
+      "id": "app-router",
+      "term": "App Router",
+      "match": ["App Router"],
+      "level": "L1",
+      "tip": "app/ 目录驱动的新路由体系：服务端组件为默认，支持嵌套布局、流式渲染——新项目首选",
+      "desc": "与 Pages Router（pages/ 目录）不兼容混用，一个项目只认一套。app/ 下文件夹=路由段，文件=该段的特殊约定（page/layout/route/not-found/loading/error）。"
+    },
+    {
+      "id": "file-routing",
+      "term": "文件路由",
+      "full": "file-system routing",
+      "match": ["文件路由"],
+      "level": "L1",
+      "tip": "文件夹结构即 URL 结构：新增页面=新增文件，零配置文件",
+      "desc": "Next、Nuxt、SvelteKit 等现代框架的共同设计：路由表由构建器扫描目录生成。心智从「配路由」变成「放文件」，重构页面结构等于挪文件夹。"
+    },
+    {
+      "id": "convention-files",
+      "term": "约定文件",
+      "match": ["page.tsx", "layout.tsx", "template", "route.ts", "not-found", "default.tsx"],
+      "level": "L2",
+      "tip": "文件名即角色：page 页面、layout 共享外壳、route 接口、not-found 404、loading 兜底",
+      "desc": "`layout.tsx` 必须返回 `<html><body>{children}</body></html>`（根布局）；`template.tsx` 与 layout 像但每次导航重新挂载并加过渡；`default.tsx` 给动态段做并行路由兜底；`route.ts` 把目录变成 API 端点（与 page 互斥）。"
+    },
+    {
+      "id": "dynamic-route",
+      "term": "动态段与 catch-all",
+      "match": ["[slug]", "[[...", "...", "generateStaticParams"],
+      "level": "L2",
+      "tip": "[id] 一个段、[[...id]] 可选全段、[...id] 全段；build 时用 generateStaticParams 枚举要预渲染的参值",
+      "desc": "params 在 page 的第二参数（App Router 里是 Promise，15 起需 await）。动态页配 ISR 时用 generateStaticParams 预生成热门详情页、未命中的 fallback 按需渲染；不预生成则全走按需。"
+    },
+    {
+      "id": "route-group",
+      "term": "路由组与私有目录",
+      "match": ["(group)", "(marketing)", "@slot", "_ ", "._"],
+      "level": "L2",
+      "tip": "(名) 分组共享布局不占 URL；@name 并行插槽；下划线前缀纯排除出路由",
+      "desc": "`app/(marketing)/about` 与 `app/(shop)/cart` 各挂各的 layout，URL 里却没有 group 段。`@modal` 插槽让 /feed 页面同时渲染 `@modal/photo`（图片弹层有独立 URL）——拦截路由或模态框进阶玩法的地基。"
+    },
+    {
+      "id": "matchers",
+      "term": "matcher",
+      "match": ["matcher"],
+      "level": "L2",
+      "tip": "两个用武之地：中间件 config.matcher 声明拦截哪些路径；动态段 [id]\\d+ 正则约束",
+      "desc": "matcher 写 `/((?!api|_next).*)` 排除静态资源（省 Edge 函数调用费）；文件级 matcher 如 `page.[ext]\\.(js|ts)` 用正则限制段只匹配指定后缀。"
+    },
+    {
+      "id": "parallel-routes",
+      "term": "并行与拦截路由",
+      "match": ["拦截路由", "并行路由"],
+      "level": "L2",
+      "tip": "一个页面同时渲染多个插槽（并行）；(.)(segment) 括号前缀「截胡」子路由做弹层（拦截）",
+      "desc": "典型组合：相册列表 + 点击照片在当前页弹出大图（拦截路由渲染进 @modal），同时大图有独立 URL 可分享可前进后退。刷新时注意 fallback 分支否则 404。"
+    },
+    {
+      "id": "rsc",
+      "term": "RSC",
+      "full": "React Server Components",
+      "zh": "服务器组件",
+      "match": ["RSC", "服务器组件", "Server Component"],
+      "level": "L3",
+      "tip": "只在服务器执行、代码不进浏览器包的组件——可以直接查库，渲染结果以序列化流下发",
+      "desc": "App Router 所有组件默认 RSC：能用 async/await、能 import 服务端资源，但不能 useState/useEffect/onClick。产物是 RSC Payload（UI 的序列化描述），客户端据此补水合。体积省一半以上、数据获取免 API 层都源于它。",
+      "seeAlso": [{ "pkg": "05-react", "id": "rsc", "term": "Server Components" }]
+    },
+    {
+      "id": "use-client",
+      "term": "'use client'",
+      "match": ["'use client'", "\"use client\"", "use client"],
+      "level": "L3",
+      "tip": "文件顶部这行声明把组件划入客户端 bundle；边界以下整条子树都在浏览器渲染",
+      "desc": "边界 = 瀑布式：一个文件标了，它 import 的本地模块全变客户端代码。服务器组件可以把「渲染函数/JSX 作为 props」传给客户端组件（children 模式），保持外壳是 server。交互叶子节点下沉，数据留在服务端取。"
+    },
+    {
+      "id": "use-router-hooks",
+      "term": "路由钩子",
+      "match": ["usePathname", "useRouter", "useSearchParams", "redirect", "revalidatePath", "after"],
+      "level": "L3",
+      "tip": "客户端读/控路由用钩子；服务端用 redirect() 与 next/revalidate；15 起 after() 挂后活",
+      "desc": "`useRouter` 只在客户端组件可用；服务器组件里跳转用 `redirect('/login')`（抛特殊控制流，别包 try/catch 吞掉）。`after(() => 日志/埋点)` 让响应发出后继续干活不阻塞 TTFB。"
+    },
+    {
+      "id": "streaming",
+      "term": "流式渲染与 Suspense",
+      "match": ["streaming", "流式", "Suspense"],
+      "level": "L3",
+      "tip": "外壳 HTML 先发出，慢组件挂 <Suspense> 占位，数据就绪以 HTTP 流追加——首字节不等最慢者",
+      "desc": "`<Suspense fallback={<Skeleton/>}>` 包住慢的服务器组件即成流式边界；一段段 push 到浏览器替换占位。loading.tsx 自动为整段路由生成 Suspense 外壳。没有 Suspense 时整个页面等最慢数据源。"
+    },
+    {
+      "id": "ssr-next",
+      "term": "SSR",
+      "full": "Server-Side Rendering",
+      "match": ["SSR"],
+      "level": "L4",
+      "tip": "每次请求在服务器现渲染 HTML——动态数据 + SEO 的默认选择；Next 里就是渲染模式之一",
+      "desc": "App Router 的页面默认就是「静态优先 + 动态兜底」：用到 cookies()/headers()/未缓存 fetch 才转为每次请求执行。SSR 让首屏 HTML 含内容，水合后变 SPA。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "ssr-hydration", "term": "SSR 与水合" }]
+    },
+    {
+      "id": "ssg",
+      "term": "SSG",
+      "full": "Static Site Generation",
+      "match": ["SSG"],
+      "level": "L4",
+      "tip": "build 时把 HTML 全量生成好，CDN 直接发——最快最省，但内容变更要重新构建",
+      "desc": "纯静态页（营销页、博客首页）默认就是 SSG：generateStaticParams 枚举动态页。全量重建有延迟，内容频繁变的站点要配 ISR 或 on-demand revalidate 补救。"
+    },
+    {
+      "id": "isr",
+      "term": "ISR",
+      "full": "Incremental Static Regeneration",
+      "zh": "增量静态再生",
+      "match": ["ISR", "revalidate"],
+      "level": "L4",
+      "tip": "静态页到期后台再生：先旧页服务用户，新页渲染完悄悄替换——CDN 速度与动态内容兼得",
+      "desc": "`export const revalidate = 60`（段级）或 fetch(url,{next:{revalidate:60}})（数据级）。到期后首个请求仍拿旧页、触发再生；`revalidatePath('/blog')` / `revalidateTag('post')` 可在内容发布时立刻主动失效。",
+      "seeAlso": [{ "pkg": "05-react", "id": "swr", "term": "stale-while-revalidate" }]
+    },
+    {
+      "id": "ppr",
+      "term": "PPR",
+      "full": "Partial Prerendering",
+      "match": ["PPR"],
+      "level": "L4",
+      "tip": "同一页面里静态壳预渲染 + 动态区流式填充，SSG 与 SSR 不再二选一",
+      "desc": "静态段（导航、文章正文）build 时就进 HTML；动态段（购物车、用户名）标记 Suspense 后请求时流式补。Next 15 canary 起 experimental.ppr，代价是要处理「千人千面但壳是静态」的缓存键设计。"
+    },
+    {
+      "id": "render-modes",
+      "term": "渲染模式选型",
+      "match": ["渲染模式", "force-dynamic", "force-static"],
+      "level": "L4",
+      "tip": "一个页面选一种节奏：纯静态 SSG / 到期再生 ISR / 每次现算 SSR / 纯客户端——按数据鲜度与 SEO 需求拍板",
+      "desc": "`export const dynamic = 'force-static' | 'force-dynamic' | 'error'` 段级强控；`export const runtime = 'edge'` 换执行环境；`'use client'` 页面可配 `ssr:false` 动态导入走纯客户端。没有银弹：列表页 ISR、详情页 ISR/SSR、个人中心 SSR、后台报表 CSR。"
+    },
+    {
+      "id": "fetch-cache",
+      "term": "fetch 缓存层",
+      "match": ["no-store", "force-cache", "cache:"],
+      "level": "L4",
+      "tip": "Next 扩展了全局 fetch：默认缓存、按 revalidate 过期；no-store 每次现拉、force-cache 尽量不拉",
+      "desc": "同一次渲染内相同请求自动去重（React cache）。14 里 fetch 默认静态缓存被广泛误解，15 起改为「不透明缓存、随渲染模式而定」。缓存键 = URL + options，透传自定义 tag 用 next:{tags}。"
+    },
+    {
+      "id": "data-dedup",
+      "term": "请求去重与缓存层",
+      "match": ["去重", "LRU"],
+      "level": "L4",
+      "tip": "一次渲染内同 URL 只发一次；跨渲染靠 Data Cache（.next/cache）持久化",
+      "desc": "多层缓存各司其职：Data Cache（fetch 结果）、Router Cache（客户端访问过的路由数据，前进后退免加载）、Full Route Cache（静态化产物）、Request Cache（单次渲染内）。理解这四层，Next 数据行为不再玄学。"
+    },
+    {
+      "id": "cookies-headers",
+      "term": "动态性来源",
+      "match": ["cookies()", "headers()"],
+      "level": "L4",
+      "tip": "读了 cookie/header 这页就变动态（每人不同没法静态化）——这是「为何我的页面不静态」的标准答案",
+      "desc": "App Router 用「动态 API 探测」决定静态/动态：cookies()、headers()、未缓存 fetch、searchParams（Pages 里动态，App 里 page 本身仍静态、读 useSearchParams 才动态需配 Suspense）。想静态页按请求个性化，走 middleware 或客户端拉。"
+    },
+    {
+      "id": "server-action",
+      "term": "Server Action",
+      "full": "Server Actions",
+      "match": ["Action", "use server", "Server Action"],
+      "level": "L5",
+      "tip": "标 'use server' 的函数自动获得 HTTP 端点：表单/按钮直接调，代码跑在服务端",
+      "desc": "`<form action={save}>` 渐进增强：JS 未加载时走原生 POST，加载后走 fetch 提交 + Router Cache 失效刷新。返回值/抛错配 useFormState/useActionState 显示校验信息。敏感操作必须在函数内再校验会话，端点本身对公网开放。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "form-action", "term": "Form Actions" }]
+    },
+    {
+      "id": "revalidate-server",
+      "term": "变更后的失效",
+      "match": ["revalidatePath(", "revalidateTag("],
+      "level": "L5",
+      "tip": "写完数据喊一嗓子：这个路径/这个 tag 的缓存作废，下次访问重新生成",
+      "desc": "默认在同一次请求内执行（乐观更新场景）；`after(() => revalidatePath(...))` 延迟到响应发出后，避免用户看到再生成中的旧数据。粒度：path 精确/前缀（layout 型），tag 多对多更灵活。"
+    },
+    {
+      "id": "route-handlers",
+      "term": "Route Handlers",
+      "match": ["Route Handler", "route.ts"],
+      "level": "L5",
+      "tip": "app/xxx/route.ts 导出 GET/POST 就是 API 端点——Request/Response 原生 Web API 风格",
+      "desc": "`export async function GET(req: Request)`，支持 Edge/Node 两种 runtime。与 Server Action 分工：给自家页面提交动作用 Action；给外部（App、第三方、webhook）用的标准接口用 Route Handler，可独立缓存、限流、鉴权。"
+    },
+    {
+      "id": "proxy-middleware",
+      "term": "middleware / proxy",
+      "match": ["middleware.ts", "proxy.ts"],
+      "level": "L5",
+      "tip": "请求到达页面前的 Edge 拦截器：重写、重定向、改头、A/B——Next 15.5 后更名 proxy.ts",
+      "desc": "只跑在 Node 之外的轻量 Edge 运行时（无 fs、无原生模块）。`NextResponse.rewrite('/login')` 保 URL 换内容 vs `redirect` 302 改 URL；matcher 控制成本。鉴权红线：middleware 只做粗筛，服务器组件/接口里必须再验一次。"
+    },
+    {
+      "id": "edge-node",
+      "term": "Edge 与 Node 运行时",
+      "match": ["runtime = 'edge'", "runtime: 'nodejs'"],
+      "level": "L5",
+      "tip": "页面/RSC 默认 Node（能连库、能用原生模块）；middleware 只能 Edge（V8  isolate，快但限制多）",
+      "desc": "标记 `export const runtime = 'edge'` 可把整个路由段搬到边缘执行（就近用户、冷启动近乎 0），代价是 npm 生态兼容性差（Prisma、sharp 等原生绑定不行）。Vercel/Cloudflare 的部署形态也围绕这两个运行时展开。"
+    },
+    {
+      "id": "metadata-seo",
+      "term": "Metadata API",
+      "match": ["Metadata", "metadata export", "generateMetadata"],
+      "level": "L6",
+      "tip": "layout/page 导出 metadata 对象或 async 函数，框架代管 <head>：title、OG、twitter card、canonical",
+      "desc": "动态页用 `generateMetadata({params})` 按数据拼标题。约定文件自动服务：app/icon.png→favicon、apple-icon、opengraph-image（OG 图可按路由段自动生成动态图）、sitemap.ts、robots.ts——SEO 全家桶零手工模板。"
+    },
+    {
+      "id": "hreflang-i18n",
+      "term": "国际化",
+      "match": ["hreflang", "i18n", "locale"],
+      "level": "L6",
+      "tip": "[locale] 动态段 + middleware 协商语言 + hreflang 标签让 Google 知道各语言版本",
+      "desc": "App Router 无内置 i18n 路由（Pages 有），社区方案 next-intl：accept-language → middleware rewrite `/zh/about`。hreflang 声明语言版本互链，配合 canonical 避免重复内容降权。"
+    },
+    {
+      "id": "next-image",
+      "term": "next/image",
+      "match": ["next/image", "Image("],
+      "level": "L7",
+      "tip": "自动按需转码（WebP/AVIF）、按设备出多尺寸、默认懒加载——防布局偏移的 LCP 利器",
+      "desc": "width/height 或 fill 定比例（CLS 关键）；priority 给首屏大图提前加载与预连接；远程域名必须在 next.config 的 images.remotePatterns 白名单声明。它内建一个 image optimizer 端点，自托管可换 loader 走 CDN。"
+    },
+    {
+      "id": "next-font",
+      "term": "next/font",
+      "match": ["next/font"],
+      "level": "L7",
+      "tip": "构建时把字体文件自托管 + 预加载，消灭布局抖动（外部 Google Fonts 的 CLS 元凶）",
+      "desc": "`const inter = Inter({subsets:['latin'], display:'swap'})` 返回 CSS 变量类名挂 html 上。本地字体用 localFont；fallback 子集自动生成，无需手配 font-display。"
+    },
+    {
+      "id": "vitals",
+      "term": "Core Web Vitals",
+      "match": ["LCP", "CLS", "INP", "TTFB", "Lighthouse"],
+      "level": "L7",
+      "tip": "Google 的三大体验分：LCP 最大内容画出（≤2.5s）、INP 交互延迟、CLS 布局偏移（<0.1）",
+      "desc": "`useReportWebVitals` 钩子把真实用户指标（不是实验室数）上报自家日志。TTFB 高→上 ISR/边缘；LCP 高→优先加载主图/字体瘦身；CLS 高→图片写死尺寸、字体 swap。`next config` 实验项与 DevTools 的 Next.js 插件都直接标注每段耗时。"
+    },
+    {
+      "id": "bundle-next",
+      "term": "分包与体积分析",
+      "match": ["bundle", "Barrel", "dynamic import"],
+      "level": "L7",
+      "tip": "路由级自动 code splitting；客户端组件是分包边界；next/dynamic 与 import() 手动切；警惕 barrel 文件把全家桶拖进来",
+      "desc": "RSC 组件不进客户端 bundle——把重依赖留在服务端是 Next 独有的减肥法。`optimizePackageImports` 处理已知大库；分析用 `ANALYZE=1` + @next/bundle-analyzer，看 First Load JS 共同部分与每页独立 chunk。"
+    },
+    {
+      "id": "env-next",
+      "term": "环境变量",
+      "match": [".env.local", "NEXT_PUBLIC_"],
+      "level": "L8",
+      "tip": "NEXT_PUBLIC_ 前缀的才会编译进浏览器包——其余只在服务端可见，密钥千万别加前缀",
+      "desc": "加载顺序 .env.local > .env.production 等；runtimeConfig（server-only）与 publicRuntimeConfig 在 15 被 env 取代的趋势明显。CI 里用 Vercel 项目环境变量或 Secret Manager，不落 git。"
+    },
+    {
+      "id": "standalone",
+      "term": "standalone 自托管部署",
+      "match": ["output: 'standalone'", "Dockerfile"],
+      "level": "L8",
+      "tip": "next.config 开 standalone：产物只含必要文件 + 精简 node_modules，配 Docker 部署体积骤减",
+      "desc": "`.next/standalone` 可 `node server.js` 直接跑；多阶段 Dockerfile 复制 public/.next/static 进镜像。平台侧：Vercel 零配置（Edge 网络+图像优化内置），自托管承担 CDN、图像优化端点、多实例 Router Cache 一致性（Data Cache 需 Redis 共享）三件事。"
+    },
+    {
+      "id": "vercel",
+      "term": "Vercel 与平台特性",
+      "match": ["Vercel"],
+      "level": "L8",
+      "tip": "Next 亲儿子托管平台：Git push 即部署、PR 预览环境、边缘函数/图像/ KV 按量计费",
+      "desc": "零配置的 ISR 缓存协同、Image Optimization、Edge Config 是它相对自托管的真实增值；规模上来后账单驱动迁移。任何平台只要实现了 Build Output API 也能跑 Next（Netlify、Cloudflare、Node 容器）。"
+    },
+    {
+      "id": "bff",
+      "term": "BFF",
+      "full": "Backend For Frontend",
+      "zh": "服务于前端的后端",
+      "match": ["BFF"],
+      "level": "L8",
+      "tip": "页面与微服务之间的聚合层：Next 的 Server Component/Route Handler 天然就是 BFF——裁剪、聚合、鉴权",
+      "desc": "前端不再直连七八个微服务：服务端把数据拼成页面刚好要的形状再下发。全栈 Next 的「前店后厂」结构（RSC 直连数据库/内部服务，公网只暴露自家域名）让 BFF 从一层架构变成一个项目。"
+    },
+    {
+      "id": "headless",
+      "term": "Headless CMS",
+      "match": ["Headless", "CMS"],
+      "level": "L8",
+      "tip": "只管内容 API、不管展示的 CMS（Sanity/Contentful/Strapi）：内容与渲染彻底解耦",
+      "desc": "配合 ISR：内容发布时 CMS webhook 调 revalidateTag 即时更新。选型看三件事：webhook 支持、查询语言（GQL/自建）、预览模式（draft 内容走带 secret 的 API 不落缓存）。"
+    }
+  ]
+}

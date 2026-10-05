@@ -1,0 +1,342 @@
+{
+  "title": "Vue 3 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "spa",
+      "term": "SPA",
+      "full": "Single Page Application",
+      "zh": "单页应用",
+      "match": ["单页应用"],
+      "level": "L1",
+      "tip": "只加载一次 HTML，之后页面切换全靠 JS 换组件——Vue/React 应用的默认形态",
+      "desc": "传统网站每跳一页重新请求整份 HTML；SPA 把界面装进一个页面，路由切换只是本地组件替换，体验接近原生 App。代价是首屏 JS 体积与 SEO，需要时再上 SSR。",
+      "seeAlso": [{ "pkg": "07-nextjs", "id": "ssr-next", "term": "SSR" }]
+    },
+    {
+      "id": "sfc",
+      "term": "SFC",
+      "full": "Single File Component",
+      "zh": "单文件组件",
+      "match": ["SFC", "单文件组件"],
+      "level": "L1",
+      "tip": "一个 .vue 文件装齐模板、逻辑、样式三件套",
+      "desc": "`<template>` 写结构、`<script setup>` 写逻辑、`<style scoped>` 写样式，由 `@vitejs/plugin-vue` 编译成 JS 模块。`.vue` 后缀只有构建工具认识，浏览器看到的是编译产物。"
+    },
+    {
+      "id": "composition-api",
+      "term": "组合式 API",
+      "full": "Composition API",
+      "match": ["组合式", "Options API"],
+      "level": "L1",
+      "tip": "用函数内自由编排的 setup 写法组织逻辑，对立面是按 data/methods 分格的选项式 API",
+      "desc": "选项式 API 把同一功能的代码按选项拆散在几百行里；组合式 API 让你在 `<script setup>` 里按「功能」聚合变量与函数，天然适合抽离复用。Vue3 两者共存，新项目推荐组合式。"
+    },
+    {
+      "id": "reactivity",
+      "term": "响应式",
+      "full": "reactivity",
+      "match": ["响应式"],
+      "level": "L1",
+      "tip": "数据变了视图自动跟着变——背后是 Proxy 拦截读写 + effect 自动记录依赖",
+      "desc": "Vue 的响应式 = 用 Proxy 代理对象，读属性时把当前 effect 登记为「订阅者」（track），写属性时通知所有订阅者重跑（trigger）。组件渲染本身就是一个 effect，所以 ref 一改视图就更新。",
+      "seeAlso": [{ "pkg": "01-es", "id": "proxy", "term": "Proxy" }, { "pkg": "14-signals", "id": "signal", "term": "Signal" }]
+    },
+    {
+      "id": "ref-reactive",
+      "term": "ref 与 reactive",
+      "match": ["reactive", "toRef", "toRaw"],
+      "level": "L1",
+      "tip": "ref 包一切（取值要 .value），reactive 只包对象；模板里 ref 自动解包",
+      "desc": "`ref(0)` 返回带 `.value` 的盒子，基础类型也能响应；`reactive({})` 直接代理对象但整包替换会丢响应式。`toRaw` 拿回原始对象（脱离追踪），`readonly` 生成只读代理。实践默认用 ref，对象也装进 ref。",
+      "seeAlso": [{ "pkg": "01-es", "id": "proxy", "term": "Proxy" }]
+    },
+    {
+      "id": "unref-rule",
+      "term": ".value 规则",
+      "zh": "ref 解包",
+      "match": [".value", "unwrap"],
+      "level": "L1",
+      "tip": "script 里 ref 必须 .value，模板/对象字面量嵌套时自动解包——忘加是最常见报错",
+      "desc": "ref 是对象、值是载荷：JS 代码里读写都要 `.value`。模板表达式、reactive 对象的属性、props 传递处 Vue 会替你解包。`unref(x)` / `toValue(x)` 写「不管是 ref 还是普通值都拿本体」的通用代码。"
+    },
+    {
+      "id": "computed",
+      "term": "computed",
+      "zh": "计算属性",
+      "match": ["computed"],
+      "level": "L1",
+      "tip": "带缓存的派生值：依赖不变不重算，读起来像普通值",
+      "desc": "computed 包着一个 getter，只有它追踪到的依赖变化时才失效重算，多次读取走缓存。watchEffect 里读 computed 也只在真正变化时触发。需要传参派生时用「返回函数的 computed」或普通函数。"
+    },
+    {
+      "id": "watch-family",
+      "term": "watch 家族",
+      "match": ["watchEffect", "watchPost", "watchSync"],
+      "level": "L2",
+      "tip": "watch 盯源变化拿新旧值；watchEffect 自动收依赖、立即执行一次",
+      "desc": "`watch(source, cb)` 懒、可多源、可拿 oldValue；`watchEffect(cb)` 边跑边收集依赖、同步立即执行，回调里用到什么就监听什么。别在 watchEffect 里「只为读值不建立依赖」——要用 toValue 或 untrack 逃逸。"
+    },
+    {
+      "id": "effect-flush",
+      "term": "effect 与 flush",
+      "match": ["flush", "pre", "post", "sync"],
+      "level": "L2",
+      "tip": "响应式回调的排队时机：pre 更新前、post 更新后（能碰 DOM）、sync 立刻同步",
+      "desc": "组件渲染 effect 固定 pre；watch 默认 post 且多次变更合并成一次回调；`flush:'sync'` 每次变更立即触发（调试用，慎用）。同一 tick 内 `a++` 两次只触发一次回调——这是批处理（batching）行为。"
+    },
+    {
+      "id": "nexttick",
+      "term": "nextTick（Vue）",
+      "match": ["nextTick"],
+      "level": "L2",
+      "tip": "等 Vue 把 DOM 更新完再执行回调——改了数据马上量 DOM 就要用它",
+      "desc": "`await nextTick()` 排到本次渲染队列之后，此时 DOM 已反映最新状态。数据改了但 DOM 还没变，是因为更新被推迟到微任务里批量执行。要操作滚动、焦点、图表尺寸，都在 nextTick 后做。",
+      "seeAlso": [{ "pkg": "03-nodejs", "id": "nexttick", "term": "process.nextTick" }]
+    },
+    {
+      "id": "template-syntax",
+      "term": "模板语法",
+      "match": ["插值", "v-bind", "v-on", "v-slot"],
+      "level": "L2",
+      "tip": "mustache {{ }} 插值；v-xxx 是指令，缩写 : 绑属性、@ 绑事件、# 插槽",
+      "desc": "模板是 HTML 超集：`{{ }}` 文本插值、`:`/v-bind 动态属性、`@`/v-on 事件、`v-model` 双向绑定、`v-slot`/`#` 插槽。编译后全部变成渲染函数，所以模板里只允许单表达式，if/for 逻辑走指令。"
+    },
+    {
+      "id": "v-if-v-show",
+      "term": "v-if 与 v-show",
+      "match": ["v-else", "v-cloak", "v-pre", "v-once"],
+      "level": "L2",
+      "tip": "v-if 销毁重建 DOM，v-show 只切 CSS display——频繁切换用后者",
+      "desc": "v-if 是真正的条件渲染：分支元素连带其状态、生命周期一起生灭；v-show 元素始终渲染，靠 style.display 隐藏。另外 v-once 只渲染一次、v-pre 跳过编译（给原生模板/大型静态内容提速）、v-cloak 防未编译 mustache 闪烁。"
+    },
+    {
+      "id": "v-for-key",
+      "term": "v-for 与 key",
+      "match": ["v-for"],
+      "level": "L2",
+      "tip": "列表渲染；:key 是 diff 时认人的身份证，必须用稳定唯一值",
+      "desc": "`v-for=\"(item, i) in list\" :key=\"item.id\"`。key 让 Vue 在数据重排时移动正确的 DOM 而不是复用错乱（输入框内容串位经典事故）。index 作 key 只在列表永不重排时用；对象渲染可 v-for 出 [k,v] 对。"
+    },
+    {
+      "id": "vmodel",
+      "term": "v-model",
+      "match": ["v-model"],
+      "level": "L2",
+      "tip": "表单双向绑定的语法糖：:modelValue + @update:modelValue；组件上可自定义参数与修饰符",
+      "desc": "`v-model.trim /.number /.lazy` 控制取值时机；`v-model:标题=\"x\"` 一个组件绑多个值；`defineModel()`（3.4+）让组件一行声明双向绑定。它本质是「prop 进 + 事件出」的缩写，不是魔法。"
+    },
+    {
+      "id": "class-style-bind",
+      "term": "类与样式绑定",
+      "match": ["classList", "内联样式"],
+      "level": "L2",
+      "tip": ":class 传对象/数组做条件样式，:style 传对象写动态值；多元素动画过渡见 Transition",
+      "desc": "`:class=\"{ active: isActive }\"`、`:class=\"[a, b]\"` 合并；`:style=\"{ color: c }\"` 驼峰键名。组件根元素自动继承父传来的 class/style（fallthrough）。CSS 变量配合响应式值可做出主题切换等动态样式。"
+    },
+    {
+      "id": "props",
+      "term": "props 与 prop",
+      "match": ["props", "Prop 校验", "props 校验"],
+      "level": "L3",
+      "tip": "父传子的只读数据；子组件用 defineProps 声明名称、类型、默认值",
+      "desc": "单向数据流：props 下来、events 上去。`defineProps({ title: String, count: { type: Number, default: 0 } })`，TS 项目直接 `defineProps<{ title: string }>()` 类型声明。子组件改 props 对象属性会报警告，要拷贝或 emit 让父改。",
+      "seeAlso": [{ "pkg": "05-react", "id": "lifting", "term": "状态提升" }]
+    },
+    {
+      "id": "emit",
+      "term": "emit / defineEmits",
+      "match": ["emit", "defineEmits"],
+      "level": "L3",
+      "tip": "子向父喊话：抛自定义事件带载荷，父组件 @事件名 接听",
+      "desc": "`const emit = defineEmits(['change'])` 后 `emit('change', val)`。事件名不自动冒泡到多层，跨层级用 provide/inject 或 store。v-model 就是这套机制的官方应用。"
+    },
+    {
+      "id": "slotted",
+      "term": "slot 插槽",
+      "match": ["插槽", "具名插槽", "作用域插槽", "slot=\""],
+      "level": "L3",
+      "tip": "组件留的坑位：父传内容子渲染；作用域插槽让子把数据回传给内容",
+      "desc": "`<slot>` 是出口，`<template #header>` 对号入座；`<slot :row=\"item\">` 把子组件数据暴露给外面传入的模板（作用域插槽，v-slot 解构接收）。3.3+ 可用 `defineSlots` 做类型约束。",
+      "seeAlso": [{ "pkg": "11-svelte", "id": "snippet", "term": "Snippet" }, { "pkg": "05-react", "id": "composition", "term": "组合而非继承" }]
+    },
+    {
+      "id": "attrs-inherit",
+      "term": "attribute 透传",
+      "full": "fallthrough attrs",
+      "match": ["fallthrough", "透传", "inheritAttrs"],
+      "level": "L3",
+      "tip": "父传的未知属性（class、data-*、@click）自动落到组件根元素；多根组件要手动接力",
+      "desc": "未声明为 props 的都进 `useAttrs()`，默认合并到单根元素上；`defineOptions({ inheritAttrs: false })` 关掉自动、手动 `v-bind=\"$attrs\"` 到需要的内层元素（如输入框组件把事件绑给 input）。",
+      "seeAlso": [{ "pkg": "11-svelte", "id": "spread", "term": "spread 展开属性" }]
+    },
+    {
+      "id": "lifecycle",
+      "term": "生命周期",
+      "match": ["生命周期", "onMounted", "onUnmounted", "onUpdated"],
+      "level": "L3",
+      "tip": "create→mount→update→unmount 四段，钩子是挂在路上的回调（onMounted 里才碰得到 DOM）",
+      "desc": "组合式里用 `onMounted / onUpdated / onUnmounted / onErrorCaptured` 等注册；`onBeforeMount` 时 DOM 还没生成，发请求、初始化第三方库放 onMounted，清理定时器/监听器放 onUnmounted。KeepAlive 组件额外有 onActivated/onDeactivated。",
+      "seeAlso": [{ "pkg": "05-react", "id": "useeffect", "term": "useEffect" }]
+    },
+    {
+      "id": "refs-expose",
+      "term": "模板 refs 与 expose",
+      "match": ["ref=\"", "defineExpose", "template ref"],
+      "level": "L3",
+      "tip": "ref=\"xxx\" + useTemplateRef 拿 DOM/组件实例；子组件默认封闭，defineExpose 才给外面调",
+      "desc": "拿到子组件实例 ≠ 随便调：`<script setup>` 编译后默认所有绑定不对外暴露，必须 `defineExpose({ open })` 显式开门。能不碰实例就不碰——优先 props/emit，命令式 API 是逃生舱。"
+    },
+    {
+      "id": "provide-inject",
+      "term": "provide / inject",
+      "match": ["provide", "inject"],
+      "level": "L4",
+      "tip": "跨层级传数据：祖先提供、后代注入，不走 props 接力",
+      "desc": "`provide(key, value)` 与 `const x = inject(key, 默认值)` 配对，常用于主题、插件上下文、深层表单。传 ref/computed 保持响应式；想「只能改不能直接动」就 provide 一个 readonly 值 + 修改函数。"
+    },
+    {
+      "id": "composable",
+      "term": "composable 组合函数",
+      "match": ["composable", "组合函数", "useMouse", "VueUse"],
+      "level": "L4",
+      "tip": "把一段带响应式的逻辑抽成 useXxx() 函数，组件间复用——Vue 版的自定义 Hook",
+      "desc": "约定：文件名 `useXxx.js`、在 setup 顶层调用、返回 ref/函数组成的对象。它复用「逻辑 + 状态」而不是复用模板，是 Vue 生态共享代码的第一公民；VueUse 是现成的 200+ 组合函数军火库。",
+      "seeAlso": [{ "pkg": "05-react", "id": "custom-hook", "term": "自定义 Hook" }]
+    },
+    {
+      "id": "async-setup",
+      "term": "异步组件与 Suspense",
+      "match": ["defineAsyncComponent", "Suspense"],
+      "level": "L4",
+      "tip": "defineAsyncComponent 按需加载组件分包；Suspense 给异步依赖统一 loading 骨架",
+      "desc": "路由级 `() => import('./Page.vue')` 自动切小 chunk；`defineAsyncComponent({ loader, timeout, errorComponent })` 精细控制。`<Suspense>` 的 #fallback 插槽包住内部所有 setup await 的组件（实验特性，配合 `<script setup>` 顶层 await 使用）。"
+    },
+    {
+      "id": "router-basics",
+      "term": "Vue Router",
+      "match": ["router-view", "router-link", "RouterView", "RouterLink"],
+      "level": "L5",
+      "tip": "官方路由：routes 表把 URL 映射到组件，<router-view> 是显示出口",
+      "desc": "`useRouter()` 编程式导航（push/back），`useRoute()` 只读当前路由。SPA 靠 History API（pushState）或 hash 改地址不刷新页面；部署到服务器需把所有路径 fallback 到 index.html（history 模式）。"
+    },
+    {
+      "id": "nested-routes",
+      "term": "嵌套与动态路由",
+      "match": ["嵌套路由", "动态路由", "params", "catchAll", "redirect"],
+      "level": "L5",
+      "tip": "children 配子路由、路径带 :id 参数、* 兜底 404；params 随地址走，query 也可显式传",
+      "desc": "父组件里再放 `<RouterView>` 渲染 children；`/user/:id` 用 `route.params.id` 取值。`:id(\\d+)` 加正则约束，`/:pathMatch(.*)*` 做 404。改 params 不换组件实例时，记得 watch route 或用 key。"
+    },
+    {
+      "id": "route-guard",
+      "term": "导航守卫",
+      "match": ["守卫", "beforeEach", "beforeRouteEnter"],
+      "level": "L5",
+      "tip": "路由切换前后的拦截器：鉴权跳转、埋点、取数据都放这",
+      "desc": "全局 `router.beforeEach((to,from,next)=>)` 或返回 false/重定向对象；组件内 `onBeforeRouteLeave`（表单未保存提示）；独享守卫进组件前跑。避免死循环：守卫里 next 只能调一次，判断「未登录且目标不是登录页才跳」。"
+    },
+    {
+      "id": "lazy-route",
+      "term": "路由懒加载",
+      "match": ["懒加载"],
+      "level": "L5",
+      "tip": "路由组件写成动态 import，访问到才下载对应 chunk——首屏减肥主力",
+      "desc": "`component: () => import('@/views/Admin.vue')` 让构建工具按路由切包；Vite 还能配 manualChunks 与预取（prefetch）。带鉴权的后台页懒加载既省流量又避免代码里泄露未上线功能。"
+    },
+    {
+      "id": "history-hash",
+      "term": "hash / history 模式",
+      "match": ["createWebHashHistory", "createWebHistory"],
+      "level": "L5",
+      "tip": "地址栏带 # 的是 hash 模式（兼容老服务器），干净 URL 是 history 模式（需服务器 fallback）",
+      "desc": "createWebHashHistory 用 `#/path` 片段，服务器永远只收到 index.html 请求，GitHub Pages 等静态托管首选；createWebHistory 用真实路径 + pushState，SEO 友好但必须配 nginx try_files 兜底。"
+    },
+    {
+      "id": "pinia-store",
+      "term": "Pinia Store",
+      "match": ["Store", "defineStore", "storeToRefs"],
+      "level": "L6",
+      "tip": "全局状态容器：state + getters + actions 三件套，替代 Vuex",
+      "desc": "`const useUser = defineStore('user', { state:..., getters:..., actions:... })`，或 setup 语法直接写 ref/computed/函数。组件外 `useUser()` 要在 app 创建后调用；解构 store 用 `storeToRefs` 保住响应式（actions 可直接解构）。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "pinia", "term": "Pinia" }]
+    },
+    {
+      "id": "pinia-persist",
+      "term": "Pinia 插件与持久化",
+      "match": ["patchObject", "onAction", "持久化"],
+      "level": "L6",
+      "tip": "插件通过 pinia.use 拦截每个 store：记日志、改 state 打补丁、自动写 localStorage",
+      "desc": "插件上下文提供 store.onAction（包一层鉴权/日志）、store.$subscribe（订阅变更）、patch 机制（只记录增量）。持久化插件 pinia-plugin-persistedstate 按 store 配置决定哪些字段落盘。"
+    },
+    {
+      "id": "compiler",
+      "term": "模板编译器",
+      "match": ["静态提升", "预字符串化", "patchFlag"],
+      "level": "L7",
+      "tip": "模板编译成 render 函数时顺手做的优化：不变的提出来、可拼的拼成字符串、变化点打补丁标记",
+      "desc": "Vue3 编译器三板斧：静态提升（静态节点只创建一次）、patchFlag（diff 时只比对动态部分，如文本 1、类绑定 6）、Block Tree（只追踪带标记的动态节点）。这就是「模板比手写 JSX 快」的原因。"
+    },
+    {
+      "id": "vdom-diff",
+      "term": "虚拟 DOM 与 diff",
+      "match": ["虚拟 DOM", "diff"],
+      "level": "L7",
+      "tip": "渲染成 JS 对象树比对差异再最小化改真实 DOM；key 决定同层怎么配对",
+      "desc": "数据变化 → 生成新 VNode 树 → 同层双端 diff → 输出移动/复用/创建操作。Vue 的 diff 假设顺序稳定，配合 key 复用节点。它不是「比直接操作 DOM 快」，而是「比低质量手动操作快且可维护」。",
+      "seeAlso": [{ "pkg": "05-react", "id": "vdom", "term": "虚拟 DOM" }]
+    },
+    {
+      "id": "keepalive",
+      "term": "KeepAlive",
+      "match": ["KeepAlive"],
+      "level": "L7",
+      "tip": "缓存切走的组件实例不销毁：列表→详情→返回时状态还在",
+      "desc": "`<KeepAlive :include=\"['List']\" :max=\"10\">` 按名字缓存，配合路由 meta 使用；缓存组件收不到 mounted，要用 onActivated/onDeactivated 补活（如回到页面刷新列表）。缓存过多会吃内存，max + LRU 兜底。"
+    },
+    {
+      "id": "teleport",
+      "term": "Teleport",
+      "match": ["Teleport"],
+      "level": "L7",
+      "tip": "组件内容渲染到 DOM 树的另一处（body 下弹窗不被父级 overflow/z-index 困住）",
+      "desc": "`<Teleport to=\"body\" :disabled=\"mobile\">` 逻辑归属不变（仍是组件树的孩子，props/事件照常），物理位置搬家。模态框、全局通知、地图浮层标配。",
+      "seeAlso": [{ "pkg": "11-svelte", "id": "head-meta", "term": "svelte:head" }]
+    },
+    {
+      "id": "perf-list",
+      "term": "性能清单",
+      "match": ["虚拟列表", "v-memo", "shallowRef"],
+      "level": "L7",
+      "tip": "大列表只渲染可视区（虚拟滚动）、shallowRef 免深层代理、v-memo 跳过不变子树",
+      "desc": "优先级：先减少响应式开销（shallowRef/markRaw 装大数据、只读数据别代理）→ 再砍渲染量（虚拟列表 @tanstack/vue-virtual、v-memo）→ 再拆组件边界（子组件独立更新）。事件委托与防抖节流处理高频交互。"
+    },
+    {
+      "id": "ssr-hydration",
+      "term": "SSR 与水合",
+      "full": "Server-Side Rendering / hydration",
+      "match": ["水合", "SSR"],
+      "level": "L8",
+      "tip": "服务端先把模板渲染成 HTML 字符串直出，浏览器再用 JS 接管事件绑定——接管那步叫水合",
+      "desc": "SSR 解决首屏白屏与 SEO；水合要求服务端/客户端渲染结果一致，不一致会 mismatch 警告并整块重建（常见于 Date.now()、随机数、浏览器 API 提前使用）。Vue 官方方案是 Nuxt，onServerPrefetch 取数据、`__INITIAL_STATE__` 接力。",
+      "seeAlso": [{ "pkg": "08-nuxt", "id": "nuxt", "term": "Nuxt" }]
+    },
+    {
+      "id": "xss-csp",
+      "term": "XSS 与 CSP",
+      "match": ["XSS", "CSP"],
+      "level": "L8",
+      "tip": "把用户输入当文本不当 HTML（v-html 是雷区）；CSP 响应头限制脚本只能从白名单执行",
+      "desc": "Vue 插值默认转义，`v-html` 绕过防御只在可信内容时用（并先 DOMPurify 消毒）。CSP（Content-Security-Policy）声明脚本来源；注意 Vue 运行时需要 `unsafe-eval` 才能编译模板，用构建时预编译（SFC 默认）可避开。",
+      "seeAlso": [{ "pkg": "09-express", "id": "xss-csrf", "term": "XSS / CSRF" }]
+    },
+    {
+      "id": "devtools-zoom",
+      "term": "DevTools 与可访问性",
+      "match": ["devtools", "a11y", "aria"],
+      "level": "L8",
+      "tip": "Vue DevTools 看组件树/pinia/路由时间线；a11y 要求语义标签、aria 属性、键盘可达",
+      "desc": "DevTools 的 Inspector 能实时改 props/state 定位响应性问题；Performance 面板看渲染耗时。可访问性基础：给交互元素可访问名称、焦点管理（弹窗锁焦）、图片 alt、色彩对比度——也是 SEO 与合规的一部分。"
+    }
+  ]
+}

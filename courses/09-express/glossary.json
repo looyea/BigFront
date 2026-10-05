@@ -1,0 +1,297 @@
+{
+  "title": "Express 5 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "express",
+      "term": "Express",
+      "match": ["Express"],
+      "level": "L1",
+      "tip": "Node 上最老牌的最小 Web 框架：路由 + 中间件，其余自己拼",
+      "desc": "定位是「极简灵活」：只给请求路由、中间件链、响应工具三样，校验/ORM/鉴权全靠选型。v5 对齐 Node 原生能力（异步错误自动捕获、Response 流式 API）。Nest/Fastify/Koa 都算它的后代或同族。",
+      "seeAlso": [{ "pkg": "03-nodejs", "id": "http-raw", "term": "裸 http 模块" }]
+    },
+    {
+      "id": "mvc",
+      "term": "MVC",
+      "full": "Model-View-Controller",
+      "zh": "模型-视图-控制器",
+      "match": ["MVC"],
+      "level": "L1",
+      "tip": "数据（Model）、界面模板（View）、请求调度（Controller）三层分离的经典架构",
+      "desc": "Express 不强制 MVC，但社区约定：routes/ 定义入口、controllers/ 处理逻辑、models/ 映射数据、views/ 放模板。请求沿 Router → Controller → Service → Model 单向流动，每层可独立测试。"
+    },
+    {
+      "id": "project-layout",
+      "term": "项目分层结构",
+      "match": ["app.js", "server.js", "bin/"],
+      "level": "L1",
+      "tip": "app 与 server 分文件：app 只组装中间件与路由（可被 supertest 直接引用），server 负责 listen",
+      "desc": "生成的脚手架即此思想：`createApp()` 导出 app、`server.js` 里 `app.listen(PORT)`。测试时 import app 免占端口；多协议（HTTP/HTTPS）共用一个 app。按功能分目录（feature folders）优于按类型分。"
+    },
+    {
+      "id": "middleware",
+      "term": "中间件",
+      "full": "middleware",
+      "match": ["中间件", "middleware"],
+      "level": "L2",
+      "tip": "(req,res,next) 签名的处理函数：干完活 next() 交棒下一环——Express 的全部骨架",
+      "desc": "执行序=注册序：日志→鉴权→解析 body→路由→错误处理。四种形态：应用级（app.use）、路由级、错误处理（四参数 (err,req,res,next)）、内置（express.json）。忘调 next 请求挂死；重复调用抛 ERR_HTTP_HEADERS_SENT。"
+    },
+    {
+      "id": "next-func",
+      "term": "next() 与控制流",
+      "match": ["next()", "next 调用", "交棒"],
+      "level": "L2",
+      "tip": "交棒信号：不 next 也不 res.end 就悬挂；next(err) 直接跳错误中间件",
+      "desc": "中间件链本质是同步循环，next() 把执行权交给下一层。`return res.json(...)` 提前终结链；`next('router')` 跳出当前路由器。异步错误：Express 5 自动捕获 rejection 转给错误中间件，v4 必须手动 try/catch + next(err)。"
+    },
+    {
+      "id": "error-mw",
+      "term": "错误处理中间件",
+      "match": ["错误处理", "errorHandler"],
+      "level": "L2",
+      "tip": "四参数签名 (err, req, res, next) 才算错误中间件，放最后；统一出参格式、隐藏堆栈",
+      "desc": "生产环境响应只给 message/code，stack 只进日志。约定 err.status/err.statusCode + 业务 code 双层：HTTP 状态表达传输结果，业务码定位具体问题（如 40101 token 过期）。未捕获的同步抛错 v5 也会自动接住。"
+    },
+    {
+      "id": "router",
+      "term": "Router",
+      "match": ["Router", "express.Router"],
+      "level": "L2",
+      "tip": "可挂载的路由分机：router.use('/users', usersRouter) 按资源拆分路由文件",
+      "desc": "Router 本身是中间件工厂，可嵌套、可带 mergeParams 拿父级参数。一个资源一个文件（users.routes.js → users.controller.js）是标准工程切分；mount 路径与 Router 内 path 拼接成完整 URL。"
+    },
+    {
+      "id": "req-api",
+      "term": "req 请求对象",
+      "match": ["req.body", "req.query", "req.params", "getHeader", "req.get"],
+      "level": "L3",
+      "tip": "三个口袋：params 路径段、query 问号串、body 请求体（要先挂 express.json 才有）",
+      "desc": "req.headers 全小写、req.get('Content-Type') 读头；req.ip 配合 trust proxy 才可信；原始流可读 req stream 一次（解析后 body 已消费）。TypeScript 下用泛型标 req 类型或 declaration merging 扩展。"
+    },
+    {
+      "id": "res-api",
+      "term": "res 响应对象",
+      "match": ["res.json", "res.send", "res.status", "res.sendFile", "res.render"],
+      "level": "L3",
+      "tip": "终结请求的出口：send 智能推断、json 设头+序列化、status 先链式设码",
+      "desc": "res.json 会序列化非对象值（字符串带引号）而 send 直发；res.sendfile 路径要绝对（v5 移除隐式 root 行为，安全整改）。res.locals 给模板传请求级变量；res.append/set 管响应头；流式下载用 stream.pipeline(res...)。"
+    },
+    {
+      "id": "body-parsing",
+      "term": "body 解析",
+      "match": ["express.json", "express.urlencoded", "raw body"],
+      "level": "L3",
+      "tip": "HTTP body 是字节流，按 Content-Type 选解析器：json / urlencoded / text / raw；Webhook 要留 raw 验签",
+      "desc": "`app.use(express.json({ limit: '100kb' }))` 必设上限防大包攻击。验签类接口（支付、webhook）在此路由单独挂 `express.raw({type:'application/json'})` 拿原始字节，或 verify 回调里暂存 req.rawBody。multipart（文件）用 multer。"
+    },
+    {
+      "id": "static-serving",
+      "term": "静态资源",
+      "match": ["express.static", "maxAge", "immutable"],
+      "level": "L4",
+      "tip": "express.static 一行挂静态目录；带 hash 的文件配长缓存 + immutable，HTML 配 no-cache",
+      "desc": "默认发 index.html、ETag 自动开。生产三参数：maxAge（缓存时长）、index（列表或关）、setHeaders 定制单文件头。SPA 兜底 `app.get('*', ...)` 送 index.html 时注意别把 /api 也兜进去——静态与 API 分离才是正解，交给 CDN/Nginx 更好。"
+    },
+    {
+      "id": "template-engine",
+      "term": "模板引擎",
+      "match": ["EJS", "res.render", "视图"],
+      "level": "L4",
+      "tip": "服务端把数据填进 HTML 模板：app.set('view engine','ejs') 后 res.render('page', data)",
+      "desc": "EJS（<%= %> 插值）、Pug（缩进式）、Handlebars（无逻辑）各派。SSR 时代模板引擎没死——Next/Nuxt 就是它的现代化身。布局片段用 partial/include；res.locals 注入当前用户等全局模板变量。"
+    },
+    {
+      "id": "rest",
+      "term": "RESTful API",
+      "full": "Representational State Transfer",
+      "match": ["RESTful", "REST"],
+      "level": "L5",
+      "tip": "把数据当资源：URL 定位名词、HTTP 方法表达动词、状态码表达结果——一套接口风格公约",
+      "desc": "GET /articles（列表）、GET /articles/:id、POST 创建、PUT/PATCH 全量/局部更新、DELETE 删除。无状态是硬约束（每个请求自带凭证）；嵌套过深（/users/1/posts/2/comments/3）是设计坏味道，改平铺+查询参数。",
+      "seeAlso": [{ "pkg": "03-nodejs", "id": "http-raw", "term": "裸 http 模块" }]
+    },
+    {
+      "id": "status-codes",
+      "term": "状态码",
+      "match": ["状态码", "401", "403", "404", "409", "422", "429", "502", "503"],
+      "level": "L5",
+      "tip": "2xx 成功（201 已创建、204 无内容）、4xx 你的错（401 没登录、403 没权限）、5xx 我的错",
+      "desc": "高频混淆：401 vs 403（身份未验证 vs 验证了但无权）；404 vs 401（资源不存在/不暴露存在性）；409 冲突（重名/并发写）；422 语义校验失败；429 限流；502 上游挂了 vs 503 自己满了/维护中。"
+    },
+    {
+      "id": "idempotent",
+      "term": "幂等",
+      "match": ["幂等"],
+      "level": "L5",
+      "tip": "执行一次和执行 N 次结果相同：GET/PUT/DELETE 幂等，POST 不幂等——重试安全性的基础",
+      "desc": "网络超时客户端敢自动重试的前提是幂等。POST 要幂等需带幂等键（Idempotency-Key 头，服务端存结果去重，Stripe 首创）。PUT 整体替换所以幂等，PATCH 视实现（`count+1` 不幂等）。"
+    },
+    {
+      "id": "pagination",
+      "term": "分页",
+      "match": ["offset", "cursor", "limit", "分页"],
+      "level": "L5",
+      "tip": "offset 简单但深翻慢且会漂；cursor 游标翻页稳定高效，适合信息流",
+      "desc": "?page=3&limit=20 的 offset 在大表要扫过前 N 行；cursor 用上一页末行排序键（?after=2026-10-01_id_889）走索引直达。返回体带 total 或 nextCursor 二选一；分页参数务必设上限（limit≤100）防拖库。"
+    },
+    {
+      "id": "api-version",
+      "term": "接口版本化",
+      "match": ["版本化", "API version", "v1 前缀"],
+      "level": "L5",
+      "tip": "URL 前缀 /v1、请求头或查询参数三种方案；内部快速迭代用 URL 最直观",
+      "desc": "破坏性变更（删字段、改语义）才升主版本；加字段不算。版本共存期两套路由挂同一 Controller 不同 Service；给旧版本设 sunset 头与下线时间表，否则永远背债。"
+    },
+    {
+      "id": "auth-basics",
+      "term": "认证与授权",
+      "match": ["认证", "授权"],
+      "level": "L6",
+      "tip": "Authentication 证明你是谁、Authorization 决定你能干什么——两道门缺一不可",
+      "desc": "先识别（session/JWT/mTLS/OAuth 委托登录）后判权（RBAC 角色、ABAC 属性、ACL 清单）。Express 里 passport 是编排器：Strategy 验凭证 → req.user 挂身份 → 权限中间件按路由表判门。"
+    },
+    {
+      "id": "session-cookie",
+      "term": "Session 与 Cookie",
+      "match": ["session", "Cookie", "Set-Cookie", "cookie-parser"],
+      "level": "L6",
+      "tip": "服务端存会话、cookie 只发随机 sid；cookie-parser 与 express-session 别混淆——一个读一个管",
+      "desc": "Cookie 属性：HttpOnly（JS 读不到，防 XSS 窃取）、Secure（仅 HTTPS）、SameSite（Lax/Strict 防 CSRF、None 需 Secure）。session 存储换 Redis（connect-redis）才能多实例共享 + 控制过期。"
+    },
+    {
+      "id": "jwt",
+      "term": "JWT",
+      "full": "JSON Web Token",
+      "match": ["JWT", "Bearer"],
+      "level": "L6",
+      "tip": "三段式签名令牌 header.payload.signature：可自验证、不可篡改，但 payload 只是 Base64 不是加密",
+      "desc": "服务端验签即免查库，天然适合无状态 API 与多服务传递。缺点：签发后难撤销——访问令牌设短命（15min）+ refresh token 轮换（存库可吊销）。alg 混淆与「不验签」是历史大漏洞，用成熟库（jose）勿手搓。",
+      "seeAlso": [{ "pkg": "02-typescript", "id": "utility-types", "term": "工具类型" }]
+    },
+    {
+      "id": "oauth",
+      "term": "OAuth 2.0 / OIDC",
+      "match": ["OAuth", "OIDC"],
+      "level": "L6",
+      "tip": "委托授权的协议框架：第三方拿 code 换 token，不见你密码；OIDC 在其上加了「身份层」id_token",
+      "desc": "角色：Resource Owner（你）、Client（第三方应用）、Authorization Server（发码）、Resource Server（存数据）。授权码模式（+PKCE）是主流；GitHub/微信登录是它的变体。"
+    },
+    {
+      "id": "hash-password",
+      "term": "口令哈希",
+      "match": ["bcrypt", "argon2", "加盐"],
+      "level": "L6",
+      "tip": "密码永不存明文：bcrypt/argon2 慢哈希 + 唯一盐，拖库也难爆破",
+      "desc": "慢是特性（对抗 GPU 暴破），cost 参数随硬件年限上调。登录校验用 `bcrypt.compare`（内置常数时间比较防时序侧信道）。重置令牌、API Key 同理：存哈希不存原值。"
+    },
+    {
+      "id": "xss-csrf",
+      "term": "XSS / CSRF / 注入",
+      "match": ["CSRF", "XSS", "SQL 注入", "注入"],
+      "level": "L6",
+      "tip": "三大经典：注入别人执行你的 SQL、XSS 注入别人执行你的 JS、CSRF 借别人浏览器发伪造请求",
+      "desc": "防注入用参数化查询/ORM；防 XSS 输出转义 + CSP；防 CSRF：SameSite=Lax cookie + Origin 校验 +（敏感操作）一次性 token。OWASP Top 10 是清单，逐条对照自己的接口。"
+    },
+    {
+      "id": "cors",
+      "term": "CORS",
+      "full": "Cross-Origin Resource Sharing",
+      "zh": "跨域资源共享",
+      "match": ["CORS", "跨域", "Access-Control-Allow"],
+      "level": "L6",
+      "tip": "浏览器同源策略的豁免机制：服务端发 Access-Control-* 头声明允哪个源",
+      "desc": "简单请求直接看响应头放行；非简单（PUT/JSON 自定义头）先 OPTIONS 预检。凭证模式 `credentials:true` 时 origin 绝不能写 *。开发期 Vite 代理绕开，生产按域名白名单精确放行。"
+    },
+    {
+      "id": "rate-limit",
+      "term": "限流与安全头",
+      "match": ["helmet", "限流", "rate limit", "express-rate-limit"],
+      "level": "L6",
+      "tip": "helmet 一把设齐安全响应头；rate-limit 按 IP 计数防刷；两者都是几行代码的事",
+      "desc": "helmet 管 CSP/HSTS/X-Frame-Options 等；限流选 express-rate-limit（内存）或外置 Redis 集群计数（window 算法）。再加：body 大小上限、依赖审计（npm audit / socket）、错误信息不外泄。"
+    },
+    {
+      "id": "validation",
+      "term": "输入校验",
+      "match": ["zod", "celebrate", "Joi"],
+      "level": "L6",
+      "tip": "一切外部输入先过 schema 再进业务：zod 推导 TS 类型，校验中间件统一抛 422",
+      "desc": "`const Schema = z.object({ email: z.string().email() })` + `z.infer` 自动得到 DTO 类型，前后端共享同一份约束。别信前端已校验——绕过它是零成本，接口层校验是唯一防线。",
+      "seeAlso": [{ "pkg": "02-typescript", "id": "infer", "term": "infer" }]
+    },
+    {
+      "id": "db-access",
+      "term": "SQL、ORM 与迁移",
+      "match": ["Prisma", "Sequelize", "knex", "N+1"],
+      "level": "L5",
+      "tip": "裸 SQL / query builder（knex） / ORM（Prisma、Sequelize）三档抽象；N+1 是 ORM 最常见病",
+      "desc": "N+1：列表查 1 次、每条关联又查 1 次。解法：include 预加载/JOIN 一次取回、DataLoader 批处理。迁移（migrate）把 schema 变更版本化，可回滚可协同；连接池上限与事务超时是默认值重灾区。"
+    },
+    {
+      "id": "redis-cache",
+      "term": "Redis 缓存",
+      "match": ["Redis", "缓存"],
+      "level": "L5",
+      "tip": "内存键值库：热点数据、会话、计数器、分布式锁；读策略 cache-aside 最常用",
+      "desc": "cache-aside：先查缓存 miss 再查库回填，配 TTL。三个经典事故：雪崩（TTL 加随机抖动）、穿透（空结果也缓存/布隆过滤器）、击穿（热点 key 失效瞬间并发打库，互斥锁重建）。"
+    },
+    {
+      "id": "testing-express",
+      "term": "接口测试",
+      "match": ["supertest", "vitest", "Jest"],
+      "level": "L7",
+      "tip": "supertest 直接对着 app 发请求断言状态码与 JSON——不占端口不起真服务器的「近真机」测试",
+      "desc": "`request(app).get('/api/users').expect(200)`。测试金字塔：Service 单测（mock DB）→ 路由集成（in-memory DB 或 testcontainers）→ 少量 e2e。每环境独立测试库 + 事务回滚，别共享开发数据。"
+    },
+    {
+      "id": "mock",
+      "term": "Mock 与打桩",
+      "match": ["mock"],
+      "level": "L7",
+      "tip": "替身演员：vi.mock/nock 拦截外部依赖（支付、短信、第三方 API），测试可控可离线",
+      "desc": "边界原则：自家代码不 mock（测它干嘛）、外部 HTTP 与时间 mock。msw 在网络层拦截比 mock 函数更真；契约测试（Pact）防第三方偷偷改接口。"
+    },
+    {
+      "id": "prod-env",
+      "term": "生产环境配置",
+      "match": ["NODE_ENV", "trust proxy"],
+      "level": "L8",
+      "tip": "NODE_ENV=production 关调试、开压缩与缓存；app.set('trust proxy', 1) 让反向代理后 req.ip 与协议正确",
+      "desc": "上线清单：错误不入敏感日志、优雅关闭（SIGTERM → server.close → 断 DB）、进程守护交给平台（PM2/systemd/K8s 三选一）、`debug` 模块按需开日志。config 分环境文件合并，密钥走环境不入库。"
+    },
+    {
+      "id": "nginx-reverse",
+      "term": "反向代理",
+      "match": ["Nginx", "反向代理", "upstream"],
+      "level": "L8",
+      "tip": "挡在 Node 前面的守门人：TLS 终结、静态直出、限流、负载均衡，Node 专心跑业务",
+      "desc": "Nginx upstream 轮询/least_conn 分发多实例；WebSocket 要显式 Upgrade 头透传；X-Forwarded-Proto/For 补齐真实协议与 IP。它也让 express 的静态与压缩职责进一步卸载。"
+    },
+    {
+      "id": "logging",
+      "term": "结构化日志",
+      "match": ["pino", "winston", "morgan"],
+      "level": "L8",
+      "tip": "JSON 行日志 + request_id 贯穿全链路：机器可查（Loki/ELK），而不是人眼扫 txt",
+      "desc": "pino 性能最好（序列化走 worker），morgan 管访问日志。字段规范：level/msg/time/pid/requestId/uid。日志分级 DEBUG~FATAL；敏感字段（密码、token）redact 脱敏。"
+    },
+    {
+      "id": "healthcheck",
+      "term": "健康检查与探活",
+      "match": ["readiness", "liveness", "/healthz", "健康检查"],
+      "level": "L8",
+      "tip": "liveness 答「进程活着吗」（挂就重启）、readiness 答「能接客吗」（依赖不通先摘流量）",
+      "desc": "/healthz 只查自身（轻、快、不查依赖）；/readyz 真连 DB/Redis 探活但设超时。K8s 两探针分别配置，滚动发布才不发 502。监控再看黄金四信号：延迟、流量、错误、饱和度。"
+    },
+    {
+      "id": "https-deploy",
+      "term": "HTTPS 落地",
+      "match": ["Let's Encrypt", "certbot", "HSTS"],
+      "level": "L8",
+      "tip": "免费证书 certbot 自动续期；全站 HTTP→HTTPS 301 + HSTS；容器里 TLS 通常终结在平台/LB",
+      "desc": "证书链（leaf + intermediate）不全安卓会报错；TLS 配置走 Mozilla intermediate 预设。HSTS 上了就难退（浏览器强制 https），确认续期自动化无误再开 preload。"
+    }
+  ]
+}

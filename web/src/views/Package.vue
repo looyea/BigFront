@@ -52,8 +52,16 @@ const parts = [
   <div v-else-if="error" class="error-box">{{ error }}</div>
 
   <template v-else-if="pkg">
-    <h1 class="page-title">{{ pkg.icon }} {{ pkg.title }}</h1>
-    <p class="page-sub">{{ pkg.tagline }}</p>
+    <!-- 标题行：右侧挂术语表入口（红框位置）。只取决于本包有没有 glossary.json，与进度/解锁无关，任何时候可点 -->
+    <div class="pkg-head">
+      <div>
+        <h1 class="page-title">{{ pkg.icon }} {{ pkg.title }}</h1>
+        <p class="page-sub">{{ pkg.tagline }}</p>
+      </div>
+      <router-link v-if="pkg.hasGlossary" class="btn ghost glossary-btn" :to="`/g/${pkg.id}`" title="术语表不受进度限制，随时可查；课文里悬停术语也能弹出解释">
+        📖 术语表
+      </router-link>
+    </div>
 
     <div
       v-for="level in pkg.levels"
@@ -97,3 +105,9 @@ const parts = [
     </div>
   </template>
 </template>
+
+<style scoped>
+/* 目录页头部：标题居左、术语表按钮居右（对齐截图红框位置） */
+.pkg-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.glossary-btn { flex-shrink: 0; margin-top: 6px; }
+</style>

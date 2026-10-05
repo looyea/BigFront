@@ -1,0 +1,332 @@
+{
+  "title": "SolidJS · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "solid-overview",
+      "term": "Solid",
+      "match": ["Solid"],
+      "level": "L1",
+      "tip": "细粒度响应式 + 编译期 JSX 的 UI 库：signal 是唯一原语，组件只执行一次、运行期没有虚拟 DOM",
+      "desc": "常被叫「长得像 React 的 Svelte」，但更准是「保留 JSX 写法 + 细粒度响应式内核 + 编译期把视图拆成一次性 DOM 命令」。API 像 React（createSignal、JSX），运行时理念像 Svelte（编译优化、无虚拟 DOM 常驻 diff）。",
+      "seeAlso": [{ "pkg": "05-react", "id": "render-model", "term": "React 渲染模型" }, { "pkg": "11-svelte", "id": "compile-vs-runtime", "term": "Svelte 编译心智" }]
+    },
+    {
+      "id": "fine-grained",
+      "term": "细粒度响应式",
+      "full": "fine-grained reactivity",
+      "match": ["细粒度响应式", "细粒度", "fine-grained"],
+      "level": "L1",
+      "tip": "改一个值只通知真正读了它的哪一个订阅者，而非重跑整个组件",
+      "desc": "状态是 signal，读它的 effect/memo/DOM 绑定被自动登记为订阅者；写时只有这些订阅者被精准更新，牵连不到别的节点。与 React「状态变→重跑组件→diff 整棵树」的粗粒度模型相对。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "subscribers", "term": "订阅者" }]
+    },
+    {
+      "id": "no-vdom",
+      "term": "无虚拟 DOM",
+      "full": "virtual DOM",
+      "match": ["虚拟 DOM", "虚拟树", "vdom", "diff"],
+      "level": "L1",
+      "tip": "Solid 不重建虚拟树再比对，更新由细粒度订阅直接打 DOM 补丁",
+      "desc": "React 每次改动都要重新执行组件、产出新虚拟树、与旧树 diff。Solid 省掉这两步：组件是搭一次性结构的工厂，之后改 count 只让绑定了它的那个文本节点更新。省下的是常驻 diff 与整组件重渲的连带成本。",
+      "seeAlso": [{ "pkg": "05-react", "id": "vdom", "term": "虚拟 DOM" }]
+    },
+    {
+      "id": "create-signal",
+      "term": "createSignal",
+      "match": ["createSignal"],
+      "level": "L1",
+      "tip": "返回 [getter, setter] 元组：读值要写 count()、写值调 setCount()，读即订阅",
+      "desc": "signal 是最基础的响应式原语。以函数调用形式读值才会被追踪，解构/提前求值/异步里读会丢失响应。setter 有值相等短路（同值不通知），传函数可基于旧值更新。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "effect-tracking", "term": "依赖追踪" }]
+    },
+    {
+      "id": "effect-tracking",
+      "term": "createEffect 与自动追踪",
+      "match": ["createEffect", "自动追踪", "追踪"],
+      "level": "L1",
+      "tip": "effect 同步收集依赖：只有在追踪作用域里读 signal 才建立订阅，setTimeout 里读不追踪",
+      "desc": "用观察者模式可手写最小响应系统：currentSubscriber + 订阅集 + 通知链路。createEffect 只跑被依赖触发的副作用；控制追踪有三件套——batch 合并通知、untrack 屏蔽读取、on 显式指定源。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "batch-untrack", "term": "batch / untrack / on" }]
+    },
+    {
+      "id": "subscribers",
+      "term": "订阅者",
+      "full": "observer / subscriber",
+      "match": ["订阅者", "observer", "订阅"],
+      "level": "L1",
+      "tip": "读了某个 signal 的 effect/memo/DOM 绑定，会被登记为该 signal 的订阅者",
+      "desc": "signal 是生产者（producer），订阅者是消费者（consumer）。写 signal 沿边精准通知订阅者，这就是细粒度的实现基础；「读一次就订阅一次」也可能造成过度订阅。"
+    },
+    {
+      "id": "create-memo",
+      "term": "createMemo",
+      "match": ["createMemo", "memo"],
+      "level": "L2",
+      "tip": "可缓存的派生 signal：只在依赖变化时重算，返回的仍是 signal",
+      "desc": "把重复计算收敛成一份缓存，也是「断链/去抖」的手段。注意早返回会改变被追踪的依赖集。对照 Svelte $derived、Vue computed、React useMemo——只有 memo 返回值本身可被再订阅。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "computed", "term": "computed" }]
+    },
+    {
+      "id": "create-store",
+      "term": "createStore",
+      "match": ["createStore", "store"],
+      "level": "L2",
+      "tip": "嵌套对象的细粒度状态：按路径订阅，直接改即可，配 produce/reconcile",
+      "desc": "选型口诀：signal 存标量/整体替换、store 存深层对象按路径订阅。produce 写类可变局部更新、reconcile 吸收不可变返回。与 Vue reactive、Svelte store 是同一问题域。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "ref-reactive", "term": "reactive" }]
+    },
+    {
+      "id": "produce-reconcile",
+      "term": "produce 与 reconcile",
+      "match": ["produce", "reconcile"],
+      "level": "L2",
+      "tip": "produce 用可变写法局部改 store；reconcile 把不可变返回的差分吸收进 store",
+      "desc": "produce(store, s => s.a.b++) 让你像改普通对象一样写；reconcile(next) 用于从后端拿到全新不可变对象时只更新真正变了的叶子路径，保住细粒度订阅不断链。"
+    },
+    {
+      "id": "owner-lifecycle",
+      "term": "Owner 作用域与生命周期",
+      "match": ["Owner", "onCleanup", "onMount", "dispose", "生命周期"],
+      "level": "L2",
+      "tip": "Owner 树界定响应式作用域；组件卸载连带 dispose 其下所有 observer",
+      "desc": "onMount 挂载跑一次、onCleanup 注册清理。createEffect 与 createRenderEffect 时机不同。脱离组件上下文的异步回调要 createRoot 手动接管，否则订阅不会被回收。"
+    },
+    {
+      "id": "props-getter",
+      "term": "props 是惰性 getter",
+      "match": ["props", "mergeProps", "splitProps", "accessor"],
+      "level": "L3",
+      "tip": "组件只执行一次，props 通过 getter 惰性读取——解构即脱离响应",
+      "desc": "`const { x } = props` 会把值定格在首帧；要保持响应就写 `props.x` 或用 accessor、mergeProps、splitProps。这与 React「每次渲染传入新快照 props」根本不同。",
+      "seeAlso": [{ "pkg": "13-solid", "id": "components-once", "term": "组件执行一次" }]
+    },
+    {
+      "id": "components-once",
+      "term": "组件是只执行一次的函数",
+      "match": ["执行一次", "组件函数", "render"],
+      "level": "L3",
+      "tip": "挂载时执行一次返回真实 DOM，之后不随状态变化重跑",
+      "desc": "所以函数体里的 if/map/普通表达式只跑一次——条件渲染与列表不能靠 JS 原生 &&/.map（那只在首次求值），得用控制流组件。副作用不靠「每次渲染后跑」的 useEffect 语义。",
+      "seeAlso": [{ "pkg": "05-react", "id": "render-model", "term": "渲染模型" }]
+    },
+    {
+      "id": "control-flow",
+      "term": "控制流组件",
+      "match": ["控制流组件", "Show", "For", "Switch", "Index"],
+      "level": "L3",
+      "tip": "<For>/<Index>/<Show>/<Switch>：为 keyed 复用 DOM 与惰性精确更新而生",
+      "desc": "为什么不用 Array.map 与三元——需要复用 DOM 节点、需要惰性求值。For 记忆列表项、不重跑回调；Show 只在 when 变化时切换分支。对照 Vue v-if/v-for、React .map。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "template-syntax", "term": "模板指令" }]
+    },
+    {
+      "id": "keyed",
+      "term": "keyed 复用",
+      "match": ["keyed", "key"],
+      "level": "L3",
+      "tip": "按身份（而非下标）复用 DOM，是列表精确更新与避免状态错位的关键",
+      "desc": "Solid 的 For 默认 keyed 到具体项，插入/删除只动对应节点；Index 按下标（便宜但换位会带动子树）。这与 React 列表 key 解决的是同一类问题。",
+      "seeAlso": [{ "pkg": "05-react", "id": "list-key", "term": "列表与 key" }]
+    },
+    {
+      "id": "context-solid",
+      "term": "Context 与组合",
+      "match": ["createContext", "useContext", "context", "Portal", "drilling", "children"],
+      "level": "L3",
+      "tip": "createContext/useContext 跨层传响应式值，避免 prop drilling",
+      "desc": "把 signal 作为 props 或返回对象即「自定义 hook 式」复用；Portal 渲染到 body 外。Solid 的 context 传的是引用稳定的 signal/store，天然保持响应，不需要 Provider 重渲。",
+      "seeAlso": [{ "pkg": "05-react", "id": "context", "term": "Context" }]
+    },
+    {
+      "id": "create-resource",
+      "term": "createResource",
+      "match": ["createResource", "resource", "fetcher", "source"],
+      "level": "L5",
+      "tip": "把异步折叠成 signal：createResource(source, fetcher) 返回 [signal, {loading,error,refetch,mutate}]",
+      "desc": "source 变化自动重取，支持 lazy 惰性、streaming 流式。与 SvelteKit load、React Query、Vue asyncData 对照——Solid 用「signal + Suspense」把异步纳入同一响应式模型。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "universal-load", "term": "universal load" }]
+    },
+    {
+      "id": "suspense-solid",
+      "term": "Suspense 与 startTransition",
+      "match": ["Suspense", "startTransition", "transition", "preload"],
+      "level": "L5",
+      "tip": "Suspense 用资源挂起回退、SuspenseList 编排多块、defer+startTransition 做非阻塞过渡",
+      "desc": "「细粒度 + 资源」让局部流式渲染自然落地：一个 resource 挂起只回退它自己那一块。preload 预取资源、transition 把更新标为非紧急不阻塞交互。",
+      "seeAlso": [{ "pkg": "05-react", "id": "lazy-suspense", "term": "Suspense" }]
+    },
+    {
+      "id": "error-boundary",
+      "term": "ErrorBoundary",
+      "match": ["ErrorBoundary", "fallback"],
+      "level": "L5",
+      "tip": "捕获渲染/资源抛错并渲染 fallback，onError 做 thrown 值归一化",
+      "desc": "Solid 无自动全局错误冒泡，需要显式在关键子树包 ErrorBoundary。与 SvelteKit +error、Next error.tsx 的错误分层对照——框架越轻，边界越要自己划。"
+    },
+    {
+      "id": "batch-untrack",
+      "term": "batch / untrack / on",
+      "match": ["batch", "untrack", "on("],
+      "level": "L1",
+      "tip": "追踪控制三件套：batch 合并多次写为一次通知、untrack 屏蔽读取不建依赖、on 显式指定源",
+      "desc": "batch 防中间态抖动（同帧多写只渲染一次）；untrack 里读 signal 不订阅（一次性取值）；on(() => props.x, fn) 精确声明「只跟 x、且默认不立即跑」。"
+    },
+    {
+      "id": "event-delegation",
+      "term": "事件委托",
+      "match": ["事件委托", "onClick", "on:click"],
+      "level": "L4",
+      "tip": "on:click 走冒泡委托（配合不重渲）、onClick 原生直绑",
+      "desc": "Solid 对常见事件走委托以兑现「组件不重跑、监听器不反复挂卸」的收益；特殊场景用 onClick 直绑单个元素。passive/capture 用修饰后缀表达。",
+      "seeAlso": [{ "pkg": "11-svelte", "id": "event-sv", "term": "事件" }]
+    },
+    {
+      "id": "refs-styles",
+      "term": "ref / classList / style 绑定",
+      "match": ["classList", "ref"],
+      "level": "L4",
+      "tip": "ref 拿 DOM 引用（回调式）、classList 条件类名合并、style 对象绑定；Signal 直接绑进属性即自动更新",
+      "desc": "`<div ref={el => ...}>` 挂载时把元素交给你。classList={{active: isActive()}} 做条件类；把 signal 传进属性，Solid 编译期就把它绑成一条 DOM 更新命令。",
+      "seeAlso": [{ "pkg": "11-svelte", "id": "style-scoped", "term": "样式作用域" }]
+    },
+    {
+      "id": "solid-typescript",
+      "term": "Solid 的 TypeScript 集成",
+      "match": ["TypeScript", "类型", "jsxImportSource", "ComponentProps"],
+      "level": "L4",
+      "tip": "靠标准 TS + 编译器插件：配置 jsxImportSource 与 solid-js 的 JSX 命名空间",
+      "desc": "signal/store/props 的类型自然流转，props 类型写 ComponentProps<'div'> 或自定义 interface。与 Svelte/SvelteKit 的 generated types 思路不同，Solid 不需要额外类型生成步骤。",
+      "seeAlso": [{ "pkg": "02-typescript", "id": "dts", "term": ".d.ts 声明文件" }]
+    },
+    {
+      "id": "subscription-graph",
+      "term": "订阅图与过度订阅",
+      "match": ["producer", "consumer", "过度订阅", "producers"],
+      "level": "L6",
+      "tip": "从图论看响应式：signal=producer、effect/memo=consumer，更新只沿边传播",
+      "desc": "没有整组件重渲染，代价是要理解订阅关系。「读一次就订阅一次」可能造成过度订阅（同一源被大量 effect 追踪），用 memo 收敛、避免在 effect 里写自己读的东西形成循环。"
+    },
+    {
+      "id": "solid-state-patterns",
+      "term": "跨组件状态模式",
+      "match": ["createAsync", "工厂函数"],
+      "level": "L6",
+      "tip": "把 signal/store 装进工厂函数做领域状态，配 context 组成全局 store——Solid 常无需外部状态库",
+      "desc": "细粒度 + 无 Provider 心智让「一个小模块导出几个 signal」就能共享状态。何时才引库？需要 DevTools 时间旅行、复杂中间件时——对照 Pinia/Zustand/Redux 的价值主张。",
+      "seeAlso": [{ "pkg": "17-zustand", "id": "za-core", "term": "Zustand 最小 store" }]
+    },
+    {
+      "id": "solid-performance",
+      "term": "性能审计",
+      "match": ["Lighthouse", "WebPageTest", "性能"],
+      "level": "L6",
+      "tip": "无 vdom/diff 的收益会被错误写法抵消：顶层大 store、过度 memo、map 里造 signal",
+      "desc": "度量口径与其他包一致（Lighthouse/WebPageTest）。识别退化点：把整个应用状态塞一个 store 又到处读、在不该 memo 的地方 memo、在列表 map 内创建大量 signal。",
+      "seeAlso": [{ "pkg": "08-nuxt", "id": "perf-nuxt", "term": "性能" }]
+    },
+    {
+      "id": "solidstart-overview",
+      "term": "SolidStart",
+      "match": ["SolidStart", "createApp"],
+      "level": "L7",
+      "tip": "Solid 的 Meta 框架：Vite + 文件路由 + SSR/流式 + server RPC 的组合",
+      "desc": "对标 SvelteKit/Next/Nuxt。目录约定 src/routes、createApp 起入口、路由级 loader/action。把「客户端细粒度」与「服务端数据」缝成一个全栈应用。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "kit-overview", "term": "SvelteKit" }]
+    },
+    {
+      "id": "solidstart-routing",
+      "term": "SolidStart 文件路由",
+      "match": ["src/routes", "catch-all", "withBase"],
+      "level": "L7",
+      "tip": "约定式路由：动态段、catch-all、layout/nested route、编程式导航",
+      "desc": "对照 solid-router 与 Start 的关系。动态段 `[id]`、catch-all `[...slug]`、`(group)` 分组与 SvelteKit/Next 同族语法；跨框架迁移者眼熟即可。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "routing-kit", "term": "文件路由" }]
+    },
+    {
+      "id": "solidstart-data",
+      "term": "route loaders 与 actions",
+      "match": ["loader", "action", "useRoute"],
+      "level": "L7",
+      "tip": "路由级 loader 服务端取数（返回可序列化）、action 做写操作并重校验，组件里 useRoute() 读",
+      "desc": "与 SvelteKit load/form action、Next Route 数据模式三方对照。loader 关心「进页面前要什么数据」，action 关心「表单/按钮提交后改什么并刷新」。"
+    },
+    {
+      "id": "server-functions",
+      "term": "Server Functions（server$）",
+      "match": ["server function", "use server", "server$", "createServer$", "RPC"],
+      "level": "L8",
+      "tip": "用 server$ 标注服务端函数，客户端调用走 RPC；闭包与环境被隔离",
+      "desc": "`'use server'` 或 server$ 前缀，函数体只在服务端跑，客户端拿到的是 RPC 代理。序列化边界、cache 指令要注意；CSRF 与入参校验是红线。与 Next Server Actions、SvelteKit +page.server 同题。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "form-action", "term": "Form Actions" }]
+    },
+    {
+      "id": "solidstart-ssr",
+      "term": "SSR、流式与 adapter 部署",
+      "match": ["SSR", "prerender", "adapter", "islands"],
+      "level": "L8",
+      "tip": "按路由配置 SSR/流式 HTML/prerender/无 JS islands 退化，vite 集成后选部署目标",
+      "desc": "Node/edge/serverless 由 adapter 决定产物形态。两阶段构建与平台能力差异同 SvelteKit/Nuxt：只用 Web Standard API 才能跨 edge 平台。",
+      "seeAlso": [{ "pkg": "12-sveltekit", "id": "adapter-kit", "term": "adapter" }]
+    },
+    {
+      "id": "solid-testing",
+      "term": "Solid 测试矩阵",
+      "match": ["solid-testing-library", "jsdom", "fireEvent"],
+      "level": "L8",
+      "tip": "组件测渲染进 jsdom + fireEvent 断言细粒度更新；server function/loader 纯函数化好测",
+      "desc": "Vitest + solid-testing-library 为主，SSR 快照与 Playwright e2e 覆盖水合全链路。分层法与 SvelteKit/Solid 各包一致：纯函数优先、组件集成其次、e2e 守关键旅程。",
+      "seeAlso": [{ "pkg": "22-vitest", "id": "vitest-overview", "term": "Vitest" }]
+    },
+    {
+      "id": "solid-internals",
+      "term": "编译器与 reactive root",
+      "match": ["reactive root", "createElement", "编译器", "reconciler"],
+      "level": "L9",
+      "tip": "Babel/SWC 插件把 JSX 模板编译成 createElement + effect；Owner 栈界定 reactive root",
+      "desc": "「JSX→signal 图→命令式 DOM」的编译产物：模板变建立命令、动态部分包成 effect 绑到 signal。无 vdom 下 diff 被「更新即订阅」取代——这是它快的根。",
+      "seeAlso": [{ "pkg": "20-swc", "id": "swc-overview", "term": "SWC" }]
+    },
+    {
+      "id": "react-to-solid",
+      "term": "React-ism 迁移陷阱",
+      "match": ["React-ism", "惯性", "迁移"],
+      "level": "L9",
+      "tip": "拆掉 React 惯性：不「每次重渲」、useState→signal、useEffect 滥用→createEffect/on、不可变→直接改 store",
+      "desc": "最大心智差是「组件只跑一次」：把「渲染期重算」的代码改成「派生 memo/effect」；把「用不可变数组触发重渲」改成「直接改 store 走路径订阅」。用收益 vs 生态的框架做迁移决策。",
+      "seeAlso": [{ "pkg": "05-react", "id": "usestate", "term": "useState" }]
+    },
+    {
+      "id": "jsx-compile",
+      "term": "编译期 JSX",
+      "match": ["编译期 JSX", "vite-plugin-solid"],
+      "level": "L1",
+      "tip": "JSX 在编译期被拆成「建 DOM 命令 + 把节点 effect 绑到 signal」，故组件只跑一次",
+      "desc": "这是第二根支柱的落地方式，靠 vite-plugin-solid / babel-preset-solid 完成。与 Svelte「编译消灭 runtime」同属编译派，区别是 Solid 保留标准 JSX 写法、留一个很轻的 signal reconciler。"
+    },
+    {
+      "id": "signals-plural",
+      "term": "signals（复数概念）",
+      "match": ["signals"],
+      "level": "L1",
+      "tip": "指 Solid 及业界这类「小值 + 订阅」原语的统称，也是 TC39 提案名",
+      "desc": "单数 signal 是一个响应式值；signals 常指这套范式或本仓库的 14-signals 包主题。Solid 是 signals 最彻底的框架实现——一切响应式皆 signal。",
+      "seeAlso": [{ "pkg": "14-signals", "id": "sig-paradigms", "term": "signal 与 stream" }]
+    },
+    {
+      "id": "undefined-eq",
+      "term": "值相等短路",
+      "match": ["undefined", "相等"],
+      "level": "L1",
+      "tip": "signal setter 默认对写入值做 === 比较，同值直接不通知订阅者",
+      "desc": "`setCount(5)` 再 `setCount(5)` 第二次不触发更新。这也是「存对象/数组时要整体替换新引用、否则引用没变不会通知」的来源；自定义比较用 createSignal 的 equals 选项。"
+    },
+    {
+      "id": "dispose-cleanup",
+      "term": "dispose 与清理",
+      "match": ["dispose", "清理"],
+      "level": "L2",
+      "tip": "Owner 被销毁时连带 dispose 其下所有 observer，释放订阅防泄漏",
+      "desc": "路由离开/组件卸载即触发 dispose。脱离上下文的异步要 createRoot 拿 dispose 函数手动收尾，否则 effect 与其订阅会一直存活形成内存泄漏。"
+    }
+  ]
+}

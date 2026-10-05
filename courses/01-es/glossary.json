@@ -1,0 +1,518 @@
+{
+  "title": "JavaScript 现代语法 ES6→ES2025 · 术语表",
+  "intro": "本课出现的专业缩写、文件名格式与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "pkg-layout",
+      "term": "课程包文件命名",
+      "zh": "目录与文件前缀",
+      "match": ["course.json", "lesson-", "quiz-", "interview-", "homework-", "example-"],
+      "level": "平台",
+      "tip": "每个阶段一个文件夹；文件按前缀分类：lesson-课文、quiz-小测、interview-面试题、homework-作业、example-示例",
+      "desc": "课程包的固定结构：包根下有 `course.json`（大纲清单，写清包信息与每阶段每关），其余按「阶段文件夹」平铺，文件名前缀标明类别——`lesson-<关卡id>.md` 课文、`quiz-<关卡id>.json` 小测题库、`interview-<关卡id>.md` 面试题、`homework-<阶段id>.md` 阶段作业、`example-<关卡id>-<名>.js` 可运行示例。关卡 id 前缀是包缩写（es-、ts-、vue-…），防跨包重名。"
+    },
+    {
+      "id": "md",
+      "term": "Markdown",
+      "full": "Markdown (.md)",
+      "match": ["Markdown"],
+      "level": "平台",
+      "tip": "一种「纯文本 + 轻标记」的排版格式，# 是标题、**加粗**、``` 围栏包代码",
+      "desc": "课文/面试题/作业都用 `.md` 写：普通文本加少量符号就能表达标题、列表、表格、代码块，前端渲染成网页。会写文档即会写课，不需要学编程语法。"
+    },
+    {
+      "id": "ecmascript",
+      "term": "ECMAScript",
+      "zh": "语言标准",
+      "match": ["ECMAScript"],
+      "level": "L1",
+      "tip": "JavaScript 的「国标文件」：规定语言该有什么，浏览器各自实现它",
+      "desc": "JavaScript 只是这门语言的商品名，真正的语言规范叫 **ECMAScript**（由 TC39 委员会维护，每年出一版）。浏览器、Node 里的 JS 引擎都是对它的实现，所以谈「语法从哪版开始支持」谈的都是 ECMAScript。",
+      "seeAlso": [{ "pkg": "02-typescript", "id": "typescript", "term": "TypeScript" }]
+    },
+    {
+      "id": "tc39",
+      "term": "TC39",
+      "zh": "提案五阶段",
+      "match": ["TC39", "提案"],
+      "level": "L1",
+      "tip": "管 ECMAScript 标准的委员会；新语法要过 Stage 0~4 五道门，Stage 4 才定稿",
+      "desc": "TC39 是 ECMAScript 的标准化委员会，任何新语法（如装饰器、Iterator Helpers）都要走 Stage 0（草案）→ Stage 4（定稿）五个阶段才能进标准。看到「Stage 3」就知道它还可能改，生产环境慎用。"
+    },
+    {
+      "id": "tdz",
+      "term": "TDZ",
+      "full": "Temporal Dead Zone",
+      "zh": "暂时性死区",
+      "match": ["TDZ", "暂时性死区"],
+      "level": "L1",
+      "tip": "let/const 声明前那段「变量存在但碰不得」的区域，提前访问直接 ReferenceError",
+      "desc": "块内 let/const 声明的变量从块开始到声明行为止处于「已登记、未初始化」状态，这段区域叫暂时性死区（TDZ）。提前读写不会像 var 那样得到 undefined，而是直接抛 `ReferenceError: Cannot access 'x' before initialization`。"
+    },
+    {
+      "id": "hoisting",
+      "term": "提升",
+      "full": "hoisting",
+      "match": ["变量提升", "函数提升", "hoisting"],
+      "level": "L1",
+      "tip": "声明被引擎「搬到」作用域顶部：var 提升得 undefined，function 整个提升，class/let 提升但进 TDZ",
+      "desc": "JS 编译阶段会把声明登记到作用域顶部，所以「先用后声明」在某些情况下不报错：`var` 提升后值是 undefined；函数声明整体提升可任意先调；`let/const/class` 虽也提升但落在 TDZ 里，先碰就炸。"
+    },
+    {
+      "id": "scope",
+      "term": "作用域",
+      "full": "scope / scope chain",
+      "match": ["块级作用域", "作用域链", "作用域"],
+      "level": "L1",
+      "tip": "变量「可见范围」；块级=一对花括号内（let/const），链=查不到就一层层往外找",
+      "desc": "决定一个变量在哪能被访问。var 只有函数作用域，let/const 引入了块级作用域；查找时沿作用域链由内向外，找到即停——这条链也是闭包能「记住」外部变量的原因。"
+    },
+    {
+      "id": "closure",
+      "term": "闭包",
+      "full": "closure",
+      "match": ["闭包"],
+      "level": "L1",
+      "tip": "函数带着出生地的变量引用一起活：外层函数退了，里面用的变量还不死",
+      "desc": "函数连同它定义时所在的作用域引用一起被保留，即使外层函数已执行完。防抖、节流、柯里化、缓存、模块化私有变量，全是闭包的直接应用；代价是被引用的变量不会被垃圾回收，滥用会内存泄漏。",
+      "seeAlso": [{ "pkg": "01-es", "id": "debounce", "term": "防抖" }]
+    },
+    {
+      "id": "iife",
+      "term": "IIFE",
+      "full": "Immediately-Invoked Function Expression",
+      "zh": "立即执行函数",
+      "match": ["IIFE"],
+      "level": "L1",
+      "tip": "(function(){…})()——定义完当场执行的那一层括号，ESM 出现前用来藏私有变量",
+      "desc": "把函数包进括号表达式并在末尾加 `()` 立即调用，形如 `(function(){ ... })()`。在模块语法普及前，它是「造一个一次性作用域、不污染全局」的标准手法，也是理解闭包与 var 时代模块化的钥匙。"
+    },
+    {
+      "id": "arrow-fn",
+      "term": "箭头函数",
+      "full": "arrow function",
+      "match": ["箭头函数"],
+      "level": "L3",
+      "tip": "(x) => x*2；没有自己的 this，用哪的 this 取决于写在哪（词法绑定）",
+      "desc": "ES6 的函数简写，核心差异是 **this 的词法绑定**：不跟随调用方式变化，而是锁定在定义时外层的 this。所以它不适合做对象方法与构造函数，却是回调、数组方法里的首选。"
+    },
+    {
+      "id": "hof",
+      "term": "高阶函数",
+      "full": "higher-order function",
+      "match": ["高阶函数"],
+      "level": "L3",
+      "tip": "收函数当参数或吐函数当返回值的函数：map/filter/reduce、防抖柯里化都是",
+      "desc": "函数在 JS 里是一等公民，可以像数字一样被传递。接收或返回函数的函数就叫高阶函数——`array.map(fn)` 收函数，`debounce(fn)` 吐函数，是函数式编程的地基。"
+    },
+    {
+      "id": "curry",
+      "term": "柯里化",
+      "full": "currying",
+      "match": ["柯里化", "curry"],
+      "level": "L3",
+      "tip": "把 f(a,b,c) 拆成 f(a)(b)(c)：一次喂一个参数，攒齐才真正执行",
+      "desc": "把一个多参函数转换成一系列「每次只收一个参数、返回下一个人」的函数。用途是提前固定部分参数生成专用小函数（如 `check('admin')(user)`），配合 compose 做管道式组合。"
+    },
+    {
+      "id": "debounce",
+      "term": "防抖",
+      "full": "debounce",
+      "match": ["防抖"],
+      "level": "L1",
+      "tip": "事件连发时只认最后一下：每次触发重置计时器，安静一段时间才执行",
+      "desc": "搜索框输入联想、窗口 resize 常用：N 毫秒内反复触发只在「停下来」后执行一次。闭包保存那个待执行的 timer，是闭包最经典的应用之一。",
+      "seeAlso": [{ "pkg": "01-es", "id": "throttle", "term": "节流" }]
+    },
+    {
+      "id": "throttle",
+      "term": "节流",
+      "full": "throttle",
+      "match": ["节流"],
+      "level": "L1",
+      "tip": "再快也每隔固定时间才执行一次：滚动、拖拽按帧限速",
+      "desc": "与防抖相反：无论触发多密集，保证每 N 毫秒至多跑一次。滚动进度条、游戏连发这类「持续但要限速」的场景用节流，一次性收尾动作用防抖。"
+    },
+    {
+      "id": "memoize",
+      "term": "记忆化",
+      "full": "memoize",
+      "match": ["记忆化", "memoize"],
+      "level": "L1",
+      "tip": "算过的结果存 Map，同参数再调直接返回缓存——空间换时间",
+      "desc": "用闭包或 Map 缓存「参数 → 结果」的映射，重复调用直接命中缓存。斐波那契、昂贵查询、Vue 的 computed 背后都是这个思想；注意参数是引用类型时缓存键怎么做。"
+    },
+    {
+      "id": "primitive",
+      "term": "原始类型",
+      "full": "primitive types",
+      "match": ["原始类型", "7 种类型", "基本类型"],
+      "level": "L2",
+      "tip": "string/number/boolean/null/undefined/symbol/bigint 七种，按值不可变；其余全是对象",
+      "desc": "JS 的值分两堆：七个原始类型（按值、不可变、存栈上语义）和对象（引用）。`typeof` 判原始类型够用，判对象要 `Object.prototype.toString`；原始值上的方法（如 `'a'.length`）靠临时装箱提供。"
+    },
+    {
+      "id": "coercion",
+      "term": "隐式转换",
+      "full": "implicit coercion / ToPrimitive",
+      "match": ["隐式转换", "ToPrimitive", "类型转换"],
+      "level": "L2",
+      "tip": "运算符要求什么类型就把值暗中变成什么类型；== 与 + 是两大重灾区",
+      "desc": "引擎在运算/比较前自动把值转成需要的类型：`[] + {}` 得到 `\"[object Object]\"`、`'1' == 1` 为 true。规则底层是 ToPrimitive（先 valueOf 后 toString）。工程结论：一律用 `===`，需要转换就显式转。"
+    },
+    {
+      "id": "destructure",
+      "term": "解构",
+      "full": "destructuring",
+      "match": ["解构赋值", "解构"],
+      "level": "L4",
+      "tip": "从数组/对象里按位置或键名「拆包」取值的语法：const { a, b = 1 } = obj",
+      "desc": "按形状从对象/数组里批量取值的写法，可配默认值、重命名、深层嵌套。函数参数处解构（`function f({ id })`）是组件 props 与配置对象的日常；配合展开运算符做不可变更新。"
+    },
+    {
+      "id": "rest-spread",
+      "term": "展开/剩余运算符",
+      "full": "spread & rest (...)",
+      "match": ["展开运算符", "剩余参数", "rest 参数"],
+      "level": "L4",
+      "tip": "同一个 ...：放实参/字面量里是「摊开」（复制合并），放形参里是「收拢」成数组/对象",
+      "desc": "`...` 一位两用：在调用与字面量位置是展开（浅复制、合并、转实参），在形参位置是剩余收集。注意展开只有一层——嵌套对象仍是共享引用的浅拷贝。"
+    },
+    {
+      "id": "shallow-deep",
+      "term": "浅拷贝与深拷贝",
+      "match": ["浅拷贝", "深拷贝"],
+      "level": "L4",
+      "tip": "浅拷贝只复制最外层，嵌套层仍共享引用；深拷贝整棵树重做一份",
+      "desc": "展开运算符、`Object.assign`、`slice` 都是浅拷贝；`JSON.parse(JSON.stringify())` 能深拷贝但丢函数/undefined/Date 且不处理循环引用；`structuredClone` 是原生正解（同样不能克隆函数）。"
+    },
+    {
+      "id": "template-literal",
+      "term": "模板字面量",
+      "full": "template literal",
+      "match": ["模板字面量", "标签模板"],
+      "level": "L4",
+      "tip": "反引号字符串：`a${x}b` 可插值可换行；前面加函数名就是标签模板（如 sql`…`）",
+      "desc": "反引号包裹的字符串，`${}` 内可放任意表达式。在反引号前加一个函数即成「标签模板」，函数收到字符串片段与插值两个数组，是 styled-components、SQL 防注入等库的语法基础。"
+    },
+    {
+      "id": "unicode",
+      "term": "码点与代码单元",
+      "full": "code point / UTF-16",
+      "match": ["码点", "代理对", "Unicode"],
+      "level": "L4",
+      "tip": "JS 字符串按 16 位「代码单元」数长度；一个 emoji 占两个单元，length 会骗人",
+      "desc": "JS 字符串是 UTF-16 序列：BMP 内字符一个「码点」占一个「代码单元」，emoji 等增补字符要用两个单元（代理对）。所以 `'😀'.length === 2`，正确姿势是 `[...str]`、`codePointAt` 或 `Intl.Segmenter`。"
+    },
+    {
+      "id": "weak-collections",
+      "term": "WeakMap / WeakRef",
+      "match": ["WeakMap", "WeakSet", "WeakRef", "弱引用"],
+      "level": "L5",
+      "tip": "键/值「握得松」的容器：对象没人引用时能被垃圾回收，适合做旁路缓存",
+      "desc": "Map/Set 会牢牢钉住键，对象做键就成了回收障碍；WeakMap/WeakSet 对键是弱持有，GC 可正常清理，典型用途是给对象挂私有数据、DOM 节点缓存、按对象去重。WeakRef 则把「弱」升级到普通引用层面。"
+    },
+    {
+      "id": "local-storage",
+      "term": "localStorage",
+      "match": ["localStorage"],
+      "level": "L5",
+      "tip": "浏览器里 5MB 上下的同步键值串仓库：只能存字符串、阻塞主线程、同源共享",
+      "desc": "最简单的浏览器持久化：同步 API、只认字符串、约 5MB 配额，读写大数据会卡 UI。适合存主题偏好这类小东西；大量结构化数据应上 IndexedDB，离线优先场景注意它随时可能被驱逐。"
+    },
+    {
+      "id": "indexeddb",
+      "term": "IndexedDB",
+      "full": "浏览器事务型数据库",
+      "match": ["IndexedDB", "idb-keyval", "Dexie"],
+      "level": "L5",
+      "tip": "浏览器内置的异步 NoSQL：对象仓库 + 索引 + 事务，能存 Blob，配额按磁盘算",
+      "desc": "浏览器自带的异步事务数据库，能直接存对象与二进制，容量远大于 localStorage。原生 API 回调繁琐，工程上一般走 `idb-keyval`（极简键值）或 `Dexie`（类 ORM）封装；注意事务过期（`TransactionInactiveError`）与结构化克隆限制。"
+    },
+    {
+      "id": "opfs",
+      "term": "OPFS",
+      "full": "Origin Private File System",
+      "zh": "源私有文件系统",
+      "match": ["OPFS"],
+      "level": "L5",
+      "tip": "浏览器里专属你站点的「真文件」沙盒：读写快，主线程只能异步、Worker 里才有同步句柄",
+      "desc": "每个源私有的高速文件存储，读写大文件比 IndexedDB 快得多。主线程只有异步句柄，`FileSystemSyncAccessHandle` 只能在 Worker 打开——sqlite-wasm 的官方推荐底座就是它。"
+    },
+    {
+      "id": "symbol",
+      "term": "Symbol",
+      "full": "Symbol 原始类型",
+      "match": ["Symbol", "内置符号"],
+      "level": "L6",
+      "tip": "永远独一无二的第七种类型；内置的 Symbol.iterator 等是语言钩子的插槽",
+      "desc": "每个 `Symbol()` 都全局唯一，适合做对象私有键、库间不冲突的标记。更重要的是「内置符号」：`Symbol.iterator`、`Symbol.toPrimitive`、`Symbol.hasInstance` 是语言留给你的挂钩——实现它们就能自定义 for-of、转换与 instanceof 行为。"
+    },
+    {
+      "id": "iterator",
+      "term": "迭代器协议",
+      "match": ["迭代器", "可迭代"],
+      "level": "L6",
+      "tip": "next() 返回 { value, done } 的对象就是迭代器；实现了 Symbol.iterator 的都能 for-of",
+      "desc": "`for-of`、展开、解构、`Array.from` 背后是同一套协议：对象提供 `Symbol.iterator` 方法，返回带 `next()` 的迭代器，每次吐出 `{ value, done }`。自己实现它，你的数据结构就能被所有语言特性消费。"
+    },
+    {
+      "id": "generator",
+      "term": "生成器",
+      "full": "generator / yield",
+      "match": ["生成器", "yield"],
+      "level": "L6",
+      "tip": "function* 函数：在 yield 处暂停、可恢复，天然是一个迭代器工厂",
+      "desc": "`function*` 里代码可执行到 `yield` 暂停并把值交给外部，下次 `next()` 从断点继续。写无限序列、惰性求值、协程式异步（早期 co/蓝鸟方案）都靠它；`yield*` 负责委托子迭代器。"
+    },
+    {
+      "id": "proxy",
+      "term": "Proxy",
+      "full": "Proxy / trap",
+      "match": ["Proxy", "trap", "元编程"],
+      "level": "L6",
+      "tip": "给对象雇一个「拦截器」：13 个 trap 改写读、写、删、枚举等一切操作",
+      "desc": "元编程的核心工具：`new Proxy(target, handler)` 返回一个能拦截目标对象基本操作的代理。`get/set/deleteProperty/ownKeys` 等 13 个 trap 是 Vue3 响应式、信号系统、数据绑定的原语；注意 trap 有 invariants（对 frozen 对象的约束会抛 TypeError）。"
+    },
+    {
+      "id": "reflect",
+      "term": "Reflect",
+      "match": ["Reflect"],
+      "level": "L6",
+      "tip": "与 Proxy trap 一一对应的操作 API：Reflect.get/set 做 trap 默认行为最顺手",
+      "desc": "把对象基本操作从「魔法方法」变成函数命名空间，每个 `Reflect.xxx` 恰好对应一个 Proxy trap。写 trap 时转发给 Reflect 拿默认行为，还能正确处理 receiver，避免无限递归。"
+    },
+    {
+      "id": "esm",
+      "term": "ESM",
+      "full": "ECMAScript Modules",
+      "zh": "ES 模块",
+      "match": ["ESM", "ES Modules", "ECMAScript Modules", "模块化"],
+      "level": "L7",
+      "tip": "语言原生模块标准：import/export、静态分析、编译期确定依赖、严格模式、按文件 URL 单例",
+      "desc": "JS 的官方模块系统：`import`/`export` 是编译期静态声明（所以 tree-shaking 可行），模块天然严格模式、this 为 undefined，每个模块按解析后的 URL 只执行一次（模块即单例）。命名导出要名字对齐，默认导出只是「名字叫 default 的命名导出」。",
+      "seeAlso": [{ "pkg": "03-nodejs", "id": "cjs", "term": "CJS" }, { "pkg": "02-typescript", "id": "import-type", "term": "import type" }]
+    },
+    {
+      "id": "cjs",
+      "term": "CJS",
+      "full": "CommonJS",
+      "zh": "Node 老模块系统",
+      "match": ["CJS", "CommonJS"],
+      "level": "L7",
+      "tip": "require/module.exports：运行时动态取值的 Node 时代模块，与 ESM 规则不同",
+      "desc": "Node 早期自建的模块规范：`require()` 运行时加载、导出的是值的拷贝、默认非严格。与 ESM 互操作有坑（default 导入 CJS 拿到整个 module.exports、顶层 this 不同、无静态分析）。浏览器与 Node ≥12 双端包要处理两套规则。",
+      "seeAlso": [{ "pkg": "03-nodejs", "id": "esm-cjs", "term": "ESM↔CJS 互操作" }]
+    },
+    {
+      "id": "dynamic-import",
+      "term": "动态 import",
+      "full": "import()",
+      "match": ["动态 import", "import("],
+      "level": "L7",
+      "tip": "import() 是返回 Promise 的函数：运行时决定路径、按需加载、代码分割入口",
+      "desc": "与静态 import 不同，`import()` 在运行期才发起加载，返回 Promise<模块命名空间>。路由懒加载、按条件加载 polyfill、打包器的代码分割锚点都用它；Vite/Webpack 会据此自动切 chunk。"
+    },
+    {
+      "id": "tla",
+      "term": "顶层 await",
+      "full": "top-level await",
+      "match": ["顶层 await", "top-level await"],
+      "level": "L7",
+      "tip": "ESM 模块顶层直接 await：模块加载完成前，导入方都在等它",
+      "desc": "ES2022 起 ESM 顶层可 `await`（CJS 不行）。副作用是模块本身变成 async：下游 import 会等它 resolve，打包与循环依赖更复杂，适合配置加载、DB 连接这类「不就绪别往下走」的场景。"
+    },
+    {
+      "id": "import-meta",
+      "term": "import.meta",
+      "match": ["import.meta"],
+      "level": "L7",
+      "tip": "模块自己的「身份证」：import.meta.url 当前模块地址，Vite 还有 .glob/.env",
+      "desc": "ESM 里唯一能拿到模块元信息的地方。`import.meta.url` 可换算出 CJS 的 `__dirname`；Vite 扩展了 `import.meta.glob`（批量导入）与 `import.meta.env`（环境变量），都是构建期静态替换的。"
+    },
+    {
+      "id": "module-singleton",
+      "term": "模块即单例",
+      "match": ["单例"],
+      "level": "L7",
+      "tip": "同一 URL 的模块只执行一次，导出状态全应用共享——前端「隐式全局状态」",
+      "desc": "ESM 按解析后的 URL 缓存模块：谁 import 拿到的都是同一份实例。好处是天然单例（配置、client 实例），坏处是模块顶层状态跨页面跨测试共享，SSR 会跨请求串号——这是很多「测试互相污染」「数据泄漏」事故的根因。"
+    },
+    {
+      "id": "tree-shaking",
+      "term": "tree-shaking",
+      "zh": "摇树优化",
+      "match": ["tree-shaking", "Tree Shaking", "摇树"],
+      "level": "L7",
+      "tip": "打包器顺着静态 import 图把没人用的导出「摇掉」——只有 ESM 做得到",
+      "desc": "生产构建时从入口沿依赖图标记「被用到的导出」，没被摸到的代码整体删除。前提是依赖是静态的 ESM 且无副作用（所以要 `sideEffects` 字段配合）；CJS 的动态 require 摇不动。"
+    },
+    {
+      "id": "callback",
+      "term": "回调函数",
+      "full": "callback",
+      "match": ["回调函数", "回调"],
+      "level": "L8",
+      "tip": "把函数交出去，事情办完对方回头调用你——JS 异步的最小单元",
+      "desc": "把「接下来要做的事」作为参数交给异步 API。约定俗成 **错误优先**（error-first）：`cb(err, result)` 第一个参数永远是错误。层层嵌套后就是「回调地狱」，于是有了 Promise/async 的扁平化方案。"
+    },
+    {
+      "id": "promise",
+      "term": "Promise",
+      "match": ["Promise"],
+      "level": "L8",
+      "tip": "一次性异步结果的三态容器：pending → fulfilled / rejected，then 链式转换",
+      "desc": "表示「将来会有一个值」的对象，状态单向落定不可逆。`then/catch/finally` 返回新 Promise 形成链；A+ 规范定义了 thenable 互操作。聚合器四件套 all/allSettled/race/any 各有分工；手写 Promise 是理解微任务调度的最好练习。"
+    },
+    {
+      "id": "microtask",
+      "term": "微任务 / 宏任务",
+      "full": "microtask / macrotask",
+      "match": ["微任务", "宏任务"],
+      "level": "L8",
+      "tip": "当前同步代码跑完先清空微任务队列（Promise.then），再取一个宏任务（setTimeout）",
+      "desc": "异步回调分两列队：微任务（Promise 回调、queueMicrotask、MutationObserver）优先级高，每个宏任务执行完都要先清空它；宏任务（timer、I/O、事件）排后面。面试经典输出顺序题考的就是这两队的调度规则。"
+    },
+    {
+      "id": "event-loop",
+      "term": "事件循环",
+      "full": "event loop",
+      "match": ["事件循环"],
+      "level": "L8",
+      "tip": "JS 单线程的调度心脏：同步跑完 → 清空微任务 → 渲染检查点 → 下一个宏任务",
+      "desc": "浏览器/Node 主线程不断重复「取任务、执行、清空微任务队列」的循环，单线程靠它实现并发假象。浏览器每轮之间可能插入渲染帧；Node 分六个阶段（timers → poll → check…），`setImmediate` 与 `process.nextTick` 的插队位是两者最大差异。"
+    },
+    {
+      "id": "async-await",
+      "term": "async/await",
+      "match": ["async/await"],
+      "level": "L8",
+      "tip": "用同步的书写方式消费 Promise：await 暂停函数、把后面代码自动接成微任务",
+      "desc": "`async` 函数永远返回 Promise，`await` 等它落定并把后续代码变成 then 回调——语法糖，但让 try/catch 能罩住异步错误。陷阱：循环里逐个 await 会串成瀑布，该并发时要先收集 Promise 再 `Promise.all`。"
+    },
+    {
+      "id": "optional-chaining",
+      "term": "可选链",
+      "full": "optional chaining (?.)",
+      "match": ["可选链", "?."],
+      "level": "L9",
+      "tip": "a?.b?.[0]?.()：链条上任一环是 null/undefined 就短路返回 undefined 而不是炸",
+      "desc": "ES2020 的 `?.` 把「先判空再取值」的样板压成一个符号，支持属性、下标、调用三种形态。注意它只保护「读取」，赋值左侧与函数必调用场景不适用；与 `??` 搭配处理缺省值最顺。"
+    },
+    {
+      "id": "nullish",
+      "term": "空值合并",
+      "full": "nullish coalescing (??)",
+      "match": ["空值合并", "??"],
+      "level": "L9",
+      "tip": "a ?? b 只在 a 是 null/undefined 时取 b——不像 || 会把 0、'' 也当假值吞掉",
+      "desc": "对「假值不等于没值」的修正：`0 || 10` 得 10（错），`0 ?? 10` 得 0（对）。配套的逻辑赋值 `||=` `&&=` `??=`（ES2021）常用于惰性初始化与缓存写入。"
+    },
+    {
+      "id": "bigint",
+      "term": "BigInt",
+      "match": ["BigInt"],
+      "level": "L9",
+      "tip": "第八种原始类型：任意精度整数，字面量加 n；不能与 number 混算",
+      "desc": "number 只有 53 位安全整数，雪花 ID、精确金额会溢出；`BigInt`（`10n`）补上任意精度整数。代价是运算严格：`1n + 1` 直接 TypeError，序列化、Math、第三方库大多不认它。"
+    },
+    {
+      "id": "class-fields",
+      "term": "类字段与私有成员",
+      "full": "class fields / #private",
+      "match": ["私有字段", "类字段", "class fields"],
+      "level": "L9",
+      "tip": "ES2022 起 class 可直接写 `count = 0` 与 `#secret`；# 是语言级私有，不是命名约定",
+      "desc": "实例字段声明、static 块、`#` 私有字段/私有方法在 ES2022 一次到位。`#x` 由引擎强制（外部访问 SyntaxError），与 TS 的 `private`（仅编译期检查）和 `WeakMap` 模拟私有同族但层级不同；`in` 运算符可探测私有成员存在性。"
+    },
+    {
+      "id": "iterator-helpers",
+      "term": "Iterator Helpers",
+      "match": ["Iterator Helpers", "迭代器助手"],
+      "level": "L9",
+      "tip": "ES2025：map/filter/take/drop 也能直接挂在迭代器上惰性链式消费",
+      "desc": "把数组方法的体验带给任意可迭代对象：`iterator.map(…).take(3)` 全程惰性、不落地数组。与 Array 方法的区别是「拉取式、可无限」，处理大流/生成器时省内存。"
+    },
+    {
+      "id": "transpile",
+      "term": "转译与编译",
+      "full": "transpile / compile",
+      "match": ["转译", "编译"],
+      "level": "L10",
+      "tip": "源码→源码叫转译（新语法变旧语法），源码→字节码/机器码叫编译；Babel/SWC/esbuild 干的都是转译",
+      "desc": "前端语境里通常指：把 TS/JSX/新语法降级为旧浏览器能跑的目标代码。Babel 是 JS 写的参考实现，SWC/esbuild 用 Rust/Go 重写快一个量级；「转译只删类型不校验类型」（SWC/esbuild）是与 tsc 的本质分工。"
+    },
+    {
+      "id": "bundler",
+      "term": "打包与构建",
+      "full": "bundler / build",
+      "match": ["打包", "构建"],
+      "level": "L10",
+      "tip": "顺着 import 图把几百个模块拼成少数几个 chunk，顺带转译、压缩、tree-shaking、加 hash",
+      "desc": "浏览器不会自己解析模块图（太多请求、还要降级），构建工具（Vite/Rollup/Webpack）离线把源码合成产物：合并 chunk、摇树、压缩、内容 hash 供缓存。dev 模式可以不打包按需转换，prod 必须打包。"
+    },
+    {
+      "id": "polyfill",
+      "term": "polyfill",
+      "zh": "垫片",
+      "match": ["polyfill"],
+      "level": "L10",
+      "tip": "用 JS 在旧环境里把缺失的新 API 补上（如 core-js 补 Promise）；转译补语法、polyfill 补 API",
+      "desc": "转译解决「语法不认识」，polyfill 解决「函数不存在」：给全局打补丁让 `Array.prototype.flat`、`Promise` 在旧环境可用。按 browserslist 注入需要的部分（Vite 接 core-js/兼容库），全量注入白白增大体积。"
+    },
+    {
+      "id": "npm",
+      "term": "npm",
+      "full": "Node Package Manager",
+      "match": ["npm"],
+      "level": "L10",
+      "tip": "JS 的包管理器 + 官方仓库：package.json 记依赖，node_modules 放代码，npx 免装执行",
+      "desc": "前端工程绕不开的基础设施：`npm install` 解析依赖树落盘 `node_modules`，`package.json` 声明依赖与脚本，`package-lock.json` 锁版本。同类客户端（pnpm/yarn）管的是同一个仓库。发布 `npm publish` 即把库推向全世界。"
+    },
+    {
+      "id": "package-json",
+      "term": "package.json",
+      "zh": "包的身份证",
+      "match": ["package.json"],
+      "level": "L10",
+      "tip": "每个 Node/前端项目的说明书：name/version/dependencies/scripts/exports/type",
+      "desc": "一个包的全部元数据：`type: \"module\"` 决定 .js 按 ESM 还是 CJS 解析；`exports` 字段管入口与子路径导出；`scripts` 是命令别名；`dependencies` vs `devDependencies` 区分运行时与开发时。库包还要注意 `main`/`types`/`sideEffects`。"
+    },
+    {
+      "id": "exports-field",
+      "term": "exports 字段",
+      "full": "package exports map",
+      "match": ["exports 字段"],
+      "level": "L10",
+      "tip": "package.json 里的「海关」：规定外面能 import 哪些子路径、ESM/CJS 各给哪份文件",
+      "desc": "写了 `exports` 后包内其他路径一律不可见（`ERR_PACKAGE_PATH_NOT_EXPORTED`），这是库的公共 API 边界。条件导出 `import`/`require`/`types` 分别指向不同产物，是 ESM/CJS 双包（dual package）的标准发法。"
+    },
+    {
+      "id": "semver",
+      "term": "语义化版本",
+      "full": "semver (major.minor.patch)",
+      "match": ["语义化版本", "semver", "caret"],
+      "level": "L10",
+      "tip": "主.次.补丁：破坏性改动升主版本、加功能升次位、修 bug 升补丁；^ ~ 按此划范围",
+      "desc": "版本号三个数字各有承诺：`major` 不兼容变更、`minor` 向下兼容新增、`patch` 只修 bug。`^1.2.3` 允许 minor/patch 增长、`~` 只允许 patch——理解 semver 才读得懂依赖范围与「升级怎么就把项目升炸了」。"
+    },
+    {
+      "id": "devtools",
+      "term": "DevTools",
+      "full": "浏览器开发者工具",
+      "match": ["DevTools", "开发者工具"],
+      "level": "L10",
+      "tip": "F12 打开：Sources 打断点、Console、Network、Performance 面板，前端调试主战场",
+      "desc": "浏览器内置调试套件。与本课最相关的是 Sources 断点（条件断点、watch、call stack 看闭包现场）与 Performance 面板（长任务、微任务火焰图）。代码是 sourcemap 映射前的产物，断点打得中全靠它。"
+    },
+    {
+      "id": "sourcemap",
+      "term": "sourcemap",
+      "full": "源码映射 (.map)",
+      "match": ["sourcemap", "Source Map", "source map"],
+      "level": "L10",
+      "tip": "产物 → 源码的坐标翻译表：报错堆栈、断点、DevTools 显示原代码全靠它",
+      "desc": "转译打包后行号全变，`.map` 文件记录产物位置与源码位置的映射（V3 格式）。dev 用 cheap-module 档求快，prod 常「上传错误平台但不公开」——公网放出 map 等于把源码送回攻击者手里。"
+    }
+  ]
+}

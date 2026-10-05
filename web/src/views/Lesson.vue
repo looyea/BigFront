@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import { api, startTracking, stopTracking } from '../api.js';
+import { markTerms, bindTermTips } from '../utils/glossary.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -46,9 +47,20 @@ async function loadAll() {
   } finally {
     loading.value = false;
   }
-  // 等课文渲染进 DOM 后再高亮代码块
+  // 等课文渲染进 DOM 后再高亮代码块、再标记术语（顺序不能反：标记会改动文本节点，须避开 code/pre 内部）
   await nextTick();
   highlight();
+  markGlossaryTerms(pkgId);
+}
+
+// 术语自动识别 + 悬停 Tooltip：失败静默（如后端未重启、术语表接口 404），绝不影响课文阅读
+async function markGlossaryTerms(pkgId) {
+  try {
+    const prose = document.querySelector('.prose');
+    if (!prose) return;
+    bindTermTips(prose);
+    await markTerms(prose, pkgId);
+  } catch { /* 术语表不可用时降级为纯文本 */ }
 }
 onMounted(loadAll);
 watch(() => [route.params.pkgId, route.params.lessonId], loadAll);
@@ -96,8 +108,9 @@ async function copyText(t) {
       </template>
     </section>
 
-    <!-- 底部返回：课文与动手示例读完，一键回课程目录选下一节 -->
+    <!-- 底部返回：课文与动手示例读完，一键回课程目录选下一节；术语表入口永远开放 -->
     <div class="lesson-foot">
+      <router-link v-if="pkgMeta?.hasGlossary" class="btn ghost" :to="`/g/${lesson.pkgId}`">📖 本课术语表</router-link>
       <router-link class="btn" :to="`/p/${lesson.pkgId}`">📚 返回课程目录 · 选下一节</router-link>
     </div>
 

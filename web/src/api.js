@@ -34,6 +34,9 @@ export const api = {
   setHomework: (pkg, id, done) => post('/progress/homework', { pkgId: pkg, lessonId: id, done }),
   complete: (pkg, id) => post('/progress/complete', { pkgId: pkg, lessonId: id }),
   integrity: () => get('/integrity'),
+  // 术语表：不受进度/解锁限制的只读接口（任何时候都开放，见 server/index.js v1.4）
+  glossary: (pkg) => get(`/glossary/${pkg}`),
+  glossaryIndex: () => get('/glossary-index'),
   // 外观偏好（主题 + 正文字号）：读回上次选择 / 写入本次选择
   // 存服务端是为了跨端口、跨浏览器也能带回来（localStorage 按 origin 隔离，见 themes.js 头注释）
   getAppearance: () => get('/appearance'),

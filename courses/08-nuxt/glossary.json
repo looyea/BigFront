@@ -1,0 +1,300 @@
+{
+  "title": "Nuxt 3 · 术语表",
+  "intro": "本课出现的专业缩写、API 名与概念词速查。课文里把鼠标悬停在带虚线下划线的术语上，也会弹出这里的解释并直达本条。",
+  "terms": [
+    {
+      "id": "nuxt",
+      "term": "Nuxt",
+      "match": ["Nuxt"],
+      "level": "L1",
+      "tip": "Vue 的元框架：文件路由、SSR、数据获取、构建部署一站配齐——Vue 界的 Next.js",
+      "desc": "裸 Vue 只管 UI；Nuxt 补上：基于 vue-router 的文件路由、Nitro 服务端引擎、自动导入、渲染模式控制、部署预设。写 .vue 的同时白送 SSR 与全栈能力。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "ssr-hydration", "term": "SSR 与水合" }, { "pkg": "07-nextjs", "id": "meta-framework", "term": "元框架" }]
+    },
+    {
+      "id": "nuxt-vs-vue",
+      "term": "Nuxt 与裸 Vue 的边界",
+      "match": ["Vite"],
+      "level": "L1",
+      "tip": "Nuxt 底层就是 Vite + Vue：组件写法不变，多的是「文件即路由、服务端也跑 Vue」这两层",
+      "desc": "Nuxt 3 用 Vite 做客户端构建、Nitro 做服务端打包。从纯 SPA 迁 Nuxt 的收益：SSR/SEO、首屏、文件路由、服务端能力；成本：部署不再是丢静态文件、要处理水合与双端环境差异。"
+    },
+    {
+      "id": "hybrid-rendering",
+      "term": "混合渲染",
+      "full": "hybrid rendering",
+      "match": ["混合渲染"],
+      "level": "L1",
+      "tip": "同一个站里不同页面走不同模式：SSR、SPA、SSG、SWR、ISR、预渲染混着用，routeRules 逐路配置",
+      "desc": "Nuxt 把「渲染模式」降级成每路由的策略选择：`routeRules: { '/': { prerender: true }, '/admin/**': { ssr: false } }`。选型口诀：内容型可预渲染、千人千面要 SSR、纯交互后台可 CSR。"
+    },
+    {
+      "id": "render-modes-nuxt",
+      "term": "SSR / SPA 模式",
+      "match": ["ssr: false", "SPA 模式"],
+      "level": "L3",
+      "tip": "nuxt.config ssr:true（默认，服务端出 HTML+水合）或 false（纯 SPA，只发空壳）",
+      "desc": "SSR 模式下服务端渲染首屏 HTML，客户端注水接管网状路由；SPA 模式退化成一个带文件路由的 Vite SPA，内网后台常用。中间态：页面级 `definePageMeta({ssr:false})` 只关某页的 SSR。"
+    },
+    {
+      "id": "payload-nuxt",
+      "term": "payload",
+      "match": ["payload"],
+      "level": "L3",
+      "tip": "服务端取好的数据序列化进 HTML（<script type=\"application/json\">），客户端水合直接复用免二刷",
+      "desc": "useFetch 在服务端执行一次，结果进 payload；客户端 hydrate 时读缓存不再发请求。payload 过大（整页列表数据）会拖慢首屏解析——服务端裁剪字段、分页只带首页是基本修养。"
+    },
+    {
+      "id": "hydration-nuxt",
+      "term": "水合与 mismatch",
+      "match": ["hydration", "水合", "mismatch"],
+      "level": "L3",
+      "tip": "客户端 Vue 接管服务端 HTML 并绑事件；两端渲染结果不一致叫 hydration mismatch",
+      "desc": "常见雷：服务端渲染用 Date.now()/随机数/Math.random 排序、依赖 window 的分支、浏览器插件改 DOM。治理：客户端专属内容包 `<ClientOnly>`、随机值用 useId 稳定化、时间放挂载后再渲染。",
+      "seeAlso": [{ "pkg": "04-vue", "id": "ssr-hydration", "term": "SSR 与水合" }]
+    },
+    {
+      "id": "lifecycle-nuxt",
+      "term": "Nuxt 生命周期",
+      "match": ["vue-ssr-nuxt", "app.vue"],
+      "level": "L3",
+      "tip": "请求前（server middleware）→ 路由钩子（route middleware）→ setup → 渲染钩子（render:html）→ 水合",
+      "desc": "全局外壳 `app.vue` + `<NuxtLayout>`/`<NuxtPage>`；页面级 `<NuxtPage>` 可挂 keepalive 与 transition。钩子族：`page:start/page:end`、`app:created`、服务端 `render:html/render:response`——埋点、SEO 注入、全局 loading 都挂这条时间线。"
+    },
+    {
+      "id": "routing-nuxt",
+      "term": "文件路由",
+      "match": ["definePageMeta", "NuxtPage"],
+      "level": "L2",
+      "tip": "pages/ 目录即路由表；definePageMeta 声明布局、中间件、缓存、name",
+      "desc": "构建时扫描生成路由，`.name`、`[id]`、`[...slug]` 与 Next 同款约定。`definePageMeta({ layout:'admin', middleware:['auth'] })` 是路由配置内聚到页面文件的写法；path 可用 `path: '/about-us'` 覆写文件名。"
+    },
+    {
+      "id": "dynamic-nuxt",
+      "term": "动态与可选参数",
+      "match": ["catchAll", "动态段", "可选参数"],
+      "level": "L2",
+      "tip": "[id] 动态段、[id]?.vue 可选段、[...slug] 兜底段；layouts/ 放命名布局；error.vue 全局错误页",
+      "desc": "嵌套路由=嵌套 `<NuxtPage>`；命名视图用 `<NuxtPage name=\"modal\">` 配 `pages/index.vue` + `pages/modal/`。`error.vue` 定制 404/500 外壳，`createError({statusCode:404})` 在任意处抛出即命中。"
+    },
+    {
+      "id": "named-views",
+      "term": "布局系统",
+      "match": ["NuxtLayout", "命名布局", "布局系统"],
+      "level": "L2",
+      "tip": "layouts/default.vue 全局壳、命名布局按页切换；`<NuxtLayout>` 包 `<NuxtPage>` 组成应用骨架",
+      "desc": "布局也是组件：`<slot/>` 接收页面内容，`useRoute().meta.layout` 决定用哪套。布局切换默认整棵重建（状态丢），要保状态用 `<NuxtLayout name=\"x\">` 手动嵌套或 keepalive。"
+    },
+    {
+      "id": "usefetch",
+      "term": "useFetch 与 useAsyncData",
+      "match": ["useFetch", "useAsyncData"],
+      "level": "L4",
+      "tip": "SSR 感知的数据获取：服务端 await 取数进 payload、客户端复用；useAsyncData 是其「自带任意异步函数」版",
+      "desc": "`const { data, pending, error, refresh } = useFetch('/api/list')` 自动 key（URL 派生）；useAsyncData 要手写 key 与请求函数。key 相同的全局去重——两组件用同一 key 只发一次请求。"
+    },
+    {
+      "id": "lazy-fetch",
+      "term": "lazy 与客户端取数",
+      "match": ["lazy 取数", "lazy", "onServerPrefetch"],
+      "level": "L4",
+      "tip": "lazy:true 不阻塞导航（数据没到也先切页）；纯客户端场景用 onServerPrefetch/仅客户端请求",
+      "desc": "默认 useFetch 会 await 到数据再完成路由跳转（防闪烁）；列表翻页这类「切换即 loading 也可接受」的上 lazy。组件内顶层 await（Suspense 风格）需要 `<Suspense>` 包裹才安全。"
+    },
+    {
+      "id": "fetch-data",
+      "term": "$fetch 与 ofetch",
+      "match": ["$fetch", "ofetch"],
+      "level": "L4",
+      "tip": "底层 HTTP 客户端：自动前缀 baseURL、JSON 推断、错误对象带 data/response；服务端内部请求走内网直连",
+      "desc": "`$fetch('/api/hello')` 在浏览器打 HTTP，在 Nitro 内部直接函数调用（免网络回环）。retry、timeout、响应类型泛型都齐；自定义拦截器用 `ofetch.create({ baseURL })` 或 runtimeConfig 配基址。"
+    },
+    {
+      "id": "nitro",
+      "term": "Nitro",
+      "match": ["Nitro"],
+      "level": "L4",
+      "tip": "Nuxt 的服务端引擎：把 server/ 目录、API、SSR 编译成可部署到任意平台的产物",
+      "desc": "独立包（unjs/nitro），也能给 SvelteKit 之外的任意框架用。职责：服务端路由扫描、定时任务、缓存层、部署预设。产物 `.output/server/index.mjs` 一个文件跑遍 Node/Deno/Cloudflare/Vercel。"
+    },
+    {
+      "id": "server-routes",
+      "term": "server/api 路由",
+      "match": ["server/api", "defineEventHandler", "eventHandler"],
+      "level": "L4",
+      "tip": "server/api/me.get.ts 即 GET /api/me：文件名+方法后缀=端点，H3 事件处理器",
+      "desc": "`export default defineEventHandler((event) => ...)` 里 readBody/getQuery/readHeaders 取请求，返回值自动 JSON。server/routes/ 可自定义完整路径；中间件放 server/middleware/。",
+      "seeAlso": [{ "pkg": "09-express", "id": "router", "term": "Router" }]
+    },
+    {
+      "id": "routerrules",
+      "term": "routeRules",
+      "match": ["routeRules"],
+      "level": "L4",
+      "tip": "nuxt.config 里的路由级策略中心：缓存、重定向、代理、预渲染、CORS 全在这配",
+      "desc": "`{ '/old': { redirect: '/' }, '/api/**': { cors: true }, '/about': { prerender: true }, '/p/**': { swr: 60, isr: 'x-isr' } }`。规则按 glob 匹配、越具体越优先；服务端渲染页的 SEO 301 用 redirect 即可。"
+    },
+    {
+      "id": "cached-function",
+      "term": "defineCachedFunction / defineCachedEventHandler",
+      "match": ["defineCachedFunction", "defineCachedEventHandler", "cachedWithTTL"],
+      "level": "L4",
+      "tip": "声明式缓存：给函数/接口套一层「结果存多久、存哪」，命中直接返回",
+      "desc": "`defineCachedFunction({ maxAge: 60, fn })` 默认内存缓存，生产换 redis driver（unstorage）。配合 `getCachedRequestEvent`/swr 路由规则构成 Nitro 的三层缓存：数据缓存、接口缓存、页面缓存。"
+    },
+    {
+      "id": "nitro-storage",
+      "term": "unstorage 与 KV",
+      "match": ["useStorage", "unstorage"],
+      "level": "L4",
+      "tip": "Nitro 的统一键值存储抽象：`useStorage()` 一套 API，后端可插内存/文件/Redis/云 KV",
+      "desc": "挂载点即驱动：`.data/` 落文件、redis 驱动落远端。SSR 服务端缓存 session、功能开关、爬取结果都走它，客户端永远别直连——暴露经 server/api 包一层。"
+    },
+    {
+      "id": "render-targets",
+      "term": "SSG 与 prerender",
+      "match": ["prerender", "nitro.prerender", "SSG"],
+      "level": "L3",
+      "tip": "nitro.prerender.routes 枚举或 crawl 自动爬，build 时输出纯静态 HTML+可 SPA fallback",
+      "desc": "`prerender: { crawlLinks: true, routes: ['/'] }` 从入口爬全站链接逐个生成 .html。纯静态托管（GitHub Pages）配 `ssr:false + prerender`；内容变更后全量重建，大站请上 SWR/ISR 或 CMS webhook 触发增量。"
+    },
+    {
+      "id": "swr-nuxt",
+      "term": "SWR / ISR（Nuxt）",
+      "match": ["isr", "swr"],
+      "level": "L3",
+      "tip": "routeRules 里 swr:3600 = 边缘缓存 1 小时后台再生；isr:'tag' = Vercel 式按需失效",
+      "desc": "swr 对静态资源 CDN 生效（Vercel/Netlify/Cloudflare 各平台实现略有差异）；`isr: { revalidateOnlyTriggered: true }` 配合 `revalidatePath`/webhook 做主动失效。与 Next 的同名机制语义一致，粒度从页面到 API 路由。"
+    },
+    {
+      "id": "statemgmt-nuxt",
+      "term": "useState",
+      "match": ["useState"],
+      "level": "L5",
+      "tip": "SSR 友好的跨组件状态：每个请求独立、值随 payload 带到客户端——不是全局单例！",
+      "desc": "`const count = useState('count', () => 0)` 解决「模块级 ref 在 SSR 跨请求泄漏」的经典事故。共享数据可序列化、每个访客一份；持久化到浏览器再配 localStorage/pinia 插件。",
+      "seeAlso": [{ "pkg": "18-jotai", "id": "jotai", "term": "Jotai" }]
+    },
+    {
+      "id": "pinia-nuxt",
+      "term": "Pinia 在 Nuxt",
+      "match": ["pinia", "@pinia/nuxt"],
+      "level": "L5",
+      "tip": "模块自动注入、SSR 状态自动收集回填——用 @pinia/nuxt 后 store 写法与纯 Vue 无异",
+      "desc": "服务端渲染完把各 store 的 state 序列化进 payload，客户端 `pinia.state.value` 复原。注意 store 里不要在模块顶层调 useRuntimeConfig（作用域丢失），放 action/state 工厂里取。",
+      "seeAlso": [{ "pkg": "16-pinia", "id": "pinia", "term": "Pinia" }, { "pkg": "04-vue", "id": "pinia-store", "term": "Pinia Store" }]
+    },
+    {
+      "id": "cookie-nuxt",
+      "term": "useCookie",
+      "match": ["useCookie"],
+      "level": "L5",
+      "tip": "双端同构的 cookie 读写：服务端能读请求头并 Set-Cookie，客户端走 document.cookie",
+      "desc": "`const token = useCookie('token', { maxAge: 3600, sameSite:'lax' })` 返回 ref，改值即写回。SSR 鉴权三件套：useCookie 读 token → server/api 校验 → 不通过 navigateTo('/login')。"
+    },
+    {
+      "id": "route-middleware",
+      "term": "路由中间件",
+      "match": ["路由中间件", "defineNuxtRouteMiddleware", "全局中间件"],
+      "level": "L5",
+      "tip": "middleware/*.ts 按名挂到页面 definePageMeta；.global.ts 后缀每路由必跑",
+      "desc": "`export default defineNuxtRouteMiddleware((to, from) => { if (!auth) return navigateTo('/login') })`。只在客户端跑；服务端鉴权要在 server wrapper（API/事件处理器）里再验——中间件拦 UI，服务端拦数据，缺一不可。"
+    },
+    {
+      "id": "nuxtauth",
+      "term": "鉴权与授权",
+      "match": ["鉴权"],
+      "level": "L5",
+      "tip": "认证（你是谁：session/JWT/OAuth）与授权（你能不能：角色/权限）分开设计；凭证只放 httpOnly cookie",
+      "desc": "方案谱系：手写（useCookie+server middleware）→ sidebase/auth-kit → lucia 风格 session → Auth.js v5。httpOnly+SameSite=Lax 的 session cookie 抗 XSS 窃取，CSRF 用 Origin 校验或双提交 token 补防。"
+    },
+    {
+      "id": "autology",
+      "term": "自动导入",
+      "match": ["auto-import", "自动导入", "imports:"],
+      "level": "L6",
+      "tip": "composables/utils/components 目录免 import 直接用；.nuxt/ims.ts 是生成的类型地图",
+      "desc": "编译期把 `useRequestURL()` 等自动补 import（本质是 unimport 的 AST 注入）。代价是「这函数哪来的」新手困惑与 IDE 跳转失灵（没跑 `nuxt prepare`）。可配 imports:false 退回手动，团队规范二选一。"
+    },
+    {
+      "id": "layer",
+      "term": "Layer 层",
+      "match": ["Layer", "layers/"],
+      "level": "L6",
+      "tip": "可叠加的项目片段 extends：共享组件、路由、配置——多品牌站与 monorepo 的复用单元",
+      "desc": "`extends: ['github:org/ui-layer']` 后该层的 pages/components/app.vue 参与合并，同名按「当前项目 > 上层」覆盖。设计系统、法务合规页、主题变量下沉的标准做法；层与层可成链。"
+    },
+    {
+      "id": "module",
+      "term": "Nuxt 模块",
+      "match": ["defineNuxtModule", "模块"],
+      "level": "L6",
+      "tip": "nuxt.config modules 数组里的扩展插件：@nuxt/image、@vueuse/nuxt、自家 team-kit 都是模块",
+      "desc": "`defineNuxtModule({ setup(options, nuxt){ nuxt.hook('components:dirs',...) } })` 能改配置、注源文件、注册钩子、加 Nitro 插件。模块生态（nuxt.com/modules）是 Nuxt 开发效率的核心资产。"
+    },
+    {
+      "id": "runtimeconfig",
+      "term": "runtimeConfig",
+      "match": ["runtimeConfig", "NUXT_PUBLIC_"],
+      "level": "L6",
+      "tip": "双端配置中心：public 段随 HTML 暴露给浏览器，其余只在服务端；环境变量 NUXT_* 自动覆盖",
+      "desc": "`runtimeConfig: { apiKey: '', public: { apiBase: '/api' } }`——服务端 `useRuntimeConfig().apiKey`（环境变量 NUXT_API_KEY 注入），客户端 `useRuntimeConfig().public.apiBase`。构建期 env 与运行期 env 的分工也在这里。"
+    },
+    {
+      "id": "head-seo",
+      "term": "useHead / SEO",
+      "match": ["useHead", "useSeoMeta", "SEO 元信息"],
+      "level": "L6",
+      "tip": "响应式管理 <head>：title、meta、OG、canonical；useSeoMeta 给 SEO 常用字段加了类型与别名",
+      "desc": "页面/布局/组件都可 useHead，按就近原则合并；动态标题 `useSeoMeta({ title: () => post.value?.title })`。robots 与 sitemap 用 @nuxtjs/robots 与 @nuxtjs/sitemap 模块，别手写 xml。"
+    },
+    {
+      "id": "server-components-nuxt",
+      "term": "组件服务端化",
+      "match": ["server components", "ServerComponent"],
+      "level": "L3",
+      "tip": "把纯展示组件改名 *.server.vue 或包 <ServerComponent>：不进客户端 bundle，可 async 取数",
+      "desc": "Nuxt 4 实验性支持 Vue 服务端组件（与 Next RSC 机制不同、目的一致：减包、直连数据源）。客户端交互件照旧；大列表外壳、markdown 渲染器适合 server 化。experimental.clientComponentRCCFallback 处理嵌套回退。"
+    },
+    {
+      "id": "islands",
+      "term": "Islands 与行级水合",
+      "match": ["Islands", "island", "行级水合"],
+      "level": "L3",
+      "tip": "只水合页面里真正交互的「小岛」，其余静态 HTML——实验特性，省 JS 的终极形态之一",
+      "desc": "`<NuxtIsland name=\"Cart\">` 在服务端渲染、客户端零 JS（或仅局部）。适合导航、页脚、推荐位。与 PPR/流式互补；生产使用先验证水合边界与 CSS 抽取。"
+    },
+    {
+      "id": "perf-nuxt",
+      "term": "性能清单",
+      "match": ["预取", "prefetch", "bundle-analyzer"],
+      "level": "L7",
+      "tip": "路由级组件才分包、chunk:preload 预取、图片 @nuxt/image、字体自托管、routeRules 上 CDN 缓存",
+      "desc": "Nuxt 默认「所有同步组件打一个包」——`<NuxtPage>` 里 keepalive 与动态组件写法影响分包粒度。`<NuxtLink prefetch>` 悬停即预载下一页；`nuxt build --analyze`（rollup-plugin-visualizer）看谁胖；TTFB 高就上 swr/边缘。"
+    },
+    {
+      "id": "preset",
+      "term": "部署预设 preset",
+      "match": ["preset"],
+      "level": "L8",
+      "tip": "nitro.preset 告诉构建器目标平台：node-server、vercel、cloudflare、netlify、bun…产物自动适配",
+      "desc": "`NITRO_PRESET=cloudflare_pages nuxt build` 一条 env 切平台；平台差异（Edge 无 fs、静态目录怎么发）预设都处理了。Docker 部署选 node-server 预设 + standalone .output，8080 端口直接 node 起。"
+    },
+    {
+      "id": "node-server",
+      "term": "自托管与反代",
+      "match": ["node-server", "反向代理"],
+      "level": "L8",
+      "tip": ".output 跑在 Node/Bun 上，Nginx/Caddy 反代 + 静态目录直出；多实例记得把缓存外置 Redis",
+      "desc": "SSR 服务要处理：健康检查、优雅停机（SIGTERM 后收流）、X-Forwarded-For 解析（req-ip 中间件）。内存型缓存/会话在多实例下不一致——换 redis/unstorage 云驱动，或 sticky session 过渡。"
+    },
+    {
+      "id": "bun-deno",
+      "term": "Bun / Deno 运行时",
+      "match": ["Bun", "Deno"],
+      "level": "L8",
+      "tip": "Node 的两位挑战者：Bun 快启动兼容 npm、Deno 安全默认+TS 原生；Nitro 产物三者都能跑",
+      "desc": "部署时 `node .output/server/index.mjs` 换 `bun`/`deno run --node-modules-dir` 即可提速冷启动与内存。兼容性检查：原生模块、node: 内建模块支持度；Cloudflare 等平台自带 V8 运行时不需选。"
+    }
+  ]
+}
